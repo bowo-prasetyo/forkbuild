@@ -81,7 +81,16 @@ export default {
     // offer a "Distribute now" action over that same identity without
     // Toolbar knowing anything about distribution itself. Emitted only on
     // a SUCCESSFUL publish; the catch branch below never emits it.
-    emits: ['back-to-world', 'open-shortcuts', 'published'],
+    //
+    // 0.9.641 — Editor Document Export. `export-document` is a plain
+    // trigger, no payload — the same division of labor EditorView.js
+    // already keeps for exportStructure()/exportBlueprintAttribution()/
+    // exportBlueprintLineageClaim(): Toolbar knows a user wants to export
+    // the open document; EditorView is the one that calls
+    // editorSession.exportDocument() and turns the result into an actual
+    // browser download. Toolbar itself never touches `document.createElement`
+    // or a data: URI.
+    emits: ['back-to-world', 'open-shortcuts', 'published', 'export-document'],
     setup(props, { emit }) {
         const dirty = ref(props.documentManager.state.dirty);
         const recentDocuments = ref(props.loadDocumentUseCase.listSavedDocuments());
@@ -222,6 +231,7 @@ export default {
             </template>
 
             <button class="toolbar-save" @click="save">Save</button>
+            <button class="toolbar-export" @click="$emit('export-document')">Export</button>
             <button class="toolbar-publish" @click="publish">Publish</button>
             <button class="toolbar-new" @click="createNew">New</button>
             <button

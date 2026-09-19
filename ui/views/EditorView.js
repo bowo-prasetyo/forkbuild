@@ -85,6 +85,7 @@ export default {
                 @back-to-world="backToWorld"
                 @open-shortcuts="shortcutsOpen = true"
                 @published="onDocumentPublished"
+                @export-document="exportDocument"
             />
             <RecoveryBanner
                 :status="recoveryStatus"
@@ -674,6 +675,40 @@ export default {
 		    link.download = `forkbuild-blueprint-${slug}.json`;
 		    link.click();
 		    feedback.show(`Exported "${structure.name}" as a blueprint`);
+		}
+
+		// 0.9.641 — Editor Document Export. The exact
+		// exportStructure()/exportBlueprintAttribution() shape, one
+		// concept over: editorSession.exportDocument() (a thin wrapper
+		// over the existing DocumentSerializer.serialize() seam —
+		// application/ExportDocumentUseCase.js, tests/
+		// EditorDocumentPortabilityBoundaryAudit.test.js Section C) never
+		// touches storage, the manifest, or the document's own dirty
+		// state — this handler's only job, same as its blueprint
+		// siblings, is turning that already-serialized JSON into a
+		// browser download. Filename follows the SAME
+		// `forkbuild-<kind>-<slug>.json` convention exportStructure()
+		// and IdentityManagementView.js's own identity export already
+		// established, rather than inventing a new extension.
+		function exportDocument() {
+			let json;
+			try {
+				json = editorSession.exportDocument();
+			} catch (e) {
+				feedback.show(e.message);
+				return;
+			}
+			if (!json) {
+				return;
+			}
+			const serialized = JSON.stringify(json, null, 2);
+			const title = documentManager.document.metadata.title || '';
+			const slug = title.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'document';
+			const link = document.createElement('a');
+			link.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(serialized);
+			link.download = `forkbuild-document-${slug}.json`;
+			link.click();
+			feedback.show(`Exported "${title || 'document'}"`);
 		}
 
 		// 0.6.6 — Decentralized Blueprint Exchange. Exports a SINGLE
@@ -2345,6 +2380,7 @@ export default {
             renamePersonalStructure,
             removePersonalStructure,
             exportStructure,
+            exportDocument,
             importBlueprint,
             brickRegistry: registry,
             inspectStructure,
