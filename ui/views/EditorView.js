@@ -86,6 +86,7 @@ export default {
                 @open-shortcuts="shortcutsOpen = true"
                 @published="onDocumentPublished"
                 @export-document="exportDocument"
+                @import-document="importDocument"
             />
             <RecoveryBanner
                 :status="recoveryStatus"
@@ -709,6 +710,44 @@ export default {
 			link.download = `forkbuild-document-${slug}.json`;
 			link.click();
 			feedback.show(`Exported "${title || 'document'}"`);
+		}
+
+		// 0.9.642 — Editor Document Import. `rawText` is whatever
+		// Toolbar's own hidden file input read off disk — untrusted,
+		// unparsed input, the same "JSON.parse and the use case call are
+		// each wrapped separately" two-stage error handling
+		// importBlueprint() (below) and IdentityManagementView.js's own
+		// confirmImport() already established: a bad file (not JSON at
+		// all) gets one message, a well-formed-but-invalid Document gets
+		// whatever editorSession.importDocument()/ImportDocumentUseCase/
+		// DocumentSerializer.deserialize() actually says. Either failure
+		// leaves the currently open document, its dirty state, and
+		// storage completely untouched — the JSON.parse throw and the
+		// deserialize() throw both happen before editorSession ever
+		// calls openDocument() (see EditorSession#importDocument()'s own
+		// header). On success, the imported document — a fresh local
+		// identity, per the 0.9.640 audit's own Section D — becomes the
+		// open document through the exact same session/navigation
+		// lifecycle a Fork or a New already uses; nothing here decides
+		// what happens next beyond that, exactly like forkStructure()
+		// above it never does either.
+		function importDocument(rawText) {
+			let json;
+			try {
+				json = JSON.parse(rawText);
+			} catch (e) {
+				feedback.show('That is not valid JSON — choose a file exported with "Export."');
+				return;
+			}
+			try {
+				const imported = editorSession.importDocument(json);
+				if (!imported) {
+					return;
+				}
+				feedback.show(`Imported "${imported.metadata.title || 'document'}"`);
+			} catch (e) {
+				feedback.show(e.message.replace(/^DocumentSerializer:\s*/, ''));
+			}
 		}
 
 		// 0.6.6 — Decentralized Blueprint Exchange. Exports a SINGLE
@@ -2381,6 +2420,7 @@ export default {
             removePersonalStructure,
             exportStructure,
             exportDocument,
+            importDocument,
             importBlueprint,
             brickRegistry: registry,
             inspectStructure,

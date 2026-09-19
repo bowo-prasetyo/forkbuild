@@ -38,6 +38,7 @@ import { CreateStructureFromSelectionUseCase } from './CreateStructureFromSelect
 import { ExportBlueprintUseCase } from './ExportBlueprintUseCase.js';
 import { ExportDocumentUseCase } from './ExportDocumentUseCase.js';
 import { ImportBlueprintUseCase } from './ImportBlueprintUseCase.js';
+import { ImportDocumentUseCase } from './ImportDocumentUseCase.js';
 import { deriveBlueprintFingerprint } from '../core/BlueprintFingerprint.js';
 import { ForkStructureToLibraryUseCase } from './ForkStructureToLibraryUseCase.js';
 import { RemoveStructurePlacementCommand } from './commands/RemoveStructurePlacementCommand.js';
@@ -124,6 +125,11 @@ export class EditorSession {
         // no external dependency to omit — every EditorSession, old or
         // new, gets a working exportDocument() for free.
         exportDocumentUseCase = new ExportDocumentUseCase(),
+        // 0.9.642 — Editor Document Import. The identical
+        // no-external-dependency-to-omit posture as
+        // exportDocumentUseCase immediately above — every EditorSession
+        // gets a working importDocument() for free.
+        importDocumentUseCase = new ImportDocumentUseCase(),
         // 0.6.6 — Decentralized Blueprint Exchange. Optional, same
         // graceful-degradation posture as every other optional
         // collaborator here — an EditorSession built without one (older
@@ -205,6 +211,7 @@ export class EditorSession {
         this._exportBlueprintUseCase = exportBlueprintUseCase;
         this._importBlueprintUseCase = importBlueprintUseCase;
         this._exportDocumentUseCase = exportDocumentUseCase;
+        this._importDocumentUseCase = importDocumentUseCase;
         this._blueprintAttributionExchange = blueprintAttributionExchange;
         this._blueprintLineageExchange = blueprintLineageExchange;
         this._forkStructureToLibraryUseCase = forkStructureToLibraryUseCase;
@@ -1439,6 +1446,35 @@ export class EditorSession {
             return null;
         }
         return this._exportDocumentUseCase.execute(this._documentManager.document);
+    }
+
+    // 0.9.642 — Editor Document Import. `json` is whatever an imported
+    // file's own text parsed into — untrusted, exactly like a Blueprint
+    // package handed to importBlueprint() below. ImportDocumentUseCase
+    // throws (deserialize's own migrate -> validate -> construct
+    // pipeline, per its own header) before this method ever reaches
+    // openDocument() — a malformed import therefore never touches the
+    // currently open document, its dirty state, or storage; callers
+    // (ui/views/EditorView.js#importDocument()) surface that error
+    // directly, the same restraint importBlueprint() already takes
+    // toward BlueprintPackageError.
+    //
+    // On success, reuses openDocument() — the EXACT SAME path
+    // forkStructure() above already uses to bring a freshly-constructed
+    // Document into this session (fresh eventBus rehydration,
+    // documentManager.newDocument(), a clean DocumentState) — rather
+    // than inventing a second "open a Document" entry point. Import
+    // never calls loadDocument()/storage directly: the imported
+    // document only ever reaches disk if the user's own, later,
+    // ordinary Save does that, exactly like a fork or a brand-new
+    // document today.
+    importDocument(json) {
+        if (!this._importDocumentUseCase) {
+            return null;
+        }
+        const importedDocument = this._importDocumentUseCase.execute(json);
+        this.openDocument(importedDocument);
+        return importedDocument;
     }
 
     exportBlueprint(structure, attributions = [], lineageClaims = []) {
