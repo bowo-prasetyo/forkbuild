@@ -50,6 +50,8 @@ import { CreatePeerContentExchangeUseCase } from '../application/CreatePeerConte
 import { CreatePublicationResolutionCoordinatorUseCase } from '../application/CreatePublicationResolutionCoordinatorUseCase.js';
 import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
 import { ReconstructPublicationDiscoveryUseCase } from '../application/ReconstructPublicationDiscoveryUseCase.js';
+import { CreateWorldEncounterPublicationAdmissionLogUseCase } from '../application/CreateWorldEncounterPublicationAdmissionLogUseCase.js';
+import { ReconstructWorldEncounterPublicationDiscoveryUseCase } from '../application/ReconstructWorldEncounterPublicationDiscoveryUseCase.js';
 import { CreatePublicationAnchorPeerExchangeUseCase } from '../application/CreatePublicationAnchorPeerExchangeUseCase.js';
 import { CreatePublicationAnchorDiscoveryCoordinatorUseCase } from '../application/CreatePublicationAnchorDiscoveryCoordinatorUseCase.js';
 import { CreatePublicationSnapshotPlacementPeerExchangeUseCase } from '../application/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js';
@@ -655,6 +657,35 @@ const decentralizedPublicationDiscoveryProvider = new DecentralizedPublicationDi
 // peerContentExchange.
 await new ReconstructPublicationDiscoveryUseCase(
     publicationCatalog, publicationResolutionCoordinator, publicationDisplayKindPlugins, decentralizedPublicationDiscoveryProvider
+).execute();
+
+// 0.9.651 — Persist World-Encounter Publication Admissions.
+//
+// 0.9.650's own Major User Journey Product Reassessment found the SAME
+// continuity gap the reconstruction immediately above already closes for
+// `publicationCatalog`, on a SECOND admission path:
+// ui/components/WorldEncounterCanvas.js's own admitToRepositoryDiscovery()
+// (0.9.474/0.9.523/0.9.595) admits a resolved, AVAILABLE+VERIFIED World
+// Encounter Publication into `decentralizedPublicationDiscoveryProvider`
+// (constructed above) and nowhere durable — a restart loses it even though
+// a PlacementRecord for the same Publication survives.
+//
+// `publicationCatalog` itself cannot be reused for this: it stores signed
+// core/DecentralizedPublication.js locator envelopes, a shape World
+// Encounter admission never produces — see application/
+// LocalWorldEncounterPublicationAdmissionLog.js's own header, and
+// tests/DistributionResultPublicationCenterDeepLinkAudit.test.js's own
+// Section B6, for the live proof that bridging the two would corrupt
+// `publicationCatalog` for every other consumer. `worldEncounterPublicationAdmissionLog`
+// is therefore a separate, purpose-built durable log, reconstructed here
+// into the SAME `decentralizedPublicationDiscoveryProvider` instance the
+// line above already populates — never a second discovery provider, never
+// a second in-memory index. See application/
+// ReconstructWorldEncounterPublicationDiscoveryUseCase.js's own header for
+// why this performs no resolution and no network access of any kind.
+const { admissionLog: worldEncounterPublicationAdmissionLog } = new CreateWorldEncounterPublicationAdmissionLogUseCase().execute();
+new ReconstructWorldEncounterPublicationDiscoveryUseCase(
+    worldEncounterPublicationAdmissionLog, decentralizedPublicationDiscoveryProvider
 ).execute();
 
 // 0.9.620 — Wire Publication Commentary Peer Distribution.
@@ -1756,6 +1787,12 @@ app.provide('publicationDisplayKindPlugins', publicationDisplayKindPlugins);
 // second, isolated one — shared with both the decentralized resolution
 // UI (admission) and Repository's own discovery composition (search).
 app.provide('decentralizedPublicationDiscoveryProvider', decentralizedPublicationDiscoveryProvider);
+// 0.9.651 — Persist World-Encounter Publication Admissions. The SAME
+// single durable log instance constructed and already reconstructed into
+// `decentralizedPublicationDiscoveryProvider` above — see
+// ui/views/WorldView.js's own `worldEncounterPublicationAdmissionLog`
+// injection.
+app.provide('worldEncounterPublicationAdmissionLog', worldEncounterPublicationAdmissionLog);
 // 0.9.289 — Other-Publication Commentary Entry Point. See this file's own
 // comment where these commands are built, above.
 app.provide('getPublicationCommentariesCommand', getPublicationCommentariesCommand);
