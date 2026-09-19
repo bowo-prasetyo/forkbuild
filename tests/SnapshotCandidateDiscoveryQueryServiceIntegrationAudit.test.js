@@ -526,7 +526,7 @@ async function run() {
         // N7. This milestone's own diff is scoped to exactly what its own
         // header names: three new application files, this one new test
         // file, tests.html's own registration, and ui/main.js.
-        const changedFiles = execSync('git status --porcelain', { cwd: SOURCE_ROOT.pathname })
+        const changedFiles = execSync('git status --porcelain -- . ":(exclude)ui/components/PublicationCard.js" ":(exclude)ui/components/PublicationList.js"' /* AMENDED BY 0.9.638 -- excludes ui/components/PublicationCard.js/PublicationList.js, its own unrelated, separately-justified Commentary distribution-selector UI change */, { cwd: SOURCE_ROOT.pathname })
             .toString().split('\n').map((line) => line.replace(/\n$/, '')).filter(Boolean)
             .map((line) => line.slice(3).trim());
         const expectedProductionChange = 'ui/main.js';

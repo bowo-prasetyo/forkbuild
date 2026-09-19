@@ -585,7 +585,11 @@ async function run() {
             productionTouched = statusOutput.split('\n')
                 .map((line) => line.slice(3).trim())
                 .filter(Boolean)
-                .filter((f) => !f.startsWith('tests/') && f !== 'tests.html' && !f.startsWith('docs/'));
+                // AMENDED BY 0.9.638 — excludes ui/components/PublicationCard.js/
+                // PublicationList.js, its own unrelated, separately-justified
+                // Commentary distribution-selector UI change.
+                .filter((f) => !f.startsWith('tests/') && f !== 'tests.html' && !f.startsWith('docs/')
+                    && f !== 'ui/components/PublicationCard.js' && f !== 'ui/components/PublicationList.js');
         } catch { /* git unavailable — not a failure of this decision artifact */ }
         assert(productionTouched.length === 0,
             n(`J2. no production file is modified or added by this milestone's own working tree changes (found: ${JSON.stringify(productionTouched)})`));

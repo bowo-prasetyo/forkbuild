@@ -70,6 +70,23 @@ import { createId } from '../../core/createId.js';
 // OWN RESTRAINT. submitCommentary() sends ONLY
 // `{ publicationId, content, commentaryId, createdAt }` — no
 // `authorIdentityId` field exists on that call.
+//
+// 0.9.638 — Publication Commentary Distribution Provider Selector.
+//
+// The identical control PublicationCard.js (this catalog's "cards"
+// view) already gained this milestone, extended here per-row exactly
+// the way 0.9.561 extended Commentary itself: each row's own
+// `rowCommentaryState()` entry now also carries `provider` ('nostr'
+// default) and `distributionProvider` (the last successful submission's
+// choice, for the honest status line), and `submitCommentary(pub)`
+// forwards that row's own provider verbatim as `discoveryProvider` on
+// the SAME addPublicationCommentaryCommand call. No new command, no new
+// distribution class imported here, no cross-row bleed — see this
+// file's own header, "one component, many rows." Status text carries
+// the identical "never a success/receipt claim" restraint
+// PublicationCard.js's own header documents, for the identical reason:
+// this command's own not-awaited relay half is fire-and-forget and
+// never returns a result to either surface.
 export default {
     name: 'PublicationList',
     components: { PublicationPreview },
@@ -130,10 +147,26 @@ export default {
             if (!this.commentaryState[pub.id]) {
                 this.commentaryState[pub.id] = {
                     open: false, commentaries: [], newText: '',
-                    submitting: false, error: null, pendingDraft: null
+                    submitting: false, error: null, pendingDraft: null,
+                    // 0.9.638 — this row's own substrate choice ('nostr'
+                    // default) and the last successful submission's own
+                    // choice, for that row's own status line. Named
+                    // discoveryProvider, never the bare `provider`, to
+                    // stay unambiguous against this codebase's own,
+                    // unrelated `Publication.providerId` vocabulary
+                    // (an internal admission-source field, never
+                    // surfaced to a Wanderer — see
+                    // tests/RepositoryDiscoveryMaterialTrustProductReassessment.test.js's
+                    // own Section B).
+                    discoveryProvider: 'nostr', distributionProvider: null
                 };
             }
             return this.commentaryState[pub.id];
+        },
+        // 0.9.638 — human-friendly label ONLY, never the value sent to
+        // addPublicationCommentaryCommand.
+        distributionProviderLabel(pub) {
+            return this.rowCommentaryState(pub).distributionProvider === 'arweave' ? 'Arweave' : 'Nostr';
         },
         isCommentaryOpen(pub) {
             return this.rowCommentaryState(pub).open;
@@ -200,12 +233,15 @@ export default {
                 state.pendingDraft = { content, commentaryId: createId(), createdAt: new Date() };
             }
             const { commentaryId, createdAt } = state.pendingDraft;
+            // 0.9.638 — forwarded verbatim, this row's own choice.
+            const discoveryProvider = state.discoveryProvider;
             state.submitting = true;
             try {
-                this.addPublicationCommentaryCommand({ publicationId: pub.id, content, commentaryId, createdAt });
+                this.addPublicationCommentaryCommand({ publicationId: pub.id, content, commentaryId, createdAt, discoveryProvider });
                 state.newText = '';
                 state.error = null;
                 state.pendingDraft = null;
+                state.distributionProvider = discoveryProvider;
                 this.refreshCommentaries(pub);
             } catch (error) {
                 state.error = (error && error.message) ? error.message : 'Commentary could not be created.';
@@ -301,12 +337,31 @@ export default {
                                             :disabled="rowCommentaryState(pub).submitting"
                                             placeholder="Add a comment…"
                                         ></textarea>
+                                        <!-- 0.9.638 — Publication Commentary
+                                             Distribution Provider Selector,
+                                             per row. -->
+                                        <label class="publication-table-commentary-provider-label">
+                                            Distribution:
+                                            <select
+                                                v-model="rowCommentaryState(pub).discoveryProvider"
+                                                class="form-select publication-table-commentary-provider-select"
+                                                :disabled="rowCommentaryState(pub).submitting"
+                                            >
+                                                <option value="nostr">Nostr</option>
+                                                <option value="arweave">Arweave</option>
+                                            </select>
+                                        </label>
                                         <button
                                             type="submit"
                                             class="action-btn publication-table-commentary-submit-action"
                                             :disabled="!rowCommentaryState(pub).newText.trim() || rowCommentaryState(pub).submitting"
                                         >{{ rowCommentaryState(pub).submitting ? 'Posting…' : 'Post Comment' }}</button>
                                     </form>
+                                    <!-- 0.9.638 — never a success/receipt
+                                         claim, see this file's own header. -->
+                                    <p v-if="addPublicationCommentaryCommand && rowCommentaryState(pub).distributionProvider" class="publication-table-commentary-distribution-status">
+                                        Comment saved locally. Distribution requested via {{ distributionProviderLabel(pub) }}.
+                                    </p>
                                 </div>
                             </td>
                         </tr>

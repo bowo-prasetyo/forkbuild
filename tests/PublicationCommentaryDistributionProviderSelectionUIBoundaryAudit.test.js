@@ -182,12 +182,26 @@ async function run() {
             const callMatch = window.match(callPattern);
             assert(callMatch !== null, n(`${file}#${fn}() calls addPublicationCommentaryCommand() at least once, found within its own body`));
             totalCallSites += 1;
-            assert(!/discoveryProvider/.test(callMatch[0]),
-                n(`${file}#${fn}()'s own real, current call — "${callMatch[0]}" — sends no discoveryProvider field; every Commentary this call site creates today reaches whatever substrate its own command defaults to, never a caller-chosen one`));
+            // AMENDED BY 0.9.638 — Publication Commentary Distribution
+            // Provider Selector implemented exactly this audit's own
+            // Section J recommendation, for PATH 1 only: PublicationCard.js
+            // and PublicationList.js now DO send discoveryProvider,
+            // forwarded verbatim from a real UI selector. PATH 2
+            // (OwnPublicationPanel.js/WorldEncounterCanvas.js) was
+            // deliberately left exactly as this audit found it — still
+            // omitting the field — per this audit's own explicit boundary.
+            const isPath1 = file === 'ui/components/PublicationCard.js' || file === 'ui/components/PublicationList.js';
+            if (isPath1) {
+                assert(/discoveryProvider/.test(callMatch[0]),
+                    n(`AMENDED BY 0.9.638 — ${file}#${fn}()'s own real, current call — "${callMatch[0]}" — now sends discoveryProvider, forwarded verbatim from a real UI selector, exactly this audit's own Section J recommendation`));
+            } else {
+                assert(!/discoveryProvider/.test(callMatch[0]),
+                    n(`${file}#${fn}()'s own real, current call — "${callMatch[0]}" — sends no discoveryProvider field; PATH 2 is deliberately unchanged by 0.9.638, per this audit's own boundary`));
+            }
         }
         assert(totalCallSites === 5, n('exactly five real Commentary-creation call sites exist in the current codebase, confirmed by direct source inspection rather than assumed from memory'));
 
-        console.log('✓ B: all five real Commentary-creation call sites — OwnPublicationPanel.js, PublicationList.js, PublicationCard.js, and WorldEncounterCanvas.js\'s own two (encounter + observer-local) — call addPublicationCommentaryCommand() with exactly { publicationId, content, commentaryId, createdAt }. None passes a discoveryProvider today; the UI never exposes the dimension, live-confirmed rather than assumed.');
+        console.log('✓ B (AMENDED BY 0.9.638): all five real Commentary-creation call sites — OwnPublicationPanel.js, PublicationList.js, PublicationCard.js, and WorldEncounterCanvas.js\'s own two (encounter + observer-local) — call addPublicationCommentaryCommand() with exactly { publicationId, content, commentaryId, createdAt }, PLUS discoveryProvider on the two PATH 1 sites (PublicationCard.js/PublicationList.js), as of 0.9.638. PATH 2 (OwnPublicationPanel.js/WorldEncounterCanvas.js) still omits it, deliberately, live-confirmed rather than assumed.');
     }
 
     // ===============================================================
@@ -385,6 +399,16 @@ async function run() {
 
     // ===============================================================
     // Section H — production-change guard.
+    //
+    // AMENDED BY 0.9.638 — this audit's own Section J recommendation
+    // ("a narrowly-scoped 0.9.638 should add the SAME two-option
+    // ... <select> ... to PATH 1 ONLY") was subsequently BUILT, exactly
+    // as scoped: PublicationCard.js/PublicationList.js are 0.9.638's own,
+    // separately-justified, expected production change — the milestone
+    // this file recommended, not a violation of this file's own "audit,
+    // not implementation" scope. The guard below is narrowed to except
+    // exactly those two files, while still catching any OTHER,
+    // unexpected production drift.
     // ===============================================================
     {
         const changedNonTestFiles = execSync(
@@ -398,10 +422,14 @@ async function run() {
             .filter((line) => line.startsWith('??'))
             .map((line) => line.replace(/^\?\?\s*/, ''));
 
-        assert(changedNonTestFiles.length === 0, n(`no existing production file is modified by this milestone — found modified: ${changedNonTestFiles.join(', ') || 'none'}`));
-        assert(newNonTestFiles.length === 0, n(`no new production file is added by this milestone — found new: ${newNonTestFiles.join(', ') || 'none'}`));
+        const expected0938Files = new Set(['ui/components/PublicationCard.js', 'ui/components/PublicationList.js']);
+        const unexpectedChanged = changedNonTestFiles.filter((f) => !expected0938Files.has(f));
+        const unexpectedNew = newNonTestFiles.filter((f) => !expected0938Files.has(f));
 
-        console.log('✓ H: zero production files changed or added — a genuinely test-only audit.');
+        assert(unexpectedChanged.length === 0, n(`AMENDED BY 0.9.638 — no UNEXPECTED existing production file is modified (0.9.638's own recommended PATH 1 files excepted) — found modified: ${unexpectedChanged.join(', ') || 'none'}`));
+        assert(unexpectedNew.length === 0, n(`no new production file is added by this milestone — found new: ${unexpectedNew.join(', ') || 'none'}`));
+
+        console.log('✓ H (AMENDED BY 0.9.638): zero UNEXPECTED production files changed or added — PublicationCard.js/PublicationList.js are 0.9.638\'s own, separately-scoped, expected implementation of this audit\'s own Section J recommendation, not a violation of it.');
     }
 
     // ===============================================================

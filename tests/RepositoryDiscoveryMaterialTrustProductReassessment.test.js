@@ -241,11 +241,40 @@ async function run() {
         assert(!/\bsource\s*:|\borigin\s*:|\bprovenance\s*:/i.test(compositeBody),
             '1. the merge point every decentralized-origin Publication passes through carries no source/origin/provenance field of its own — nothing substrate-shaped is even representable here to leak.');
 
+        // AMENDED BY 0.9.638 — Publication Commentary Distribution
+        // Provider Selector. This section's own finding is about
+        // PUBLICATION PROVENANCE: neither file may claim to know, or
+        // display, which substrate an EXISTING, already-admitted
+        // Publication arrived through — Section B's own live proof
+        // above (assertion 3) is why: that information genuinely does
+        // not exist at the data layer to leak. 0.9.638 added a
+        // DIFFERENT, deliberate thing — a "Distribution: Nostr/Arweave"
+        // control that lets a Wanderer choose which substrate their
+        // OWN, new Commentary (not the Publication being viewed) should
+        // announce through, mirroring EditorView.js's own identical,
+        // pre-existing "Announcement / Discovery substrate" selector
+        // for Publications themselves (never flagged by this same
+        // check, because that check has only ever scoped to these two
+        // files). Stripping that one, narrow, known block before
+        // re-running the identical regex keeps this guard doing its
+        // real job — catching a NEW, accidental provenance leak — while
+        // no longer tripping on the deliberate, unrelated selector.
+        function withoutCommentaryDistributionSelectorMarkup(source) {
+            return source.split('\n')
+                // Drop 0.9.638's own prose comments (which, like every
+                // other milestone's header in this codebase, freely
+                // names "Nostr"/"Arweave" while explaining the
+                // restraint) the same way this codebase's own
+                // codeOnlySource() convention already does elsewhere.
+                .filter((line) => !line.trim().startsWith('//'))
+                .filter((line) => !/commentary-provider|discoveryProvider|selectedDiscoveryProvider|distributionProvider|lastCommentaryDistributionProvider|Distribution requested via|>Distribution:<|<option value="nostr">|<option value="arweave">/.test(line))
+                .join('\n');
+        }
         const cardSource = await readSource('ui/components/PublicationCard.js');
         const listSource = await readSource('ui/components/PublicationList.js');
         for (const [name, src] of [['PublicationCard.js', cardSource], ['PublicationList.js', listSource]]) {
-            assert(!/\bNostr\b|\bArweave\b|\bpeer:|\bWebSocket\b|relay/i.test(src),
-                `2. ${name} never leaks a substrate/transport term (Nostr/Arweave/peer/relay/WebSocket) into a Wanderer-facing template — there is no provenance to describe, so none is fabricated either.`);
+            assert(!/\bNostr\b|\bArweave\b|\bpeer:|\bWebSocket\b|relay/i.test(withoutCommentaryDistributionSelectorMarkup(src)),
+                `2. AMENDED BY 0.9.638 — ${name} never leaks a substrate/transport term describing an EXISTING Publication's own provenance — there is no provenance to describe, so none is fabricated either. (0.9.638's own, deliberate Commentary distribution SELECTOR markup — a choice about a NEW Commentary, never a claim about the viewed Publication — is excluded from this check by name, not silently permitted at large.)`);
         }
 
         // Live: a locally-authored Publication and a decentralized-

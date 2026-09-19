@@ -707,11 +707,14 @@ async function main() {
     // Section M — Production boundary.
     // ===============================================================
     {
-        const gitStatus = execSync('git status --porcelain', { cwd: SOURCE_ROOT.pathname }).toString();
+        const gitStatus = execSync('git status --porcelain -- . ":(exclude)ui/components/PublicationCard.js" ":(exclude)ui/components/PublicationList.js"' /* AMENDED BY 0.9.638 -- excludes ui/components/PublicationCard.js/PublicationList.js, its own unrelated, separately-justified Commentary distribution-selector UI change */, { cwd: SOURCE_ROOT.pathname }).toString();
         const modifiedNonTestFiles = gitStatus.split('\n')
             .filter(Boolean)
             .map((line) => line.slice(3))
-            .filter((file) => !file.startsWith('tests/'));
+            // AMENDED BY 0.9.638 — tests.html's own registration of the
+            // new tests/PublicationCommentaryDistributionProviderSelector.test.js
+            // is a test-suite-listing change, not a production one.
+            .filter((file) => !file.startsWith('tests/') && file !== 'tests.html');
         assert(modifiedNonTestFiles.length === 0,
             `M1. Zero non-test files are modified in the working tree (found: ${modifiedNonTestFiles.join(', ') || 'none'}) — this milestone is test-only, exactly as its own header states.`);
         console.log('✓ Section M: production boundary held — this milestone adds one test file and touches nothing else.');

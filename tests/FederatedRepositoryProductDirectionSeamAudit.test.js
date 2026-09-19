@@ -456,10 +456,21 @@ async function run() {
         // the same reason). Amended to exclude exactly 0.9.597's own,
         // already-accounted-for files, while still catching any OTHER,
         // unexpected production drift.
-        const expectedLaterMilestoneFiles = new Set(['application/CreateWorldViewUseCase.js', 'application/WorldNavigationSession.js', 'ui/views/WorldView.js']);
+        //
+        // AMENDED BY 0.9.638 — Publication Commentary Distribution
+        // Provider Selector. Adds ui/components/PublicationCard.js and
+        // ui/components/PublicationList.js — the two PATH 1 Commentary
+        // composer surfaces 0.9.637's own Boundary Audit named — to the
+        // already-accounted-for set. Unrelated to Repository federation;
+        // no distribution class, catalog, or discovery provider is
+        // touched by that change.
+        const expectedLaterMilestoneFiles = new Set([
+            'application/CreateWorldViewUseCase.js', 'application/WorldNavigationSession.js', 'ui/views/WorldView.js',
+            'ui/components/PublicationCard.js', 'ui/components/PublicationList.js'
+        ]);
         const unexpectedNonTestFiles = changedNonTestFiles.split('\n').filter(Boolean)
             .filter((f) => !expectedLaterMilestoneFiles.has(f));
-        assert(unexpectedNonTestFiles.length === 0, `4. AMENDED BY 0.9.597 — no UNEXPECTED production file is modified by this milestone (0.9.597's own, separately-justified files excepted) — found: ${unexpectedNonTestFiles.join(', ') || 'none'}.`);
+        assert(unexpectedNonTestFiles.length === 0, `4. AMENDED BY 0.9.597/0.9.638 — no UNEXPECTED production file is modified by this milestone (0.9.597's/0.9.638's own, separately-justified files excepted) — found: ${unexpectedNonTestFiles.join(', ') || 'none'}.`);
     }
     console.log('\n✓ Section J: FINAL DECISION.\n' +
 '\n' +

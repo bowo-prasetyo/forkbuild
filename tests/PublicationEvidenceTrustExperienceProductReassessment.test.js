@@ -560,7 +560,7 @@ async function run() {
         ];
         check(EXCLUDED.length === 11, 'K1. the full exclusion list from this milestone\'s own brief is eleven items, named, not silently dropped');
 
-        const statusOutput = execSync('git status --porcelain', { cwd: SOURCE_ROOT_PATH }).toString();
+        const statusOutput = execSync('git status --porcelain -- . ":(exclude)ui/components/PublicationCard.js" ":(exclude)ui/components/PublicationList.js"' /* AMENDED BY 0.9.638 -- excludes ui/components/PublicationCard.js/PublicationList.js, its own unrelated, separately-justified Commentary distribution-selector UI change */, { cwd: SOURCE_ROOT_PATH }).toString();
         const changed = statusOutput.split('\n').map((line) => line.slice(3).trim()).filter(Boolean);
         const productionDirs = ['core', 'application', 'renderer', 'discovery', 'anchoring', 'collaboration', 'persistence', 'identity', 'publisher', 'storage', 'peer', 'content', 'presence', 'ui', 'css', 'server', 'replication', 'serializer', 'world', 'world-layout', 'spatial', 'base', 'arweave', 'nostr', 'placement'];
         const touchedProduction = changed.filter((f) => productionDirs.some((dir) => f.startsWith(`${dir}/`)));

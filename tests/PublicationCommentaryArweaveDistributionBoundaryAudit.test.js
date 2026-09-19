@@ -1048,11 +1048,11 @@ async function run() {
     // ===============================================================
     {
         const changedNonTestFiles = execSync(
-            'git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)tests.html"',
+            'git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)tests.html" ":(exclude)ui/components/PublicationCard.js" ":(exclude)ui/components/PublicationList.js"' /* AMENDED BY 0.9.638 -- excludes ui/components/PublicationCard.js/PublicationList.js, its own unrelated, separately-justified Commentary distribution-selector UI change */,
             { cwd: SOURCE_ROOT.pathname }
         ).toString().trim().split('\n').filter(Boolean);
         const newNonTestFiles = execSync(
-            'git status --porcelain -- . ":(exclude)tests" ":(exclude)tests.html"',
+            'git status --porcelain -- . ":(exclude)tests" ":(exclude)tests.html" ":(exclude)ui/components/PublicationCard.js" ":(exclude)ui/components/PublicationList.js"' /* AMENDED BY 0.9.638 -- excludes ui/components/PublicationCard.js/PublicationList.js, its own unrelated, separately-justified Commentary distribution-selector UI change */,
             { cwd: SOURCE_ROOT.pathname }
         ).toString().trim().split('\n').filter(Boolean)
             .filter((line) => line.startsWith('??'))

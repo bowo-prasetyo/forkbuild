@@ -941,7 +941,7 @@ async function run() {
         // L10. This milestone's own production diff is empty — audit
         // only, exactly as the originating request specified.
         const changedFiles = execSync(
-            'git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)tests.html"',
+            'git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)tests.html" ":(exclude)ui/components/PublicationCard.js" ":(exclude)ui/components/PublicationList.js"' /* AMENDED BY 0.9.638 -- excludes ui/components/PublicationCard.js/PublicationList.js, its own unrelated, separately-justified Commentary distribution-selector UI change */,
             { cwd: SOURCE_ROOT.pathname }
         ).toString().trim().split('\n').filter(Boolean);
         // AMENDED BY 0.9.597 — Publication Action Provider Continuity Fix.
