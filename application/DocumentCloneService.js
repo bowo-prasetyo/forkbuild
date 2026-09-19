@@ -1,6 +1,7 @@
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { World } from '../core/World.js';
+import { createId } from '../core/createId.js';
 
 // The single cloning mechanism for Documents (0.1.42). Deep-clones with
 // fresh identities throughout: a new world.id (the document identity),
@@ -47,11 +48,28 @@ export class DocumentCloneService {
 
         const worldJson = sourceDocument.world.toJSON();
         delete worldJson.id;
+
+        // Regenerate brick identities ourselves (rather than deleting the
+        // id and letting Brick.fromJSON default it) so we keep the old id
+        // -> new id mapping needed below to remap Group.brickIds. Building
+        // ids are still just deleted — nothing references a building by id
+        // the way a Group references a brick.
+        const brickIdMap = new Map();
         for (const buildingJson of worldJson.buildings) {
             delete buildingJson.id;
             for (const brickJson of buildingJson.bricks) {
-                delete brickJson.id;
+                const newBrickId = createId();
+                brickIdMap.set(brickJson.id, newBrickId);
+                brickJson.id = newBrickId;
             }
+        }
+        // A Group's membership is referential (core/Group.js), so a brick
+        // id with no entry in the map (already a dangling reference in the
+        // source) is left as-is rather than dropped — cloning must not
+        // change what a group's membership resolves to beyond following
+        // the bricks it already pointed at to their new identities.
+        for (const groupJson of worldJson.groups || []) {
+            groupJson.brickIds = (groupJson.brickIds || []).map((brickId) => brickIdMap.get(brickId) || brickId);
         }
         const clonedWorld = World.fromJSON(worldJson, eventBus);
         const sourceTitle = sourceDocument.metadata.title || 'Untitled';
