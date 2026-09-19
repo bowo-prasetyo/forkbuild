@@ -1,5 +1,6 @@
 import { brickAabb, translateAabb, resolveHorizontalMovement, AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
 import { WalkableSurfaceKind, walkableSurfaceKindFor } from '../core/WalkableSurface.js';
+import { TransformMath } from './TransformMath.js';
 
 // 0.2.42 — the application-layer half of avatar/world collision: this
 // class supplies "the world geometry currently available to this
@@ -67,12 +68,27 @@ export class AvatarMovementConstraint {
     // belongs entirely to application/AvatarStepConstraint.js, applied
     // afterward in application/AvatarMovementController.js's own
     // pipeline.
-    constructor({ loadedDocuments, getWorldPosition, brickRegistry, queryRadius = DEFAULT_QUERY_RADIUS, maxStepHeight = 0 } = {}) {
+    // `structureResolver` (optional) — resolves a StructurePlacement's
+    // documentId to its live bricks, the exact collaborator
+    // renderer/WorldRenderer.js#_renderStructurePlacement() already uses
+    // to RENDER a placed structure instance. Omitting it (every caller
+    // before this fix) means placement bricks contribute no obstacles at
+    // all — the same silent-absence gap _collectObstacles() previously
+    // had for every placement, not just terrain-lifted ones.
+    constructor({
+        loadedDocuments,
+        getWorldPosition,
+        brickRegistry,
+        queryRadius = DEFAULT_QUERY_RADIUS,
+        maxStepHeight = 0,
+        structureResolver = null
+    } = {}) {
         this._loadedDocuments = loadedDocuments;
         this._getWorldPosition = getWorldPosition;
         this._brickRegistry = brickRegistry;
         this._queryRadius = queryRadius;
         this._maxStepHeight = maxStepHeight;
+        this._structureResolver = structureResolver;
     }
 
     // `position` — the avatar's position BEFORE this tick's movement.
@@ -153,52 +169,90 @@ export class AvatarMovementConstraint {
                     if (!definition) continue;
                     const worldAabb = translateAabb(brickAabb(brick.position, definition), worldPosition);
                     if (flatAabbDistance(worldAabb, position, avatarRadius) > this._queryRadius) continue;
-                    if (canStep) {
-                        // 0.3.3 — a DIRECTIONAL walkable shape (a
-                        // stair, a slope) is never treated as a flat
-                        // wall via ITS OWN worldAabb.max.y at all — that
-                        // single scalar is the brick's own PEAK height,
-                        // meaningless for a surface whose walkable
-                        // height genuinely varies across its footprint
-                        // (a stair's front tread is nowhere near its
-                        // back tread's height). It is always excluded
-                        // from horizontal obstruction here, exactly
-                        // like a low flat brick already is below;
-                        // whether any given tick's approach into it is
-                        // actually climbable is decided entirely by
-                        // application/AvatarStepConstraint.js's own
-                        // PER-TICK height-delta check against
-                        // core/WalkableSurface.js's real tread/ramp
-                        // height at the resolved (x, z) — see that
-                        // class's own header. A too-tall single-tick
-                        // entry (e.g. walking straight at a stair's
-                        // own tall back face) is still genuinely
-                        // blocked there, just never by THIS class.
-                        const shapeKind = walkableSurfaceKindFor(brick.definitionId);
-                        if (shapeKind === WalkableSurfaceKind.STEP || shapeKind === WalkableSurfaceKind.SLOPE) {
-                            continue;
-                        }
-                        // 0.3.2 — a LOW flat brick (its own top within
-                        // maxStepHeight of the avatar's current support
-                        // height) is a step, not a wall: it never enters
-                        // the obstacle list at all, so resolveHorizontalMovement()
-                        // lets the avatar walk straight onto its footprint.
-                        // A brick sitting BELOW the avatar's own support
-                        // height by more than maxStepHeight (e.g. one it's
-                        // already standing beside, chest-high) is NOT
-                        // excluded by this check alone — it must also not
-                        // be a ceiling above the avatar's reach; the plain
-                        // `worldAabb.max.y - supportHeight` difference
-                        // already captures both directions symmetrically,
-                        // matching core/BrickWalkability.js#isStepClimbable's
-                        // own convention.
-                        if (Math.abs(worldAabb.max.y - supportHeight) <= this._maxStepHeight) continue;
-                    }
+                    if (canStep && this._excludedByStep(worldAabb, brick.definitionId, supportHeight)) continue;
+                    obstacles.push(worldAabb);
+                }
+            }
+            this._collectPlacementObstacles(document, worldPosition, position, supportHeight, avatarRadius, canStep, obstacles);
+        }
+        return obstacles;
+    }
+
+    // Mirrors the building-brick loop above exactly, but for
+    // StructurePlacement instances — see renderer/WorldRenderer.js#
+    // _renderStructurePlacement() for the render-side equivalent this
+    // is deliberately kept in lockstep with: same resolver, same
+    // per-brick rotation composed around the placement's own origin,
+    // same (brick.rotation + placement.rotation) final orientation. A
+    // silent no-op without a structureResolver or an unresolvable
+    // placement.documentId — the same "absence, not an error" posture
+    // StructureDocumentResolver's own header documents — rather than a
+    // hole every placement previously fell through here.
+    _collectPlacementObstacles(document, worldPosition, position, supportHeight, avatarRadius, canStep, obstacles) {
+        if (!this._structureResolver) return;
+        for (const placement of document.world.getStructurePlacements()) {
+            const placementWorldPosition = {
+                x: placement.position.x + worldPosition.x,
+                y: placement.position.y + worldPosition.y,
+                z: placement.position.z + worldPosition.z
+            };
+            if (flatDistance(placementWorldPosition, position) > this._queryRadius + MAX_DOCUMENT_SPAN_MARGIN) continue;
+            const placedWorld = this._structureResolver.resolve(placement.documentId);
+            if (!placedWorld) continue;
+            for (const building of placedWorld.getBuildings()) {
+                for (const brick of building.getBricks()) {
+                    const definition = this._brickRegistry ? this._brickRegistry.get(brick.definitionId) : null;
+                    if (!definition) continue;
+                    const localPoint = placement.rotation
+                        ? TransformMath.rotatePointAroundPivotY(brick.position, { x: 0, y: 0, z: 0 }, placement.rotation)
+                        : brick.position;
+                    const worldCenter = {
+                        x: localPoint.x + placementWorldPosition.x,
+                        y: localPoint.y + placementWorldPosition.y,
+                        z: localPoint.z + placementWorldPosition.z
+                    };
+                    const worldAabb = brickAabb(worldCenter, definition);
+                    if (flatAabbDistance(worldAabb, position, avatarRadius) > this._queryRadius) continue;
+                    if (canStep && this._excludedByStep(worldAabb, brick.definitionId, supportHeight)) continue;
                     obstacles.push(worldAabb);
                 }
             }
         }
-        return obstacles;
+    }
+
+    // 0.3.3 — a DIRECTIONAL walkable shape (a stair, a slope) is never
+    // treated as a flat wall via ITS OWN worldAabb.max.y at all — that
+    // single scalar is the brick's own PEAK height, meaningless for a
+    // surface whose walkable height genuinely varies across its
+    // footprint (a stair's front tread is nowhere near its back
+    // tread's height). It is always excluded from horizontal
+    // obstruction here, exactly like a low flat brick already is
+    // below; whether any given tick's approach into it is actually
+    // climbable is decided entirely by
+    // application/AvatarStepConstraint.js's own PER-TICK height-delta
+    // check against core/WalkableSurface.js's real tread/ramp height
+    // at the resolved (x, z) — see that class's own header. A
+    // too-tall single-tick entry (e.g. walking straight at a stair's
+    // own tall back face) is still genuinely blocked there, just
+    // never by THIS class.
+    //
+    // 0.3.2 — a LOW flat brick (its own top within maxStepHeight of
+    // the avatar's current support height) is a step, not a wall: it
+    // never enters the obstacle list at all, so
+    // resolveHorizontalMovement() lets the avatar walk straight onto
+    // its footprint. A brick sitting BELOW the avatar's own support
+    // height by more than maxStepHeight (e.g. one it's already
+    // standing beside, chest-high) is NOT excluded by this check alone
+    // — it must also not be a ceiling above the avatar's reach; the
+    // plain `worldAabb.max.y - supportHeight` difference already
+    // captures both directions symmetrically, matching
+    // core/BrickWalkability.js#isStepClimbable's own convention.
+    _excludedByStep(worldAabb, definitionId, supportHeight) {
+        const shapeKind = walkableSurfaceKindFor(definitionId);
+        if (shapeKind === WalkableSurfaceKind.STEP || shapeKind === WalkableSurfaceKind.SLOPE) {
+            return true;
+        }
+        return Math.abs(worldAabb.max.y - supportHeight) <= this._maxStepHeight;
     }
 }
 

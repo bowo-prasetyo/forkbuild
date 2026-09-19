@@ -1520,7 +1520,13 @@ export class WorldNavigationSession {
             // climbs are always talking about the exact same height
             // threshold, never two constants that could quietly drift
             // apart.
-            maxStepHeight: DEFAULT_MAX_STEP_HEIGHT
+            maxStepHeight: DEFAULT_MAX_STEP_HEIGHT,
+            // Bug fix — Placed StructurePlacement instances previously
+            // contributed zero collision at all: this is the same
+            // resolver renderer/WorldRenderer.js already uses to RENDER
+            // them, reused here so a placed structure's bricks are as
+            // solid as an ordinary building's.
+            structureResolver: this._structureResolver
         });
     }
 
@@ -1556,7 +1562,11 @@ export class WorldNavigationSession {
         return new AvatarStepConstraint({
             loadedDocuments: this._loadedDocuments,
             getWorldPosition: (documentId) => this._getWorldPosition(documentId),
-            brickRegistry: this._registry
+            brickRegistry: this._registry,
+            // Bug fix — see _buildAvatarMovementConstraint()'s own
+            // comment just above: a StructurePlacement's walkable top
+            // must be as real as an ordinary building's.
+            structureResolver: this._structureResolver
         });
     }
 
