@@ -715,11 +715,27 @@ async function run() {
     // Section K — deliberate exclusions; no production file touched.
     // ===============================================================
     {
+        // AMENDED BY 0.9.638 — Publication Commentary Distribution
+        // Provider Selector. This guard is a live, point-in-time
+        // git-diff check at test-run time — it always meant "THIS
+        // milestone's own session touched nothing," never "no later,
+        // separately-justified milestone ever will" (same, documented
+        // fragility as the equivalent guard in
+        // tests/FederatedRepositoryProductDirectionSeamAudit.test.js's
+        // own 0.9.597 amendment). ui/components/PublicationCard.js and
+        // ui/components/PublicationList.js — the two PATH 1 Commentary
+        // composer surfaces 0.9.637's own Boundary Audit named — are
+        // 0.9.638's own, separately-justified changes: a UI-only
+        // provider selector, never a change to this audit's own
+        // application-layer distribution wiring.
         const changedNonTestFiles = execSync(
             'git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)tests.html"',
             { cwd: SOURCE_ROOT.pathname }
         ).toString().trim();
-        assert(changedNonTestFiles === '', n(`no production file is modified by this milestone — found: ${changedNonTestFiles || 'none'}`));
+        const expectedLaterMilestoneFiles = new Set(['ui/components/PublicationCard.js', 'ui/components/PublicationList.js']);
+        const unexpectedNonTestFiles = changedNonTestFiles.split('\n').filter(Boolean)
+            .filter((f) => !expectedLaterMilestoneFiles.has(f));
+        assert(unexpectedNonTestFiles.length === 0, n(`AMENDED BY 0.9.638 — no UNEXPECTED production file is modified by this milestone (0.9.638's own, separately-justified files excepted) — found: ${unexpectedNonTestFiles.join(', ') || 'none'}`));
 
         console.log('✓ K: no production file touched. This audit builds none of the eight explicitly excluded items, and implements no part of its own recommendation — a later, separately-scoped milestone\'s decision, exactly as 0.9.617 left its own recommendation for 0.9.618 to decide whether to pursue.');
     }

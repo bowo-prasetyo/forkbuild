@@ -835,11 +835,19 @@ async function run() {
     // Section M — production-change guard.
     // ===============================================================
     {
+        // AMENDED BY 0.9.638 — see
+        // tests/PublicationCommentaryCrossDeviceProductClosureAudit.test.js's
+        // own identical 0.9.638 amendment for the full rationale: a
+        // live, point-in-time guard, amended to except 0.9.638's own,
+        // separately-justified UI-only files.
         const changedNonTestFiles = execSync(
             'git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)tests.html"',
             { cwd: SOURCE_ROOT.pathname }
         ).toString().trim();
-        assert(changedNonTestFiles === '', n(`no production file is modified by this milestone — found: ${changedNonTestFiles || 'none'}`));
+        const expectedLaterMilestoneFiles = new Set(['ui/components/PublicationCard.js', 'ui/components/PublicationList.js']);
+        const unexpectedNonTestFiles = changedNonTestFiles.split('\n').filter(Boolean)
+            .filter((f) => !expectedLaterMilestoneFiles.has(f));
+        assert(unexpectedNonTestFiles.length === 0, n(`AMENDED BY 0.9.638 — no UNEXPECTED production file is modified by this milestone — found: ${unexpectedNonTestFiles.join(', ') || 'none'}`));
 
         console.log('✓ M: no production file touched. This audit implements nothing — it reconfirms the arc 0.9.617-0.9.620 already built.');
     }

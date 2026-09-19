@@ -645,8 +645,15 @@ async function runTests() {
         const listCode = await codeOnlySource('ui/components/PublicationList.js');
         const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
         const canvasCode = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
-        assert(cardCode.includes('this.addPublicationCommentaryCommand({ publicationId: this.publication.id, content, commentaryId, createdAt })'), '25. PublicationCard.js\'s own call site is exactly { publicationId, content, commentaryId, createdAt }.');
-        assert(listCode.includes("this.addPublicationCommentaryCommand({ publicationId: pub.id, content, commentaryId, createdAt })"), '26. PublicationList.js\'s own call site is exactly { publicationId, content, commentaryId, createdAt }.');
+        // AMENDED BY 0.9.638 — Publication Commentary Distribution
+        // Provider Selector adds exactly one more field, discoveryProvider,
+        // to PublicationCard.js's/PublicationList.js's own call sites —
+        // the two PATH 1 surfaces 0.9.637's own Boundary Audit named.
+        // OwnPublicationPanel.js/WorldEncounterCanvas.js (PATH 2) are
+        // deliberately unchanged, per that same audit's own boundary —
+        // Sections 27/28, below, stay unmodified.
+        assert(cardCode.includes('this.addPublicationCommentaryCommand({ publicationId: this.publication.id, content, commentaryId, createdAt, discoveryProvider })'), '25. AMENDED BY 0.9.638 — PublicationCard.js\'s own call site is exactly { publicationId, content, commentaryId, createdAt, discoveryProvider }.');
+        assert(listCode.includes("this.addPublicationCommentaryCommand({ publicationId: pub.id, content, commentaryId, createdAt, discoveryProvider })"), '26. AMENDED BY 0.9.638 — PublicationList.js\'s own call site is exactly { publicationId, content, commentaryId, createdAt, discoveryProvider }.');
         assert(panelCode.includes('this.addPublicationCommentaryCommand({ publicationId: publication.id, content, commentaryId, createdAt })'), '27. OwnPublicationPanel.js\'s own call site is exactly { publicationId, content, commentaryId, createdAt }.');
         assert(canvasCode.includes('this.addPublicationCommentaryCommand({ publicationId, content, commentaryId, createdAt })'), '28. WorldEncounterCanvas.js\'s own call sites (both panels, identical shape) are exactly { publicationId, content, commentaryId, createdAt }.');
 

@@ -101,6 +101,46 @@ import { createId } from '../../core/createId.js';
 // any of the other five surfaces 0.9.288 Section E named — see this
 // milestone's own docs/Roadmap.md entry for why exactly one surface,
 // deliberately, this milestone.
+//
+// 0.9.638 — Publication Commentary Distribution Provider Selector.
+//
+// 0.9.637's own Section D flagship proved, live, that
+// addPublicationCommentaryCommand (the app-wide, distribution-wrapped
+// command this component already injects — see 0.9.289's own header
+// above) already reaches Arweave instead of its Nostr default the
+// instant a caller's input carries `discoveryProvider: 'arweave'`. This
+// milestone is exactly that one field, exposed as a real control:
+//
+//   selectedDiscoveryProvider ('nostr' default, matching
+//   EditorView.js's own 0.9.502 `selectedDiscoveryProvider` precedent
+//   and ui/main.js's own `|| 'nostr'` fallback exactly)
+//        │
+//        ▼
+//   submitCommentary() forwards it verbatim as `discoveryProvider` on
+//   the SAME addPublicationCommentaryCommand({ publicationId, content,
+//   commentaryId, createdAt }) call this file has sent since 0.9.289 —
+//   no new field name, no new command, no new distribution class
+//   imported or constructed here.
+//
+// This component never imports PublicationCommentaryNostrDistribution
+// or PublicationCommentaryArweaveDistribution — selecting between them
+// is entirely ui/main.js's own existing job (0.9.620/0.9.628/0.9.631),
+// unmodified by this milestone. No fan-out, no fallback, no retry, and
+// no new persisted preference: the selection lives only in this card's
+// own ephemeral `data()`, exactly like `newCommentaryText`.
+//
+// STATUS TEXT IS HONEST ABOUT WHAT addPublicationCommentaryCommand
+// ACTUALLY DOES. That command's own asynchronous half is fire-and-
+// forget (see ui/main.js's own `asynchronousDistribution.publish(...)
+// .catch(() => {})`) — it is never awaited and never returns a result
+// to its caller, unlike EditorView.js's own AWAITED
+// distributeEditorPublication(). There is therefore no real success/
+// failure signal for this milestone to surface, and none is invented:
+// `lastCommentaryDistributionProvider` only ever reports which
+// substrate a locally-succeeded submission REQUESTED, never a
+// delivery/receipt claim — the same "never a delivery/read claim"
+// restraint 0.9.637's own Section A/G already found in EditorView.js's
+// own distribution status vocabulary.
 export default {
     name: 'PublicationCard',
     components: { PublicationPreview },
@@ -160,7 +200,18 @@ export default {
             // draft's own text changes from what it was on the last
             // attempt — an edited draft is a new logical comment, not a
             // retry of the old one.
-            pendingCommentaryDraft: null
+            pendingCommentaryDraft: null,
+            // 0.9.638 — the Wanderer's current substrate choice for the
+            // NEXT submission. Defaults to 'nostr', matching
+            // EditorView.js's own selectedDiscoveryProvider default and
+            // ui/main.js's own application-level fallback (0.9.637
+            // Section F). Never persisted.
+            selectedDiscoveryProvider: 'nostr',
+            // 0.9.638 — which substrate the MOST RECENT successful
+            // submission requested, for the honest status line below.
+            // `null` until a first successful submit. Never a
+            // success/failure claim — see this file's own header.
+            lastCommentaryDistributionProvider: null
         };
     },
     computed: {
@@ -186,6 +237,13 @@ export default {
                 return null;
             }
             return resolveSigningIdentityId(this.identityUseCase.provider);
+        },
+        // 0.9.638 — human-friendly label ONLY, never the value sent to
+        // addPublicationCommentaryCommand (that stays the literal
+        // application-layer string — see submitCommentary()'s own
+        // comment above).
+        lastCommentaryDistributionProviderLabel() {
+            return this.lastCommentaryDistributionProvider === 'arweave' ? 'Arweave' : 'Nostr';
         }
     },
     methods: {
@@ -261,12 +319,19 @@ export default {
                 this.pendingCommentaryDraft = { content, commentaryId: createId(), createdAt: new Date() };
             }
             const { commentaryId, createdAt } = this.pendingCommentaryDraft;
+            // 0.9.638 — forwarded verbatim, the same 'nostr'/'arweave'
+            // literal EditorView.js's own selector already sends;
+            // ui/main.js's own wrapper falls back to 'nostr' if this were
+            // ever omitted, so no local default duplication is needed
+            // beyond the data() default above.
+            const discoveryProvider = this.selectedDiscoveryProvider;
             this.commentarySubmitting = true;
             try {
-                this.addPublicationCommentaryCommand({ publicationId: this.publication.id, content, commentaryId, createdAt });
+                this.addPublicationCommentaryCommand({ publicationId: this.publication.id, content, commentaryId, createdAt, discoveryProvider });
                 this.newCommentaryText = '';
                 this.commentaryError = null;
                 this.pendingCommentaryDraft = null;
+                this.lastCommentaryDistributionProvider = discoveryProvider;
                 this.refreshCommentaries();
             } catch (error) {
                 this.commentaryError = (error && error.message) ? error.message : 'Commentary could not be created.';
@@ -343,12 +408,32 @@ export default {
                         :disabled="commentarySubmitting"
                         placeholder="Add a comment…"
                     ></textarea>
+                    <!-- 0.9.638 — Publication Commentary Distribution
+                         Provider Selector. Same two-option vocabulary as
+                         EditorView.js's own "Announcement / Discovery
+                         substrate" control, one caller over. -->
+                    <label class="publication-card-commentary-provider-label">
+                        Distribution:
+                        <select
+                            v-model="selectedDiscoveryProvider"
+                            class="form-select publication-card-commentary-provider-select"
+                            :disabled="commentarySubmitting"
+                        >
+                            <option value="nostr">Nostr</option>
+                            <option value="arweave">Arweave</option>
+                        </select>
+                    </label>
                     <button
                         type="submit"
                         class="action-btn publication-card-commentary-submit-action"
                         :disabled="!newCommentaryText.trim() || commentarySubmitting"
                     >{{ commentarySubmitting ? 'Posting…' : 'Post Comment' }}</button>
                 </form>
+                <!-- 0.9.638 — reports what was actually requested, never
+                     a success/receipt claim — see this file's own header. -->
+                <p v-if="addPublicationCommentaryCommand && lastCommentaryDistributionProvider" class="publication-card-commentary-distribution-status">
+                    Comment saved locally. Distribution requested via {{ lastCommentaryDistributionProviderLabel }}.
+                </p>
             </div>
         </li>
     `

@@ -410,10 +410,17 @@ async function run() {
         // amended for the same reason). Amended to also exclude exactly
         // 0.9.597's own, already-accounted-for files, while still catching
         // any OTHER, unexpected production drift.
-        const expectedLaterMilestoneFiles = new Set(['application/CreateWorldViewUseCase.js', 'application/WorldNavigationSession.js', 'ui/views/WorldView.js']);
+        // AMENDED BY 0.9.638 — Publication Commentary Distribution
+        // Provider Selector adds ui/components/PublicationCard.js and
+        // ui/components/PublicationList.js, unrelated to World Encounter
+        // Repository-admission gating.
+        const expectedLaterMilestoneFiles = new Set([
+            'application/CreateWorldViewUseCase.js', 'application/WorldNavigationSession.js', 'ui/views/WorldView.js',
+            'ui/components/PublicationCard.js', 'ui/components/PublicationList.js'
+        ]);
         const unexpectedChangedFiles = changedFiles.filter((f) => f !== 'ui/components/WorldEncounterCanvas.js' && !expectedLaterMilestoneFiles.has(f));
         assert(unexpectedChangedFiles.length === 0,
-            `2. AMENDED BY 0.9.597 — production changes are limited to this milestone's own flagship file plus 0.9.597's own, separately-justified files (found unexpected: ${JSON.stringify(unexpectedChangedFiles)}).`);
+            `2. AMENDED BY 0.9.597/0.9.638 — production changes are limited to this milestone's own flagship file plus 0.9.597's/0.9.638's own, separately-justified files (found unexpected: ${JSON.stringify(unexpectedChangedFiles)}).`);
     }
     console.log('✓ Section H: PRODUCT_COMPLETE (A, B, F, G), DELIBERATE_ASYMMETRY (C, D, both already-established, reconfirmed rather than re-litigated), PRODUCT_GAP -> FIXED (E, this milestone\'s own flagship). Production changed in exactly one file.');
 

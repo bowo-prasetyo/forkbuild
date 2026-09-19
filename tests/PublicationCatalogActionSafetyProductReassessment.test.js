@@ -511,8 +511,14 @@ async function run() {
         // commentaryId/createdAt (a stable per-draft retry identity — see
         // PublicationCard.js's own 0.9.542 header); this pattern is
         // updated to match, the underlying structural claim unchanged.
-        assert(/submitCommentary\(\) \{[\s\S]*?this\.addPublicationCommentaryCommand\(\{ publicationId: this\.publication\.id, content, commentaryId, createdAt \}\);/.test(cardSource),
-            '2. STRUCTURAL: the ONE write in these surfaces (posting a comment) fires only from submitCommentary(), itself only ever reachable via the form\'s own explicit @submit.prevent — never from render, toggle, or any other action\'s own code path.');
+        //
+        // AMENDED BY 0.9.638 — submitCommentary()'s own call now also
+        // passes discoveryProvider (the Distribution Provider Selector's
+        // own selected value — see PublicationCard.js's own 0.9.638
+        // header); still the ONE write, still fired only from this one
+        // function.
+        assert(/submitCommentary\(\) \{[\s\S]*?this\.addPublicationCommentaryCommand\(\{ publicationId: this\.publication\.id, content, commentaryId, createdAt, discoveryProvider \}\);/.test(cardSource),
+            '2. AMENDED BY 0.9.638 — STRUCTURAL: the ONE write in these surfaces (posting a comment) fires only from submitCommentary(), itself only ever reachable via the form\'s own explicit @submit.prevent — never from render, toggle, or any other action\'s own code path.');
         assert(!/unpublish|delete|remove/i.test(cardSource + listSource + forkTreeSource + catalogSource),
             '3. N/A, confirmed rather than assumed: no delete/unpublish/remove action of any kind exists anywhere in the catalog card, list, fork-tree, or host surfaces — that capability lives only in ui/components/OwnPublicationPanel.js (a single-Publication detail panel, already covered by its own 0.9.198 milestone), never in a catalog listing.');
     }

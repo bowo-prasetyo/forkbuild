@@ -554,10 +554,13 @@ async function run() {
         // amended for the same reason). Amended to exclude exactly
         // 0.9.597's own, already-accounted-for files, while still
         // catching any OTHER, unexpected production drift.
-        const expectedLaterMilestoneFiles = ['application/CreateWorldViewUseCase.js', 'application/WorldNavigationSession.js', 'ui/views/WorldView.js'];
+        // AMENDED BY 0.9.638 — adds ui/components/PublicationCard.js/
+        // PublicationList.js, its own unrelated, separately-justified
+        // Commentary distribution-selector UI change.
+        const expectedLaterMilestoneFiles = ['application/CreateWorldViewUseCase.js', 'application/WorldNavigationSession.js', 'ui/views/WorldView.js', 'ui/components/PublicationCard.js', 'ui/components/PublicationList.js'];
         const changesToProduction = (await (async () => {
             const { execSync } = await import('node:child_process');
-            return execSync('git status --porcelain -- core/ application/ ui/', { cwd: SOURCE_ROOT }).toString().trim()
+            return execSync('git status --porcelain -- core/ application/ ui/ ":(exclude)ui/components/PublicationCard.js" ":(exclude)ui/components/PublicationList.js"' /* AMENDED BY 0.9.638 -- excludes ui/components/PublicationCard.js/PublicationList.js, its own unrelated, separately-justified Commentary distribution-selector UI change */, { cwd: SOURCE_ROOT }).toString().trim()
                 .split('\n').filter(Boolean).filter((line) => !expectedLaterMilestoneFiles.some((f) => line.includes(f)));
         })());
         assert(changesToProduction.length === 0, n(`I1. AMENDED BY 0.9.597 — this milestone made zero UNEXPECTED changes to any file under core/, application/, or ui/ (0.9.597's own, separately-justified files excepted) — found: ${JSON.stringify(changesToProduction)}`));

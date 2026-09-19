@@ -226,8 +226,14 @@ async function runTests() {
         // idempotent-retry identity. The security-relevant invariant this
         // assertion actually protects — authorIdentityId can never be
         // supplied by the caller — is unchanged and re-checked explicitly.
-        assert(Object.keys(receivedInput).sort().join(',') === 'commentaryId,content,createdAt,publicationId',
-            '12. the command receives publicationId, content, commentaryId and createdAt — never authorIdentityId or any other field');
+        //
+        // AMENDED BY 0.9.638 — Publication Commentary Distribution
+        // Provider Selector adds exactly one more field, discoveryProvider
+        // ('nostr'/'arweave', the SAME application-layer vocabulary
+        // EditorView.js's own selector already sends) — never
+        // authorIdentityId, still never anything else.
+        assert(Object.keys(receivedInput).sort().join(',') === 'commentaryId,content,createdAt,discoveryProvider,publicationId',
+            '12. AMENDED BY 0.9.638 — the command receives publicationId, content, commentaryId, createdAt, and (as of 0.9.638) discoveryProvider — never authorIdentityId or any other field');
         assert(!('authorIdentityId' in receivedInput), '12b. authorIdentityId is never among the fields sent');
 
         const cardCode = await codeOnlySource('ui/components/PublicationCard.js');

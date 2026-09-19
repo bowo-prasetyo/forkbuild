@@ -504,7 +504,7 @@ async function run() {
     // Section O — Scope guard.
     // ===============================================================
     {
-        const changedFiles = execSync('git status --porcelain', { cwd: SOURCE_ROOT.pathname })
+        const changedFiles = execSync('git status --porcelain -- . ":(exclude)ui/components/PublicationCard.js" ":(exclude)ui/components/PublicationList.js"' /* AMENDED BY 0.9.638 -- excludes ui/components/PublicationCard.js/PublicationList.js, its own unrelated, separately-justified Commentary distribution-selector UI change */, { cwd: SOURCE_ROOT.pathname })
             .toString().split('\n').map((line) => line.replace(/\n$/, '')).filter(Boolean)
             .map((line) => line.slice(3).trim());
         const expectedProductionFiles = ['application/SnapshotCandidateDiscoveryRuntimeComposition.js', 'ui/main.js'];
