@@ -203,10 +203,19 @@ async function run() {
         assert(/same card\/list language every other social surface already uses/.test(cssCollapsed),
             n('B: .conversations-view\'s own 0.2.70 comment names this explicitly as "the same card/list language every other social surface already uses" — an authored convention with a name, not a guess'));
 
-        // Publications matches neither convention's OWN selector — still
-        // zero CSS rules of its own, exactly as 0.9.646 found.
-        assert(countSelectorMentions(css, '.publications-view') === 0,
-            n('B: .publications-view still matches ZERO CSS rules of its own — unchanged since 0.9.646'));
+        // At the time of THIS audit (0.9.648), Publications matched
+        // neither convention's own selector — still zero CSS rules of its
+        // own, exactly as 0.9.646 found. This audit's own Section G/H
+        // verdict recommended exactly one follow-up: join the second
+        // (720px) convention, not the first. 0.9.649 carried that out —
+        // .publications-view now exists, and (proven below) is
+        // byte-identical to the second convention, never the first.
+        assert(countSelectorMentions(css, '.publications-view') === 1,
+            n('B: .publications-view now matches exactly ONE CSS rule of its own — the 0.9.649 follow-up this audit itself recommended'));
+        const publicationsViewBody = findRuleBody(css, '.publications-view');
+        assert(publicationsViewBody, n('B: .publications-view has a real CSS rule body'));
+        assert(normalize(publicationsViewBody) === canonical,
+            n('B: .publications-view declares the BYTE-IDENTICAL container rule to .identity-management-view/.peer-connections-view/.conversations-view/.leaderboard-hub-view — 0.9.649 joined the SECOND (720px social-surface) convention, exactly as this audit\'s own verdict recommended, not the first (1400px catalog) convention'));
 
         // But Publications' own markup (Section A) uses the SECOND
         // convention's card vocabulary (.identity-mgmt-list/.identity-mgmt-card)

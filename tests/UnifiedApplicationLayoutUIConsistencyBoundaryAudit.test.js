@@ -170,9 +170,18 @@ async function run() {
         assert(overlayRule && /position\s*:\s*absolute/.test(overlayRule) && /max-width\s*:\s*280px/.test(overlayRule),
             n('A: .world-view-overlay (World left panel) is position:absolute, max-width:280px — it floats OVER the canvas, never taking layout space the canvas would otherwise get'));
 
-        // Publications.
+        // Publications. At the time of THIS audit (0.9.646), .publications-view
+        // matched zero CSS rules of its own — full width by omission. The
+        // follow-up chain this audit's own DEFER left open (0.9.648's
+        // investigation, then 0.9.649's fix) has since joined it to the
+        // same 720px convention as IdentityManagementView/PeerConnectionsView/
+        // ConversationsView/LeaderboardHubView — a SEPARATE convention
+        // from the 1400px catalog rule checked below, so this audit's own
+        // "matches no container rule at all" finding is superseded, not
+        // contradicted: it never claimed Publications should join the
+        // catalog family, only that it joined none at the time.
         assert(/<section class="publications-view">/.test(publicationsViewSrc), n('A: DecentralizedPublicationsView\'s own root element is <section class="publications-view">'));
-        assert(countSelectorMentions(css, '.publications-view') === 0, n('A: .publications-view matches ZERO rules anywhere in css/main.css — no width, no max-width, no padding, no margin, nothing'));
+        assert(countSelectorMentions(css, '.publications-view') === 1, n('A (superseded by 0.9.649): .publications-view now matches exactly one rule — the 720px social-surface convention, not the catalog convention this section documents below'));
 
         // Repository (+ Author, Recent Worlds — the shared "catalog" family).
         assert(/<section class="repository-view">/.test(repositoryViewSrc), n('A: RepositoryView\'s own root element is <section class="repository-view">'));
@@ -254,8 +263,16 @@ async function run() {
         for (const [selector, behavior] of matrix) {
             assert(typeof behavior === 'string' && behavior.length > 0, n(`C: ${selector} classified with an observed behavior`));
         }
-        assert(countSelectorMentions(css, '.publications-view') === 0,
-            n('C: re-confirmed — Publications\' width is not a documented design decision anywhere in css/main.css, unlike every other row in this matrix, which is'));
+        // Superseded by 0.9.649: the matrix row above still records this
+        // audit's own point-in-time finding (UNDETERMINED at 0.9.646), but
+        // the follow-up chain it opened (0.9.648 investigation → 0.9.649
+        // fix) has since joined .publications-view to the 720px
+        // "social surface" convention shared by IdentityManagementView/
+        // PeerConnectionsView/ConversationsView/LeaderboardHubView — a
+        // documented decision now exists, just not the catalog-family one
+        // this section's own matrix was contrasting it against.
+        assert(countSelectorMentions(css, '.publications-view') === 1,
+            n('C (superseded by 0.9.649): Publications\' width is now a documented decision — one CSS rule, the 720px social-surface convention, not the catalog convention this matrix contrasts it with'));
         // No wide grid/table structure in the Publications view's own
         // markup that would mechanically demand full width, the way (for
         // contrast) .publication-list's own auto-fill grid demands SOME
@@ -418,7 +435,11 @@ async function run() {
             ['.repository-view', ['ui/views/RepositoryView.js'], 2],
             ['.author-view', ['ui/views/AuthorView.js'], 2],
             ['.recent-worlds-view', ['ui/views/RecentWorldsView.js'], 2],
-            ['.publications-view', ['ui/views/DecentralizedPublicationsView.js'], 0]
+            // Superseded by 0.9.649: .publications-view now carries its
+            // own 1 CSS rule (the 720px social-surface convention) —
+            // still isolated (used in exactly this one view file, styled
+            // by exactly one rule), just no longer zero.
+            ['.publications-view', ['ui/views/DecentralizedPublicationsView.js'], 1]
         ];
         for (const [cls, expectedFiles, expectedCssMentions] of isolationChecks) {
             const bareCls = cls.slice(1);
