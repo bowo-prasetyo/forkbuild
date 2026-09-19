@@ -113,8 +113,43 @@ export class AvatarStepConstraint {
     // `core:stair`/`core:slope_45` brick now reports the tread/ramp
     // height under this specific (x, z), honoring the brick's own
     // rotation.
-    supportHeightAt(x, z) {
+    //
+    // `referenceHeight` (optional) — a known "actual current height"
+    // (almost always the avatar's own real `position.y`) a candidate
+    // brick must be physically ROOTED within `maxStepHeight` of to be
+    // allowed to compete for the max at all. Bug fix: without this, a
+    // brick floating far overhead (a bridge deck spanning two rooftops,
+    // say) still claims its ENTIRE horizontal footprint as "the floor
+    // here," all the way down to bare ground — so walking into that
+    // footprint at ground level reads as an impossible multi-unit
+    // "step," which apply() below then rejects exactly like walking
+    // into a solid wall, even though nothing is actually there to
+    // touch.
+    //
+    // The check is against the candidate's own BASE (`center.y -
+    // height/2`), never its reported walkable-surface height — that
+    // distinction matters. A stair or an ordinary too-tall block is
+    // physically ROOTED at/near the ground (its base is right there,
+    // reachable) even though its own TOP is unclimbably high; excluding
+    // it here by its (high) surface height instead of its (low) base
+    // would silently make it vanish into "bare ground, nothing here,"
+    // letting an avatar walk straight through solid geometry — exactly
+    // backward from what this fix is for. Filtering by BASE instead
+    // means a genuinely rooted obstacle's unclimbable top still wins the
+    // max and still correctly fails isStepClimbable() in apply() below;
+    // only a candidate that is not standing on anything reachable in the
+    // first place — its own base already out of reach — is excluded.
+    //
+    // A candidate BELOW `referenceHeight` is never filtered — stepping/
+    // falling DOWN onto a lower surface is always legitimate (see
+    // apply()'s own 0.3.4 falling branch) — only a candidate rooted
+    // unreachably HIGH is excluded from competing for the max. Omitting
+    // `referenceHeight` (every caller before this fix) reproduces the
+    // exact prior behavior, byte for byte — this is purely an
+    // additional, optional filter.
+    supportHeightAt(x, z, referenceHeight) {
         let height = this._groundHeight;
+        const hasReference = Number.isFinite(referenceHeight);
         if (!this._loadedDocuments || !this._getWorldPosition) {
             return height;
         }
@@ -129,13 +164,15 @@ export class AvatarStepConstraint {
                     // AvatarMovementConstraint's own obstacle collection
                     // follows for an unrecognized definitionId.
                     if (!definition) continue;
+                    const center = {
+                        x: brick.position.x + worldPosition.x,
+                        y: brick.position.y + worldPosition.y,
+                        z: brick.position.z + worldPosition.z
+                    };
+                    if (hasReference && (center.y - definition.height / 2) - referenceHeight > this._maxStepHeight) continue;
                     const surface = resolveWalkableSurfaceAt({
                         shapeKind: walkableSurfaceKindFor(brick.definitionId),
-                        center: {
-                            x: brick.position.x + worldPosition.x,
-                            y: brick.position.y + worldPosition.y,
-                            z: brick.position.z + worldPosition.z
-                        },
+                        center,
                         width: definition.width,
                         height: definition.height,
                         depth: definition.depth,
@@ -195,8 +232,14 @@ export class AvatarStepConstraint {
         if (!grounded) {
             return { position: desiredPosition, blocked: false, falling: false };
         }
-        const fromHeight = this.supportHeightAt(position.x, position.z);
-        const toHeight = this.supportHeightAt(desiredPosition.x, desiredPosition.z);
+        // Both reads are filtered against the avatar's own REAL current
+        // height (position.y) — see supportHeightAt()'s own
+        // `referenceHeight` header. Without this, a brick floating
+        // unreachably high above the avatar's actual position could
+        // still win `fromHeight`/`toHeight`'s max and make an ordinary
+        // ground-level step read as a multi-unit "climb."
+        const fromHeight = this.supportHeightAt(position.x, position.z, position.y);
+        const toHeight = this.supportHeightAt(desiredPosition.x, desiredPosition.z, position.y);
         if (isStepClimbable(fromHeight, toHeight, this._maxStepHeight)) {
             return {
                 position: { x: desiredPosition.x, y: toHeight, z: desiredPosition.z },
