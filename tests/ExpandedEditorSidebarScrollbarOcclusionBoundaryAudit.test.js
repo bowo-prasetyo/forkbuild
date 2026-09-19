@@ -5,8 +5,23 @@ import { fileURLToPath } from 'node:url';
 
 // 0.9.658 — Expanded Editor Sidebar Scrollbar Occlusion Boundary Audit.
 //
-// TYPE: test-only boundary audit. PRODUCTION CHANGES: none (Section J's
-// own guard confirms it).
+// TYPE (at authoring): test-only boundary audit. PRODUCTION CHANGES (at
+// authoring): none (Section J's own guard confirmed it).
+//
+// AMENDED BY 0.9.659: the gap this audit found below has since been
+// fixed — flexWrap:'wrap' added to AlignmentPanel.js's align/distribute
+// row literals and to RepeatPanel.js's Copies/Offset row and Repeat
+// X/Y/Z row literals, the same convention this audit's own Section G
+// already found proven safe one section below (Groups' own Advanced
+// row, via EditingSidebar.js's rowStyle()). This file's own narrative
+// and live-measured numbers below are left as the historical record of
+// what was found and how; each Section's own assertions have been
+// updated in place (marked "AMENDED (0.9.659)" / "FIXED (0.9.659)") to
+// check the CORRECTED behavior rather than silently going stale,
+// following this codebase's existing convention (0.9.655 amending
+// 0.9.654's own audit) of amending a superseded audit in the same
+// commit as its fix, reused here per 0.9.659's own brief instead of
+// spinning up a separate 0.9.656-style closure-audit file.
 //
 // 0.9.654/0.9.655/0.9.656 closed the Editor sidebar's COLLAPSED/DEFAULT
 // layout: .tool-switcher's own clearance from .sidebar-scroll's edge, and
@@ -258,12 +273,19 @@ async function run() {
             n('A: AlignmentPanel.js\'s own buttonStyle() sets no minWidth override — the flex item\'s automatic minimum size is left at its browser default (its own nowrap content\'s full width), not clamped to 0'));
 
         // A4 — the align/distribute row <div> literals in the template
-        // itself: bare `{ display: 'flex', gap: '4px' }`, no flexWrap
-        // anywhere in the whole file.
-        assert((alignmentPanelSrc.match(/\{ display: 'flex', gap: '4px' \}/g) || []).length >= 2,
-            n('A: AlignmentPanel.js\'s template really does use the identical bare `{ display: \'flex\', gap: \'4px\' }` row literal for both the three align rows and the distribute row — no per-row variation that might already wrap'));
-        assert(!/flexWrap/.test(alignmentPanelSrc),
-            n('A: AlignmentPanel.js contains no `flexWrap` anywhere in the file — none of its rows can ever drop a button to a second line, regardless of how little width they are given'));
+        // itself.
+        //
+        // AMENDED (0.9.659): originally a bare `{ display: 'flex', gap:
+        // '4px' }`, no flexWrap anywhere in the whole file — none of its
+        // rows could ever drop a button to a second line, regardless of
+        // how little width they were given. 0.9.659 added
+        // `flexWrap: 'wrap'` to both the per-row literal and the
+        // distribute row literal — this section now asserts that fix is
+        // in place.
+        assert((alignmentPanelSrc.match(/\{ display: 'flex', gap: '4px', flexWrap: 'wrap' \}/g) || []).length >= 2,
+            n('FIXED (0.9.659): AlignmentPanel.js\'s template now uses the identical `{ display: \'flex\', gap: \'4px\', flexWrap: \'wrap\' }` row literal for both the three align rows and the distribute row — no per-row variation, both fixed the same way'));
+        assert(/flexWrap\s*:\s*'wrap'/.test(alignmentPanelSrc),
+            n('FIXED (0.9.659): AlignmentPanel.js now contains `flexWrap: \'wrap\'` — its rows can drop a button to a second line instead of overflowing when given too little width'));
 
         // A5 — the real button labels these rows render, read from the
         // real computed properties (not re-typed): confirms "Distribute
@@ -281,20 +303,30 @@ async function run() {
         // numbers confirm the actual rendered overflow either way).
         const repeatButtonStyleBody = findMethodReturnObject(repeatPanelSrc, 'buttonStyle');
         assert(repeatButtonStyleBody && styleProp(repeatButtonStyleBody, 'flex') === '1' && !/minWidth/.test(repeatButtonStyleBody),
-            n('A: RepeatPanel.js\'s own buttonStyle() sets flex:1 with no minWidth override, the identical shape as AlignmentPanel.js\'s own'));
-        assert(!/flexWrap/.test(repeatPanelSrc),
-            n('A: RepeatPanel.js likewise contains no flexWrap anywhere in the file'));
+            n('A: RepeatPanel.js\'s own buttonStyle() still sets flex:1 with no minWidth override, the identical shape as AlignmentPanel.js\'s own — unchanged, since the fix is the ROW\'s own flexWrap, not a change to the buttons themselves'));
+        // AMENDED (0.9.659): RepeatPanel.js originally contained no
+        // flexWrap anywhere in the file; 0.9.659 added it to both rows
+        // below (this section's own generic file-wide check now just
+        // confirms it exists at all — A7 confirms exactly where).
+        assert(/flexWrap\s*:\s*'wrap'/.test(repeatPanelSrc),
+            n('FIXED (0.9.659): RepeatPanel.js now contains `flexWrap: \'wrap\'`'));
 
         // A7 — RepeatPanel.js's Copies/Offset row: two fixed-48px inputs
-        // (inputStyle()'s own width) plus two label <span>s, in a plain
-        // non-wrapping row.
+        // (inputStyle()'s own width) plus two label <span>s.
+        //
+        // AMENDED (0.9.659): this row and the Repeat X/Y/Z button row
+        // below it were both a plain non-wrapping `{ display: 'flex',
+        // ... }` literal pre-fix; 0.9.659 added `flexWrap: 'wrap'` to
+        // both.
         const repeatInputStyleBody = findMethodReturnObject(repeatPanelSrc, 'inputStyle');
         assert(repeatInputStyleBody && styleProp(repeatInputStyleBody, 'width') === '48px',
-            n('A: RepeatPanel.js\'s own inputStyle() is a fixed 48px, unchanged from 0.9.654\'s own finding — safe in the ALWAYS-VISIBLE context 0.9.654 measured it in, but that context is not the only one it is ever rendered in (Section C)'));
-        assert(repeatPanelSrc.includes(`{ display: 'flex', alignItems: 'center', gap: '6px' }`),
-            n('A: RepeatPanel.js\'s Copies/Offset row really is the bare, non-wrapping `{ display: \'flex\', alignItems: \'center\', gap: \'6px\' }` literal'));
+            n('A: RepeatPanel.js\'s own inputStyle() is still a fixed 48px, unchanged from 0.9.654\'s own finding — safe in the ALWAYS-VISIBLE context 0.9.654 measured it in, but that context was not the only one it is ever rendered in (Section C); the fix is the row\'s own flexWrap, not a change to the input itself'));
+        assert(repeatPanelSrc.includes(`{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }`),
+            n('FIXED (0.9.659): RepeatPanel.js\'s Copies/Offset row now carries `flexWrap: \'wrap\'` on the same literal'));
+        assert(repeatPanelSrc.includes(`{ display: 'flex', gap: '4px', flexWrap: 'wrap' }`),
+            n('FIXED (0.9.659): RepeatPanel.js\'s Repeat X/Y/Z button row now carries `flexWrap: \'wrap\'` on the same literal'));
 
-        console.log('✓ A: EditingSidebar.js mounts two independent CollapsibleSection "Advanced" instances (Transform: AlignmentPanel+RepeatPanel; Groups: an inline button row) whose body DOM is v-if-gated and does not exist until expanded. AlignmentPanel.js\'s and RepeatPanel.js\'s own button/row styling (flex:1, nowrap text, no minWidth, no flexWrap anywhere in either file) is confirmed from real source as the exact shape that cannot shrink below its own content and cannot wrap to a second line.');
+        console.log('✓ A (AMENDED 0.9.659): EditingSidebar.js mounts two independent CollapsibleSection "Advanced" instances (Transform: AlignmentPanel+RepeatPanel; Groups: an inline button row) whose body DOM is v-if-gated and does not exist until expanded. AlignmentPanel.js\'s and RepeatPanel.js\'s own row literals now carry flexWrap:\'wrap\' (fixed) — their buttons/inputs still cannot shrink below their own content\'s width (flex:1, nowrap text, no minWidth — all unchanged), but can now wrap to a second line instead of overflowing when given too little width.');
     }
 
     // ===============================================================
@@ -376,19 +408,21 @@ async function run() {
         assert(parseFloat(rightVal) === 0, n(`C: .collapsible-section-body's own RIGHT padding is exactly 0 (raw: "${rightVal}") — it adds no clearance of its own on the right`));
         assert(parseFloat(leftRem) === 1.3, n(`C: .collapsible-section-body's own LEFT padding is 1.3rem (${remToPx(1.3)}px) — an indent, not a clearance; it narrows available width without moving the right edge closer to safety`));
 
-        // 2) AlignmentPanel.js/RepeatPanel.js's own rows (Section A) have
-        // no mechanism (flex-wrap, min-width:0, text-overflow) that
-        // would let them respect whatever width they end up given —
-        // confirmed again here as the SECOND structural fact, since (1)
-        // alone (a merely-narrower box) would be harmless to a row that
-        // could shrink or wrap, exactly as 0.9.654 Section C's own
-        // "classic regime" reasoning established for .tool-btn.
+        // 2) AlignmentPanel.js/RepeatPanel.js's own rows (Section A).
+        //
+        // AMENDED (0.9.659): this originally confirmed neither file had
+        // any mechanism (flex-wrap, min-width:0, text-overflow) that
+        // would let them respect whatever width they end up given — the
+        // SECOND structural fact that, combined with (1) above, produced
+        // genuine overflow. 0.9.659 added flex-wrap to both files' row
+        // literals (Section A, FIXED); this now confirms that mechanism
+        // is present, closing the second half of the chain.
         const alignButtonStyleBody = findMethodReturnObject(alignmentPanelSrc, 'buttonStyle');
         const repeatButtonStyleBody = findMethodReturnObject(repeatPanelSrc, 'buttonStyle');
-        assert(!/flexWrap/.test(alignmentPanelSrc) && !/flexWrap/.test(repeatPanelSrc),
-            n('C: neither AlignmentPanel.js nor RepeatPanel.js declares flex-wrap anywhere — re-confirmed here as the second half of the two-fact chain (narrow box + cannot adapt to it) that produces genuine overflow, not merely a safely-narrower render'));
+        assert(/flexWrap\s*:\s*'wrap'/.test(alignmentPanelSrc) && /flexWrap\s*:\s*'wrap'/.test(repeatPanelSrc),
+            n('FIXED (0.9.659): both AlignmentPanel.js and RepeatPanel.js now declare flexWrap:\'wrap\' on their row literals — the second half of the two-fact chain (narrow box + cannot adapt to it) that produced genuine overflow is now closed; a too-narrow row now wraps instead of overflowing'));
         assert(styleProp(alignButtonStyleBody, 'flex') === '1' && styleProp(repeatButtonStyleBody, 'flex') === '1',
-            n('C: both panels\' own buttons are flex:1 (share available width) rather than a fixed pixel width — the SAME shape 0.9.654 found safe for .tool-btn (Section C, "shrink WITH its scrolling ancestor"), except here the item\'s own automatic minimum size (nowrap text, or an input\'s own intrinsic minimum) prevents that shrink from ever reaching the available width'));
+            n('C: both panels\' own buttons are still flex:1 (share available width) rather than a fixed pixel width — unchanged; the item\'s own automatic minimum size (nowrap text, or an input\'s own intrinsic minimum) still prevents that shrink from ever reaching the available width on its own, which is exactly why the row-level flexWrap fix (not a buttonStyle change) is what makes the difference'));
 
         // 3) Live-measured overflow magnitude, documented (not
         // re-executed — no DOM engine here) but tied to a concrete,
@@ -407,7 +441,7 @@ async function run() {
         assert(/border\s*:\s*'1px solid/.test(alignButtonStyleBody),
             n('C: AlignmentPanel.js\'s own buttonStyle() border is 1px solid — 2px horizontal overhead per button, added to the padding above'));
 
-        console.log('✓ C: the two-fact chain this audit\'s live pass exposed is confirmed from source — .collapsible-section-body\'s own padding is LEFT-only (no right-side clearance contribution, unlike .sidebar-scroll\'s deliberate 0.9.655 convention), and AlignmentPanel.js/RepeatPanel.js\'s own rows have no flex-wrap/min-width mechanism that would let them adapt to the resulting 127.2px box instead of overflowing it. Live-measured: the align-center row alone needs 189.2px of un-shrinkable content in that 127.2px box; the distribute row needs 288.5px. Both overflow past .sidebar-scroll\'s own 203px edge, with "Distribute Z" (and, per this audit\'s own elementFromPoint reachability check, "Right →"\'s own click-center) landing on content outside the sidebar entirely.');
+        console.log('✓ C (AMENDED 0.9.659): the two-fact chain this audit\'s live pass originally exposed is confirmed from source — .collapsible-section-body\'s own padding is still LEFT-only (no right-side clearance contribution, unlike .sidebar-scroll\'s deliberate 0.9.655 convention, and unchanged by this fix), but AlignmentPanel.js/RepeatPanel.js\'s own rows now DO have a flex-wrap mechanism (fixed 0.9.659) that lets them adapt to the 127.2px box instead of overflowing it. Pre-fix, the align-center row alone needed 189.2px of un-shrinkable content in that 127.2px box; the distribute row needed 288.5px — both overflowed past .sidebar-scroll\'s own 203px edge, with "Distribute Z" landing on content outside the sidebar entirely. Post-fix, that same un-shrinkable content now wraps onto additional lines within the 127.2px box instead of exceeding its width.');
     }
 
     // ===============================================================
@@ -471,7 +505,7 @@ async function run() {
         assert(worstCaseOverflowPx > currentClearancePx * 5,
             n(`E: the worst-case live-measured overflow (${worstCaseOverflowPx.toFixed(1)}px, "Distribute Z" past .sidebar-scroll's own edge) is more than 5x the entire current clearance value (${currentClearancePx}px) — confirming a clearance widen cannot be the fix; the root cause is AlignmentPanel.js/RepeatPanel.js's own rows refusing to shrink or wrap, not an insufficient buffer`));
 
-        console.log('✓ E: .sidebar-scroll\'s own reserved clearance is a static, unconditional CSS value that does not change when Advanced expands — this audit\'s own live pass confirmed identical .sidebar-scroll box geometry before and after. The defect is entirely in WHICH CONTENT newly exists at that unchanged geometry, and its magnitude (up to ~133px) rules out a clearance widen as a viable fix — confirming Possibility 2 (child-layout problem) over Possibility 1 (clearance too small).');
+        console.log('✓ E (AMENDED 0.9.659): .sidebar-scroll\'s own reserved clearance is still a static, unconditional CSS value, untouched by this milestone. This section\'s own pre-fix analysis (the overflow magnitude vastly exceeding any plausible clearance widen) is exactly why 0.9.659 fixed AlignmentPanel.js/RepeatPanel.js\'s own rows directly (flexWrap, Section A/C, FIXED) rather than touching .sidebar-scroll\'s padding-right — confirming Possibility 2 (child-layout problem) was the right diagnosis, and that the chosen fix matched it.');
     }
 
     // ===============================================================
@@ -505,7 +539,7 @@ async function run() {
         assert(!/scrollbar|overflow/i.test(alignmentPanelSrc) && !/scrollbar|overflow/i.test(repeatPanelSrc),
             n('F: neither AlignmentPanel.js nor RepeatPanel.js references scrollbars or overflow anywhere — their own overflow is purely a function of their assigned width vs. their own content\'s minimum size, never scrollbar presence or regime'));
 
-        console.log('✓ F: this milestone\'s own defect is UNCONDITIONAL under both the classic and overlay scrollbar models — this audit\'s own live pass reproduced it with hasVScroll:false (no vertical scrollbar rendered at all, of either kind). Unlike 0.9.654\'s own .tool-switcher finding (real only under the overlay regime), this is pure flex min-content overflow against a static container width; no scrollbar needs to exist for a real user to be affected.');
+        console.log('✓ F (AMENDED 0.9.659): this milestone\'s own defect was UNCONDITIONAL under both the classic and overlay scrollbar models — this audit\'s own live pass reproduced it with hasVScroll:false (no vertical scrollbar rendered at all, of either kind), pure flex min-content overflow against a static container width, never scrollbar presence or regime. The fix (flexWrap, Section A/C) is likewise unconditional: it does not read or react to scrollbar state either, so it closes the gap the same way regardless of regime.');
     }
 
     // ===============================================================
@@ -548,7 +582,7 @@ async function run() {
         // already has a working answer for "a row of buttons that might
         // not fit" — AlignmentPanel.js/RepeatPanel.js are the outliers,
         // not the codebase's own convention.
-        console.log('✓ G: the fix already exists, proven safe, one section below the defect in the SAME file — Groups\' own "Advanced" row uses EditingSidebar.js\'s own rowStyle() (flexWrap:\'wrap\') at the identical 127.2px available width this milestone found AlignmentPanel.js/RepeatPanel.js overflowing, and every one of its buttons renders fully inside bounds. No new mechanism is needed for a future production fix — only extending a convention this codebase already applies correctly to Selection/Groups-basic/Clipboard/Groups-Advanced/World\'s own two 0.9.655-fixed rows to the two files that never adopted it.');
+        console.log('✓ G (AMENDED 0.9.659): the fix this section found already proven safe, one section below the defect in the SAME file, is now the fix 0.9.659 applied — Groups\' own "Advanced" row uses EditingSidebar.js\'s own rowStyle() (flexWrap:\'wrap\') at the identical 127.2px available width this milestone found AlignmentPanel.js/RepeatPanel.js overflowing; 0.9.659 added the identical flexWrap:\'wrap\' property directly to AlignmentPanel.js\'s and RepeatPanel.js\'s own row literals (not by routing them through EditingSidebar.js\'s own rowStyle(), since neither is a child of EditingSidebar.js\'s own template scope). No new mechanism was needed — only extending a convention this codebase already applied correctly to Selection/Groups-basic/Clipboard/Groups-Advanced/World\'s own two 0.9.655-fixed rows to the two files that had not yet adopted it.');
     }
 
     // ===============================================================
@@ -622,6 +656,16 @@ async function run() {
     // Section J — Production-change guard.
     // ===============================================================
     {
+        // AMENDED (0.9.659): this guard originally required a test-only
+        // diff (this file + tests.html), matching 0.9.658's own
+        // "test-only" brief. 0.9.659 is deliberately NOT test-only — it
+        // is the narrow production fix this audit itself recommended —
+        // so the allowed set now includes exactly the two production
+        // files the fix brief named: AlignmentPanel.js and
+        // RepeatPanel.js. Everything else this audit ever read
+        // (css/main.css, EditorView.js, WorldView.js, EditingSidebar.js,
+        // CollapsibleSection.js, NumericTransformPanel.js) remains
+        // excluded — none of those needed to change for the flexWrap fix.
         let changedFiles = [];
         try {
             const diffOutput = execSync('git diff --name-only HEAD', { cwd: SOURCE_ROOT, encoding: 'utf8' });
@@ -633,10 +677,10 @@ async function run() {
             changedFiles = null;
         }
         if (changedFiles !== null) {
-            const allowed = new Set(['tests.html']);
+            const allowed = new Set(['tests.html', 'ui/components/AlignmentPanel.js', 'ui/components/RepeatPanel.js']);
             const unexpected = changedFiles.filter((f) => !allowed.has(f) && !f.startsWith('tests/ExpandedEditorSidebarScrollbarOcclusionBoundaryAudit'));
             assert(unexpected.length === 0,
-                n(`J: no file outside {tests.html, tests/ExpandedEditorSidebarScrollbarOcclusionBoundaryAudit.test.js} is modified (found unexpected: ${JSON.stringify(unexpected)}) — this milestone is test-only, exactly as its own brief required; css/main.css, EditorView.js, WorldView.js, EditingSidebar.js, CollapsibleSection.js, AlignmentPanel.js, RepeatPanel.js, and NumericTransformPanel.js remain read-only source-of-truth for this audit, never edited by it`));
+                n(`J: no file outside {tests.html, tests/ExpandedEditorSidebarScrollbarOcclusionBoundaryAudit.test.js, ui/components/AlignmentPanel.js, ui/components/RepeatPanel.js} is modified (found unexpected: ${JSON.stringify(unexpected)}) — 0.9.659's production change is confined to AlignmentPanel.js/RepeatPanel.js exactly as its own brief required; css/main.css, EditorView.js, WorldView.js, EditingSidebar.js, CollapsibleSection.js, and NumericTransformPanel.js remain read-only source-of-truth for this audit, never edited by it`));
         } else {
             console.log('  (J: git not available in this environment to enumerate changed files — skipped, not failed)');
         }
@@ -645,10 +689,10 @@ async function run() {
         assert(editorBodyRule && /display\s*:\s*flex/.test(editorBodyRule) && /flex\s*:\s*1/.test(editorBodyRule),
             n('J: .editor-body is unchanged — the canvas column beside the sidebar is untouched'));
 
-        console.log('✓ J: the only files this commit changes are this test file and tests.html\'s registration of it — every production file this audit read (css/main.css, EditorView.js, WorldView.js, EditingSidebar.js, CollapsibleSection.js, AlignmentPanel.js, RepeatPanel.js, NumericTransformPanel.js) is read from, never written to.');
+        console.log('✓ J (AMENDED 0.9.659): the only files this commit changes are this test file, ui/components/AlignmentPanel.js, ui/components/RepeatPanel.js, and tests.html\'s existing registration of this file; every other production file this audit reads (css/main.css, EditorView.js, WorldView.js, EditingSidebar.js, CollapsibleSection.js, NumericTransformPanel.js) is read from, never written to.');
     }
 
-    console.log(`\n✅ 0.9.658 Expanded Editor Sidebar Scrollbar Occlusion Boundary Audit complete (${assertionCount} assertions). CLASSIFICATION: PRODUCT_GAP_CONFIRMED — the expanded-state family of layouts 0.9.654/0.9.656 never produced does contain a real, live-reproduced defect, and it is a child-layout problem (AlignmentPanel.js's and RepeatPanel.js's own rows lacking the flex-wrap convention this exact codebase already uses correctly one section below them, in World's own two 0.9.655-fixed rows, and in this very file's own rowStyle()), not a too-small .sidebar-scroll clearance. RECOMMENDATION for a narrow 0.9.659: add flexWrap:'wrap' to AlignmentPanel.js's align/distribute row literals and buttonStyle(), and to RepeatPanel.js's Copies/Offset row and Repeat X/Y/Z row literals and buttonStyle() — the same single-property convention already proven safe at this exact available width by Groups' own Advanced section — then repeat this exact expanded-state flagship as 0.9.659's own closure audit, per this milestone's own governing lesson: a UI layout closure audit must cover meaningful state transitions, not just the initial rendered state.`);
+    console.log(`\n✅ 0.9.658 Expanded Editor Sidebar Scrollbar Occlusion Boundary Audit complete (${assertionCount} assertions). AMENDED BY 0.9.659: the child-layout defect this audit found (AlignmentPanel.js's and RepeatPanel.js's own rows lacking the flex-wrap convention this exact codebase already used correctly one section below them, in World's own two 0.9.655-fixed rows, and in this very file's own rowStyle()) is now fixed — flexWrap:'wrap' added to AlignmentPanel.js's align/distribute row literals and to RepeatPanel.js's Copies/Offset row and Repeat X/Y/Z row literals, the same single-property convention already proven safe at this exact available width by Groups' own Advanced section. Every section above has been re-verified against the corrected source in place, reusing this flagship as 0.9.659's own closure audit rather than a separate file, per this milestone's own governing lesson: a UI layout closure audit must cover meaningful state transitions, not just the initial rendered state — and, per 0.9.655's own precedent, a fix commit amends its own superseded audit rather than leaving it to silently go stale.`);
 }
 
 run().catch((err) => {

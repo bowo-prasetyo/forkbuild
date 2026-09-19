@@ -89,7 +89,7 @@ export default {
     },
     template: `
         <div :style="{ display: 'flex', flexDirection: 'column', gap: '6px', opacity: enabled ? 1 : 0.55 }">
-            <div :style="{ display: 'flex', alignItems: 'center', gap: '6px' }">
+            <div :style="{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }">
                 <span :style="labelStyle()">Copies</span>
                 <input
                     type="text" class="repeat-panel-count"
@@ -107,7 +107,7 @@ export default {
                     v-model="offsetText"
                 />
             </div>
-            <div :style="{ display: 'flex', gap: '4px' }">
+            <div :style="{ display: 'flex', gap: '4px', flexWrap: 'wrap' }">
                 <button type="button" :disabled="!enabled" :style="buttonStyle()" title="Repeat along world X" @click="onRepeat('x')">Repeat X</button>
                 <button type="button" :disabled="!enabled" :style="buttonStyle()" title="Repeat along world Y" @click="onRepeat('y')">Repeat Y</button>
                 <button type="button" :disabled="!enabled" :style="buttonStyle()" title="Repeat along world Z" @click="onRepeat('z')">Repeat Z</button>
