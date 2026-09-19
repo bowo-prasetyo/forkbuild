@@ -359,6 +359,44 @@ export function createStandardActions({ session, feedback, ui = {} }) {
                 feedback.show(deleted !== false ? 'Deleted selection' : 'Nothing to delete');
             })
         }),
+        // 0.9.661 — Add Editor Selection Focus Action. Composed entirely
+        // from two EXISTING, unmodified EditorSession methods —
+        // getSelectionSummary() (application/SelectionBoundsService.js's
+        // own union-bounds center) and frameCameraOn() (0.6.0's fixed
+        // (12,12,12)-offset instant framing) — exactly as
+        // tests/EditorSelectedBrickCameraFocusBoundaryAudit.test.js
+        // (0.9.660) proved composes with zero new geometry or camera
+        // code. Brick selections only: gated off for a structure-
+        // placement selection the same way structure.createFromSelection
+        // already is, because getSelectionSummary() itself only ever
+        // resolves brick items (by design — see that method's own
+        // header) — structure-placement focusing is an explicit, separate
+        // scope decision the 0.9.660 audit (Section I) left open, not
+        // something this action silently attempts.
+        define({
+            id: 'selection.focus',
+            label: 'Focus Selection',
+            category: 'Selection',
+            description: 'Frame the camera on the selected bricks',
+            enabled: (ctx) => ctx.hasSelection && !ctx.selectionIsStructurePlacement,
+            disabledReason: (ctx) => {
+                if (ctx.selectionIsStructurePlacement) return 'Focus Selection is available for brick selections only';
+                return ctx.hasSelection ? null : 'No bricks selected';
+            },
+            execute: () => {
+                if (typeof session.getSelectionSummary !== 'function' || typeof session.frameCameraOn !== 'function') {
+                    feedback.show('Focus Selection is not available on this surface');
+                    return;
+                }
+                const summary = session.getSelectionSummary();
+                if (!summary) {
+                    feedback.show('Nothing to focus');
+                    return;
+                }
+                session.frameCameraOn(summary.bounds.center);
+                feedback.show('Focused selection');
+            }
+        }),
 
         // -------------------------------------------------------- Groups
         groupAction('create', 'Create Group', 'createGroupFromSelection',
