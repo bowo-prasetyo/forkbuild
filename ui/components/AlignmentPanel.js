@@ -97,7 +97,7 @@ export default {
             <div
                 v-for="(row, rowIndex) in alignRows"
                 :key="'align-' + rowIndex"
-                :style="{ display: 'flex', gap: '4px' }"
+                :style="{ display: 'flex', gap: '4px', flexWrap: 'wrap' }"
             >
                 <button
                     v-for="operation in row"
@@ -108,7 +108,7 @@ export default {
                     @click="onAlign(operation.mode)"
                 >{{ operation.label }}</button>
             </div>
-            <div :style="{ display: 'flex', gap: '4px' }">
+            <div :style="{ display: 'flex', gap: '4px', flexWrap: 'wrap' }">
                 <button
                     v-for="distributeAxis in distributeAxes"
                     :key="distributeAxis.axis"
