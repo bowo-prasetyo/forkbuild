@@ -19,6 +19,20 @@ import { computeContentHash } from '../serializer/contentHash.js';
 //
 // recoveryStore is optional for backward compatibility: when absent, save
 // still tracks revision but does not clear a checkpoint.
+//
+// 0.9.653 — Surface Document Save Failures made both real UI call sites
+// (ui/components/Toolbar.js's Save button, ui/views/EditorView.js's
+// Ctrl+S/Cmd+S shortcut) catch a thrown execute() failure and report it
+// through the existing feedback.show() boundary. This file itself is
+// deliberately UNCHANGED by that fix and remains unwrapped: the document
+// write and the manifest write above are still two independent
+// StorageProvider calls, and a failure on the second after the first
+// already succeeded (see tests/DocumentSaveFailureHandlingBoundaryAudit.test.js
+// Section B5) still leaves a real, correctly-persisted document blob with
+// no matching manifest entry. PERMANENT INVARIANT: 0.9.653 handles
+// user-visible Save failure; it does not make the two StorageProvider
+// writes transactional. Any future rollback, compensation, or write-
+// ahead-log behavior is a separate, explicitly unscoped change.
 export class SaveDocumentUseCase {
     constructor(
         storageProvider,
