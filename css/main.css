@@ -4088,27 +4088,20 @@ html, body {
 }
 
 /* 0.9.436 — Publications Distribution Section Reorganization. One
-   contextual "Distribution" section per publication card, always
-   visible (never nested inside .identity-mgmt-card-details above) —
-   grouping the three RoleProviderRole roles (Announcement/Discovery,
-   Content, Proof/Anchoring) that were previously split across two
-   different views/locations. Reuses .evidence-list/.evidence-anchor-card/
-   .evidence-convergence-title wholesale — the one genuinely new
-   presentation element is the section heading and the per-role wrapper. */
+   contextual "Distribution" disclosure per publication card, open by
+   default — grouping the three RoleProviderRole roles (Announcement/
+   Discovery, Content, Proof/Anchoring) that were previously split across
+   two different views/locations. Reuses .evidence-list/.evidence-anchor-card/
+   .evidence-convergence-title wholesale. Collapsible exactly like
+   .identity-mgmt-card-details below (combined with that class on the same
+   <details> element for the shared border/summary-arrow treatment) — the
+   `open` attribute is what keeps these primary actions visible on first
+   load; the flex layout here is the one property that class doesn't
+   already supply. */
 .identity-mgmt-distribution {
-    margin-top: 0.85rem;
-    padding-top: 0.85rem;
-    border-top: 1px solid #2a2a2a;
     display: flex;
     flex-direction: column;
     gap: 0.9rem;
-}
-
-.identity-mgmt-distribution-heading {
-    margin: 0;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #e0e0e0;
 }
 
 .identity-mgmt-distribution-role {
