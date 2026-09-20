@@ -4175,9 +4175,13 @@ html, body {
     color: #ffffff;
 }
 
-/* Three tabs (Blockchain Anchoring / Archive Tools / References &
-   Achievements) grouping the tools panel's own ~20 cards by what they're
-   about, instead of one flat stack. Same visual language as
+/* Tabs grouping a disclosure's own cards by what they're about, instead of
+   one flat stack — used both by the page-level "Wallet, Archive & Publisher
+   Tools" panel (3 tabs: Blockchain Anchoring / Archive Tools / References &
+   Achievements) and by each publication entry's own "Snapshot, Anchoring,
+   IPFS & Evidence Details" disclosure (4 tabs: Snapshot / Decentralization &
+   Evidence / Placements & IPFS / History) — same vocabulary, unscoped to
+   either container, reused rather than duplicated. Same visual language as
    .build-library-tab/.build-library-tab--active — reused wholesale rather
    than inventing a second tab vocabulary. */
 .publications-tools-tabs {
