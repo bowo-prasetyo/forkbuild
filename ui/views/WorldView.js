@@ -8,6 +8,7 @@ import { WorldSpatialContextService } from '../../application/WorldSpatialContex
 import { AutomaticSnapshotEncounterCascade } from '../../application/AutomaticSnapshotEncounterCascade.js';
 import { AutomaticSnapshotEncounterRetentionReconciliation } from '../../application/AutomaticSnapshotEncounterRetentionReconciliation.js';
 import { IpfsRemotePublicationState } from '../../application/IpfsRemotePublicationState.js';
+import { sanitizeDistributionErrorMessage } from '../../application/DistributionErrorMessageSanitizer.js';
 import { SnapshotWorldRegistrationOutcome } from '../../application/SnapshotWorldRegistrationOutcome.js';
 import { ObserverLocalEncounterStore } from '../../application/ObserverLocalEncounterStore.js';
 import ActionFeedback from '../components/ActionFeedback.js';
@@ -1503,11 +1504,31 @@ export default {
                         }
                         const contentReference = { hash: outcome.contentHash, uri: outcome.locator, storage: 'ipfs' };
                         if (!snapshotDiscoveryPublisher) {
-                            return { contentReference, announcement: null };
+                            return { contentReference, announcement: null, announcementError: 'Snapshot distribution is not available.' };
                         }
                         return snapshotDiscoveryPublisher.publish({ contentHash: outcome.contentHash, locator: outcome.locator, storage: 'ipfs' })
                             .then((announcement) => ({ contentReference, announcement }))
-                            .catch(() => ({ contentReference, announcement: null }));
+                            .catch((error) => {
+                                // Bug fix — a genuine Nostr announcement
+                                // failure (e.g. no NIP-07 extension
+                                // configured) never fails the whole
+                                // attempt — the content is already
+                                // durably pinned regardless, the same
+                                // restraint ui/views/DecentralizedPublicationsView.js's
+                                // own identical Remote-Pinning-then-Nostr
+                                // sequence already holds — but it used to
+                                // be swallowed into a bare "No
+                                // announcement" here, indistinguishable
+                                // from an ordinary relay decline.
+                                // announcementError now carries the real,
+                                // sanitized cause instead.
+                                console.error('Snapshot Nostr announcement failed:', error);
+                                return {
+                                    contentReference,
+                                    announcement: null,
+                                    announcementError: sanitizeDistributionErrorMessage(error) || 'Announcement could not be completed.'
+                                };
+                            });
                     });
             }
             if (!snapshotDistributionCommand) {
