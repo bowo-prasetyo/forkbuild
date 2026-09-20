@@ -993,6 +993,19 @@ const IPFS_PUBLICATION_CONTENT_VERIFICATION_BADGE_CLASSES = {
 export default {
     name: 'DecentralizedPublicationsView',
     setup() {
+        // Splits the "Wallet, Archive & Publisher Tools" disclosure's own
+        // ~20 stacked page-level cards into three named tabs (Blockchain
+        // Anchoring / Archive Tools / References & Achievements) so opening
+        // it no longer dumps every secondary feature into one undifferentiated
+        // scroll. Purely a presentation grouping over the same v-show'd
+        // sections — no card moves, no state it reads changes, and nothing
+        // here performs a network operation. Mirrors the same tab pattern
+        // ui/components/BuildLibraryPanel.js's own activeTab already uses.
+        const publicationsToolsTab = ref('anchoring');
+        function setPublicationsToolsTab(tab) {
+            publicationsToolsTab.value = tab;
+        }
+
         const catalog = inject('publicationCatalog');
         const coordinator = inject('publicationResolutionCoordinator');
         const kindPlugins = inject('publicationDisplayKindPlugins');
@@ -7270,7 +7283,8 @@ export default {
             bitcoinAnchorBroadcastConfirmationView, bitcoinAnchorBroadcastConfirmationBadgeClass,
             bitcoinAnchorBroadcastConfirmationHistoryView, toggleBitcoinAnchorBroadcastConfirmationHistory,
             bitcoinAnchorBroadcastConfirmationHistoryExpanded, toggleBitcoinAnchorBroadcastConfirmationHistoryEntry,
-            isBitcoinAnchorBroadcastConfirmationHistoryEntryExpanded
+            isBitcoinAnchorBroadcastConfirmationHistoryEntryExpanded,
+            publicationsToolsTab, setPublicationsToolsTab
         };
     },
     template: `
@@ -7298,6 +7312,34 @@ export default {
             <details class="publications-tools-panel">
                 <summary class="publications-tools-panel-summary">Wallet, Archive &amp; Publisher Tools</summary>
 
+                <!-- Three tabs grouping the cards below by what they're
+                     actually about — Bitcoin/Base wallets & anchoring
+                     pipelines, the durable observation archive's own
+                     export/import/diff/fingerprint tools, and the
+                     reference-graph/achievement/publisher lookups. Each
+                     tab's own panel(s) below use v-show, not v-if: no card
+                     is removed from the page, so nothing about how any
+                     card's own state works changes, only whether it is
+                     currently on screen. -->
+                <div class="publications-tools-tabs" role="tablist">
+                    <button type="button" role="tab" :aria-selected="publicationsToolsTab === 'anchoring'"
+                            :class="['publications-tools-tab', { 'publications-tools-tab--active': publicationsToolsTab === 'anchoring' }]"
+                            @click="setPublicationsToolsTab('anchoring')">
+                        Blockchain Anchoring
+                    </button>
+                    <button type="button" role="tab" :aria-selected="publicationsToolsTab === 'archive'"
+                            :class="['publications-tools-tab', { 'publications-tools-tab--active': publicationsToolsTab === 'archive' }]"
+                            @click="setPublicationsToolsTab('archive')">
+                        Archive Tools
+                    </button>
+                    <button type="button" role="tab" :aria-selected="publicationsToolsTab === 'connections'"
+                            :class="['publications-tools-tab', { 'publications-tools-tab--active': publicationsToolsTab === 'connections' }]"
+                            @click="setPublicationsToolsTab('connections')">
+                        References &amp; Achievements
+                    </button>
+                </div>
+
+            <div v-show="publicationsToolsTab === 'anchoring'" class="publications-tools-tab-panel">
             <!-- 0.8.60 — Explicit Bitcoin Anchor Funding & Address
                  Preparation. A page-level panel, deliberately unrelated to
                  any one publication's own evidence card below — this
@@ -7796,7 +7838,9 @@ export default {
                     </div>
                 </div>
             </div>
+            </div>
 
+            <div v-show="publicationsToolsTab === 'archive'" class="publications-tools-tab-panel">
             <!-- 0.8.75 — Durable Publication Observation Records.
                  Page-level, deliberately unrelated to any one
                  publication's own card below — this section reads
@@ -8289,7 +8333,9 @@ export default {
                     </p>
                 </div>
             </div>
+            </div>
 
+            <div v-show="publicationsToolsTab === 'anchoring'" class="publications-tools-tab-panel">
             <!-- 0.8.79 — Durable Bitcoin Anchor Evidence Restoration &
                  Historical Inspection. Page-level, deliberately unrelated
                  to any one publication's own card below, mirroring the
@@ -8594,7 +8640,9 @@ export default {
                     </ul>
                 </div>
             </div>
+            </div>
 
+            <div v-show="publicationsToolsTab === 'connections'" class="publications-tools-tab-panel">
             <!-- 0.8.104 — Explicit Publication Reference Relationship. A
                  durable, EXPLICIT sourcePublicationIdentity ->
                  referencedPublicationIdentity fact between two ALREADY-
@@ -9043,6 +9091,8 @@ export default {
                  three cards were genuinely upstream of that leaderboard,
                  not incidental to it, so they moved there with it. See
                  that file's own header for the full chain. -->
+            </div>
+
             </details>
 
             <p v-if="loading" class="locations-panel-empty">Checking cataloged publications…</p>
