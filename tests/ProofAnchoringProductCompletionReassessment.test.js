@@ -108,8 +108,16 @@ async function run() {
     // ===============================================================
     {
         const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
-        check(viewSource.includes('<h4 class="identity-mgmt-distribution-heading">Distribution</h4>'),
-            'A1. the Distribution heading (0.9.436\'s own normal, discoverable entry point) still exists');
+        // AMENDED — the Distribution section's own heading later became a
+        // <summary> inside a <details open> (collapsible, exactly like
+        // every other disclosure on this page, but open by default) —
+        // still the same normal, discoverable entry point A1 checks for:
+        // `open` means the heading and everything under it renders
+        // immediately, with zero extra click, exactly as the original
+        // <h4> did.
+        check(viewSource.includes('<details open class="identity-mgmt-card-details identity-mgmt-distribution">')
+            && viewSource.includes('<summary class="identity-mgmt-card-details-summary">Distribution</summary>'),
+            'A1. the Distribution heading (0.9.436\'s own normal, discoverable entry point) still exists, open by default');
         check(/<span class="evidence-convergence-title">Proof \/ Anchoring<\/span>/.test(viewSource),
             'A2. "Proof / Anchoring" is one of Distribution\'s own named roles, sitting alongside Announcement/Discovery and Content');
         check(/v-if="availableAnchorTypes\.length > 0" class="identity-mgmt-distribution-role"/.test(viewSource),
