@@ -121,32 +121,36 @@ function makeNostrNetwork() {
     return { events, publishImpl, queryImpl };
 }
 
-// A fake application/PublicationCatalogContentResolver.js — the exact
-// duck-typed collaborator ui/views/WorldView.js's own
-// distributeWorldEncounterSnapshot() (unmodified by this milestone)
-// already reads Snapshot bytes back through.
-function fakeContentResolver(entries = {}) {
+// A fake content/ContentStore.js — the exact duck-typed collaborator
+// ui/views/WorldView.js's own distributeWorldEncounterSnapshot() reads
+// Snapshot bytes back through, keyed by contentReference.hash exactly
+// like the real content-addressed store (bug fix: this used to be a fake
+// application/PublicationCatalogContentResolver.js, resolving by
+// publicationId — see ui/main.js's own publicationContentStore injection
+// comment for why that was wrong).
+function fakeContentStore(entries = {}) {
     return {
-        resolve(publicationId) {
-            return Object.prototype.hasOwnProperty.call(entries, publicationId) ? entries[publicationId] : null;
+        get(contentReference) {
+            const key = contentReference && contentReference.hash;
+            return Object.prototype.hasOwnProperty.call(entries, key) ? entries[key] : null;
         }
     };
 }
 
 // The EXACT logic ui/views/WorldView.js's own distributeWorldEncounterSnapshot()
-// implements, unmodified by this milestone — reproduced here for the
-// identical reason tests/WorldViewSnapshotDistribution.test.js's own
+// implements — reproduced here for the identical reason
+// tests/WorldViewSnapshotDistribution.test.js's own
 // makeSnapshotDistributionAction() already is.
-function makeSnapshotDistributionAction({ snapshotDistributionCommand, publicationCatalogContentResolver }) {
+function makeSnapshotDistributionAction({ snapshotDistributionCommand, publicationContentStore }) {
     return (publication) => {
-        if (!snapshotDistributionCommand || !publicationCatalogContentResolver) {
+        if (!snapshotDistributionCommand || !publicationContentStore || !publication.contentReference) {
             return Promise.reject(new Error('Snapshot distribution is not available.'));
         }
-        const snapshotJson = publicationCatalogContentResolver.resolve(publication.id);
-        if (snapshotJson === null) {
+        const snapshotBytes = publicationContentStore.get(publication.contentReference);
+        if (snapshotBytes === null || snapshotBytes === undefined) {
             return Promise.reject(new Error('Snapshot distribution is not available.'));
         }
-        return snapshotDistributionCommand(JSON.stringify(snapshotJson));
+        return snapshotDistributionCommand(snapshotBytes);
     };
 }
 
@@ -234,20 +238,21 @@ async function runTests() {
     // Section B — OwnPublicationPanel's action contract.
     // ---------------------------------------------------------------
     {
-        const publication = new Publication({ id: 'pub-own-b', documentId: 'doc-b' });
+        const publication = new Publication({ id: 'pub-own-b', documentId: 'doc-b', contentReference: { hash: 'pub-own-b-hash' } });
         const snapshotJson = { world: { buildings: [{ id: 'own-pub-building', bricks: 3 }] } };
-        const contentResolver = fakeContentResolver({ [publication.id]: snapshotJson });
+        const snapshotBytes = JSON.stringify(snapshotJson);
+        const contentStore = fakeContentStore({ 'pub-own-b-hash': snapshotBytes });
         let receivedBytes = null;
         const action = makeSnapshotDistributionAction({
             snapshotDistributionCommand: (bytes) => { receivedBytes = bytes; return Promise.resolve({ contentReference: {}, announcement: null }); },
-            publicationCatalogContentResolver: contentResolver
+            publicationContentStore: contentStore
         });
 
         const ctx = panelCtx({ publication, snapshotDistributionCommand: action });
         ctx.distributeOwnSnapshot();
         await flushMicrotasks();
-        assert(receivedBytes === JSON.stringify(snapshotJson),
-            '6. the action forwards exactly the already-resolved Snapshot JSON, no re-serialization of its own');
+        assert(receivedBytes === snapshotBytes,
+            '6. the action forwards exactly the already-stored Snapshot bytes, no re-serialization of its own');
 
         const noPublicationCtx = panelCtx({ publication: null, snapshotDistributionCommand: action });
         noPublicationCtx.distributeOwnSnapshot();
@@ -292,14 +297,14 @@ async function runTests() {
         const discoveryTag = 'flagship-own-publication-distribution';
         const publisher = new NostrSnapshotDiscoveryPublisher({ discoveryTag, publishImpl: network.publishImpl });
 
-        const publication = new Publication({ id: 'pub-own-flagship', documentId: 'doc-own-flagship' });
+        const publication = new Publication({ id: 'pub-own-flagship', documentId: 'doc-own-flagship', contentReference: { hash: 'pub-own-flagship-hash' } });
         const snapshotJson = { world: { buildings: [{ id: 'flagship-own-building', bricks: 4 }] } };
         const expectedBytes = JSON.stringify(snapshotJson);
         const expectedHash = computeContentHash(expectedBytes);
-        const contentResolver = fakeContentResolver({ [publication.id]: snapshotJson });
+        const localPublicationContentStore = fakeContentStore({ 'pub-own-flagship-hash': expectedBytes });
 
         const snapshotDistributionCommand = (bytes) => executeSnapshotDistributionCommand({ bytes, contentStore: store, discoveryPublisher: publisher });
-        const distributeOwnSnapshotAction = makeSnapshotDistributionAction({ snapshotDistributionCommand, publicationCatalogContentResolver: contentResolver });
+        const distributeOwnSnapshotAction = makeSnapshotDistributionAction({ snapshotDistributionCommand, publicationContentStore: localPublicationContentStore });
 
         // Note what is deliberately ABSENT from this section: no
         // WorldDiscoverySourceRegistry, no WorldEncounterCanvas, no
@@ -364,10 +369,10 @@ async function runTests() {
         let publishCalls = 0;
         const publisher = { discoveryTag: 'section-f-own-placement-failure', publish: async () => { publishCalls += 1; return { published: true, id: 'x'.repeat(64) }; } };
 
-        const publication = new Publication({ id: 'pub-own-f', documentId: 'doc-own-f' });
-        const contentResolver = fakeContentResolver({ [publication.id]: { world: {} } });
+        const publication = new Publication({ id: 'pub-own-f', documentId: 'doc-own-f', contentReference: { hash: 'pub-own-f-hash' } });
+        const localPublicationContentStore = fakeContentStore({ 'pub-own-f-hash': JSON.stringify({ world: {} }) });
         const snapshotDistributionCommand = (bytes) => executeSnapshotDistributionCommand({ bytes, contentStore: store, discoveryPublisher: publisher });
-        const action = makeSnapshotDistributionAction({ snapshotDistributionCommand, publicationCatalogContentResolver: contentResolver });
+        const action = makeSnapshotDistributionAction({ snapshotDistributionCommand, publicationContentStore: localPublicationContentStore });
 
         const ctx = panelCtx({ publication, snapshotDistributionCommand: action });
         ctx.distributeOwnSnapshot();
@@ -390,11 +395,11 @@ async function runTests() {
         const store = new ArweaveContentStore({ signer: makeFakeArweaveSigner(), fetchImpl: gateway.fetchImpl });
         const decliningPublisher = { discoveryTag: 'section-g-own-decline', publish: async () => null };
 
-        const publication = new Publication({ id: 'pub-own-g', documentId: 'doc-own-g' });
+        const publication = new Publication({ id: 'pub-own-g', documentId: 'doc-own-g', contentReference: { hash: 'pub-own-g-hash' } });
         const snapshotJson = { world: { buildings: [{ id: 'own-decline-building', bricks: 1 }] } };
-        const contentResolver = fakeContentResolver({ [publication.id]: snapshotJson });
+        const localPublicationContentStore = fakeContentStore({ 'pub-own-g-hash': JSON.stringify(snapshotJson) });
         const snapshotDistributionCommand = (bytes) => executeSnapshotDistributionCommand({ bytes, contentStore: store, discoveryPublisher: decliningPublisher });
-        const action = makeSnapshotDistributionAction({ snapshotDistributionCommand, publicationCatalogContentResolver: contentResolver });
+        const action = makeSnapshotDistributionAction({ snapshotDistributionCommand, publicationContentStore: localPublicationContentStore });
 
         const ctx = panelCtx({ publication, snapshotDistributionCommand: action });
         ctx.distributeOwnSnapshot();

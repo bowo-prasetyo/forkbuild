@@ -26,10 +26,12 @@ import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterM
 // loads. ui/views/WorldView.js supplies that function as a thin wrapper
 // around the app-wide snapshotDistributionCommand (composed once in
 // ui/main.js), adding only the already-stored Snapshot bytes read back
-// through publicationCatalogContentResolver — the SAME collaborator
-// application/CreateExternalSnapshotPlacementUseCase.js (0.8.18) already
-// reads a Snapshot's own local bytes through for the older, peer-based
-// placement family.
+// through publicationContentStore.get(publication.contentReference) — the
+// SAME content-addressed store the publish path itself already wrote
+// those bytes into (bug fix: this used to go through
+// publicationCatalogContentResolver.resolve(publication.id) instead, a
+// resolver backed by a catalog that never holds a World Publication at
+// all — see ui/main.js's own publicationContentStore injection comment).
 //
 // Deliberately NOT a mechanical copy of tests/WorldViewPublicationDistributionActionIntegration.test.js
 // (0.9.104) — two things differ, because the underlying command does:
@@ -134,13 +136,15 @@ function makeNostrNetwork() {
     return { events, publishImpl, queryImpl };
 }
 
-// A fake application/PublicationCatalogContentResolver.js — duck-typed
-// resolve(publicationId), exactly the one method ui/views/WorldView.js's
-// own distributeWorldEncounterSnapshot() ever calls on it.
-function fakeContentResolver(entries = {}) {
+// A fake content/ContentStore.js — duck-typed get(contentReference),
+// exactly the one method ui/views/WorldView.js's own
+// distributeWorldEncounterSnapshot() ever calls on it, keyed by
+// contentReference.hash exactly like the real content-addressed store.
+function fakeContentStore(entries = {}) {
     return {
-        resolve(publicationId) {
-            return Object.prototype.hasOwnProperty.call(entries, publicationId) ? entries[publicationId] : null;
+        get(contentReference) {
+            const key = contentReference && contentReference.hash;
+            return Object.prototype.hasOwnProperty.call(entries, key) ? entries[key] : null;
         }
     };
 }
@@ -152,16 +156,16 @@ function fakeContentResolver(entries = {}) {
 // realDistributionCommand() is: WorldView.js's function lives inside its
 // own setup(), not exported. Section I's own structural checks verify the
 // real file actually implements this shape.
-function makeSnapshotDistributionAction({ snapshotDistributionCommand, publicationCatalogContentResolver }) {
+function makeSnapshotDistributionAction({ snapshotDistributionCommand, publicationContentStore }) {
     return (publication) => {
-        if (!snapshotDistributionCommand || !publicationCatalogContentResolver) {
+        if (!snapshotDistributionCommand || !publicationContentStore || !publication.contentReference) {
             return Promise.reject(new Error('Snapshot distribution is not available.'));
         }
-        const snapshotJson = publicationCatalogContentResolver.resolve(publication.id);
-        if (snapshotJson === null) {
+        const snapshotBytes = publicationContentStore.get(publication.contentReference);
+        if (snapshotBytes === null || snapshotBytes === undefined) {
             return Promise.reject(new Error('Snapshot distribution is not available.'));
         }
-        return snapshotDistributionCommand(JSON.stringify(snapshotJson));
+        return snapshotDistributionCommand(snapshotBytes);
     };
 }
 
@@ -218,32 +222,33 @@ async function runTests() {
     // already-stored Snapshot bytes and forwards them verbatim.
     // ---------------------------------------------------------------
     {
-        const publication = new Publication({ id: 'pub-snapshot-a', documentId: 'doc-a' });
+        const publication = new Publication({ id: 'pub-snapshot-a', documentId: 'doc-a', contentReference: { hash: 'pub-snapshot-a-hash' } });
         const snapshotJson = { world: { buildings: [{ id: 'action-contract-building', bricks: 2 }] } };
-        const contentResolver = fakeContentResolver({ [publication.id]: snapshotJson });
+        const snapshotBytes = JSON.stringify(snapshotJson);
+        const contentStore = fakeContentStore({ 'pub-snapshot-a-hash': snapshotBytes });
         let receivedBytes = null;
         const action = makeSnapshotDistributionAction({
             snapshotDistributionCommand: (bytes) => { receivedBytes = bytes; return Promise.resolve({ contentReference: {}, announcement: null }); },
-            publicationCatalogContentResolver: contentResolver
+            publicationContentStore: contentStore
         });
 
         await action(publication);
-        assert(receivedBytes === JSON.stringify(snapshotJson),
-            '1. the action forwards exactly JSON.stringify() of the already-resolved Snapshot JSON — no re-serialization of its own');
+        assert(receivedBytes === snapshotBytes,
+            '1. the action forwards exactly the already-stored Snapshot bytes — no re-serialization of its own');
 
-        // No resolver, or no command: the action never fabricates bytes,
-        // and rejects instead of silently doing nothing.
+        // No content store, or no command: the action never fabricates
+        // bytes, and rejects instead of silently doing nothing.
         let calls = 0;
-        const noResolverAction = makeSnapshotDistributionAction({
+        const noStoreAction = makeSnapshotDistributionAction({
             snapshotDistributionCommand: () => { calls += 1; return Promise.resolve(null); },
-            publicationCatalogContentResolver: null
+            publicationContentStore: null
         });
-        await noResolverAction(publication).catch(() => {});
-        assert(calls === 0, '2. with no publicationCatalogContentResolver, the action never calls snapshotDistributionCommand');
+        await noStoreAction(publication).catch(() => {});
+        assert(calls === 0, '2. with no publicationContentStore, the action never calls snapshotDistributionCommand');
 
         const unresolvedAction = makeSnapshotDistributionAction({
             snapshotDistributionCommand: () => { calls += 1; return Promise.resolve(null); },
-            publicationCatalogContentResolver: fakeContentResolver({})
+            publicationContentStore: fakeContentStore({})
         });
         await unresolvedAction(publication).catch(() => {});
         assert(calls === 0, '3. with no locally stored Snapshot bytes for this publication, the action never calls snapshotDistributionCommand');
@@ -288,14 +293,14 @@ async function runTests() {
         const discoveryTag = 'flagship-world-view-snapshot-distribution';
         const publisher = new NostrSnapshotDiscoveryPublisher({ discoveryTag, publishImpl: network.publishImpl });
 
-        const publication = new Publication({ id: 'pub-snapshot-flagship', documentId: 'doc-flagship' });
+        const publication = new Publication({ id: 'pub-snapshot-flagship', documentId: 'doc-flagship', contentReference: { hash: 'pub-snapshot-flagship-hash' } });
         const snapshotJson = { world: { buildings: [{ id: 'flagship-building', bricks: 9 }] } };
         const expectedBytes = JSON.stringify(snapshotJson);
         const expectedHash = computeContentHash(expectedBytes);
-        const contentResolver = fakeContentResolver({ [publication.id]: snapshotJson });
+        const localPublicationContentStore = fakeContentStore({ 'pub-snapshot-flagship-hash': expectedBytes });
 
         const snapshotDistributionCommand = (bytes) => executeSnapshotDistributionCommand({ bytes, contentStore: store, discoveryPublisher: publisher });
-        const distributeWorldEncounterSnapshot = makeSnapshotDistributionAction({ snapshotDistributionCommand, publicationCatalogContentResolver: contentResolver });
+        const distributeWorldEncounterSnapshot = makeSnapshotDistributionAction({ snapshotDistributionCommand, publicationContentStore: localPublicationContentStore });
 
         const ctx = canvasCtx({ snapshotDistributionCommand: distributeWorldEncounterSnapshot });
         ctx.selectedEncounter = { kind: 'PUBLICATION', objectId: publication.id };
@@ -371,10 +376,10 @@ async function runTests() {
         let publishCalls = 0;
         const publisher = { discoveryTag: 'section-e-placement-failure', publish: async () => { publishCalls += 1; return { published: true, id: 'x'.repeat(64) }; } };
 
-        const publication = new Publication({ id: 'pub-snapshot-e', documentId: 'doc-e' });
-        const contentResolver = fakeContentResolver({ [publication.id]: { world: {} } });
+        const publication = new Publication({ id: 'pub-snapshot-e', documentId: 'doc-e', contentReference: { hash: 'pub-snapshot-e-hash' } });
+        const localPublicationContentStore = fakeContentStore({ 'pub-snapshot-e-hash': JSON.stringify({ world: {} }) });
         const snapshotDistributionCommand = (bytes) => executeSnapshotDistributionCommand({ bytes, contentStore: store, discoveryPublisher: publisher });
-        const action = makeSnapshotDistributionAction({ snapshotDistributionCommand, publicationCatalogContentResolver: contentResolver });
+        const action = makeSnapshotDistributionAction({ snapshotDistributionCommand, publicationContentStore: localPublicationContentStore });
 
         const ctx = canvasCtx({
             selectedEncounter: { kind: 'PUBLICATION', objectId: publication.id },
@@ -402,11 +407,11 @@ async function runTests() {
         const store = new ArweaveContentStore({ signer: makeFakeArweaveSigner(), fetchImpl: gateway.fetchImpl });
         const decliningPublisher = { discoveryTag: 'section-f-decline', publish: async () => null };
 
-        const publication = new Publication({ id: 'pub-snapshot-f', documentId: 'doc-f' });
+        const publication = new Publication({ id: 'pub-snapshot-f', documentId: 'doc-f', contentReference: { hash: 'pub-snapshot-f-hash' } });
         const snapshotJson = { world: { buildings: [{ id: 'decline-building', bricks: 1 }] } };
-        const contentResolver = fakeContentResolver({ [publication.id]: snapshotJson });
+        const localPublicationContentStore = fakeContentStore({ 'pub-snapshot-f-hash': JSON.stringify(snapshotJson) });
         const snapshotDistributionCommand = (bytes) => executeSnapshotDistributionCommand({ bytes, contentStore: store, discoveryPublisher: decliningPublisher });
-        const action = makeSnapshotDistributionAction({ snapshotDistributionCommand, publicationCatalogContentResolver: contentResolver });
+        const action = makeSnapshotDistributionAction({ snapshotDistributionCommand, publicationContentStore: localPublicationContentStore });
 
         const ctx = canvasCtx({
             selectedEncounter: { kind: 'PUBLICATION', objectId: publication.id },
@@ -515,13 +520,13 @@ async function runTests() {
 
         assert(viewCode.includes("inject('snapshotDistributionCommand', null)"),
             '35. WorldView.js injects the app-wide snapshotDistributionCommand, defaulting to null');
-        assert(viewCode.includes("inject('publicationCatalogContentResolver', null)"),
-            '36. WorldView.js injects the existing publicationCatalogContentResolver, defaulting to null — never a second resolver');
+        assert(viewCode.includes("inject('publicationContentStore', null)"),
+            '36. WorldView.js injects the app-wide publicationContentStore, defaulting to null — the SAME content-addressed store the publish path itself writes into, never a second one');
         assert(/:snapshotDistributionCommand="distributeWorldEncounterSnapshot"/.test(viewCode),
             '37. WorldView.js forwards its own wrapper to WorldEncounterCanvas as its new snapshotDistributionCommand prop');
         assert(viewCode.includes('function distributeWorldEncounterSnapshot(publication)')
-            && /return snapshotDistributionCommand\(\s*JSON\.stringify\(snapshotJson\),/.test(viewCode),
-            '38. (0.9.566) distributeWorldEncounterSnapshot still calls the injected snapshotDistributionCommand — never a second command — now forwarding placementInfo.publicationId/placementInfo.position alongside the serialized bytes.');
+            && /return snapshotDistributionCommand\(\s*snapshotBytes,/.test(viewCode),
+            '38. (0.9.566) distributeWorldEncounterSnapshot still calls the injected snapshotDistributionCommand — never a second command — now forwarding placementInfo.publicationId/placementInfo.position alongside the already-stored bytes.');
         assert(!/publication\.toJSON\(\)/.test(viewCode.split('function distributeWorldEncounterSnapshot')[1]?.split('\n\n')[0] || ''),
             '39. distributeWorldEncounterSnapshot never re-serializes the publication itself — it reads already-stored bytes back instead');
 

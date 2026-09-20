@@ -555,15 +555,25 @@ export default {
         // by 0.9.136's own unmodified `executeSnapshotDistributionCommand()`)
         // — a thin `(bytes) -> Promise<{ contentReference, announcement }>`
         // function, injected here so `distributeWorldEncounterSnapshot()`
-        // below can call it. `publicationCatalogContentResolver` is the
-        // SAME already-provided resolver `application/
-        // CreateExternalSnapshotPlacementUseCase.js` (0.8.18) already reads
-        // a published Snapshot's own local bytes back through — injected
-        // here for the identical reason, never a second serialization
-        // mechanism of this view's own. See `distributeWorldEncounterSnapshot()`,
-        // below, for how the two are used together.
+        // below can call it.
+        //
+        // Bug fix — `publicationCatalogContentResolver` (resolves by id,
+        // against application/LocalPublicationCatalog.js) used to be
+        // injected here instead of `publicationContentStore` below. That
+        // catalog only ever holds peer-announced DecentralizedPublication
+        // envelopes (see application/CreatePublicationPeerExchangeUseCase.js's
+        // own header, "Deliberately NOT wired into
+        // application/CreateWorldViewUseCase.js") — never a World
+        // Publication created by PublishDocumentUseCase/LocalPublisherProvider,
+        // so it always resolved to nothing for a genuine World Publication,
+        // regardless of wallet/relay configuration. `publicationContentStore`
+        // is the SAME content-addressed store the publish path itself
+        // already wrote bytes into; `distributeWorldEncounterSnapshot()`,
+        // below, reads them back through the Publication's own
+        // `contentReference` — the object it already holds, never a second
+        // id-based lookup.
         const snapshotDistributionCommand = inject('snapshotDistributionCommand', null);
-        const publicationCatalogContentResolver = inject('publicationCatalogContentResolver', null);
+        const publicationContentStore = inject('publicationContentStore', null);
         // 0.9.142 — World View Snapshot Discovery Command. The SAME
         // app-wide `discoverSnapshotCommand` `ui/main.js` now composes
         // (0.9.142's own `composeDiscoverSnapshotRuntime()`, sequenced by
@@ -1372,14 +1382,20 @@ export default {
         // never calls `publication.toJSON()`, never computes a content
         // hash, and never constructs an Arweave transaction or a Nostr
         // event — it reads this replica's own already-stored Snapshot bytes
-        // back through `publicationCatalogContentResolver.resolve()`, the
-        // SAME collaborator `application/CreateExternalSnapshotPlacementUseCase.js`
-        // (0.8.18) already reads a Snapshot's own bytes through for the
-        // OLDER, peer-based placement family, and stringifies them the
-        // identical way that file's own `bytes = JSON.stringify(snapshotJson)`
-        // line already does. `SnapshotDistributionCommand.js`'s own header
-        // is explicit that `contentStore` is the one and only place a
-        // content hash is ever computed — this function computes none.
+        // back through `publicationContentStore.get(publication.contentReference)`,
+        // the SAME content-addressed store the publish path itself already
+        // wrote those bytes into (see `publicationContentStore`'s own
+        // injection comment above for why this replaced
+        // `publicationCatalogContentResolver.resolve(publication.id)` —
+        // that resolver's own backing catalog never holds a World
+        // Publication at all, so it could never have resolved this
+        // Publication's own material). The bytes returned are the exact
+        // canonical string `LocalPublisherProvider.publish()` hashed and
+        // stored, passed straight through — never round-tripped through
+        // `JSON.parse`/`JSON.stringify`. `SnapshotDistributionCommand.js`'s
+        // own header is explicit that `contentStore` is the one and only
+        // place a content hash is ever computed — this function computes
+        // none.
         //
         // NEVER CONSTRUCTS `ArweaveContentStore`/`NostrSnapshotDiscoveryPublisher`,
         // AND NEVER CALLS `executeSnapshotDistributionCommand()`/
@@ -1404,18 +1420,18 @@ export default {
         // current position, the encounter's position, or any other spatial
         // state as a substitute claim.
         function distributeWorldEncounterSnapshot(publication) {
-            if (!snapshotDistributionCommand || !publicationCatalogContentResolver) {
+            if (!snapshotDistributionCommand || !publicationContentStore || !publication.contentReference) {
                 return Promise.reject(new Error('Snapshot distribution is not available.'));
             }
-            const snapshotJson = publicationCatalogContentResolver.resolve(publication.id);
-            if (snapshotJson === null) {
+            const snapshotBytes = publicationContentStore.get(publication.contentReference);
+            if (snapshotBytes === null || snapshotBytes === undefined) {
                 return Promise.reject(new Error('Snapshot distribution is not available.'));
             }
             const placementInfo = typeof session.getPlacementInfoForPublication === 'function'
                 ? session.getPlacementInfoForPublication(publication.id)
                 : null;
             return snapshotDistributionCommand(
-                JSON.stringify(snapshotJson),
+                snapshotBytes,
                 undefined,
                 placementInfo ? placementInfo.publicationId : undefined,
                 placementInfo ? placementInfo.position : undefined

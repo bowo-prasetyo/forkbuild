@@ -302,20 +302,20 @@ function makeRealSnapshotDistributionCommand({ contentStore, discoveryPublisher 
 }
 
 // Mirrors ui/views/WorldView.js's own real distributeWorldEncounterSnapshot(publication).
-function makeDistributeWorldEncounterSnapshotAction({ snapshotDistributionCommand, publicationCatalogContentResolver, session }) {
+function makeDistributeWorldEncounterSnapshotAction({ snapshotDistributionCommand, publicationContentStore, session }) {
     return function distributeWorldEncounterSnapshot(publication) {
-        if (!snapshotDistributionCommand || !publicationCatalogContentResolver) {
+        if (!snapshotDistributionCommand || !publicationContentStore || !publication.contentReference) {
             return Promise.reject(new Error('Snapshot distribution is not available.'));
         }
-        const snapshotJson = publicationCatalogContentResolver.resolve(publication.id);
-        if (snapshotJson === null) {
+        const snapshotBytes = publicationContentStore.get(publication.contentReference);
+        if (snapshotBytes === null || snapshotBytes === undefined) {
             return Promise.reject(new Error('Snapshot distribution is not available.'));
         }
         const placementInfo = typeof session.getPlacementInfoForPublication === 'function'
             ? session.getPlacementInfoForPublication(publication.id)
             : null;
         return snapshotDistributionCommand(
-            JSON.stringify(snapshotJson),
+            snapshotBytes,
             undefined,
             placementInfo ? placementInfo.publicationId : undefined,
             placementInfo ? placementInfo.position : undefined
@@ -323,10 +323,14 @@ function makeDistributeWorldEncounterSnapshotAction({ snapshotDistributionComman
     };
 }
 
-function fakeContentResolver(entries = {}) {
+// Keyed by contentReference.hash exactly like the real content-addressed
+// store; every Publication below is given a contentReference whose hash
+// equals its own id, so `entries` stays keyed by publication id.
+function fakeContentStore(entries = {}) {
     return {
-        resolve(publicationId) {
-            return Object.prototype.hasOwnProperty.call(entries, publicationId) ? entries[publicationId] : null;
+        get(contentReference) {
+            const key = contentReference && contentReference.hash;
+            return Object.prototype.hasOwnProperty.call(entries, key) ? JSON.stringify(entries[key]) : null;
         }
     };
 }
@@ -575,9 +579,9 @@ async function run() {
         const publisherSession = makeRealSession(publisherPlacementRegistry);
 
         const host = makeHost(storageProvider, 'section-c-claim-to-encounter');
-        const contentResolver = fakeContentResolver({ [publication.id]: { world: { buildings: [{ id: 'section-c' }] } } });
+        const publicationContentStore = fakeContentStore({ [publication.contentReference.hash]: { world: { buildings: [{ id: 'section-c' }] } } });
         const snapshotDistributionCommand = makeRealSnapshotDistributionCommand({ contentStore: host.arweaveStore, discoveryPublisher: host.discoveryPublisher });
-        const distribute = makeDistributeWorldEncounterSnapshotAction({ snapshotDistributionCommand, publicationCatalogContentResolver: contentResolver, session: publisherSession });
+        const distribute = makeDistributeWorldEncounterSnapshotAction({ snapshotDistributionCommand, publicationContentStore, session: publisherSession });
         await distribute(publication);
 
         // The RECEIVER's own world: a real WorldDiscoverySourceRegistry, a
@@ -653,9 +657,9 @@ async function run() {
         const publisherSession = makeRealSession(publisherPlacementRegistry);
 
         const host = makeHost(storageProvider, 'section-d-double-presentation');
-        const contentResolver = fakeContentResolver({ [publication.id]: { world: { buildings: [{ id: 'section-d' }] } } });
+        const publicationContentStore = fakeContentStore({ [publication.contentReference.hash]: { world: { buildings: [{ id: 'section-d' }] } } });
         const snapshotDistributionCommand = makeRealSnapshotDistributionCommand({ contentStore: host.arweaveStore, discoveryPublisher: host.discoveryPublisher });
-        const distribute = makeDistributeWorldEncounterSnapshotAction({ snapshotDistributionCommand, publicationCatalogContentResolver: contentResolver, session: publisherSession });
+        const distribute = makeDistributeWorldEncounterSnapshotAction({ snapshotDistributionCommand, publicationContentStore, session: publisherSession });
         await distribute(publication);
 
         // One shared registry and one shared observer-local store — EXACTLY
@@ -1168,9 +1172,9 @@ async function run() {
         // bytes republished under two Publication identities).
         const host = makeHost(storageProvider, 'section-l-flagship');
         const sharedSnapshotJson = { world: { buildings: [{ id: 'flagship-shared' }] } };
-        const contentResolver = fakeContentResolver({ [p1.id]: sharedSnapshotJson, [p2.id]: sharedSnapshotJson });
+        const publicationContentStore = fakeContentStore({ [p1.contentReference.hash]: sharedSnapshotJson, [p2.contentReference.hash]: sharedSnapshotJson });
         const snapshotDistributionCommand = makeRealSnapshotDistributionCommand({ contentStore: host.arweaveStore, discoveryPublisher: host.discoveryPublisher });
-        const distribute = makeDistributeWorldEncounterSnapshotAction({ snapshotDistributionCommand, publicationCatalogContentResolver: contentResolver, session: publisherSession });
+        const distribute = makeDistributeWorldEncounterSnapshotAction({ snapshotDistributionCommand, publicationContentStore, session: publisherSession });
         const distP1 = await distribute(p1);
         const distP2 = await distribute(p2);
         assert(distP1.contentReference.hash === distP2.contentReference.hash, 'L1. Sanity — P1 and P2 genuinely share one contentHash.');

@@ -148,20 +148,20 @@ function makeContentStore() {
 // makeSnapshotDistributionAction() is: WorldView.js's function lives inside
 // its own setup(), not exported. Section H's own structural checks verify
 // the real file actually implements this shape.
-function makeSnapshotDistributionAction({ snapshotDistributionCommand, publicationCatalogContentResolver, session }) {
+function makeSnapshotDistributionAction({ snapshotDistributionCommand, publicationContentStore, session }) {
     return (publication) => {
-        if (!snapshotDistributionCommand || !publicationCatalogContentResolver) {
+        if (!snapshotDistributionCommand || !publicationContentStore || !publication.contentReference) {
             return Promise.reject(new Error('Snapshot distribution is not available.'));
         }
-        const snapshotJson = publicationCatalogContentResolver.resolve(publication.id);
-        if (snapshotJson === null) {
+        const snapshotBytes = publicationContentStore.get(publication.contentReference);
+        if (snapshotBytes === null || snapshotBytes === undefined) {
             return Promise.reject(new Error('Snapshot distribution is not available.'));
         }
         const placementInfo = typeof session.getPlacementInfoForPublication === 'function'
             ? session.getPlacementInfoForPublication(publication.id)
             : null;
         return snapshotDistributionCommand(
-            JSON.stringify(snapshotJson),
+            snapshotBytes,
             undefined,
             placementInfo ? placementInfo.publicationId : undefined,
             placementInfo ? placementInfo.position : undefined
@@ -169,10 +169,14 @@ function makeSnapshotDistributionAction({ snapshotDistributionCommand, publicati
     };
 }
 
-function fakeContentResolver(entries = {}) {
+// Keyed by contentReference.hash exactly like the real content-addressed
+// store; every Publication below is given a contentReference whose hash
+// equals its own id, so `entries` stays keyed by publication id.
+function fakeContentStore(entries = {}) {
     return {
-        resolve(publicationId) {
-            return Object.prototype.hasOwnProperty.call(entries, publicationId) ? entries[publicationId] : null;
+        get(contentReference) {
+            const key = contentReference && contentReference.hash;
+            return Object.prototype.hasOwnProperty.call(entries, key) ? JSON.stringify(entries[key]) : null;
         }
     };
 }
@@ -212,9 +216,9 @@ async function run() {
     // Section B — Exact forwarding.
     // =======================================================================
     {
-        const publication = new Publication({ id: 'pub-B', documentId: 'doc-B' });
+        const publication = new Publication({ id: 'pub-B', documentId: 'doc-B', contentReference: { hash: 'pub-B' } });
         const snapshotJson = { world: { buildings: [{ id: 'section-b-building', bricks: 3 }] } };
-        const contentResolver = fakeContentResolver({ [publication.id]: snapshotJson });
+        const publicationContentStore = fakeContentStore({ [publication.id]: snapshotJson });
 
         let capturedArgs = null;
         const fakeSnapshotDistributionCommand = (...args) => {
@@ -226,7 +230,7 @@ async function run() {
 
         const action = makeSnapshotDistributionAction({
             snapshotDistributionCommand: fakeSnapshotDistributionCommand,
-            publicationCatalogContentResolver: contentResolver,
+            publicationContentStore,
             session
         });
         await action(publication);
@@ -273,9 +277,9 @@ async function run() {
     // Section D — No-claim behavior.
     // =======================================================================
     {
-        const publication = new Publication({ id: 'pub-D', documentId: 'doc-D' });
+        const publication = new Publication({ id: 'pub-D', documentId: 'doc-D', contentReference: { hash: 'pub-D' } });
         const snapshotJson = { world: { buildings: [] } };
-        const contentResolver = fakeContentResolver({ [publication.id]: snapshotJson });
+        const publicationContentStore = fakeContentStore({ [publication.id]: snapshotJson });
 
         const network = makeNostrNetwork();
         const publisher = new NostrSnapshotDiscoveryPublisher({ discoveryTag: '0.9.566-noclaim', publishImpl: network.publishImpl });
@@ -289,7 +293,7 @@ async function run() {
         // own World.
         const session = sessionFromPlacementRegistry(null);
 
-        const action = makeSnapshotDistributionAction({ snapshotDistributionCommand: realSnapshotDistributionCommand, publicationCatalogContentResolver: contentResolver, session });
+        const action = makeSnapshotDistributionAction({ snapshotDistributionCommand: realSnapshotDistributionCommand, publicationContentStore, session });
         const result = await action(publication);
 
         assert(result && result.announcement && result.announcement.published === true, '1. distribution still succeeds — a missing claim is never a distribution failure.');
@@ -305,9 +309,9 @@ async function run() {
     // Section E — Identity binding.
     // =======================================================================
     {
-        const publicationA = new Publication({ id: 'pub-E-A', documentId: 'doc-E-A' });
-        const publicationB = new Publication({ id: 'pub-E-B', documentId: 'doc-E-B' });
-        const contentResolver = fakeContentResolver({
+        const publicationA = new Publication({ id: 'pub-E-A', documentId: 'doc-E-A', contentReference: { hash: 'pub-E-A' } });
+        const publicationB = new Publication({ id: 'pub-E-B', documentId: 'doc-E-B', contentReference: { hash: 'pub-E-B' } });
+        const publicationContentStore = fakeContentStore({
             [publicationA.id]: { world: { buildings: [{ id: 'a' }] } },
             [publicationB.id]: { world: { buildings: [{ id: 'b' }] } }
         });
@@ -322,7 +326,7 @@ async function run() {
             calls.push(args);
             return Promise.resolve({ contentReference: { hash: `hash-${calls.length}`, uri: `u-${calls.length}`, storage: 'ar' }, announcement: null });
         };
-        const action = makeSnapshotDistributionAction({ snapshotDistributionCommand: fakeSnapshotDistributionCommand, publicationCatalogContentResolver: contentResolver, session });
+        const action = makeSnapshotDistributionAction({ snapshotDistributionCommand: fakeSnapshotDistributionCommand, publicationContentStore, session });
 
         await action(publicationA);
         await action(publicationB);
@@ -348,15 +352,15 @@ async function run() {
         assert(!/PlacementRecord|LocalPlacementRegistry|WorldPlacement/.test(commandSource),
             '1. application/SnapshotDistributionCommand.js still references no PlacementRecord/LocalPlacementRegistry/WorldPlacement — forwarding a claim is never itself a placement.');
 
-        const publication = new Publication({ id: 'pub-F', documentId: 'doc-F' });
+        const publication = new Publication({ id: 'pub-F', documentId: 'doc-F', contentReference: { hash: 'pub-F' } });
         const placementRegistry = new LocalPlacementRegistry(new InMemoryStorageProvider());
         placeReal(placementRegistry, publication.id, new Position(2, 2, 2));
         const session = sessionFromPlacementRegistry(placementRegistry);
 
         const before = session.getPlacementInfoForPublication(publication.id);
-        const contentResolver = fakeContentResolver({ [publication.id]: { world: { buildings: [] } } });
+        const publicationContentStore = fakeContentStore({ [publication.id]: { world: { buildings: [] } } });
         const fakeSnapshotDistributionCommand = () => Promise.resolve({ contentReference: { hash: 'h', uri: 'u', storage: 'ar' }, announcement: { published: true } });
-        const action = makeSnapshotDistributionAction({ snapshotDistributionCommand: fakeSnapshotDistributionCommand, publicationCatalogContentResolver: contentResolver, session });
+        const action = makeSnapshotDistributionAction({ snapshotDistributionCommand: fakeSnapshotDistributionCommand, publicationContentStore, session });
 
         await action(publication);
         const after = session.getPlacementInfoForPublication(publication.id);
@@ -376,14 +380,14 @@ async function run() {
     // Section G — Failure isolation.
     // =======================================================================
     {
-        const publication = new Publication({ id: 'pub-G', documentId: 'doc-G' });
-        const contentResolver = fakeContentResolver({ [publication.id]: { world: { buildings: [] } } });
+        const publication = new Publication({ id: 'pub-G', documentId: 'doc-G', contentReference: { hash: 'pub-G' } });
+        const publicationContentStore = fakeContentStore({ [publication.id]: { world: { buildings: [] } } });
         const fakeSnapshotDistributionCommand = () => Promise.resolve({ contentReference: { hash: 'h', uri: 'u', storage: 'ar' }, announcement: { published: true } });
 
         const brokenSession = {
             getPlacementInfoForPublication() { throw new Error('placement registry unavailable'); }
         };
-        const action = makeSnapshotDistributionAction({ snapshotDistributionCommand: fakeSnapshotDistributionCommand, publicationCatalogContentResolver: contentResolver, session: brokenSession });
+        const action = makeSnapshotDistributionAction({ snapshotDistributionCommand: fakeSnapshotDistributionCommand, publicationContentStore, session: brokenSession });
 
         let threwSynchronously = false;
         try {
