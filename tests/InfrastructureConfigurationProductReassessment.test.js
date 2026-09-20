@@ -266,10 +266,10 @@ async function run() {
             n('D2. NostrRelaySettingsView.js still targets the Nostr Relay configuration store/use case — Settings -> persist step intact'));
 
         const mainSource = await source('ui/main.js');
-        const resolutionSites = (codeOnly(mainSource).match(/const resolvedNostrRelayUrl\s*=/g) || []).length;
-        assert(resolutionSites === 1, n(`D3. resolvedNostrRelayUrl is assigned exactly once in ui/main.js (found ${resolutionSites}) — one startup resolution, no second authority`));
-        assert(mainSource.includes('(nostrRelayConfigurationStore.get() || { relayUrl: DEFAULT_NOSTR_RELAY_URL })'),
-            n('D3. …and that one resolution falls back to DEFAULT_NOSTR_RELAY_URL only on absence'));
+        const resolutionSites = (codeOnly(mainSource).match(/const resolvedNostrRelayUrls\s*=/g) || []).length;
+        assert(resolutionSites === 1, n(`D3. resolvedNostrRelayUrls is assigned exactly once in ui/main.js (found ${resolutionSites}) — one startup resolution, no second authority`));
+        assert(mainSource.includes('(nostrRelayConfigurationStore.get() || { relayUrls: [DEFAULT_NOSTR_RELAY_URL] })'),
+            n('D3. …and that one resolution falls back to [DEFAULT_NOSTR_RELAY_URL] only on absence — a one-element relay set, byte-identical in effect to the pre-fan-out single-relay resolution'));
 
         // D4. Startup resolution -> concrete consumer: 0.9.368's own
         // finding was that Nostr relay has THREE independent read-path
@@ -280,11 +280,11 @@ async function run() {
         // (resolvedNostrPublicationRelayUrls) — see this file's own 0.9.451
         // amendment, below.
         const worldEncounterConsumer = /nostrRelayUrls:\s*resolvedNostrPublicationRelayUrls/.test(mainSource);
-        const snapshotConsumer = /nostrSnapshotDiscoveryQueryServiceOptions:\s*\{[^}]*relayUrl:\s*resolvedNostrRelayUrl/.test(mainSource);
-        const placeNamingConsumer = /NostrPlaceNamingDiscoverySource\(\{[^}]*relayUrl:\s*resolvedNostrRelayUrl/.test(mainSource);
+        const snapshotConsumer = /nostrSnapshotDiscoveryQueryServiceOptions:\s*\{[^}]*relayUrls:\s*resolvedNostrRelayUrls/.test(mainSource);
+        const placeNamingConsumer = /NostrPlaceNamingDiscoverySource\(\{[^}]*relayUrl:\s*resolvedNostrRelayUrls\[0\]/.test(mainSource);
         assert(worldEncounterConsumer, n('D4. resolvedNostrPublicationRelayUrls now reaches World Encounter (Publication) discovery composition — 0.9.451'));
-        assert(snapshotConsumer, n('D4. resolvedNostrRelayUrl still reaches Snapshot discovery composition'));
-        assert(placeNamingConsumer, n('D4. resolvedNostrRelayUrl still reaches Place Naming discovery composition — 0.9.368\'s own "not just one consumer" finding is unchanged'));
+        assert(snapshotConsumer, n('D4. resolvedNostrRelayUrls still reaches Snapshot discovery composition (now the fan-out-capable relay set)'));
+        assert(placeNamingConsumer, n('D4. resolvedNostrRelayUrls[0] still reaches Place Naming discovery composition (single-relay case) — 0.9.368\'s own "not just one consumer" finding is unchanged'));
 
         console.log('\n=== SECTION D: NOSTR RELAY JOURNEY ===');
         console.log('✓ Section D: Settings -> persist -> restart -> startup resolution -> all three real consumers (Snapshot, Place Naming discovery on resolvedNostrRelayUrl; World Encounter/Publication discovery on the publication relay set since 0.9.451) is intact, live-reconfirmed. Full correctness already proven by 0.9.370/0.9.372.');

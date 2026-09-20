@@ -128,7 +128,7 @@ async function run() {
     {
         const config = new NostrRelayConfiguration({ relayUrl: 'wss://my-relay.example' });
         const json = config.toJSON();
-        assert(JSON.stringify(json) === JSON.stringify({ relayUrl: 'wss://my-relay.example' }), 'F1. toJSON() returns exactly { relayUrl }, nothing more');
+        assert(JSON.stringify(json) === JSON.stringify({ relayUrls: ['wss://my-relay.example'] }), 'F1. toJSON() returns exactly { relayUrls }, nothing more — the list shape, mirroring core/ArweaveGatewayConfiguration.js\'s own toJSON()');
         assert(Object.keys(json).length === 1, 'F2. toJSON() carries exactly one field');
         console.log('✓ Section F: toJSON() is a plain, single-field data shape — no extra fields, no methods');
     }

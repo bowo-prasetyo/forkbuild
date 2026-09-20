@@ -276,14 +276,21 @@ async function run() {
         assert(/Publication distribution and Publication discovery/.test(relaySettingsViewSource),
             n('A10b. …and now accurately states it affects both Publication distribution AND Publication discovery — the read-side half closed by 0.9.451, documented by 0.9.452'));
 
-        // A11. Snapshot Nostr distribution has no relay-SET concept
-        // anywhere in this codebase, and ui/main.js supplies it no
-        // relayUrl at all — the Settings page's own "or Snapshot" half is
-        // not merely unwired, it names a capability that does not exist.
+        // A11. AMENDED — Snapshot Nostr distribution has since gained its
+        // own relay multiplicity — but from a wholly separate mechanism
+        // than THIS milestone's own Publication relay SET
+        // (core/NostrPublicationRelaySetConfiguration.js): it fans out
+        // using the GENERAL Nostr Relay preference
+        // (core/NostrRelayConfiguration.js's own relayUrls), never the
+        // publication-specific one. So ui/views/NostrPublicationRelaySettingsView.js's
+        // own exclusion of Snapshot (A10/A10b, above) remains correct —
+        // Snapshot's own relay resilience comes from an entirely
+        // independent settings surface, never from the one this test file
+        // is about.
         const snapshotRuntimeSource = await source('application/SnapshotDistributionRuntimeComposition.js');
-        assert(!/relayUrls/.test(snapshotRuntimeSource), n('A11. application/SnapshotDistributionRuntimeComposition.js has no relayUrls-shaped option anywhere — Snapshot Nostr distribution was never given a multi-relay seam of any kind'));
-        assert(!/nostrSnapshotDiscoveryPublisherOptions[\s\S]{0,80}relayUrl/.test(mainSource),
-            n('A11b. ui/main.js\'s own nostrSnapshotDiscoveryPublisherOptions supplies no relayUrl at all — Snapshot distribution falls through to NostrSnapshotDiscoveryPublisher\'s own single hardcoded default, entirely untouched by any relay configuration this Wanderer could ever set'));
+        assert(/relayUrls/.test(snapshotRuntimeSource), n('A11. application/SnapshotDistributionRuntimeComposition.js now DOES have a relayUrls-shaped option — Snapshot Nostr distribution gained its own, later, separately-decided multi-relay seam'));
+        assert(!/NostrPublicationRelaySetConfiguration|resolvedNostrPublicationRelayUrls/.test(snapshotRuntimeSource),
+            n('A11b. …but it is never sourced from THIS milestone\'s own Publication relay-SET configuration — the two multi-relay features remain fully independent, so the Publication Relays settings page\'s own exclusion of Snapshot (A10/A10b) still holds'));
 
         console.log('\n=== SECTION A: CURRENT USER-VISIBLE CAPABILITY ===');
         console.log('✓ Section A: the ACTUAL current user-visible capability is single-relay Nostr publication distribution, unchanged since 0.9.46 — a Wanderer can configure and persist a multi-relay set (0.9.447), and that set is byte-correct and immediately usable (A6/A7), but zero real "Distribute" action anywhere in this shipped product ever reads it (A3-A5, A8), and the Settings page that collects it overstates its own effect for both Publication (currently unwired) and Snapshot (never built at all) distribution (A10/A11). "0.9.448 completes the arc" is true of the INFRASTRUCTURE; it is not yet true of the PRODUCT a Wanderer actually experiences.');
@@ -541,13 +548,18 @@ async function run() {
         assert(/<option value="nostr">Nostr<\/option>/.test(publicationsViewSource) && /<option value="arweave">Arweave<\/option>/.test(publicationsViewSource),
             n('F5. the Publications Distribution page\'s own Substrate selector is a single-choice control (Nostr XOR Arweave, never both) — a Wanderer who chose Nostr gets no incidental Arweave-side discoverability as a fallback'));
 
-        // F6. Compounding factor: the read-side Settings page itself tells
-        // a Wanderer this setting is discovery-only, but never says WHERE
-        // the publication-side setting lives — confirmed live (also named
-        // in Section I as a still-open UX defect).
+        // F6. AMENDED — a later, separate milestone gave Snapshot
+        // Distribution its own relay-resilience fan-out, so this page's own
+        // blanket "does not change where announcements are published"
+        // disclaimer is no longer accurate (Snapshot announcement genuinely
+        // IS affected now) and was removed. The finding this section
+        // originally recorded — no NAVIGABLE link (only a prose mention) to
+        // the page that actually governs Publication announcements — still
+        // holds: the copy names "Nostr Publication Relays" by prose, never
+        // as an actual href/router-link to its route slug.
         const readSettingsViewSource = await source('ui/views/NostrRelaySettingsView.js');
-        assert(/does not change where announcements are published/.test(readSettingsViewSource) && !readSettingsViewSource.includes('nostr-publication-relay'),
-            n('F6. ui/views/NostrRelaySettingsView.js correctly tells a Wanderer this setting does not affect where announcements are published, but never names or links the page where that actually IS configured — a Wanderer reading this warning has nowhere to go to check whether their two settings agree'));
+        assert(/Nostr Publication Relays/.test(readSettingsViewSource) && !readSettingsViewSource.includes('nostr-publication-relay'),
+            n('F6. ui/views/NostrRelaySettingsView.js still only names "Nostr Publication Relays" in prose, never as an actual navigable link to its route — a Wanderer reading this page has nowhere to click to check whether their two settings agree (recorded, non-blocking UX finding, unaffected by Snapshot\'s own later relay-resilience addition)'));
 
         console.log('\n=== SECTION F: DISCOVERY/READ-SIDE CANDIDATE ===');
         console.log('✓ Section F: a real, live, end-to-end experiment shows a Wanderer\'s own discovery path can genuinely fail to find their own, successfully, verifiably published announcement — not a hypothetical, a reproduced failure (F2b). The gap is narrow and specific, never generic multi-relay browsing: a Wanderer\'s own configured PUBLICATION relay set is never consulted by their own DISCOVERY query. Today\'s coincidental matching defaults (F4a) mask it for anyone who customizes neither setting; Section A\'s own finding means this gap is currently LATENT (nothing customizes a live relay set yet) but becomes IMMEDIATELY LIVE the moment Section A\'s own wiring gap is closed, unless addressed in the same breath.');

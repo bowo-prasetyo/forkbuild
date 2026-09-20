@@ -85,15 +85,12 @@ const DEFAULT_NOSTR_RELAY_URL = 'wss://relay.damus.io';
 //   this same milestone, sibling file.
 // - **A network call of any kind, ever, for any reason.** See "validation
 //   is deliberately modest," above.
-// - **`timeout`/`retry`/`fallbackRelay`/`healthCheck`/`priority` fields, a
-//   relay LIST, or any field beyond `relayUrl`.** None of these are
-//   evidenced by 0.9.368's own audit as needed for a first configuration
-//   boundary — adding them here would be speculative surface, not a real
-//   requirement. `nostr/NostrRelayQueryClient.js`'s own header already
-//   documents "exactly one relay, one subscription, per call — no fan-out,
-//   no retry, no ranking" as deliberate; this file holds the identical
-//   single-URL replacement semantic.
-// - **A settings UI, or any `ui/` import.** Unscheduled, later work.
+// - **`timeout`/`healthCheck`/`priority` fields, or any field beyond
+//   `relayUrl`/`relayUrls`.** None of these are evidenced as needed for
+//   this configuration boundary — adding them here would be speculative
+//   surface, not a real requirement.
+// - **A settings UI, or any `ui/` import.** See ui/views/
+//   NostrRelaySettingsView.js for the reachable surface over this shape.
 // - **Publishing.** This configuration affects read/discovery only — see
 //   storage/NostrRelayConfigurationStore.js's own header, "read-path only,"
 //   and `ui/main.js`'s own 0.9.369 wiring for the enforced boundary. The
@@ -104,6 +101,35 @@ const DEFAULT_NOSTR_RELAY_URL = 'wss://relay.damus.io';
 //   sharing with `core/ArweaveGatewayConfiguration.js`.** See "a separate
 //   object," above — this file names itself `NostrRelayConfiguration` on
 //   purpose.
+//
+// RELAY MULTIPLICITY — FAN-OUT, NEVER ORDERED FAILOVER. Unlike
+// `core/ArweaveGatewayConfiguration.js`'s own `gatewayUrls` (ordered read
+// FAILOVER — a second gateway serves byte-identical content, so trying the
+// next one only after the first fails captures the whole benefit at no
+// cost), Nostr relays are independent, non-interchangeable stores: a relay
+// that is never contacted because an earlier one already succeeded is a
+// real, permanently lost discovery surface for anyone who only ever queries
+// that relay. So `relayUrls` here means every configured relay is queried
+// or published to, every time, independently of the others' own outcomes —
+// the identical "fan-out, never failover" invariant `core/
+// NostrPublicationRelaySetConfiguration.js`'s own header already holds for
+// the Publication-distribution relay set, extended here to this codebase's
+// general discovery-relay preference (Snapshot discovery, Place Naming
+// discovery). `relayUrls` is still accepted as an ORDERED array — order is
+// preserved for stable, predictable rendering only, and carries no
+// priority/preference meaning of any kind.
+//
+//   { relayUrl: 'wss://a.example' }            (still valid, unchanged)
+//        │                                      == one-element list
+//        ▼
+//   { relayUrls: ['wss://a.example', 'wss://b.example'] }   (new)
+//        │
+//        ▼
+//   core/NostrRelayConfiguration.js   ★ (THIS)
+//        .relayUrl    — the FIRST configured relay, unchanged shape, for
+//                        every caller that only ever wanted a single value
+//        .relayUrls   — the FULL configured set, new, for a caller building
+//                        a fan-out read/write collaborator
 export function isValidNostrRelayUrl(value) {
     if (typeof value !== 'string') return false;
     const trimmed = value.trim();
@@ -118,28 +144,59 @@ export function isValidNostrRelayUrl(value) {
 }
 
 export class NostrRelayConfiguration {
-    constructor({ relayUrl } = {}) {
-        if (!isValidNostrRelayUrl(relayUrl)) {
-            throw new Error(`NostrRelayConfiguration: invalid relayUrl "${relayUrl}"`);
+    // Exactly one of `relayUrl` (a single string — unchanged since 0.9.369)
+    // or `relayUrls` (a non-empty array, fan-out targets — new) is
+    // accepted; passing both throws, exactly like passing neither already
+    // did. `relayUrl: ['a', 'b']` still throws — an array is never valid
+    // under the singular key, only under `relayUrls`.
+    constructor({ relayUrl, relayUrls } = {}) {
+        if (relayUrl !== undefined && relayUrls !== undefined) {
+            throw new Error('NostrRelayConfiguration: pass exactly one of relayUrl or relayUrls, never both');
         }
-        this._relayUrl = relayUrl.trim();
+        const candidates = relayUrls !== undefined ? relayUrls : [relayUrl];
+        if (!Array.isArray(candidates) || candidates.length === 0) {
+            throw new Error('NostrRelayConfiguration: relayUrls must be a non-empty array');
+        }
+        this._relayUrls = Object.freeze(candidates.map((url) => {
+            if (!isValidNostrRelayUrl(url)) {
+                throw new Error(`NostrRelayConfiguration: invalid relayUrl "${url}"`);
+            }
+            return url.trim();
+        }));
         Object.freeze(this);
     }
 
-    get relayUrl() { return this._relayUrl; }
+    // The first configured relay — unchanged shape/meaning for every
+    // caller that only ever wanted a single value; see this file's own
+    // header.
+    get relayUrl() { return this._relayUrls[0]; }
+
+    // The full configured set, one entry per configured relay — always at
+    // least one entry, even when this instance was constructed from the
+    // singular `relayUrl` shape.
+    get relayUrls() { return this._relayUrls; }
 
     // Value equality, never identity — the same convention this codebase's
     // other small value objects already hold (e.g. core/
-    // ArweaveGatewayConfiguration.js's own equals()).
+    // ArweaveGatewayConfiguration.js's own equals()). Order is preserved
+    // for stable rendering only — see this file's own header, "fan-out,
+    // never ordered failover" — but two configurations naming the same
+    // relays in a different order are still NOT equal, mirroring
+    // `core/ArweaveGatewayConfiguration.js`'s own `equals()` exactly.
     equals(other) {
-        return other instanceof NostrRelayConfiguration && other._relayUrl === this._relayUrl;
+        return other instanceof NostrRelayConfiguration &&
+            other._relayUrls.length === this._relayUrls.length &&
+            other._relayUrls.every((url, index) => url === this._relayUrls[index]);
     }
 
     // Plain-data convenience for storage/NostrRelayConfigurationStore.js —
     // this class itself never calls it, and never reads or writes any
-    // storage key on its own.
+    // storage key on its own. Always the list shape, even for a
+    // single-relay configuration — storage/NostrRelayConfigurationStore.js's
+    // own `get()` reads a legacy single-`relayUrl` payload back into the
+    // identical one-element-list configuration this would have produced.
     toJSON() {
-        return { relayUrl: this._relayUrl };
+        return { relayUrls: [...this._relayUrls] };
     }
 }
 

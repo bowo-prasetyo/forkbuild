@@ -62,13 +62,13 @@ const NOSTR_RELAY_CONFIGURATION_STORE_KEY = 'nostr-relay-configuration';
 // out by name: "store.get() === null means no user override, rather than
 // user explicitly selected the deployment default."
 //
-// A SINGLE CONFIGURATION, NEVER A HISTORY, AND NEVER A RELAY LIST. Storage
-// holds exactly one `{ relayUrl }` object under one fixed key — saving a
-// new relayUrl REPLACES whatever was previously on file outright. There is
-// no per-region or per-purpose dimension here at all — this milestone gives
-// Nostr discovery exactly one relay preference, application-wide, matching
-// every one of the three read-path classes' own "exactly one relay per
-// instance — no fan-out, no ranking" restraint.
+// A SINGLE CONFIGURATION, NEVER A HISTORY. Storage holds exactly one
+// `{ relayUrls }` object under one fixed key — saving a new configuration
+// REPLACES whatever was previously on file outright. There is no
+// per-region or per-purpose dimension here at all — this store gives
+// Nostr discovery exactly one relay preference, application-wide (which may
+// itself name several relays — see core/NostrRelayConfiguration.js's own
+// "relay multiplicity — fan-out, never ordered failover" header).
 //
 // MALFORMED DATA DEGRADES; A GENUINE STORAGE FAILURE PROPAGATES — the
 // identical split storage/ArweaveGatewayConfigurationStore.js's own header
@@ -113,12 +113,26 @@ export class NostrRelayConfigurationStore {
     // header) — both cases are indistinguishable to a caller, deliberately:
     // "absent" and "unreadable" both mean this store has no valid
     // configuration to hand back right now.
+    //
+    // BOTH PERSISTED SHAPES ROUND-TRIP. `configuration.toJSON()` has
+    // written `{ relayUrls: [...] }` since relay fan-out was added, but a
+    // payload saved by an earlier build of this codebase —
+    // `{ relayUrl: '...' }` — is still read back exactly as it always was:
+    // a genuine, one-element relay set, byte-identical in effect to what it
+    // always meant. An upgrade never loses, and never silently
+    // reinterprets, a user's existing single-relay preference.
     get() {
         const raw = this._storageProvider.load(NOSTR_RELAY_CONFIGURATION_STORE_KEY);
-        if (!raw || typeof raw !== 'object' || Array.isArray(raw) || !isValidNostrRelayUrl(raw.relayUrl)) {
+        if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
             return null;
         }
-        return new NostrRelayConfiguration({ relayUrl: raw.relayUrl });
+        if (Array.isArray(raw.relayUrls) && raw.relayUrls.length > 0 && raw.relayUrls.every(isValidNostrRelayUrl)) {
+            return new NostrRelayConfiguration({ relayUrls: raw.relayUrls });
+        }
+        if (isValidNostrRelayUrl(raw.relayUrl)) {
+            return new NostrRelayConfiguration({ relayUrl: raw.relayUrl });
+        }
+        return null;
     }
 
     // Removes any persisted override outright — the one way back to "no

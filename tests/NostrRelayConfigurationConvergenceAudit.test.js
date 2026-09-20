@@ -575,13 +575,27 @@ async function run() {
 
         // Structural: none of the write-path composition/publisher/
         // resolver files reference the read-path configuration boundary by
-        // name.
+        // name — EXCEPT `application/SnapshotDistributionRuntimeComposition.js`,
+        // a deliberate, narrow exception: Snapshot Distribution's own
+        // announcement publishing now optionally accepts a caller-resolved
+        // `relayUrls` set (fanning the announcement out across every
+        // configured relay for resilience — see core/
+        // NostrRelayConfiguration.js's own "fan-out, never ordered
+        // failover" header), sourced from the SAME configuration boundary
+        // Snapshot discovery already read. `ui/main.js` is the one place
+        // that actually resolves `NostrRelayConfigurationStore.get()`;
+        // this file itself still performs no store lookup, no persistence,
+        // and no I/O of its own — it only names the boundary in its own
+        // comments to explain where a caller's `relayUrls` option is
+        // expected to originate from. Publication discovery's write path
+        // and Place Naming's write path remain completely untouched and
+        // unaware this boundary exists at all — see G2-G8, above, still
+        // passing unmodified.
         const writePathFiles = [
             'application/NostrPublicationDiscoveryPublisher.js',
             'application/NostrSnapshotDiscoveryPublisher.js',
             'application/NostrPlaceNamingDiscoveryPublisher.js',
             'application/NostrPublicationDistributionRuntimeAdapter.js',
-            'application/SnapshotDistributionRuntimeComposition.js',
             'application/PlaceNamingPublicationRuntimeComposition.js',
             'application/PublicationDistributionRuntimeConfiguration.js',
             'application/PublicationDistributionConfigurationProvider.js',
@@ -592,7 +606,7 @@ async function run() {
             assert(!/NostrRelayConfiguration/.test(src), `G11 (${path}). the write path never references the read-path configuration boundary by name`);
         }
 
-        console.log('✓ Section G: a read-path override on file has provably zero effect on any of the three Nostr publishers\' own resolved relayUrl (each still the deployment default, verified against the concrete publishImpl call), and none of the write-path files reference the read-path configuration boundary by name');
+        console.log('✓ Section G: a read-path override on file has provably zero effect on any of the three Nostr publishers\' own resolved relayUrl (each still the deployment default, verified against the concrete publishImpl call), and only the deliberately-widened Snapshot Distribution composition file references the read-path configuration boundary by name');
     }
 
     // ===============================================================

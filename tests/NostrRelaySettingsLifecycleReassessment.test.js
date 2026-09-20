@@ -231,8 +231,8 @@ async function run() {
         // A6. Startup composition.
         const mainSource = await source('ui/main.js');
         assert(mainSource.includes('new NostrRelayConfigurationStore('), 'A6. ui/main.js constructs the store at startup');
-        assert(/resolvedNostrRelayUrl\s*=\s*\(nostrRelayConfigurationStore\.get\(\)\s*\|\|\s*\{\s*relayUrl:\s*DEFAULT_NOSTR_RELAY_URL\s*\}\)\.relayUrl/.test(mainSource),
-            'A6. ui/main.js resolves the effective relay once, at startup, from the store');
+        assert(/resolvedNostrRelayUrls\s*=\s*\(nostrRelayConfigurationStore\.get\(\)\s*\|\|\s*\{\s*relayUrls:\s*\[DEFAULT_NOSTR_RELAY_URL\]\s*\}\)\.relayUrls/.test(mainSource),
+            'A6. ui/main.js resolves the effective relay set once, at startup, from the store');
 
         // A7-A9. All THREE read-path composition call sites receive the
         // resolved relay.
@@ -246,21 +246,25 @@ async function run() {
         // relay set must be discoverable through that same set.
         assert(/composeDecentralizedWorldEncounterMaterialDiscoveryServices\(\{[\s\S]{0,300}?nostrRelayUrls:\s*resolvedNostrPublicationRelayUrls/.test(mainSource),
             'A7. World Encounter (Publication) discovery composition receives the resolved publication relay set — 0.9.451');
-        assert(/nostrSnapshotDiscoveryQueryServiceOptions:\s*\{[\s\S]{0,200}?relayUrl:\s*resolvedNostrRelayUrl/.test(mainSource),
-            'A8. Snapshot discovery composition receives the resolved relay');
+        assert(/nostrSnapshotDiscoveryQueryServiceOptions:\s*\{[\s\S]{0,200}?relayUrls:\s*resolvedNostrRelayUrls/.test(mainSource),
+            'A8. Snapshot discovery composition receives the resolved relay set');
         assert(/new NostrPlaceNamingDiscoverySource\(\{[\s\S]{0,200}?relayUrl:\s*resolvedNostrRelayUrl/.test(mainSource),
             'A9. Place Naming discovery construction receives the resolved relay');
 
-        // A10. Write-path isolation — none of the three Nostr publishers'
-        // own composition call sites ever mention resolvedNostrRelayUrl.
-        const publisherIsolationExcerpts = [
-            mainSource.match(/composeSnapshotDistributionRuntime\(\{[\s\S]{0,400}?\}\);/),
-            mainSource.match(/composePlaceNamingPublicationRuntime\(\{[\s\S]{0,400}?\}\);/)
-        ];
-        for (const match of publisherIsolationExcerpts) {
-            assert(match, 'A10. sanity — a write-path composition call site was found');
-            assert(!match[0].includes('resolvedNostrRelayUrl'), 'A10. a write-path composition call site never receives the settings-configured relay');
-        }
+        // A10. Write-path isolation — Place Naming's own publisher
+        // composition call site never mentions the settings-configured
+        // relay. Snapshot Distribution's own composition call site is a
+        // deliberate, narrow exception (see the convergence audit's own
+        // Section G): it now fans an announcement out across every
+        // configured relay for resilience, so it legitimately receives
+        // `resolvedNostrRelayUrls` — checked separately, below.
+        const placeNamingPublisherExcerpt = mainSource.match(/composePlaceNamingPublicationRuntime\(\{[\s\S]{0,400}?\}\);/);
+        assert(placeNamingPublisherExcerpt, 'A10. sanity — the Place Naming write-path composition call site was found');
+        assert(!placeNamingPublisherExcerpt[0].includes('resolvedNostrRelayUrl'), 'A10. the Place Naming write-path composition call site never receives the settings-configured relay');
+
+        const snapshotDistributionExcerpt = mainSource.match(/composeSnapshotDistributionRuntime\(\{[\s\S]{0,400}?\}\);/);
+        assert(snapshotDistributionExcerpt, 'A10b. sanity — the Snapshot Distribution write-path composition call site was found');
+        assert(snapshotDistributionExcerpt[0].includes('relayUrls: resolvedNostrRelayUrls'), 'A10b. the Snapshot Distribution write-path composition call site now deliberately fans announcement publishing out across the settings-configured relay set');
 
         // A11. No generic InfrastructureEndpointConfiguration abstraction
         // exists anywhere — the string appears only inside the two config
@@ -435,23 +439,27 @@ async function run() {
         // relay set, not the general single discovery-relay preference.
         assert(/composeDecentralizedWorldEncounterMaterialDiscoveryServices\(\{[\s\S]{0,300}?nostrRelayUrls:\s*resolvedNostrPublicationRelayUrls/.test(mainSource),
             'C1. Publication discovery\'s real composition call site receives the resolved publication relay set — 0.9.451');
-        assert(/nostrSnapshotDiscoveryQueryServiceOptions:\s*\{[\s\S]{0,200}?relayUrl:\s*resolvedNostrRelayUrl/.test(mainSource),
-            'C2. Snapshot discovery\'s real composition call site receives the resolved relay');
-        assert(/new NostrPlaceNamingDiscoverySource\(\{[\s\S]{0,200}?relayUrl:\s*resolvedNostrRelayUrl/.test(mainSource),
-            'C3. Place Naming discovery\'s real construction call site receives the resolved relay');
+        assert(/nostrSnapshotDiscoveryQueryServiceOptions:\s*\{[\s\S]{0,200}?relayUrls:\s*resolvedNostrRelayUrls/.test(mainSource),
+            'C2. Snapshot discovery\'s real composition call site receives the resolved relay set');
+        assert(/new NostrPlaceNamingDiscoverySource\(\{[\s\S]{0,200}?relayUrl:\s*resolvedNostrRelayUrls\[0\]/.test(mainSource),
+            'C3. Place Naming discovery\'s real construction call site (single-relay case) receives the resolved relay');
 
         // C4. Place Naming discovery, specifically: confirm — structurally,
-        // in the real composition — that NostrPlaceNamingDiscoverySource
-        // is the ONLY entry ui/main.js ever places in
-        // placeNamingDiscoverySources. There is no second, alternative
-        // source (peer, Arweave, local) for the settings-configured relay
-        // to sit alongside — the relay setting is the ENTIRE resilience
-        // lever this discovery family has.
-        const placeNamingSourcesBlockMatch = mainSource.match(/const placeNamingDiscoverySources\s*=[\s\S]{0,300}?;/);
+        // in the real composition — that ui/main.js only ever places one of
+        // the two Nostr Place Naming source classes (the single-relay
+        // `NostrPlaceNamingDiscoverySource`, or its fan-out counterpart
+        // `NostrMultiRelayPlaceNamingDiscoverySource` when more than one
+        // relay is configured) into `placeNamingDiscoverySources`. There is
+        // no second, alternative source (peer, Arweave, local) for the
+        // settings-configured relay(s) to sit alongside — the relay setting
+        // is the ENTIRE resilience lever this discovery family has.
+        const placeNamingSourcesBlockMatch = mainSource.match(/const placeNamingDiscoverySources\s*=[\s\S]{0,500}?;/);
         assert(placeNamingSourcesBlockMatch, 'C4. sanity — the placeNamingDiscoverySources declaration was found');
         const placeNamingSourcesBlock = placeNamingSourcesBlockMatch[0];
-        assert(/\[\s*new NostrPlaceNamingDiscoverySource\(/.test(placeNamingSourcesBlock),
-            'C4. the only possible non-empty content of placeNamingDiscoverySources is a single-element array holding one NostrPlaceNamingDiscoverySource');
+        assert(/\[resolvedNostrRelayUrls\.length > 1\s*\?\s*new NostrMultiRelayPlaceNamingDiscoverySource\(/.test(placeNamingSourcesBlock),
+            'C4. the array\'s one element is a fan-out-vs-single-relay ternary, fan-out branch first');
+        assert(/:\s*new NostrPlaceNamingDiscoverySource\(/.test(placeNamingSourcesBlock),
+            'C4. …and the single-relay NostrPlaceNamingDiscoverySource as the ternary\'s other branch');
         assert(!/PeerDiscoverySource|ArweaveDiscoverySource|LocalDiscoverySource/.test(placeNamingSourcesBlock),
             'C4. no second source type is ever placed alongside it — confirming Place Naming discovery has genuinely no alternative source, exactly as the 0.9.368 audit found');
 
@@ -487,16 +495,29 @@ async function run() {
         });
         assert(placeNamingDiscoveryPublisher.relayUrl === DEFAULT_NOSTR_RELAY_URL, 'D1. Place Naming publishing also still defaults to the deployment default relay');
 
-        // D2. The settings page copy states the discovery-only scope
-        // explicitly — this is now MORE important than it was pre-UI,
-        // per this milestone's own brief: a user seeing "Nostr Relay" in
-        // Settings could reasonably assume it means "my relay" generally.
+        // D2. The settings page copy states its actual scope explicitly —
+        // this is now MORE important than it was pre-UI, per this
+        // milestone's own brief: a user seeing "Nostr Relay" in Settings
+        // could reasonably assume it means "my relay" generally.
+        //
+        // AMENDED — Snapshot Distribution's own announcement publishing is
+        // no longer excluded from this scope (see D1's own sibling
+        // assertions above and application/
+        // SnapshotDistributionRuntimeComposition.js's own
+        // `buildNostrSnapshotDiscoveryPublisher()`), so the settings page
+        // copy no longer claims "does not change where announcements are
+        // published" — it now names Snapshot announcement explicitly among
+        // what this setting affects, and still says nothing about
+        // Publication distribution/discovery, which remains governed by
+        // the separate Nostr Publication Relays configuration.
         const viewSource = await source('ui/views/NostrRelaySettingsView.js');
         const templateMatch = viewSource.match(/template:\s*`([\s\S]*)`\s*\n\};/);
         assert(templateMatch, 'D2. sanity — the view exports a template literal to inspect');
         const templateText = templateMatch[1];
-        assert(/discovery/i.test(templateText) && /does not change where announcements are published/i.test(templateText),
-            'D2. the discovery-only scope is stated in one plain sentence, distinguishing it from publishing without requiring the reader to already know the architecture');
+        assert(/discovery/i.test(templateText) && /Snapshot discovery and announcement/i.test(templateText),
+            'D2. the settings copy names Snapshot discovery AND announcement among what this setting affects, without requiring the reader to already know the architecture');
+        assert(!/does not change where announcements are published/i.test(templateText),
+            'D2. the settings copy no longer claims announcements are unaffected — Snapshot announcement is now genuinely in scope');
 
         console.log('✓ Section D: read configuration ≠ publishing configuration, confirmed behaviorally at the concrete publishImpl call site; the settings page copy already states the discovery-only scope in plain language');
     }
@@ -651,12 +672,19 @@ async function run() {
         // affordance, not just prose.
         assert(/>Use Deployment Default</.test(templateText), 'F5. "Use Deployment Default" exists as a real, clearly labeled action');
 
-        // F6. Publishing-unaffected is explicit — Nostr's own copy is, if
-        // anything, MORE explicit than Arweave Gateway's own two-clause
-        // version (0.9.367's own G3): one sentence names both scope and
-        // exclusion together.
-        assert(/This setting affects discovery only; it does not change where announcements are published\./.test(templateText),
-            'F6. publishing-unaffected is stated in one explicit, self-contained sentence — never left for the reader to infer from architecture');
+        // F6. AMENDED — Scope is stated explicitly, including that Snapshot
+        // announcement publishing is now genuinely covered (Snapshot
+        // Distribution's own composition now fans an announcement out
+        // across every configured relay — see application/
+        // SnapshotDistributionRuntimeComposition.js's own
+        // `buildNostrSnapshotDiscoveryPublisher()`). Publication
+        // distribution/discovery remains explicitly out of scope, governed
+        // by the separate Nostr Publication Relays configuration instead —
+        // this page's own copy still names that boundary by cross-reference.
+        assert(/This setting affects Snapshot discovery and announcement, and Place Naming discovery\./.test(templateText),
+            'F6. the setting\'s actual scope — including Snapshot announcement — is stated in one explicit, self-contained sentence — never left for the reader to infer from architecture');
+        assert(/Publication discovery uses the separate Nostr Publication Relays configuration instead/.test(templateText),
+            'F6. Publication distribution/discovery is still explicitly named as OUT of this setting\'s scope, cross-referencing the separate configuration that governs it');
 
         // F7. RECORDED FINDING (non-blocking, the same class 0.9.367's
         // own G6 recorded for Arweave Gateway): the "Saved." confirmation

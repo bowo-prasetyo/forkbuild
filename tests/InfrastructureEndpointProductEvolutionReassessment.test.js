@@ -121,8 +121,8 @@ async function run() {
         // A4. The three actual runtime consumers, traced by name, never
         // inferred from the file's own prose comments.
         assert(mainSource.includes('nostrQueryImpl: nostrRelayQueryClient'), 'A4. consumer #1 — composeDecentralizedWorldEncounterMaterialDiscoveryServices({ nostrQueryImpl })');
-        assert(mainSource.includes('nostrSnapshotDiscoveryQueryServiceOptions: { queryImpl: nostrRelayQueryClient, relayUrl: resolvedNostrRelayUrl }'), 'A4. consumer #2 — composeDiscoverSnapshotRuntime({ nostrSnapshotDiscoveryQueryServiceOptions })');
-        assert(mainSource.includes('new NostrPlaceNamingDiscoverySource({ queryImpl: nostrRelayQueryClient, relayUrl: resolvedNostrRelayUrl })'), 'A4. consumer #3 — NostrPlaceNamingDiscoverySource, Place Naming discovery');
+        assert(mainSource.includes('nostrSnapshotDiscoveryQueryServiceOptions: { queryImpl: nostrRelayQueryClient, relayUrls: resolvedNostrRelayUrls }'), 'A4. consumer #2 — composeDiscoverSnapshotRuntime({ nostrSnapshotDiscoveryQueryServiceOptions }), now the fan-out-capable relay set');
+        assert(mainSource.includes('new NostrPlaceNamingDiscoverySource({ queryImpl: nostrRelayQueryClient, relayUrl: resolvedNostrRelayUrls[0] })'), 'A4. consumer #3 — NostrPlaceNamingDiscoverySource (single-relay case), Place Naming discovery');
 
         // A5 — UPDATED BY 0.9.369. At the time this milestone (0.9.368) ran,
         // none of the three consuming composition calls passed a relayUrl
@@ -148,7 +148,7 @@ async function run() {
             mainSource.indexOf('composeDiscoverSnapshotRuntime({'),
             mainSource.indexOf('composeDiscoverSnapshotRuntime({') + 400
         );
-        assert(/relayUrl:\s*resolvedNostrRelayUrl/.test(snapshotCompositionRegion), 'A5. the Snapshot discovery composition call now supplies the resolved relayUrl too');
+        assert(/relayUrls:\s*resolvedNostrRelayUrls/.test(snapshotCompositionRegion), 'A5. the Snapshot discovery composition call now supplies the resolved relay set too');
 
         // A6. Place Naming discovery has NO other discovery source of any
         // kind — Nostr is not merely A source there, it is the ONLY source.

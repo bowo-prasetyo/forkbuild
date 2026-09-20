@@ -53,15 +53,25 @@ import { DEFAULT_NOSTR_RELAY_URL } from '../../core/NostrRelayConfiguration.js';
 // view performs no live re-composition of its own.
 //
 // THIS VIEW NEVER "TESTS" THE RELAY. No Test Connection button, no live
-// WebSocket probing, no health indicator, no automatic retry, no fallback
-// to relay.damus.io, no multiple relay entries, no priority/ranking/health
-// history. The user is selecting an endpoint, not asking this page to
-// establish whether that endpoint is currently reachable — an unreachable
-// configured relay remains a DISCOVERY-time failure for each of the three
-// existing read-path classes' own failure semantics to report (0.9.370's
-// own Section F already proved those differ — [] for Publication/Snapshot,
-// a rejection for Place Naming — and this view never normalizes them into
-// one new error model; it only ever configures which relay is used).
+// WebSocket probing, no health indicator, no automatic retry, no
+// priority/ranking/health history. The user is selecting endpoints, not
+// asking this page to establish whether they are currently reachable — an
+// unreachable configured relay remains a DISCOVERY-time failure for each of
+// the read-path classes' own failure semantics to report, and this view
+// never normalizes them into one new error model; it only ever configures
+// which relay(s) are used.
+//
+// ONE RELAY PER LINE, EVERY LINE FANNED OUT TO, NEVER TRIED IN ORDER. The
+// single text input became a multi-line field: each non-empty line is one
+// relay URL, and every configured relay is queried/published to
+// independently — see core/NostrRelayConfiguration.js's own header, "fan-out,
+// never ordered failover." A single line still behaves exactly as the
+// single input always did. This view still performs no ordering or
+// selection decision of its own: it only ever splits the textarea into
+// lines and hands the resulting array to
+// `setNostrRelayConfigurationUseCase.execute({ relayUrls })`, which is
+// itself a thin, unvalidating forward to core/NostrRelayConfiguration.js's
+// own constructor.
 //
 // OPENING THIS PAGE NEVER WRITES ANYTHING. `load()` only ever reads
 // `store.get()`; when it returns `null`, the input stays empty and the
@@ -105,16 +115,17 @@ export default {
         // The NostrRelayConfiguration currently on file, or null — read
         // straight from the injected store, never constructed here.
         const configuration = ref(null);
+        // One relay URL per line — every configured relay is fanned out to.
         const relayUrlInput = ref('');
         const saveError = ref(null);
         const saveStatus = ref('idle'); // 'idle' | 'saving' | 'saved'
         const clearStatus = ref('idle'); // 'idle' | 'cleared'
 
         const hasOverride = computed(() => configuration.value !== null);
-        // The relay actually in effect right now: the stored override when
-        // one exists, otherwise the deployment default — never a merge of
-        // the two, mirroring ui/main.js's own `resolvedNostrRelayUrl`
-        // resolution exactly.
+        // The relay actually in effect right now when no override is on
+        // file — the deployment default, shown as informational text.
+        // Never a merge with anything, mirroring ui/main.js's own
+        // `resolvedNostrRelayUrls` resolution exactly.
         const effectiveRelayUrl = computed(() => (
             configuration.value ? configuration.value.relayUrl : DEFAULT_NOSTR_RELAY_URL
         ));
@@ -126,7 +137,19 @@ export default {
         function load() {
             if (!store) return;
             configuration.value = store.get();
-            relayUrlInput.value = configuration.value ? configuration.value.relayUrl : '';
+            relayUrlInput.value = configuration.value ? configuration.value.relayUrls.join('\n') : '';
+        }
+
+        // Splits the textarea into one trimmed URL per non-empty line —
+        // the ONLY interpretation this view performs; every other rule
+        // (what counts as a valid URL, whether the list is non-empty) stays
+        // inside core/NostrRelayConfiguration.js's own constructor, reached
+        // through the use case below.
+        function parseRelayUrls() {
+            return relayUrlInput.value
+                .split('\n')
+                .map((line) => line.trim())
+                .filter((line) => line.length > 0);
         }
 
         function save() {
@@ -135,8 +158,8 @@ export default {
             clearStatus.value = 'idle';
             saveStatus.value = 'saving';
             try {
-                configuration.value = setNostrRelayConfigurationUseCase.execute({ relayUrl: relayUrlInput.value.trim() });
-                relayUrlInput.value = configuration.value.relayUrl;
+                configuration.value = setNostrRelayConfigurationUseCase.execute({ relayUrls: parseRelayUrls() });
+                relayUrlInput.value = configuration.value.relayUrls.join('\n');
                 saveStatus.value = 'saved';
             } catch (error) {
                 // The use case's own construction step threw before
@@ -168,23 +191,23 @@ export default {
         <section class="nostr-relay-settings-view">
             <h1>Nostr Relay</h1>
             <p class="form-hint form-hint--neutral">
-                Relay used for discovery operations, including Snapshots and Place Naming. Publication discovery uses the separate Nostr Publication Relays configuration instead (see Nostr Publication Relays, under Network Settings). This setting affects discovery only; it does not change where announcements are published.
+                Relay(s) used for discovery operations, including Snapshots and Place Naming. One per line — every configured relay is queried and announced to independently, so a second relay stays useful even while the first is unreachable. Publication discovery uses the separate Nostr Publication Relays configuration instead (see Nostr Publication Relays, under Network Settings). This setting affects Snapshot discovery and announcement, and Place Naming discovery.
             </p>
 
             <p v-if="hasOverride" class="form-hint form-hint--neutral">
-                Current override: {{ configuration.relayUrl }}
+                Current override(s): {{ configuration.relayUrls.join(', ') }}
             </p>
             <p v-else class="form-hint form-hint--neutral">
                 No override configured. Currently using the deployment default: {{ effectiveRelayUrl }}
             </p>
 
             <div class="nostr-relay-settings-form">
-                <input
-                    type="text"
+                <textarea
                     v-model="relayUrlInput"
                     placeholder="wss://relay.damus.io"
+                    rows="4"
                     class="nostr-relay-input"
-                />
+                ></textarea>
 
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
                 <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>

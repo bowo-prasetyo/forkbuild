@@ -464,14 +464,23 @@ async function run() {
         // still consume the general preference, never the publication relay
         // set, at their own real call sites in ui/main.js.
         const mainSource = await source('ui/main.js');
-        assert(/nostrSnapshotDiscoveryQueryServiceOptions:\s*\{\s*queryImpl:\s*nostrRelayQueryClient,\s*relayUrl:\s*resolvedNostrRelayUrl\s*\}/.test(mainSource),
-            n('F3. Snapshot discovery\'s real composition call site still receives the general resolvedNostrRelayUrl'));
-        assert(/new NostrPlaceNamingDiscoverySource\(\{\s*queryImpl:\s*nostrRelayQueryClient,\s*relayUrl:\s*resolvedNostrRelayUrl\s*\}\)/.test(mainSource),
-            n('F4. Place Naming discovery\'s real construction call site still receives the general resolvedNostrRelayUrl'));
+        assert(/nostrSnapshotDiscoveryQueryServiceOptions:\s*\{\s*queryImpl:\s*nostrRelayQueryClient,\s*relayUrls:\s*resolvedNostrRelayUrls\s*\}/.test(mainSource),
+            n('F3. Snapshot discovery\'s real composition call site still receives the general resolvedNostrRelayUrls (now the fan-out-capable relay set)'));
+        assert(/new NostrPlaceNamingDiscoverySource\(\{\s*queryImpl:\s*nostrRelayQueryClient,\s*relayUrl:\s*resolvedNostrRelayUrls\[0\]\s*\}\)/.test(mainSource),
+            n('F4. Place Naming discovery\'s real construction call site (single-relay case) still receives the general resolvedNostrRelayUrls[0]'));
         assert(/nostrRelayUrls:\s*resolvedNostrPublicationRelayUrls/.test(mainSource),
             n('F5. Publication distribution/discovery\'s own real call sites receive resolvedNostrPublicationRelayUrls — a genuinely separate resolved value'));
+        // AMENDED — Snapshot Distribution has since gained its own, later,
+        // separately-decided multi-relay seam (fan-out resilience for its
+        // own announcement publishing, sourced from the general
+        // resolvedNostrRelayUrls — never from resolvedNostrPublicationRelayUrls,
+        // this milestone's own separate relay set). F6 now checks the
+        // invariant that actually matters to THIS milestone's own scope:
+        // the two multi-relay features stay independent.
         const snapshotRuntimeSource = await source('application/SnapshotDistributionRuntimeComposition.js');
-        assert(!/relayUrls/.test(snapshotRuntimeSource), n('F6. Snapshot distribution still has no multi-relay seam of any kind'));
+        assert(/relayUrls/.test(snapshotRuntimeSource), n('F6. Snapshot distribution now has its own, later, separately-decided multi-relay seam'));
+        assert(!/NostrPublicationRelaySetConfiguration|resolvedNostrPublicationRelayUrls/.test(snapshotRuntimeSource),
+            n('F6b. …but it never reuses this milestone\'s own Publication relay-SET configuration — the two multi-relay features remain independent'));
 
         // The architecture-residue audit: does the settings copy now
         // accurately describe both distribution and discovery? This

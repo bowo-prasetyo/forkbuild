@@ -1,6 +1,7 @@
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { ArweaveGatewayFailoverContentStore } from '../content/ArweaveGatewayFailoverContentStore.js';
 import { NostrSnapshotDiscoveryQueryService } from './NostrSnapshotDiscoveryQueryService.js';
+import { NostrMultiRelaySnapshotDiscoveryQueryService } from './NostrMultiRelaySnapshotDiscoveryQueryService.js';
 import { DecentralizedSnapshotResolver } from './DecentralizedSnapshotResolver.js';
 
 // 0.9.142 — World View Snapshot Discovery Command.
@@ -215,6 +216,27 @@ function buildArweaveRetrievalContentStore({ gatewayUrls, ...options }) {
     return new ArweaveContentStore(options);
 }
 
+// buildNostrSnapshotDiscoveryQueryService(options) -> queryService. 0.9.440's
+// own `gatewayUrl`/`gatewayUrls` dual-shape precedent, held here for Nostr:
+// `relayUrls` (plural, an array) is a new, additional way to configure the
+// same one `queryService` field. Passing `relayUrls` with more than one
+// entry builds a `NostrMultiRelaySnapshotDiscoveryQueryService` instead of
+// a plain `NostrSnapshotDiscoveryQueryService` — every configured relay is
+// queried independently (fan-out, never failover — see core/
+// NostrRelayConfiguration.js's own header). Passing zero or one entries, or
+// the original singular `relayUrl` string, or nothing at all, is
+// byte-for-byte the pre-existing behavior: exactly one plain
+// `NostrSnapshotDiscoveryQueryService` is constructed, unchanged.
+function buildNostrSnapshotDiscoveryQueryService({ relayUrls, ...options }) {
+    if (Array.isArray(relayUrls) && relayUrls.length > 1) {
+        return new NostrMultiRelaySnapshotDiscoveryQueryService({ ...options, relayUrls });
+    }
+    if (Array.isArray(relayUrls) && relayUrls.length === 1) {
+        return new NostrSnapshotDiscoveryQueryService({ ...options, relayUrl: relayUrls[0] });
+    }
+    return new NostrSnapshotDiscoveryQueryService(options);
+}
+
 // composeDiscoverSnapshotRuntime({ arweaveContentStoreOptions,
 //   nostrSnapshotDiscoveryQueryServiceOptions }) -> { resolver,
 //   contentStore, queryService }. See this file's own header for the full
@@ -252,7 +274,7 @@ export function composeDiscoverSnapshotRuntime({
         : null;
 
     const queryService = canAttemptNostrQuery(nostrSnapshotDiscoveryQueryServiceOptions)
-        ? new NostrSnapshotDiscoveryQueryService(nostrSnapshotDiscoveryQueryServiceOptions)
+        ? buildNostrSnapshotDiscoveryQueryService(nostrSnapshotDiscoveryQueryServiceOptions)
         : null;
 
     const resolver = queryService ? new DecentralizedSnapshotResolver(queryService) : null;
