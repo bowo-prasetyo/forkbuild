@@ -3703,16 +3703,73 @@ export class WorldNavigationSession {
         return true;
     }
 
-    // 0.2.94 — "Home": returns the camera to the world's one
-    // conventional starting framing, regardless of how far the camera
-    // has since wandered. Exactly `focusLocation(ORIGIN_LOCATION_ID)`,
-    // exposed under its own name because "Home" is the one destination
-    // the design conversation calls out as needing no Locations-panel
-    // lookup at all — a single always-available action. Never changes
-    // `_activeDocumentId` or any document/placement state — the world
-    // itself is completely unaffected; only the camera moves.
+    // Bug fix / redefinition — "Home" used to mean `focusLocation(ORIGIN_LOCATION_ID)`:
+    // the camera alone, jumping to the shared World View's fixed
+    // (0,0,0) reference framing regardless of what the user was
+    // actually doing. Since a published world's own position is
+    // essentially randomized across a huge shared grid
+    // (core/DeterministicGridPlacement.js), (0,0,0) is almost never
+    // anywhere near the user's own content — the button read as "Home"
+    // but behaved as "teleport to an unrelated, usually-empty part of
+    // the shared map," a reported source of real confusion. True
+    // world origin remains reachable exactly as before, just no longer
+    // through this shortcut: WorldLocationDirectory's own `list()`
+    // always lists it first, under its permanent `ORIGIN_LOCATION_ID`
+    // entry, for anyone who wants it deliberately.
+    //
+    // "Home" now means what the word actually promises: back to the
+    // user's OWN currently-focused world (`_focusedDocumentId` — see
+    // focusDocument()'s own header for how that gets set), both the
+    // CAMERA and the LOCAL AVATAR. This is a deliberate, singular
+    // exception to the "navigation is camera-only, never silently
+    // relocates a participant" rule every other focus*() method here
+    // holds (see focusDocument()'s own `_spawnAvatarNear()`, gated to
+    // fire at most once per session, on `sequence === 0`, for exactly
+    // that reason): leaving the avatar behind while the camera jumps
+    // "home" would recreate the same render/reality mismatch this
+    // World View has already had fixed elsewhere this session — the
+    // camera would show the user's own world while WASD kept moving
+    // their avatar around wherever it actually was, off-screen. A
+    // button people will genuinely think of as "take me home" should
+    // take all of them home, not just their point of view.
+    //
+    // Reuses focusDocument() for the camera/active-document/streaming
+    // half (identical to what every other "jump to a specific world"
+    // entry point already does), then unconditionally repositions the
+    // avatar on top — overriding, harmlessly, whatever
+    // focusDocument()'s own once-only _spawnAvatarNear() already did
+    // when the avatar had never moved, and actually moving it every
+    // other time, which is the entire point of this override existing.
+    //
+    // Falls back to the pre-existing origin behavior only when there
+    // is no world of the user's own currently open to go home TO (no
+    // document has ever been focused yet, or the previously-focused
+    // one has since streamed out) — the same "graceful degrade to the
+    // one guaranteed destination" posture focusLocation() itself
+    // already has for an unresolvable id.
     goHome() {
-        return this.focusLocation(ORIGIN_LOCATION_ID);
+        const documentId = this._focusedDocumentId;
+        if (!documentId || !this._loadedDocuments.has(documentId)) {
+            return this.focusLocation(ORIGIN_LOCATION_ID);
+        }
+        // focusDocument()'s own return is updateSpatialView()'s richer
+        // { loaded, visible, failed } shape, not a boolean — goHome()
+        // keeps focusLocation()'s own established true/false contract
+        // instead (every existing caller of goHome() already expects
+        // that shape; nothing needs updateSpatialView()'s own streaming
+        // detail from this particular call).
+        this.focusDocument(documentId);
+        const layoutPos = this._getWorldPosition(documentId);
+        if (this._avatarPresenceSession && layoutPos) {
+            this._avatarPresenceSession.update({
+                position: {
+                    x: layoutPos.x + AVATAR_SPAWN_OFFSET.x,
+                    y: layoutPos.y + AVATAR_SPAWN_OFFSET.y,
+                    z: layoutPos.z + AVATAR_SPAWN_OFFSET.z
+                }
+            });
+        }
+        return true;
     }
 
     // 0.2.94 — a pure, derived orientation reading for a compass

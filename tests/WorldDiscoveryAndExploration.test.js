@@ -22,6 +22,9 @@ import { WorldLocationKind } from '../core/WorldLocationKind.js';
 import { WorldSpatialContextService } from '../application/WorldSpatialContextService.js';
 import { deriveSpatialContext } from '../core/WorldSpatialContext.js';
 import { HYDROLOGY_FEATURE } from '../core/Hydrology.js';
+import { Publication } from '../publisher/Publication.js';
+import { WorldPlacement } from '../core/WorldPlacement.js';
+import { SpatialBounds } from '../core/SpatialBounds.js';
 
 // 0.3.6 — World Discovery & Exploration.
 //
@@ -132,6 +135,26 @@ async function run() {
     villageWorld.addStructurePlacement(new StructurePlacement({ documentId: marketDoc.world.id, position: new Position(20, 0, -100), rotation: 0 }));
     const villageDoc = new Document({ world: villageWorld, metadata: new DocumentMetadata({ title: "Alice's Village", author: 'alice' }) });
     saveDocumentUseCase.execute(new DocumentManager(villageDoc));
+    // goHome() (redefined to return to the user's own currently-focused
+    // world) reuses focusDocument(), which also runs updateSpatialView()
+    // — a real, desirable side effect in production (bringing a
+    // streamed-out world back into range) but it means villageWorld must
+    // be genuinely DISCOVERABLE the same way any real "current world"
+    // would be, or it gets judged invisible and unloaded. This test's
+    // own makeSession() loads it directly via _loadWorld(), bypassing
+    // normal discovery — an explicit WorldPlacement pinned to (0,0,0)
+    // (rather than a bare Publication, which would land villageWorld at
+    // an arbitrary hashed grid position and break every earlier
+    // phase's own "the village sits at the origin" assumption) matches
+    // what would really be true of a world the session is actually
+    // viewing, without disturbing any position this test already relies on.
+    const villagePublication = new Publication({ documentId: villageWorld.id, title: "Alice's Village", author: 'alice' });
+    storage.save('forkbuild-publications', [villagePublication.toJSON()]);
+    spatialIndexProvider.add(new WorldPlacement({
+        publicationId: villagePublication.id,
+        position: new Position(0, 0, 0),
+        bounds: SpatialBounds.fromWorld(villageWorld, registry)
+    }));
 
     console.log('✓ Setup complete: three structures placed in Alice\'s Village World');
 
@@ -354,8 +377,12 @@ async function run() {
     for (const pos of explorationPositions) {
         contextService.getContextAtPosition(pos);
     }
+    // goHome() (redefined to return to the user's OWN currently-focused
+    // world rather than the fixed (0,0,0) origin) reuses focusDocument(),
+    // an INSTANT camera jump — see SpatialCameraController#focusDocument()
+    // — never _beginCameraFocus()'s animated glide, so no
+    // _activeCameraFocus animation is ever scheduled here to tick.
     aliceSession.goHome();
-    aliceSession._tickCameraFocus(aliceSession._activeCameraFocus.startedAt + 900);
 
     const worldAfterMore = JSON.stringify(aliceSession.getDocument(villageWorld.id).world.toJSON());
     assert(worldBeforeMore === worldAfterMore, 'Exploration/navigation must not mutate World state');
