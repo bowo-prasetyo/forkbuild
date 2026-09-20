@@ -1,5 +1,6 @@
 import { RenderWorldViewUseCase } from './RenderWorldViewUseCase.js';
 import { Position } from '../core/Position.js';
+import { SpatialBounds } from '../core/SpatialBounds.js';
 import { SpatialSelectionState } from './spatial-state/SpatialSelectionState.js';
 import { SpatialHoverState } from './spatial-state/SpatialHoverState.js';
 import { SpatialCameraController } from './SpatialCameraController.js';
@@ -190,7 +191,23 @@ const GESTURE_DURATION_MS = 1800;
 // document's own geometry — gives a sensible "you arrive where you're
 // looking" default without pretending to know anything about that
 // document's actual size/shape.
+//
+// Bug fix — kept ONLY as the fallback for when a document's content
+// isn't loaded yet to measure (see _safeSpawnPosition() below): a
+// fixed (3, 0, 3) assumes the document's own local origin sits outside
+// whatever was built there, which breaks the instant a structure is
+// authored AROUND its own origin instead of out from a corner of it —
+// reported live as an avatar spawning inside its own pyramid once that
+// pyramid was recentered on local (0,0,0) to fix an unrelated
+// streaming bug. _safeSpawnPosition() now measures real content
+// whenever it can and only falls back to this constant when it can't.
 const AVATAR_SPAWN_OFFSET = { x: 3, y: 0, z: 3 };
+// The gap left BEYOND a document's own farthest measured corner (see
+// _safeSpawnPosition() below) — small on purpose, matching
+// AVATAR_SPAWN_OFFSET's own original magnitude: enough that the avatar
+// doesn't spawn flush against a wall, not so much that it lands far
+// out in unrelated space for a small build.
+const AVATAR_SPAWN_CLEARANCE = 3;
 
 // 0.2.94 — World View Location & Navigation. HOME_CAMERA_FRAMING is
 // deliberately NOT a fresh invention: it is exactly
@@ -2797,17 +2814,49 @@ export class WorldNavigationSession {
     // focusDocument() call (searching, Explore Here, Nearby Worlds)
     // leaves it exactly where it is; navigating the CAMERA elsewhere
     // must never silently teleport a participant.
-    _spawnAvatarNear(position) {
+    _spawnAvatarNear(documentId, position) {
         if (!this._avatarPresenceSession || this._avatarPresenceSession.current.sequence !== 0) {
             return;
         }
-        this._avatarPresenceSession.update({
-            position: {
+        this._avatarPresenceSession.update({ position: this._safeSpawnPosition(documentId, position) });
+    }
+
+    // Bug fix — a spawn/homecoming point must clear the document's own
+    // REAL content, not just assume its local origin sits outside
+    // whatever was built there. AVATAR_SPAWN_OFFSET's small, fixed
+    // (3, 0, 3) worked fine for typical content authored out from its
+    // own local origin (a house whose corner is near (0,0,0)), but a
+    // structure recentered AROUND its own local origin (exactly what
+    // this session's own earlier bug fix did for an oversized, far-
+    // from-origin pyramid — see PlacePublicationUseCase's own bounds
+    // fix) puts (3, 0, 3) well inside it: reported live as "Home
+    // dropped me inside my own pyramid."
+    //
+    // When the document's content is already loaded, this measures its
+    // REAL local bounds (core/SpatialBounds.js#fromWorld(), the exact
+    // same AABB PlacePublicationUseCase already computes for streaming)
+    // and spawns just past its farthest corner plus a small clearance —
+    // guaranteed outside the footprint regardless of size or where its
+    // own local origin happens to sit inside it. Falls back to the
+    // original small fixed offset only when the document isn't loaded
+    // yet to measure (the exact pre-existing behavior for that case) —
+    // graceful degradation, never a throw, matching every other
+    // optional-data posture in this class.
+    _safeSpawnPosition(documentId, position) {
+        const document = documentId ? this._loadedDocuments.get(documentId) : null;
+        if (!document) {
+            return {
                 x: position.x + AVATAR_SPAWN_OFFSET.x,
                 y: position.y + AVATAR_SPAWN_OFFSET.y,
                 z: position.z + AVATAR_SPAWN_OFFSET.z
-            }
-        });
+            };
+        }
+        const bounds = SpatialBounds.fromWorld(document.world, this._registry);
+        return {
+            x: position.x + bounds.max.x + AVATAR_SPAWN_CLEARANCE,
+            y: position.y + AVATAR_SPAWN_OFFSET.y,
+            z: position.z + bounds.max.z + AVATAR_SPAWN_CLEARANCE
+        };
     }
 
     // A pure client rendering preference — see docs/Principles.md.
@@ -2852,7 +2901,7 @@ export class WorldNavigationSession {
             this.setActiveDocument(documentId);
         }
         const layoutPos = this._getWorldPosition(documentId);
-        this._spawnAvatarNear(layoutPos);
+        this._spawnAvatarNear(documentId, layoutPos);
         this._spatialCameraController.focusDocument(documentId, layoutPos);
         return this.updateSpatialView();
     }
@@ -3761,12 +3810,18 @@ export class WorldNavigationSession {
         this.focusDocument(documentId);
         const layoutPos = this._getWorldPosition(documentId);
         if (this._avatarPresenceSession && layoutPos) {
+            // Bug fix — reuses the same real-bounds-aware spawn point
+            // _spawnAvatarNear() computes for a fresh avatar's own
+            // first spawn (see _safeSpawnPosition()'s own header): the
+            // fixed (3, 0, 3) offset this used to add put the avatar
+            // INSIDE a structure recentered around its own local origin
+            // — reported live as "Home dropped me inside my own
+            // pyramid." documentId is guaranteed already loaded here
+            // (checked above), so this always measures the world's
+            // real content rather than falling back to that fixed
+            // offset.
             this._avatarPresenceSession.update({
-                position: {
-                    x: layoutPos.x + AVATAR_SPAWN_OFFSET.x,
-                    y: layoutPos.y + AVATAR_SPAWN_OFFSET.y,
-                    z: layoutPos.z + AVATAR_SPAWN_OFFSET.z
-                }
+                position: this._safeSpawnPosition(documentId, layoutPos)
             });
         }
         return true;
