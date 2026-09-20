@@ -148,11 +148,12 @@ async function run() {
         const mainStoreConstructions = (mainSource.match(/new NostrRelayConfigurationStore\(/g) || []).length;
         assert(mainStoreConstructions === 1, `D5. ui/main.js constructs exactly one NostrRelayConfigurationStore instance — found ${mainStoreConstructions}`);
 
-        // AMENDED BY 0.9.451 — World Encounter (Publication) discovery no
-        // longer receives resolvedNostrRelayUrl; it receives the resolved
-        // publication relay SET instead. See this file's own 0.9.451 header.
-        assert(!/nostrQueryImpl:\s*nostrRelayQueryClient,\s*\n\s*nostrRelayUrl:\s*resolvedNostrRelayUrl/.test(mainSource), 'D6. composeDecentralizedWorldEncounterMaterialDiscoveryServices() (World Encounter discovery) no longer receives resolvedNostrRelayUrl — 0.9.451 moved it onto the publication relay set instead');
-        assert(/nostrQueryImpl:\s*nostrRelayQueryClient,\s*\n\s*nostrRelayUrls:\s*resolvedNostrPublicationRelayUrls/.test(mainSource), 'D6b. composeDecentralizedWorldEncounterMaterialDiscoveryServices() (World Encounter discovery) instead receives resolvedNostrPublicationRelayUrls (0.9.451)');
+        // UNIFIED — 0.9.451 originally moved World Encounter (Publication)
+        // discovery onto a separate `resolvedNostrPublicationRelayUrls`
+        // relay set; that separate set has since been merged back into the
+        // general `resolvedNostrRelayUrls` — see core/
+        // NostrRelayConfiguration.js's own "unified" header.
+        assert(/nostrQueryImpl:\s*nostrRelayQueryClient,\s*\n\s*nostrRelayUrls:\s*resolvedNostrRelayUrls/.test(mainSource), 'D6. composeDecentralizedWorldEncounterMaterialDiscoveryServices() (World Encounter discovery) receives the unified resolvedNostrRelayUrls');
         assert(/nostrSnapshotDiscoveryQueryServiceOptions:\s*\{\s*queryImpl:\s*nostrRelayQueryClient,\s*relayUrls:\s*resolvedNostrRelayUrls\s*\}/.test(mainSource), 'D7. composeDiscoverSnapshotRuntime() (Snapshot discovery) still receives the resolved relay set, untouched by 0.9.451 — now the fan-out-capable relayUrls, not a single relayUrl');
         assert(/new NostrPlaceNamingDiscoverySource\(\{\s*queryImpl:\s*nostrRelayQueryClient,\s*relayUrl:\s*resolvedNostrRelayUrls\[0\]\s*\}\)/.test(mainSource), 'D8. NostrPlaceNamingDiscoverySource (Place Naming discovery, single-relay case) still receives the resolved relayUrl, untouched by 0.9.451 — now sourced from resolvedNostrRelayUrls[0]');
 
@@ -172,7 +173,7 @@ async function run() {
             assert(!offendingLine, `D10 (${publisherName}). no CODE line in ui/main.js both references this write-path publisher and the resolved relayUrl — confirming resolvedNostrRelayUrl never reaches it through this file`);
         }
 
-        console.log('✓ Section D: ui/main.js source sweep confirms the resolved relay set reaches the two remaining read-path composition call sites (World Encounter discovery now receives the publication relay set instead, per 0.9.451), and no Publication/Place-Naming publishing call site references it — Snapshot Distribution\'s own publishing is the one deliberate exception, confirmed separately in the convergence audit');
+        console.log('✓ Section D: ui/main.js source sweep confirms the unified resolved relay set reaches all three read-path composition call sites (World Encounter, Snapshot, and Place Naming discovery), and no Publication/Place-Naming publishing call site references it — Snapshot Distribution\'s own publishing is the one deliberate exception, confirmed separately in the convergence audit');
     }
 
     // ===============================================================

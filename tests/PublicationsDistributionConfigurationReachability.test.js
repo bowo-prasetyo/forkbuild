@@ -127,18 +127,15 @@ async function run() {
     {
         assert(/<router-link\s+:to="discoveryDistributionConfigurationRoute\(entry\)"/.test(publicationCardSlice),
             n('A1. the Publication card carries exactly one dynamic router-link, resolved per-entry from discoveryDistributionConfigurationRoute(entry)'));
-        // AMENDED BY 0.9.447 — Nostr Publication Relay Set Configuration.
-        // This milestone added a SECOND, additive contextual link — "Configure
-        // Nostr Publication Relays," pointed at the new
-        // /settings/nostr-publication-relays route — never a duplicate of
-        // the dynamic per-entry link above, and never a replacement for it:
-        // that link still resolves per-entry from
-        // discoveryDistributionConfigurationRoute(entry) exactly as before
-        // (still true, per A1 immediately above). See
-        // tests/NostrPublicationRelaySetConfiguration.test.js, Section J,
-        // for this new link's own dedicated coverage.
-        assert(countOccurrences(publicationCardSlice, '<router-link') === 2,
-            n('A2. AMENDED BY 0.9.447 — the Publication card now carries exactly two router-links: the original dynamic, per-entry discovery-relay link, plus the new, additive Nostr Publication Relays link'));
+        // UNIFIED — 0.9.447 added a SECOND, additive contextual link,
+        // "Configure Nostr Publication Relays," pointed at a genuinely
+        // separate relay-SET configuration/route. That configuration has
+        // since been merged into the same one discoveryDistributionConfigurationRoute(entry)
+        // already resolves to (/settings/nostr-relay for the Nostr case) —
+        // see core/NostrRelayConfiguration.js's own "unified" header — so
+        // the second link was removed as fully redundant with the first.
+        assert(countOccurrences(publicationCardSlice, '<router-link') === 1,
+            n('A2. UNIFIED — the Publication card carries exactly one router-link again: the second, now-redundant Nostr Publication Relays link was removed once its configuration merged into the one the first link already targets'));
 
         // AMENDED BY 0.9.506 — the Content link is now dynamic, resolved
         // per-entry from snapshotDistributionConfigurationRoute(entry),
@@ -257,7 +254,7 @@ async function run() {
         // SAME "nostr" choice Section A's own table already names, just a
         // different, genuinely separate destination for it).
         const routerLinkTags = distributionSection.match(/<router-link[^>]*>/g) || [];
-        assert(routerLinkTags.length === 5, n(`D1. AMENDED BY 0.9.447 — exactly five router-link opening tags exist in the Distribution section (found ${routerLinkTags.length}) — the original four, plus the one new Nostr Publication Relays link`));
+        assert(routerLinkTags.length === 4, n(`D1. UNIFIED — exactly four router-link opening tags exist in the Distribution section (found ${routerLinkTags.length}) — the original four; the 0.9.447 Nostr Publication Relays link was removed once its configuration merged into the one the Publication card's own dynamic link already targets`));
         for (const tag of routerLinkTags) {
             assert(!/@click/.test(tag), n(`D2[${tag.replace(/\s+/g, ' ').trim()}]. carries no @click handler of its own — navigation only, never a distribution trigger`));
         }

@@ -542,8 +542,9 @@ export default {
         // 0.9.450 — Nostr Multi-Relay Publication Distribution Wiring. The
         // SAME app-wide `multiRelayNostrPublicationDistributionCommand`
         // `ui/main.js` has provided since 0.9.447 (composed against the
-        // Wanderer's own persisted `NostrPublicationRelaySetConfigurationProvider`
-        // relay set, bound to the identical `publicationDistributionLifecycleStore`
+        // Wanderer's own persisted Nostr relay set — see core/
+        // NostrRelayConfiguration.js's own "unified" header — bound to the
+        // identical `publicationDistributionLifecycleStore`
         // injected above) — injected here so `distributeWorldEncounterPublication()`
         // below can reach it for the Nostr path specifically. This view
         // still constructs no orchestrator, uploader, or publisher of its

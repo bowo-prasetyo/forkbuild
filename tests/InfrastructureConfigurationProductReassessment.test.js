@@ -271,19 +271,19 @@ async function run() {
         assert(mainSource.includes('(nostrRelayConfigurationStore.get() || { relayUrls: [DEFAULT_NOSTR_RELAY_URL] })'),
             n('D3. …and that one resolution falls back to [DEFAULT_NOSTR_RELAY_URL] only on absence — a one-element relay set, byte-identical in effect to the pre-fan-out single-relay resolution'));
 
-        // D4. Startup resolution -> concrete consumer: 0.9.368's own
-        // finding was that Nostr relay has THREE independent read-path
-        // consumers (World Encounter discovery, Snapshot discovery, Place
-        // Naming discovery) — reconfirmed live for the two 0.9.451 left
-        // untouched (Snapshot, Place Naming); World Encounter (Publication)
-        // discovery now reads the resolved publication relay SET instead
-        // (resolvedNostrPublicationRelayUrls) — see this file's own 0.9.451
-        // amendment, below.
-        const worldEncounterConsumer = /nostrRelayUrls:\s*resolvedNostrPublicationRelayUrls/.test(mainSource);
+        // D4. UNIFIED — 0.9.368's own finding was that Nostr relay has
+        // THREE independent read-path consumers (World Encounter discovery,
+        // Snapshot discovery, Place Naming discovery). 0.9.451 briefly split
+        // World Encounter (Publication) discovery onto its own,
+        // separately-configured relay set; that set has since been merged
+        // back into the general one — see core/NostrRelayConfiguration.js's
+        // own "unified" header — so all three consumers now read the SAME
+        // resolved relay set again.
+        const worldEncounterConsumer = /nostrRelayUrls:\s*resolvedNostrRelayUrls/.test(mainSource);
         const snapshotConsumer = /nostrSnapshotDiscoveryQueryServiceOptions:\s*\{[^}]*relayUrls:\s*resolvedNostrRelayUrls/.test(mainSource);
         const placeNamingConsumer = /NostrPlaceNamingDiscoverySource\(\{[^}]*relayUrl:\s*resolvedNostrRelayUrls\[0\]/.test(mainSource);
-        assert(worldEncounterConsumer, n('D4. resolvedNostrPublicationRelayUrls now reaches World Encounter (Publication) discovery composition — 0.9.451'));
-        assert(snapshotConsumer, n('D4. resolvedNostrRelayUrls still reaches Snapshot discovery composition (now the fan-out-capable relay set)'));
+        assert(worldEncounterConsumer, n('D4. resolvedNostrRelayUrls now reaches World Encounter (Publication) discovery composition — unified'));
+        assert(snapshotConsumer, n('D4. resolvedNostrRelayUrls still reaches Snapshot discovery composition (the fan-out-capable relay set)'));
         assert(placeNamingConsumer, n('D4. resolvedNostrRelayUrls[0] still reaches Place Naming discovery composition (single-relay case) — 0.9.368\'s own "not just one consumer" finding is unchanged'));
 
         console.log('\n=== SECTION D: NOSTR RELAY JOURNEY ===');

@@ -237,15 +237,13 @@ async function run() {
         // A7-A9. All THREE read-path composition call sites receive the
         // resolved relay.
         //
-        // AMENDED BY 0.9.451 — Nostr Publication Relay Set Discovery
-        // Alignment. World Encounter (Publication) discovery no longer
-        // receives `resolvedNostrRelayUrl`; it now receives the resolved
-        // publication relay SET instead (`resolvedNostrPublicationRelayUrls`)
-        // — see `application/NostrPublicationRelaySetDiscoveryQueryService.js`'s
-        // own header for why a publication distributed to a configured
-        // relay set must be discoverable through that same set.
-        assert(/composeDecentralizedWorldEncounterMaterialDiscoveryServices\(\{[\s\S]{0,300}?nostrRelayUrls:\s*resolvedNostrPublicationRelayUrls/.test(mainSource),
-            'A7. World Encounter (Publication) discovery composition receives the resolved publication relay set — 0.9.451');
+        // UNIFIED — 0.9.451's own separate `resolvedNostrPublicationRelayUrls`
+        // has since been merged back into the general `resolvedNostrRelayUrls`
+        // — see core/NostrRelayConfiguration.js's own "unified" header. World
+        // Encounter (Publication) discovery now receives the SAME array
+        // Snapshot/Place-Naming discovery already use.
+        assert(/composeDecentralizedWorldEncounterMaterialDiscoveryServices\(\{[\s\S]{0,300}?nostrRelayUrls:\s*resolvedNostrRelayUrls/.test(mainSource),
+            'A7. World Encounter (Publication) discovery composition receives the unified resolved relay set');
         assert(/nostrSnapshotDiscoveryQueryServiceOptions:\s*\{[\s\S]{0,200}?relayUrls:\s*resolvedNostrRelayUrls/.test(mainSource),
             'A8. Snapshot discovery composition receives the resolved relay set');
         assert(/new NostrPlaceNamingDiscoverySource\(\{[\s\S]{0,200}?relayUrl:\s*resolvedNostrRelayUrl/.test(mainSource),
@@ -434,11 +432,11 @@ async function run() {
         // ui/main.js genuinely receives its own resolved relay(s) (re-swept
         // independently of Section A's own sweep, never assumed).
         //
-        // AMENDED BY 0.9.451 — see this file's own A7 amendment, above:
-        // Publication discovery's own resolved value is now the publication
-        // relay set, not the general single discovery-relay preference.
-        assert(/composeDecentralizedWorldEncounterMaterialDiscoveryServices\(\{[\s\S]{0,300}?nostrRelayUrls:\s*resolvedNostrPublicationRelayUrls/.test(mainSource),
-            'C1. Publication discovery\'s real composition call site receives the resolved publication relay set — 0.9.451');
+        // UNIFIED — see this file's own A7 amendment, above: Publication
+        // discovery's own resolved value is now the SAME unified relay set
+        // every other Nostr consumer uses.
+        assert(/composeDecentralizedWorldEncounterMaterialDiscoveryServices\(\{[\s\S]{0,300}?nostrRelayUrls:\s*resolvedNostrRelayUrls/.test(mainSource),
+            'C1. Publication discovery\'s real composition call site receives the unified resolved relay set');
         assert(/nostrSnapshotDiscoveryQueryServiceOptions:\s*\{[\s\S]{0,200}?relayUrls:\s*resolvedNostrRelayUrls/.test(mainSource),
             'C2. Snapshot discovery\'s real composition call site receives the resolved relay set');
         assert(/new NostrPlaceNamingDiscoverySource\(\{[\s\S]{0,200}?relayUrl:\s*resolvedNostrRelayUrls\[0\]/.test(mainSource),
@@ -495,29 +493,21 @@ async function run() {
         });
         assert(placeNamingDiscoveryPublisher.relayUrl === DEFAULT_NOSTR_RELAY_URL, 'D1. Place Naming publishing also still defaults to the deployment default relay');
 
-        // D2. The settings page copy states its actual scope explicitly —
-        // this is now MORE important than it was pre-UI, per this
-        // milestone's own brief: a user seeing "Nostr Relay" in Settings
-        // could reasonably assume it means "my relay" generally.
-        //
-        // AMENDED — Snapshot Distribution's own announcement publishing is
-        // no longer excluded from this scope (see D1's own sibling
-        // assertions above and application/
-        // SnapshotDistributionRuntimeComposition.js's own
-        // `buildNostrSnapshotDiscoveryPublisher()`), so the settings page
-        // copy no longer claims "does not change where announcements are
-        // published" — it now names Snapshot announcement explicitly among
-        // what this setting affects, and still says nothing about
-        // Publication distribution/discovery, which remains governed by
-        // the separate Nostr Publication Relays configuration.
+        // D2. UNIFIED — the settings page copy states its actual scope
+        // explicitly. Snapshot Distribution's own announcement publishing,
+        // and now Publication distribution/discovery and Commentary too,
+        // are all in scope — see core/NostrRelayConfiguration.js's own
+        // "unified" header. The old "does not change where announcements
+        // are published" disclaimer is gone; a Wanderer reading this page
+        // reads the true, complete scope in one place.
         const viewSource = await source('ui/views/NostrRelaySettingsView.js');
         const templateMatch = viewSource.match(/template:\s*`([\s\S]*)`\s*\n\};/);
         assert(templateMatch, 'D2. sanity — the view exports a template literal to inspect');
         const templateText = templateMatch[1];
-        assert(/discovery/i.test(templateText) && /Snapshot discovery and announcement/i.test(templateText),
-            'D2. the settings copy names Snapshot discovery AND announcement among what this setting affects, without requiring the reader to already know the architecture');
+        assert(/Publications, Snapshots, Place Naming, and Commentary/i.test(templateText),
+            'D2. the settings copy names every Nostr-facing feature this setting now affects, without requiring the reader to already know the architecture');
         assert(!/does not change where announcements are published/i.test(templateText),
-            'D2. the settings copy no longer claims announcements are unaffected — Snapshot announcement is now genuinely in scope');
+            'D2. the settings copy no longer claims announcements are unaffected — every Nostr write path is now genuinely in scope');
 
         console.log('✓ Section D: read configuration ≠ publishing configuration, confirmed behaviorally at the concrete publishImpl call site; the settings page copy already states the discovery-only scope in plain language');
     }
@@ -646,20 +636,19 @@ async function run() {
         assert(templateMatch, 'F1. sanity — the view exports a template literal to inspect');
         const templateText = templateMatch[1];
 
-        // F2. Plain product name heading.
-        assert(/<h1>Nostr Relay<\/h1>/.test(templateText), 'F2. the page heading is the plain product name "Nostr Relay"');
+        // F2. UNIFIED — the page heading changed from the singular "Nostr
+        // Relay" to the plural "Nostr Relays," reflecting that this page
+        // now configures a fan-out SET, not a single value.
+        assert(/<h1>Nostr Relays<\/h1>/.test(templateText), 'F2. the page heading is the plain product name "Nostr Relays"');
 
-        // F3. "Discovery" scope is explained, not left to jargon alone —
-        // it names the concrete discovery families, not just the word
-        // "discovery" on its own. STATUS UPDATE (0.9.452): the list itself
-        // changed — 0.9.451 moved Publication discovery onto the separate
-        // Nostr Publication Relays configuration, and 0.9.452 corrected
-        // this page's own copy to match (it no longer lists Publications).
-        // The invariant this assertion checks — "discovery" is grounded
-        // with a concrete list, never left as unexplained jargon — still
-        // holds, against the updated, accurate list.
-        assert(/discovery operations, including Snapshots and Place Naming/.test(templateText),
-            'F3. "discovery" is grounded with the concrete list of what it covers (Snapshots and Place Naming — Publications moved to its own relay set in 0.9.451/0.9.452), never left as an unexplained term of art');
+        // F3. UNIFIED — the scope list now names every Nostr-facing feature
+        // this one relay set governs (Publications, Snapshots, Place
+        // Naming, Commentary), rather than a subset — see core/
+        // NostrRelayConfiguration.js's own "unified" header. The invariant
+        // this assertion checks — scope is grounded with a concrete list,
+        // never left as unexplained jargon — still holds.
+        assert(/Publications, Snapshots, Place Naming, and Commentary/.test(templateText),
+            'F3. scope is grounded with the concrete, complete list of what this one relay set now covers, never left as an unexplained term of art');
 
         // F4. The default is clearly identified — grounded with the
         // actual concrete URL in effect, exactly the same discipline
@@ -672,19 +661,16 @@ async function run() {
         // affordance, not just prose.
         assert(/>Use Deployment Default</.test(templateText), 'F5. "Use Deployment Default" exists as a real, clearly labeled action');
 
-        // F6. AMENDED — Scope is stated explicitly, including that Snapshot
-        // announcement publishing is now genuinely covered (Snapshot
-        // Distribution's own composition now fans an announcement out
-        // across every configured relay — see application/
-        // SnapshotDistributionRuntimeComposition.js's own
-        // `buildNostrSnapshotDiscoveryPublisher()`). Publication
-        // distribution/discovery remains explicitly out of scope, governed
-        // by the separate Nostr Publication Relays configuration instead —
-        // this page's own copy still names that boundary by cross-reference.
-        assert(/This setting affects Snapshot discovery and announcement, and Place Naming discovery\./.test(templateText),
-            'F6. the setting\'s actual scope — including Snapshot announcement — is stated in one explicit, self-contained sentence — never left for the reader to infer from architecture');
-        assert(/Publication discovery uses the separate Nostr Publication Relays configuration instead/.test(templateText),
-            'F6. Publication distribution/discovery is still explicitly named as OUT of this setting\'s scope, cross-referencing the separate configuration that governs it');
+        // F6. UNIFIED — there is no longer a second Nostr relay
+        // configuration to cross-reference or carve an exception for. The
+        // old "Publication discovery uses the separate ... configuration
+        // instead" disclaimer, and the old "does not change where
+        // announcements are published" disclaimer, are both gone — this
+        // page's own copy states the complete, true scope directly.
+        assert(!/Publication discovery uses the separate/.test(templateText),
+            'F6. the settings copy no longer cross-references a second, separate Nostr relay configuration — there is only one now');
+        assert(!/nostr-publication-relay/i.test(templateText),
+            'F6. the settings copy contains no residual reference to the removed Nostr Publication Relays page');
 
         // F7. RECORDED FINDING (non-blocking, the same class 0.9.367's
         // own G6 recorded for Arweave Gateway): the "Saved." confirmation
