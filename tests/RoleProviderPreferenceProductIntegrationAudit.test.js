@@ -214,7 +214,7 @@ async function run() {
         // composition root — ALREADY registers TWO real content stores
         // for BOTH Publication and Snapshot placement creation today.
         const mainSource = await source('ui/main.js');
-        assert(/stores:\s*\[publicationContentStore,\s*new IpfsGatewayContentStore\(\)\]/.test(mainSource), 'B2c. ui/main.js registers publicationContentStore (\'local\') AND a real content/IpfsGatewayContentStore.js (\'ipfs\') together for Publication placement creation — two genuine, already-available choices, not a capability gap');
+        assert(/stores:\s*\[publicationContentStore,\s*new IpfsGatewayContentStore\(\{ gatewayUrl: resolvedIpfsGatewayUrl \}\)\]/.test(mainSource), 'B2c. ui/main.js registers publicationContentStore (\'local\') AND a real content/IpfsGatewayContentStore.js (\'ipfs\', now settings-backed per 0.9.665) together for Publication placement creation — two genuine, already-available choices, not a capability gap');
         assert(/stores:\s*\[publicationContentStore,\s*new IpfsContentStore\(\)\]/.test(mainSource), 'B2d. ui/main.js registers publicationContentStore (\'local\') AND a real content/IpfsContentStore.js (\'ipfs\') together for Snapshot placement creation — the identical two-real-choices shape');
         contentSeams[contentSeams.length - 1].evidence = 'ui/main.js already registers TWO real, distinct content stores (local + ipfs) for BOTH Publication and Snapshot placement creation — the only seam in this entire audit, across all three roles, where production wiring today offers a person more than one genuinely available provider to choose among';
 

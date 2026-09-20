@@ -169,10 +169,13 @@ async function run() {
 
         // A7. IPFS Gateway — reconfirmed narrow and opt-in, per 0.9.367's own
         // finding, at exactly its two known call sites, never the World
-        // Encounter discovery composition.
+        // Encounter discovery composition. AMENDED BY 0.9.665 — those two
+        // call sites now receive a resolved, settings-backed gatewayUrl
+        // (see docs/Roadmap.md, "0.9.665") rather than zero arguments; the
+        // call-site COUNT this section actually cares about is unchanged.
         const worldEncounterCompositionSource = await source('application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
         assert(!/ipfs/i.test(worldEncounterCompositionSource), 'A7. World Encounter material discovery composition never references IPFS — Local + Nostr + Arweave only');
-        const ipfsGatewayUsageCount = countOccurrences(mainSource, 'new IpfsGatewayContentStore()');
+        const ipfsGatewayUsageCount = countOccurrences(mainSource, 'new IpfsGatewayContentStore({ gatewayUrl: resolvedIpfsGatewayUrl })');
         assert(ipfsGatewayUsageCount === 2, `A7. IpfsGatewayContentStore is still constructed at exactly its two known, opt-in call sites — found ${ipfsGatewayUsageCount}`);
 
         // A8. STUN/TURN, Rendezvous, Bitcoin Esplora, Base RPC — reconfirmed

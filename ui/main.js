@@ -141,6 +141,9 @@ import { bootstrapWorldDiscoveryRuntime } from '../application/WorldDiscoveryRun
 import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
 import { DEFAULT_ARWEAVE_GATEWAY_URL } from '../core/ArweaveGatewayConfiguration.js';
 import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfigurationStore.js';
+import { DEFAULT_IPFS_GATEWAY_URL } from '../core/IpfsGatewayConfiguration.js';
+import { IpfsGatewayConfigurationStore } from '../storage/IpfsGatewayConfigurationStore.js';
+import { SetIpfsGatewayConfigurationUseCase } from '../application/SetIpfsGatewayConfigurationUseCase.js';
 import { DEFAULT_NOSTR_RELAY_URL } from '../core/NostrRelayConfiguration.js';
 import { NostrRelayConfigurationStore } from '../storage/NostrRelayConfigurationStore.js';
 import { SetNostrRelayConfigurationUseCase } from '../application/SetNostrRelayConfigurationUseCase.js';
@@ -987,12 +990,23 @@ const { discoveryCoordinator: publicationSnapshotPlacementDiscoveryCoordinator }
 // resolution registry too, alongside the CREATION registry — see that
 // wiring's own comment for why one shared instance is registered into
 // both rather than two independently constructed ones.
+// 0.9.665 — User-Configurable IPFS Gateway Configuration Boundary.
+// Resolved here, ahead of both real IpfsGatewayContentStore construction
+// sites below (this one and the "Observe Content" verifier further down),
+// mirroring the Arweave Gateway resolution below but computed earlier
+// since these two consumers are wired before `app` exists — the use case
+// and app.provide() calls for the settings page itself are added
+// alongside the Arweave Gateway wiring further down, reusing this SAME
+// store instance. See core/IpfsGatewayConfiguration.js's own header for
+// why this reopens a candidate 0.9.373/0.9.385/0.9.657 each deferred.
+const ipfsGatewayConfigurationStore = new IpfsGatewayConfigurationStore(new LocalStorageProvider());
+const resolvedIpfsGatewayUrl = (ipfsGatewayConfigurationStore.get() || { gatewayUrl: DEFAULT_IPFS_GATEWAY_URL }).gatewayUrl;
 const {
     coordinator: publicationSnapshotPlacementResolutionCoordinator,
     storeRegistry: publicationSnapshotPlacementResolutionStoreRegistry
 } = new CreateSnapshotPlacementResolutionCoordinatorUseCase().execute({
     placementCatalog: publicationSnapshotPlacementCatalog,
-    stores: [publicationContentStore, new IpfsGatewayContentStore()]
+    stores: [publicationContentStore, new IpfsGatewayContentStore({ gatewayUrl: resolvedIpfsGatewayUrl })]
 });
 
 // The presentation-side counterpart of the resolution wiring above: a
@@ -1751,7 +1765,7 @@ const { coordinator: ipfsRemotePublicationCoordinator } = new CreateIpfsRemotePu
 // exactly as safe as sharing ipfsRemotePublicationCoordinator is — it
 // holds no credential and no publication-specific state between calls.
 const { ipfsPublicationContentVerifier } = new CreateIpfsPublicationContentVerifierUseCase().execute({
-    contentStore: new IpfsGatewayContentStore()
+    contentStore: new IpfsGatewayContentStore({ gatewayUrl: resolvedIpfsGatewayUrl })
 });
 const { coordinator: ipfsPublicationContentVerificationCoordinator } =
     new CreateIpfsPublicationContentVerificationCoordinatorUseCase().execute({ ipfsPublicationContentVerifier });
@@ -2084,6 +2098,14 @@ const resolvedArweaveGatewayUrls = (arweaveGatewayConfigurationStore.get() || { 
 const setArweaveGatewayConfigurationUseCase = new SetArweaveGatewayConfigurationUseCase({ arweaveGatewayConfigurationStore });
 app.provide('arweaveGatewayConfigurationStore', arweaveGatewayConfigurationStore);
 app.provide('setArweaveGatewayConfigurationUseCase', setArweaveGatewayConfigurationUseCase);
+
+// 0.9.665 — IPFS Gateway Settings UI. The WRITE half of the settings entry
+// point, wired against the SAME ipfsGatewayConfigurationStore instance
+// resolved earlier in this file (never a second, disconnected store) — see
+// application/SetIpfsGatewayConfigurationUseCase.js's own header.
+const setIpfsGatewayConfigurationUseCase = new SetIpfsGatewayConfigurationUseCase({ ipfsGatewayConfigurationStore });
+app.provide('ipfsGatewayConfigurationStore', ipfsGatewayConfigurationStore);
+app.provide('setIpfsGatewayConfigurationUseCase', setIpfsGatewayConfigurationUseCase);
 
 // 0.9.369 — Nostr Relay Configuration Boundary.
 //

@@ -727,14 +727,19 @@ async function run() {
     {
         const decisions = {};
 
-        // H1. IPFS Gateway. Reconfirmed unchanged from 0.9.367/0.9.368 —
-        // never assumed to be "next" merely because it resembles Arweave.
+        // H1. IPFS Gateway. AMENDED BY 0.9.665 (see docs/Roadmap.md,
+        // "0.9.665") — the DEFER 0.9.367/0.9.368/0.9.373/0.9.385/0.9.657
+        // each held was reversed once the hardcoded default became
+        // permanently unreachable by ordinary programmatic requests (a
+        // bot-detection wall), a structurally different fact from the
+        // occasional-outage narrowness this section's own DEFER reasoning
+        // was originally about.
         const worldEncounterCompositionSource = await source('application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
         assert(!/ipfs/i.test(worldEncounterCompositionSource), 'H1. World Encounter material discovery composition still never references IPFS — Local + Nostr + Arweave only');
         const mainSourceForIpfs = await source('ui/main.js');
-        const ipfsGatewayUsageCount = (mainSourceForIpfs.match(/new IpfsGatewayContentStore\(\)/g) || []).length;
-        assert(ipfsGatewayUsageCount === 2, `H1. IpfsGatewayContentStore is still constructed at exactly its two known, narrowly-scoped, opt-in call sites — found ${ipfsGatewayUsageCount}`);
-        decisions.ipfsGateway = { candidate: 'IPFS Gateway', verdict: 'DEFER', evidence: 'Still a real but structurally narrower, opt-in-per-item failure mode — never the default World Encounter/Snapshot retrieval backbone. Unchanged since 0.9.367/0.9.368; not "next" merely by resemblance to Arweave.' };
+        const ipfsGatewayUsageCount = (mainSourceForIpfs.match(/new IpfsGatewayContentStore\(\{ gatewayUrl: resolvedIpfsGatewayUrl \}\)/g) || []).length;
+        assert(ipfsGatewayUsageCount === 2, `H1. IpfsGatewayContentStore is still constructed at exactly its two known, narrowly-scoped call sites, now settings-backed — found ${ipfsGatewayUsageCount}`);
+        decisions.ipfsGateway = { candidate: 'IPFS Gateway', verdict: 'BUILT (0.9.665)', evidence: 'Narrow, opt-in-per-item failure mode correctly justified DEFER through 0.9.657 — reversed once the hardcoded default itself became permanently unreachable, never merely by resemblance to Arweave.' };
 
         // H2. STUN — still one flat iceServers array, no independently
         // configurable STUN field to expose.
@@ -764,10 +769,14 @@ async function run() {
 
         const nonCompleteVerdicts = ['DEFER', 'SEPARATE_PRODUCT'];
         for (const [key, decision] of Object.entries(decisions)) {
+            if (key === 'ipfsGateway') {
+                assert(decision.verdict === 'BUILT (0.9.665)', `H (${key}). IPFS Gateway's DEFER was reversed by 0.9.665 — see docs/Roadmap.md`);
+                continue;
+            }
             assert(nonCompleteVerdicts.includes(decision.verdict), `H (${key}). every remaining candidate reassessed with real evidence, none reaches BUILD_NEXT`);
         }
 
-        console.log('✓ Section H: reassessed against real, current source — IPFS Gateway and STUN, Rendezvous, Bitcoin Esplora, Base RPC remain DEFER; TURN remains SEPARATE_PRODUCT (credential-shaped); none reaches BUILD_NEXT');
+        console.log('✓ Section H: reassessed against real, current source — IPFS Gateway\'s own DEFER was reversed by 0.9.665; STUN, Rendezvous, Bitcoin Esplora, Base RPC remain DEFER; TURN remains SEPARATE_PRODUCT (credential-shaped)');
         console.log('  ' + JSON.stringify(Object.values(decisions).map((d) => `${d.candidate}: ${d.verdict}`)));
     }
 
@@ -851,7 +860,7 @@ async function run() {
 
         console.log('✓ Section J: ' + JSON.stringify(verdicts));
         console.log('\n✅ All Nostr Relay Settings Lifecycle & Product Reassessment (0.9.372) checks passed.');
-        console.log('VERDICT: STABLE_STOP for infrastructure-endpoint configuration — Arweave Gateway and Nostr Relay are both COMPLETE, and no remaining candidate (IPFS Gateway, STUN, Rendezvous, Bitcoin Esplora, Base RPC — all DEFER; TURN — SEPARATE_PRODUCT) demonstrates a comparable recovery gap. "Discovery Failure Visibility" (Section E — distinguishing silent relay failure from a genuinely empty result, across all three discovery paths) is named as its own SEPARATE_PRODUCT candidate, distinct from endpoint configuration, and deliberately NOT built here — first because an alternative relay already resolves the practical recovery need, second because it is a presentation/error-semantics question, not a configuration-boundary one. No production code changed in this milestone.');
+        console.log('VERDICT: STABLE_STOP for infrastructure-endpoint configuration — Arweave Gateway, Nostr Relay, and (as of 0.9.665) IPFS Gateway are all COMPLETE, and no remaining candidate (STUN, Rendezvous, Bitcoin Esplora, Base RPC — all DEFER; TURN — SEPARATE_PRODUCT) demonstrates a comparable recovery gap. "Discovery Failure Visibility" (Section E — distinguishing silent relay failure from a genuinely empty result, across all three discovery paths) is named as its own SEPARATE_PRODUCT candidate, distinct from endpoint configuration, and deliberately NOT built here — first because an alternative relay already resolves the practical recovery need, second because it is a presentation/error-semantics question, not a configuration-boundary one. No production code changed in this milestone.');
     }
 }
 

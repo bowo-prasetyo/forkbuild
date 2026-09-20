@@ -199,19 +199,25 @@ async function run() {
             n('B5. no core/TurnConfiguration.js (or equivalent) exists — 0.9.390\'s own DEFER has not been quietly reopened by any file added since'));
         results['TURN'] = 'DEFERRED';
 
-        // B6. IPFS Gateway, Base RPC, Bitcoin Esplora — reconfirmed fresh,
-        // never user-configurable, each backing an explicitly optional/
-        // deferred/non-default capability (0.9.373/0.9.385's own finding).
-        const ipfsSource = await sourceExists('content/IpfsGatewayContentStore.js') ? await source('content/IpfsGatewayContentStore.js') : '';
-        assert(ipfsSource.length > 0 && !/IpfsGatewayConfiguration/.test(ipfsSource),
-            n('B6. content/IpfsGatewayContentStore.js exists but has no accompanying IpfsGatewayConfiguration — still no configuration seam, reconfirmed fresh'));
-        results['IPFS Gateway'] = 'NOT_USER_CONFIGURABLE';
+        // B6. IPFS Gateway — AMENDED BY 0.9.665 (see docs/Roadmap.md,
+        // "0.9.665"): 0.9.373/0.9.385's own DEFER, reconfirmed by 0.9.657,
+        // was reversed on new evidence (ipfs.io's public gateway now blocks
+        // ordinary programmatic requests behind a bot-detection check).
+        // IPFS Gateway now has the identical value-object/store/view chain
+        // Arweave Gateway (B1) and Nostr Relay (B2) already hold.
+        assert(await sourceExists('core/IpfsGatewayConfiguration.js') && await sourceExists('storage/IpfsGatewayConfigurationStore.js') && await sourceExists('ui/views/IpfsGatewaySettingsView.js'),
+            n('B6. IPFS Gateway\'s full chain (value object, store, settings view) exists on disk, live-checked'));
+        results['IPFS Gateway'] = 'COMPLETE';
+
+        // Base RPC, Bitcoin Esplora — reconfirmed fresh, still never
+        // user-configurable, each backing an explicitly optional/deferred/
+        // non-default capability, unaffected by this milestone.
         results['Base RPC'] = 'NOT_USER_CONFIGURABLE';
         results['Bitcoin Esplora'] = 'NOT_USER_CONFIGURABLE';
 
         console.log('\n=== SECTION B: FRESH ENDPOINT CLASSIFICATION ===');
         for (const [endpoint, status] of Object.entries(results)) console.log(`${endpoint.padEnd(16)} ${status}`);
-        console.log('✓ Section B: re-derived from current source rather than cited from prior milestones\' own prose, the classification is unchanged — four endpoints COMPLETE, one DEFERRED for a documented reason, three NOT_USER_CONFIGURABLE by deliberate, unchanged product boundary.');
+        console.log('✓ Section B: re-derived from current source rather than cited from prior milestones\' own prose — five endpoints COMPLETE (IPFS Gateway joined this milestone, 0.9.665), one DEFERRED for a documented reason, two NOT_USER_CONFIGURABLE by deliberate, unchanged product boundary.');
     }
 
     // ===============================================================
@@ -564,7 +570,7 @@ async function run() {
         console.log('| STUN             | COMPLETE                |');
         console.log('| Rendezvous       | COMPLETE                |');
         console.log('| TURN             | DEFERRED (semantic, not technical) |');
-        console.log('| IPFS Gateway     | NOT USER CONFIGURABLE   |');
+        console.log('| IPFS Gateway     | COMPLETE (0.9.665)      |');
         console.log('| Base RPC         | NOT USER CONFIGURABLE   |');
         console.log('| Bitcoin Esplora  | NOT USER CONFIGURABLE   |');
         console.log('');
@@ -572,14 +578,16 @@ async function run() {
         console.log('');
         console.log('No remaining product discontinuity was found. The recorded requirement — "users must be able to');
         console.log('switch critical infrastructure endpoints when the default endpoint is unavailable" — is answered');
-        console.log('wherever its own semantics are actually well-defined: four endpoints (Arweave, Nostr, STUN,');
-        console.log('Rendezvous) each have a complete, converged, independently-isolated configuration journey');
-        console.log('(Sections C-F, reconfirmed live). TURN is not a gap left open by inertia — Section G proves it is');
-        console.log('technically fully functional today and deferred for a specific, still-unresolved product/security');
-        console.log('reason (configuration-shape asymmetry, an unverifiable credential lifecycle, and this family\'s');
-        console.log('first persisted secret). IPFS Gateway, Base RPC, and Bitcoin Esplora remain deliberately outside');
-        console.log('this requirement\'s scope, backing explicitly optional or deferred capabilities, never a primary');
-        console.log('journey\'s default path.');
+        console.log('wherever its own semantics are actually well-defined: five endpoints (Arweave, Nostr, STUN,');
+        console.log('Rendezvous, and — as of 0.9.665 — IPFS Gateway) each have a complete, converged,');
+        console.log('independently-isolated configuration journey (Sections C-F, reconfirmed live for the original');
+        console.log('four; IPFS Gateway\'s own equivalent chain is proven in tests/IpfsGatewaySettingsEntryPoint');
+        console.log('.test.js). TURN is not a gap left open by inertia — Section G proves it is technically fully');
+        console.log('functional today and deferred for a specific, still-unresolved product/security reason');
+        console.log('(configuration-shape asymmetry, an unverifiable credential lifecycle, and this family\'s first');
+        console.log('persisted secret). Base RPC and Bitcoin Esplora remain deliberately outside this requirement\'s');
+        console.log('scope, backing explicitly optional or deferred capabilities, never a primary journey\'s default');
+        console.log('path.');
         console.log('');
         console.log('Section H\'s own finding is the reason this is STABLE_STOP rather than a prompt to keep building:');
         console.log('user-configurable endpoints were never meant to, and do not, solve AVAILABILITY — only SELECTION.');

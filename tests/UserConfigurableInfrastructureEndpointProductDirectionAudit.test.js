@@ -261,11 +261,17 @@ async function run() {
             n('B2. Rendezvous — still exactly one operator-run bootstrap node, unchanged'));
         inventory.rendezvous = { file: 'peer/RendezvousConfig.js', consumers: 1 };
 
+        // AMENDED BY 0.9.665 (see docs/Roadmap.md, "0.9.665") — the DEFER
+        // this section's own decision matrix (below) records for IPFS
+        // Gateway was reversed: both construction sites now receive a
+        // resolved, settings-backed gatewayUrl rather than zero arguments.
+        // The shipped default itself is unchanged; only its configurability
+        // is new.
         const ipfsGatewaySource = await source('content/IpfsGatewayContentStore.js');
         assert(ipfsGatewaySource.includes("const DEFAULT_GATEWAY_URL = 'https://ipfs.io'"), n('B3. IPFS Gateway — unchanged default, unchanged file'));
         const mainSource = await source('ui/main.js');
-        const gatewayConstructionCount = (mainSource.match(/new IpfsGatewayContentStore\(\)/g) || []).length;
-        assert(gatewayConstructionCount === 2, n(`B3. IPFS Gateway — still exactly two opt-in construction sites in ui/main.js (found ${gatewayConstructionCount}), reconfirmed fresh rather than cited from 0.9.373`));
+        const gatewayConstructionCount = (mainSource.match(/new IpfsGatewayContentStore\(\{ gatewayUrl: resolvedIpfsGatewayUrl \}\)/g) || []).length;
+        assert(gatewayConstructionCount === 2, n(`B3. IPFS Gateway — still exactly two construction sites in ui/main.js, now settings-backed rather than opt-in-with-no-override (found ${gatewayConstructionCount}) — see docs/Roadmap.md, "0.9.665"`));
         inventory.ipfsGateway = { file: 'content/IpfsGatewayContentStore.js', consumers: gatewayConstructionCount };
 
         const baseRpcSource = await source('base/BaseJsonRpcClient.js');

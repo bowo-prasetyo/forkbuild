@@ -97237,3 +97237,80 @@ the point is reaching Publications documentId-based resolution deliberately does
 action from `OwnPublicationPanel`'s existing `.own-publication-placements` listing. Authorization — who may
 place someone else's discovered work — is explicitly left open, a genuine product decision this audit surfaces
 but does not answer, consistent with this milestone's own type: a test-only audit that implements nothing.
+
+## 0.9.665 — User-Configurable IPFS Gateway Configuration Boundary (verdict reversed)
+
+**Type:** implementation. **Production changes:** `core/IpfsGatewayConfiguration.js` (new),
+`storage/IpfsGatewayConfigurationStore.js` (new), `application/SetIpfsGatewayConfigurationUseCase.js` (new),
+`ui/views/IpfsGatewaySettingsView.js` (new), a new `/settings/ipfs-gateway` route in `ui/router/index.js`, a new
+link on `ui/views/NetworkSettingsView.js`, and `ui/main.js` (both real `IpfsGatewayContentStore` construction
+sites now receive a resolved `gatewayUrl` instead of zero arguments). Adds
+`tests/IpfsGatewayConfiguration.test.js`, `tests/IpfsGatewayConfigurationPersistence.test.js`, and
+`tests/IpfsGatewaySettingsEntryPoint.test.js`. Removes `tests/IpfsGatewayProductGapAudit.test.js` and
+`tests/IpfsGatewayConfigurationPersistenceBoundaryAudit.test.js` — both existed solely to assert this feature
+did not exist, and could not be reconciled with adding it.
+
+**This reverses a decision made twice on the record.** `0.9.373` (`IPFS Gateway Product Gap Audit`) recorded
+`DEFER` for this exact candidate. `0.9.385` (`User-Configurable Infrastructure Endpoint Product Direction
+Audit`) independently reconfirmed it: "`DEFER`: IPFS Gateway (reconfirmed, 0.9.373 — narrow, opt-in, never a
+primary journey's default path)." A later audit, `0.9.657` (`IPFS Gateway Configuration Persistence Boundary
+Audit`, recorded only as a test file — `tests/IpfsGatewayConfigurationPersistenceBoundaryAudit.test.js` — never
+mirrored into this document), reconfirmed both prior verdicts a third time, classifying the absence of
+persistence as `DELIBERATE_BOUNDARY` rather than a gap, and closing the arc with "No 0.9.658 is recommended."
+Each of those three audits reasoned correctly from the evidence available at the time: `IpfsGatewayContentStore`
+is constructed at exactly two call sites in `ui/main.js`, both genuinely opt-in (resolving a placement a
+publisher specifically chose `ipfs://` for, and the secondary "Observe Content" verification action), never the
+default World Encounter or Snapshot retrieval path the way `arweave.net` is for Arweave Gateway. A down default
+gateway, on that evidence, degraded a narrow corner of the product, not the core loop — a real but comparatively
+small recovery gap, correctly weighed as insufficient to clear the bar that had already justified building
+Arweave Gateway (`0.9.364-0.9.366`) and Nostr Relay (`0.9.369-0.9.371`) configuration.
+
+**The new fact those three audits did not have.** The hardcoded default itself, `https://ipfs.io`, now sits
+behind a bot-detection interstitial (a Cloudflare-style "Performing security check" JS challenge) that blocks
+ordinary programmatic `fetch()` requests outright — confirmed live, in production use, by a real person: a
+genuine remote-pinning publish (`IPFS Publishing`, `0.8.67`/`0.8.70`) succeeded and the resulting CID was
+independently verified byte-identical through a second, unrelated gateway (`https://gateway.pinata.cloud`),
+while the SAME CID against the hardcoded default failed with `"Failed to fetch"` — the exact `ContentUnavailableError`
+`0.9.373`'s own Section B already proved is the honest failure mode for an unreachable gateway, except this
+failure is not occasional or environment-specific. It is a structural property of the one hardcoded gateway
+itself, for anyone, indefinitely, with no code-level workaround available to a person who hits it — a
+materially different fact from "gateway occasionally down," the condition all three prior audits actually
+weighed. A severity judgment about an occasional outage does not survive a wall that never comes down for the
+one and only configured endpoint.
+
+**Why this is a reversal, not merely an addition.** `0.9.657`'s own Section G had already proven, live, against
+the real Arweave/Nostr `StorageProvider` convention, that the persistence pattern this milestone now uses is
+sound — "this proves the PATH would be sound; it is not evidence that walking it is currently warranted." That
+same section named the exact condition under which the question should reopen: "If a future, EXPLICIT new
+product requirement ever makes IPFS Gateway configurability warranted on its own criticality merits." This
+milestone is that explicit reopening, on the strength of the new evidence above, not a quiet re-litigation of
+settled ground.
+
+**What was built, deliberately narrow.** Mirrors `core/ArweaveGatewayConfiguration.js`/`storage/
+ArweaveGatewayConfigurationStore.js`/`application/SetArweaveGatewayConfigurationUseCase.js`/`ui/views/
+ArweaveGatewaySettingsView.js` exactly, one axis over — **except** it deliberately stays single-`gatewayUrl`,
+never adopting Arweave Gateway's later `0.9.440` multi-gateway/failover list shape:
+`content/IpfsGatewayContentStore.js`'s own header is explicit that it supports exactly one gateway per instance
+("no list, no automatic fallback... a caller that wants multiple gateways runs multiple instances explicitly"),
+so a list-shaped configuration would describe a capability that does not exist underneath it. The shipped
+default itself, `DEFAULT_IPFS_GATEWAY_URL = 'https://ipfs.io'`, is left unchanged — this milestone adds
+configurability, never silently swaps what "unconfigured" means for the many existing tests and call sites
+that key on that exact string; a person who hits the bot-detection wall now has an explicit settings page
+(`/settings/ipfs-gateway`, linked from Network Settings) to point at a reachable gateway — Pinata's own
+(`https://gateway.pinata.cloud`) being the most immediately useful choice for anyone already using IPFS
+Publishing's remote pinning path, since that pinning provider's own gateway can never be blind to content it
+itself just pinned.
+
+**Deliberately unchanged.** Local Kubo (`content/IpfsContentStore.js`) and remote pinning
+(`content/IpfsRemotePinningContentStore.js`) — the two IPFS *write* paths — remain completely untouched and
+structurally isolated from this *read*-path setting, reconfirmed live in `tests/
+IpfsGatewaySettingsEntryPoint.test.js`'s own Section H, the identical isolation `0.9.373`'s own Section F/G
+already established and this milestone does not disturb. IPFS local node configuration (a person's own Kubo
+daemon/provider) remains its own, separate, unaddressed candidate — a different capability question, not this
+one.
+
+**Classification: `VERDICT_REVERSED`.** The prior `DEFER` verdicts (`0.9.373`, `0.9.385`, `0.9.657`) are not
+described as having been wrong; they were correct given what was known. New, live production evidence — a
+structural, permanent failure mode for the one hardcoded gateway, discovered through genuine use rather than
+speculation — is what reopened and reversed the question, exactly the standard `0.9.657`'s own Section G set
+for when that should happen.

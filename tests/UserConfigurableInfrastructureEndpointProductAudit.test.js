@@ -231,9 +231,19 @@ async function run() {
         // supplies an override for any of them: every call site either
         // passes no options object at all, or passes an object whose
         // fields are `undefined` (the Create*UseCase spread pattern).
+        //
+        // AMENDED BY 0.9.665 — this section's own recommendation (Section J,
+        // below) named IPFS Gateway "BUILD FIRST" alongside Arweave Gateway;
+        // 0.9.364-366 built Arweave, 0.9.373/0.9.385/0.9.657 each instead
+        // deferred IPFS Gateway specifically, and 0.9.665 finally built it —
+        // reversing those three deferrals on new evidence (see
+        // docs/Roadmap.md, "0.9.665"). ui/main.js now resolves a real,
+        // settings-backed gatewayUrl for both IpfsGatewayContentStore call
+        // sites, the identical shape Arweave Gateway already held when this
+        // section was first written.
         const mainSource = await rawSource('ui/main.js');
-        assert(mainSource.includes('new IpfsGatewayContentStore()'), 'C3. ui/main.js constructs IpfsGatewayContentStore with zero arguments (x2 call sites)');
-        assert(mainSource.includes('new IpfsContentStore()'), 'C3. ui/main.js constructs IpfsContentStore with zero arguments');
+        assert(mainSource.includes('new IpfsGatewayContentStore({ gatewayUrl: resolvedIpfsGatewayUrl })'), 'C3. ui/main.js constructs IpfsGatewayContentStore with a resolved, settings-backed gatewayUrl (x2 call sites) — AMENDED 0.9.665, see comment above');
+        assert(mainSource.includes('new IpfsContentStore()'), 'C3. ui/main.js constructs IpfsContentStore with zero arguments — unaffected: this is the local Kubo WRITE path, deliberately untouched by 0.9.665\'s read-path gateway configuration');
         assert(mainSource.includes('new CreateBaseJsonRpcClientUseCase().execute()'), 'C3. ui/main.js resolves the Base RPC client with zero arguments to execute()');
         assert(mainSource.includes('new CreateBitcoinEsploraTransactionBroadcasterUseCase().execute()'), 'C3. ui/main.js resolves the Esplora broadcaster with zero arguments to execute()');
 
