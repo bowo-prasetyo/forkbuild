@@ -121,8 +121,19 @@ const EVENT_ID_PATTERN = /^[0-9a-f]{64}$/i;
 // Section I audited the existing relay-SET configuration abstraction and
 // multi-relay fan-out orchestrator built for Publication announcement and
 // deliberately did not reuse either for Commentary — this file does not
-// either. Multi-relay resilience for Commentary remains a
+// either. Multi-relay resilience for Commentary was, at the time, a
 // NEW_SUBSTRATE_BOUNDARY, deliberately unbuilt here.
+//
+// AMENDED — Multi-relay resilience for Commentary has since been built:
+// application/NostrMultiRelayPublicationCommentaryDistribution.js
+// constructs one instance of THIS class per configured relay and fans
+// publish()/retrieve()/discover() out across all of them, following the
+// unification decision recorded in core/NostrRelayConfiguration.js's own
+// header (this codebase now has exactly one Nostr relay set, used
+// everywhere Nostr is used). This class itself is entirely unmodified —
+// the fan-out lives one layer up, exactly the same "composition around the
+// unmodified single-relay class" shape every sibling fan-out wrapper in
+// this codebase already holds.
 //
 // A GENUINE TRANSPORT FAILURE PROPAGATES, NEVER SWALLOWED — the identical
 // line application/NostrPublicationDiscoveryPublisher.js's own header

@@ -18,7 +18,6 @@ import ContentProviderSettingsView from '../views/ContentProviderSettingsView.js
 import ArweaveGatewaySettingsView from '../views/ArweaveGatewaySettingsView.js';
 import IpfsGatewaySettingsView from '../views/IpfsGatewaySettingsView.js';
 import NostrRelaySettingsView from '../views/NostrRelaySettingsView.js';
-import NostrPublicationRelaySettingsView from '../views/NostrPublicationRelaySettingsView.js';
 import StunSettingsView from '../views/StunSettingsView.js';
 import TurnServerSettingsView from '../views/TurnServerSettingsView.js';
 import RendezvousSettingsView from '../views/RendezvousSettingsView.js';
@@ -77,10 +76,9 @@ const routes = [
     // DecentralizedPublication envelopes (0.7.0) this replica has
     // cataloged (0.7.2), regardless of whether their content resolves.
     { path: '/publications', name: 'publications', component: DecentralizedPublicationsView },
-    // Network Settings hub — one top-nav entry point linking to the six
+    // Network Settings hub — one top-nav entry point linking to the
     // endpoint-server settings pages below (content-provider, arweave-gateway,
-    // nostr-relay, nostr-publication-relays, stun, rendezvous), each still
-    // its own route and component.
+    // nostr-relay, stun, rendezvous), each still its own route and component.
     { path: '/settings', name: 'network-settings', component: NetworkSettingsView },
     // 0.9.302 — Content Provider Preference Settings Entry Point. The one
     // ordinary product path to create/change the persisted CONTENT role
@@ -109,24 +107,20 @@ const routes = [
     // /settings/arweave-gateway's own shape exactly.
     { path: '/settings/ipfs-gateway', name: 'ipfs-gateway-settings', component: IpfsGatewaySettingsView },
     // 0.9.371 — Nostr Relay Settings UI. The one ordinary product path to
-    // create/change/clear the persisted Nostr relay discovery override
+    // create/change/clear the persisted Nostr relay set
     // (core/NostrRelayConfiguration.js, storage/NostrRelayConfigurationStore.js,
     // both 0.9.369) — see ui/views/NostrRelaySettingsView.js's own header.
     // Deliberately its own top-nav destination, the identical "not folded
     // into a growing dashboard" shape /settings/arweave-gateway already
     // holds.
+    //
+    // UNIFIED — this is now the ONE Nostr relay configuration for the whole
+    // application. A separate route, /settings/nostr-publication-relays
+    // (0.9.447, ui/views/NostrPublicationRelaySettingsView.js), used to hold
+    // an independent relay SET for Publication distribution/discovery
+    // only — removed; see core/NostrRelayConfiguration.js's own header,
+    // "unified," for the full rationale and what changed.
     { path: '/settings/nostr-relay', name: 'nostr-relay-settings', component: NostrRelaySettingsView },
-    // 0.9.447 — Nostr Publication Relay Set Configuration. A genuinely
-    // separate route from /settings/nostr-relay directly above — that route
-    // is explicitly, correctly scoped to read/discovery only (see
-    // NostrRelaySettingsView.js's own header); 0.9.446's own audit
-    // (tests/NostrMultiRelayConfigurationUIReachabilityAudit.test.js) proved
-    // live that widening it to also cover publication distribution would
-    // cross that boundary rather than merely widen a single value. This
-    // route is the new, correct destination for the persisted relay SET
-    // 0.9.444's own multi-relay fan-out capability needs — see
-    // ui/views/NostrPublicationRelaySettingsView.js's own header.
-    { path: '/settings/nostr-publication-relays', name: 'nostr-publication-relay-settings', component: NostrPublicationRelaySettingsView },
     // 0.9.386 — STUN Settings UI. The one ordinary product path to
     // create/change/clear the persisted STUN server configuration
     // override (core/IceServerConfiguration.js, storage/

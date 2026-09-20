@@ -34,36 +34,18 @@ export default {
                     </router-link>
                 </li>
                 <li>
-                    <!-- AMENDED BY 0.9.452 — this row previously read "Relay
-                         used for Nostr-based discovery and publishing,"
-                         contradicting this same page's own "discovery only"
-                         text (named as a known, open defect by 0.9.446/
-                         0.9.448/0.9.449). It was also stale about scope:
-                         since 0.9.451, Publication discovery no longer even
-                         reads this relay (see the Nostr Publication Relays
-                         row below) — this preference now covers Snapshot
-                         and Place Naming discovery only. -->
+                    <!-- UNIFIED — this row used to link to two separate
+                         pages: "Nostr Relay" (Snapshot/Place Naming
+                         discovery only) and "Nostr Publication Relays"
+                         (Publication distribution/discovery only). See
+                         core/NostrRelayConfiguration.js's own "unified"
+                         header for the full rationale — the two relay sets
+                         were merged into this one page/store, used
+                         everywhere Nostr is used (Publications, Snapshots,
+                         Place Naming, Commentary). -->
                     <router-link to="/settings/nostr-relay" class="network-settings-link">
-                        <span class="network-settings-link-title">Nostr Relay</span>
-                        <span class="form-hint form-hint--neutral">Relay used for Nostr-based Snapshot and Place Naming discovery.</span>
-                    </router-link>
-                </li>
-                <li>
-                    <!-- 0.9.447 — Nostr Publication Relay Set Configuration.
-                         A genuinely separate page from "Nostr Relay" above:
-                         that page configures Snapshot/Place Naming discovery
-                         only (see its own template text); this one
-                         configures the relay SET a signed Publication
-                         announcement fans out to, and the relay SET
-                         Publication discovery queries (0.9.451). AMENDED BY
-                         0.9.452 — this row previously also claimed Snapshot
-                         distribution, which this relay set has never
-                         governed (Snapshot distribution has no multi-relay
-                         seam of any kind — see application/
-                         SnapshotDistributionRuntimeComposition.js). -->
-                    <router-link to="/settings/nostr-publication-relays" class="network-settings-link">
-                        <span class="network-settings-link-title">Nostr Publication Relays</span>
-                        <span class="form-hint form-hint--neutral">Relays used to publish and discover Publications over Nostr.</span>
+                        <span class="network-settings-link-title">Nostr Relays</span>
+                        <span class="form-hint form-hint--neutral">Relays used everywhere this replica publishes and discovers over Nostr — Publications, Snapshots, Place Naming, and Commentary.</span>
                     </router-link>
                 </li>
                 <li>

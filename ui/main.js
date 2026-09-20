@@ -6,7 +6,7 @@ import { IdentityUseCase } from '../application/IdentityUseCase.js';
 import { CreatePublicationCommentaryUseCase } from '../application/CreatePublicationCommentaryUseCase.js';
 import { CreatePublicationCommentaryDistributionPeerExchangeUseCase } from '../application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js';
 import { PublicationCommentaryRemoteNotificationBridge } from '../application/PublicationCommentaryRemoteNotificationBridge.js';
-import { PublicationCommentaryNostrDistribution } from '../application/PublicationCommentaryNostrDistribution.js';
+import { NostrMultiRelayPublicationCommentaryDistribution } from '../application/NostrMultiRelayPublicationCommentaryDistribution.js';
 import { DiscoverPublicationCommentaryFromNostrUseCase } from '../application/DiscoverPublicationCommentaryFromNostrUseCase.js';
 import { PublicationCommentaryArweaveDistribution } from '../application/PublicationCommentaryArweaveDistribution.js';
 import { DiscoverPublicationCommentaryFromArweaveUseCase } from '../application/DiscoverPublicationCommentaryFromArweaveUseCase.js';
@@ -147,9 +147,6 @@ import { SetIpfsGatewayConfigurationUseCase } from '../application/SetIpfsGatewa
 import { DEFAULT_NOSTR_RELAY_URL } from '../core/NostrRelayConfiguration.js';
 import { NostrRelayConfigurationStore } from '../storage/NostrRelayConfigurationStore.js';
 import { SetNostrRelayConfigurationUseCase } from '../application/SetNostrRelayConfigurationUseCase.js';
-import { NostrPublicationRelaySetConfigurationStore } from '../storage/NostrPublicationRelaySetConfigurationStore.js';
-import { SetNostrPublicationRelaySetConfigurationUseCase } from '../application/SetNostrPublicationRelaySetConfigurationUseCase.js';
-import { resolveNostrPublicationRelayUrls } from '../application/NostrPublicationRelaySetConfigurationProvider.js';
 import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
 import { PeerWorldEncounterMaterialSource } from '../application/PeerWorldEncounterMaterialSource.js';
 import { composeWorldEncounterMaterialVerifier } from '../application/WorldEncounterMaterialVerifierRuntimeComposition.js';
@@ -2159,27 +2156,21 @@ app.provide('setIpfsGatewayConfigurationUseCase', setIpfsGatewayConfigurationUse
 // to the pre-existing behavior; a multi-relay override fans the
 // announcement out to every configured relay (see core/
 // NostrRelayConfiguration.js's own header, "fan-out, never ordered
-// failover"). It is never threaded into `createNostrInjectedProviderPublisher()`
-// or the Publication-distribution WRITE publisher
-// (`NostrPublicationDiscoveryPublisher`, which instead reads the separate
-// `resolvedNostrPublicationRelayUrls` set below) — Snapshot's own relay
-// preference and Publication's own relay set remain two independent,
-// unconnected configurations.
+// failover").
 //
-// `resolvedNostrRelayUrl` (the FIRST configured relay) REMAINS THE VALUE
-// `PublicationCommentaryNostrDistribution` (below) CONSULTS — Commentary's
-// own Nostr transport stays single-relay, untouched by this fan-out
-// extension; scoping fan-out to Snapshot discovery/announcement and Place
-// Naming discovery only, exactly what ui/views/NostrRelaySettingsView.js's
-// own template text documents.
-//
-// AMENDED BY 0.9.451 — the third read-path site,
-// `composeDecentralizedWorldEncounterMaterialDiscoveryServices()`'s own
-// Nostr Publication discovery, no longer consults `resolvedNostrRelayUrl`
-// at all — see this file's own 0.9.451 comment, below, where that
-// composition is actually called, for why Publication discovery now
-// consumes `resolvedNostrPublicationRelayUrls` (0.9.447's own write-side
-// relay SET) instead.
+// UNIFIED — `resolvedNostrRelayUrls` IS NOW THE ONE NOSTR RELAY SET FOR THE
+// WHOLE APPLICATION. A separate `resolvedNostrPublicationRelayUrls`
+// (0.9.447), resolved from its own independent
+// `NostrPublicationRelaySetConfigurationStore`, used to feed Publication
+// distribution/discovery only. That store, its use case, its provider, and
+// its own settings page have all been removed — see core/
+// NostrRelayConfiguration.js's own "unified" header for the full
+// rationale. Every consumer that used to read
+// `resolvedNostrPublicationRelayUrls` now reads THIS array instead: World
+// Encounter (Publication) discovery (below), Publication distribution's
+// own multi-relay command (further below), Snapshot discovery/
+// announcement, Place Naming discovery, and Publication Commentary
+// (below) all fan out across the SAME configured set.
 //
 // 0.9.371 — Nostr Relay Settings UI. The WRITE half of the settings entry
 // point, wired against this SAME store instance (never a second,
@@ -2196,26 +2187,6 @@ const resolvedNostrRelayUrl = resolvedNostrRelayUrls[0];
 const setNostrRelayConfigurationUseCase = new SetNostrRelayConfigurationUseCase({ nostrRelayConfigurationStore });
 app.provide('nostrRelayConfigurationStore', nostrRelayConfigurationStore);
 app.provide('setNostrRelayConfigurationUseCase', setNostrRelayConfigurationUseCase);
-
-// 0.9.447 — Nostr Publication Relay Set Configuration. A GENUINELY SEPARATE
-// store from `nostrRelayConfigurationStore` above — its own storage key,
-// its own value object, its own use case — never a widening of the
-// read/discovery boundary above. 0.9.446's own audit
-// (tests/NostrMultiRelayConfigurationUIReachabilityAudit.test.js) proved
-// live that `/settings/nostr-relay` never reaches the write/publish path at
-// all, and recommended exactly this: a new, sibling relay-SET configuration
-// for publication-distribution fan-out (0.9.444), reachable through
-// ui/views/NostrPublicationRelaySettingsView.js (this same milestone) at
-// its own route. `resolvedNostrPublicationRelayUrls` never falls back to
-// `resolvedNostrRelayUrl` above — see application/
-// NostrPublicationRelaySetConfigurationProvider.js's own header, "the
-// fallback comes from the write-side default, never from discovery
-// configuration."
-const nostrPublicationRelaySetConfigurationStore = new NostrPublicationRelaySetConfigurationStore(new LocalStorageProvider());
-const resolvedNostrPublicationRelayUrls = resolveNostrPublicationRelayUrls({ nostrPublicationRelaySetConfigurationStore });
-const setNostrPublicationRelaySetConfigurationUseCase = new SetNostrPublicationRelaySetConfigurationUseCase({ nostrPublicationRelaySetConfigurationStore });
-app.provide('nostrPublicationRelaySetConfigurationStore', nostrPublicationRelaySetConfigurationStore);
-app.provide('setNostrPublicationRelaySetConfigurationUseCase', setNostrPublicationRelaySetConfigurationUseCase);
 
 // 0.9.386 — STUN Settings UI. `iceServerConfigurationStore` and
 // `setIceServerConfigurationUseCase` were already constructed earlier in
@@ -2249,21 +2220,22 @@ app.provide('setRendezvousConfigurationUseCase', setRendezvousConfigurationUseCa
 
 const nostrRelayQueryClient = createNostrRelayQueryClient({});
 // 0.9.451 — Nostr Publication Relay Set Discovery Alignment. Publication
-// discovery now consumes `resolvedNostrPublicationRelayUrls` (the SAME
-// already-resolved array 0.9.450's own multi-relay distribution wiring
-// already reads, above) rather than `resolvedNostrRelayUrl` — see
+// discovery consumes `resolvedNostrRelayUrls` — see
 // `application/NostrPublicationRelaySetDiscoveryQueryService.js`'s own
 // header for why a publication distributed to a configured relay set must
 // be discoverable through that same set, and `application/
 // DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js`'s own
 // 0.9.451 amendment for how `nostrRelayUrls` (plural) reaches this one
-// call site. Snapshot discovery and place-naming discovery, below, are
-// untouched — both remain wired to `resolvedNostrRelayUrl`, exactly as
-// 0.9.369 left them; this milestone's own scope is Publication discovery
-// only.
+// call site.
+//
+// UNIFIED — this used to read the separately-configured
+// `resolvedNostrPublicationRelayUrls`; Snapshot discovery and Place Naming
+// discovery, below, used to read the general `resolvedNostrRelayUrls`
+// instead. Both now read the SAME array — see core/
+// NostrRelayConfiguration.js's own "unified" header.
 const decentralizedWorldDiscoveryServices = composeDecentralizedWorldEncounterMaterialDiscoveryServices({
     nostrQueryImpl: nostrRelayQueryClient,
-    nostrRelayUrls: resolvedNostrPublicationRelayUrls
+    nostrRelayUrls: resolvedNostrRelayUrls
 });
 const decentralizedWorldEncounterMaterialDiscoveryRuntime = composeDecentralizedWorldEncounterMaterialDiscoveryRuntime({
     discoveryServices: decentralizedWorldDiscoveryServices,
@@ -2710,15 +2682,17 @@ const nostrPublicationRuntimeCapabilities = createNostrPublicationDistributionRu
 
 // 0.9.628 — Publication Commentary Nostr Asynchronous Distribution.
 //
-// `nostrHostPublisher`/`nostrRelayQueryClient`/`resolvedNostrRelayUrl` all
+// `nostrHostPublisher`/`nostrRelayQueryClient`/`resolvedNostrRelayUrls` all
 // already exist above (this file's own existing Nostr wiring, unmodified)
 // — this is a fourth, independent consumer of the same three values,
 // exactly like `nostrPublicationRuntimeCapabilities` immediately above it
 // and `nostrSnapshotDiscoveryPublisherOptions` further below: no second
 // relay-configuration mechanism, no second host-capability resolution.
-// `PublicationCommentaryNostrDistribution` (application/, this same
-// milestone) is the small, permanent adapter 0.9.627's own audit
-// recommended — the identical composition that test file's own
+// `NostrMultiRelayPublicationCommentaryDistribution` (application/, fanning
+// out across `resolvedNostrRelayUrls` — see core/NostrRelayConfiguration.js's
+// own "unified" header) wraps `PublicationCommentaryNostrDistribution`
+// (application/, 0.9.628's own small, permanent adapter, unmodified) — the
+// identical composition that test file's own
 // `ComposedNostrTransportCommentarySubstrate` already proved conforms to
 // core/PublicationCommentaryAsynchronousDeliveryContract.js's own
 // publish()/retrieve() contract, given a real home. `discoveryTag`
@@ -2732,10 +2706,19 @@ const nostrPublicationRuntimeCapabilities = createNostrPublicationDistributionRu
 // inside that function — before this line runs, every Commentary
 // submission's own Nostr publish attempt above is a silent no-op (the
 // `if (publicationCommentaryNostrDistribution)` guard), never a throw.
-publicationCommentaryNostrDistribution = new PublicationCommentaryNostrDistribution({
+//
+// UNIFIED — Commentary used to target a single relay
+// (`relayUrl: resolvedNostrRelayUrl`), the one asynchronous Nostr substrate
+// that had never gained relay multiplicity. It now fans out across the
+// SAME unified relay set every other Nostr consumer uses — see core/
+// NostrRelayConfiguration.js's own "unified" header and application/
+// NostrMultiRelayPublicationCommentaryDistribution.js's own header for the
+// fan-out contract (publish/retrieve resolve on the first relay to
+// succeed; discover concatenates every relay's own results).
+publicationCommentaryNostrDistribution = new NostrMultiRelayPublicationCommentaryDistribution({
     publishImpl: nostrHostPublisher,
     queryImpl: nostrRelayQueryClient,
-    relayUrl: resolvedNostrRelayUrl
+    relayUrls: resolvedNostrRelayUrls
 });
 
 // The explicit, separately-invoked acquisition boundary this milestone's
@@ -2885,8 +2868,7 @@ app.provide('publicationDistributionCommand', publicationDistributionCommand);
 // `publicationDistributionCommand` above, now ALSO composes
 // `executeMultiRelayNostrPublicationDistributionCommand()` (0.9.444) via
 // `composeMultiRelayNostrPublicationDistributionCommand()` (this same
-// milestone) — pre-binding `resolvedNostrPublicationRelayUrls` (resolved
-// above from the new, dedicated store) alongside the identical
+// milestone) — pre-binding `resolvedNostrRelayUrls` alongside the identical
 // `arweaveUploaderOptions`/`nostrPublisherOptions`/`lifecycleStore`
 // collaborators the single-relay command already uses. This changes
 // nothing about `publicationDistributionCommand` itself, and nothing about
@@ -2900,10 +2882,16 @@ app.provide('publicationDistributionCommand', publicationDistributionCommand);
 // paths — see each file's own 0.9.450 amendment. This composition itself
 // is entirely unchanged: those three views inject the exact instance
 // provided immediately below, never constructing their own.
+//
+// UNIFIED — this used to pre-bind the separately-configured
+// `resolvedNostrPublicationRelayUrls`; it now pre-binds the SAME
+// `resolvedNostrRelayUrls` Snapshot/Place-Naming discovery and Snapshot
+// announcement already use — see core/NostrRelayConfiguration.js's own
+// "unified" header.
 const multiRelayNostrPublicationDistributionCommand = composeMultiRelayNostrPublicationDistributionCommand({
     lifecycleStore: publicationDistributionLifecycleStore,
     arweaveUploaderOptions,
-    nostrRelayUrls: resolvedNostrPublicationRelayUrls,
+    nostrRelayUrls: resolvedNostrRelayUrls,
     nostrPublisherOptions
 });
 app.provide('multiRelayNostrPublicationDistributionCommand', multiRelayNostrPublicationDistributionCommand);

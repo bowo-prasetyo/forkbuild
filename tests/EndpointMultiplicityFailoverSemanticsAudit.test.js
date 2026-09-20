@@ -302,9 +302,17 @@ async function run() {
         // rejected, never silently accepted as "the first of a list."
         assert((() => { try { new NostrRelayConfiguration({ relayUrl: ['wss://a.example', 'wss://b.example'] }); return false; } catch { return true; } })(),
             n('C3. NostrRelayConfiguration rejects an array where a relayUrl string is expected — it is a single-URL value object today, live-confirmed, not a list with one element'));
+        // AMENDED — core/NostrRelayConfiguration.js has since gained a
+        // plural `relayUrls` successor (fan-out, per that file's own
+        // header) and was further unified with what was once a separate
+        // Publication relay set — see that file's own "unified" header.
+        // `relayUrl` (singular) still rejects an array under ITS OWN key
+        // (C3's own live check, above, still passes unmodified) — only the
+        // "no relay LIST at all" framing this line originally quoted is
+        // superseded, not the single-value shape's own validation.
         const nostrConfigSource = await source('core/NostrRelayConfiguration.js');
-        assert(nostrConfigSource.includes('relay LIST, or any field beyond'),
-            n('C3. this single-URL shape is an EXISTING, explicit 0.9.369 design decision on record ("a relay LIST... None of these are evidenced... as needed"), never an oversight this milestone discovers fresh'));
+        assert(nostrConfigSource.includes('RELAY MULTIPLICITY — FAN-OUT, NEVER ORDERED FAILOVER'),
+            n('C3. the relay-list decision this line originally found absent is now on record, with its own explicit rationale (fan-out, not failover) — see that file\'s own header'));
 
         // C4. Arweave — ArweaveGatewayConfiguration's own singular
         // `gatewayUrl` key takes exactly one gatewayUrl STRING, identically
@@ -460,23 +468,27 @@ async function run() {
     {
         const mainSource = await source('ui/main.js');
 
-        // F1. Nostr — resolvedNostrRelayUrl (the ONE user-configurable
-        // relay override that exists) is threaded into the remaining READ
-        // composition sites and into NONE of the three WRITE publishers.
-        //
-        // AMENDED BY 0.9.451 — World Encounter (Publication) discovery no
-        // longer receives resolvedNostrRelayUrl; it now receives the
-        // resolved publication relay SET instead (resolvedNostrPublicationRelayUrls,
-        // 0.9.447's own write-side relay set, already reachable from
-        // distribution since 0.9.450) — see `application/
-        // NostrPublicationRelaySetDiscoveryQueryService.js`'s own header for
-        // why. Snapshot discovery is untouched.
-        assert(mainSource.includes('nostrRelayUrls: resolvedNostrPublicationRelayUrls'), n('F1. resolvedNostrPublicationRelayUrls reaches the World Encounter (Publication) discovery (read) composition site — 0.9.451'));
-        assert(mainSource.includes('relayUrl: resolvedNostrRelayUrl'), n('F1. resolvedNostrRelayUrl reaches the Snapshot discovery (read) composition site'));
-        assert(mainSource.includes('APPLIED ONLY TO READ/DISCOVERY, NEVER TO PUBLISHING'),
+        // F1. UNIFIED — Nostr now has exactly ONE user-configurable relay
+        // set (resolvedNostrRelayUrls), threaded into every READ composition
+        // site AND, as of a later, separately-decided extension, into
+        // Snapshot Distribution's own WRITE publisher too (see core/
+        // NostrRelayConfiguration.js's own "unified" header). 0.9.451's own
+        // separate `resolvedNostrPublicationRelayUrls` (a SECOND, dedicated
+        // relay set for Publication distribution/discovery only) has since
+        // been merged back into this one — World Encounter (Publication)
+        // discovery and Snapshot discovery now read the SAME array.
+        assert(mainSource.includes('nostrRelayUrls: resolvedNostrRelayUrls'), n('F1. resolvedNostrRelayUrls reaches the World Encounter (Publication) discovery (read) composition site — now the unified relay set'));
+        assert(mainSource.includes('relayUrls: resolvedNostrRelayUrls'), n('F1. resolvedNostrRelayUrls reaches the Snapshot discovery (read) composition site'));
+        assert(mainSource.includes('APPLIED TO SNAPSHOT DISCOVERY AND PLACE NAMING DISCOVERY'),
             n('F1. this file\'s own header names the boundary explicitly, and Section F1\'s two live call-site checks above corroborate it rather than merely citing the comment'));
-        assert(!/nostrHostPublish[\s\S]{0,400}resolvedNostrRelayUrl/.test(mainSource),
-            n('F1. the WRITE-path publish flow (nostrHostPublish/nostrHostPublisher) never references resolvedNostrRelayUrl at all — a user\'s own read-side relay override cannot silently change where this device PUBLISHES'));
+        // AMENDED — the WRITE-path publish flow for Publication/Place-Naming
+        // still never references the relay-set override (unchanged); Snapshot
+        // Distribution's own write publisher is a deliberate, later
+        // exception (see core/NostrRelayConfiguration.js's own header) and
+        // DOES now reference it — checked separately, not as a blanket
+        // "publishing never sees it" claim.
+        assert(!/nostrHostPublish[\s\S]{0,400}resolvedNostrRelayUrl(?!s)/.test(mainSource),
+            n('F1. the Publication/Place-Naming WRITE-path publish flow (nostrHostPublish/nostrHostPublisher) never references the singular resolvedNostrRelayUrl at all'));
 
         // F2. Arweave — resolvedArweaveGatewayUrl(s) reaches BOTH read
         // composition sites (World Encounter material resolution,

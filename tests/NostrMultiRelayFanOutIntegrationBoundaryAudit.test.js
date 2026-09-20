@@ -844,29 +844,49 @@ async function run() {
         const unexpectedUiReachabilityFiles = uiReachabilityFiles.filter((relPath) => !NOSTR_MULTI_RELAY_UI_REACHABILITY_ALLOWLIST.has(relPath));
         assert(unexpectedUiReachabilityFiles.length === 0, n(`L3. AMENDED BY 0.9.450 — no file anywhere under ui/ OUTSIDE this milestone's own six allowlisted files names the multi-relay command, "MultiRelay", or "nostrRelayUrls" — found unexpected: ${JSON.stringify(unexpectedUiReachabilityFiles)}`));
 
-        // L4. `application/` itself: the multi-relay classes are now
-        // referenced by the two original production files, the command
-        // boundary that composes them (PublicationDistributionCommand.js,
-        // unchanged since 0.9.444), and this milestone's own new
-        // configuration-provider file (which references them only in
-        // prose/header commentary explaining the architecture, never in
-        // executable code) — no OTHER application/ file (a use case, a
-        // runtime composition, a different command) references them.
+        // L4. AMENDED — `application/` itself: this check originally
+        // scanned for the bare substring "NostrMultiRelay" across every
+        // application/ file, excluding only the two ORIGINAL Publication
+        // multi-relay classes this section is about. Since then, several
+        // more multi-relay classes were built for entirely different
+        // features (Snapshot discovery/announcement, Place Naming
+        // discovery, Publication Commentary — each named
+        // `NostrMultiRelay<Feature>...`), and Publication's own relay-set
+        // configuration was unified into core/NostrRelayConfiguration.js
+        // (removing application/NostrPublicationRelaySetConfigurationProvider.js
+        // entirely — see that file's own "unified" header). None of that
+        // is what this section was ever checking. This assertion now scans
+        // specifically for the two ORIGINAL Publication multi-relay class
+        // NAMES (never the generic "NostrMultiRelay" substring, which
+        // every sibling multi-relay class's own file self-matches) —
+        // confirming the same original invariant: only the command
+        // boundary that composes them
+        // (application/PublicationDistributionCommand.js, unchanged since
+        // 0.9.444) references either by name, outside their own files.
         const applicationFiles = await listJsFilesRecursive('application');
+        const publicationMultiRelayClassNames = /\bNostrMultiRelayPublicationDiscoveryPublisher\b|\bNostrMultiRelayPublicationDistributionOrchestrator\b/;
         const referencingFiles = [];
         for (const relPath of applicationFiles) {
             if (relPath.endsWith('NostrMultiRelayPublicationDiscoveryPublisher.js') || relPath.endsWith('NostrMultiRelayPublicationDistributionOrchestrator.js')) {
                 continue;
             }
             const text = await source(relPath);
-            if (/NostrMultiRelay/.test(text)) {
+            if (publicationMultiRelayClassNames.test(text)) {
                 referencingFiles.push(relPath);
             }
         }
-        assert(JSON.stringify(referencingFiles.sort()) === JSON.stringify(['application/NostrPublicationRelaySetConfigurationProvider.js', 'application/PublicationDistributionCommand.js']),
-            n(`L4. AMENDED BY 0.9.447 — exactly the expected two OTHER application/ files reference the multi-relay classes: PublicationDistributionCommand.js (unchanged since 0.9.444) and application/NostrPublicationRelaySetConfigurationProvider.js (this milestone's own new file, referencing them only in its own header commentary) — no use case, runtime composition, or other command file does. Found: ${JSON.stringify(referencingFiles)}`));
+        // application/NostrMultiRelaySnapshotDiscoveryPublisher.js and
+        // application/NostrPublicationRelaySetDiscoveryQueryService.js each
+        // name NostrMultiRelayPublicationDiscoveryPublisher.js once, in
+        // their own header prose, as the precedent their own (unrelated,
+        // Snapshot/Publication-discovery-scoped) fan-out class structurally
+        // mirrors — never an import, never executable code.
+        const knownCommentOnlyReferences = ['application/NostrMultiRelaySnapshotDiscoveryPublisher.js', 'application/NostrPublicationRelaySetDiscoveryQueryService.js'];
+        const unexpectedReferencingFiles = referencingFiles.filter((relPath) => !knownCommentOnlyReferences.includes(relPath));
+        assert(JSON.stringify(unexpectedReferencingFiles.sort()) === JSON.stringify(['application/PublicationDistributionCommand.js']),
+            n(`L4. only application/PublicationDistributionCommand.js (unchanged since 0.9.444) references either original Publication multi-relay class in executable code, outside their own files and the known comment-only cross-references above. Found: ${JSON.stringify(unexpectedReferencingFiles)}`));
 
-        console.log('✓ Section L: AMENDED BY 0.9.447 — CLASSIFICATION UPDATED. executeMultiRelayNostrPublicationDistributionCommand() is now reachable through the ordinary application composition root (composeMultiRelayNostrPublicationDistributionCommand(), application/PublicationDistributionCommandComposition.js), wired at ui/main.js exactly like every other distribution command, with a real Settings surface (ui/views/NostrPublicationRelaySettingsView.js) and route (/settings/nostr-publication-relays) supplying its configuration. This section\'s own original "classification (2), currently internal but intentionally so" finding is superseded — the product decision it named as remaining ("where should a caller\'s own nostrRelayUrls list come from") was 0.9.446\'s own job, and 0.9.446 recommended exactly the configuration this milestone (0.9.447) built. See tests/NostrPublicationRelaySetConfiguration.test.js for the full, dedicated test coverage of that new configuration layer.');
+        console.log('✓ Section L: executeMultiRelayNostrPublicationDistributionCommand() is reachable through the ordinary application composition root (composeMultiRelayNostrPublicationDistributionCommand(), application/PublicationDistributionCommandComposition.js), wired at ui/main.js exactly like every other distribution command, with its relay set supplied by the SAME unified core/NostrRelayConfiguration.js the whole application now shares (see that file\'s own "unified" header) rather than a dedicated Publication-only configuration layer.');
     }
 
     // ===============================================================
@@ -874,7 +894,7 @@ async function run() {
     // ===============================================================
     {
         console.log(`\n✅ All Nostr Multi-Relay Fan-Out Integration Boundary Audit (0.9.445) checks passed (${assertionCount} assertions).`);
-        console.log('VERDICT: NOSTR_MULTI_RELAY_FAN_OUT_INTEGRATION_COMPLETE — 0.9.444\'s fan-out capability survives the real application boundary: the real executeMultiRelayNostrPublicationDistributionCommand() delivers every configured field (relayUrls, discoveryTag, tagName, kind, publication identity, shared material URI, injected publishImpl) unmolested; material uploads exactly once regardless of relay count; independent relay success/failure is preserved in both directions; three relays\' own observations are simultaneously retrievable through the real 0.9.443 lifecycle path with no phantom entries on failure; repeated publication replaces rather than accumulates; relay order never changes the resulting set of facts; a one-element relay list is semantically identical to the pre-existing single-relay command; and every OTHER distribution surface — the existing single-relay Nostr command, Arweave content/gateway-failover, Arweave/Bitcoin anchoring, Snapshot distribution, and the discovery-query read side — remains structurally and behaviorally untouched. REACHABILITY CLASSIFICATION: AMENDED BY 0.9.447 — the capability is now reachable through the ordinary application composition root (application/PublicationDistributionCommandComposition.js\'s own new composeMultiRelayNostrPublicationDistributionCommand()), configured through a genuinely separate, persisted relay-set configuration (core/NostrPublicationRelaySetConfiguration.js, storage/NostrPublicationRelaySetConfigurationStore.js) and a real Settings surface (ui/views/NostrPublicationRelaySettingsView.js, /settings/nostr-publication-relays) — see tests/NostrPublicationRelaySetConfiguration.test.js for that layer\'s own full coverage. Test-only when originally written (0.9.445) — this file\'s own Section L is amended here to record a later, real production change made by a subsequent milestone (0.9.447), not by this file itself.');
+        console.log('VERDICT: NOSTR_MULTI_RELAY_FAN_OUT_INTEGRATION_COMPLETE — 0.9.444\'s fan-out capability survives the real application boundary: the real executeMultiRelayNostrPublicationDistributionCommand() delivers every configured field (relayUrls, discoveryTag, tagName, kind, publication identity, shared material URI, injected publishImpl) unmolested; material uploads exactly once regardless of relay count; independent relay success/failure is preserved in both directions; three relays\' own observations are simultaneously retrievable through the real 0.9.443 lifecycle path with no phantom entries on failure; repeated publication replaces rather than accumulates; relay order never changes the resulting set of facts; a one-element relay list is semantically identical to the pre-existing single-relay command; and every OTHER distribution surface — the existing single-relay Nostr command, Arweave content/gateway-failover, Arweave/Bitcoin anchoring, Snapshot distribution, and the discovery-query read side — remains structurally and behaviorally untouched. REACHABILITY CLASSIFICATION: the capability is reachable through the ordinary application composition root (application/PublicationDistributionCommandComposition.js\'s own composeMultiRelayNostrPublicationDistributionCommand()), configured through the SAME unified Nostr relay set (core/NostrRelayConfiguration.js, storage/NostrRelayConfigurationStore.js) and Settings surface (ui/views/NostrRelaySettingsView.js, /settings/nostr-relay) every other Nostr-facing feature now shares — see core/NostrRelayConfiguration.js\'s own "unified" header for the full rationale. A separate, Publication-only relay-set configuration existed briefly (0.9.447-0.9.9xx) and has since been merged back into this one.');
     }
 }
 

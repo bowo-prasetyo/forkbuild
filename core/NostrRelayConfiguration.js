@@ -110,14 +110,47 @@ const DEFAULT_NOSTR_RELAY_URL = 'wss://relay.damus.io';
 // that is never contacted because an earlier one already succeeded is a
 // real, permanently lost discovery surface for anyone who only ever queries
 // that relay. So `relayUrls` here means every configured relay is queried
-// or published to, every time, independently of the others' own outcomes —
-// the identical "fan-out, never failover" invariant `core/
-// NostrPublicationRelaySetConfiguration.js`'s own header already holds for
-// the Publication-distribution relay set, extended here to this codebase's
-// general discovery-relay preference (Snapshot discovery, Place Naming
-// discovery). `relayUrls` is still accepted as an ORDERED array — order is
-// preserved for stable, predictable rendering only, and carries no
-// priority/preference meaning of any kind.
+// or published to, every time, independently of the others' own outcomes.
+// `relayUrls` is still accepted as an ORDERED array — order is preserved
+// for stable, predictable rendering only, and carries no priority/
+// preference meaning of any kind.
+//
+// UNIFIED — THIS IS NOW THE ONE NOSTR RELAY SET FOR THE WHOLE APPLICATION,
+// PUBLICATIONS INCLUDED. A separate, earlier configuration boundary —
+// `core/NostrPublicationRelaySetConfiguration.js` — used to hold an
+// independent relay SET for Publication distribution/discovery only, kept
+// deliberately apart from this file across several past milestones on the
+// reasoning that Publications (meant for broad discovery by strangers) and
+// Snapshot/Place-Naming discovery (a narrower, personal-utility need)
+// might reasonably want different relays. In practice, no product need for
+// that divergence ever materialized — every Wanderer who configured one
+// wanted the other to match, and maintaining two nearly-identical
+// textareas was pure friction for zero real flexibility. That file, its
+// storage store, its use case, its resolution provider, and its own
+// settings page have all been REMOVED; every consumer that used to read
+// `resolvedNostrPublicationRelayUrls` (Publication distribution via
+// `application/NostrMultiRelayPublicationDiscoveryPublisher.js`,
+// Publication discovery via `application/
+// NostrPublicationRelaySetDiscoveryQueryService.js`) now reads THIS file's
+// own `relayUrls` instead — the identical array Snapshot discovery,
+// Snapshot announcement, and Place Naming discovery already use. Nostr
+// Publication Commentary (`application/
+// NostrMultiRelayPublicationCommentaryDistribution.js`) was extended to
+// the same fan-out set at the same time, closing the one asynchronous
+// Nostr substrate that had never gained relay multiplicity at all. There
+// is now exactly one Nostr relay list in this codebase, one Settings page,
+// and one fan-out policy — reachability, broad discoverability, and
+// resilience all draw from the same configured set, everywhere Nostr is
+// used.
+//
+// A WANDERER WHO GENUINELY WANTS TO SPLIT THEM AGAIN HAS NO SEAM TO DO SO
+// TODAY. Reintroducing per-feature relay divergence (e.g., "announce
+// Publications more broadly than I query for Snapshots") would be a new,
+// deliberate product decision — building a second configuration boundary
+// back is a well-understood, mechanical reversal (this file's own git
+// history holds the original `NostrPublicationRelaySetConfiguration.js`),
+// never something to smuggle back in as an incidental side effect of an
+// unrelated change.
 //
 //   { relayUrl: 'wss://a.example' }            (still valid, unchanged)
 //        │                                      == one-element list

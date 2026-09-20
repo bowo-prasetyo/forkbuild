@@ -9293,20 +9293,15 @@ export default {
                                         <router-link :to="discoveryDistributionConfigurationRoute(entry)" class="action-btn action-btn--secondary">
                                             Configure {{ entry.discoveryDistributionProvider === 'arweave' ? 'Arweave' : 'Nostr' }}
                                         </router-link>
-                                        <!-- 0.9.447 — Nostr Publication Relay Set
-                                             Configuration. A SECOND, additive contextual
-                                             link, never a replacement for the one above:
-                                             that link points at the read/discovery relay
-                                             page (/settings/nostr-relay); this one points
-                                             at the genuinely separate relay SET a Nostr
-                                             announcement actually fans out to — see
-                                             ui/views/NostrPublicationRelaySettingsView.js's
-                                             own header. Shown only alongside the Nostr
-                                             choice, mirroring the condition already used
-                                             above. -->
-                                        <router-link v-if="entry.discoveryDistributionProvider !== 'arweave'" to="/settings/nostr-publication-relays" class="action-btn action-btn--secondary">
-                                            Configure Nostr Publication Relays
-                                        </router-link>
+                                        <!-- UNIFIED — a second contextual link used to
+                                             point here at the genuinely separate
+                                             /settings/nostr-publication-relays relay SET
+                                             a Nostr announcement fanned out to; removed
+                                             once that relay set was merged into the same
+                                             /settings/nostr-relay page the link above
+                                             already targets — see
+                                             core/NostrRelayConfiguration.js's own
+                                             "unified" header. -->
                                     </div>
                                     <p v-if="entry.discoveryDistributionAttempt && entry.discoveryDistributionAttempt.error" class="form-hint form-hint--neutral">
                                         {{ entry.discoveryDistributionAttempt.error }}

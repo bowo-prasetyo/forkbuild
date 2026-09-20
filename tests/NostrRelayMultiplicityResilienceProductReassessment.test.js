@@ -151,15 +151,16 @@ async function run() {
         // split, but this time also checking that the write side's OWN
         // default is untouched by any settings-resolved value at all.
         const mainSource = await source('ui/main.js');
-        // AMENDED BY 0.9.451 — Nostr Publication Relay Set Discovery
-        // Alignment. World Encounter (Publication) discovery no longer
-        // receives resolvedNostrRelayUrl; it now receives the resolved
-        // publication relay SET instead — see `application/
-        // NostrPublicationRelaySetDiscoveryQueryService.js`'s own header.
-        // The other two read-path sites (Snapshot, Place Naming discovery)
-        // are unaffected.
-        assert(mainSource.includes('nostrRelayUrls: resolvedNostrPublicationRelayUrls') && mainSource.includes('relayUrl: resolvedNostrRelayUrl'),
-            n('B3. resolvedNostrPublicationRelayUrls reaches World Encounter (Publication) discovery, and resolvedNostrRelayUrl still reaches the remaining read-path composition sites, live-confirmed — 0.9.451'));
+        // UNIFIED — Nostr Publication Relay Set Discovery Alignment (0.9.451)
+        // originally split World Encounter (Publication) discovery onto its
+        // own, separately-configured relay SET, apart from the general
+        // discovery-relay preference the other two read-path sites (Snapshot,
+        // Place Naming discovery) used. That separate configuration has
+        // since been merged back into this one — see core/
+        // NostrRelayConfiguration.js's own "unified" header — so all three
+        // read-path sites now receive the SAME resolved relay set.
+        assert(mainSource.includes('nostrRelayUrls: resolvedNostrRelayUrls') && mainSource.includes('relayUrl: resolvedNostrRelayUrls[0]'),
+            n('B3. resolvedNostrRelayUrls reaches World Encounter (Publication) discovery, and the same resolvedNostrRelayUrls[0] still reaches the single-relay Place Naming construction site — one unified relay set, live-confirmed'));
         // AMENDED — Publication and Place Naming's own write-path publisher
         // option objects remain untouched, exactly as this audit's own
         // Section I recommended NOT extending failover-style thinking to

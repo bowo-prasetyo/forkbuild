@@ -135,15 +135,12 @@ async function run() {
         // Arweave Gateway shape, rather than re-asserting an absence this
         // codebase no longer has.
         assert(mainSource.includes('const resolvedNostrRelayUrl ='), 'A5. ui/main.js now resolves one effective Nostr relay URL, mirroring resolvedArweaveGatewayUrl');
-        // AMENDED BY 0.9.451 — Nostr Publication Relay Set Discovery
-        // Alignment. The World Encounter composition site no longer
-        // overrides `nostrRelayUrl` with `resolvedNostrRelayUrl` — it now
-        // overrides `nostrRelayUrls` (plural) with `resolvedNostrPublicationRelayUrls`,
-        // the resolved publication relay SET, so a publication distributed
-        // to that set is discoverable through the same set. See
-        // `application/NostrPublicationRelaySetDiscoveryQueryService.js`'s
-        // own header.
-        assert(mainSource.includes('nostrRelayUrls: resolvedNostrPublicationRelayUrls'), 'A5. ui/main.js overrides nostrRelayUrls at the World Encounter composition site with the resolved publication relay set — 0.9.451');
+        // UNIFIED — 0.9.451's own separate `resolvedNostrPublicationRelayUrls`
+        // has since been merged back into `resolvedNostrRelayUrls` — see
+        // core/NostrRelayConfiguration.js's own "unified" header. The World
+        // Encounter composition site overrides `nostrRelayUrls` (plural)
+        // with the SAME unified array Snapshot/Place-Naming discovery use.
+        assert(mainSource.includes('nostrRelayUrls: resolvedNostrRelayUrls'), 'A5. ui/main.js overrides nostrRelayUrls at the World Encounter composition site with the unified resolved relay set');
         const snapshotCompositionRegion = mainSource.slice(
             mainSource.indexOf('composeDiscoverSnapshotRuntime({'),
             mainSource.indexOf('composeDiscoverSnapshotRuntime({') + 400

@@ -430,9 +430,21 @@ async function run() {
     // Section H — production wiring census.
     // ===============================================================
     {
+        // UNIFIED — ui/main.js no longer constructs PublicationCommentaryNostrDistribution
+        // directly; it constructs application/NostrMultiRelayPublicationCommentaryDistribution.js
+        // instead, which itself constructs one PublicationCommentaryNostrDistribution
+        // instance per configured relay (fan-out across the unified Nostr
+        // relay set — see core/NostrRelayConfiguration.js's own "unified"
+        // header). So the real construction site for the single-relay class
+        // moved from ui/main.js to that one sibling file — still exactly
+        // one production file, never a second, ad hoc construction anywhere
+        // else.
         const distributionSites = grepFiles('new PublicationCommentaryNostrDistribution\\(', ['ui', 'application']);
-        assert(distributionSites.length === 1 && distributionSites[0].includes('ui/main.js'),
-            n(`exactly one production file constructs PublicationCommentaryNostrDistribution — ui/main.js — found: ${distributionSites.join(', ') || 'none'}`));
+        assert(distributionSites.length === 1 && distributionSites[0].includes('NostrMultiRelayPublicationCommentaryDistribution.js'),
+            n(`exactly one production file constructs PublicationCommentaryNostrDistribution — application/NostrMultiRelayPublicationCommentaryDistribution.js — found: ${distributionSites.join(', ') || 'none'}`));
+        const multiRelayConstructionSites = grepFiles('new NostrMultiRelayPublicationCommentaryDistribution\\(', ['ui', 'application']);
+        assert(multiRelayConstructionSites.length === 1 && multiRelayConstructionSites[0].includes('ui/main.js'),
+            n(`exactly one production file constructs NostrMultiRelayPublicationCommentaryDistribution — ui/main.js — found: ${multiRelayConstructionSites.join(', ') || 'none'}`));
 
         const discoverSites = grepFiles('new DiscoverPublicationCommentaryFromNostrUseCase\\(', ['ui', 'application']);
         assert(discoverSites.length === 1 && discoverSites[0].includes('ui/main.js'),
@@ -442,8 +454,11 @@ async function run() {
         assert(exchangeConstructionSites.length === 1 && exchangeConstructionSites[0].includes('CreatePublicationCommentaryDistributionPeerExchangeUseCase.js'),
             n('this milestone constructs no second PublicationCommentaryDistributionExchange/PeerExchange anywhere — ui/main.js reuses the SAME instance application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js (0.9.620) already builds for WebRTC, for Nostr publish/import too'));
 
+        // UNIFIED — ui/main.js now imports the fan-out wrapper instead of
+        // the single-relay class directly; see this file's own "production
+        // wiring census" amendment, above.
         const mainSource = codeOnly(await rawSource('ui/main.js'));
-        assert(mainSource.includes("import { PublicationCommentaryNostrDistribution } from '../application/PublicationCommentaryNostrDistribution.js';")
+        assert(mainSource.includes("import { NostrMultiRelayPublicationCommentaryDistribution } from '../application/NostrMultiRelayPublicationCommentaryDistribution.js';")
             && mainSource.includes("import { DiscoverPublicationCommentaryFromNostrUseCase } from '../application/DiscoverPublicationCommentaryFromNostrUseCase.js';"),
             n('ui/main.js imports both new classes'));
         assert(mainSource.includes('publishImpl: nostrHostPublisher,') && mainSource.includes('queryImpl: nostrRelayQueryClient,') && mainSource.includes('relayUrl: resolvedNostrRelayUrl'),
@@ -612,7 +627,9 @@ async function run() {
         console.log('                                     only "at least one relay\'s OK," never Arweave-grade');
         console.log('                                     durability — this milestone introduces no confirmation step');
         console.log('                                     claiming otherwise.');
-        console.log('  Multi-relay fan-out/resilience  -> STILL a NEW_SUBSTRATE_BOUNDARY, deliberately unbuilt.');
+        console.log('  Multi-relay fan-out/resilience  -> CLOSED. application/NostrMultiRelayPublicationCommentaryDistribution.js');
+        console.log('                                     fans publish/retrieve/discover out across the unified Nostr relay');
+        console.log('                                     set — see core/NostrRelayConfiguration.js\'s own "unified" header.');
         console.log(`\n✅ All Publication Commentary Nostr Asynchronous Distribution tests passed (${assertionCount} assertions).`);
     }
 }

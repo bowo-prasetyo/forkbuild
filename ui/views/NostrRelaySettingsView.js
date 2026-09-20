@@ -88,24 +88,26 @@ import { DEFAULT_NOSTR_RELAY_URL } from '../../core/NostrRelayConfiguration.js';
 // NostrRelayConfigurationStore.js's own header already rules out. This
 // button is the one UI path back to genuine absence.
 //
-// DELIBERATELY EXCLUDED — NOT THIS MILESTONE. No Test Connection, no health
-// indicator, no automatic fallback, no multiple relay entries, no priority
-// or ranking, no relay health history, no retry/timeout configuration, no
+// DELIBERATELY EXCLUDED. No Test Connection, no health indicator, no
+// automatic fallback, no priority or ranking among configured relays (fan-out
+// treats every one identically — see core/NostrRelayConfiguration.js's own
+// header), no relay health history, no retry/timeout configuration, no
 // credentials, no generic "Infrastructure Settings" page, and no new
 // discovery-error framework distinguishing "nothing discovered" from "relay
-// unavailable" — that is a separate, later product question (see
-// docs/Roadmap.md, 0.9.372, "distinguishing 'no results' from 'relay
-// unavailable'"), never something this milestone tries to solve.
+// unavailable" — that remains a separate, later product question, never
+// something this page tries to solve.
 //
-// AMENDED BY 0.9.452 — Product Completion Reassessment. This view's own
-// template text below previously listed Publications among the discovery
-// operations this relay preference governs. That was accurate through
-// 0.9.450, but 0.9.451 moved Publication discovery onto the separate
-// Nostr Publication Relays configuration (`ui/views/
-// NostrPublicationRelaySettingsView.js`) instead — see `ui/main.js`'s own
-// 0.9.451 comment. This relay preference now governs Snapshot discovery and
-// Place Naming discovery only; the template text below is corrected
-// accordingly. No behavior changes — documentation/copy correction only.
+// UNIFIED — this relay set now governs Publications too. 0.9.451/0.9.452
+// had moved Publication distribution/discovery onto a separate
+// `NostrPublicationRelaySetConfiguration`/`ui/views/NostrPublicationRelaySettingsView.js`
+// pair, reasoning that Publications (broad discovery by strangers) and
+// Snapshot/Place-Naming discovery (a narrower, personal need) might want
+// different relays. See core/NostrRelayConfiguration.js's own "unified"
+// header for why that divergence never materialized and the two
+// configurations were merged back into this one — this page, this store,
+// this use case. `ui/views/NostrPublicationRelaySettingsView.js` and its
+// own route have been removed; this is now the one Nostr relay
+// configuration surface in the application.
 export default {
     name: 'NostrRelaySettingsView',
     setup() {
@@ -189,9 +191,9 @@ export default {
     },
     template: `
         <section class="nostr-relay-settings-view">
-            <h1>Nostr Relay</h1>
+            <h1>Nostr Relays</h1>
             <p class="form-hint form-hint--neutral">
-                Relay(s) used for discovery operations, including Snapshots and Place Naming. One per line — every configured relay is queried and announced to independently, so a second relay stays useful even while the first is unreachable. Publication discovery uses the separate Nostr Publication Relays configuration instead (see Nostr Publication Relays, under Network Settings). This setting affects Snapshot discovery and announcement, and Place Naming discovery.
+                Relay(s) used everywhere this replica publishes or discovers over Nostr — Publications, Snapshots, Place Naming, and Commentary. One per line — every configured relay is queried and announced to independently, so a second relay stays useful even while the first is unreachable, and a Publication announced to more than one relay is discoverable by more people.
             </p>
 
             <p v-if="hasOverride" class="form-hint form-hint--neutral">

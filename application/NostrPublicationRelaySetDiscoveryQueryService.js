@@ -14,7 +14,11 @@ import { NostrDiscoveryQueryService } from './NostrDiscoveryQueryService.js';
 // only ever queried ONE Nostr relay — the general discovery-relay
 // preference (`core/NostrRelayConfiguration.js`) — never the relay SET a
 // Wanderer configures for publication distribution
-// (`core/NostrPublicationRelaySetConfiguration.js`, 0.9.447). This class is
+// (`core/NostrPublicationRelaySetConfiguration.js`, 0.9.447, since REMOVED
+// and merged back into `core/NostrRelayConfiguration.js` — see that file's
+// own "unified" header; this class's own `relayUrls` constructor argument
+// is unaffected by that merge, since it always accepted a plain array
+// regardless of where a caller resolved it from). This class is
 // the read-side counterpart to `application/
 // NostrMultiRelayPublicationDiscoveryPublisher.js` (0.9.444) — the identical
 // "one relay, N times, wrapped" composition, one layer over, for discovery
