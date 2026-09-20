@@ -524,9 +524,9 @@ async function runTests() {
             '36. WorldView.js injects the app-wide publicationContentStore, defaulting to null — the SAME content-addressed store the publish path itself writes into, never a second one');
         assert(/:snapshotDistributionCommand="distributeWorldEncounterSnapshot"/.test(viewCode),
             '37. WorldView.js forwards its own wrapper to WorldEncounterCanvas as its new snapshotDistributionCommand prop');
-        assert(viewCode.includes('function distributeWorldEncounterSnapshot(publication)')
-            && /return snapshotDistributionCommand\(\s*snapshotBytes,/.test(viewCode),
-            '38. (0.9.566) distributeWorldEncounterSnapshot still calls the injected snapshotDistributionCommand — never a second command — now forwarding placementInfo.publicationId/placementInfo.position alongside the already-stored bytes.');
+        assert(viewCode.includes('function distributeWorldEncounterSnapshot(publication, storage)')
+            && /return snapshotDistributionCommand\(\s*snapshotBytes,\s*storage,/.test(viewCode),
+            '38. (0.9.566) distributeWorldEncounterSnapshot still calls the injected snapshotDistributionCommand — never a second command — now forwarding placementInfo.publicationId/placementInfo.position alongside the already-stored bytes and the caller\'s own selected storage backend.');
         assert(!/publication\.toJSON\(\)/.test(viewCode.split('function distributeWorldEncounterSnapshot')[1]?.split('\n\n')[0] || ''),
             '39. distributeWorldEncounterSnapshot never re-serializes the publication itself — it reads already-stored bytes back instead');
 

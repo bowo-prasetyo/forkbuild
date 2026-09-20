@@ -1465,13 +1465,25 @@ export default {
             type: Function,
             default: null
         },
-        // `(publication) -> Promise<{ contentReference, announcement }>`,
-        // or `null` when the capability is unavailable — the identical
-        // shape/default `WorldEncounterCanvas`'s own
+        // `(publication, storage) -> Promise<{ contentReference,
+        // announcement }>`, or `null` when the capability is unavailable
+        // — the identical shape/default `WorldEncounterCanvas`'s own
         // `snapshotDistributionCommand` prop already uses.
         snapshotDistributionCommand: {
             type: Function,
             default: null
+        },
+        // Bug fix — the eligible-and-currently-registered Snapshot
+        // Distribution content backends ('ipfs'/'ar'), the SAME plain
+        // array `ui/views/WorldView.js` already reads once from the
+        // app-wide `snapshotDistributionAvailableStorageTypes` command —
+        // see that file's own injection comment. Never recomputed here;
+        // this component only renders whatever it was handed. Empty
+        // (the default) means no picker renders at all — distributeOwnSnapshot()
+        // then falls back to 'ar', the historical, silent default.
+        snapshotDistributionStorageTypes: {
+            type: Array,
+            default: () => []
         },
         // 0.9.347 — optional. A `(publication) -> Promise<Publication
         // DistributionResult | null>` function, or `null` when the
@@ -1663,6 +1675,11 @@ export default {
             snapshotDistributionError: null,
             snapshotDistributionResult: null,
             snapshotDistributionRequestId: 0,
+            // Bug fix — backs the snapshotDistributionStorage computed
+            // below. `null` until a Wanderer explicitly picks a storage
+            // from the picker; the computed's own getter supplies the
+            // default until then.
+            snapshotDistributionStorageChoice: null,
             // 0.9.347 — see this file's own header, "0.9.347 — Post-Publish
             // Distribution Entry Point." A separate ephemeral state, never
             // shared with the Snapshot distribution family's own —
@@ -1837,6 +1854,25 @@ export default {
             // question."
             publicationPlacementsError: null
         };
+    },
+    computed: {
+        // Bug fix — the Arweave/IPFS choice the "Distribute Snapshot"
+        // picker shows and distributeOwnSnapshot() reads. Falls back to
+        // the first eligible storage this device currently has
+        // registered, or 'ar' when snapshotDistributionStorageTypes is
+        // empty (no picker renders in that case either — see the
+        // template's own v-if) — the exact historical default this
+        // capability silently used before the picker existed. Setting it
+        // only ever happens through an explicit Wanderer selection in
+        // the picker itself.
+        snapshotDistributionStorage: {
+            get() {
+                return this.snapshotDistributionStorageChoice || this.snapshotDistributionStorageTypes[0] || 'ar';
+            },
+            set(value) {
+                this.snapshotDistributionStorageChoice = value;
+            }
+        }
     },
     watch: {
         // A different Publication (or none at all) becoming current
@@ -2057,7 +2093,7 @@ export default {
             const requestId = this.snapshotDistributionRequestId;
 
             Promise.resolve()
-                .then(() => this.snapshotDistributionCommand(publication))
+                .then(() => this.snapshotDistributionCommand(publication, this.snapshotDistributionStorage))
                 .then((result) => {
                     if (requestId === this.snapshotDistributionRequestId) {
                         this.snapshotDistributionResult = result;
@@ -2774,6 +2810,19 @@ export default {
                 :disabled="!publication"
                 @click="unpublishOwnPublication"
             >Unpublish</button>
+
+            <!-- Bug fix — the Arweave/IPFS storage choice, mirroring
+                 ui/views/DecentralizedPublicationsView.js's own picker.
+                 Renders only when this device actually has more than the
+                 historical, silent Arweave-only default to offer —
+                 snapshotDistributionStorageTypes is empty on a device
+                 with no eligible backend registered at all. -->
+            <label v-if="snapshotDistributionStorageTypes.length > 0" class="own-publication-distribution-storage-label">
+                Storage
+                <select v-model="snapshotDistributionStorage" class="own-publication-distribution-storage-select" :disabled="snapshotDistributionExecuting">
+                    <option v-for="storage in snapshotDistributionStorageTypes" :key="storage" :value="storage">{{ storage === 'ipfs' ? 'IPFS' : 'Arweave' }}</option>
+                </select>
+            </label>
 
             <!-- Reachable with zero connected peers and an empty World
                  Encounters panel — this action never depends on either.

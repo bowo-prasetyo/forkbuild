@@ -411,8 +411,8 @@ async function run() {
             '2. it forwards publicationId/claimedPosition into discoveryPublisher.publish() alongside the pre-existing three fields, unmodified.');
 
         const worldViewSource = await readSource('ui/views/WorldView.js');
-        const distributeFnMatch = worldViewSource.match(/function distributeWorldEncounterSnapshot\(publication\)\s*\{[\s\S]*?\n        \}/);
-        assert(distributeFnMatch, '3. WorldView.js#distributeWorldEncounterSnapshot(publication) exists as an isolable function.');
+        const distributeFnMatch = worldViewSource.match(/function distributeWorldEncounterSnapshot\(publication, storage\)\s*\{[\s\S]*?\n        \}/);
+        assert(distributeFnMatch, '3. WorldView.js#distributeWorldEncounterSnapshot(publication, storage) exists as an isolable function.');
         const body = distributeFnMatch[0];
         assert(/session\.getPlacementInfoForPublication\(publication\.id\)/.test(body),
             '4. it reads the claim through session.getPlacementInfoForPublication(publication.id) — the same collaborator Section A exercised directly.');

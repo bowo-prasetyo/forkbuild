@@ -574,6 +574,22 @@ export default {
         // id-based lookup.
         const snapshotDistributionCommand = inject('snapshotDistributionCommand', null);
         const publicationContentStore = inject('publicationContentStore', null);
+        // Snapshot Distribution storage backend choice — the SAME
+        // app-wide `snapshotDistributionAvailableStorageTypes` ui/main.js
+        // already provides for ui/views/DecentralizedPublicationsView.js's
+        // own picker (a plain `() -> string[]` read of the eligible-and-
+        // currently-registered content backends, 'ipfs'/'ar'). Called
+        // once, exactly like that page already does — the result is a
+        // plain array, never recomputed reactively, since the underlying
+        // registry is populated once at composition-root startup.
+        // Forwarded to OwnPublicationPanel/WorldEncounterCanvas as a prop
+        // so each can offer the same Arweave/IPFS choice next to its own
+        // "Distribute Snapshot" button, rather than silently defaulting
+        // to Arweave the way this function always used to.
+        const snapshotDistributionAvailableStorageTypesCommand = inject('snapshotDistributionAvailableStorageTypes', null);
+        const snapshotDistributionStorageTypes = snapshotDistributionAvailableStorageTypesCommand
+            ? snapshotDistributionAvailableStorageTypesCommand()
+            : [];
         // 0.9.142 — World View Snapshot Discovery Command. The SAME
         // app-wide `discoverSnapshotCommand` `ui/main.js` now composes
         // (0.9.142's own `composeDiscoverSnapshotRuntime()`, sequenced by
@@ -1419,7 +1435,15 @@ export default {
         // 0.9.566 — this function never falls back to the Wanderer's own
         // current position, the encounter's position, or any other spatial
         // state as a substitute claim.
-        function distributeWorldEncounterSnapshot(publication) {
+        //
+        // Bug fix — `storage` is now a real second parameter, forwarded
+        // into `snapshotDistributionCommand` unchanged, instead of always
+        // `undefined` (which silently meant Arweave — `executeSnapshotDistributionCommand()`'s
+        // own default). OwnPublicationPanel/WorldEncounterCanvas now offer
+        // an explicit Arweave/IPFS picker next to "Distribute Snapshot"
+        // (see `snapshotDistributionStorageTypes` above) and pass their
+        // own selected value here — never a silent, invisible choice.
+        function distributeWorldEncounterSnapshot(publication, storage) {
             if (!snapshotDistributionCommand || !publicationContentStore || !publication.contentReference) {
                 return Promise.reject(new Error('Snapshot distribution is not available.'));
             }
@@ -1432,7 +1456,7 @@ export default {
                 : null;
             return snapshotDistributionCommand(
                 snapshotBytes,
-                undefined,
+                storage,
                 placementInfo ? placementInfo.publicationId : undefined,
                 placementInfo ? placementInfo.position : undefined
             );
@@ -4641,6 +4665,7 @@ export default {
             publishActiveDocument,
             distributeWorldEncounterPublication,
             distributeWorldEncounterSnapshot,
+            snapshotDistributionStorageTypes,
             discoverOwnSnapshot,
             exportOwnSnapshot,
             discoverSnapshotCandidatesCommand,
@@ -4799,6 +4824,7 @@ export default {
                     :unpublishCommand="unpublishOwnPublication"
                     :placePublicationCommand="placeOwnPublication"
                     :snapshotDistributionCommand="distributeWorldEncounterSnapshot"
+                    :snapshotDistributionStorageTypes="snapshotDistributionStorageTypes"
                     :publicationDistributionCommand="distributeWorldEncounterPublication"
                     :discoverSnapshotCommand="discoverOwnSnapshot"
                     :exportSnapshotCommand="exportOwnSnapshot"
@@ -5157,6 +5183,7 @@ export default {
                         :distributionLifecycleStore="publicationDistributionLifecycleStore"
                         :distributionCommand="distributeWorldEncounterPublication"
                         :snapshotDistributionCommand="distributeWorldEncounterSnapshot"
+                        :snapshotDistributionStorageTypes="snapshotDistributionStorageTypes"
                         :discoverSnapshotCommand="discoverOwnSnapshot"
                         :worldDiscoveryLeadRegistry="worldDiscoveryLeadRegistry"
                         :getPublicationCommentariesCommand="getPublicationCommentariesCommand"

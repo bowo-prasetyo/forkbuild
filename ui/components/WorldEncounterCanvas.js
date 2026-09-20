@@ -3054,6 +3054,14 @@ export default {
             type: Function,
             default: null
         },
+        // Bug fix — the eligible-and-currently-registered Snapshot
+        // Distribution content backends ('ipfs'/'ar'), mirroring
+        // OwnPublicationPanel.js's own identical prop — see that file's
+        // own comment and ui/views/WorldView.js's own injection comment.
+        snapshotDistributionStorageTypes: {
+            type: Array,
+            default: () => []
+        },
         // 0.9.111 — optional. A `({ objectId, discoveryTag }) -> Promise<{
         // discovery, resolution, inspection }>` function — see this file's
         // own header, "discoveryCommand is the one new collaborator this
@@ -3364,6 +3372,10 @@ export default {
             // resolves; reset on every fresh selection and on every new
             // attempt, exactly like `snapshotDistributionError`.
             snapshotDistributionResult: null,
+            // Bug fix — backs the snapshotDistributionStorage computed
+            // below, mirroring OwnPublicationPanel.js's own identical
+            // field. `null` until a Wanderer explicitly picks a storage.
+            snapshotDistributionStorageChoice: null,
             // 0.9.144 — ephemeral UI interaction state only, mirroring
             // `snapshotDistributionExecuting`/`snapshotDistributionError`/
             // `snapshotDistributionRequestId` (0.9.138) exactly, one action
@@ -3540,6 +3552,17 @@ export default {
         };
     },
     computed: {
+        // Bug fix — the Arweave/IPFS choice the "Distribute Snapshot"
+        // picker shows and distributeSelectedSnapshot() reads, mirroring
+        // OwnPublicationPanel.js's own identical computed exactly.
+        snapshotDistributionStorage: {
+            get() {
+                return this.snapshotDistributionStorageChoice || this.snapshotDistributionStorageTypes[0] || 'ar';
+            },
+            set(value) {
+                this.snapshotDistributionStorageChoice = value;
+            }
+        },
         // 0.9.13 — registry, when supplied, wins; see this file's own
         // header, "`effectiveView`: registry, when supplied, wins."
         effectiveView() {
@@ -4933,7 +4956,7 @@ export default {
             const requestId = this.snapshotDistributionRequestId;
 
             Promise.resolve()
-                .then(() => this.snapshotDistributionCommand(publication))
+                .then(() => this.snapshotDistributionCommand(publication, this.snapshotDistributionStorage))
                 .then((result) => {
                     if (requestId === this.snapshotDistributionRequestId) {
                         this.snapshotDistributionResult = result;
@@ -6112,6 +6135,16 @@ export default {
                  distributionLifecycleStore, which this panel never reads. -->
             <div v-if="selectedEncounter && selectedEncounter.kind === 'PUBLICATION' && snapshotDistributionCommand" class="world-encounter-snapshot-distribution-panel">
                 <h4 class="world-encounter-snapshot-distribution-title">Snapshot Distribution</h4>
+
+                <!-- Bug fix — the Arweave/IPFS storage choice. Renders
+                     only when this device has more than the historical,
+                     silent Arweave-only default to offer. -->
+                <label v-if="snapshotDistributionStorageTypes.length > 0" class="world-encounter-snapshot-distribution-storage-label">
+                    Storage
+                    <select v-model="snapshotDistributionStorage" class="world-encounter-snapshot-distribution-storage-select" :disabled="snapshotDistributionExecuting">
+                        <option v-for="storage in snapshotDistributionStorageTypes" :key="storage" :value="storage">{{ storage === 'ipfs' ? 'IPFS' : 'Arweave' }}</option>
+                    </select>
+                </label>
 
                 <!-- 0.9.138 — a request/attempt action, never a claim of
                      success — mirrors the Distribute Publication button

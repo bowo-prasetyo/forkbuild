@@ -1097,14 +1097,22 @@ export default {
         // the identical degrade-gracefully posture `placementCreationCoordinator`
         // immediately above already holds. `ipfsRemotePublicationCoordinator`
         // is the ONE place this page ever calls
-        // application/IpfsRemotePublicationCoordinator.js#publish() —
-        // `publicationCatalogContentResolver` is the SAME resolver
-        // application/CreateExternalSnapshotPlacementUseCase.js already
-        // reads a publication's own locally stored bytes through, reused
-        // here rather than duplicated (see ui/main.js's own 0.8.68
-        // comment).
+        // application/IpfsRemotePublicationCoordinator.js#publish().
+        //
+        // Bug fix — this page's own `publishToRemoteIpfs()`/
+        // `distributeEntrySnapshot()` used to read a Publication's local
+        // bytes through `publicationCatalogContentResolver`, resolving by
+        // id against application/LocalPublicationCatalog.js — a catalog
+        // that only ever holds peer-announced DecentralizedPublication
+        // envelopes, never a World `publisher/Publication.js` instance
+        // created by PublishDocumentUseCase/LocalPublisherProvider (see
+        // ui/views/WorldView.js's own identical fix and comment). Both
+        // functions now read bytes the correct way: given the `entry.publication`
+        // object already held, `publicationContentStore.get(entry.publication.contentReference)`
+        // — the SAME content-addressed store the publish path itself
+        // already wrote those bytes into.
         const ipfsRemotePublicationCoordinator = inject('ipfsRemotePublicationCoordinator', null);
-        const publicationCatalogContentResolver = inject('publicationCatalogContentResolver', null);
+        const publicationContentStore = inject('publicationContentStore', null);
         // 0.9.663 — Connect Remote IPFS to Nostr Snapshot Distribution. THE
         // SAME `snapshotDiscoveryPublisher` instance ui/main.js already
         // composes for the existing Kubo/Arweave "Distribute Snapshot"
@@ -6243,7 +6251,7 @@ export default {
         // FAILED outcome, mirroring `broadcastBitcoinAnchorTransaction()`'s
         // own identical restraint above.
         async function publishToRemoteIpfs(entry) {
-            if (!ipfsRemotePublicationCoordinator || !publicationCatalogContentResolver) return;
+            if (!ipfsRemotePublicationCoordinator || !publicationContentStore) return;
             const configuration = entry.ipfsRemotePublishingConfiguration;
             if (!configuration) return;
 
@@ -6261,13 +6269,14 @@ export default {
             // `entry.ipfsPublicationRecord`'s own reset immediately above.
             entry.ipfsRemoteSnapshotAnnouncement = null;
             try {
-                const contentHash = entry.publication.contentReference.hash;
-                const isValid = publicationCatalogContentResolver.verify(entry.publication.id, contentHash);
+                const bytes = publicationContentStore.get(entry.publication.contentReference);
+                if (bytes === null || bytes === undefined) {
+                    throw new Error('local snapshot bytes are not available — refusing to publish it externally');
+                }
+                const isValid = entry.publication.contentReference.verify(bytes);
                 if (!isValid) {
                     throw new Error('local snapshot integrity check failed — refusing to publish it externally');
                 }
-                const snapshotJson = publicationCatalogContentResolver.resolve(entry.publication.id);
-                const bytes = JSON.stringify(snapshotJson);
                 entry.ipfsRemotePublicationOutcome = await ipfsRemotePublicationCoordinator.publish({ bytes, configuration });
                 // 0.8.70 — the ONE place this page ever constructs an
                 // application/IpfsPublicationRecord.js: immediately after a
@@ -6920,14 +6929,14 @@ export default {
         }
 
         function distributeEntrySnapshot(entry) {
-            if (!snapshotDistributionCommand || !publicationCatalogContentResolver) {
+            if (!snapshotDistributionCommand || !publicationContentStore || !entry.publication.contentReference) {
                 return Promise.reject(new Error('Snapshot distribution is not available.'));
             }
-            const snapshotJson = publicationCatalogContentResolver.resolve(entry.publication.id);
-            if (snapshotJson === null) {
+            const snapshotBytes = publicationContentStore.get(entry.publication.contentReference);
+            if (snapshotBytes === null || snapshotBytes === undefined) {
                 return Promise.reject(new Error('Snapshot distribution is not available.'));
             }
-            return snapshotDistributionCommand(JSON.stringify(snapshotJson), entry.snapshotDistributionStorage);
+            return snapshotDistributionCommand(snapshotBytes, entry.snapshotDistributionStorage);
         }
 
         // The only writer of `entry.discoveryDistributionAttempt`, and
@@ -7151,7 +7160,7 @@ export default {
             snapshotDistributionStorageTypes,
             preferredPlacementCreationCoordinator, createPreferredPlacement, preferredPlacementCreationView,
             preferredPlacementCreationBadgeClass, preferredPlacementCreationButtonLabel,
-            ipfsRemotePublicationCoordinator, publicationCatalogContentResolver,
+            ipfsRemotePublicationCoordinator, publicationContentStore,
             openIpfsRemotePublishingConfigureForm, cancelIpfsRemotePublishingConfigureForm,
             toggleIpfsRemotePublishingConfigureForm,
             saveIpfsRemotePublishingConfiguration, clearIpfsRemotePublishingConfiguration,
@@ -11530,10 +11539,10 @@ export default {
                          remains authoritative for content creation." This section only ever
                          shows the result of the MOST RECENT explicit publish attempt, exactly
                          like the Bitcoin Broadcast section above, one axis over. Absent
-                         ipfsRemotePublicationCoordinator or publicationCatalogContentResolver,
+                         ipfsRemotePublicationCoordinator or publicationContentStore,
                          this section simply never renders — the identical degrade-gracefully
                          posture every optional section on this page already holds. -->
-                    <div v-if="ipfsRemotePublicationCoordinator && publicationCatalogContentResolver" class="evidence-section">
+                    <div v-if="ipfsRemotePublicationCoordinator && publicationContentStore" class="evidence-section">
                         <div class="evidence-summary">
                             <span class="evidence-summary-title">IPFS Publishing</span>
                             <span class="form-hint form-hint--neutral">
