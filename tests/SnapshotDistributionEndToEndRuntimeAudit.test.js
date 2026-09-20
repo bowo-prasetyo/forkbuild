@@ -185,13 +185,15 @@ function makeNostrNetwork(log = null) {
     return { events, publishImpl, queryImpl };
 }
 
-// A fake application/PublicationCatalogContentResolver.js — duck-typed
-// resolve(publicationId), exactly the one method ui/views/WorldView.js's
-// own distributeWorldEncounterSnapshot() ever calls on it.
-function fakeContentResolver(entries = {}) {
+// A fake content/ContentStore.js — duck-typed get(contentReference),
+// exactly the one method ui/views/WorldView.js's own
+// distributeWorldEncounterSnapshot() ever calls on it, keyed by
+// contentReference.hash exactly like the real content-addressed store.
+function fakeContentStore(entries = {}) {
     return {
-        resolve(publicationId) {
-            return Object.prototype.hasOwnProperty.call(entries, publicationId) ? entries[publicationId] : null;
+        get(contentReference) {
+            const key = contentReference && contentReference.hash;
+            return Object.prototype.hasOwnProperty.call(entries, key) ? entries[key] : null;
         }
     };
 }
@@ -201,17 +203,17 @@ function fakeContentResolver(entries = {}) {
 // makeSnapshotDistributionAction() exactly, with one addition: an optional
 // `log`, pushed to as 'ACTION' the moment a caller (a World View click)
 // invokes it — the first entry in Section A's own shared call-order log.
-function makeSnapshotDistributionAction({ snapshotDistributionCommand, publicationCatalogContentResolver, log }) {
+function makeSnapshotDistributionAction({ snapshotDistributionCommand, publicationContentStore, log }) {
     return (publication) => {
         if (log) log.push('ACTION');
-        if (!snapshotDistributionCommand || !publicationCatalogContentResolver) {
+        if (!snapshotDistributionCommand || !publicationContentStore || !publication.contentReference) {
             return Promise.reject(new Error('Snapshot distribution is not available.'));
         }
-        const snapshotJson = publicationCatalogContentResolver.resolve(publication.id);
-        if (snapshotJson === null) {
+        const snapshotBytes = publicationContentStore.get(publication.contentReference);
+        if (snapshotBytes === null || snapshotBytes === undefined) {
             return Promise.reject(new Error('Snapshot distribution is not available.'));
         }
-        return snapshotDistributionCommand(JSON.stringify(snapshotJson));
+        return snapshotDistributionCommand(snapshotBytes);
     };
 }
 
@@ -319,17 +321,17 @@ async function run() {
         const discoveryTag = 'audit-e2e-flagship';
         const publisher = new NostrSnapshotDiscoveryPublisher({ discoveryTag, publishImpl: network.publishImpl });
 
-        const publication = new Publication({ id: 'pub-e2e-flagship', documentId: 'doc-e2e-flagship' });
+        const publication = new Publication({ id: 'pub-e2e-flagship', documentId: 'doc-e2e-flagship', contentReference: { hash: 'pub-e2e-flagship-hash' } });
         const snapshotJson = { world: { buildings: [{ id: 'flagship-e2e-building', bricks: 4 }] } };
         const expectedBytes = JSON.stringify(snapshotJson);
         const expectedHash = computeContentHash(expectedBytes);
-        const contentResolver = fakeContentResolver({ [publication.id]: snapshotJson });
+        const publicationContentStore = fakeContentStore({ 'pub-e2e-flagship-hash': expectedBytes });
 
         // World View -> WorldView.js's own distributeWorldEncounterSnapshot()
         // (reproduced) -> executeSnapshotDistributionCommand() -> ArweaveContentStore.put()
         // -> NostrSnapshotDiscoveryPublisher.publish().
         const snapshotDistributionCommand = (bytes) => executeSnapshotDistributionCommand({ bytes, contentStore: store, discoveryPublisher: publisher });
-        const distributeWorldEncounterSnapshot = makeSnapshotDistributionAction({ snapshotDistributionCommand, publicationCatalogContentResolver: contentResolver, log });
+        const distributeWorldEncounterSnapshot = makeSnapshotDistributionAction({ snapshotDistributionCommand, publicationContentStore, log });
 
         const ctx = canvasCtx({ snapshotDistributionCommand: distributeWorldEncounterSnapshot });
         ctx.selectedEncounter = { kind: 'PUBLICATION', objectId: publication.id };

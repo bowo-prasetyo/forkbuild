@@ -301,20 +301,20 @@ function makeRealSnapshotDistributionCommand({ contentStore, discoveryPublisher 
 // Mirrors ui/views/WorldView.js's own real
 // distributeWorldEncounterSnapshot(publication) exactly. Verified
 // structurally against the real source in Section B, below.
-function makeDistributeWorldEncounterSnapshotAction({ snapshotDistributionCommand, publicationCatalogContentResolver, session }) {
+function makeDistributeWorldEncounterSnapshotAction({ snapshotDistributionCommand, publicationContentStore, session }) {
     return function distributeWorldEncounterSnapshot(publication) {
-        if (!snapshotDistributionCommand || !publicationCatalogContentResolver) {
+        if (!snapshotDistributionCommand || !publicationContentStore || !publication.contentReference) {
             return Promise.reject(new Error('Snapshot distribution is not available.'));
         }
-        const snapshotJson = publicationCatalogContentResolver.resolve(publication.id);
-        if (snapshotJson === null) {
+        const snapshotBytes = publicationContentStore.get(publication.contentReference);
+        if (snapshotBytes === null || snapshotBytes === undefined) {
             return Promise.reject(new Error('Snapshot distribution is not available.'));
         }
         const placementInfo = typeof session.getPlacementInfoForPublication === 'function'
             ? session.getPlacementInfoForPublication(publication.id)
             : null;
         return snapshotDistributionCommand(
-            JSON.stringify(snapshotJson),
+            snapshotBytes,
             undefined,
             placementInfo ? placementInfo.publicationId : undefined,
             placementInfo ? placementInfo.position : undefined
@@ -322,10 +322,14 @@ function makeDistributeWorldEncounterSnapshotAction({ snapshotDistributionComman
     };
 }
 
-function fakeContentResolver(entries = {}) {
+// Keyed by contentReference.hash exactly like the real content-addressed
+// store — every Publication in this file comes from the real
+// publishOwnPublication() below, so its contentReference is genuine.
+function fakeContentStore(entries = {}) {
     return {
-        resolve(publicationId) {
-            return Object.prototype.hasOwnProperty.call(entries, publicationId) ? entries[publicationId] : null;
+        get(contentReference) {
+            const key = contentReference && contentReference.hash;
+            return Object.prototype.hasOwnProperty.call(entries, key) ? JSON.stringify(entries[key]) : null;
         }
     };
 }
@@ -437,9 +441,9 @@ async function run() {
         // ---- B: production distribution ----
         const host = makeHost(storageProvider, 'sections-a-f-production-chain');
         const snapshotJson = { world: { buildings: [{ id: 'a-f-flagship-building', bricks: 1 }] } };
-        const contentResolver = fakeContentResolver({ [publication.id]: snapshotJson });
+        const publicationContentStore = fakeContentStore({ [publication.contentReference.hash]: snapshotJson });
         const snapshotDistributionCommand = makeRealSnapshotDistributionCommand({ contentStore: host.arweaveStore, discoveryPublisher: host.discoveryPublisher });
-        const distributeWorldEncounterSnapshot = makeDistributeWorldEncounterSnapshotAction({ snapshotDistributionCommand, publicationCatalogContentResolver: contentResolver, session });
+        const distributeWorldEncounterSnapshot = makeDistributeWorldEncounterSnapshotAction({ snapshotDistributionCommand, publicationContentStore, session });
 
         const mainSource = await readSource('ui/main.js');
         assert(/const snapshotDistributionCommand = \(bytes, storage = 'ar', publicationId, claimedPosition\) => executeSnapshotDistributionCommand\(\{\s*\n\s*bytes,\s*\n\s*contentStore: resolveSnapshotDistributionContentStore\(snapshotPlacementStoreRegistry, storage\),\s*\n\s*discoveryPublisher: snapshotDiscoveryPublisher,\s*\n\s*publicationId,\s*\n\s*claimedPosition\s*\n\s*\}\);/.test(mainSource),
@@ -532,9 +536,9 @@ async function run() {
             '1. sanity — a Publication with no existing placement genuinely resolves no claim from a real, genuinely empty LocalPlacementRegistry.');
 
         const host = makeHost(storageProvider, 'section-g-no-placement');
-        const contentResolver = fakeContentResolver({ [publication.id]: { world: { buildings: [] } } });
+        const publicationContentStore = fakeContentStore({ [publication.contentReference.hash]: { world: { buildings: [] } } });
         const snapshotDistributionCommand = makeRealSnapshotDistributionCommand({ contentStore: host.arweaveStore, discoveryPublisher: host.discoveryPublisher });
-        const distribute = makeDistributeWorldEncounterSnapshotAction({ snapshotDistributionCommand, publicationCatalogContentResolver: contentResolver, session });
+        const distribute = makeDistributeWorldEncounterSnapshotAction({ snapshotDistributionCommand, publicationContentStore, session });
 
         const distribution = await distribute(publication);
         assert(distribution.announcement.published === true, '2. distribution still succeeds through the full real chain with no placement to carry.');
@@ -577,9 +581,9 @@ async function run() {
 
         const host = makeHost(storageProvider, 'section-h-identity-isolation');
         const sharedSnapshotJson = { world: { buildings: [{ id: 'shared-across-p1-and-p2' }] } };
-        const contentResolver = fakeContentResolver({ [publicationP1.id]: sharedSnapshotJson, [publicationP2.id]: sharedSnapshotJson });
+        const publicationContentStore = fakeContentStore({ [publicationP1.contentReference.hash]: sharedSnapshotJson, [publicationP2.contentReference.hash]: sharedSnapshotJson });
         const snapshotDistributionCommand = makeRealSnapshotDistributionCommand({ contentStore: host.arweaveStore, discoveryPublisher: host.discoveryPublisher });
-        const distribute = makeDistributeWorldEncounterSnapshotAction({ snapshotDistributionCommand, publicationCatalogContentResolver: contentResolver, session });
+        const distribute = makeDistributeWorldEncounterSnapshotAction({ snapshotDistributionCommand, publicationContentStore, session });
 
         const distP1 = await distribute(publicationP1);
         const distP2 = await distribute(publicationP2);
@@ -627,9 +631,9 @@ async function run() {
         const session = makeRealSession(publisherPlacementRegistry);
 
         const host = makeHost(storageProvider, 'section-i-authority-boundary');
-        const contentResolver = fakeContentResolver({ [publication.id]: { world: { buildings: [] } } });
+        const publicationContentStore = fakeContentStore({ [publication.contentReference.hash]: { world: { buildings: [] } } });
         const snapshotDistributionCommand = makeRealSnapshotDistributionCommand({ contentStore: host.arweaveStore, discoveryPublisher: host.discoveryPublisher });
-        const distribute = makeDistributeWorldEncounterSnapshotAction({ snapshotDistributionCommand, publicationCatalogContentResolver: contentResolver, session });
+        const distribute = makeDistributeWorldEncounterSnapshotAction({ snapshotDistributionCommand, publicationContentStore, session });
 
         const beforeCount = publisherPlacementRegistry.findByPublicationId(publication.id).length;
         await distribute(publication);
@@ -689,17 +693,17 @@ async function run() {
         const placementRegistry = new LocalPlacementRegistry(storageProvider);
         placeReal(placementRegistry, publication.id, new Position(6, 0, -6));
         const session = makeRealSession(placementRegistry);
-        const contentResolver = fakeContentResolver({ [publication.id]: { world: { buildings: [] } } });
+        const publicationContentStore = fakeContentStore({ [publication.contentReference.hash]: { world: { buildings: [] } } });
 
         const hostRelayA = makeHost(storageProvider, 'section-j-relay-a');
         const hostRelayB = makeHost(storageProvider, 'section-j-relay-b');
         const distributeToA = makeDistributeWorldEncounterSnapshotAction({
             snapshotDistributionCommand: makeRealSnapshotDistributionCommand({ contentStore: hostRelayA.arweaveStore, discoveryPublisher: hostRelayA.discoveryPublisher }),
-            publicationCatalogContentResolver: contentResolver, session
+            publicationContentStore, session
         });
         const distributeToB = makeDistributeWorldEncounterSnapshotAction({
             snapshotDistributionCommand: makeRealSnapshotDistributionCommand({ contentStore: hostRelayB.arweaveStore, discoveryPublisher: hostRelayB.discoveryPublisher }),
-            publicationCatalogContentResolver: contentResolver, session
+            publicationContentStore, session
         });
 
         await distributeToA(publication);
@@ -727,12 +731,12 @@ async function run() {
         placeReal(placementRegistry, publicationWithPlacement.id, new Position(2, 0, 2));
         const session = makeRealSession(placementRegistry);
         const host = makeHost(storageProvider, 'section-k-failure-isolation');
-        const contentResolver = fakeContentResolver({
-            [publicationNoPlacement.id]: { world: { buildings: [{ id: 'no-placement' }] } },
-            [publicationWithPlacement.id]: { world: { buildings: [{ id: 'with-placement' }] } }
+        const publicationContentStore = fakeContentStore({
+            [publicationNoPlacement.contentReference.hash]: { world: { buildings: [{ id: 'no-placement' }] } },
+            [publicationWithPlacement.contentReference.hash]: { world: { buildings: [{ id: 'with-placement' }] } }
         });
         const snapshotDistributionCommand = makeRealSnapshotDistributionCommand({ contentStore: host.arweaveStore, discoveryPublisher: host.discoveryPublisher });
-        const distribute = makeDistributeWorldEncounterSnapshotAction({ snapshotDistributionCommand, publicationCatalogContentResolver: contentResolver, session });
+        const distribute = makeDistributeWorldEncounterSnapshotAction({ snapshotDistributionCommand, publicationContentStore, session });
 
         // K-1: placement info absent for one Publication never affects a
         // separate, independent distribution for another.
@@ -750,7 +754,7 @@ async function run() {
         assert(unavailablePublisher === null, '2. sanity — composeSnapshotDistributionRuntime() genuinely produces no discoveryPublisher when none is configured.');
         const unavailableAction = makeDistributeWorldEncounterSnapshotAction({
             snapshotDistributionCommand: makeRealSnapshotDistributionCommand({ contentStore: host.arweaveStore, discoveryPublisher: unavailablePublisher }),
-            publicationCatalogContentResolver: contentResolver, session
+            publicationContentStore, session
         });
         let threwSynchronously = false;
         try { unavailableAction(publicationWithPlacement); } catch (error) { threwSynchronously = /discoveryPublisher/.test(error.message); }
@@ -766,7 +770,7 @@ async function run() {
         });
         const failingAction = makeDistributeWorldEncounterSnapshotAction({
             snapshotDistributionCommand: makeRealSnapshotDistributionCommand({ contentStore: host.arweaveStore, discoveryPublisher: failingPublisher }),
-            publicationCatalogContentResolver: contentResolver, session
+            publicationContentStore, session
         });
         let rejectedWithOriginalError = false;
         try { await failingAction(publicationWithPlacement); } catch (error) { rejectedWithOriginalError = error.message === 'relay unreachable'; }
@@ -813,9 +817,9 @@ async function run() {
 
         const host = makeHost(storageProvider, 'section-l-flagship');
         const snapshotJson = { world: { buildings: [{ id: 'flagship' }] } };
-        const contentResolver = fakeContentResolver({ [publication.id]: snapshotJson });
+        const publicationContentStore = fakeContentStore({ [publication.contentReference.hash]: snapshotJson });
         const snapshotDistributionCommand = makeRealSnapshotDistributionCommand({ contentStore: host.arweaveStore, discoveryPublisher: host.discoveryPublisher });
-        const distribute = makeDistributeWorldEncounterSnapshotAction({ snapshotDistributionCommand, publicationCatalogContentResolver: contentResolver, session });
+        const distribute = makeDistributeWorldEncounterSnapshotAction({ snapshotDistributionCommand, publicationContentStore, session });
 
         await distribute(publication);
 

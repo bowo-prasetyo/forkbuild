@@ -1874,6 +1874,20 @@ app.provide('bitcoinAnchorConfirmationCoordinator', bitcoinAnchorConfirmationCoo
 // computing a hash "the same way every other content/ContentStore.js
 // implementation already does" rather than inventing a new one.
 app.provide('publicationCatalogContentResolver', publicationCatalogContentResolver);
+// Bug fix — `publicationCatalogContentResolver` above resolves by id
+// against `publicationCatalog` (application/LocalPublicationCatalog.js),
+// which only ever holds peer-announced DecentralizedPublication envelopes
+// — never a World `publisher/Publication.js` instance created by
+// PublishDocumentUseCase/LocalPublisherProvider (Editor or World View
+// alike). `ui/views/WorldView.js`'s own `distributeWorldEncounterSnapshot()`
+// was reading a Publication's local material back through that resolver
+// by id, so it always found nothing for a genuine World Publication —
+// its own contentReference was never even consulted. Providing the SAME
+// `publicationContentStore` the publish path itself already wrote bytes
+// into lets that function resolve local material the correct way: given
+// the Publication object it already holds, `publicationContentStore.get(
+// publication.contentReference)` — no id-based catalog lookup needed.
+app.provide('publicationContentStore', publicationContentStore);
 app.provide('ipfsRemotePublicationCoordinator', ipfsRemotePublicationCoordinator);
 // 0.8.70 — IPFS Publication & Content Verification UI.
 app.provide('ipfsPublicationContentVerificationCoordinator', ipfsPublicationContentVerificationCoordinator);

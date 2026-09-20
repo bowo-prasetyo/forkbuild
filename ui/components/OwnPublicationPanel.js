@@ -59,8 +59,9 @@ import { sanitizeDistributionErrorMessage } from '../../application/Distribution
 // ArweaveContentStore.js`, or `application/
 // NostrSnapshotDiscoveryPublisher.js`, and never constructs an Arweave
 // or Nostr client of its own. `distributeWorldEncounterSnapshot()`
-// itself already reads its bytes from `publicationCatalogContentResolver`
-// — the local origin of "which bytes" — so this component supplies
+// itself already reads its bytes from `publicationContentStore`, via the
+// Publication's own `contentReference` — the local origin of "which
+// bytes" — so this component supplies
 // nothing but which `Publication` to ask for, exactly the way
 // WorldEncounterCanvas's own `distributablePublication` already does.
 //

@@ -145,13 +145,21 @@ function makeNostrNetwork() {
     return { events, publishImpl, queryImpl };
 }
 
-// A fake application/PublicationCatalogContentResolver.js — the exact
-// duck-typed collaborator ui/views/WorldView.js's own
-// distributeWorldEncounterSnapshot() reads Snapshot bytes back through.
-function fakeContentResolver(entries = {}) {
+// A fake content/ContentStore.js — the exact duck-typed collaborator
+// ui/views/WorldView.js's own distributeWorldEncounterSnapshot() reads
+// Snapshot bytes back through, keyed by contentReference.hash exactly
+// like the real content-addressed store. For this file's own
+// convenience, every Publication below is given a contentReference whose
+// hash equals its own id, so `entries` stays keyed by publication id at
+// every call site — only the resolution mechanism changed, not this
+// file's own scenario shape. Values are raw JS objects at the call site;
+// `.get()` stringifies them, mirroring the real store's own contract of
+// returning bytes, never a parsed object.
+function fakeContentStore(entries = {}) {
     return {
-        resolve(publicationId) {
-            return Object.prototype.hasOwnProperty.call(entries, publicationId) ? entries[publicationId] : null;
+        get(contentReference) {
+            const key = contentReference && contentReference.hash;
+            return Object.prototype.hasOwnProperty.call(entries, key) ? JSON.stringify(entries[key]) : null;
         }
     };
 }
@@ -159,16 +167,16 @@ function fakeContentResolver(entries = {}) {
 // The EXACT logic ui/views/WorldView.js's own distributeWorldEncounterSnapshot()
 // implements, reproduced verbatim — the ONE function this milestone's own
 // Section A proves both UI surfaces are bound to.
-function makeDistributeWorldEncounterSnapshot({ snapshotDistributionCommand, publicationCatalogContentResolver }) {
+function makeDistributeWorldEncounterSnapshot({ snapshotDistributionCommand, publicationContentStore }) {
     return (publication) => {
-        if (!snapshotDistributionCommand || !publicationCatalogContentResolver) {
+        if (!snapshotDistributionCommand || !publicationContentStore || !publication.contentReference) {
             return Promise.reject(new Error('Snapshot distribution is not available.'));
         }
-        const snapshotJson = publicationCatalogContentResolver.resolve(publication.id);
-        if (snapshotJson === null) {
+        const snapshotBytes = publicationContentStore.get(publication.contentReference);
+        if (snapshotBytes === null || snapshotBytes === undefined) {
             return Promise.reject(new Error('Snapshot distribution is not available.'));
         }
-        return snapshotDistributionCommand(JSON.stringify(snapshotJson));
+        return snapshotDistributionCommand(snapshotBytes);
     };
 }
 
@@ -222,8 +230,8 @@ function makeSharedScenario({ discoveryTag, contentEntries }) {
     const network = makeNostrNetwork();
     const publisher = new NostrSnapshotDiscoveryPublisher({ discoveryTag, publishImpl: network.publishImpl });
     const snapshotDistributionCommand = (bytes) => executeSnapshotDistributionCommand({ bytes, contentStore: store, discoveryPublisher: publisher });
-    const contentResolver = fakeContentResolver(contentEntries);
-    const distributeWorldEncounterSnapshot = makeDistributeWorldEncounterSnapshot({ snapshotDistributionCommand, publicationCatalogContentResolver: contentResolver });
+    const publicationContentStore = fakeContentStore(contentEntries);
+    const distributeWorldEncounterSnapshot = makeDistributeWorldEncounterSnapshot({ snapshotDistributionCommand, publicationContentStore });
     return { store, network, distributeWorldEncounterSnapshot };
 }
 
@@ -265,8 +273,8 @@ async function run() {
         // Behavioral: the SAME function reference, handed to both a
         // simulated OwnPublicationPanel and a simulated WorldEncounterCanvas,
         // genuinely reaches the real chain for both.
-        const publicationLocal = new Publication({ id: 'pub-a-local', documentId: 'doc-a-local' });
-        const publicationRemote = new Publication({ id: 'pub-a-remote', documentId: 'doc-a-remote' });
+        const publicationLocal = new Publication({ id: 'pub-a-local', documentId: 'doc-a-local', contentReference: { hash: 'pub-a-local' } });
+        const publicationRemote = new Publication({ id: 'pub-a-remote', documentId: 'doc-a-remote', contentReference: { hash: 'pub-a-remote' } });
         const snapshotLocal = { world: { buildings: [{ id: 'a-local-building', bricks: 1 }] } };
         const snapshotRemote = { world: { buildings: [{ id: 'a-remote-building', bricks: 2 }] } };
         const { network, distributeWorldEncounterSnapshot } = makeSharedScenario({
@@ -299,7 +307,7 @@ async function run() {
     // Encounters state anywhere in scope.
     // ===============================================================
     {
-        const publication = new Publication({ id: 'pub-b-local', documentId: 'doc-b-local' });
+        const publication = new Publication({ id: 'pub-b-local', documentId: 'doc-b-local', contentReference: { hash: 'pub-b-local' } });
         const snapshotJson = { world: { buildings: [{ id: 'b-local-building', bricks: 3 }] } };
         const { distributeWorldEncounterSnapshot } = makeSharedScenario({
             discoveryTag: 'audit-entry-point-b',
@@ -329,7 +337,7 @@ async function run() {
     // publication, zero OwnPublicationPanel state anywhere in scope.
     // ===============================================================
     {
-        const publication = new Publication({ id: 'pub-c-remote', documentId: 'doc-c-remote' });
+        const publication = new Publication({ id: 'pub-c-remote', documentId: 'doc-c-remote', contentReference: { hash: 'pub-c-remote' } });
         const snapshotJson = { world: { buildings: [{ id: 'c-remote-building', bricks: 5 }] } };
         const { distributeWorldEncounterSnapshot } = makeSharedScenario({
             discoveryTag: 'audit-entry-point-c',
@@ -358,8 +366,8 @@ async function run() {
         // D-i. Local, then remote — the flagship order the milestone's own
         // task framing spells out step by step.
         {
-            const publicationLocal = new Publication({ id: 'pub-d1-local', documentId: 'doc-d1-local' });
-            const publicationRemote = new Publication({ id: 'pub-d1-remote', documentId: 'doc-d1-remote' });
+            const publicationLocal = new Publication({ id: 'pub-d1-local', documentId: 'doc-d1-local', contentReference: { hash: 'pub-d1-local' } });
+            const publicationRemote = new Publication({ id: 'pub-d1-remote', documentId: 'doc-d1-remote', contentReference: { hash: 'pub-d1-remote' } });
             const { distributeWorldEncounterSnapshot } = makeSharedScenario({
                 discoveryTag: 'audit-entry-point-d1',
                 contentEntries: { [publicationLocal.id]: { v: 'd1-local' }, [publicationRemote.id]: { v: 'd1-remote' } }
@@ -392,8 +400,8 @@ async function run() {
 
         // D-ii. The reverse order.
         {
-            const publicationLocal = new Publication({ id: 'pub-d2-local', documentId: 'doc-d2-local' });
-            const publicationRemote = new Publication({ id: 'pub-d2-remote', documentId: 'doc-d2-remote' });
+            const publicationLocal = new Publication({ id: 'pub-d2-local', documentId: 'doc-d2-local', contentReference: { hash: 'pub-d2-local' } });
+            const publicationRemote = new Publication({ id: 'pub-d2-remote', documentId: 'doc-d2-remote', contentReference: { hash: 'pub-d2-remote' } });
             const { distributeWorldEncounterSnapshot } = makeSharedScenario({
                 discoveryTag: 'audit-entry-point-d2',
                 contentEntries: { [publicationLocal.id]: { v: 'd2-local' }, [publicationRemote.id]: { v: 'd2-remote' } }
@@ -421,8 +429,8 @@ async function run() {
         // D-iii. Genuine concurrent overlap — both calls in flight at once,
         // resolving out of order, over the SAME shared collaborators.
         {
-            const publicationLocal = new Publication({ id: 'pub-d3-local', documentId: 'doc-d3-local' });
-            const publicationRemote = new Publication({ id: 'pub-d3-remote', documentId: 'doc-d3-remote' });
+            const publicationLocal = new Publication({ id: 'pub-d3-local', documentId: 'doc-d3-local', contentReference: { hash: 'pub-d3-local' } });
+            const publicationRemote = new Publication({ id: 'pub-d3-remote', documentId: 'doc-d3-remote', contentReference: { hash: 'pub-d3-remote' } });
             const { distributeWorldEncounterSnapshot } = makeSharedScenario({
                 discoveryTag: 'audit-entry-point-d3',
                 contentEntries: { [publicationLocal.id]: { v: 'd3-local' }, [publicationRemote.id]: { v: 'd3-remote' } }
@@ -456,8 +464,8 @@ async function run() {
     // merges either.
     // ===============================================================
     {
-        const publicationLocal = new Publication({ id: 'pub-e-local', documentId: 'doc-e-local' });
-        const publicationRemote = new Publication({ id: 'pub-e-remote', documentId: 'doc-e-remote' });
+        const publicationLocal = new Publication({ id: 'pub-e-local', documentId: 'doc-e-local', contentReference: { hash: 'pub-e-local' } });
+        const publicationRemote = new Publication({ id: 'pub-e-remote', documentId: 'doc-e-remote', contentReference: { hash: 'pub-e-remote' } });
         const frozenLocalId = publicationLocal.id;
         const frozenRemoteId = publicationRemote.id;
         const { distributeWorldEncounterSnapshot } = makeSharedScenario({
@@ -508,19 +516,19 @@ async function run() {
             const workingPublisher = new NostrSnapshotDiscoveryPublisher({ discoveryTag: 'audit-entry-point-f1', publishImpl: network.publishImpl });
             const throwingPublisher = { discoveryTag: 'audit-entry-point-f1', publish: async () => { throw new Error('relay unreachable'); } };
 
-            const publicationLocal = new Publication({ id: 'pub-f1-local', documentId: 'doc-f1-local' });
-            const publicationRemote = new Publication({ id: 'pub-f1-remote', documentId: 'doc-f1-remote' });
+            const publicationLocal = new Publication({ id: 'pub-f1-local', documentId: 'doc-f1-local', contentReference: { hash: 'pub-f1-local' } });
+            const publicationRemote = new Publication({ id: 'pub-f1-remote', documentId: 'doc-f1-remote', contentReference: { hash: 'pub-f1-remote' } });
             const localBytes = JSON.stringify({ v: 'f1-local' });
             const remoteBytes = JSON.stringify({ v: 'f1-remote' });
-            const contentResolver = fakeContentResolver({ [publicationLocal.id]: { v: 'f1-local' }, [publicationRemote.id]: { v: 'f1-remote' } });
+            const publicationContentStore = fakeContentStore({ [publicationLocal.id]: { v: 'f1-local' }, [publicationRemote.id]: { v: 'f1-remote' } });
 
             const failingLocalAction = makeDistributeWorldEncounterSnapshot({
                 snapshotDistributionCommand: (bytes) => executeSnapshotDistributionCommand({ bytes, contentStore: store, discoveryPublisher: throwingPublisher }),
-                publicationCatalogContentResolver: contentResolver
+                publicationContentStore
             });
             const workingRemoteAction = makeDistributeWorldEncounterSnapshot({
                 snapshotDistributionCommand: (bytes) => executeSnapshotDistributionCommand({ bytes, contentStore: store, discoveryPublisher: workingPublisher }),
-                publicationCatalogContentResolver: contentResolver
+                publicationContentStore
             });
 
             const ownCtx = ownPanelCtx({ publication: publicationLocal, snapshotDistributionCommand: failingLocalAction });
@@ -565,20 +573,20 @@ async function run() {
             const network = makeNostrNetwork();
             const publisher = new NostrSnapshotDiscoveryPublisher({ discoveryTag: 'audit-entry-point-f2', publishImpl: network.publishImpl });
 
-            const publicationLocal = new Publication({ id: 'pub-f2-local', documentId: 'doc-f2-local' });
-            const publicationRemote = new Publication({ id: 'pub-f2-remote', documentId: 'doc-f2-remote' });
+            const publicationLocal = new Publication({ id: 'pub-f2-local', documentId: 'doc-f2-local', contentReference: { hash: 'pub-f2-local' } });
+            const publicationRemote = new Publication({ id: 'pub-f2-remote', documentId: 'doc-f2-remote', contentReference: { hash: 'pub-f2-remote' } });
             const localBytes = JSON.stringify({ v: 'f2-local' });
-            const contentResolver = fakeContentResolver({ [publicationLocal.id]: { v: 'f2-local' }, [publicationRemote.id]: { v: 'f2-remote' } });
+            const publicationContentStore = fakeContentStore({ [publicationLocal.id]: { v: 'f2-local' }, [publicationRemote.id]: { v: 'f2-remote' } });
 
             const workingLocalAction = makeDistributeWorldEncounterSnapshot({
                 snapshotDistributionCommand: (bytes) => executeSnapshotDistributionCommand({ bytes, contentStore: workingStore, discoveryPublisher: publisher }),
-                publicationCatalogContentResolver: contentResolver
+                publicationContentStore
             });
             let remotePublishAttempts = 0;
             const brokenPublisherRef = { discoveryTag: 'audit-entry-point-f2', publish: async () => { remotePublishAttempts += 1; return { published: true, id: 'z'.repeat(64) }; } };
             const failingRemoteAction = makeDistributeWorldEncounterSnapshot({
                 snapshotDistributionCommand: (bytes) => executeSnapshotDistributionCommand({ bytes, contentStore: brokenStore, discoveryPublisher: brokenPublisherRef }),
-                publicationCatalogContentResolver: contentResolver
+                publicationContentStore
             });
 
             const ownCtx = ownPanelCtx({ publication: publicationLocal, snapshotDistributionCommand: workingLocalAction });
