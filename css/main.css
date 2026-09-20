@@ -4060,11 +4060,15 @@ html, body {
     padding-bottom: 0.1rem;
 }
 
+/* Same title weight/size/color as .identity-mgmt-name (the card's own
+   title) and .publications-tools-panel-summary (the page-level disclosure
+   one level up) — one consistent "section title" look across the page,
+   whether or not the title happens to also be a clickable <summary>. */
 .identity-mgmt-card-details-summary {
     cursor: pointer;
     list-style: none;
-    color: #909090;
-    font-size: 0.8rem;
+    color: #e0e0e0;
+    font-size: 0.95rem;
     font-weight: 600;
 }
 
@@ -4084,7 +4088,7 @@ html, body {
 }
 
 .identity-mgmt-card-details-summary:hover {
-    color: #c9c9c9;
+    color: #ffffff;
 }
 
 /* 0.9.436 — Publications Distribution Section Reorganization. One
