@@ -259,6 +259,18 @@ export class WorldRenderer {
         if (!placedWorld) {
             return;
         }
+        // Bug fix — same defensive guard as _addBrickMesh() above: a
+        // stale entry already registered under this placement.id would
+        // otherwise be silently overwritten by the set() call below,
+        // orphaning its OLD meshes in the scene (never removed from the
+        // renderer, no longer reachable through placementMeshRegistry —
+        // and PickingService's own pickPlacement() raycasts exclusively
+        // against placementMeshRegistry.getAllMeshes(), never the raw
+        // scene). Every existing caller (_onStructurePlacementUpdated
+        // already removes first, by hand) is unaffected; this simply
+        // makes that ordering a guarantee of this method itself, not
+        // something every caller must remember to do.
+        this._removeStructurePlacementMeshes(placement.id);
         const groundY = this._terrainOffsetY(offset.x, offset.z);
         const meshes = [];
         for (const building of placedWorld.getBuildings()) {
@@ -314,7 +326,30 @@ export class WorldRenderer {
             : 0;
     }
 
+    // Bug fix — defensively removes any mesh ALREADY registered under
+    // this brickId before adding the new one. Every call site of
+    // _addBrickMesh() already believes it is adding a brick that isn't
+    // currently tracked, but nothing previously verified that: if this
+    // ever ran twice for the same brickId without a clean
+    // _removeBrickMesh() in between (e.g. a document rapidly streaming
+    // out and back in — see addWorld()/_onBrickAdded() above — racing
+    // against its own removeWorld() cleanup), the OLD mesh's
+    // MeshRegistry entry would simply be overwritten, orphaning the OLD
+    // Three.js object in the scene forever: still rendered (never
+    // removed from the renderer), but no longer reachable through
+    // meshRegistry — and renderer/PickingService.js's own pick()/
+    // pickRich() raycast EXCLUSIVELY against meshRegistry.getAllMeshes(),
+    // never the raw scene graph (see its own header). An orphaned mesh
+    // is therefore permanently unpickable and, since collision
+    // (application/AvatarMovementConstraint.js) reads
+    // WorldNavigationSession's own _loadedDocuments — a completely
+    // separate structure this class never touches — an orphan is
+    // exactly a visible-but-unselectable-and-uncollidable ghost: solid
+    // to the eye, absent to every other system. This one-line guard
+    // makes that outcome structurally impossible, regardless of what
+    // upstream condition ever causes a re-add without a prior remove.
     _addBrickMesh(brickId, documentId, buildingId, mesh) {
+        this._removeBrickMesh(brickId);
         this._meshRegistry.set(brickId, documentId, buildingId, mesh);
         this._renderer.add(mesh);
     }
