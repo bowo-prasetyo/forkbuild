@@ -897,6 +897,21 @@ export class WorldNavigationSession {
         // pointed" can never silently decide what gets edited.
         this._focusedDocumentId = null;
         this._activeDocumentId = null;
+        // 0.9.606 — Home, Even After Streaming Out. _focusedDocumentId
+        // is deliberately volatile: _unloadWorld() clears it the moment
+        // its document streams out of camera range, because nothing
+        // else in this file needs "focus" to mean anything once the
+        // document it names is gone. goHome() needs the opposite
+        // property — wandering far enough that the user's own world
+        // unloads (on foot, or riding a vehicle — see
+        // _setupVehicleRendering() above) is exactly the scenario Home
+        // exists for, so its target can't be a value that same
+        // wandering just erased. _homeDocumentId is that stable
+        // pointer: bootstrapped once by _loadWorld() (identical
+        // condition to _focusedDocumentId's own bootstrap, see below)
+        // and never cleared by _unloadWorld() or anything else short of
+        // dispose()'s full reset.
+        this._homeDocumentId = null;
         this._eventBus = null;
 	    this._discoveryProvider = discoveryProvider;
 	    // 0.9.597 — see this constructor's own parameter comment, above.
@@ -3791,14 +3806,27 @@ export class WorldNavigationSession {
     // other time, which is the entire point of this override existing.
     //
     // Falls back to the pre-existing origin behavior only when there
-    // is no world of the user's own currently open to go home TO (no
-    // document has ever been focused yet, or the previously-focused
-    // one has since streamed out) — the same "graceful degrade to the
-    // one guaranteed destination" posture focusLocation() itself
-    // already has for an unresolvable id.
+    // is no world of the user's own to go home TO — no document has
+    // ever been focused yet — the same "graceful degrade to the one
+    // guaranteed destination" posture focusLocation() itself already
+    // has for an unresolvable id.
+    //
+    // Reads _homeDocumentId, NOT _focusedDocumentId, and — unlike an
+    // earlier version of this method — does not also require the
+    // document to be currently loaded. Wandering far enough (on foot,
+    // or riding a vehicle) that the user's own world streams out via
+    // updateSpatialView() is exactly the scenario Home exists to
+    // recover from, and _unloadWorld() clears _focusedDocumentId the
+    // moment that happens; _homeDocumentId is the stable pointer that
+    // survives it (see its own constructor comment). focusDocument()
+    // below reloads the document itself — its own trailing
+    // updateSpatialView() call runs synchronously, so by the time this
+    // method reaches _safeSpawnPosition() the document is back in
+    // _loadedDocuments and its real bounds are measured, not the
+    // fixed-offset fallback.
     goHome() {
-        const documentId = this._focusedDocumentId;
-        if (!documentId || !this._loadedDocuments.has(documentId)) {
+        const documentId = this._homeDocumentId;
+        if (!documentId) {
             return this.focusLocation(ORIGIN_LOCATION_ID);
         }
         // focusDocument()'s own return is updateSpatialView()'s richer
@@ -3816,10 +3844,9 @@ export class WorldNavigationSession {
             // fixed (3, 0, 3) offset this used to add put the avatar
             // INSIDE a structure recentered around its own local origin
             // — reported live as "Home dropped me inside my own
-            // pyramid." documentId is guaranteed already loaded here
-            // (checked above), so this always measures the world's
-            // real content rather than falling back to that fixed
-            // offset.
+            // pyramid." _safeSpawnPosition() degrades to that same
+            // fixed offset gracefully on its own if, for any reason,
+            // the document above failed to reload.
             this._avatarPresenceSession.update({
                 position: this._safeSpawnPosition(documentId, layoutPos)
             });
@@ -6237,6 +6264,14 @@ export class WorldNavigationSession {
 	    if (!this._focusedDocumentId) {
 	        this._focusedDocumentId = documentId; // Set focus on first load
 	    }
+	    // 0.9.606 — see this constructor's own _homeDocumentId comment:
+	    // set once, on the same "nothing else to be instead of"
+	    // condition as _focusedDocumentId's own bootstrap, but — unlike
+	    // _focusedDocumentId — never cleared by _unloadWorld() when this
+	    // document later streams out.
+	    if (!this._homeDocumentId) {
+	        this._homeDocumentId = documentId;
+	    }
 	    // 0.2.27: bootstrap the active document the same way — the very
 	    // first thing streamed in has nothing else to be "instead of."
 	    if (!this._activeDocumentId) {
@@ -7203,6 +7238,7 @@ export class WorldNavigationSession {
         this._spatialEditingContext = SpatialEditingContext.empty();
         this._focusedDocumentId = null;
         this._activeDocumentId = null;
+        this._homeDocumentId = null;
         // 0.9.208 — every other piece of history-adjacent state above
         // (commandHistories, loadedDocuments, selection) is reset here so
         // a fresh start() after this dispose() behaves like a genuinely
