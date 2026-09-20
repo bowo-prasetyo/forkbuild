@@ -2743,6 +2743,17 @@ export default {
                 view: null,
                 checking: false,
                 retrieving: false,
+                // Which tab of this entry's own "Snapshot, Anchoring, IPFS &
+                // Evidence Details" disclosure is currently showing — a pure
+                // presentation grouping over the same four facets that
+                // disclosure has always held (Local Snapshot/Snapshot State,
+                // Decentralization/External Evidence, Snapshot Placements/
+                // IPFS Publishing, and the Cross-Domain Observation
+                // Timeline), never a new fact about the publication itself.
+                // Reused, not reset, across refreshList()'s own known.get()
+                // reuse of this entry — exactly like evidenceExpanded/
+                // placementsExpanded below stay put across a refresh.
+                detailsTab: 'snapshot',
                 evidenceAnchors: [],
                 evidence: null,
                 evidenceExpanded: false,
@@ -3830,6 +3841,14 @@ export default {
 
         function toggleEvidence(entry) {
             entry.evidenceExpanded = !entry.evidenceExpanded;
+        }
+
+        // Switches which of the four facet tabs this entry's own "Snapshot,
+        // Anchoring, IPFS & Evidence Details" disclosure currently shows —
+        // presentation only, mirrors setPublicationsToolsTab() above, one
+        // level down (per-entry rather than page-level).
+        function setEntryDetailsTab(entry, tab) {
+            entry.detailsTab = tab;
         }
 
         // The one place this page calls application/
@@ -7284,7 +7303,8 @@ export default {
             bitcoinAnchorBroadcastConfirmationHistoryView, toggleBitcoinAnchorBroadcastConfirmationHistory,
             bitcoinAnchorBroadcastConfirmationHistoryExpanded, toggleBitcoinAnchorBroadcastConfirmationHistoryEntry,
             isBitcoinAnchorBroadcastConfirmationHistoryEntryExpanded,
-            publicationsToolsTab, setPublicationsToolsTab
+            publicationsToolsTab, setPublicationsToolsTab,
+            setEntryDetailsTab
         };
     },
     template: `
@@ -9517,6 +9537,39 @@ export default {
                     <details class="identity-mgmt-card-details">
                         <summary class="identity-mgmt-card-details-summary">Snapshot, Anchoring, IPFS &amp; Evidence Details</summary>
 
+                        <!-- Four tabs over this SAME disclosure's own facets — Local
+                             Snapshot/Snapshot State (this replica's own possession),
+                             Decentralization/External Evidence (anchoring claims and the
+                             Bitcoin/Base wallet-guided pipelines), Snapshot Placements/
+                             IPFS Publishing (where bytes can be retrieved), and the
+                             Cross-Domain Observation Timeline — grouped exactly along the
+                             boundaries this disclosure's own existing comments already
+                             draw between sections, so nothing about any one fact's own
+                             gating or wording changes, only which facet is on screen. -->
+                        <div class="publications-tools-tabs" role="tablist">
+                            <button type="button" role="tab" :aria-selected="entry.detailsTab === 'snapshot'"
+                                    :class="['publications-tools-tab', { 'publications-tools-tab--active': entry.detailsTab === 'snapshot' }]"
+                                    @click="setEntryDetailsTab(entry, 'snapshot')">
+                                Snapshot
+                            </button>
+                            <button type="button" role="tab" :aria-selected="entry.detailsTab === 'evidence'"
+                                    :class="['publications-tools-tab', { 'publications-tools-tab--active': entry.detailsTab === 'evidence' }]"
+                                    @click="setEntryDetailsTab(entry, 'evidence')">
+                                Decentralization &amp; Evidence
+                            </button>
+                            <button type="button" role="tab" :aria-selected="entry.detailsTab === 'placements'"
+                                    :class="['publications-tools-tab', { 'publications-tools-tab--active': entry.detailsTab === 'placements' }]"
+                                    @click="setEntryDetailsTab(entry, 'placements')">
+                                Placements &amp; IPFS
+                            </button>
+                            <button type="button" role="tab" :aria-selected="entry.detailsTab === 'history'"
+                                    :class="['publications-tools-tab', { 'publications-tools-tab--active': entry.detailsTab === 'history' }]"
+                                    @click="setEntryDetailsTab(entry, 'history')">
+                                History
+                            </button>
+                        </div>
+
+                    <div v-show="entry.detailsTab === 'snapshot'" class="publications-tools-tab-panel">
                     <!-- 0.8.33 — Local Snapshot Content Availability & Integrity UX. A
                          replica-local OBSERVATION of whether THIS device's own
                          content/ContentStore.js currently holds bytes for this
@@ -10043,7 +10096,9 @@ export default {
                             </p>
                         </div>
                     </div>
+                    </div>
 
+                    <div v-show="entry.detailsTab === 'evidence'" class="publications-tools-tab-panel">
                     <!-- 0.8.27 — Unified Publication Decentralization View. Always visible
                          (never gated behind "Show Evidence"/"Show Placements") the moment
                          either dimension has at least one known claim — the two parallel
@@ -11239,6 +11294,9 @@ export default {
                         </div>
                     </div>
 
+                    </div>
+
+                    <div v-show="entry.detailsTab === 'placements'" class="publications-tools-tab-panel">
                     <!-- 0.8.20 — Snapshot Placement Inspection & Explicit Resolution UX.
                          Deliberately a SEPARATE section from "External Evidence" above —
                          a placement and an anchor answer two different questions, and this
@@ -11745,7 +11803,9 @@ export default {
                             </div>
                         </div>
                     </div>
+                    </div>
 
+                    <div v-show="entry.detailsTab === 'history'" class="publications-tools-tab-panel">
                     <!-- 0.8.74 — Cross-Domain Publication Observation Timeline.
                          Deliberately a SIBLING evidence-section, placed after both the
                          "Bitcoin Anchor"/evidence card above and the "IPFS Publishing"
@@ -11796,6 +11856,7 @@ export default {
                                 </li>
                             </ul>
                         </div>
+                    </div>
                     </div>
 
                     </details>
