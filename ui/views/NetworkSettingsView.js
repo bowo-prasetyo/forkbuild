@@ -19,6 +19,12 @@ export default {
                     </router-link>
                 </li>
                 <li>
+                    <router-link to="/settings/announcement-discovery-provider" class="network-settings-link">
+                        <span class="network-settings-link-title">Announcement / Discovery Provider</span>
+                        <span class="form-hint form-hint--neutral">Preferred substrate — Nostr or Arweave — for announcing and discovering Publications, Snapshots, Place Naming, and Commentary.</span>
+                    </router-link>
+                </li>
+                <li>
                     <router-link to="/settings/arweave-gateway" class="network-settings-link">
                         <span class="network-settings-link-title">Arweave Gateway</span>
                         <span class="form-hint form-hint--neutral">Gateway used for retrieving Arweave content.</span>

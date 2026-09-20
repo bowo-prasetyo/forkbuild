@@ -1,6 +1,7 @@
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { NostrSnapshotDiscoveryPublisher } from './NostrSnapshotDiscoveryPublisher.js';
 import { NostrMultiRelaySnapshotDiscoveryPublisher } from './NostrMultiRelaySnapshotDiscoveryPublisher.js';
+import { ArweaveSnapshotDiscoveryPublisher } from './ArweaveSnapshotDiscoveryPublisher.js';
 
 // 0.9.137 — Snapshot Distribution Runtime Composition.
 //
@@ -236,6 +237,17 @@ function canAttemptNostrDiscovery({ publishImpl, discoveryTag } = {}) {
         && discoveryTag.length > 0;
 }
 
+// canAttemptArweaveDiscovery({ uploadTaggedTransaction, discoveryTag }) ->
+// boolean. Asks exactly the two questions `application/
+// ArweaveSnapshotDiscoveryPublisher.js`'s own constructor already asks of
+// `uploadTaggedTransaction`/`discoveryTag` — the identical duck-typed
+// restraint `canAttemptNostrDiscovery()` already holds, one substrate over.
+function canAttemptArweaveDiscovery({ uploadTaggedTransaction, discoveryTag } = {}) {
+    return typeof uploadTaggedTransaction === 'function'
+        && typeof discoveryTag === 'string'
+        && discoveryTag.length > 0;
+}
+
 // buildNostrSnapshotDiscoveryPublisher(options) -> discoveryPublisher.
 // `relayUrls` (plural, an array) is a new, additional way to configure the
 // same one `discoveryPublisher` field — the identical dual-shape pattern
@@ -258,8 +270,23 @@ function buildNostrSnapshotDiscoveryPublisher({ relayUrls, ...options }) {
     return new NostrSnapshotDiscoveryPublisher(options);
 }
 
+// AMENDED — Announcement/Discovery Provider Selection. `discoveryProvider`
+// ('nostr', the default, preserving every existing caller's behavior
+// unchanged | 'arweave') selects EXACTLY ONE discovery-substrate
+// collaborator for `discoveryPublisher` — the same "selection, never
+// fan-out" invariant `application/PublicationDistributionRuntimeComposition.js`'s
+// own 0.9.428 amendment already holds for Publication distribution, held
+// here for the Snapshot family instead. `contentStore` (Arweave CONTENT
+// placement) is a wholly separate role/decision, untouched by this
+// selection — selecting `'arweave'` for discovery announces the placed
+// Snapshot's locator over an Arweave-tagged transaction; it never changes
+// where the Snapshot's own bytes were placed. An unrecognized
+// `discoveryProvider` throws synchronously, before either substrate is
+// even inspected.
+
 // composeSnapshotDistributionRuntime({ arweaveContentStoreOptions,
-//   nostrSnapshotDiscoveryPublisherOptions }) -> { contentStore,
+//   discoveryProvider, nostrSnapshotDiscoveryPublisherOptions,
+//   arweaveSnapshotDiscoveryPublisherOptions }) -> { contentStore,
 //   discoveryPublisher }. See this file's own header for the full
 //   contract: each field is either a real, working collaborator or `null`
 //   — never a throw for an absent capability, never a fabricated stand-in,
@@ -269,15 +296,26 @@ function buildNostrSnapshotDiscoveryPublisher({ relayUrls, ...options }) {
 //   underlying constructor directly already would.
 export function composeSnapshotDistributionRuntime({
     arweaveContentStoreOptions = {},
-    nostrSnapshotDiscoveryPublisherOptions = {}
+    discoveryProvider = 'nostr',
+    nostrSnapshotDiscoveryPublisherOptions = {},
+    arweaveSnapshotDiscoveryPublisherOptions = {}
 } = {}) {
     const contentStore = canAttemptArweavePlacement(arweaveContentStoreOptions)
         ? new ArweaveContentStore(arweaveContentStoreOptions)
         : null;
 
-    const discoveryPublisher = canAttemptNostrDiscovery(nostrSnapshotDiscoveryPublisherOptions)
-        ? buildNostrSnapshotDiscoveryPublisher(nostrSnapshotDiscoveryPublisherOptions)
-        : null;
+    let discoveryPublisher = null;
+    if (discoveryProvider === 'nostr') {
+        discoveryPublisher = canAttemptNostrDiscovery(nostrSnapshotDiscoveryPublisherOptions)
+            ? buildNostrSnapshotDiscoveryPublisher(nostrSnapshotDiscoveryPublisherOptions)
+            : null;
+    } else if (discoveryProvider === 'arweave') {
+        discoveryPublisher = canAttemptArweaveDiscovery(arweaveSnapshotDiscoveryPublisherOptions)
+            ? new ArweaveSnapshotDiscoveryPublisher(arweaveSnapshotDiscoveryPublisherOptions)
+            : null;
+    } else {
+        throw new Error(`SnapshotDistributionRuntimeComposition: unrecognized discoveryProvider "${discoveryProvider}" — expected "nostr" or "arweave"`);
+    }
 
     return Object.freeze({ contentStore, discoveryPublisher });
 }

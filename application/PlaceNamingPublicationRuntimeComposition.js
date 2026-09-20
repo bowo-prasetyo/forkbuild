@@ -1,4 +1,5 @@
 import { NostrPlaceNamingDiscoveryPublisher } from './NostrPlaceNamingDiscoveryPublisher.js';
+import { ArweavePlaceNamingDiscoveryPublisher } from './ArweavePlaceNamingDiscoveryPublisher.js';
 
 // 0.9.320 — Explicit Place Naming Publication Action.
 //
@@ -135,6 +136,19 @@ import { NostrPlaceNamingDiscoveryPublisher } from './NostrPlaceNamingDiscoveryP
 //   Everything else stays entirely `application/
 //   NostrPlaceNamingDiscoveryPublisher.js`'s own constructor's job.
 
+// AMENDED — Announcement/Discovery Provider Selection. `discoveryProvider`
+// ('nostr', the default, preserving every existing caller's behavior
+// unchanged | 'arweave') selects EXACTLY ONE discovery-substrate
+// collaborator to attempt constructing — the same "selection, never
+// fan-out" invariant `application/PublicationDistributionRuntimeComposition.js`'s
+// own 0.9.428 amendment already holds for Publication distribution. Unlike
+// that file, an absent capability for the SELECTED substrate still
+// degrades to `null` rather than throwing — this file's own pre-existing
+// "graceful degradation, never a throw, for an absent capability"
+// restraint, held here for either substrate rather than only Nostr. An
+// unrecognized `discoveryProvider` throws synchronously, before either
+// substrate is even inspected.
+
 // canAttemptNostrPlaceNamingPublication({ publishImpl }) -> boolean. Asks
 // exactly the one question `application/NostrPlaceNamingDiscoveryPublisher.js`'s
 // own constructor already asks of `publishImpl` — see this file's own
@@ -143,20 +157,42 @@ function canAttemptNostrPlaceNamingPublication({ publishImpl } = {}) {
     return typeof publishImpl === 'function';
 }
 
-// composePlaceNamingPublicationRuntime({ nostrPlaceNamingDiscoveryPublisherOptions })
-//   -> { discoveryPublisher }. See this file's own header for the full
-//   contract: `discoveryPublisher` is either a real, working
-//   `NostrPlaceNamingDiscoveryPublisher` or `null` — never a throw for an
-//   absent capability, never a fabricated stand-in. A genuinely malformed
-//   PRESENT capability (a real `publishImpl` alongside an invalid
-//   `relayUrl`, for instance) still throws, exactly as calling the
-//   underlying constructor directly already would.
+// canAttemptArweavePlaceNamingPublication({ uploadTaggedTransaction }) ->
+// boolean. Asks exactly the one question `application/
+// ArweavePlaceNamingDiscoveryPublisher.js`'s own constructor already asks
+// of `uploadTaggedTransaction` — the identical duck-typed restraint held
+// one substrate over, above.
+function canAttemptArweavePlaceNamingPublication({ uploadTaggedTransaction } = {}) {
+    return typeof uploadTaggedTransaction === 'function';
+}
+
+// composePlaceNamingPublicationRuntime({ discoveryProvider,
+//   nostrPlaceNamingDiscoveryPublisherOptions,
+//   arweavePlaceNamingDiscoveryPublisherOptions }) -> { discoveryPublisher }.
+//   See this file's own header for the full contract: `discoveryPublisher`
+//   is either a real, working publisher for the SELECTED substrate, or
+//   `null` — never a throw for an absent capability, never a fabricated
+//   stand-in. A genuinely malformed PRESENT capability (a real
+//   `publishImpl`/`uploadTaggedTransaction` alongside an otherwise invalid
+//   option, for instance) still throws, exactly as calling the underlying
+//   constructor directly already would.
 export function composePlaceNamingPublicationRuntime({
-    nostrPlaceNamingDiscoveryPublisherOptions = {}
+    discoveryProvider = 'nostr',
+    nostrPlaceNamingDiscoveryPublisherOptions = {},
+    arweavePlaceNamingDiscoveryPublisherOptions = {}
 } = {}) {
-    const discoveryPublisher = canAttemptNostrPlaceNamingPublication(nostrPlaceNamingDiscoveryPublisherOptions)
-        ? new NostrPlaceNamingDiscoveryPublisher(nostrPlaceNamingDiscoveryPublisherOptions)
-        : null;
+    let discoveryPublisher = null;
+    if (discoveryProvider === 'nostr') {
+        discoveryPublisher = canAttemptNostrPlaceNamingPublication(nostrPlaceNamingDiscoveryPublisherOptions)
+            ? new NostrPlaceNamingDiscoveryPublisher(nostrPlaceNamingDiscoveryPublisherOptions)
+            : null;
+    } else if (discoveryProvider === 'arweave') {
+        discoveryPublisher = canAttemptArweavePlaceNamingPublication(arweavePlaceNamingDiscoveryPublisherOptions)
+            ? new ArweavePlaceNamingDiscoveryPublisher(arweavePlaceNamingDiscoveryPublisherOptions)
+            : null;
+    } else {
+        throw new Error(`PlaceNamingPublicationRuntimeComposition: unrecognized discoveryProvider "${discoveryProvider}" — expected "nostr" or "arweave"`);
+    }
 
     return Object.freeze({ discoveryPublisher });
 }
