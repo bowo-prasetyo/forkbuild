@@ -215,7 +215,11 @@ async function run() {
         // commentary) is unrelated distribution functionality.
         assert(/'Distribute Snapshot'/.test(ownPanelSource), n('A1. OwnPublicationPanel.js: a real "Distribute Snapshot" action exists'));
         assert(/'Distribute Publication'/.test(ownPanelSource), n('A2. ...and a real "Distribute Publication" action exists'));
-        assert(/snapshotDistributionCommand\(publication\)/.test(codeOnly(ownPanelSource)), n('A3. "Distribute Snapshot" calls its command with the publication alone — no storage, substrate, or role parameter of its own'));
+        // Bug fix — "Distribute Snapshot" now also passes an explicit
+        // Arweave/IPFS storage choice (mirroring DecentralizedPublicationsView.js's
+        // own CONTENT storage picker, A9 below) rather than always
+        // silently defaulting to Arweave.
+        assert(/snapshotDistributionCommand\(publication, this\.snapshotDistributionStorage\)/.test(codeOnly(ownPanelSource)), n('A3. "Distribute Snapshot" calls its command with the publication plus its own explicit storage choice — no substrate or role parameter of its own'));
         assert(/publicationDistributionCommand\(publication\)/.test(codeOnly(ownPanelSource)), n('A4. "Distribute Publication" likewise takes only the publication — confirmed below (Section B) this means it can never itself select a discovery substrate, unlike WorldEncounterCanvas\'s own sibling action'));
         assert(!/Anchor|Bitcoin/.test(codeOnly(ownPanelSource)), n('A5. OwnPublicationPanel.js\'s own real code (comments stripped) contains no Proof/Anchoring action of any kind — its own header mentions "Bitcoin anchoring" only in prose, as a deliberate exclusion, never in any actual button, prop, or method'));
 

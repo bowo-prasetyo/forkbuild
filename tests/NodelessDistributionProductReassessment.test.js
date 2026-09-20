@@ -299,8 +299,8 @@ async function run() {
 
         // C2 — no "you need IPFS/Kubo installed" gate blocks the Remote
         // IPFS configuration/publish UI itself from rendering.
-        const remoteIpfsSectionMatch = templateBody.match(/<div v-if="ipfsRemotePublicationCoordinator && publicationCatalogContentResolver" class="evidence-section">[\s\S]*?<\/section>/);
-        assert(remoteIpfsSectionMatch || templateBody.includes('ipfsRemotePublicationCoordinator && publicationCatalogContentResolver'),
+        const remoteIpfsSectionMatch = templateBody.match(/<div v-if="ipfsRemotePublicationCoordinator && publicationContentStore" class="evidence-section">[\s\S]*?<\/section>/);
+        assert(remoteIpfsSectionMatch || templateBody.includes('ipfsRemotePublicationCoordinator && publicationContentStore'),
             n('C2. the Remote IPFS section\'s only rendering precondition is these two injected collaborators — never a Kubo daemon reachability check — so a node-less user genuinely sees and can use "Publish to Remote IPFS" without ever needing Kubo running.'));
 
         // C3 — the PUBLISHED state's own hint text (0.8.68) already states

@@ -141,8 +141,8 @@ async function run() {
             '5. (0.9.566) executeSnapshotDistributionCommand()\'s own public parameter list now carries publicationId/claimedPosition alongside bytes/contentStore/discoveryPublisher — a caller who already computed both (Section A) now has a parameter through which to hand them in.');
 
         const worldViewSource = await readSource('ui/views/WorldView.js');
-        const distributeFnMatch = worldViewSource.match(/function distributeWorldEncounterSnapshot\(publication\)\s*\{[\s\S]*?\n        \}/);
-        assert(distributeFnMatch, '6. ui/views/WorldView.js#distributeWorldEncounterSnapshot(publication) exists as an isolable function — the ONE production call site that invokes Snapshot distribution.');
+        const distributeFnMatch = worldViewSource.match(/function distributeWorldEncounterSnapshot\(publication, storage\)\s*\{[\s\S]*?\n        \}/);
+        assert(distributeFnMatch, '6. ui/views/WorldView.js#distributeWorldEncounterSnapshot(publication, storage) exists as an isolable function — the ONE production call site that invokes Snapshot distribution.');
         const distributeFnBody = distributeFnMatch[0];
         assert(/getPlacementInfoForPublication\(publication\.id\)/.test(distributeFnBody),
             '7. (0.9.566) it now calls session.getPlacementInfoForPublication(publication.id) — the full `publication` object it is handed is finally read for its own id, exactly as Section A\'s own already-available lookup allows.');

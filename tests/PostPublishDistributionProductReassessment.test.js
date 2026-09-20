@@ -351,7 +351,7 @@ async function run() {
         // Reachability. distributeWorldEncounterPublication gained a new,
         // optional discoveryProvider parameter — still a distinct wrapper
         // from distributeWorldEncounterSnapshot, never collapsed into it.
-        assert(viewCode.includes('function distributeWorldEncounterSnapshot(publication)') && viewCode.includes('function distributeWorldEncounterPublication(publication, discoveryProvider)'),
+        assert(viewCode.includes('function distributeWorldEncounterSnapshot(publication, storage)') && viewCode.includes('function distributeWorldEncounterPublication(publication, discoveryProvider)'),
             '14. WorldView.js still wires two distinct wrapper functions — Snapshot distribution and Publication distribution were never collapsed into one');
         const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
         assert((panelCode.match(/this\.snapshotDistributionCommand\(/g) || []).length === 1,
