@@ -561,7 +561,7 @@ async function runTests() {
         });
         failCtx.discoverSnapshotCandidates();
         await flushMicrotasks();
-        assert(failCtx.snapshotCandidateDiscoveryError === 'Snapshot candidate discovery could not be completed.', 'E2.1. DISCOVER genuinely fails and records the pipeline\'s own existing error text');
+        assert(failCtx.snapshotCandidateDiscoveryError === 'section-e2-boom', 'E2.1. DISCOVER genuinely fails and now surfaces the underlying (sanitized) error text rather than a generic notice — see application/DistributionErrorMessageSanitizer.js');
         assert(failCtx.snapshotCandidateDiscoveryResult === null, 'E2.2. a failed discovery never silently produces a result');
         const errorRef = failCtx.snapshotCandidateDiscoveryError;
 

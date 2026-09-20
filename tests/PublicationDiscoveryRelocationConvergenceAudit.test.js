@@ -442,7 +442,7 @@ async function run() {
         ctxCanonical.discoveryCommand = async () => { throw new Error('network unavailable'); };
         WorldEncounterCanvas.methods.discoverPublication.call(ctxCanonical);
         await flush();
-        assert(ctxCanonical.discoveryError === 'Discovery could not be completed.', 'G1. a genuine rejection with the canonical tag produces the pre-existing failure message');
+        assert(ctxCanonical.discoveryError === 'network unavailable', 'G1. a genuine rejection with the canonical tag now surfaces the sanitized underlying cause — see application/DistributionErrorMessageSanitizer.js');
         assert(ctxCanonical.discoveryResult === null, 'G2. a failed discovery leaves discoveryResult null');
 
         const ctxCustom = makeFullCtx({ defaultDiscoveryTag: canonicalTag, discoveryObjectId: 'enc-g-custom' });

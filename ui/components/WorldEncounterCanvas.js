@@ -5,6 +5,7 @@ import { describeWorldEncounterInspection } from '../../application/WorldEncount
 import { describeWorldEncounterSelectionOutcomeFromRegistry, WorldEncounterSelectionOutcomeStatus } from '../../application/WorldEncounterSelectionOutcome.js';
 import { inspectWorldEncounterMaterial } from '../../application/WorldEncounterMaterialInspection.js';
 import { createId } from '../../core/createId.js';
+import { sanitizeDistributionErrorMessage } from '../../application/DistributionErrorMessageSanitizer.js';
 // 0.9.474 — Admit World-Encountered Publications into App-Wide Discovery.
 // `Publication` (never previously imported here) is needed for exactly one
 // check: `loading.status === 'AVAILABLE' && loading.material instanceof
@@ -4894,9 +4895,11 @@ export default {
 
             Promise.resolve()
                 .then(() => this.distributionCommand(publication, this.selectedDiscoveryProvider))
-                .catch(() => {
+                .catch((error) => {
                     if (requestId === this.distributionRequestId) {
-                        this.distributionError = 'Distribution could not be completed.';
+                        console.error('Publication distribution failed:', error);
+                        this.distributionError = sanitizeDistributionErrorMessage(error)
+                            || 'Distribution could not be completed.';
                     }
                 })
                 .then(() => {
@@ -4936,9 +4939,11 @@ export default {
                         this.snapshotDistributionResult = result;
                     }
                 })
-                .catch(() => {
+                .catch((error) => {
                     if (requestId === this.snapshotDistributionRequestId) {
-                        this.snapshotDistributionError = 'Snapshot distribution could not be completed.';
+                        console.error('Snapshot distribution failed:', error);
+                        this.snapshotDistributionError = sanitizeDistributionErrorMessage(error)
+                            || 'Snapshot distribution could not be completed.';
                     }
                 })
                 .then(() => {
@@ -4979,9 +4984,11 @@ export default {
                         this.snapshotAttributionResult = resolveSnapshotPublicationAttribution(publication, result);
                     }
                 })
-                .catch(() => {
+                .catch((error) => {
                     if (requestId === this.snapshotDiscoveryRequestId) {
-                        this.snapshotDiscoveryError = 'Snapshot discovery could not be completed.';
+                        console.error('Snapshot discovery failed:', error);
+                        this.snapshotDiscoveryError = sanitizeDistributionErrorMessage(error)
+                            || 'Snapshot discovery could not be completed.';
                     }
                 })
                 .then(() => {
@@ -5224,9 +5231,11 @@ export default {
                         this.discoveryResult = result;
                     }
                 })
-                .catch(() => {
+                .catch((error) => {
                     if (requestId === this.discoveryRequestId) {
-                        this.discoveryError = 'Discovery could not be completed.';
+                        console.error('Discovery failed:', error);
+                        this.discoveryError = sanitizeDistributionErrorMessage(error)
+                            || 'Discovery could not be completed.';
                     }
                 })
                 .then(() => {

@@ -518,13 +518,16 @@ async function run() {
         }
         assert(threw, '32. the exact same existing command rejects on a genuine failure — a third caller inherits a real rejection to catch, never a silent swallow');
 
-        // The panel's own catch() renders a fixed, generic message
-        // regardless of the underlying failure — the SAME restraint a
+        // The panel's own catch() renders the sanitized underlying cause
+        // when one survives sanitization, falling back to one fixed,
+        // generic message otherwise (see application/
+        // DistributionErrorMessageSanitizer.js) — the SAME restraint a
         // toast action would inherit for free if it called this command,
         // never a toast-specific error vocabulary of its own.
         const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
-        assert(panelCode.includes("this.publicationDistributionError = 'Publication distribution could not be completed.'"),
-            '33. OwnPublicationPanel.js\'s own catch() renders one fixed, generic failure message — the exact vocabulary a toast action would reuse, never a distinct one');
+        assert(panelCode.includes('this.publicationDistributionError = sanitizeDistributionErrorMessage(error)') &&
+               panelCode.includes("|| 'Publication distribution could not be completed.'"),
+            '33. OwnPublicationPanel.js\'s own catch() renders the sanitized cause, or one fixed, generic fallback failure message — the exact vocabulary a toast action would reuse, never a distinct one');
 
         console.log('✓ Section H: the existing distribution command is structurally caller-agnostic and live-proven to behave identically for a third caller, on both success and failure — a toast action, IF wired through this same command, would need no new failure/dismissal vocabulary of its own');
     }

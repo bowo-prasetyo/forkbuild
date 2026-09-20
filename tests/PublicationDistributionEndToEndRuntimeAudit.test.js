@@ -44,9 +44,10 @@ import { Signature } from '../core/Signature.js';
 //              Arweave leg is proven to make the Nostr leg UNREACHABLE —
 //              see this section's own header for why that asymmetry is
 //              correct, not a bug
-//   Section D: lifecycle semantics — a wallet-rejection-shaped failure
-//              collapses into the exact same generic notice as any other
-//              failure; no new lifecycle vocabulary appears anywhere
+//   Section D: lifecycle semantics — a wallet-rejection-shaped failure now
+//              surfaces its own sanitized cause (see application/
+//              DistributionErrorMessageSanitizer.js); no new lifecycle
+//              vocabulary appears anywhere
 //   Section E: the UI stays a thin observer — no `ui/` file outside this
 //              milestone's own two host-capability producers ever touches
 //              `window.arweaveWallet`/`window.nostr`/`crypto.subtle`/`WebSocket`
@@ -524,11 +525,10 @@ async function run() {
     // Section D — lifecycle semantics.
     // ===================================================================
     {
-        // D1 — a wallet-rejection-shaped failure collapses into the exact
-        // same generic notice as every other failure this component has
-        // ever produced — never a distinguished "wallet rejected" /
-        // "relay timeout" / "gateway unavailable" message, and no new
-        // `distributionError` vocabulary of any kind.
+        // D1 — a wallet-rejection-shaped failure now surfaces its own
+        // (sanitized) cause instead of collapsing into the generic notice
+        // — see application/DistributionErrorMessageSanitizer.js, wired
+        // into this surface's catch block alongside EditorView's own.
         const lifecycleStore = new PublicationDistributionLifecycleMemoryStore();
         const publication = signedPublication({ id: 'pub-e2e-audit-d1', documentId: 'doc-e2e-audit-d1' });
 
@@ -548,7 +548,7 @@ async function run() {
         ctx.distributeSelectedPublication();
         await waitForSettled(ctx);
 
-        assert(ctx.distributionError === 'Distribution could not be completed.', 'D1. a real wallet rejection ends in EXACTLY the same generic notice as the pre-0.9.121 "missing capability" case — no leaked wallet error text, no new vocabulary');
+        assert(ctx.distributionError === 'ArweaveInjectedProviderSigner: wallet extension rejected sign() — User rejected the request.', 'D1. a real wallet rejection now surfaces the sanitized underlying cause — the exact, actionable case application/DistributionErrorMessageSanitizer.js\'s own header names as the primary motivation');
         assert(ctx.distributionMaterialState === PublicationDistributionState.ABSENT, 'D1. no phantom PRESENT state appears for a leg that genuinely rejected');
         assert(lifecycleStore.get(publication.id) === null, 'D1. the lifecycle store stays untouched — a rejection is not silently reinterpreted as a partial success');
 
@@ -558,7 +558,7 @@ async function run() {
         assert(Object.keys(PublicationDistributionState).length === 2, 'D2. PublicationDistributionState still names exactly two values');
         assert(PublicationDistributionState.ABSENT === 'ABSENT' && PublicationDistributionState.PRESENT === 'PRESENT', 'D2. no WALLET_REJECTED / RELAY_TIMEOUT / GATEWAY_UNAVAILABLE (or similar) value has been introduced anywhere in the lifecycle vocabulary');
 
-        console.log('✓ Section D: lifecycle semantics — real host failures collapse into the same generic, pre-existing notice; no new lifecycle vocabulary exists anywhere');
+        console.log('✓ Section D: lifecycle semantics — a real host failure now surfaces its own sanitized cause instead of the old generic notice; no new lifecycle vocabulary exists anywhere');
     }
 
     // ===================================================================

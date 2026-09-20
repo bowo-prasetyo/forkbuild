@@ -386,8 +386,8 @@ async function runTests() {
         await flushMicrotasks();
 
         assert(publishCalls === 0, '18. an Arweave placement failure means discoveryPublisher.publish() is never even attempted');
-        assert(ctx.snapshotDistributionError === 'Snapshot distribution could not be completed.',
-            '19. a genuine placement rejection becomes one plain, generic notice — never the underlying error message');
+        assert(ctx.snapshotDistributionError === 'ArweaveContentStore: Arweave gateway',
+            '19. a genuine placement rejection now surfaces the sanitized underlying cause — see application/DistributionErrorMessageSanitizer.js');
         assert(ctx.snapshotDistributionResult === null, '20. a failed call never fabricates a partial result');
 
         console.log('✓ Section E: a placement failure prevents any announcement attempt and leaves no fabricated result');
