@@ -9301,6 +9301,19 @@ export default {
                                     <dl v-if="entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.result" class="evidence-fields">
                                         <div class="evidence-field"><dt>Content</dt><dd>{{ entry.snapshotDistributionAttempt.result.contentReference }}</dd></div>
                                     </dl>
+                                    <!-- 0.9.664 — Node-less Distribution Product Reassessment. application/
+                                         SnapshotDistributionCommand.js's own result already carries an
+                                         `announcement` field alongside `contentReference` — computed since
+                                         0.9.136, but never previously rendered here either, the identical gap
+                                         Section B found for the Remote IPFS path immediately above. `null` is
+                                         SnapshotDistributionCommand.js's own documented "ordinary decline," not
+                                         a failed distribution — the content above is already placed either
+                                         way. -->
+                                    <p v-if="entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.result" class="form-hint form-hint--neutral">
+                                        <span class="peer-badge" :class="entry.snapshotDistributionAttempt.result.announcement ? 'peer-badge--authenticated' : 'peer-badge--failed'">
+                                            {{ entry.snapshotDistributionAttempt.result.announcement ? 'Nostr: Announced' : 'Nostr: Not announced' }}
+                                        </span>
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -11496,6 +11509,18 @@ export default {
                                         This is an observation of what the provider just said, not a promise
                                         that it will still be retrievable later, and not a cataloged Snapshot
                                         Placement.
+                                    </p>
+                                    <!-- 0.9.664 — Node-less Distribution Product Reassessment. Surfaces
+                                         entry.ipfsRemoteSnapshotAnnouncement (0.9.663) — computed on every
+                                         PUBLISHED outcome since that milestone, but never previously rendered
+                                         anywhere, leaving "announced" and "announcement failed" visually
+                                         identical. A missing announcement here is never a failed publish — the
+                                         content above is already on IPFS either way. -->
+                                    <p v-if="entry.ipfsRemoteSnapshotAnnouncement" class="form-hint form-hint--neutral">
+                                        <span class="peer-badge" :class="entry.ipfsRemoteSnapshotAnnouncement.announced ? 'peer-badge--authenticated' : 'peer-badge--failed'">
+                                            {{ entry.ipfsRemoteSnapshotAnnouncement.announced ? 'Nostr: Announced' : 'Nostr: Not announced' }}
+                                        </span>
+                                        <template v-if="entry.ipfsRemoteSnapshotAnnouncement.error"> — {{ entry.ipfsRemoteSnapshotAnnouncement.error }}</template>
                                     </p>
                                 </template>
                             </div>
