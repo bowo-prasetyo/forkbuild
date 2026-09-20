@@ -9303,9 +9303,9 @@ export default {
                                     </dl>
                                     <!-- 0.9.664 — Node-less Distribution Product Reassessment. application/
                                          SnapshotDistributionCommand.js's own result already carries an
-                                         `announcement` field alongside `contentReference` — computed since
+                                         'announcement' field alongside 'contentReference' — computed since
                                          0.9.136, but never previously rendered here either, the identical gap
-                                         Section B found for the Remote IPFS path immediately above. `null` is
+                                         Section B found for the Remote IPFS path immediately above. 'null' is
                                          SnapshotDistributionCommand.js's own documented "ordinary decline," not
                                          a failed distribution — the content above is already placed either
                                          way. -->
