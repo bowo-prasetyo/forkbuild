@@ -326,7 +326,7 @@ async function run() {
         await waitForSettled(ctx);
 
         assert(ctx.distributionExecuting === false, '13. missing capability — execution still returns to idle');
-        assert(ctx.distributionError === 'Distribution could not be completed.', '14. missing capability — with no wallet/extension installed anywhere, the click still ends in exactly the existing, unchanged plain notice');
+        assert(ctx.distributionError === 'ArweavePublicationMaterialUploader: a signer with a sign() method is required', '14. missing capability — with no wallet/extension installed anywhere, the click now surfaces the sanitized underlying cause instead of the old generic notice — see application/DistributionErrorMessageSanitizer.js');
         assert(lifecycleStore.get(publication.id) === null, '15. missing capability — the lifecycle store is left untouched');
 
         console.log('✓ Section C: with no injected wallet/extension anywhere, the click still degrades to exactly today\'s existing, honest plain notice');

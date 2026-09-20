@@ -472,8 +472,8 @@ async function run() {
         ctxA.discoveryCommand = async () => { throw new Error('network unavailable'); };
         WorldEncounterCanvas.methods.discoverPublication.call(ctxA);
         await new Promise((resolve) => setTimeout(resolve, 10));
-        assert(ctxA.discoveryError === 'Discovery could not be completed.' && ctxA.discoveryResult === null,
-            '1. a rejection with the canonical tag seeded produces exactly the pre-existing failure message and leaves discoveryResult null.');
+        assert(ctxA.discoveryError === 'network unavailable' && ctxA.discoveryResult === null,
+            '1. a rejection with the canonical tag seeded now surfaces the sanitized underlying cause (see application/DistributionErrorMessageSanitizer.js) and leaves discoveryResult null.');
 
         // The identical rejection, with a hand-typed custom starting tag —
         // the same failure message, byte for byte.

@@ -393,9 +393,10 @@ const OWN_PUBLICATION_SURFACE = {
     error: (ctx) => ctx.publicationDistributionError,
     result: (ctx) => ctx.publicationDistributionResult,
     genericErrorMessage: 'Publication distribution could not be completed.',
-    // Unchanged by this milestone — still the one fixed, generic notice
-    // regardless of the raw failure's own message.
-    expectedFailureMessage: () => 'Publication distribution could not be completed.'
+    // OwnPublicationPanel now also runs a raw failure's own message through
+    // sanitizeDistributionErrorMessage(), matching EditorView's own
+    // convention above — see application/DistributionErrorMessageSanitizer.js.
+    expectedFailureMessage: (rawMessage) => sanitizeDistributionErrorMessage(rawMessage) || 'Publication distribution could not be completed.'
 };
 
 const WORLD_ENCOUNTER_SURFACE = {
@@ -415,9 +416,10 @@ const WORLD_ENCOUNTER_SURFACE = {
     // through the shared lifecycle store instead (Sections A/F below).
     result: () => undefined,
     genericErrorMessage: 'Distribution could not be completed.',
-    // Unchanged by this milestone — still the one fixed, generic notice
-    // regardless of the raw failure's own message.
-    expectedFailureMessage: () => 'Distribution could not be completed.'
+    // WorldEncounterCanvas now also runs a raw failure's own message through
+    // sanitizeDistributionErrorMessage(), matching EditorView's own
+    // convention above — see application/DistributionErrorMessageSanitizer.js.
+    expectedFailureMessage: (rawMessage) => sanitizeDistributionErrorMessage(rawMessage) || 'Distribution could not be completed.'
 };
 
 async function run() {

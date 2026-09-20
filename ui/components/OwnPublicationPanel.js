@@ -5,6 +5,7 @@ import { registerMaterializedSnapshotWorldSource } from '../../application/Mater
 import { resolveSnapshotWorldPositionClaim } from '../../application/SnapshotWorldPositionClaim.js';
 import { SnapshotWorldPositionClaimOutcome } from '../../application/SnapshotWorldPositionClaimOutcome.js';
 import { createId } from '../../core/createId.js';
+import { sanitizeDistributionErrorMessage } from '../../application/DistributionErrorMessageSanitizer.js';
 
 // 0.9.140 — Own Publication Distribution Entry Point.
 //
@@ -2061,9 +2062,11 @@ export default {
                         this.snapshotDistributionResult = result;
                     }
                 })
-                .catch(() => {
+                .catch((error) => {
                     if (requestId === this.snapshotDistributionRequestId) {
-                        this.snapshotDistributionError = 'Snapshot distribution could not be completed.';
+                        console.error('Snapshot distribution failed:', error);
+                        this.snapshotDistributionError = sanitizeDistributionErrorMessage(error)
+                            || 'Snapshot distribution could not be completed.';
                     }
                 })
                 .then(() => {
@@ -2097,9 +2100,11 @@ export default {
                         this.publicationDistributionResult = result;
                     }
                 })
-                .catch(() => {
+                .catch((error) => {
                     if (requestId === this.publicationDistributionRequestId) {
-                        this.publicationDistributionError = 'Publication distribution could not be completed.';
+                        console.error('Publication distribution failed:', error);
+                        this.publicationDistributionError = sanitizeDistributionErrorMessage(error)
+                            || 'Publication distribution could not be completed.';
                     }
                 })
                 .then(() => {
@@ -2140,9 +2145,11 @@ export default {
                         this.snapshotAttributionResult = resolveSnapshotPublicationAttribution(publication, result);
                     }
                 })
-                .catch(() => {
+                .catch((error) => {
                     if (requestId === this.snapshotDiscoveryRequestId) {
-                        this.snapshotDiscoveryError = 'Snapshot discovery could not be completed.';
+                        console.error('Snapshot discovery failed:', error);
+                        this.snapshotDiscoveryError = sanitizeDistributionErrorMessage(error)
+                            || 'Snapshot discovery could not be completed.';
                     }
                 })
                 .then(() => {
@@ -2179,9 +2186,11 @@ export default {
                         this.snapshotExportResult = result;
                     }
                 })
-                .catch(() => {
+                .catch((error) => {
                     if (requestId === this.snapshotExportRequestId) {
-                        this.snapshotExportError = 'Snapshot export could not be completed.';
+                        console.error('Snapshot export failed:', error);
+                        this.snapshotExportError = sanitizeDistributionErrorMessage(error)
+                            || 'Snapshot export could not be completed.';
                     }
                 })
                 .then(() => {
@@ -2235,9 +2244,11 @@ export default {
                         this.snapshotCandidateDiscoveryOutcome = withOutcome ? result.outcome : null;
                     }
                 })
-                .catch(() => {
+                .catch((error) => {
                     if (requestId === this.snapshotCandidateDiscoveryRequestId) {
-                        this.snapshotCandidateDiscoveryError = 'Snapshot candidate discovery could not be completed.';
+                        console.error('Snapshot candidate discovery failed:', error);
+                        this.snapshotCandidateDiscoveryError = sanitizeDistributionErrorMessage(error)
+                            || 'Snapshot candidate discovery could not be completed.';
                     }
                 })
                 .then(() => {
@@ -2347,9 +2358,11 @@ export default {
                         this.selectedSnapshotResolutionResult = result;
                     }
                 })
-                .catch(() => {
+                .catch((error) => {
                     if (requestId === this.selectedSnapshotResolutionRequestId) {
-                        this.selectedSnapshotResolutionError = 'Selected Snapshot resolution could not be completed.';
+                        console.error('Selected Snapshot resolution failed:', error);
+                        this.selectedSnapshotResolutionError = sanitizeDistributionErrorMessage(error)
+                            || 'Selected Snapshot resolution could not be completed.';
                     }
                 })
                 .then(() => {
@@ -2423,9 +2436,11 @@ export default {
                         this.selectedSnapshotMaterializationResult = result;
                     }
                 })
-                .catch(() => {
+                .catch((error) => {
                     if (requestId === this.selectedSnapshotMaterializationRequestId) {
-                        this.selectedSnapshotMaterializationError = 'Selected Snapshot materialization could not be completed.';
+                        console.error('Selected Snapshot materialization failed:', error);
+                        this.selectedSnapshotMaterializationError = sanitizeDistributionErrorMessage(error)
+                            || 'Selected Snapshot materialization could not be completed.';
                     }
                 })
                 .then(() => {

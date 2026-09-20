@@ -376,7 +376,7 @@ async function runTests() {
         });
         ctx.exportOwnSnapshot();
         await flushMicrotasks();
-        assert(ctx.snapshotExportError === 'Snapshot export could not be completed.', 'D4a. a real export failure produces this component\'s own distinct error message');
+        assert(ctx.snapshotExportError === 'boom', 'D4a. a real export failure now surfaces the sanitized underlying cause — see application/DistributionErrorMessageSanitizer.js');
         assert(ctx.snapshotExportResult === null, 'D4b. no result is recorded for a failed attempt');
         assert(ctx.snapshotExportExecuting === false, 'D4c. the in-flight flag clears even on failure');
         assert(ctx.snapshotDistributionResult && ctx.snapshotDistributionResult.untouched === true, 'D4d. a failed export never touches snapshotDistributionResult');

@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 
+import { sanitizeDistributionErrorMessage } from '../application/DistributionErrorMessageSanitizer.js';
 import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
 import { executePublicationDistributionCommand } from '../application/PublicationDistributionCommand.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
@@ -719,8 +720,8 @@ async function run() {
 
             surface.trigger(ctx);
             await flushMicrotasks();
-            assert(surface.error(ctx) === surface.genericErrorMessage,
-                n(`${surface.name}: a first synchronous failure surfaces the existing generic notice`));
+            assert(surface.error(ctx) === (sanitizeDistributionErrorMessage(`${surface.name} gateway unavailable`) || surface.genericErrorMessage),
+                n(`${surface.name}: a first synchronous failure surfaces the sanitized underlying cause (or the generic notice when nothing safe survives sanitization)`));
 
             surface.trigger(ctx);
             await flushMicrotasks();

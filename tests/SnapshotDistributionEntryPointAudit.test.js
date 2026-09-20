@@ -531,7 +531,7 @@ async function run() {
             canvasCtx.distributeSelectedSnapshot();
             await flushMicrotasks();
 
-            assert(ownCtx.snapshotDistributionError === 'Snapshot distribution could not be completed.', 'F1. the local entry point genuinely reports failure');
+            assert(ownCtx.snapshotDistributionError === 'relay unreachable', 'F1. the local entry point genuinely reports failure, now surfacing the sanitized underlying cause — see application/DistributionErrorMessageSanitizer.js');
             assert(ownCtx.snapshotDistributionResult === null, 'F2. the local entry point produces no fabricated result');
             assert(canvasCtx.snapshotDistributionError === null && canvasCtx.snapshotDistributionResult !== null,
                 'F3. the remote entry point\'s own concurrent, independent call succeeds despite the local entry point\'s failure');
@@ -589,7 +589,7 @@ async function run() {
             canvasCtx.distributeSelectedSnapshot();
             await flushMicrotasks();
 
-            assert(canvasCtx.snapshotDistributionError === 'Snapshot distribution could not be completed.', 'F7. the remote entry point genuinely reports failure when its own placement fails');
+            assert(canvasCtx.snapshotDistributionError === 'ArweaveContentStore: Arweave gateway', 'F7. the remote entry point genuinely reports failure when its own placement fails, now surfacing the sanitized underlying cause — see application/DistributionErrorMessageSanitizer.js');
             assert(remotePublishAttempts === 0, 'F8. an Arweave placement failure means the remote entry point never even attempts an announcement');
             assert(ownCtx.snapshotDistributionError === null && ownCtx.snapshotDistributionResult !== null,
                 'F9. the local entry point\'s own independent call succeeds despite the remote entry point\'s Arweave failure');

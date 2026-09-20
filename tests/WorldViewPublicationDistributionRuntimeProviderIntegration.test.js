@@ -209,7 +209,7 @@ async function run() {
         await flushMicrotasks();
 
         assert(ctx.distributionExecuting === false, '9. today\'s configuration — execution still returns to idle');
-        assert(ctx.distributionError === 'Distribution could not be completed.', '10. today\'s configuration — the click still ends in exactly 0.9.104\'s own plain notice, unchanged');
+        assert(ctx.distributionError === 'ArweavePublicationMaterialUploader: a signer with a sign() method is required', '10. today\'s configuration — the click now surfaces the sanitized underlying cause (no wallet signer configured) instead of the old generic notice — see application/DistributionErrorMessageSanitizer.js');
         assert(lifecycleStore.get(publication.id) === null, '11. today\'s configuration — the lifecycle store is left untouched, exactly as before this milestone');
 
         console.log('✓ Section B: with the provider built the way ui/main.js builds it today, the identical click still reaches exactly today\'s existing honest failure');

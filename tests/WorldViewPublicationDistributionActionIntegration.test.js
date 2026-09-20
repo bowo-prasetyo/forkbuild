@@ -243,8 +243,8 @@ async function runTests() {
         await flushMicrotasks();
 
         assert(ctx.distributionExecuting === false, '12. execution returns to idle after a rejection');
-        assert(ctx.distributionError === 'Distribution could not be completed.',
-            '13. a genuine rejection becomes one plain, generic notice — never the underlying error message');
+        assert(ctx.distributionError === 'no wallet available',
+            '13. a genuine rejection now surfaces the sanitized underlying cause — see application/DistributionErrorMessageSanitizer.js');
         assert(lifecycleStore.get(publication.id) === null,
             '14. a rejected call never corrupts or writes into the lifecycle store');
 
@@ -267,8 +267,8 @@ async function runTests() {
         await flushMicrotasks();
 
         assert(ctx.distributionExecuting === false, '15. execution returns to idle after a synchronous throw');
-        assert(ctx.distributionError === 'Distribution could not be completed.',
-            '16. a synchronous construction throw is caught and surfaces the same generic notice a rejection would');
+        assert(ctx.distributionError === 'signer is required',
+            '16. a synchronous construction throw is caught and surfaces the same sanitized notice a rejection would');
 
         console.log('✓ A synchronous construction throw is caught exactly like a genuine rejection');
     }

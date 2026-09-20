@@ -402,8 +402,9 @@ async function run() {
         assert(threw, '27. the exact real command chain rejects on a genuine failure when called through the SAME one-argument wrapper contract a hypothetical EditorView caller would use');
 
         const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
-        assert(panelCode.includes("this.publicationDistributionError = 'Publication distribution could not be completed.'"),
-            '28. the ONE existing UI-facing failure message stays a single fixed string — a fourth caller (a hypothetical EditorView surface) would reuse this exact string, never a distinct one, the same restraint 0.9.375 already confirmed for a third caller');
+        assert(panelCode.includes('this.publicationDistributionError = sanitizeDistributionErrorMessage(error)') &&
+               panelCode.includes("|| 'Publication distribution could not be completed.'"),
+            '28. the ONE existing UI-facing fallback failure message stays a single fixed string, now reached through the shared sanitizeDistributionErrorMessage() seam — a fourth caller (a hypothetical EditorView surface) would reuse this exact fallback, never a distinct one, the same restraint 0.9.375 already confirmed for a third caller');
 
         const forbiddenFailureVocabulary = ['EDITOR_DISTRIBUTION_FAILED', 'EditorDistributionFailed', 'EditorDistributionError', 'EDITOR_PUBLICATION_DISTRIBUTION_FAILED'];
         for (const term of forbiddenFailureVocabulary) {

@@ -470,8 +470,8 @@ async function run() {
             await flushMicrotasks();
 
             assert(surface.executing(ctx) === false, `24. [${surface.name}] D2 — returns to idle after a rejection`);
-            assert(surface.error(ctx) === surface.genericErrorMessage,
-                `25. [${surface.name}] D2 — a genuine rejection becomes one plain, generic notice — never the underlying error message`);
+            assert(surface.error(ctx) === 'no wallet available',
+                `25. [${surface.name}] D2 — a genuine rejection now surfaces the sanitized underlying cause — see application/DistributionErrorMessageSanitizer.js`);
             assert(lifecycleStore.get(publication.id) === null, `26. [${surface.name}] D2 — a rejected call never writes into the lifecycle store`);
         }
 
@@ -485,8 +485,8 @@ async function run() {
             await flushMicrotasks();
 
             assert(surface.executing(ctx) === false, `27. [${surface.name}] D3 — returns to idle after a synchronous throw`);
-            assert(surface.error(ctx) === surface.genericErrorMessage,
-                `28. [${surface.name}] D3 — a synchronous construction throw surfaces the same generic notice a rejection would`);
+            assert(surface.error(ctx) === 'signer is required',
+                `28. [${surface.name}] D3 — a synchronous construction throw surfaces the same sanitized notice a rejection would`);
         }
 
         // D4 — duplicate-click protection: repeated clicks while a call is
