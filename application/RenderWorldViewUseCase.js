@@ -513,12 +513,33 @@ export class RenderWorldViewUseCase {
             // because unlike a remote participant's own presence, this
             // facade has no per-vehicle identity to be told about
             // individually; a caller always knows the whole current set.
+            // 0.9.607 — Vehicle Ground Elevation Parity. `instance.position`
+            // is a flat domain fact — core/VehicleInstance.js never knows
+            // about terrain — exactly like AvatarPresence.position (see
+            // withGroundElevation()'s own header above). setLocalAvatar/
+            // updateLocalAvatarPresence already lift the RENDERED avatar
+            // onto the real terrain height at (x, z); a mounted rider's
+            // own domain position is kept identical to their vehicle's
+            // (application/WorldNavigationSession.js's own movement tick
+            // sets `position: moved.vehicleInstance.position` verbatim), so
+            // without the SAME lift here the vehicle's mesh stays pinned
+            // to the flat domain Y while the avatar riding it floats up to
+            // the real ground height the moment terrain departs from
+            // Y=0 — invisible near a flat spawn area, obvious once a ride
+            // reaches rolling terrain. Reuses withGroundElevation()
+            // VERBATIM (never a second formula) so the two visuals can
+            // never drift apart, and goes through instance.withPosition()
+            // (never a direct field write) so this stays a RENDER-ONLY
+            // lift — the real, flat `instance.position` this facade was
+            // handed is never mutated, and nothing written back to
+            // application/VehicleRuntimeInstances.js's own runtime store.
             syncVehicles: (vehicleInstances) => {
                 const nextIds = new Set();
                 for (const instance of vehicleInstances) {
                     nextIds.add(instance.id);
                     const alreadyTracked = vehicleFieldRenderer.trackedVehicleIds().includes(instance.id);
-                    const object = vehicleFieldRenderer.setVehicle(instance);
+                    const renderInstance = instance.withPosition(withGroundElevation(instance.position));
+                    const object = vehicleFieldRenderer.setVehicle(renderInstance);
                     if (object && !alreadyTracked) {
                         renderer.add(object);
                     }

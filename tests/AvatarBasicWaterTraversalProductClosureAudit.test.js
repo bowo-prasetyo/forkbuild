@@ -363,8 +363,15 @@ async function run() {
         // already sees the corrected value, by construction, not the
         // divergent one.
         const withGroundElevationCallSites = (codeOnly(renderWorldViewSource).match(/withGroundElevation\(/g) || []).length;
-        assert(withGroundElevationCallSites === 5, // 1 definition + 4 call sites (setLocalAvatar, updateLocalAvatarPresence, setRemoteAvatar, updateRemoteAvatarPresence)
-            `13. application/RenderWorldViewUseCase.js applies withGroundElevation() at exactly its four avatar-pose call sites (setLocalAvatar/updateLocalAvatarPresence/setRemoteAvatar/updateRemoteAvatarPresence) — every avatar visual (and therefore every avatar raycast target) is built from the CORRECTED position, never the raw one, so pickAvatar() cannot observe the divergence`);
+        // AMENDED — a later milestone (0.9.607, Vehicle Ground Elevation
+        // Parity) added a FIFTH call site, syncVehicles(), so a mounted
+        // rider's own vehicle mesh is lifted by the exact same formula as
+        // the avatar riding it; this audit's own "every avatar visual is
+        // built from the CORRECTED position" reasoning is unaffected —
+        // vehicles are a new PRODUCER of the same corrected value, never
+        // a new way to observe the pre-existing avatar divergence.
+        assert(withGroundElevationCallSites === 6, // 1 definition + 4 avatar call sites + 1 vehicle call site (setLocalAvatar, updateLocalAvatarPresence, setRemoteAvatar, updateRemoteAvatarPresence, syncVehicles)
+            `13. application/RenderWorldViewUseCase.js applies withGroundElevation() at exactly its four avatar-pose call sites (setLocalAvatar/updateLocalAvatarPresence/setRemoteAvatar/updateRemoteAvatarPresence) plus its one vehicle call site (syncVehicles) — every avatar visual (and therefore every avatar raycast target) is built from the CORRECTED position, never the raw one, so pickAvatar() cannot observe the divergence`);
 
         // Consumer 5 — core/CameraPerspective.js#computeCameraFraming(),
         // invoked from application/WorldNavigationSession.js. THIS is the
