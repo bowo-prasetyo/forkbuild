@@ -2929,6 +2929,17 @@ const snapshotDistributionCommand = (bytes, storage = 'ar', publicationId, claim
     claimedPosition
 });
 app.provide('snapshotDistributionCommand', snapshotDistributionCommand);
+// 0.9.663 — Connect Remote IPFS to Nostr Snapshot Distribution. Exposes the
+// SAME `snapshotDiscoveryPublisher` instance directly — never a second
+// `NostrSnapshotDiscoveryPublisher` construction — so `ui/views/
+// DecentralizedPublicationsView.js#publishToRemoteIpfs()` can announce a
+// Remote IPFS-produced CID via Nostr once that CID already exists, without
+// going through `executeSnapshotDistributionCommand()`'s own
+// `contentStore.put(bytes)` step (which would re-upload the bytes through a
+// second HTTP pin rather than reuse the CID `IpfsRemotePublicationCoordinator`
+// already obtained). May be `null` — the identical graceful degradation
+// `snapshotDiscoveryPublisher` itself already holds.
+app.provide('snapshotDiscoveryPublisher', snapshotDiscoveryPublisher);
 // 0.9.506 — the eligible-and-currently-registered Content backend list a
 // caller (ui/views/DecentralizedPublicationsView.js) can offer as an
 // explicit Snapshot Distribution picker, without ever hardcoding or
