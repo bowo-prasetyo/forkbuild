@@ -9227,7 +9227,7 @@ export default {
                          that specific route and no other.
 
                          Collapsible, exactly like "Snapshot, Anchoring,
-                         IPFS & Evidence Details" below — but carries `open`
+                         IPFS & Evidence Details" below — but carries \`open\`
                          so it starts expanded: these three roles remain the
                          primary actions for a publication, never hidden
                          behind a click on first load. Collapsing it once
