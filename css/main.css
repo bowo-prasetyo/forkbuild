@@ -3835,6 +3835,30 @@ html, body {
     margin-top: 1.5rem;
 }
 
+/* Arweave Gateway / IPFS Gateway / Nostr Relays / STUN Servers / TURN
+   Server / Rendezvous Servers — the other Network Settings endpoint-server
+   pages, same card language as .content-provider-settings-view above. */
+.arweave-gateway-settings-view,
+.ipfs-gateway-settings-view,
+.nostr-relay-settings-view,
+.stun-settings-view,
+.turn-server-settings-view,
+.rendezvous-settings-view {
+    padding: 2rem 2.5rem 3rem;
+    max-width: 560px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.arweave-gateway-settings-form,
+.ipfs-gateway-settings-form,
+.nostr-relay-settings-form,
+.stun-settings-form,
+.turn-server-settings-form,
+.rendezvous-settings-form {
+    margin-top: 1.5rem;
+}
+
 .content-provider-option {
     display: flex;
     align-items: center;
