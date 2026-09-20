@@ -105,21 +105,26 @@ top-level [docs/](..) folder.
    optional snapshot placements: creating, inspecting, resolving,
    materializing, and comparing locators like an IPFS node that can
    currently serve a claim's content (resolving now works through a
-   public IPFS gateway, with no local node required), a standing
-   **Content Provider** preference (its own settings page) so a **Use
-   Preferred Provider** button can create a placement on your saved
-   backend without naming one each time, two further standing overrides —
-   **Arweave Gateway** and **Nostr Relay**, each its own settings page —
-   for replacing which endpoint every Arweave retrieval and every Nostr
-   discovery on this device goes through, an **IPFS
+   public, user-overridable IPFS gateway, with no local node required), a
+   standing **Content Provider** preference (its own settings page) so a
+   **Use Preferred Provider** button can create a placement on your saved
+   backend without naming one each time, three further standing
+   overrides — **Arweave Gateway**, **IPFS Gateway**, and **Nostr
+   Relay**, each its own settings page — for replacing which endpoint
+   every Arweave retrieval, IPFS gateway retrieval, and Nostr discovery
+   on this device goes through, an **IPFS
    Publishing** section for explicitly publishing content to a
-   configured remote pinning provider, independently verifying it's
-   still retrievable, and inspecting the full history of both, a
+   configured remote pinning provider — a successful publish there now
+   also announces itself for Nostr Snapshot discovery, the same way a
+   local Kubo node's own Distribute Snapshot already does, so it's
+   findable by peers without ever running an IPFS node — independently
+   verifying it's still retrievable, and inspecting the full history of
+   both, a
    **Local Snapshot** section for checking, importing, and pulling in
    the actual bytes this device holds (from a placement, a peer, or an
    offline file), a **Decentralization** overview comparing your
    evidence and placements, synchronizing knowledge with peers, and
-   seeing how each claim was learned, a third standing override — **Nostr
+   seeing how each claim was learned, a fourth standing override — **Nostr
    Publication Relays** — configuring the whole *set* of relays a
    Publication announcement fans out to and Publication discovery queries
    (kept genuinely separate from the plain **Nostr Relay** override above

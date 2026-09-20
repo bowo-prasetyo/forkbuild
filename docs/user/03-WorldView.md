@@ -22,7 +22,7 @@ world's URL directly. You'll appear next to that creation in the shared world.
 - **Left-drag** — orbit the camera
 - **Right-drag** — pan
 - **Scroll** — zoom in and out
-- **Home** — reset the view
+- **Home** — return to your own world (see below)
 
 As you move, nearby worlds **stream in and out** automatically. The overlay in
 the corner shows you:
@@ -46,7 +46,16 @@ Next to your camera coordinates, a small **compass** shows which way you're
 facing (it's read-only — it never moves the camera). Three buttons sit
 beside it:
 
-- **Home** resets the camera to the default view.
+- **Home** takes you — camera and avatar both — back to your own current
+  world, the one you have open or last had focused, rather than the
+  shared map's fixed (0,0,0) origin. It lands you just past your world's
+  own footprint, never inside it, even if that world's own content is
+  centered around its local origin. If you haven't focused a world of
+  your own yet this session, it falls back to that shared origin instead
+  — still reachable any time from **Locations** below, listed there
+  permanently under "World." Wandering far enough that your own world
+  streams back out of view (on foot or by vehicle) doesn't lose your way
+  home; Home still returns you to it.
 - **Locations** opens a list of every place this session currently knows
   about, grouped into **World**, **Structures**, and **Landmarks** — each
   with one **Focus** button. Like Search and Explore Here/What's Here?,
