@@ -19,6 +19,7 @@ import { WorldLocation } from '../core/WorldLocation.js';
 import { WorldLocationKind, isValidWorldLocationKind } from '../core/WorldLocationKind.js';
 import { WorldLocationDirectory, ORIGIN_LOCATION_ID } from '../application/WorldLocationDirectory.js';
 import { CameraFocusAnimator } from '../application/CameraFocusAnimator.js';
+import { Publication } from '../publisher/Publication.js';
 import { computeCompassHeading, resolveCompassLabel } from '../core/CompassHeading.js';
 
 // 0.2.94 — World View Location & Navigation.
@@ -288,6 +289,20 @@ async function run() {
             metadata: new DocumentMetadata({ title: "Bob's World", author: 'bob' })
         }));
         saveDocumentUseCase.execute(bobManager);
+        // goHome() (redefined below) reuses focusDocument(), which also
+        // runs updateSpatialView() — a real, desirable side effect in
+        // production (bringing the user's own world back into range if
+        // it had streamed out while their avatar wandered away), but it
+        // means bobWorld must actually be DISCOVERABLE the same way any
+        // real "current world" would be, or updateSpatialView() judges
+        // it invisible and unloads it. This test's own makeSession()
+        // loads bobWorld directly via _loadWorld(), bypassing normal
+        // discovery entirely — registering a Publication here is what
+        // makes that bypass consistent with what would really be true
+        // of a world the session is actually viewing.
+        storage.save('forkbuild-publications', [
+            new Publication({ documentId: bobWorld.id, title: "Bob's World", author: 'bob' }).toJSON()
+        ]);
 
         function makeSession() {
             const session = new WorldNavigationSession({
@@ -376,17 +391,32 @@ async function run() {
         assert(heading.label === 'SW',
             '49. flagship: looking from (+12,+12,+12) offset back down at the target reads as Southwest — a fixed, reproducible reading');
 
-        // "Home returns to the world's fixed starting framing."
-        replicaA._cameraFocusFrameSubscription = () => {};
+        // "Home returns the camera (and, were one wired, the avatar) to
+        // the USER'S OWN currently-focused world" — redefined away from
+        // the original "jump to the fixed (0,0,0) origin regardless of
+        // context" behavior, which read as "Home" but actually meant
+        // "teleport to an unrelated, usually-empty part of the shared
+        // map" for anyone whose own content (as basically everyone's
+        // is — core/DeterministicGridPlacement.js scatters it across a
+        // huge shared grid) wasn't itself near true origin. True origin
+        // remains reachable exactly as before, just no longer through
+        // this shortcut — WorldLocationDirectory's own list() still
+        // lists it first, permanently, under ORIGIN_LOCATION_ID.
+        // goHome() reuses focusDocument() (an INSTANT jump — see
+        // SpatialCameraController#focusDocument()'s own fixed +35/axis
+        // offset — never _beginCameraFocus()'s animated glide, exactly
+        // like every other "jump to a different world" entry point:
+        // ui/views/WorldView.js#focusWorld(), Search, Explore), so no
+        // animation is scheduled and the new framing is already final
+        // the instant the call returns.
         const wentHome = replicaA.goHome();
         assert(wentHome === true, '50. flagship: goHome() succeeds');
-        const homeStartedAt = replicaA._activeCameraFocus.startedAt;
-        replicaA._tickCameraFocus(homeStartedAt + 900);
+        assert(replicaA._activeCameraFocus === null, '50b. flagship: goHome() jumps instantly (via focusDocument()), scheduling no glide animation');
         const homeFraming = replicaA._spatialCameraController.getSpatialCameraState();
-        assert(homeFraming.position.x === 10 && homeFraming.position.y === 10 && homeFraming.position.z === 10,
-            '51. flagship: Home returns the camera to the world\'s conventional (10,10,10) starting position');
-        assert(homeFraming.target.x === 0 && homeFraming.target.y === 0 && homeFraming.target.z === 0,
-            '52. flagship: Home\'s target is exactly the world origin');
+        assert(homeFraming.target.x === layoutPos.x && homeFraming.target.y === layoutPos.y && homeFraming.target.z === layoutPos.z,
+            '51. flagship: Home returns the camera to bobWorld\'s OWN layout position — the world the session was actually loaded/focused on — never the fixed (0,0,0) origin');
+        assert(homeFraming.position.x === layoutPos.x + 35 && homeFraming.position.y === layoutPos.y + 35 && homeFraming.position.z === layoutPos.z + 35,
+            '52. flagship: Home\'s camera position is bobWorld\'s own layout position plus focusDocument()\'s fixed +35/axis offset, the same formula every other "jump to a world" entry point already uses');
 
         // An unknown location id is a clean no-op, never a throw.
         assert(replicaA.focusLocation('not-a-real-location-id') === false,
@@ -406,7 +436,7 @@ async function run() {
         assert(!history || history.canUndo() === false,
             '56. flagship: zero commands were ever executed — Focus/Home/compass are pure camera + read operations');
         assert(replicaA.getActiveDocumentId() === bobWorld.id,
-            '57. flagship: the active document is still exactly what _loadWorld bootstrapped it to — focusLocation/goHome never call setActiveDocument');
+            '57. flagship: the active document is still exactly what _loadWorld bootstrapped it to — focusLocation never calls setActiveDocument, and goHome() (redefined to jump to the user\'s own focused world via focusDocument()) sets it to the SAME bobWorld.id it already was, so the value is unchanged even though goHome() now does touch it');
 
         // Graceful degradation: a session with a camera controller but
         // NO frame-tick support (e.g. start() truly never wired one)
