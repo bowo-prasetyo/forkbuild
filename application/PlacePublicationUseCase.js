@@ -49,7 +49,33 @@ export class PlacePublicationUseCase {
         let bounds = options.bounds;
         if (!bounds) {
             try {
-                const document = this._loadDocumentUseCase.execute(publicationId);
+                // Bug fix — this used to call execute(publicationId), but
+                // LoadPublicationDocumentUseCase#execute() takes a
+                // DOCUMENT id (it loads storage[documentId] — see its own
+                // header) and a Publication's own `id` is a SEPARATE,
+                // independently-minted field from its `documentId` (see
+                // core/WorldPlacement.js's own header on the distinction).
+                // Passing publicationId here therefore threw "no document
+                // found" on every single call, unconditionally — this
+                // branch's own catch below silently swallowed that and
+                // substituted a tiny 1x1x1 placeholder bounds for EVERY
+                // placement ever created, regardless of the real world's
+                // actual size. That silently defeated
+                // LocalSpatialIndexProvider#discover()'s own sphere-AABB
+                // streaming check (spatial/LocalSpatialIndexProvider.js)
+                // for every publication: a placement's recorded bounds
+                // were never bigger than a single brick, so streaming
+                // visibility degraded to "is the camera within radius of
+                // this document's bare placement ORIGIN," with no memory
+                // of how far the document's own content actually
+                // extended from it — harmless for a small build whose
+                // bricks stay near that origin, but exactly the failure
+                // mode that makes a large structure (bricks authored far
+                // from local (0,0,0), or simply large enough that its own
+                // extent exceeds the streaming radius on its own) stream
+                // out — and back in, and out again — while the camera
+                // sits well within its TRUE footprint.
+                const document = this._loadDocumentUseCase.execute(publication.documentId);
                 bounds = SpatialBounds.fromWorld(document.world, this._brickRegistry);
             } catch (e) {
                 bounds = new SpatialBounds({
