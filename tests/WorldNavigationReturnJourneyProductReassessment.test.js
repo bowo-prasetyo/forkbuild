@@ -398,7 +398,15 @@ async function main() {
             'D1b. A single movement update advances sequence past 0 and updates position — from this point on, _spawnAvatarNear()\'s own guard (sequence !== 0) would skip re-spawning on every subsequent focusDocument() call, confirming avatar position survives a World-to-World hop by construction, never by a per-hop preservation branch.');
 
         const navigationSessionSource = codeOnly(await readSource('application/WorldNavigationSession.js'));
-        assert(/_spawnAvatarNear\(position\) \{/.test(navigationSessionSource) && /current\.sequence !== 0/.test(navigationSessionSource),
+        // Bug fix (this session) — _spawnAvatarNear() gained a `documentId`
+        // parameter alongside `position`, so it can measure the target
+        // world's own real bounds (via the new _safeSpawnPosition()) and
+        // spawn just outside them, rather than always adding a small
+        // fixed offset that could land inside a structure recentered on
+        // its own local origin. The spawn-once, sequence-gated CLAIM this
+        // assertion exists to confirm is unchanged — only the source
+        // pattern that proves it needs to match the new signature.
+        assert(/_spawnAvatarNear\(documentId, position\) \{/.test(navigationSessionSource) && /current\.sequence !== 0/.test(navigationSessionSource),
             'D1c. Exact source confirmation: _spawnAvatarNear() is a spawn-ONCE guard keyed on sequence, called from every focusDocument(), never a per-World respawn.');
         assert(/_vehicleRuntimeInstances\.clear\(\)/.test(navigationSessionSource) && /dispose\(\)/.test(navigationSessionSource),
             'D1d. Vehicle/mount runtime state is cleared only inside dispose() (full session teardown) — never inside focusDocument()/setActiveDocument() — confirming vehicle state also survives a World-to-World hop, and resets only on a genuinely fresh session.');
