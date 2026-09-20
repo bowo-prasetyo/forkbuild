@@ -1699,11 +1699,12 @@ accepted these bytes just now.
 > HTTP API on this device (expected at `http://127.0.0.1:5001`) — without
 > one running, you'll see **No placement was created**. **Resolve
 > Snapshot** and **Materialize Snapshot**, just below, are different: they
-> reach a public IPFS gateway (`https://ipfs.io` by default) instead,
-> whether or not you have a node of your own running. That means you can
-> resolve and materialize an `ipfs` placement someone *else* created —
-> theirs or a peer's — without ever installing or running IPFS software
-> yourself; only creating a brand-new IPFS placement still requires it.
+> reach a public IPFS gateway (`https://ipfs.io`, unless you've overridden
+> it — see [IPFS Gateway](#ipfs-gateway) below) instead, whether or not you
+> have a node of your own running. That means you can resolve and
+> materialize an `ipfs` placement someone *else* created — theirs or a
+> peer's — without ever installing or running IPFS software yourself; only
+> creating a brand-new IPFS placement still requires it.
 
 ### Using a preferred provider
 
@@ -1851,8 +1852,9 @@ derived purely from the claims themselves, every time.
 Open **Network Settings** in the top bar for one hub linking every
 endpoint-server settings page ForkBuild has: **Content Provider** (see
 [Using a preferred provider](#using-a-preferred-provider) above),
-**Arweave Gateway** and **Nostr Relay** (below), **Nostr Publication
-Relays** (below), **STUN Servers** and **TURN Server** (see
+**Arweave Gateway**, **IPFS Gateway**, and **Nostr Relay** (below),
+**Nostr Publication Relays** (below), **STUN Servers** and **TURN
+Server** (see
 [TURN: relaying peer connections that can't find a direct
 path](07-PeerConnectionsAndFriends.md#turn-relaying-peer-connections-that-cant-find-a-direct-path)),
 and **Rendezvous Servers** (see
@@ -1898,6 +1900,32 @@ A change you save or clear here takes effect the next time the app loads
 — this page never re-wires an already-running session live, so an
 already-open World View or Editor tab keeps using whatever gateway(s) it
 started with until you reload.
+
+### IPFS Gateway
+
+Open **IPFS Gateway** in the top bar (`/settings/ipfs-gateway`). It works
+like a single-gateway version of Arweave Gateway above — one gateway URL,
+never a list or a failover order — with the same "Current override" / "No
+override configured" display against the deployment default,
+`https://ipfs.io`, the same free-text input, and the same **Save** /
+**Use Deployment Default** buttons and shape-only validation (a valid
+`http:`/`https:` URL, never a reachability check).
+
+This setting affects retrieval only, exactly like Arweave Gateway — never
+where your own content gets pinned or published. It's consulted wherever
+this device reaches a public IPFS gateway rather than a local node:
+resolving or materializing an `ipfs` Snapshot Placement (see the note on
+[Snapshot Placements](#snapshot-placements) above) and the **Verify IPFS
+Content** check in [IPFS Publishing](#ipfs-publishing) below. The
+deployment default exists specifically because the built-in one,
+`https://ipfs.io`, is known to sit behind a bot-detection check that
+blocks ordinary programmatic requests for some people — if a **Verify**
+or **Resolve** keeps failing with "Failed to fetch" even though the
+content is genuinely retrievable (for example, through your own pinning
+provider's gateway, like `https://gateway.pinata.cloud`), pointing this
+setting at that gateway instead is the fix. Exactly like every other
+setting on this page, a change here only takes effect on the next app
+load.
 
 ### Nostr Relay
 
@@ -2060,6 +2088,17 @@ every other outcome on this page, none of this is ever worded as
 "verified," "trusted," "safe," "permanent," or "guaranteed" — only that
 the provider accepted these particular bytes just now.
 
+Right below that, a small **Nostr: Announced** (or **Nostr: Not
+announced**) badge reports a second, separate thing: whether this exact
+publish was also announced over Nostr for Snapshot discovery — the same
+announcement the Snapshot Placements list's own **Distribute Snapshot**
+protocol already produces for a local Kubo publish, so a peer or a
+**Discover Publication** search can find this content the same way
+either way, without you ever running an IPFS node. A publish reaching
+**Published** always means the content is genuinely on IPFS regardless
+of this badge; **Not announced** only means the discovery step failed
+(shown with its own error), never that the publish itself did.
+
 ### Verifying what was published
 
 Once you've published successfully at least once, a separate **Content
@@ -2067,8 +2106,10 @@ retrieval** box appears with a **Verify IPFS Content** button (**Verify
 Again** afterward). This is an entirely independent check: it goes back
 to the exact record the most recent successful publish produced, fetches
 whatever bytes are presently retrievable at that locator through a
-public IPFS gateway, and compares them against the recorded content
-hash — never assumed just because publishing itself reported success.
+public IPFS gateway — your [IPFS Gateway](#ipfs-gateway) override if you've
+set one, `https://ipfs.io` otherwise — and compares them against the
+recorded content hash — never assumed just because publishing itself
+reported success.
 
 | Badge | Meaning |
 |---|---|

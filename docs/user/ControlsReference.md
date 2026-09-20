@@ -20,7 +20,7 @@ every editing operation below by name.
 | Left-drag on empty space | Orbit |
 | Right-drag | Pan |
 | Scroll wheel | Zoom |
-| `Home` | Reset camera (ignored while a gizmo drag is active) |
+| `Home` | Editor: reset camera (ignored while a gizmo drag is active). World View: return camera and avatar to your own current world — see [World View](03-WorldView.md#orientation-and-locations) |
 
 ## Command Surface (Editor only)
 
@@ -52,7 +52,7 @@ selection, or edit anything. See
 | Control | Action |
 |---|---|
 | Compass indicator | Read-only heading with contextual markers for nearby structures and terrain features |
-| **Home** | Reset the camera to the default view |
+| **Home** | Return camera and avatar to your own current world (falls back to the shared origin if you haven't focused one of your own yet this session) — see [World View](03-WorldView.md#orientation-and-locations) |
 | **Locations** | Open a list of Home plus every structure known this session, each with a **Focus** button |
 | **Notifications** | Open your **Notification History** — a read-only log, not a camera action; see [World View](03-WorldView.md#orientation-and-locations) |
 | **Camera**: Free / First Person / Third Person / Bird's-Eye | Lock the camera to a fixed offset from your own avatar instead of flying it yourself; click the active one again to return to Free — see [Avatars & Presence](06-AvatarsAndPresence.md#camera-perspective) |
