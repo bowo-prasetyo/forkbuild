@@ -323,8 +323,8 @@ Capability inventory (Section B):
 
         // G1 — Snapshot placement (local IPFS daemon) vs. remote IPFS
         // pinning (hosted service): DISTINCT, not duplicative.
-        assert(/new IpfsContentStore\(\)/.test(await readSource('ui/main.js')) && /new IpfsGatewayContentStore\(\)/.test(await readSource('ui/main.js')),
-            '1. Snapshot Placement\'s own "ipfs" storage type is backed by content/IpfsContentStore.js (Kubo — a locally-run IPFS daemon the person must have installed), confirmed in ui/main.js\'s own composition.');
+        assert(/new IpfsContentStore\(\)/.test(await readSource('ui/main.js')) && /new IpfsGatewayContentStore\(\{ gatewayUrl: resolvedIpfsGatewayUrl \}\)/.test(await readSource('ui/main.js')),
+            '1. Snapshot Placement\'s own "ipfs" storage type is backed by content/IpfsContentStore.js (Kubo — a locally-run IPFS daemon the person must have installed), confirmed in ui/main.js\'s own composition. (AMENDED 0.9.665 — the gateway construction now carries a resolved, settings-backed gatewayUrl; see docs/Roadmap.md.)');
         assert(/HttpPinningProvider/.test(await readSource('application/IpfsRemotePublicationCoordinator.js')),
             '2. "Publish to Remote IPFS" is backed by a completely different collaborator, content/HttpPinningProvider.js (a hosted, third-party pinning service, no local daemon required) — genuinely different infrastructure behind a similar-sounding label, not the same capability shown twice.');
 

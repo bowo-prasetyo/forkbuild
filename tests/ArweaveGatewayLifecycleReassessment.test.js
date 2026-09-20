@@ -545,19 +545,24 @@ async function run() {
         const worldEncounterCompositionSource = await source('application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
         assert(!/ipfs/i.test(worldEncounterCompositionSource), 'H1. World Encounter material discovery composition never references IPFS at all — confirming it is Local + Nostr + Arweave only, never a fourth, IPFS-backed source');
 
-        // IPFS Gateway's own two real call sites are both OPT-IN,
-        // per-item paths: resolving a Snapshot placement a publisher
-        // specifically chose IPFS for, and the "Observe Content"
-        // verification UI — never a deployment-wide default the way
-        // Arweave's gateway is for World Encounter material and Snapshot
-        // distribution.
+        // IPFS Gateway's own two real call sites remain the same two
+        // narrowly-scoped, opt-in-per-item paths: resolving a Snapshot
+        // placement a publisher specifically chose IPFS for, and the
+        // "Observe Content" verification UI — never a deployment-wide
+        // default the way Arweave's gateway is for World Encounter
+        // material and Snapshot distribution. AMENDED BY 0.9.665 (see
+        // docs/Roadmap.md, "0.9.665"): that narrowness argument correctly
+        // justified DEFER against an occasional-outage failure mode, but
+        // did not survive new evidence that the one hardcoded default
+        // gateway is now PERMANENTLY unreachable by ordinary programmatic
+        // requests (a bot-detection wall) — DEFER was reversed to BUILD.
         const mainSource = await source('ui/main.js');
-        const ipfsGatewayUsageCount = (mainSource.match(/new IpfsGatewayContentStore\(\)/g) || []).length;
-        assert(ipfsGatewayUsageCount === 2, `H1. IpfsGatewayContentStore is constructed at exactly its two known, narrowly-scoped call sites (Snapshot placement resolution, content verification) — found ${ipfsGatewayUsageCount}`);
+        const ipfsGatewayUsageCount = (mainSource.match(/new IpfsGatewayContentStore\(\{ gatewayUrl: resolvedIpfsGatewayUrl \}\)/g) || []).length;
+        assert(ipfsGatewayUsageCount === 2, `H1. IpfsGatewayContentStore is constructed at exactly its two known, narrowly-scoped call sites (Snapshot placement resolution, content verification), now settings-backed — found ${ipfsGatewayUsageCount}`);
         decisions.ipfsGateway = {
             candidate: 'IPFS Gateway',
-            evidence: 'Real failure mode exists, but only for content a publisher specifically placed on IPFS, or the secondary "Observe Content" verification action — never the default World Encounter or Snapshot retrieval backbone Arweave Gateway covers.',
-            verdict: 'DEFER'
+            evidence: 'Narrow, opt-in failure mode correctly justified DEFER here (0.9.367) against an occasional-outage read — reversed by 0.9.665 once the hardcoded default itself became permanently unreachable by ordinary programmatic requests, a structurally different fact.',
+            verdict: 'BUILT (0.9.665)'
         };
 
         // H2. STUN/TURN. 0.9.363 already corrected the premise here —
@@ -624,11 +629,18 @@ async function run() {
             verdict: 'DEFER'
         };
 
+        // AMENDED BY 0.9.665 — ipfsGateway alone left DEFER (see its own
+        // 0.9.665 comment above); every other candidate here is
+        // unaffected and still reconfirmed DEFER.
         for (const [key, decision] of Object.entries(decisions)) {
+            if (key === 'ipfsGateway') {
+                assert(decision.verdict === 'BUILT (0.9.665)', `H (${key}). IPFS Gateway's DEFER was reversed by 0.9.665 — see docs/Roadmap.md`);
+                continue;
+            }
             assert(decision.verdict === 'DEFER', `H (${key}). every remaining candidate reassessed with real evidence, none reaches BUILD_NEXT`);
         }
 
-        console.log('✓ Section H: reassessed against real product evidence gathered from this running composition — IPFS Gateway has a genuine but structurally narrower (opt-in-per-item) failure mode than Arweave Gateway\'s default-backbone role; STUN/TURN, Rendezvous, Nostr relay, Bitcoin Esplora, and Base RPC are all reconfirmed DEFER');
+        console.log('✓ Section H: reassessed against real product evidence gathered from this running composition — IPFS Gateway\'s own earlier DEFER was reversed by 0.9.665 once its hardcoded default became permanently unreachable; STUN/TURN, Rendezvous, Nostr relay, Bitcoin Esplora, and Base RPC are all reconfirmed DEFER');
         console.log('  ' + JSON.stringify(Object.values(decisions).map((d) => `${d.candidate}: ${d.verdict}`)));
     }
 
@@ -664,7 +676,7 @@ async function run() {
     }
 
     console.log('\n✅ All Arweave Gateway Settings Product & Lifecycle Reassessment (0.9.367) checks passed.');
-    console.log('VERDICT: STABLE_STOP — no remaining endpoint candidate has a demonstrated user-value gap comparable to Arweave Gateway\'s default-backbone role; IPFS Gateway remains the strongest DEFER, revisitable if it ever becomes a default path rather than an opt-in one.');
+    console.log('VERDICT: STABLE_STOP — no remaining endpoint candidate has a demonstrated user-value gap comparable to Arweave Gateway\'s default-backbone role; IPFS Gateway\'s own DEFER was later reversed by 0.9.665 once its hardcoded default became permanently unreachable (see docs/Roadmap.md).');
 }
 
 run().catch((error) => {

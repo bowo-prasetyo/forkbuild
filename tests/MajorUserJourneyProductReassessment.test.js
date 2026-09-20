@@ -412,16 +412,19 @@ async function run() {
         assert(identityProviderSource.includes('_vaultCache'), 'E6a. Identity: a protected identity\'s decrypted key is cached in memory only, never persisted — requiring the passphrase again after restart. INTENTIONAL, not a gap.');
 
         // E7. Provider configuration — Arweave gateway and both Nostr
-        // relay stores are persisted and read at boot; IPFS gateway
-        // configuration has NO equivalent persisted store at all — a
-        // real, if narrow, asymmetry.
+        // relay stores are persisted and read at boot. AMENDED BY 0.9.665
+        // (see docs/Roadmap.md, "0.9.665"): IPFS gateway configuration now
+        // has the identical persisted store, closing the asymmetry this
+        // section originally found.
         assert(mainSourceRaw.includes('arweaveGatewayConfigurationStore.get()') && mainSourceRaw.includes('nostrRelayConfigurationStore.get()'),
             'E7a. Arweave gateway and Nostr relay configuration: persisted and restored at boot — COMES BACK.');
         const ipfsConfigStoreExists = await rawSource('content/IpfsGatewayContentStore.js').then(() => true).catch(() => false);
         assert(ipfsConfigStoreExists, 'setup: content/IpfsGatewayContentStore.js exists');
         const ipfsConfigStoreFileExists = await rawSource('storage/IpfsGatewayConfigurationStore.js').then(() => true).catch(() => false);
-        assert(ipfsConfigStoreFileExists === false,
-            n('E7b. no storage/IpfsGatewayConfigurationStore.js (or equivalent) exists anywhere in the repository — unlike Arweave/Nostr, the IPFS gateway URL is not user-configurable across restarts; it is a single hardcoded default. USABILITY_GAP — narrow, asymmetric, never previously named by any prior milestone this audit could find.'));
+        assert(ipfsConfigStoreFileExists === true,
+            n('E7b. storage/IpfsGatewayConfigurationStore.js now exists (0.9.665) — IPFS gateway configuration is persisted and restored at boot, the same "COMES BACK" shape Arweave/Nostr already held. The asymmetry this section originally found (USABILITY_GAP) is closed; see docs/Roadmap.md, "0.9.665," for why the earlier DEFER verdicts this gap sat behind were reversed.'));
+        assert(mainSourceRaw.includes('ipfsGatewayConfigurationStore.get()'),
+            n('E7c. ui/main.js actually reads the persisted IPFS gateway configuration at boot, the identical "resolved at composition time" shape E7a already confirmed for Arweave/Nostr'));
 
         console.log('✓ E: every major category checked either genuinely reconstructs on restart (documents, catalog-backed publications, distribution lifecycle state, commentary, notifications, Arweave/Nostr provider configuration) or deliberately does not by documented design (protected-identity auto-unlock). One narrow, real asymmetry found: IPFS gateway configuration has no persisted store at all. One narrow, real gap found and already covered in depth: World-Encounter-discovered Publications (Section C).');
     }

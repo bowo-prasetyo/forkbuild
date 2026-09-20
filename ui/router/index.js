@@ -16,6 +16,7 @@ import DecentralizedPublicationsView from '../views/DecentralizedPublicationsVie
 import NetworkSettingsView from '../views/NetworkSettingsView.js';
 import ContentProviderSettingsView from '../views/ContentProviderSettingsView.js';
 import ArweaveGatewaySettingsView from '../views/ArweaveGatewaySettingsView.js';
+import IpfsGatewaySettingsView from '../views/IpfsGatewaySettingsView.js';
 import NostrRelaySettingsView from '../views/NostrRelaySettingsView.js';
 import NostrPublicationRelaySettingsView from '../views/NostrPublicationRelaySettingsView.js';
 import StunSettingsView from '../views/StunSettingsView.js';
@@ -97,6 +98,16 @@ const routes = [
     // own top-nav destination, the identical "not folded into a growing
     // dashboard" shape /settings/content-provider already holds.
     { path: '/settings/arweave-gateway', name: 'arweave-gateway-settings', component: ArweaveGatewaySettingsView },
+    // 0.9.665 — IPFS Gateway Settings UI. Reverses the 0.9.373/0.9.385/
+    // 0.9.657 DEFER verdicts for this exact candidate — see core/
+    // IpfsGatewayConfiguration.js's own header for the new evidence
+    // (ipfs.io's public gateway now blocks ordinary programmatic
+    // requests behind a bot-detection check) that reopened the question.
+    // The one ordinary product path to create/change/clear the persisted
+    // IPFS gateway retrieval override (core/IpfsGatewayConfiguration.js,
+    // storage/IpfsGatewayConfigurationStore.js), mirroring
+    // /settings/arweave-gateway's own shape exactly.
+    { path: '/settings/ipfs-gateway', name: 'ipfs-gateway-settings', component: IpfsGatewaySettingsView },
     // 0.9.371 — Nostr Relay Settings UI. The one ordinary product path to
     // create/change/clear the persisted Nostr relay discovery override
     // (core/NostrRelayConfiguration.js, storage/NostrRelayConfigurationStore.js,

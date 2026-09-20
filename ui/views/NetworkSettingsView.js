@@ -25,6 +25,15 @@ export default {
                     </router-link>
                 </li>
                 <li>
+                    <!-- 0.9.665 — reverses the earlier DEFER verdicts for
+                         IPFS Gateway configurability (see core/
+                         IpfsGatewayConfiguration.js's own header). -->
+                    <router-link to="/settings/ipfs-gateway" class="network-settings-link">
+                        <span class="network-settings-link-title">IPFS Gateway</span>
+                        <span class="form-hint form-hint--neutral">Gateway used for retrieving IPFS content.</span>
+                    </router-link>
+                </li>
+                <li>
                     <!-- AMENDED BY 0.9.452 — this row previously read "Relay
                          used for Nostr-based discovery and publishing,"
                          contradicting this same page's own "discovery only"

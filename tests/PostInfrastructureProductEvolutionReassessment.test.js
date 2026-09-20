@@ -120,15 +120,23 @@ async function run() {
         assert(routerSource.includes("path: '/settings/nostr-relay'"), 'A2. /settings/nostr-relay route registered');
         assert(networkSettingsSource.includes('to="/settings/nostr-relay"'), 'A2. Nostr Relay settings reachable from the Network Settings hub');
 
-        // A3. IPFS Gateway — reconfirmed absent (0.9.373's own DEFER
-        // still holds): no configuration seam exists, and both real
-        // consumers remain exactly the two zero-argument, opt-in
-        // construction sites 0.9.373 Section A found.
-        assert(!(await sourceExists('core/IpfsGatewayConfiguration.js')), 'A3. no core/IpfsGatewayConfiguration.js exists');
-        assert(!(await sourceExists('ui/views/IpfsGatewaySettingsView.js')), 'A3. no ui/views/IpfsGatewaySettingsView.js exists');
+        // A3. IPFS Gateway — AMENDED BY 0.9.665 (see docs/Roadmap.md,
+        // "0.9.665"): 0.9.373's own DEFER, reconfirmed by 0.9.385/0.9.657,
+        // was reversed on new evidence (ipfs.io's public gateway now blocks
+        // ordinary programmatic requests behind a bot-detection check).
+        // IPFS Gateway now has the identical chain Arweave Gateway (A1) and
+        // Nostr Relay (A2) already hold, at the SAME two real construction
+        // sites this section always tracked — now fed a resolved
+        // gatewayUrl instead of zero arguments.
+        assert(await sourceExists('core/IpfsGatewayConfiguration.js'), 'A3. core/IpfsGatewayConfiguration.js exists');
+        assert(await sourceExists('storage/IpfsGatewayConfigurationStore.js'), 'A3. storage/IpfsGatewayConfigurationStore.js exists');
+        assert(await sourceExists('application/SetIpfsGatewayConfigurationUseCase.js'), 'A3. application/SetIpfsGatewayConfigurationUseCase.js exists');
+        assert(await sourceExists('ui/views/IpfsGatewaySettingsView.js'), 'A3. ui/views/IpfsGatewaySettingsView.js exists');
+        assert(routerSource.includes("path: '/settings/ipfs-gateway'"), 'A3. /settings/ipfs-gateway route registered');
+        assert(networkSettingsSource.includes('to="/settings/ipfs-gateway"'), 'A3. IPFS Gateway settings reachable from the Network Settings hub');
         const mainSource = await rawSource('ui/main.js');
-        const ipfsGatewayConstructionCount = (mainSource.match(/new IpfsGatewayContentStore\(\)/g) || []).length;
-        assert(ipfsGatewayConstructionCount === 2, `A3. IpfsGatewayContentStore is still constructed at exactly two zero-argument, opt-in sites in ui/main.js — found ${ipfsGatewayConstructionCount}`);
+        const ipfsGatewayConstructionCount = (mainSource.match(/new IpfsGatewayContentStore\(\{ gatewayUrl: resolvedIpfsGatewayUrl \}\)/g) || []).length;
+        assert(ipfsGatewayConstructionCount === 2, `A3. IpfsGatewayContentStore is still constructed at exactly the same two sites in ui/main.js, now with a resolved gatewayUrl — found ${ipfsGatewayConstructionCount}`);
 
         // A4. IPFS Kubo API and TURN — SEPARATE_PRODUCT, reconfirmed:
         // a local-node identity question and a dynamic-credential fetch,
