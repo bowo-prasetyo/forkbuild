@@ -449,7 +449,7 @@ async function run() {
         assert(/const snapshotDistributionCommand = \(bytes, storage = 'ar', publicationId, claimedPosition\) => executeSnapshotDistributionCommand\(\{\s*\n\s*bytes,\s*\n\s*contentStore: resolveSnapshotDistributionContentStore\(snapshotPlacementStoreRegistry, storage\),\s*\n\s*discoveryPublisher: snapshotDiscoveryPublisher,\s*\n\s*publicationId,\s*\n\s*claimedPosition\s*\n\s*\}\);/.test(mainSource),
             'B1. ui/main.js\'s own real `snapshotDistributionCommand` wrapper genuinely has this exact shape — makeRealSnapshotDistributionCommand() above reproduces it faithfully.');
         const worldViewSource = await readSource('ui/views/WorldView.js');
-        const distributeFnMatch = worldViewSource.match(/function distributeWorldEncounterSnapshot\(publication, storage\)\s*\{[\s\S]*?\n        \}/);
+        const distributeFnMatch = worldViewSource.match(/function distributeWorldEncounterSnapshot\(publication, storage, remotePinningConfiguration\)\s*\{[\s\S]*?\n        \}/);
         assert(distributeFnMatch && /session\.getPlacementInfoForPublication\(publication\.id\)/.test(distributeFnMatch[0])
             && /placementInfo \? placementInfo\.publicationId : undefined/.test(distributeFnMatch[0]),
             'B2. ui/views/WorldView.js\'s own real distributeWorldEncounterSnapshot() genuinely has this exact shape — makeDistributeWorldEncounterSnapshotAction() above reproduces it faithfully.');

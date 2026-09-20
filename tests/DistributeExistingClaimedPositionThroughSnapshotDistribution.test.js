@@ -411,7 +411,7 @@ async function run() {
             '2. it forwards publicationId/claimedPosition into discoveryPublisher.publish() alongside the pre-existing three fields, unmodified.');
 
         const worldViewSource = await readSource('ui/views/WorldView.js');
-        const distributeFnMatch = worldViewSource.match(/function distributeWorldEncounterSnapshot\(publication, storage\)\s*\{[\s\S]*?\n        \}/);
+        const distributeFnMatch = worldViewSource.match(/function distributeWorldEncounterSnapshot\(publication, storage, remotePinningConfiguration\)\s*\{[\s\S]*?\n        \}/);
         assert(distributeFnMatch, '3. WorldView.js#distributeWorldEncounterSnapshot(publication, storage) exists as an isolable function.');
         const body = distributeFnMatch[0];
         assert(/session\.getPlacementInfoForPublication\(publication\.id\)/.test(body),

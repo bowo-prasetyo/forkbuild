@@ -7,6 +7,7 @@ import { InputRouter } from '../../application/InputRouter.js';
 import { WorldSpatialContextService } from '../../application/WorldSpatialContextService.js';
 import { AutomaticSnapshotEncounterCascade } from '../../application/AutomaticSnapshotEncounterCascade.js';
 import { AutomaticSnapshotEncounterRetentionReconciliation } from '../../application/AutomaticSnapshotEncounterRetentionReconciliation.js';
+import { IpfsRemotePublicationState } from '../../application/IpfsRemotePublicationState.js';
 import { SnapshotWorldRegistrationOutcome } from '../../application/SnapshotWorldRegistrationOutcome.js';
 import { ObserverLocalEncounterStore } from '../../application/ObserverLocalEncounterStore.js';
 import ActionFeedback from '../components/ActionFeedback.js';
@@ -590,6 +591,25 @@ export default {
         const snapshotDistributionStorageTypes = snapshotDistributionAvailableStorageTypesCommand
             ? snapshotDistributionAvailableStorageTypesCommand()
             : [];
+        // Remote pinning (e.g. Pinata) — the SAME app-wide, stateless
+        // `ipfsRemotePublicationCoordinator` ui/views/DecentralizedPublicationsView.js's
+        // own "Publish to Remote IPFS" action already calls, and the SAME
+        // `snapshotDiscoveryPublisher` Nostr instance the app-wide
+        // `snapshotDistributionCommand` already announces through
+        // internally — exposed directly here (never a second instance of
+        // either) so `distributeWorldEncounterSnapshot()` below can offer
+        // Remote Pinning as a THIRD storage choice, alongside the
+        // registry-backed 'ar'/'ipfs' (local Kubo) choices above. Unlike
+        // those two, Remote Pinning needs no pre-registration — it holds
+        // no credential of its own, so it is never listed in
+        // `snapshotDistributionStorageTypes`; a Wanderer configures the
+        // endpoint/credential fresh, per attempt, exactly the way
+        // DecentralizedPublicationsView.js's own ephemeral configuration
+        // draft already works (see application/
+        // IpfsRemotePublishingConfiguration.js's own header, "EPHEMERAL BY
+        // CONSTRUCTION").
+        const ipfsRemotePublicationCoordinator = inject('ipfsRemotePublicationCoordinator', null);
+        const snapshotDiscoveryPublisher = inject('snapshotDiscoveryPublisher', null);
         // 0.9.142 — World View Snapshot Discovery Command. The SAME
         // app-wide `discoverSnapshotCommand` `ui/main.js` now composes
         // (0.9.142's own `composeDiscoverSnapshotRuntime()`, sequenced by
@@ -1443,12 +1463,54 @@ export default {
         // an explicit Arweave/IPFS picker next to "Distribute Snapshot"
         // (see `snapshotDistributionStorageTypes` above) and pass their
         // own selected value here — never a silent, invisible choice.
-        function distributeWorldEncounterSnapshot(publication, storage) {
-            if (!snapshotDistributionCommand || !publicationContentStore || !publication.contentReference) {
+        //
+        // `storage === 'remote-pinning'` is a THIRD, separate path — see
+        // `ipfsRemotePublicationCoordinator`'s own injection comment
+        // above for why it never goes through the registry-backed
+        // `snapshotDistributionCommand` at all. `remotePinningConfiguration`
+        // (a plain `{ endpoint, credential, requestField, responseField }`
+        // object — never a class instance this function would have to
+        // import application/IpfsRemotePublishingConfiguration.js for;
+        // `IpfsRemotePublicationCoordinator#publish()` itself duck-types
+        // it) is this call's own only source of endpoint/credential —
+        // never persisted, never read from anywhere else. Normalizes the
+        // coordinator's own `{ state, contentHash, locator, reason }`
+        // outcome into the IDENTICAL `{ contentReference, announcement }`
+        // shape the 'ar'/'ipfs' path already resolves to, so
+        // OwnPublicationPanel/WorldEncounterCanvas render the result
+        // through their own existing, unmodified display — never a
+        // second result shape or a second error vocabulary. A genuine
+        // Nostr announcement failure here never fails the whole call —
+        // the content is already durably pinned either way, the exact
+        // restraint DecentralizedPublicationsView.js's own identical
+        // Remote-IPFS-then-Nostr sequence already holds.
+        function distributeWorldEncounterSnapshot(publication, storage, remotePinningConfiguration) {
+            if (!publicationContentStore || !publication.contentReference) {
                 return Promise.reject(new Error('Snapshot distribution is not available.'));
             }
             const snapshotBytes = publicationContentStore.get(publication.contentReference);
             if (snapshotBytes === null || snapshotBytes === undefined) {
+                return Promise.reject(new Error('Snapshot distribution is not available.'));
+            }
+            if (storage === 'remote-pinning') {
+                if (!ipfsRemotePublicationCoordinator) {
+                    return Promise.reject(new Error('Snapshot distribution is not available.'));
+                }
+                return ipfsRemotePublicationCoordinator.publish({ bytes: snapshotBytes, configuration: remotePinningConfiguration })
+                    .then((outcome) => {
+                        if (outcome.state !== IpfsRemotePublicationState.PUBLISHED) {
+                            throw new Error(outcome.reason || 'Remote IPFS publish failed.');
+                        }
+                        const contentReference = { hash: outcome.contentHash, uri: outcome.locator, storage: 'ipfs' };
+                        if (!snapshotDiscoveryPublisher) {
+                            return { contentReference, announcement: null };
+                        }
+                        return snapshotDiscoveryPublisher.publish({ contentHash: outcome.contentHash, locator: outcome.locator, storage: 'ipfs' })
+                            .then((announcement) => ({ contentReference, announcement }))
+                            .catch(() => ({ contentReference, announcement: null }));
+                    });
+            }
+            if (!snapshotDistributionCommand) {
                 return Promise.reject(new Error('Snapshot distribution is not available.'));
             }
             const placementInfo = typeof session.getPlacementInfoForPublication === 'function'

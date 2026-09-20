@@ -1680,6 +1680,14 @@ export default {
             // from the picker; the computed's own getter supplies the
             // default until then.
             snapshotDistributionStorageChoice: null,
+            // Bug fix — the Remote Pinning (e.g. Pinata) endpoint/credential
+            // draft, shown only when snapshotDistributionStorage === 'remote-pinning'.
+            // A plain object, never a class instance — this component
+            // still imports no application/ class of its own, exactly the
+            // restraint every other command prop here already holds.
+            // Never persisted anywhere; discarded on reload like every
+            // other ephemeral field in this file.
+            remotePinningDraft: { endpoint: '', credential: '', requestField: '', responseField: '' },
             // 0.9.347 — see this file's own header, "0.9.347 — Post-Publish
             // Distribution Entry Point." A separate ephemeral state, never
             // shared with the Snapshot distribution family's own —
@@ -1856,15 +1864,16 @@ export default {
         };
     },
     computed: {
-        // Bug fix — the Arweave/IPFS choice the "Distribute Snapshot"
-        // picker shows and distributeOwnSnapshot() reads. Falls back to
-        // the first eligible storage this device currently has
-        // registered, or 'ar' when snapshotDistributionStorageTypes is
-        // empty (no picker renders in that case either — see the
-        // template's own v-if) — the exact historical default this
-        // capability silently used before the picker existed. Setting it
-        // only ever happens through an explicit Wanderer selection in
-        // the picker itself.
+        // Bug fix — the Arweave/IPFS/Remote-Pinning choice the "Distribute
+        // Snapshot" picker shows and distributeOwnSnapshot() reads. Falls
+        // back to the first eligible registry-backed storage this device
+        // currently has registered, or 'ar' when snapshotDistributionStorageTypes
+        // is empty — the exact historical default this capability
+        // silently used before the picker existed. 'remote-pinning' is
+        // never this default (see the template's own always-present
+        // "Remote Pinning" option) — it needs a fresh endpoint/credential
+        // typed in every time, so it is only ever reached through an
+        // explicit Wanderer selection, never inherited automatically.
         snapshotDistributionStorage: {
             get() {
                 return this.snapshotDistributionStorageChoice || this.snapshotDistributionStorageTypes[0] || 'ar';
@@ -2092,8 +2101,16 @@ export default {
             this.snapshotDistributionRequestId += 1;
             const requestId = this.snapshotDistributionRequestId;
 
+            const storage = this.snapshotDistributionStorage;
+            const remotePinningConfiguration = storage === 'remote-pinning' ? {
+                endpoint: this.remotePinningDraft.endpoint,
+                credential: this.remotePinningDraft.credential || null,
+                requestField: this.remotePinningDraft.requestField || null,
+                responseField: this.remotePinningDraft.responseField || null
+            } : undefined;
+
             Promise.resolve()
-                .then(() => this.snapshotDistributionCommand(publication, this.snapshotDistributionStorage))
+                .then(() => this.snapshotDistributionCommand(publication, storage, remotePinningConfiguration))
                 .then((result) => {
                     if (requestId === this.snapshotDistributionRequestId) {
                         this.snapshotDistributionResult = result;
@@ -2812,17 +2829,44 @@ export default {
             >Unpublish</button>
 
             <!-- Bug fix — the Arweave/IPFS storage choice, mirroring
-                 ui/views/DecentralizedPublicationsView.js's own picker.
-                 Renders only when this device actually has more than the
-                 historical, silent Arweave-only default to offer —
-                 snapshotDistributionStorageTypes is empty on a device
-                 with no eligible backend registered at all. -->
-            <label v-if="snapshotDistributionStorageTypes.length > 0" class="own-publication-distribution-storage-label">
+                 ui/views/DecentralizedPublicationsView.js's own picker,
+                 PLUS a third "Remote Pinning" option (e.g. Pinata) that
+                 needs no pre-registered backend — always offered,
+                 regardless of what snapshotDistributionStorageTypes
+                 reports for the other two. -->
+            <label class="own-publication-distribution-storage-label">
                 Storage
                 <select v-model="snapshotDistributionStorage" class="own-publication-distribution-storage-select" :disabled="snapshotDistributionExecuting">
-                    <option v-for="storage in snapshotDistributionStorageTypes" :key="storage" :value="storage">{{ storage === 'ipfs' ? 'IPFS' : 'Arweave' }}</option>
+                    <option v-for="storage in snapshotDistributionStorageTypes" :key="storage" :value="storage">{{ storage === 'ipfs' ? 'IPFS (Local Kubo)' : 'Arweave' }}</option>
+                    <option value="remote-pinning">IPFS (Remote Pinning)</option>
                 </select>
             </label>
+
+            <!-- Bug fix — the Remote Pinning endpoint/credential draft.
+                 Renders only when that storage is selected. Nothing here
+                 is saved anywhere — discarded on reload exactly like
+                 ui/views/DecentralizedPublicationsView.js's own identical
+                 draft (see application/IpfsRemotePublishingConfiguration.js's
+                 own header, "EPHEMERAL BY CONSTRUCTION"). -->
+            <div v-if="snapshotDistributionStorage === 'remote-pinning'" class="own-publication-remote-pinning-draft">
+                <label class="form-field">
+                    <span class="form-label">Endpoint</span>
+                    <input type="text" class="form-input" v-model="remotePinningDraft.endpoint" placeholder="https://api.pinata.cloud/pinning/pinFileToIPFS" />
+                </label>
+                <label class="form-field">
+                    <span class="form-label">Credential (optional)</span>
+                    <input type="password" class="form-input" v-model="remotePinningDraft.credential" placeholder="Bearer token" />
+                </label>
+                <label class="form-field">
+                    <span class="form-label">Request field (optional)</span>
+                    <input type="text" class="form-input" v-model="remotePinningDraft.requestField" placeholder="file" />
+                </label>
+                <label class="form-field">
+                    <span class="form-label">Response field (optional)</span>
+                    <input type="text" class="form-input" v-model="remotePinningDraft.responseField" placeholder="cid (Pinata: IpfsHash)" />
+                </label>
+                <p class="form-hint form-hint--neutral">Nothing here is saved anywhere — entered fresh each time you click Distribute Snapshot.</p>
+            </div>
 
             <!-- Reachable with zero connected peers and an empty World
                  Encounters panel — this action never depends on either.
