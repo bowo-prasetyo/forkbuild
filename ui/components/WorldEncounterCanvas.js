@@ -6214,7 +6214,11 @@ export default {
                     <dt>Locator</dt>
                     <dd>{{ snapshotDistributionResult.contentReference.uri }}</dd>
                     <dt>Announcement</dt>
-                    <dd>{{ snapshotDistributionResult.announcement ? snapshotDistributionResult.announcement.id : 'No announcement' }}</dd>
+                    <!-- Bug fix — announcementError (Remote Pinning only)
+                         shows the real, sanitized cause instead of an
+                         indistinguishable-from-a-decline "No announcement."
+                         undefined for Arweave/Local Kubo, unchanged. -->
+                    <dd>{{ snapshotDistributionResult.announcement ? snapshotDistributionResult.announcement.id : (snapshotDistributionResult.announcementError || 'No announcement') }}</dd>
                 </dl>
             </div>
 

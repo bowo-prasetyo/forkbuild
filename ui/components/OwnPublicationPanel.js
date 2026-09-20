@@ -2886,7 +2886,13 @@ export default {
                 <dt>Locator</dt>
                 <dd>{{ snapshotDistributionResult.contentReference.uri }}</dd>
                 <dt>Announcement</dt>
-                <dd>{{ snapshotDistributionResult.announcement ? snapshotDistributionResult.announcement.id : 'No announcement' }}</dd>
+                <!-- Bug fix — announcementError (Remote Pinning only —
+                     see ui/views/WorldView.js's own comment) shows the
+                     real, sanitized cause a Nostr announcement failed
+                     instead of an indistinguishable-from-a-relay-decline
+                     "No announcement." undefined for the Arweave/Local
+                     Kubo paths, so they render exactly as before. -->
+                <dd>{{ snapshotDistributionResult.announcement ? snapshotDistributionResult.announcement.id : (snapshotDistributionResult.announcementError || 'No announcement') }}</dd>
             </dl>
 
             <!-- 0.9.347 — Post-Publish Distribution Entry Point. See this
