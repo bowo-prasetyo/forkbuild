@@ -282,8 +282,15 @@ async function run() {
     // =======================================================================
     {
         const mainSource = await source('ui/main.js');
-        assert(/const { discoveryPublisher: snapshotDiscoveryPublisher } = composeSnapshotDistributionRuntime\(\{\s*nostrSnapshotDiscoveryPublisherOptions: \{ publishImpl: nostrHostPublisher, discoveryTag: 'forkbuild-snapshot' \}\s*\}\);/.test(mainSource),
-            n('D1. ui/main.js\'s own snapshotDiscoveryPublisher composition is byte-for-byte unchanged by this milestone.'));
+        // AMENDED — a later, separate milestone added relay-resilience
+        // fan-out to this exact call site (relayUrls: resolvedNostrRelayUrls),
+        // unrelated to Remote IPFS. D1 now checks the invariant THIS
+        // milestone's own scope actually cares about: publishImpl/discoveryTag
+        // remain the SAME nostrHostPublisher/'forkbuild-snapshot' this
+        // milestone's own Section A-C already exercise — never rewritten by
+        // Remote IPFS support.
+        assert(/const { discoveryPublisher: snapshotDiscoveryPublisher } = composeSnapshotDistributionRuntime\(\{\s*nostrSnapshotDiscoveryPublisherOptions: \{ publishImpl: nostrHostPublisher, discoveryTag: 'forkbuild-snapshot', relayUrls: resolvedNostrRelayUrls \}\s*\}\);/.test(mainSource),
+            n('D1. ui/main.js\'s own snapshotDiscoveryPublisher composition still uses the SAME publishImpl/discoveryTag this milestone relies on — relayUrls is a later, unrelated relay-resilience addition, not a Remote IPFS change.'));
         assert(/const snapshotDistributionCommand = \(bytes, storage = 'ar', publicationId, claimedPosition\) => executeSnapshotDistributionCommand\(\{\s*bytes,\s*contentStore: resolveSnapshotDistributionContentStore\(snapshotPlacementStoreRegistry, storage\),\s*discoveryPublisher: snapshotDiscoveryPublisher,\s*publicationId,\s*claimedPosition\s*\}\);/.test(mainSource),
             n('D2. ...and the existing snapshotDistributionCommand closure Kubo\'s own "Distribute Snapshot" action calls is likewise byte-for-byte unchanged — this milestone only ADDS one new app.provide() line after it, never edits it.'));
 

@@ -555,8 +555,19 @@ async function run() {
             n('K5. distributeWorldEncounterPublication() itself introduces no retry/failover logic of its own — a single call to whichever command is chosen, nothing more'));
         assert(!compositionSource.includes('overallStatus') && !compositionSource.includes("'PARTIAL'"),
             n('K6. no aggregate distribution status vocabulary exists anywhere in the composition root'));
+        // AMENDED — Snapshot Distribution has since gained its own,
+        // separately-scoped multi-relay seam (relay resilience for its own
+        // announcement publishing), deliberately excluded from THIS
+        // milestone's own diff but added later, independently. K7 no
+        // longer checks "no multi-relay seam of any kind" (now false); it
+        // checks the one invariant this milestone's own scope actually
+        // cares about — that Snapshot's later seam never reuses THIS
+        // milestone's own Publication relay-SET configuration boundary,
+        // staying the two independent, unconnected configurations both
+        // classes' own headers already document.
         const snapshotRuntimeSource = await source('application/SnapshotDistributionRuntimeComposition.js');
-        assert(!/relayUrls/.test(snapshotRuntimeSource), n('K7. Snapshot distribution still has no multi-relay seam of any kind — deliberately excluded from this milestone, exactly as 0.9.449\'s own Section A11 found'));
+        assert(!/NostrPublicationRelaySetConfiguration/.test(snapshotRuntimeSource),
+            n('K7. Snapshot distribution\'s own (later, separate) relay fan-out never reuses this milestone\'s own Publication relay-SET configuration boundary — the two multi-relay features remain independent'));
         const queryServiceSource = await source('application/NostrDiscoveryQueryService.js');
         assert(!/relayUrls/.test(queryServiceSource), n('K8. Nostr read-side discovery remains completely untouched — tracked separately as 0.9.451, deliberately not this milestone'));
 

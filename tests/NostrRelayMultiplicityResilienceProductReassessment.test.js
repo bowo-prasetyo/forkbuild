@@ -126,17 +126,22 @@ async function run() {
         const single = new NostrRelayConfiguration({ relayUrl: 'wss://relay-a.example' });
         assert(single.relayUrl === 'wss://relay-a.example', n('B1. NostrRelayConfiguration holds exactly one relayUrl string'));
 
-        // B2. Storage — storage/NostrRelayConfigurationStore.js's own header
-        // never mentions a plural `relayUrls` key, unlike
+        // B2. AMENDED — Storage. At the time this audit was originally
+        // written, storage/NostrRelayConfigurationStore.js's own header
+        // never mentioned a plural `relayUrls` key, unlike
         // core/ArweaveGatewayConfiguration.js, which 0.9.440 gave a SECOND,
-        // plural `gatewayUrls` key alongside its original singular one.
-        // Nostr has received no equivalent successor.
+        // plural `gatewayUrls` key alongside its original singular one — an
+        // asymmetry this audit's own Section J verdict (FANOUT_PRODUCT_GAP)
+        // recommended closing. It has since been closed: Nostr's own
+        // `relayUrls` (fan-out, never ordered failover — the semantic this
+        // audit's own Section I recommended) is now a real, equivalent
+        // successor.
         const nostrStoreSource = await source('storage/NostrRelayConfigurationStore.js');
-        assert(!/relayUrls/.test(nostrStoreSource),
-            n('B2. storage/NostrRelayConfigurationStore.js contains no `relayUrls` (plural) field anywhere — no 0.9.440-equivalent successor exists for Nostr'));
+        assert(/relayUrls/.test(nostrStoreSource),
+            n('B2. storage/NostrRelayConfigurationStore.js now DOES carry a plural `relayUrls` field — the fan-out successor this audit\'s own verdict recommended'));
         const arweaveConfigSource = await source('core/ArweaveGatewayConfiguration.js');
         assert(arweaveConfigSource.includes('gatewayUrls'),
-            n('B2. by contrast, core/ArweaveGatewayConfiguration.js DOES carry a plural gatewayUrls field (0.9.440) — confirming the asymmetry is real, not imagined'));
+            n('B2. core/ArweaveGatewayConfiguration.js still carries its own plural gatewayUrls field (0.9.440) — the two configuration boundaries now both support multiplicity, each with the semantic proper to its own substrate (Arweave: ordered failover; Nostr: fan-out)'));
 
         // B3. Composition — ui/main.js threads the single resolved relay
         // URL into all three READ composition sites, and into NONE of the
@@ -155,8 +160,19 @@ async function run() {
         // are unaffected.
         assert(mainSource.includes('nostrRelayUrls: resolvedNostrPublicationRelayUrls') && mainSource.includes('relayUrl: resolvedNostrRelayUrl'),
             n('B3. resolvedNostrPublicationRelayUrls reaches World Encounter (Publication) discovery, and resolvedNostrRelayUrl still reaches the remaining read-path composition sites, live-confirmed — 0.9.451'));
-        assert(!/nostrPublisherOptions[\s\S]{0,120}relayUrl/.test(mainSource) && !/nostrSnapshotDiscoveryPublisherOptions[\s\S]{0,120}relayUrl/.test(mainSource) && !/nostrPlaceNamingDiscoveryPublisherOptions[\s\S]{0,120}relayUrl/.test(mainSource),
-            n('B3. none of the three write-path publisher option objects in ui/main.js ever supplies a relayUrl — every publisher falls through to its own class-level DEFAULT_RELAY_URL, entirely unaffected by a user\'s own read-side relay setting'));
+        // AMENDED — Publication and Place Naming's own write-path publisher
+        // option objects remain untouched, exactly as this audit's own
+        // Section I recommended NOT extending failover-style thinking to
+        // them without a real product decision. Snapshot Distribution is a
+        // deliberate, later, separately-decided exception (see this
+        // audit's own final verdict: Nostr relay write fan-out is a real
+        // FANOUT_PRODUCT_GAP): its own `nostrSnapshotDiscoveryPublisherOptions`
+        // now legitimately supplies `relayUrls`, fanning Snapshot
+        // announcement publishing out across every configured relay.
+        assert(!/nostrPublisherOptions[\s\S]{0,120}relayUrl/.test(mainSource) && !/nostrPlaceNamingDiscoveryPublisherOptions[\s\S]{0,120}relayUrl/.test(mainSource),
+            n('B3. Publication and Place Naming\'s own write-path publisher option objects in ui/main.js never supply a relayUrl — both fall through to their own class-level DEFAULT_RELAY_URL, unaffected by a user\'s own relay setting'));
+        assert(/nostrSnapshotDiscoveryPublisherOptions[\s\S]{0,150}relayUrls:\s*resolvedNostrRelayUrls/.test(mainSource),
+            n('B3b. Snapshot Distribution\'s own write-path publisher option object now DOES supply the resolved relay set — the deliberate, later fan-out exception this audit\'s own verdict recommended'));
 
         // B4. The three write-path publisher classes each hardcode the
         // identical default relay, confirmed by constructing one with no
@@ -165,17 +181,19 @@ async function run() {
         assert(defaultPublisher.relayUrl === NostrPublicationDiscoveryPublisher.DEFAULT_RELAY_URL,
             n('B4. NostrPublicationDiscoveryPublisher, unconfigured, falls back to its own class-level default relay — never resolvedNostrRelayUrl'));
 
-        // B5. Settings UI — ui/views/NostrRelaySettingsView.js exposes a
-        // single `<input>`, never a `<textarea>`/list — reconfirmed live,
-        // contrasted directly against ui/views/ArweaveGatewaySettingsView.js,
-        // which DOES use a `<textarea>` (0.9.440's own line-order-preserving
-        // multi-value field).
+        // B5. AMENDED — Settings UI. ui/views/NostrRelaySettingsView.js now
+        // ALSO exposes a `<textarea>` (one relay per line), the identical
+        // line-order-preserving multi-value field
+        // ui/views/ArweaveGatewaySettingsView.js already pioneered
+        // (0.9.440) — the asymmetry Section B2 originally found in storage
+        // no longer holds all the way up to the UI a person actually sees;
+        // both configuration boundaries now present a multi-line field.
         const nostrSettingsSource = await source('ui/views/NostrRelaySettingsView.js');
-        assert(!/<textarea/.test(nostrSettingsSource) && /<input/.test(nostrSettingsSource),
-            n('B5. ui/views/NostrRelaySettingsView.js exposes exactly one <input>, no <textarea> — a single-value field, live-confirmed'));
+        assert(/<textarea/.test(nostrSettingsSource) && !/<input/.test(nostrSettingsSource),
+            n('B5. ui/views/NostrRelaySettingsView.js now exposes a <textarea>, no <input> — a multi-value fan-out field, matching Arweave Gateway\'s own shape'));
         const arweaveSettingsSource = await source('ui/views/ArweaveGatewaySettingsView.js');
         assert(/<textarea/.test(arweaveSettingsSource),
-            n('B5. ui/views/ArweaveGatewaySettingsView.js DOES expose a <textarea> for its own plural gatewayUrls field — the asymmetry Section B2 found in storage is real all the way up to the UI a person actually sees'));
+            n('B5. ui/views/ArweaveGatewaySettingsView.js still exposes a <textarea> for its own plural gatewayUrls field — the two configuration boundaries now share the same UI shape, each with its own semantic (Arweave: ordered failover; Nostr: fan-out)'));
 
         // B6. Result/lifecycle observation — application/
         // PublicationDistributionLifecycleStore.js's own 0.9.433 addition

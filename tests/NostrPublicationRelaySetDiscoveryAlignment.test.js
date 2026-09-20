@@ -381,10 +381,10 @@ async function run() {
             n('I2. Snapshot discovery\'s own composition never imports the new Publication-relay-set discovery service'));
 
         const mainSource = await source('ui/main.js');
-        assert(/nostrSnapshotDiscoveryQueryServiceOptions:\s*\{\s*queryImpl:\s*nostrRelayQueryClient,\s*relayUrl:\s*resolvedNostrRelayUrl\s*\}/.test(mainSource),
-            n('I3. Snapshot discovery\'s real composition call site still receives the general resolvedNostrRelayUrl, untouched'));
-        assert(/new NostrPlaceNamingDiscoverySource\(\{\s*queryImpl:\s*nostrRelayQueryClient,\s*relayUrl:\s*resolvedNostrRelayUrl\s*\}\)/.test(mainSource),
-            n('I4. Place Naming discovery\'s real construction call site still receives the general resolvedNostrRelayUrl, untouched'));
+        assert(/nostrSnapshotDiscoveryQueryServiceOptions:\s*\{\s*queryImpl:\s*nostrRelayQueryClient,\s*relayUrls:\s*resolvedNostrRelayUrls\s*\}/.test(mainSource),
+            n('I3. Snapshot discovery\'s real composition call site still receives the general resolvedNostrRelayUrls (now the fan-out-capable relay set), untouched by this milestone'));
+        assert(/new NostrPlaceNamingDiscoverySource\(\{\s*queryImpl:\s*nostrRelayQueryClient,\s*relayUrl:\s*resolvedNostrRelayUrls\[0\]\s*\}\)/.test(mainSource),
+            n('I4. Place Naming discovery\'s real construction call site (single-relay case) still receives the general resolvedNostrRelayUrls[0], untouched by this milestone'));
 
         const compositionSource = codeOnly(await source('application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js'));
         assert(!/Bitcoin|BitcoinAnchor|ProofVerifier/.test(compositionSource),

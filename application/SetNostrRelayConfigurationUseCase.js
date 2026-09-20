@@ -56,18 +56,20 @@ export class SetNostrRelayConfigurationUseCase {
         this._store = nostrRelayConfigurationStore;
     }
 
-    // Saves `relayUrl` as the user's own Nostr relay override, replacing
-    // whatever was previously on file outright (see
-    // NostrRelayConfigurationStore.js's own "a single configuration, never
-    // a history, and never a relay list" header for why that replacement is
-    // a structural property of the store itself). Returns the new,
-    // persisted NostrRelayConfiguration.
+    // Saves `relayUrl` (a single string) or `relayUrls` (a non-empty array
+    // of fan-out targets — exactly one of the two, never both) as the
+    // user's own Nostr relay override, replacing whatever was previously on
+    // file outright (see NostrRelayConfigurationStore.js's own "a single
+    // configuration, never a history" header for why that replacement is a
+    // structural property of the store itself). Returns the new, persisted
+    // NostrRelayConfiguration.
     //
     // Throws for anything core/NostrRelayConfiguration.js's own constructor
-    // rejects (not a ws:/wss: URL, empty, ...) — before this method ever
-    // calls `save()`.
-    execute({ relayUrl } = {}) {
-        const configuration = new NostrRelayConfiguration({ relayUrl });
+    // rejects (not a ws:/wss: URL, empty, both fields supplied, ...) —
+    // before this method ever calls `save()`. This method adds no
+    // validation of its own beyond forwarding verbatim.
+    execute({ relayUrl, relayUrls } = {}) {
+        const configuration = new NostrRelayConfiguration({ relayUrl, relayUrls });
         this._store.save(configuration);
         return configuration;
     }

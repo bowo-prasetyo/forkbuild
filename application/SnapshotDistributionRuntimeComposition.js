@@ -1,5 +1,6 @@
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { NostrSnapshotDiscoveryPublisher } from './NostrSnapshotDiscoveryPublisher.js';
+import { NostrMultiRelaySnapshotDiscoveryPublisher } from './NostrMultiRelaySnapshotDiscoveryPublisher.js';
 
 // 0.9.137 — Snapshot Distribution Runtime Composition.
 //
@@ -235,6 +236,28 @@ function canAttemptNostrDiscovery({ publishImpl, discoveryTag } = {}) {
         && discoveryTag.length > 0;
 }
 
+// buildNostrSnapshotDiscoveryPublisher(options) -> discoveryPublisher.
+// `relayUrls` (plural, an array) is a new, additional way to configure the
+// same one `discoveryPublisher` field — the identical dual-shape pattern
+// `buildArweaveRetrievalContentStore()` already holds one substrate over.
+// Passing `relayUrls` with more than one entry builds a
+// `NostrMultiRelaySnapshotDiscoveryPublisher` instead of a plain
+// `NostrSnapshotDiscoveryPublisher` — every configured relay is announced
+// to independently (fan-out, never failover — see core/
+// NostrRelayConfiguration.js's own header). Passing zero or one entries, or
+// the original singular `relayUrl` string, or nothing at all, is
+// byte-for-byte the pre-existing behavior: exactly one plain
+// `NostrSnapshotDiscoveryPublisher` is constructed, unchanged.
+function buildNostrSnapshotDiscoveryPublisher({ relayUrls, ...options }) {
+    if (Array.isArray(relayUrls) && relayUrls.length > 1) {
+        return new NostrMultiRelaySnapshotDiscoveryPublisher({ ...options, relayUrls });
+    }
+    if (Array.isArray(relayUrls) && relayUrls.length === 1) {
+        return new NostrSnapshotDiscoveryPublisher({ ...options, relayUrl: relayUrls[0] });
+    }
+    return new NostrSnapshotDiscoveryPublisher(options);
+}
+
 // composeSnapshotDistributionRuntime({ arweaveContentStoreOptions,
 //   nostrSnapshotDiscoveryPublisherOptions }) -> { contentStore,
 //   discoveryPublisher }. See this file's own header for the full
@@ -253,7 +276,7 @@ export function composeSnapshotDistributionRuntime({
         : null;
 
     const discoveryPublisher = canAttemptNostrDiscovery(nostrSnapshotDiscoveryPublisherOptions)
-        ? new NostrSnapshotDiscoveryPublisher(nostrSnapshotDiscoveryPublisherOptions)
+        ? buildNostrSnapshotDiscoveryPublisher(nostrSnapshotDiscoveryPublisherOptions)
         : null;
 
     return Object.freeze({ contentStore, discoveryPublisher });

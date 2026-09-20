@@ -178,6 +178,7 @@ import { WorldSnapshotDiscoveryMonitor } from '../application/WorldSnapshotDisco
 import { composeSnapshotCandidateDiscoveryRuntime } from '../application/SnapshotCandidateDiscoveryRuntimeComposition.js';
 import { ArweaveSnapshotDiscoveryQueryService } from '../application/ArweaveSnapshotDiscoveryQueryService.js';
 import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
+import { NostrMultiRelayPlaceNamingDiscoverySource } from '../application/NostrMultiRelayPlaceNamingDiscoverySource.js';
 import { composePlaceNamingDiscoveryRuntime } from '../application/PlaceNamingDiscoveryRuntimeComposition.js';
 import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
 import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
@@ -2144,17 +2145,33 @@ app.provide('setIpfsGatewayConfigurationUseCase', setIpfsGatewayConfigurationUse
 // three read-path classes already hardcodes as its own default) is
 // consulted only then.
 //
-// APPLIED ONLY TO READ/DISCOVERY, NEVER TO PUBLISHING. `resolvedNostrRelayUrl`
-// below is threaded into `composeDiscoverSnapshotRuntime()`'s own
-// `nostrSnapshotDiscoveryQueryServiceOptions.relayUrl` (later in this file)
-// and into `NostrPlaceNamingDiscoverySource`'s own `relayUrl` (later in
-// this file) — two of the three read-path composition sites 0.9.368's own
-// audit traced. It is never threaded into `createNostrInjectedProviderPublisher()`
-// or any of the three Nostr WRITE-path publishers
-// (`NostrPublicationDiscoveryPublisher`, `NostrSnapshotDiscoveryPublisher`,
-// `NostrPlaceNamingDiscoveryPublisher`), exactly the "user setting affects
-// read/discovery, never publishing" boundary this milestone's own brief
-// draws.
+// APPLIED TO SNAPSHOT DISCOVERY AND PLACE NAMING DISCOVERY, AND NOW ALSO TO
+// SNAPSHOT ANNOUNCEMENT PUBLISHING — NEVER TO PUBLICATION PUBLISHING.
+// `resolvedNostrRelayUrls` below is threaded into
+// `composeDiscoverSnapshotRuntime()`'s own
+// `nostrSnapshotDiscoveryQueryServiceOptions.relayUrls`, into
+// `NostrPlaceNamingDiscoverySource`'s own relay set (both later in this
+// file), and — RELAY RESILIENCE FOR SNAPSHOT DISTRIBUTION — into
+// `composeSnapshotDistributionRuntime()`'s own
+// `nostrSnapshotDiscoveryPublisherOptions.relayUrls` (also later in this
+// file), so Snapshot announcement is no longer hardcoded to one relay: a
+// single relay override still resolves to a one-element set, byte-identical
+// to the pre-existing behavior; a multi-relay override fans the
+// announcement out to every configured relay (see core/
+// NostrRelayConfiguration.js's own header, "fan-out, never ordered
+// failover"). It is never threaded into `createNostrInjectedProviderPublisher()`
+// or the Publication-distribution WRITE publisher
+// (`NostrPublicationDiscoveryPublisher`, which instead reads the separate
+// `resolvedNostrPublicationRelayUrls` set below) — Snapshot's own relay
+// preference and Publication's own relay set remain two independent,
+// unconnected configurations.
+//
+// `resolvedNostrRelayUrl` (the FIRST configured relay) REMAINS THE VALUE
+// `PublicationCommentaryNostrDistribution` (below) CONSULTS — Commentary's
+// own Nostr transport stays single-relay, untouched by this fan-out
+// extension; scoping fan-out to Snapshot discovery/announcement and Place
+// Naming discovery only, exactly what ui/views/NostrRelaySettingsView.js's
+// own template text documents.
 //
 // AMENDED BY 0.9.451 — the third read-path site,
 // `composeDecentralizedWorldEncounterMaterialDiscoveryServices()`'s own
@@ -2174,7 +2191,8 @@ app.provide('setIpfsGatewayConfigurationUseCase', setIpfsGatewayConfigurationUse
 // closed, mirroring `arweaveGatewayConfigurationStore`'s own 0.9.366
 // write-side use case and `app.provide()` calls exactly.
 const nostrRelayConfigurationStore = new NostrRelayConfigurationStore(new LocalStorageProvider());
-const resolvedNostrRelayUrl = (nostrRelayConfigurationStore.get() || { relayUrl: DEFAULT_NOSTR_RELAY_URL }).relayUrl;
+const resolvedNostrRelayUrls = (nostrRelayConfigurationStore.get() || { relayUrls: [DEFAULT_NOSTR_RELAY_URL] }).relayUrls;
+const resolvedNostrRelayUrl = resolvedNostrRelayUrls[0];
 const setNostrRelayConfigurationUseCase = new SetNostrRelayConfigurationUseCase({ nostrRelayConfigurationStore });
 app.provide('nostrRelayConfigurationStore', nostrRelayConfigurationStore);
 app.provide('setNostrRelayConfigurationUseCase', setNostrRelayConfigurationUseCase);
@@ -2916,7 +2934,23 @@ app.provide('multiRelayNostrPublicationDistributionCommand', multiRelayNostrPubl
 //
 // `discoveryTag: 'forkbuild-snapshot'` IS A DIFFERENT CAMPAIGN MARKER THAN
 // `'forkbuild-publication'`, ABOVE — the two families announce onto the
-// same Nostr relay without becoming the same discovery stream.
+// same Nostr relay set without becoming the same discovery stream.
+//
+// `relayUrls: resolvedNostrRelayUrls` — RELAY RESILIENCE FOR SNAPSHOT
+// ANNOUNCEMENT. Before this, `nostrSnapshotDiscoveryPublisherOptions` never
+// carried a relay of any kind, so every announcement silently used
+// `NostrSnapshotDiscoveryPublisher`'s own hardcoded
+// `DEFAULT_RELAY_URL` ('wss://relay.damus.io') regardless of a Wanderer's
+// own "Nostr Relay" Settings override — a real gap that Settings page's own
+// text used to name explicitly ("does not change where announcements are
+// published"). `composeSnapshotDistributionRuntime()`'s own
+// `buildNostrSnapshotDiscoveryPublisher()` now resolves this options bag's
+// `relayUrls` into either the unchanged single-relay
+// `NostrSnapshotDiscoveryPublisher` (one configured relay) or a
+// `NostrMultiRelaySnapshotDiscoveryPublisher` (more than one) that fans the
+// announcement out to every configured relay — resilient against any one
+// relay being unreachable, exactly the behavior a Wanderer configuring more
+// than one relay under "Nostr Relay" now actually gets.
 //
 // `snapshotDiscoveryPublisher` MAY BE `null` — composeSnapshotDistributionRuntime()'s
 // own graceful degradation, unchanged — in which case `snapshotDistributionCommand(bytes)`
@@ -2955,7 +2989,7 @@ app.provide('multiRelayNostrPublicationDistributionCommand', multiRelayNostrPubl
 // call site computes neither field itself; see `ui/views/WorldView.js`'s
 // own `distributeWorldEncounterSnapshot()` for where they come from.
 const { discoveryPublisher: snapshotDiscoveryPublisher } = composeSnapshotDistributionRuntime({
-    nostrSnapshotDiscoveryPublisherOptions: { publishImpl: nostrHostPublisher, discoveryTag: 'forkbuild-snapshot' }
+    nostrSnapshotDiscoveryPublisherOptions: { publishImpl: nostrHostPublisher, discoveryTag: 'forkbuild-snapshot', relayUrls: resolvedNostrRelayUrls }
 });
 const snapshotDistributionCommand = (bytes, storage = 'ar', publicationId, claimedPosition) => executeSnapshotDistributionCommand({
     bytes,
@@ -3082,7 +3116,7 @@ app.provide('publishPlaceNamingClaimToNostrCommand', publishPlaceNamingClaimToNo
 // here removes a now-entirely-unused second ArweaveContentStore
 // construction, never the resolver's own capability.
 const { resolver: snapshotResolver, queryService: snapshotDiscoveryQueryService } = composeDiscoverSnapshotRuntime({
-    nostrSnapshotDiscoveryQueryServiceOptions: { queryImpl: nostrRelayQueryClient, relayUrl: resolvedNostrRelayUrl }
+    nostrSnapshotDiscoveryQueryServiceOptions: { queryImpl: nostrRelayQueryClient, relayUrls: resolvedNostrRelayUrls }
 });
 // `storeRegistry: publicationSnapshotPlacementResolutionStoreRegistry` —
 // the SAME resolution-side registry Snapshot Placement's own resolution
@@ -3237,10 +3271,17 @@ app.provide('worldSnapshotDiscoveryMonitor', worldSnapshotDiscoveryMonitor);
 // query service a discovery command can be built against, exactly the same
 // restraint already drawn between `discoverSnapshotCandidatesCommand` above
 // and the view that actually calls it.
-// 0.9.369 — `relayUrl: resolvedNostrRelayUrl` (resolved once, above) is
-// this file's own THIRD, and last, Nostr read-path call site.
+// 0.9.369 — `relayUrls: resolvedNostrRelayUrls` (resolved once, above) is
+// this file's own THIRD, and last, Nostr read-path call site. A single
+// configured relay still constructs the unchanged, plain
+// `NostrPlaceNamingDiscoverySource`; more than one fans the query out to
+// every configured relay via `NostrMultiRelayPlaceNamingDiscoverySource` —
+// see that file's own header, "at least one relay succeeds is the whole
+// policy."
 const placeNamingDiscoverySources = nostrRelayQueryClient
-    ? [new NostrPlaceNamingDiscoverySource({ queryImpl: nostrRelayQueryClient, relayUrl: resolvedNostrRelayUrl })]
+    ? [resolvedNostrRelayUrls.length > 1
+        ? new NostrMultiRelayPlaceNamingDiscoverySource({ queryImpl: nostrRelayQueryClient, relayUrls: resolvedNostrRelayUrls })
+        : new NostrPlaceNamingDiscoverySource({ queryImpl: nostrRelayQueryClient, relayUrl: resolvedNostrRelayUrls[0] })]
     : [];
 const { queryService: placeNamingDiscoveryQueryService } = composePlaceNamingDiscoveryRuntime({ sources: placeNamingDiscoverySources });
 app.provide('placeNamingDiscoveryQueryService', placeNamingDiscoveryQueryService);
