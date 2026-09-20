@@ -156,8 +156,18 @@ async function run() {
             n('C: status indicators (.identity-mgmt-status) are untouched'));
         assert(/class="evidence-field/.test(publicationsViewSrc),
             n('C: hash/id evidence fields (.evidence-field*) are untouched'));
-        assert(/class="identity-mgmt-distribution"/.test(publicationsViewSrc),
-            n('C: the Distribution section (.identity-mgmt-distribution) is untouched'));
+        // AMENDED — the Distribution section's own outer wrapper was later
+        // made collapsible (a <details> carrying BOTH
+        // .identity-mgmt-card-details and its own .identity-mgmt-distribution,
+        // so .identity-mgmt-distribution is no longer the first/only class
+        // in that attribute) — this section's own actual job, proving THIS
+        // milestone's CSS-only .publications-view edit didn't also touch
+        // Distribution, still holds: check for the class as a token
+        // anywhere in the source, the same tolerant match this file's own
+        // classToken()/countSelectorMentions() already use for CSS
+        // selectors, rather than requiring one exact literal position.
+        assert(new RegExp(classToken('identity-mgmt-distribution')).test(publicationsViewSrc),
+            n('C: the Distribution section (.identity-mgmt-distribution) still exists — unrelated to this milestone\'s own .publications-view container change'));
 
         // None of the internal card/list/action/select/status/evidence
         // rules were touched by this milestone's CSS edit either — each

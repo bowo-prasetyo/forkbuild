@@ -93,7 +93,17 @@ async function run() {
     // it, by the same real markers 0.9.436's own test file already used to
     // locate the Content/Proof section boundaries — never a guessed line
     // range.
-    const distributionStart = viewSource.indexOf('<div class="identity-mgmt-distribution">');
+    //
+    // AMENDED — the Distribution section's own outer wrapper was later
+    // made collapsible (a <details open> carrying both
+    // .identity-mgmt-card-details, for the shared border/summary-arrow
+    // treatment every other disclosure on this page already uses, and its
+    // own .identity-mgmt-distribution for its flex layout) — open by
+    // default so these remain the primary, immediately visible actions for
+    // a publication, exactly as this milestone's own narrative already
+    // requires; only the wrapper tag changed, never the roles/actions
+    // inside it this section's own assertions check below.
+    const distributionStart = viewSource.indexOf('<details open class="identity-mgmt-card-details identity-mgmt-distribution">');
     const distributionEnd = viewSource.indexOf('<!-- Everything below is unchanged functionality', distributionStart);
     assert(distributionStart !== -1 && distributionEnd > distributionStart,
         n('setup. the Distribution section (0.9.436) is located, bounded by its own opening wrapper and the next unrelated comment immediately after it'));
@@ -351,12 +361,23 @@ async function run() {
             'tests/ArweaveGatewayRetrievalIntegration.test.js',
             'tests/EndpointMultiplicityFailoverSemanticsAudit.test.js',
             'tests/HostWalletCapabilityLazyResolutionFix.test.js',
-            'ui/main.js'
+            'ui/main.js',
+            // AMENDED — a later, independently-scoped change made the
+            // Distribution section's own wrapper collapsible (a <details>,
+            // reusing .identity-mgmt-card-details' styling), which is a
+            // real, narrow css/main.css edit — never a new configuration
+            // surface, and never a change to any of the four route links
+            // or two <select>s this section still checks below.
+            'css/main.css'
         ]);
         const unauthorized = changed.filter((f) => !AUTHORIZED.has(f));
         assert(unauthorized.length === 0, n(`F1. every changed/added file is one this milestone (or a later, independently-scoped and separately-authorized one) already names (found unauthorized: ${JSON.stringify(unauthorized)})`));
 
-        const domainDirs = ['core', 'renderer', 'discovery', 'anchoring', 'collaboration', 'persistence', 'identity', 'publisher', 'storage', 'peer', 'content', 'presence', 'docs', 'css'];
+        // AMENDED — 'css' is no longer expected to show zero change: the
+        // Distribution-wrapper collapsibility amendment above is a real,
+        // narrow css/main.css edit. Every OTHER domain directory this
+        // section originally guarded still shows zero change.
+        const domainDirs = ['core', 'renderer', 'discovery', 'anchoring', 'collaboration', 'persistence', 'identity', 'publisher', 'storage', 'peer', 'content', 'presence', 'docs'];
         for (const dir of domainDirs) {
             const status = execSync(`git status --porcelain -- ${dir}`, { cwd: SOURCE_ROOT }).toString().trim();
             assert(status === '', n(`F2[${dir}]. ${dir}/ shows no change — 0.9.437 itself touched template/markup only, no domain or styling change`));

@@ -9224,9 +9224,19 @@ export default {
                          a new configuration surface, never a duplicated
                          control, and never a distribution command of any
                          kind. See each link's own inline comment for why
-                         that specific route and no other. -->
-                    <div class="identity-mgmt-distribution">
-                        <h4 class="identity-mgmt-distribution-heading">Distribution</h4>
+                         that specific route and no other.
+
+                         Collapsible, exactly like "Snapshot, Anchoring,
+                         IPFS & Evidence Details" below — but carries `open`
+                         so it starts expanded: these three roles remain the
+                         primary actions for a publication, never hidden
+                         behind a click on first load. Collapsing it once
+                         done is presentation only, same as every other
+                         disclosure on this page — nothing here is
+                         discarded, and no distribution/creation state
+                         lives on the disclosure's own open/closed flag. -->
+                    <details open class="identity-mgmt-card-details identity-mgmt-distribution">
+                        <summary class="identity-mgmt-card-details-summary">Distribution</summary>
 
                         <!-- Announcement / Discovery. Hidden entirely when
                              neither command was ever provided — the same
@@ -9523,7 +9533,7 @@ export default {
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </details>
 
                     <!-- Everything below is unchanged functionality (local
                          snapshot state, peer possession/transfer,
