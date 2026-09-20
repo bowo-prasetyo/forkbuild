@@ -61,6 +61,22 @@ import { computeContentHash } from '../serializer/contentHash.js';
 //      against current source, with the first exact divergence point
 //      named to a single function and call site.
 //   I. Final classification, capability matrix, and recommendation scope.
+//
+// SUPERSEDED IN PART BY 0.9.663 — Connect Remote IPFS to Nostr Snapshot
+// Distribution. This audit's own recommendation (Section I, "RECOMMENDATION
+// FOR 0.9.663") is exactly what 0.9.663 implemented: publishToRemoteIpfs()
+// now calls the SAME snapshotDiscoveryPublisher instance ui/main.js already
+// composes for Kubo/Arweave's own "Distribute Snapshot", directly, with the
+// contentHash/locator the coordinator's own PUBLISHED outcome already
+// carries — never through executeSnapshotDistributionCommand() itself
+// (which would re-upload the already-pinned bytes a second time), and
+// never touching SnapshotPlacementStoreRegistry (so Section E's own
+// registry-key collision finding is unaffected and still holds). Section
+// B's own B7 assertion — which asserted the ABSENCE of exactly this
+// wiring — is amended in place, below, with an explicit "AMENDED BY
+// 0.9.663" marker, following this codebase's own established convention.
+// Every other section (A, C, D, E, F, G) still holds unchanged: none of
+// them described this specific call site.
 
 let assertionCount = 0;
 function assert(condition, message) {
@@ -205,8 +221,10 @@ async function run() {
             n('B5. that function calls the coordinator exactly once, with bytes/configuration...'));
         assert(/new IpfsPublicationRecord\(/.test(fnBody),
             n('B6. ...and on a PUBLISHED outcome, constructs an application/IpfsPublicationRecord.js — a LOCAL, ephemeral, display-only record (see that file\'s own header: no signature, no catalog, no peer propagation) — and nothing else.'));
-        assert(!/discoveryPublisher|NostrSnapshotDiscoveryPublisher|snapshotDistributionCommand|executeSnapshotDistributionCommand|createExternalSnapshotPlacementUseCase|placementCreationCoordinator\.create|snapshotPlacementStoreRegistry/.test(fnBody),
-            n('B7. THE FIRST DIVERGENCE, pinpointed: publishToRemoteIpfs()\'s own function body contains no reference to any Nostr discovery publisher, any Snapshot Distribution command, or any Snapshot Placement creation coordinator — immediately after a real CID exists, the function stores a local display record and returns. Nothing downstream of that point is ever reached.'));
+        assert(/snapshotDiscoveryPublisher\.publish\(\{/.test(fnBody),
+            n('B7. AMENDED BY 0.9.663 — Connect Remote IPFS to Nostr Snapshot Distribution. At the time this audit was written, publishToRemoteIpfs()\'s own function body contained NO reference to any Nostr discovery publisher, any Snapshot Distribution command, or any Snapshot Placement creation coordinator — THE FIRST DIVERGENCE this section named. 0.9.663 closed exactly that gap: immediately after the REAL PUBLISHED outcome this section\'s own B1/B2 already proved carries everything announcement needs (contentHash/locator, plus a hardcoded storage:\'ipfs\' — see Section E/F for why that\'s always the right self-reported name), this function now calls snapshotDiscoveryPublisher.publish() directly.'));
+        assert(!/executeSnapshotDistributionCommand|createExternalSnapshotPlacementUseCase|placementCreationCoordinator\.create|snapshotPlacementStoreRegistry/.test(fnBody),
+            n('B7b. AMENDED BY 0.9.663 — and DELIBERATELY still never goes through executeSnapshotDistributionCommand(), any Snapshot Placement creation use case, or the shared SnapshotPlacementStoreRegistry: going through executeSnapshotDistributionCommand()\'s own contentStore.put() would re-upload the ALREADY-pinned bytes a second time for no reason, and Section E\'s own registry-key collision (Kubo and Remote Pinning both self-reporting storage:\'ipfs\') therefore still cannot be triggered by this call site.'));
 
         // B3 — confirm this is not merely true of the one function; the
         // coordinator's own outcome vocabulary is never consumed anywhere
@@ -216,7 +234,7 @@ async function run() {
         assert(ipfsPublicationRecordImports.length === 0,
             n('B8. application/IpfsPublicationRecord.js — the one durable(-ish, per-entry, in-memory) shape the Remote IPFS outcome is ever folded into — has ZERO import statements at all: no PublicationSnapshotPlacement, no NostrSnapshotDiscoveryPublisher, no placement creation use case, no store registry (its own header even NAMES core/PublicationSnapshotPlacement.js, in prose, only to explicitly disclaim being wired to it — "never wired into any catalog or store by this milestone"). The Remote IPFS journey is a genuine dead end by construction, not merely by omission at one call site.'));
     }
-    console.log('✓ Section B: the REMOTE IPFS journey traced independently, live and structural. A real publish() attempt succeeds and returns a genuine contentHash/locator pair — everything Nostr announcement would need. But production\'s one call site (publishToRemoteIpfs()) folds that outcome into a local, display-only IpfsPublicationRecord and returns; no Nostr publisher, no Snapshot Distribution command, and no Snapshot Placement creation use case is ever reached from there, or from anywhere else that record\'s own source touches.');
+    console.log('✓ Section B: the REMOTE IPFS journey traced independently, live and structural. A real publish() attempt succeeds and returns a genuine contentHash/locator pair — everything Nostr announcement would need. AMENDED BY 0.9.663: production\'s one call site (publishToRemoteIpfs()) folds that outcome into a local, display-only IpfsPublicationRecord AND NOW ALSO announces it via the same snapshotDiscoveryPublisher instance the Kubo/Arweave path already uses — never through Snapshot Distribution command\'s own contentStore.put()/re-upload, and never through any Snapshot Placement creation use case, both deliberately still unreached from this call site (B7b).');
 
     // =======================================================================
     // Section C — The two-contract comparison, proven rather than tabulated.
@@ -420,16 +438,19 @@ Current working path (LOCAL KUBO):
        -> executeSnapshotDistributionCommand()'s own discoveryPublisher.publish({contentHash, locator, storage})
        -> NostrSnapshotDiscoveryPublisher -> real relay event -> Remote discovery (Section A, live)
 
-Current problematic path (REMOTE IPFS):
+Path (REMOTE IPFS) — AMENDED BY 0.9.663, gap closed:
   User -> "Publish to Remote IPFS" -> ui/views/DecentralizedPublicationsView.js#publishToRemoteIpfs()
        -> IpfsRemotePublicationCoordinator#publish({bytes, configuration})
        -> HttpPinningProvider -> IpfsRemotePinningContentStore#put(bytes) -> ContentReference (Section B, live)
        -> outcome.state === PUBLISHED
-       -> new IpfsPublicationRecord({contentHash, locator, ...})   <-- FIRST DIVERGENCE
-       -> (function returns; entry.ipfsPublicationRecord is set for on-screen display/verification only)
-       -> NEVER: discoveryPublisher.publish() / executeSnapshotDistributionCommand() / any placement use case
+       -> new IpfsPublicationRecord({contentHash, locator, ...})   (local display record, unchanged)
+       -> snapshotDiscoveryPublisher.publish({contentHash, locator, storage:'ipfs'})   <-- FORMER DIVERGENCE, NOW WIRED
+       -> the SAME NostrSnapshotDiscoveryPublisher instance ui/main.js already composes for Kubo/Arweave
+       -> real relay event -> Remote discovery, same as the Kubo path above
+       -> a Nostr failure here is caught locally and recorded on entry.ipfsRemoteSnapshotAnnouncement;
+          it never rewrites the already-PUBLISHED Remote IPFS outcome above (see that function's own header)
 `);
-        assert(true, n('H1. the first exact divergence between the two journeys is not a missing capability, a missing CID, or a missing storage backend — every fact Nostr announcement needs already exists in memory at the moment publishToRemoteIpfs() constructs its IpfsPublicationRecord. The divergence is exactly one un-taken call: nothing in that function, or anywhere downstream of application/IpfsPublicationRecord.js, ever calls a discoveryPublisher.'));
+        assert(true, n('H1. AMENDED BY 0.9.663 — at the time this audit was written, the first exact divergence between the two journeys was not a missing capability, a missing CID, or a missing storage backend — every fact Nostr announcement needs already existed in memory at the moment publishToRemoteIpfs() constructed its IpfsPublicationRecord; the divergence was exactly one un-taken call. 0.9.663 took that call: publishToRemoteIpfs() now calls snapshotDiscoveryPublisher.publish() directly with the coordinator\'s own contentHash/locator, immediately after a real PUBLISHED outcome, so the REMOTE IPFS path now reaches Nostr announcement and discovery exactly like the LOCAL KUBO path above.'));
     }
     console.log('✓ Section H: both journeys modeled directly against current, real source (never assumed). The local Kubo journey is real, live, and complete today for storage=\'ipfs\'. The Remote IPFS journey produces the identical two facts (contentHash, locator) by the identical point in its own call stack, then terminates into a local display record instead of an announcement call — a single un-taken function call, not a missing capability.');
 

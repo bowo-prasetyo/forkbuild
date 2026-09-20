@@ -1092,6 +1092,16 @@ export default {
         // comment).
         const ipfsRemotePublicationCoordinator = inject('ipfsRemotePublicationCoordinator', null);
         const publicationCatalogContentResolver = inject('publicationCatalogContentResolver', null);
+        // 0.9.663 — Connect Remote IPFS to Nostr Snapshot Distribution. THE
+        // SAME `snapshotDiscoveryPublisher` instance ui/main.js already
+        // composes for the existing Kubo/Arweave "Distribute Snapshot"
+        // action (`snapshotDistributionCommand`, injected below) — never a
+        // second `NostrSnapshotDiscoveryPublisher`. Optional, the identical
+        // graceful-degradation posture every other collaborator on this
+        // page already holds: absent, `publishToRemoteIpfs()` below simply
+        // never announces, exactly as if Nostr publishing were unavailable
+        // for the existing Kubo/Arweave path too.
+        const snapshotDiscoveryPublisher = inject('snapshotDiscoveryPublisher', null);
         // 0.9.436 — Publications Distribution Section Reorganization.
         // Announcement/Discovery's own two real write actions
         // ("Distribute Publication"/"Distribute Snapshot") reach THIS
@@ -6214,6 +6224,10 @@ export default {
             // stale record's own last observation.
             entry.ipfsPublicationRecord = null;
             entry.ipfsPublicationContentVerification = null;
+            // 0.9.663 — a fresh publish attempt also retires whatever Nostr
+            // announcement outcome the PREVIOUS attempt bound, mirroring
+            // `entry.ipfsPublicationRecord`'s own reset immediately above.
+            entry.ipfsRemoteSnapshotAnnouncement = null;
             try {
                 const contentHash = entry.publication.contentReference.hash;
                 const isValid = publicationCatalogContentResolver.verify(entry.publication.id, contentHash);
@@ -6249,6 +6263,62 @@ export default {
                     // durably, side by side with the ephemeral history
                     // above — see archivePublishIpfsRecord()'s own header.
                     archivePublishIpfsRecord(entry, entry.ipfsPublicationRecordHistory.length - 1, entry.ipfsPublicationRecord);
+
+                    // 0.9.663 — Connect Remote IPFS to Nostr Snapshot
+                    // Distribution. Reached ONLY after the REAL PUBLISHED
+                    // outcome immediately above — never for a REJECTED/
+                    // UNAVAILABLE/FAILED outcome, and never speculatively
+                    // before one. Announces the SAME contentHash/locator
+                    // this coordinator just produced, directly, through the
+                    // SAME snapshotDiscoveryPublisher instance the existing
+                    // Kubo/Arweave "Distribute Snapshot" action already
+                    // uses — the identical three-field
+                    // `{ contentHash, locator, storage }` call
+                    // application/SnapshotDistributionCommand.js's own
+                    // command function already makes internally after its
+                    // own contentStore.put(), called here directly instead
+                    // because the bytes are already pinned — going through
+                    // that command's own contentStore.put() would re-upload
+                    // them a second time for no reason. `storage` is
+                    // hardcoded to 'ipfs' — the same self-reported name
+                    // content/IpfsRemotePinningContentStore.js's own
+                    // `storage` getter always returns (see tests/
+                    // RemoteIpfsDistributionIntegrationBoundaryAudit.test.js's
+                    // own Section E/F). NEVER a publicationId — core/
+                    // SnapshotDiscoveryEnvelope.js's own
+                    // describeSnapshotDiscoveryEnvelope() requires a
+                    // publicationId and a claimedPosition to travel
+                    // together or not at all, and this call site has no
+                    // claimed position to offer; supplying one without the
+                    // other would silently invalidate every announcement
+                    // (publish() degrading to null) rather than failing
+                    // loudly. distributeEntrySnapshot()'s own
+                    // snapshotDistributionCommand() call, elsewhere in
+                    // this file, omits both for the identical reason.
+                    //
+                    // A NOSTR FAILURE NEVER FAILS THE REMOTE IPFS RESULT.
+                    // `entry.ipfsRemotePublicationOutcome` above already
+                    // reads PUBLISHED and stays that way regardless of what
+                    // happens here — content publication and discovery
+                    // announcement are two independent, sequential
+                    // operations (the content already exists on IPFS
+                    // whichever way this settles). This nested try/catch,
+                    // scoped to only this block, is what keeps a genuine
+                    // announcement failure from ever reaching the outer
+                    // catch below and overwriting a real PUBLISHED outcome
+                    // with FAILED.
+                    if (snapshotDiscoveryPublisher) {
+                        try {
+                            const announcement = await snapshotDiscoveryPublisher.publish({
+                                contentHash: entry.ipfsRemotePublicationOutcome.contentHash,
+                                locator: entry.ipfsRemotePublicationOutcome.locator,
+                                storage: 'ipfs'
+                            });
+                            entry.ipfsRemoteSnapshotAnnouncement = { announced: announcement !== null, announcement, error: null };
+                        } catch (error) {
+                            entry.ipfsRemoteSnapshotAnnouncement = { announced: false, announcement: null, error: error.message };
+                        }
+                    }
                 }
             } catch (error) {
                 entry.ipfsRemotePublicationOutcome = { state: IpfsRemotePublicationState.FAILED, published: false, contentHash: null, locator: null, endpoint: null, publishedAt: null, reason: error.message };
