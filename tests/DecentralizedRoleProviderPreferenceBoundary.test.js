@@ -312,7 +312,25 @@ async function run() {
             'application/SetRoleProviderPreferenceUseCase.js',
             'application/RoleProviderPreferenceSettingsView.js',
             'ui/views/ContentProviderSettingsView.js',
-            'ui/router/index.js'
+            'ui/router/index.js',
+            // ui/views/AnnouncementDiscoveryProviderSettingsView.js (the
+            // ANNOUNCEMENT_AND_DISCOVERY-role settings view, mirroring
+            // ui/views/ContentProviderSettingsView.js one role over) and
+            // ui/views/DecentralizedPublicationsView.js (which already named
+            // RoleProviderPreference in its own 0.9.301 preferred-placement
+            // trigger prose) were both real, legitimate consumers this set
+            // never named — closed here now that a THIRD role's own
+            // integration makes the gap impossible to keep overlooking.
+            'ui/views/AnnouncementDiscoveryProviderSettingsView.js',
+            'ui/views/DecentralizedPublicationsView.js',
+            // Preferred Proof & Anchoring Provider Creation Integration —
+            // the PROOF_AND_ANCHORING mirror of 0.9.299/0.9.301/0.9.302's
+            // own Content-role trio, one role over: the wrapped-coordinator
+            // pair, and the settings view that writes/reads this role's own
+            // preference.
+            'application/PreferredPublicationAnchorCreationCoordinator.js',
+            'application/CreatePreferredPublicationAnchorCreationCoordinatorUseCase.js',
+            'ui/views/AnchorProviderSettingsView.js'
         ]);
         let consumerCount = 0;
         const consumerFiles = [];
@@ -323,7 +341,7 @@ async function run() {
                 consumerFiles.push(file);
             }
         }
-        assert(consumerCount === KNOWN_CONSUMER_FILES.size && consumerFiles.every((f) => KNOWN_CONSUMER_FILES.has(f)), `M1. exactly the 0.9.294 persistence store, the 0.9.295 resolver, the 0.9.297 application boundary, the 0.9.299 Content creation integration (plus its ui/main.js wiring), the 0.9.301 UI-facing view-model, and the 0.9.302 settings write use case/view-model/view/route reference RoleProviderPreference or RoleProviderRole (found ${consumerCount}: ${consumerFiles.join(', ')}) — this boundary is consumed ONLY by those eleven named layers; wiring it into any OTHER production composition root is separate, unscheduled future work`);
+        assert(consumerCount === KNOWN_CONSUMER_FILES.size && consumerFiles.every((f) => KNOWN_CONSUMER_FILES.has(f)), `M1. exactly the 0.9.294 persistence store, the 0.9.295 resolver, the 0.9.297 application boundary, the 0.9.299 Content creation integration (plus its ui/main.js wiring), the 0.9.301 UI-facing view-model, the 0.9.302 settings write use case/view-model/view/route, the Announcement/Discovery settings view and DecentralizedPublicationsView.js, and the Proof/Anchoring creation integration (its wrapped-coordinator pair and settings view) reference RoleProviderPreference or RoleProviderRole (found ${consumerCount}: ${consumerFiles.join(', ')}) — this boundary is consumed ONLY by those ${KNOWN_CONSUMER_FILES.size} named layers; wiring it into any OTHER production composition root is separate, unscheduled future work`);
         for (const file of consumerFiles) {
             assert(KNOWN_CONSUMER_FILES.has(file), `M2. "${file}" is not one of the known legitimate consumers of this boundary`);
         }

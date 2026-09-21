@@ -25,6 +25,12 @@ export default {
                     </router-link>
                 </li>
                 <li>
+                    <router-link to="/settings/anchor-provider" class="network-settings-link">
+                        <span class="network-settings-link-title">Proof / Anchoring Provider</span>
+                        <span class="form-hint form-hint--neutral">Preferred substrate — Bitcoin or Arweave — "Use Preferred Provider" anchors new evidence onto. Base keeps its own separate wallet-guided anchoring flow.</span>
+                    </router-link>
+                </li>
+                <li>
                     <router-link to="/settings/arweave-gateway" class="network-settings-link">
                         <span class="network-settings-link-title">Arweave Gateway</span>
                         <span class="form-hint form-hint--neutral">Gateway used for retrieving Arweave content.</span>

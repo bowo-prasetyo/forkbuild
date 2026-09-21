@@ -859,17 +859,24 @@ async function run() {
         ];
         assert(EXCLUDED.length === 13, n('L1. the full exclusion list from this file\'s own header is thirteen items, named, not silently dropped'));
 
-        const statusOutput = execSync('git status --porcelain', { cwd: SOURCE_ROOT }).toString();
-        const changed = statusOutput.split('\n').map((line) => line.slice(3).trim()).filter(Boolean);
-        const productionDirs = ['core', 'application', 'renderer', 'discovery', 'anchoring', 'collaboration', 'persistence', 'identity', 'publisher', 'storage', 'peer', 'content', 'presence', 'ui', 'css', 'server', 'replication', 'serializer', 'world', 'world-layout', 'spatial', 'base', 'arweave', 'nostr', 'placement'];
-        const touchedProduction = changed.filter((f) => productionDirs.some((dir) => f.startsWith(`${dir}/`)));
-        assert(touchedProduction.length === 0, n(`L2. no production directory shows any change from this milestone (found: ${JSON.stringify(touchedProduction)}) — this audit reads and live-exercises existing source, it writes none`));
+        // L2/L3 ORIGINALLY asserted, live, against `git status --porcelain`,
+        // that this audit's OWN commit built nothing beyond its own test
+        // file and tests.html's own registration. That was a true, live
+        // constraint on this milestone's own commit alone — never a
+        // standing regression gate against every later commit — the
+        // identical demotion tests/
+        // PublicationsDistributionSectionProductAndUIBoundaryAudit.test.js's
+        // own Section I1/I2 already applies to a structurally identical
+        // situation. Preferred Proof & Anchoring Provider Creation
+        // Integration legitimately extended production afterward; a live
+        // `git status` assertion here would now fail on that legitimate,
+        // intentional change, and on every other legitimate change this
+        // repository makes from now on. Demoted to a historical record
+        // rather than deleted, since it correctly documents what WAS true
+        // when this audit was first written.
+        console.log('  (historical) L2/L3 — as of this audit\'s own original commit, it built nothing beyond its own test file and tests.html\'s own registration, and touched no production directory. Preferred Proof & Anchoring Provider Creation Integration legitimately extended production afterward — this is no longer a live constraint.');
 
-        const AUTHORIZED = new Set(['tests.html', 'tests/ProofAnchoringCrossSubstrateEndToEndClosureAudit.test.js']);
-        const unauthorized = changed.filter((f) => !AUTHORIZED.has(f));
-        assert(unauthorized.length === 0, n(`L3. every changed/added file is one this milestone's own commit names (found unauthorized: ${JSON.stringify(unauthorized)})`));
-
-        console.log('✓ Section L: deliberately excluded list confirmed named, not dropped; no production directory changed; the only new files are this milestone\'s own test and its tests.html registration');
+        console.log('✓ Section L: deliberately excluded list confirmed named, not dropped; the only new files at this audit\'s own original commit were its own test and its tests.html registration');
     }
 
     console.log(`\nAll ${assertionCount} assertions passed.`);

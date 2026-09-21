@@ -442,9 +442,27 @@ async function run() {
         for (const route of settingsRoutes) {
             assert(new RegExp(`path: '/settings/${route}'`).test(routerSource), n(`E2[${route}]. /settings/${route} is a real, registered route`));
         }
-        assert(!/\/settings\/(bitcoin|anchor)/.test(routerSource), n('E3. no Bitcoin/anchor-endpoint Settings route exists — confirmed deliberate, not merely missing: Bitcoin anchoring has no persistent gateway/relay concept to configure, it is wallet-connection-driven, live, inline in DecentralizedPublicationsView.js itself'));
-        assert(/bitcoinWalletConnection|baseWalletConnection/.test(codeOnly(viewSource)), n('E4. confirmed live: the wallet-connection state this role actually needs already renders inline, contextually, exactly where the anchor action itself occurs — the SAME "configuration lives where the action is" principle Settings views already hold for the other two roles, just achieved by a different, already-adequate mechanism for this one'));
-        assert(!/router-link[^>]*\/settings\/(bitcoin|anchor)/.test(viewSource), n('E5. Proof/Anchoring still carries no Settings link of any kind — 0.9.437 deliberately added none, matching E3\'s own finding that no such route exists to link to'));
+        // AMENDED BY Preferred Proof & Anchoring Provider Creation
+        // Integration. E3 originally asserted NO route matching
+        // /settings/(bitcoin|anchor)/ existed at all — true at the time,
+        // because this role had no PREFERENCE concept to configure yet,
+        // only a wallet-connection state that E4 below correctly found
+        // already renders inline. That is still true and still unchanged:
+        // Bitcoin/Base wallet endpoints still have no persistent concept to
+        // configure, and still render inline. What changed is that this
+        // role gained an ENTIRELY DIFFERENT kind of configuration — which
+        // substrate "Use Preferred Provider" resolves to, the SAME
+        // provider-PREFERENCE concept /settings/content-provider already
+        // configures for CONTENT — mirrored here, one role over, as
+        // /settings/anchor-provider. This assertion now checks the ORIGINAL
+        // concern precisely (no bitcoin- or base-ENDPOINT settings route)
+        // rather than the broader regex that would have also, incorrectly,
+        // forbidden the legitimate preference route.
+        assert(!/\/settings\/(bitcoin|base)(?!-)/.test(routerSource), n('E3. no Bitcoin/Base-ENDPOINT Settings route exists — confirmed still deliberate: Bitcoin/Base wallet connections have no persistent gateway/relay concept to configure, they are wallet-connection-driven, live, inline in DecentralizedPublicationsView.js itself'));
+        assert(/path: '\/settings\/anchor-provider'/.test(routerSource), n('E3b. /settings/anchor-provider IS now a real, registered route — the PROOF_AND_ANCHORING-role mirror of /settings/content-provider, configuring which substrate "Use Preferred Provider" resolves to, never a Bitcoin/Base wallet endpoint'));
+        assert(/bitcoinWalletConnection|baseWalletConnection/.test(codeOnly(viewSource)), n('E4. confirmed live: the wallet-connection state this role actually needs still already renders inline, contextually, exactly where the anchor action itself occurs — unchanged by E3b above, which configures a different concept entirely'));
+        assert(!/router-link[^>]*\/settings\/(bitcoin|base)(?!-)/.test(viewSource), n('E5. Proof/Anchoring still carries no Settings link to any Bitcoin/Base wallet ENDPOINT — none exists to link to, unchanged'));
+        assert(/router-link\s+to="\/settings\/anchor-provider"/.test(viewSource), n('E5b. a contextual /settings/anchor-provider router-link now exists at the Proof/Anchoring role heading — mirroring /settings/content-provider\'s own identical role-heading link immediately above it, closing the same CONFIGURATION_DISCOVERABILITY_GAP shape this section already closed for the other two Settings-backed roles'));
 
         console.log('✓ Section E — UPDATED by 0.9.437: the CONFIGURATION_DISCOVERABILITY_GAP this audit named is now closed for all three Settings-backed roles, contextually, from /publications itself — see tests/PublicationsDistributionConfigurationReachability.test.js for that milestone\'s own full proof (correct per-substrate targeting, no duplicated controls, and distribution isolation).');
     }
@@ -525,9 +543,9 @@ async function run() {
                 because: 'all three Settings views already exist and are already routed (Section E2); zero of the three action surfaces link to any of them (Section E1) — a small, concretely-scoped fix, not a new view'
             },
             {
-                finding: 'Give Bitcoin/anchor a Settings view of its own',
+                finding: 'Give Proof/Anchoring a Settings view of its own',
                 classification: 'PRODUCT_ENHANCEMENT',
-                because: 'not a gap: there is no persistent endpoint this role needs configured (Section E3/E4) — building one would be inventing a configuration surface for a role that, by design, needs none, which is new product scope, never a fix for an existing absence'
+                because: 'AMENDED — not a gap at the time this audit was written (no persistent Bitcoin/Base wallet ENDPOINT needs configuring, Section E3/E4, still true), but a genuinely different, legitimate configuration surface (which substrate "Use Preferred Provider" resolves to, the SAME preference concept /settings/content-provider already configures for CONTENT) was real product scope this audit correctly declined to build unprompted — Preferred Proof & Anchoring Provider Creation Integration built exactly that scope, deliberately, as /settings/anchor-provider (Section E3b/E5b)'
             },
             {
                 finding: 'Automatic multi-substrate fan-out, aggregate cross-substrate status, or a generic DistributionProvider abstraction',
