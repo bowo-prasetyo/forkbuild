@@ -141,16 +141,16 @@ async function run() {
         // AMENDED BY 0.9.667 — Role Provider Preference As Dropdown
         // Default. Both fields' own literal fallback values ('nostr', and
         // the first eligible storage type) are unchanged — each is now
-        // reached through resolvePreferredProviderDefault(preferred,
+        // reached through resolveSavedProviderDefault(preferred,
         // available, fallback) rather than inline, so this replica's own
         // saved preference can win first when it names one of the
         // currently-offered options — but the two fields remain exactly as
         // independent as this section's own header describes: each call
         // names only its OWN role's preference/options, never the other
         // field's.
-        check(/discoveryDistributionProvider:\s*resolvePreferredProviderDefault\(\s*\n\s*defaultAnnouncementDiscoveryProvider,\s*\['nostr',\s*'arweave'\],\s*'nostr'\s*\n\s*\),/.test(viewSource),
+        check(/discoveryDistributionProvider:\s*resolveSavedProviderDefault\(\s*\n\s*defaultAnnouncementDiscoveryProvider,\s*\['nostr',\s*'arweave'\],\s*'nostr'\s*\n\s*\),/.test(viewSource),
             "C. Announcement/Discovery's own per-entry field (discoveryDistributionProvider) exists, independent of Content, and still falls back to 'nostr' absent a saved preference");
-        check(/snapshotDistributionStorage:\s*resolvePreferredProviderDefault\(\s*\n\s*defaultContentDistributionProvider,\s*snapshotDistributionStorageTypes,\s*snapshotDistributionStorageTypes\[0\]\s*\|\|\s*'ar'\s*\n\s*\),/.test(viewSource),
+        check(/snapshotDistributionStorage:\s*resolveSavedProviderDefault\(\s*\n\s*defaultContentDistributionProvider,\s*snapshotDistributionStorageTypes,\s*snapshotDistributionStorageTypes\[0\]\s*\|\|\s*'ar'\s*\n\s*\),/.test(viewSource),
             "C. Content's own per-entry field (snapshotDistributionStorage) exists, independent of Announcement/Discovery, and still falls back to the first eligible backend (or 'ar') absent a saved preference");
 
         const codeOnly = codeOnlyLines(viewSource).join('\n');
@@ -270,11 +270,11 @@ async function run() {
 
         const viewSource = await rawSource('ui/views/DecentralizedPublicationsView.js');
         // AMENDED BY 0.9.667 — the SAME 'ar' fallback, now the third
-        // argument to resolvePreferredProviderDefault() rather than an
+        // argument to resolveSavedProviderDefault() rather than an
         // inline `||` chain, only reached when neither an explicit choice
         // nor a saved Content preference applies. Still the one hardcoded
         // fallback anywhere in this feature, never 'ipfs'.
-        check(/snapshotDistributionStorage:\s*resolvePreferredProviderDefault\(\s*\n\s*defaultContentDistributionProvider,\s*snapshotDistributionStorageTypes,\s*snapshotDistributionStorageTypes\[0\]\s*\|\|\s*'ar'\s*\n\s*\),/.test(viewSource),
+        check(/snapshotDistributionStorage:\s*resolveSavedProviderDefault\(\s*\n\s*defaultContentDistributionProvider,\s*snapshotDistributionStorageTypes,\s*snapshotDistributionStorageTypes\[0\]\s*\|\|\s*'ar'\s*\n\s*\),/.test(viewSource),
             "H. the picker's own initial selection falls back to 'ar' only when nothing is currently eligible AND no saved Content preference applies — 'ar' remains the one hardcoded fallback anywhere in this feature, never 'ipfs'");
 
         console.log("✓ Section H: Arweave remains the one backward-compatible default throughout — at the command layer (omitted storage) and at the UI layer (nothing eligible yet). Unchanged by this milestone, on purpose.");
