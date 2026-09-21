@@ -283,13 +283,17 @@ function makeRealSession(placementRegistry) {
 
 // Mirrors ui/main.js's own real `snapshotDistributionCommand` wrapper
 // exactly (minus the storage-backend-registry lookup that wrapper's own
-// `resolveSnapshotDistributionContentStore()` call performs — orthogonal
-// to this milestone's own concern, and already covered by
+// `resolveSnapshotDistributionContentStore()` call performs, and — AMENDED
+// BY 0.9.669 — minus the per-substrate `resolveSnapshotDiscoveryPublisher()`
+// resolution that wrapper now also performs — both orthogonal to this
+// milestone's own concern, which is placementInfo forwarding, not
+// substrate selection; the storage lookup is already covered by
 // tests/DistributeExistingClaimedPositionThroughSnapshotDistribution.test.js's
-// own Section H). Verified structurally against the real source in
-// Section B, below.
+// own Section H, and substrate selection is covered by
+// tests/SnapshotDistributionRuntimeComposition.test.js). Verified
+// structurally against the real source in Section B, below.
 function makeRealSnapshotDistributionCommand({ contentStore, discoveryPublisher }) {
-    return (bytes, storage = 'ar', publicationId, claimedPosition) => executeSnapshotDistributionCommand({
+    return (bytes, storage = 'ar', publicationId, claimedPosition, discoveryProvider) => executeSnapshotDistributionCommand({
         bytes,
         contentStore,
         discoveryPublisher,
@@ -446,10 +450,21 @@ async function run() {
         const distributeWorldEncounterSnapshot = makeDistributeWorldEncounterSnapshotAction({ snapshotDistributionCommand, publicationContentStore, session });
 
         const mainSource = await readSource('ui/main.js');
-        assert(/const snapshotDistributionCommand = \(bytes, storage = 'ar', publicationId, claimedPosition\) => executeSnapshotDistributionCommand\(\{\s*\n\s*bytes,\s*\n\s*contentStore: resolveSnapshotDistributionContentStore\(snapshotPlacementStoreRegistry, storage\),\s*\n\s*discoveryPublisher: snapshotDiscoveryPublisher,\s*\n\s*publicationId,\s*\n\s*claimedPosition\s*\n\s*\}\);/.test(mainSource),
-            'B1. ui/main.js\'s own real `snapshotDistributionCommand` wrapper genuinely has this exact shape — makeRealSnapshotDistributionCommand() above reproduces it faithfully.');
+        // AMENDED BY 0.9.669 — Per-Click Snapshot Announcement/Discovery
+        // Substrate Override. `discoveryProvider` joined the parameter
+        // list, and `discoveryPublisher` is now resolved per-call via
+        // `resolveSnapshotDiscoveryPublisher(discoveryProvider)` instead
+        // of always reading the single, fixed `snapshotDiscoveryPublisher`
+        // — this milestone's own concern (placementInfo forwarding) is
+        // otherwise unaffected; see makeRealSnapshotDistributionCommand()'s
+        // own amended header, above.
+        assert(/const snapshotDistributionCommand = \(bytes, storage = 'ar', publicationId, claimedPosition, discoveryProvider\) => executeSnapshotDistributionCommand\(\{\s*\n\s*bytes,\s*\n\s*contentStore: resolveSnapshotDistributionContentStore\(snapshotPlacementStoreRegistry, storage\),\s*\n\s*discoveryPublisher: resolveSnapshotDiscoveryPublisher\(discoveryProvider\),\s*\n\s*publicationId,\s*\n\s*claimedPosition\s*\n\s*\}\);/.test(mainSource),
+            'B1. AMENDED BY 0.9.669 — ui/main.js\'s own real `snapshotDistributionCommand` wrapper genuinely has this exact shape — makeRealSnapshotDistributionCommand() above reproduces it faithfully, minus per-substrate resolution (see that function\'s own amended header).');
         const worldViewSource = await readSource('ui/views/WorldView.js');
-        const distributeFnMatch = worldViewSource.match(/function distributeWorldEncounterSnapshot\(publication, storage, remotePinningConfiguration\)\s*\{[\s\S]*?\n        \}/);
+        // AMENDED BY 0.9.669 — `discoveryProvider` joined `publication`/
+        // `storage`/`remotePinningConfiguration` as a new, optional fourth
+        // parameter — still exactly one `distributeWorldEncounterSnapshot`.
+        const distributeFnMatch = worldViewSource.match(/function distributeWorldEncounterSnapshot\(publication, storage, remotePinningConfiguration, discoveryProvider\)\s*\{[\s\S]*?\n        \}/);
         assert(distributeFnMatch && /session\.getPlacementInfoForPublication\(publication\.id\)/.test(distributeFnMatch[0])
             && /placementInfo \? placementInfo\.publicationId : undefined/.test(distributeFnMatch[0]),
             'B2. ui/views/WorldView.js\'s own real distributeWorldEncounterSnapshot() genuinely has this exact shape — makeDistributeWorldEncounterSnapshotAction() above reproduces it faithfully.');

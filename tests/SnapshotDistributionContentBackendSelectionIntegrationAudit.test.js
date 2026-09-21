@@ -203,14 +203,22 @@ async function run() {
         check(mainSource.includes("import { availableSnapshotDistributionStorageTypes, resolveSnapshotDistributionContentStore } from '../application/SnapshotDistributionContentBackendSelection.js';"),
             'A. ui/main.js imports the new 0.9.506 selection module');
 
-        const commandMatch = mainSource.match(/const snapshotDistributionCommand = \(bytes, storage = 'ar', publicationId, claimedPosition\) => executeSnapshotDistributionCommand\(\{([\s\S]*?)\}\);/);
-        check(Boolean(commandMatch), 'A. (0.9.566) ui/main.js\'s real snapshotDistributionCommand is found, taking an explicit (bytes, storage = \'ar\', publicationId, claimedPosition) tuple');
+        // AMENDED BY 0.9.669 — `discoveryProvider` joined the parameter
+        // list as a new, optional fifth argument.
+        const commandMatch = mainSource.match(/const snapshotDistributionCommand = \(bytes, storage = 'ar', publicationId, claimedPosition, discoveryProvider\) => executeSnapshotDistributionCommand\(\{([\s\S]*?)\}\);/);
+        check(Boolean(commandMatch), 'A. AMENDED BY 0.9.669 — ui/main.js\'s real snapshotDistributionCommand is found, taking an explicit (bytes, storage = \'ar\', publicationId, claimedPosition, discoveryProvider) tuple');
         check(commandMatch[1].includes('resolveSnapshotDistributionContentStore(snapshotPlacementStoreRegistry, storage)'), 'A. it resolves contentStore from the SAME snapshotPlacementStoreRegistry Placement already builds, keyed by the caller\'s own storage choice');
         check(!commandMatch[1].includes('new ArweaveContentStore') && !commandMatch[1].includes('new IpfsContentStore'), 'A. the command call site itself constructs no concrete ContentStore');
 
-        const runtimeMatch = mainSource.match(/const \{ discoveryPublisher: snapshotDiscoveryPublisher \} = composeSnapshotDistributionRuntime\(\{([\s\S]*?)\}\);/);
-        check(Boolean(runtimeMatch), 'A. composeSnapshotDistributionRuntime() is now called for its discoveryPublisher half only');
-        check(!runtimeMatch[1].includes('arweaveContentStoreOptions'), 'A. it no longer passes an arweaveContentStoreOptions of its own — no second ArweaveContentStore is constructed for Distribution');
+        // AMENDED BY 0.9.669 — Per-Click Snapshot Announcement/Discovery
+        // Substrate Override. composeSnapshotDistributionRuntime() is now
+        // called twice, once per substrate (Nostr/Arweave) — each call
+        // still for its discoveryPublisher half only, and neither passes
+        // an arweaveContentStoreOptions of its own.
+        const nostrRuntimeMatch = mainSource.match(/const \{ discoveryPublisher: nostrSnapshotDiscoveryPublisher \} = composeSnapshotDistributionRuntime\(\{([\s\S]*?)\}\);/);
+        const arweaveRuntimeMatch = mainSource.match(/const \{ discoveryPublisher: arweaveSnapshotDiscoveryPublisher \} = composeSnapshotDistributionRuntime\(\{([\s\S]*?)\}\);/);
+        check(Boolean(nostrRuntimeMatch) && Boolean(arweaveRuntimeMatch), 'A. AMENDED BY 0.9.669 — composeSnapshotDistributionRuntime() is called once per substrate, each for its discoveryPublisher half only');
+        check(!nostrRuntimeMatch[1].includes('arweaveContentStoreOptions') && !arweaveRuntimeMatch[1].includes('arweaveContentStoreOptions'), 'A. neither call passes an arweaveContentStoreOptions of its own — no second ArweaveContentStore is constructed for Distribution');
 
         check(mainSource.includes("app.provide('snapshotDistributionAvailableStorageTypes', snapshotDistributionAvailableStorageTypes);"), 'A. ui/main.js provides the new eligible-storage-types read for a UI picker to consume');
 

@@ -1523,6 +1523,9 @@ export default {
         // own "Distribute Publication" button had no such prop at all and
         // always distributed via Nostr, regardless of what a Wanderer had
         // saved via /settings/announcement-discovery-provider.
+        //
+        // AMENDED BY 0.9.669 — also seeds `snapshotDiscoveryProvider`'s own
+        // initial value, the identical restraint held one field over.
         defaultDiscoveryDistributionProvider: {
             type: String,
             default: 'nostr'
@@ -1717,6 +1720,17 @@ export default {
             snapshotDistributionError: null,
             snapshotDistributionResult: null,
             snapshotDistributionRequestId: 0,
+            // AMENDED BY 0.9.669 — Per-Click Snapshot Announcement/Discovery
+            // Substrate Override. The identical kind of page-local choice
+            // as `publicationDiscoveryProvider` (below), one action over —
+            // deliberately a SEPARATE field, never shared with it, the
+            // same restraint this file already holds for every other
+            // Snapshot/Publication sibling pair. Opens on the injected
+            // `defaultDiscoveryDistributionProvider` prop, mirroring
+            // `WorldEncounterCanvas.js`'s own identical
+            // `selectedSnapshotDiscoveryProvider` field exactly, one host
+            // component over.
+            snapshotDiscoveryProvider: this.defaultDiscoveryDistributionProvider || 'nostr',
             // Bug fix — backs the snapshotDistributionStorage computed
             // below. `null` until a Wanderer explicitly picks a storage
             // from the picker; the computed's own getter supplies the
@@ -2171,7 +2185,7 @@ export default {
             } : undefined;
 
             Promise.resolve()
-                .then(() => this.snapshotDistributionCommand(publication, storage, remotePinningConfiguration))
+                .then(() => this.snapshotDistributionCommand(publication, storage, remotePinningConfiguration, this.snapshotDiscoveryProvider))
                 .then((result) => {
                     if (requestId === this.snapshotDistributionRequestId) {
                         this.snapshotDistributionResult = result;
@@ -2928,6 +2942,23 @@ export default {
                 </label>
                 <p class="form-hint form-hint--neutral">Nothing here is saved anywhere — entered fresh each time you click Distribute Snapshot.</p>
             </div>
+
+            <!-- AMENDED BY 0.9.669 — Per-Click Snapshot Announcement/
+                 Discovery Substrate Override. The identical Announcement/
+                 Discovery substrate select "Distribute Publication"
+                 below already has, one action over — applies to all three
+                 Storage choices above, including Remote Pinning. -->
+            <label class="own-publication-distribution-provider-label">
+                Announcement / Discovery substrate:
+                <select
+                    v-model="snapshotDiscoveryProvider"
+                    class="form-select own-publication-distribution-provider-select"
+                    :disabled="snapshotDistributionExecuting"
+                >
+                    <option value="nostr">Nostr</option>
+                    <option value="arweave">Arweave</option>
+                </select>
+            </label>
 
             <!-- Reachable with zero connected peers and an empty World
                  Encounters panel — this action never depends on either.

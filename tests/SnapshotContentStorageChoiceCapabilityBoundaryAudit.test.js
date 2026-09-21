@@ -533,8 +533,10 @@ async function run() {
         const placementSiteMatch = mainSource.match(/stores:\s*\[publicationContentStore,\s*new IpfsContentStore\(\{ apiUrl: resolvedIpfsNodeApiUrl \}\)\]/);
         check(Boolean(placementSiteMatch), 'J. ui/main.js\'s real Placement composition site registers exactly [publicationContentStore (local), new IpfsContentStore({ apiUrl: resolvedIpfsNodeApiUrl })] — Local + IPFS, never Arweave');
 
-        const distributionSiteMatch = mainSource.match(/const snapshotDistributionCommand = \(bytes, storage = 'ar', publicationId, claimedPosition\) => executeSnapshotDistributionCommand\(\{([\s\S]*?)\}\);/);
-        check(Boolean(distributionSiteMatch), 'J. ui/main.js\'s real Distribution command call site is found and isolated for inspection');
+        // AMENDED BY 0.9.669 — `discoveryProvider` joined the parameter
+        // list as a new, optional fifth argument.
+        const distributionSiteMatch = mainSource.match(/const snapshotDistributionCommand = \(bytes, storage = 'ar', publicationId, claimedPosition, discoveryProvider\) => executeSnapshotDistributionCommand\(\{([\s\S]*?)\}\);/);
+        check(Boolean(distributionSiteMatch), 'J. AMENDED BY 0.9.669 — ui/main.js\'s real Distribution command call site is found and isolated for inspection');
         const distributionSiteBody = distributionSiteMatch[1];
 
         check(distributionSiteBody.includes('resolveSnapshotDistributionContentStore(snapshotPlacementStoreRegistry, storage)'), 'J. as of 0.9.506, the Distribution command genuinely resolves its contentStore FROM snapshotPlacementStoreRegistry — the SAME registry Placement already builds — never a second, independent ArweaveContentStore instance');

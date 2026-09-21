@@ -293,7 +293,17 @@ async function run() {
         // own ArweaveContentStore construction (below) uses, and nothing
         // about ITS lazy-resolution wiring changed either.
         assert(!/composeSnapshotDistributionRuntime\(\{\s*arweaveContentStoreOptions/.test(mainSource), n('D1. AMENDED BY 0.9.506 — the Snapshot DISTRIBUTION composition call site no longer builds its own arweaveContentStoreOptions at all, since it no longer consumes composeSnapshotDistributionRuntime()\'s own contentStore half'));
-        assert(/const \{ discoveryPublisher: snapshotDiscoveryPublisher \} = composeSnapshotDistributionRuntime\(\{/.test(mainSource), n('D1b. 0.9.506 — it now calls composeSnapshotDistributionRuntime() for its discoveryPublisher half only'));
+        // AMENDED BY 0.9.669 — Per-Click Snapshot Announcement/Discovery
+        // Substrate Override. composeSnapshotDistributionRuntime() is now
+        // called TWICE — once per substrate — instead of once for
+        // whichever discoveryProvider happened to be saved, so a per-click
+        // override can pick between two already-composed instances rather
+        // than being locked to whichever one was built at boot. Neither
+        // call passes arweaveContentStoreOptions, so D1 (above) still
+        // holds for both.
+        assert(/const \{ discoveryPublisher: nostrSnapshotDiscoveryPublisher \} = composeSnapshotDistributionRuntime\(\{/.test(mainSource)
+            && /const \{ discoveryPublisher: arweaveSnapshotDiscoveryPublisher \} = composeSnapshotDistributionRuntime\(\{/.test(mainSource),
+            n('D1b. AMENDED BY 0.9.669 — it now calls composeSnapshotDistributionRuntime() twice, once per substrate, each still for its discoveryPublisher half only'));
         // AMENDED BY 0.9.508 — Snapshot Resolution Content Backend Registry
         // Integration. composeDiscoverSnapshotRuntime() no longer receives
         // an arweaveContentStoreOptions (or any signer) at all — that call
