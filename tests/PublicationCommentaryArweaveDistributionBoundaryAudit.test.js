@@ -440,8 +440,17 @@ async function run() {
         assert(/import\s*\{\s*ArweaveContentStore\s*\}/.test(snapshotCompositionSource)
             && /import\s*\{\s*NostrSnapshotDiscoveryPublisher\s*\}/.test(snapshotCompositionSource),
             n('application/SnapshotDistributionRuntimeComposition.js imports exactly ArweaveContentStore (content) and NostrSnapshotDiscoveryPublisher (discovery/announcement) — confirmed by reading its real, current source'));
-        assert(!/ArweaveAnnouncementPublisher|ArweaveSnapshotDiscoveryPublisher/.test(snapshotCompositionSource),
-            n('that same source never imports ArweaveAnnouncementPublisher or ArweaveSnapshotDiscoveryPublisher — Snapshot\'s own WRITE-side discovery/announcement is Nostr-only, hardcoded, with no Arweave branch of any kind, unlike Publication\'s own composition (below)'));
+        // AMENDED — a later, separately-scoped milestone (Announcement/
+        // Discovery Provider Selection, extended to the Snapshot and Place
+        // Naming families) gave SnapshotDistributionRuntimeComposition.js
+        // the identical `discoveryProvider: 'nostr' | 'arweave'` selection
+        // Publication's own composition (below) already had — the finding
+        // this assertion used to encode ("Snapshot's write side is
+        // Nostr-only, hardcoded") no longer holds. `ArweaveSnapshotDiscoveryPublisher`
+        // is now a real, selectable import there, mirroring
+        // ArweaveAnnouncementPublisher's own role one family over.
+        assert(/import\s*\{\s*ArweaveSnapshotDiscoveryPublisher\s*\}/.test(snapshotCompositionSource),
+            n('application/SnapshotDistributionRuntimeComposition.js now also imports ArweaveSnapshotDiscoveryPublisher — Snapshot\'s own WRITE-side discovery/announcement gained the identical "nostr" | "arweave" selection Publication\'s own composition (below) already had'));
 
         assert(JSON.stringify(SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES) === JSON.stringify(['ipfs', 'ar']),
             n('Snapshot Distribution\'s own real, live, user-choosable axis (application/SnapshotDistributionContentBackendSelection.js#SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES) is CONTENT BACKEND — ipfs or ar — never a Nostr-vs-Arweave DISCOVERY substrate choice'));
@@ -470,7 +479,7 @@ async function run() {
         }
         assert(threwForUnknownProvider, n('an unrecognized discoveryProvider throws synchronously — selection, never a silent third option'));
 
-        console.log('✓ B: the requesting brief\'s own framing ("Snapshot distribution already lets users choose Nostr or Arweave") does not match this codebase\'s real wiring — that live, UI-reachable choice (ui/components/WorldEncounterCanvas.js, 0.9.430) belongs to PUBLICATION distribution\'s own discoveryProvider selection. Snapshot Distribution\'s own real, choosable axis is CONTENT BACKEND (ipfs/ar); its discovery/announcement stays Nostr-only, hardcoded. This correction matters directly for Section J/M, below — the correct precedent to extend to Commentary is Publication\'s discoveryProvider selection, never a repurposing of Snapshot\'s own, differently-shaped, backend picker.');
+        console.log('✓ B: at the time this audit was originally written, the requesting brief\'s own framing ("Snapshot distribution already lets users choose Nostr or Arweave") did not match this codebase\'s real wiring — Snapshot Distribution\'s only live, choosable axis was CONTENT BACKEND (ipfs/ar), with discovery/announcement Nostr-only, hardcoded. A later, separately-scoped milestone closed exactly that gap, extending Publication\'s own "exactly one of \'nostr\'|\'arweave\', never fan-out" composePublicationDistributionRuntime() precedent to application/SnapshotDistributionRuntimeComposition.js — Snapshot distribution now has both axes: CONTENT BACKEND (ipfs/ar) and, independently, an announcement/discovery substrate choice, resolved at composition time from a shared ANNOUNCEMENT_AND_DISCOVERY role preference (ui/main.js). Commentary\'s own precedent below is unaffected by this update — Publication\'s composition remains the shape it always mirrored.');
     }
 
     // ===============================================================

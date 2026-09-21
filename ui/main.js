@@ -120,6 +120,7 @@ import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/Creat
 import { CreateSnapshotPlacementCreationCoordinatorUseCase } from '../application/CreateSnapshotPlacementCreationCoordinatorUseCase.js';
 import { CreatePreferredSnapshotPlacementCreationCoordinatorUseCase } from '../application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js';
 import { SetRoleProviderPreferenceUseCase } from '../application/SetRoleProviderPreferenceUseCase.js';
+import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { SetArweaveGatewayConfigurationUseCase } from '../application/SetArweaveGatewayConfigurationUseCase.js';
 import { PublicationCatalogDiscoveryProvider } from '../discovery/PublicationCatalogDiscoveryProvider.js';
 import { PublicationCatalogContentResolver } from '../discovery/PublicationCatalogContentResolver.js';
@@ -776,7 +777,16 @@ function addPublicationCommentaryCommand(input) {
         // createPublicationCommentaryCommand throws, unmodified, before
         // announcing anything), so nothing here ever needs to be undone.
     }
-    const discoveryProvider = (input && input.discoveryProvider) || 'nostr';
+    // Falls back to this replica's own persisted ANNOUNCEMENT_AND_DISCOVERY
+    // preference (resolved once, below, at boot) rather than a hardcoded
+    // 'nostr' — an explicit `input.discoveryProvider` from a caller still
+    // wins, unchanged. `resolvedAnnouncementDiscoveryProvider` is declared
+    // later in this file and read here only when this function is actually
+    // CALLED (a later UI interaction), the identical closure-based forward
+    // reference `publicationCommentaryNostrDistribution`/
+    // `publicationCommentaryArweaveDistribution` themselves already rely on
+    // in this same function.
+    const discoveryProvider = (input && input.discoveryProvider) || resolvedAnnouncementDiscoveryProvider;
     const asynchronousDistribution = discoveryProvider === 'arweave'
         ? publicationCommentaryArweaveDistribution
         : publicationCommentaryNostrDistribution;
@@ -1131,6 +1141,24 @@ const {
 const setRoleProviderPreferenceUseCase = new SetRoleProviderPreferenceUseCase({
     preferenceStore: roleProviderPreferenceStore
 });
+
+// Reads the SAME roleProviderPreferenceStore instance immediately above —
+// never a second, disconnected store — for the ANNOUNCEMENT_AND_DISCOVERY
+// role, so a preference saved by ui/views/AnnouncementDiscoveryProviderSettingsView.js
+// becomes this replica's default substrate for Publication, Snapshot, and
+// Place Naming distribution, and Commentary's own asynchronous publish,
+// the next time this file runs. Resolved once, here, at boot — read fresh
+// on the NEXT load if changed, mirroring `roleProviderPreferenceStore`'s
+// own "settings take effect on next load" contract every other preference
+// in this file already holds. Falls back to 'nostr' — the pre-existing
+// default every one of those call sites already had before this
+// preference existed — for "nothing configured yet" and for any persisted
+// value outside the two real substrates this codebase currently ships.
+const announcementDiscoveryProviderPreference = roleProviderPreferenceStore.get(RoleProviderRole.ANNOUNCEMENT_AND_DISCOVERY);
+const resolvedAnnouncementDiscoveryProvider = (announcementDiscoveryProviderPreference
+    && (announcementDiscoveryProviderPreference.providerKey === 'nostr' || announcementDiscoveryProviderPreference.providerKey === 'arweave'))
+    ? announcementDiscoveryProviderPreference.providerKey
+    : 'nostr';
 
 // 0.8.33 — Local Snapshot Content Availability & Integrity UX. Reads
 // through the SAME `publicationContentStore` (this replica's own 'local'
@@ -2976,8 +3004,20 @@ app.provide('multiRelayNostrPublicationDistributionCommand', multiRelayNostrPubl
 // (and `discoveryPublisher.publish()` has accepted since 0.9.171) — this
 // call site computes neither field itself; see `ui/views/WorldView.js`'s
 // own `distributeWorldEncounterSnapshot()` for where they come from.
+// `discoveryProvider: resolvedAnnouncementDiscoveryProvider` (resolved
+// once, above, from this replica's own persisted ANNOUNCEMENT_AND_DISCOVERY
+// preference) selects which substrate `snapshotDiscoveryPublisher` actually
+// announces through — 'nostr' unless a person has explicitly saved
+// 'arweave' via /settings/announcement-discovery-provider.
+// `arweaveSnapshotDiscoveryPublisherOptions` reuses the SAME
+// `arweaveAnnouncementUploadTaggedTransaction`/`resolvedArweaveGatewayUrl`
+// Publication distribution's own Arweave announcement path already
+// resolved, above — never a second signer, never a second gateway
+// resolution.
 const { discoveryPublisher: snapshotDiscoveryPublisher } = composeSnapshotDistributionRuntime({
-    nostrSnapshotDiscoveryPublisherOptions: { publishImpl: nostrHostPublisher, discoveryTag: 'forkbuild-snapshot', relayUrls: resolvedNostrRelayUrls }
+    discoveryProvider: resolvedAnnouncementDiscoveryProvider,
+    nostrSnapshotDiscoveryPublisherOptions: { publishImpl: nostrHostPublisher, discoveryTag: 'forkbuild-snapshot', relayUrls: resolvedNostrRelayUrls },
+    arweaveSnapshotDiscoveryPublisherOptions: { discoveryTag: 'forkbuild-snapshot', gatewayUrl: resolvedArweaveGatewayUrl, uploadTaggedTransaction: arweaveAnnouncementUploadTaggedTransaction }
 });
 const snapshotDistributionCommand = (bytes, storage = 'ar', publicationId, claimedPosition) => executeSnapshotDistributionCommand({
     bytes,
@@ -3030,8 +3070,17 @@ app.provide('snapshotDistributionAvailableStorageTypes', snapshotDistributionAva
 // itself, from the claim's own `worldId`/`regionId`, the one deliberate
 // departure from the Snapshot family's own shape that file's own header
 // already documents.
+// `discoveryProvider: resolvedAnnouncementDiscoveryProvider` — the same
+// resolved ANNOUNCEMENT_AND_DISCOVERY preference `snapshotDiscoveryPublisher`
+// immediately above already reads, reused here rather than resolved a
+// second time. `arweavePlaceNamingDiscoveryPublisherOptions` reuses the
+// SAME `arweaveAnnouncementUploadTaggedTransaction`/`resolvedArweaveGatewayUrl`
+// pair Publication and Snapshot distribution's own Arweave announcement
+// paths already resolved, above.
 const { discoveryPublisher: placeNamingDiscoveryPublisher } = composePlaceNamingPublicationRuntime({
-    nostrPlaceNamingDiscoveryPublisherOptions: { publishImpl: nostrHostPublisher }
+    discoveryProvider: resolvedAnnouncementDiscoveryProvider,
+    nostrPlaceNamingDiscoveryPublisherOptions: { publishImpl: nostrHostPublisher },
+    arweavePlaceNamingDiscoveryPublisherOptions: { gatewayUrl: resolvedArweaveGatewayUrl, uploadTaggedTransaction: arweaveAnnouncementUploadTaggedTransaction }
 });
 const publishPlaceNamingClaimToNostrCommand = (claim) => Promise.resolve().then(() => {
     if (!placeNamingDiscoveryPublisher) {

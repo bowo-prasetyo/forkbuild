@@ -326,10 +326,18 @@ async function run() {
         assert(!/SnapshotDiscoveryPublisher|SnapshotDistributionCommand|SnapshotDistributionRuntimeComposition/.test(editorSource),
             n('G1. EditorView.js references none of the Snapshot-family (NostrSnapshotDiscoveryPublisher/ArweaveSnapshotDiscoveryPublisher/SnapshotDistributionCommand) classes — this milestone is entirely within the Publication (Signed Claim) distribution family, structurally separate per application/SnapshotDistributionCommand.js\'s own header'));
 
-        const statusOutput = execSync('git status --porcelain -- application/SnapshotDistributionCommand.js application/NostrSnapshotDiscoveryPublisher.js application/ArweaveSnapshotDiscoveryPublisher.js application/SnapshotDistributionRuntimeComposition.js', { cwd: SOURCE_ROOT }).toString().trim();
-        assert(statusOutput === '', n('G2. none of the Snapshot-family production files show any change'));
-
-        console.log('✓ Section G: this milestone never touches the Snapshot-family discovery/distribution seam — Announcement/Discovery Provider Selection for Publications is a structurally separate change');
+        // G2 used to assert `git status --porcelain` was empty for the
+        // Snapshot-family files listed above — a live working-tree check
+        // that could only ever describe THIS milestone's own diff at the
+        // moment it was authored, never "Snapshot distribution never gains
+        // an Arweave alternative." A later, separately-scoped milestone
+        // (Announcement/Discovery Provider Selection, extended to the
+        // Snapshot and Place Naming families) legitimately touches
+        // application/SnapshotDistributionRuntimeComposition.js — G1, above,
+        // already carries this section's real, durable invariant: EditorView.js
+        // itself never references any Snapshot-family class, regardless of
+        // what those files independently contain.
+        console.log('✓ Section G: EditorView.js never references the Snapshot-family discovery/distribution seam — Announcement/Discovery Provider Selection for Publications is structurally separate from EditorView.js, independent of what those files themselves later contain');
     }
 
     // ===============================================================
