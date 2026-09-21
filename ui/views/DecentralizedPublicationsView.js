@@ -34,6 +34,7 @@ import { describeCreationAttempt as describePlacementCreationAttempt, describeCr
 import { IpfsRemotePublicationState } from '../../application/IpfsRemotePublicationState.js';
 import { describeIpfsRemotePublication, describeIpfsRemotePublishingConfiguration } from '../../application/IpfsRemotePublicationView.js';
 import { IpfsRemotePublishingConfiguration } from '../../application/IpfsRemotePublishingConfiguration.js';
+import { rememberIpfsRemotePublishingCredential, recallIpfsRemotePublishingCredential } from '../../application/IpfsRemotePublishingCredentialMemory.js';
 import { IpfsPublicationRecord, IpfsPublicationMethod } from '../../application/IpfsPublicationRecord.js';
 import { IpfsPublicationContentVerificationCoordinatorState } from '../../application/IpfsPublicationContentVerificationCoordinatorState.js';
 import { describeIpfsPublicationContentVerification } from '../../application/IpfsPublicationContentVerificationView.js';
@@ -6181,11 +6182,23 @@ export default {
         // constructs, discards, or touches a configuration that already
         // exists; canceling simply hides the form again, leaving whatever
         // was previously configured (if anything) exactly as it was.
+        // 0.8.68+ — Tab-Lifetime Remote Publishing Credential Memory.
+        // Reopening a form for an EXISTING configuration still blanks
+        // `credential` unconditionally — that restraint (never project a
+        // saved credential back onto a screen) is untouched. A brand-new,
+        // never-yet-configured entry's form instead prefills from
+        // application/IpfsRemotePublishingCredentialMemory.js: a plain
+        // in-memory, tab-lifetime convenience (never Web Storage) so
+        // configuring several entries with the same credential in one tab
+        // session doesn't mean retyping it every time. See that file's
+        // own header for why this is not a loophole in application/
+        // IpfsRemotePublishingConfiguration.js's own "Ephemeral By
+        // Construction" restraint.
         function openIpfsRemotePublishingConfigureForm(entry) {
             const existing = entry.ipfsRemotePublishingConfiguration;
             entry.ipfsRemotePublishingDraft = {
                 endpoint: existing ? existing.endpoint : '',
-                credential: '',
+                credential: existing ? '' : (recallIpfsRemotePublishingCredential() || ''),
                 requestField: existing ? (existing.requestField || '') : '',
                 responseField: existing ? (existing.responseField || '') : ''
             };
@@ -6237,6 +6250,9 @@ export default {
             entry.ipfsPublicationRecord = null;
             entry.ipfsPublicationContentVerification = null;
             entry.ipfsRemotePublishingConfigureFormOpen = false;
+            // Tab-lifetime convenience only — see openIpfsRemotePublishingConfigureForm()
+            // above and application/IpfsRemotePublishingCredentialMemory.js.
+            rememberIpfsRemotePublishingCredential(draft.credential);
         }
 
         // Discards this entry's own configuration and every fact drawn
