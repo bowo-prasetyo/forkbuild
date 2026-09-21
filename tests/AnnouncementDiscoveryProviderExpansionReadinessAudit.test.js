@@ -295,16 +295,16 @@ async function run() {
         // audit's own pre-0.9.430 content; corrected here alongside B9-B11
         // for the same file family.
         // AMENDED BY 0.9.670 — Publication Material Storage Selection. Each
-        // regex below now also tolerates the new `ipfsContentStoreOptions`/
+        // regex below now also tolerates the new `ipfsNodeOptions`/
         // `materialStorage`/`remotePinningProviderOptions` fields 0.9.670
         // threaded alongside the original four at every one of these same
         // four layers — the identical "opaque per-call/pre-bound argument"
         // treatment, never read or reinterpreted by any of them, extended
         // to the uploader's own new selection inputs.
-        assert(/composePublicationDistributionCommand\(\{ lifecycleStore, arweaveUploaderOptions, ipfsContentStoreOptions, nostrPublisherOptions, arweaveAnnouncementPublisherOptions \} = \{\}\)/.test(compositionSource), n('B9. PublicationDistributionCommandComposition.js accepts arweaveUploaderOptions/ipfsContentStoreOptions/nostrPublisherOptions/arweaveAnnouncementPublisherOptions as opaque per-call constructor arguments'));
-        assert(/executePublicationDistributionCommand\(\{[\s\S]{0,200}materialStorage,\s*\n\s*ipfsContentStoreOptions,\s*\n\s*remotePinningProviderOptions,\s*\n\s*arweaveUploaderOptions,\s*\n\s*discoveryProvider,\s*\n\s*nostrPublisherOptions,\s*\n\s*arweaveAnnouncementPublisherOptions,/.test(commandSource), n('B10. PublicationDistributionCommand.js accepts all seven as opaque per-call function arguments'));
-        assert(/materialStorage,\s*\n\s*ipfsContentStoreOptions,\s*\n\s*remotePinningProviderOptions,\s*\n\s*arweaveUploaderOptions,\s*\n\s*discoveryProvider,\s*\n\s*nostrPublisherOptions,\s*\n\s*arweaveAnnouncementPublisherOptions\s*\n\} = \{\}\) \{/.test(orchestratorSource), n('B11. PublicationDistributionOrchestrator.js accepts all seven as opaque per-call function arguments'));
-        assert(/arweaveUploaderOptions = \{\},\s*\n\s*materialStorage = 'ar',\s*\n\s*ipfsContentStoreOptions = \{\},\s*\n\s*remotePinningProviderOptions = \{\},\s*\n\s*discoveryProvider = 'nostr',\s*\n\s*nostrPublisherOptions = \{\},\s*\n\s*arweaveAnnouncementPublisherOptions = \{\}\s*\n\} = \{\}\) \{/.test(runtimeSource), n('B12. PublicationDistributionRuntimeComposition.js accepts all seven as opaque per-call function arguments, only here finally constructing the uploader (selected by materialStorage, 0.9.670) and discovery publisher (selected by discoveryProvider, never both of either pair)'));
+        assert(/composePublicationDistributionCommand\(\{ lifecycleStore, arweaveUploaderOptions, ipfsNodeOptions, nostrPublisherOptions, arweaveAnnouncementPublisherOptions \} = \{\}\)/.test(compositionSource), n('B9. PublicationDistributionCommandComposition.js accepts arweaveUploaderOptions/ipfsNodeOptions/nostrPublisherOptions/arweaveAnnouncementPublisherOptions as opaque per-call constructor arguments'));
+        assert(/executePublicationDistributionCommand\(\{[\s\S]{0,200}materialStorage,\s*\n\s*ipfsNodeOptions,\s*\n\s*remotePinningProviderOptions,\s*\n\s*arweaveUploaderOptions,\s*\n\s*discoveryProvider,\s*\n\s*nostrPublisherOptions,\s*\n\s*arweaveAnnouncementPublisherOptions,/.test(commandSource), n('B10. PublicationDistributionCommand.js accepts all seven as opaque per-call function arguments'));
+        assert(/materialStorage,\s*\n\s*ipfsNodeOptions,\s*\n\s*remotePinningProviderOptions,\s*\n\s*arweaveUploaderOptions,\s*\n\s*discoveryProvider,\s*\n\s*nostrPublisherOptions,\s*\n\s*arweaveAnnouncementPublisherOptions\s*\n\} = \{\}\) \{/.test(orchestratorSource), n('B11. PublicationDistributionOrchestrator.js accepts all seven as opaque per-call function arguments'));
+        assert(/arweaveUploaderOptions = \{\},\s*\n\s*materialStorage = 'ar',\s*\n\s*ipfsNodeOptions = \{\},\s*\n\s*remotePinningProviderOptions = \{\},\s*\n\s*discoveryProvider = 'nostr',\s*\n\s*nostrPublisherOptions = \{\},\s*\n\s*arweaveAnnouncementPublisherOptions = \{\}\s*\n\} = \{\}\) \{/.test(runtimeSource), n('B12. PublicationDistributionRuntimeComposition.js accepts all seven as opaque per-call function arguments, only here finally constructing the uploader (selected by materialStorage, 0.9.670) and discovery publisher (selected by discoveryProvider, never both of either pair)'));
 
         console.log('\n=== SECTION B: THE COMPLETE PIPELINE TRACE ===');
         console.log('  ui/main.js  --(construct, once)-->  PublicationDistributionCommandComposition.js');
@@ -373,12 +373,12 @@ async function run() {
         // purely through `...request`'s own spread, unoverridden — see
         // that file's own header, "discoveryProvider is deliberately NOT
         // added to that pre-bound set."
-        // AMENDED BY 0.9.670 — `ipfsContentStoreOptions` joined the
+        // AMENDED BY 0.9.670 — `ipfsNodeOptions` joined the
         // explicitly-set fields, spread-then-override, the identical
         // treatment `arweaveUploaderOptions` etc. already get — see this
         // section's own header, extended here to the uploader's own new
         // device-level collaborator.
-        assert(/return \(request\) => executePublicationDistributionCommand\(\{\s*\n\s*\.\.\.request,\s*\n\s*arweaveUploaderOptions,\s*\n\s*ipfsContentStoreOptions,\s*\n\s*nostrPublisherOptions,\s*\n\s*arweaveAnnouncementPublisherOptions,\s*\n\s*lifecycleStore\s*\n\s*\}\);/.test(compositionSource), n('E2. confirmed in the real code, not only the header: `...request` is spread FIRST, then arweaveUploaderOptions/ipfsContentStoreOptions/nostrPublisherOptions/arweaveAnnouncementPublisherOptions/lifecycleStore are set explicitly, so a `request.arweaveUploaderOptions` (etc.) a caller supplied would be silently overwritten, never honored — while `request.discoveryProvider`/`request.materialStorage`/`request.remotePinningProviderOptions` pass through unoverridden, the deliberate exceptions'));
+        assert(/return \(request\) => executePublicationDistributionCommand\(\{\s*\n\s*\.\.\.request,\s*\n\s*arweaveUploaderOptions,\s*\n\s*ipfsNodeOptions,\s*\n\s*nostrPublisherOptions,\s*\n\s*arweaveAnnouncementPublisherOptions,\s*\n\s*lifecycleStore\s*\n\s*\}\);/.test(compositionSource), n('E2. confirmed in the real code, not only the header: `...request` is spread FIRST, then arweaveUploaderOptions/ipfsNodeOptions/nostrPublisherOptions/arweaveAnnouncementPublisherOptions/lifecycleStore are set explicitly, so a `request.arweaveUploaderOptions` (etc.) a caller supplied would be silently overwritten, never honored — while `request.discoveryProvider`/`request.materialStorage`/`request.remotePinningProviderOptions` pass through unoverridden, the deliberate exceptions'));
 
         const mainSource = await readSource('ui/main.js');
         assert(/app\.provide\('publicationDistributionCommand', publicationDistributionCommand\);/.test(mainSource), n('E3. the ONE composed command this produces is provide()\'d exactly once, app-wide, at boot — every later inject() in this app receives the SAME fixed function reference'));
