@@ -1454,11 +1454,13 @@ export default {
         // UI state only, never persisted, never reset on a fresh publish.
         // Opens on this replica's own saved Content preference
         // (ui/main.js's own defaultContentDistributionProvider) when it
-        // names 'ar' or 'ipfs', falling back to 'ar' otherwise — the exact
-        // historical, silent default this capability already had.
+        // names 'ar', 'ipfs', or 'remote-pinning', falling back to 'ar'
+        // otherwise. 'remote-pinning' still opens the Endpoint/Credential
+        // fields empty, exactly as a manual pick of that option already
+        // does — this only changes which <option> the select starts on.
         const defaultContentDistributionProvider = inject('defaultContentDistributionProvider', null);
         const selectedMaterialStorage = ref(
-            defaultContentDistributionProvider === 'ar' || defaultContentDistributionProvider === 'ipfs'
+            ['ar', 'ipfs', 'remote-pinning'].includes(defaultContentDistributionProvider)
                 ? defaultContentDistributionProvider
                 : 'ar'
         );
@@ -1501,7 +1503,7 @@ export default {
         // reused verbatim for this action too, exactly like
         // OwnPublicationPanel.js's own single, shared draft.
         const selectedSnapshotStorage = ref(
-            defaultContentDistributionProvider === 'ar' || defaultContentDistributionProvider === 'ipfs'
+            ['ar', 'ipfs', 'remote-pinning'].includes(defaultContentDistributionProvider)
                 ? defaultContentDistributionProvider
                 : 'ar'
         );

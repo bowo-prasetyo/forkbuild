@@ -1988,20 +1988,24 @@ export default {
         // currently has registered, or 'ar' when snapshotDistributionStorageTypes
         // is empty — the exact historical default this capability
         // silently used before the picker existed. 'remote-pinning' is
-        // never this default (see the template's own always-present
-        // "Remote Pinning" option) — it needs a fresh endpoint/credential
-        // typed in every time, so it is only ever reached through an
-        // explicit Wanderer selection, never inherited automatically.
+        // never registered in that registry (see content/
+        // IpfsRemotePinningContentStore.js's own header), so it is added
+        // here explicitly, alongside the registry list, as the one
+        // eligible default this saved preference is allowed to name beyond
+        // it — the Endpoint/Credential draft still opens empty either way,
+        // exactly as an explicit Wanderer selection of that option already
+        // leaves it.
         //
         // 0.9.667 — this replica's own saved Content preference (the
         // injected `defaultContentDistributionProvider` prop) now wins over
         // that "first eligible" fallback whenever it names one of the
-        // backends `snapshotDistributionStorageTypes` currently lists — see
-        // application/SavedProviderDefaultChoice.js's own header.
+        // backends `snapshotDistributionStorageTypes` currently lists (or
+        // 'remote-pinning') — see application/SavedProviderDefaultChoice.js's
+        // own header.
         snapshotDistributionStorage: {
             get() {
                 return this.snapshotDistributionStorageChoice
-                    || resolveSavedProviderDefault(this.defaultContentDistributionProvider, this.snapshotDistributionStorageTypes, null)
+                    || resolveSavedProviderDefault(this.defaultContentDistributionProvider, [...this.snapshotDistributionStorageTypes, 'remote-pinning'], null)
                     || this.snapshotDistributionStorageTypes[0]
                     || 'ar';
             },
@@ -2021,14 +2025,16 @@ export default {
         // Falls back to `'ar'` — the exact historical, silent default this
         // capability already had before this picker existed — unless this
         // replica's own saved Content preference (0.9.667) names one of the
-        // three. `'remote-pinning'` is never inherited as a default, the
-        // identical restraint `snapshotDistributionStorage` already holds,
-        // for the identical reason — it needs a fresh endpoint/credential
-        // typed in every time.
+        // three. `'remote-pinning'` CAN now be inherited as a default too,
+        // by explicit Wanderer request (Content Provider Settings offers it
+        // as a saveable preference precisely so a Wanderer who never runs
+        // Local Kubo isn't stuck re-picking Remote Pinning by hand on every
+        // visit) — the Endpoint/Credential draft still opens empty either
+        // way, exactly as a manual pick of that option already leaves it.
         publicationMaterialStorage: {
             get() {
                 return this.publicationMaterialStorageChoice
-                    || resolveSavedProviderDefault(this.defaultContentDistributionProvider, ['ar', 'ipfs'], null)
+                    || resolveSavedProviderDefault(this.defaultContentDistributionProvider, ['ar', 'ipfs', 'remote-pinning'], null)
                     || 'ar';
             },
             set(value) {

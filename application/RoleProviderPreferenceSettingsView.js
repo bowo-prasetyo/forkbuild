@@ -43,10 +43,22 @@
 // 0.9.510 already fixed one surface over (STORAGE_TYPE_LABELS, ui/views/
 // DecentralizedPublicationsView.js) but this file's own, separate map
 // never received. `local`/`ipfs` are unchanged.
+//
+// `remote-pinning` — content/IpfsRemotePinningContentStore.js's own
+// `storage` getter still self-reports `'ipfs'` (it shares an `ipfs://`
+// locator scheme with Local Kubo), so it never occupies its own key in
+// `snapshotPlacementStoreRegistry` — see that class's own header. Its
+// caller (ui/views/ContentProviderSettingsView.js) appends the literal
+// string `'remote-pinning'` to `availableProviderKeys` itself, deliberately
+// outside that registry, purely so a Wanderer who never runs a Kubo node
+// (local or remote) can save it as their preferred Content default. This
+// label exists only so that option renders as "IPFS (Remote Pinning)"
+// instead of the raw-key fallback's "Remote-pinning".
 const PROVIDER_OPTION_LABELS = {
     local: 'Local',
     ipfs: 'IPFS',
-    ar: 'Arweave'
+    ar: 'Arweave',
+    'remote-pinning': 'IPFS (Remote Pinning)'
 };
 
 function providerOptionLabel(providerKey) {
