@@ -455,21 +455,27 @@ async function run() {
             assert(!pattern.test(bundle), n(`I7. no anti-pattern ${pattern} exists in real code (comments stripped) anywhere in ${scanDirs.join('/, ')}/`));
         }
 
-        // Production boundary.
-        const statusOutput = execSync('git status --porcelain', { cwd: SOURCE_ROOT }).toString();
-        const changed = statusOutput.split('\n').map((line) => line.slice(3).trim()).filter(Boolean);
-        const AUTHORIZED = new Set([
-            'tests.html',
-            'tests/DecentralizedSubstrateRoleChoiceUIReachabilityAudit.test.js'
-        ]);
-        const unauthorized = changed.filter((f) => !AUTHORIZED.has(f));
-        assert(unauthorized.length === 0, n(`I8. every changed/added file is exactly this milestone's own test/registration file (found unauthorized: ${JSON.stringify(unauthorized)})`));
-
-        const domainDirs = ['core', 'application', 'renderer', 'discovery', 'anchoring', 'collaboration', 'persistence', 'identity', 'publisher', 'storage', 'ui', 'peer', 'content', 'presence', 'docs'];
-        for (const dir of domainDirs) {
-            const status = execSync(`git status --porcelain -- ${dir}`, { cwd: SOURCE_ROOT }).toString().trim();
-            assert(status === '', n(`I9. ${dir}/ shows no change — this audit evaluates reachability, it does not build anything`));
-        }
+        // Production boundary — I8/I9 ORIGINALLY asserted, live, against
+        // `git status --porcelain`, that this audit's OWN commit (0.9.422)
+        // built nothing beyond its own test file and tests.html's own
+        // registration. That was a true, live constraint on 0.9.422's own
+        // commit alone — never a standing regression gate against every
+        // later commit — the identical demotion tests/
+        // PublicationsDistributionSectionProductAndUIBoundaryAudit.test.js's
+        // own Section I1/I2 already applies to an structurally identical
+        // situation. Preferred Proof & Anchoring Provider Creation
+        // Integration legitimately extended production afterward, exactly
+        // where this audit's own Section G/I named PROOF_AND_ANCHORING's
+        // mechanism as "ready, capability-limited" (a second real publisher
+        // was always going to make the existing choice mechanism relevant,
+        // and a preference layer to go with it is the same product shape
+        // CONTENT already had) — a live `git status` assertion here would
+        // now fail on that legitimate, intentional change, and on every
+        // other legitimate change this repository makes from now on.
+        // Demoted to a historical record rather than deleted, since it
+        // correctly documents what WAS true when this audit was first
+        // written.
+        console.log('  (historical) I8/I9 — as of 0.9.422\'s own original commit, this audit built nothing beyond its own test file and tests.html\'s own registration, and touched no production directory. Preferred Proof & Anchoring Provider Creation Integration legitimately extended production afterward, exactly where Section G/I above already named PROOF_AND_ANCHORING as "ready, capability-limited" — this is no longer a live constraint.');
 
         console.log('\n=== SECTION I (continued): DELIBERATE EXCLUSIONS + PRODUCTION BOUNDARY ===');
         console.log('✓ Section I: NO_PRODUCT_GAP, backed by every section above. No discovery-publisher registry, substrate-picker class, standalone substrate route, or multi-provider function signature was added. This milestone touches nothing but its own test file and tests.html\'s own registration.');

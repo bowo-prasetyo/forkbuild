@@ -31,6 +31,20 @@
 //                  happened" — never confused with REJECTED, which means
 //                  the external system was reached and said no.
 //
+// Preferred Proof & Anchoring Provider Creation Integration. A sixth
+// value, PROVIDER_NOT_FOUND, mirrors application/
+// SnapshotPlacementCreationUiState.js's own identical addition (0.9.301),
+// one role over: application/PreferredPublicationAnchorCreationCoordinator
+// .js can resolve a stored PROOF_AND_ANCHORING preference to
+// `RoleProviderResolutionStatus.PROVIDER_NOT_FOUND` — a preference IS
+// configured, but names an anchorType nothing on this replica has a
+// registered publisher for. That is a genuinely different fact from
+// UNAVAILABLE ("a real, resolved publisher could not presently be
+// reached") — here no publisher was ever even resolved, let alone
+// reached — so it gets its own state rather than silently collapsing to
+// IDLE. See application/PublicationAnchorCreationView.js's own header for
+// how this value is produced.
+//
 // THIS IS UI STATE, NEVER DOMAIN STATE. No value here is ever written
 // onto a core/PublicationAnchor.js, stored in application/
 // LocalPublicationAnchorCatalog.js, or persisted anywhere at all — it
@@ -48,5 +62,6 @@ export const ExternalAnchorCreationUiState = Object.freeze({
     CREATING: 'creating',
     CREATED: 'created',
     REJECTED: 'rejected',
-    UNAVAILABLE: 'unavailable'
+    UNAVAILABLE: 'unavailable',
+    PROVIDER_NOT_FOUND: 'provider-not-found'
 });

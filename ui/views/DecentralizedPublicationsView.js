@@ -721,7 +721,14 @@ const CREATION_BADGE_CLASSES = {
     [ExternalAnchorCreationUiState.CREATING]: 'peer-badge--pending',
     [ExternalAnchorCreationUiState.CREATED]: 'peer-badge--authenticated',
     [ExternalAnchorCreationUiState.REJECTED]: 'peer-badge--failed',
-    [ExternalAnchorCreationUiState.UNAVAILABLE]: 'peer-badge--pending'
+    [ExternalAnchorCreationUiState.UNAVAILABLE]: 'peer-badge--pending',
+    // Preferred Proof & Anchoring Provider Creation Integration. The same
+    // "honestly inconclusive" amber every other UNAVAILABLE-shaped state in
+    // this view already uses, never the red .peer-badge--failed coloring —
+    // a configured-but-unresolvable preference is not a definite rejection.
+    // Mirrors PLACEMENT_CREATION_BADGE_CLASSES's own identical entry below,
+    // one role over.
+    [ExternalAnchorCreationUiState.PROVIDER_NOT_FOUND]: 'peer-badge--pending'
 };
 
 // 0.8.25 — Explicit Snapshot Placement Creation UX. The placement-side
@@ -1030,6 +1037,17 @@ export default {
         const peerSessionManager = inject('peerSessionManager');
         const evidenceCoordinator = inject('publicationEvidenceCoordinator');
         const creationCoordinator = inject('publicationAnchorCreationCoordinator');
+        // Preferred Proof & Anchoring Provider Creation Integration.
+        // Optional — absent here (e.g. a test harness that never provides
+        // it), "Use Preferred Provider" simply never renders, the identical
+        // degrade-gracefully posture `creationCoordinator` immediately above
+        // already holds. A SEPARATE injected coordinator (application/
+        // PreferredPublicationAnchorCreationCoordinator.js, already composed
+        // and provided by ui/main.js) — never substituted for
+        // `creationCoordinator` above, which stays wired to every existing
+        // per-anchorType button completely unchanged. Mirrors
+        // `preferredPlacementCreationCoordinator` below, one role over.
+        const preferredAnchorCreationCoordinator = inject('preferredPublicationAnchorCreationCoordinator', null);
         // 0.8.16 — Evidence Synchronization UX & Explicit Historical
         // Discovery. Optional — absent here (e.g. a test harness that
         // never provides it), "Discover from Peers" simply never renders,
@@ -2821,6 +2839,19 @@ export default {
                 // written to anything durable. See application/
                 // ExternalAnchorCreationUiState.js's own header.
                 creationAttempts: {},
+                // Preferred Proof & Anchoring Provider Creation Integration.
+                // A SEPARATE field from `creationAttempts` above, never a
+                // synthetic key inside that same anchorType-keyed map — the
+                // "Use Preferred Provider" trigger has no anchorType value
+                // to key its own attempt under before resolution completes,
+                // and reusing a real anchorType key (or inventing a
+                // sentinel one) could let an explicit per-anchorType attempt
+                // and a preferred attempt that happens to resolve to the
+                // SAME anchorType clobber each other's displayed outcome —
+                // mirrors `preferredPlacementCreationAttempt` below, one
+                // role over. Ephemeral for the lifetime of this page,
+                // exactly like `creationAttempts` itself.
+                preferredAnchorCreationAttempt: null,
                 // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction
                 // UI. A single ephemeral outcome object for THIS entry —
                 // never keyed by anything, since one publication has at
@@ -6888,6 +6919,73 @@ export default {
             return describeCreationButtonLabel(humanizeAnchorType(anchorType), { creating: view.state === ExternalAnchorCreationUiState.CREATING, hasExisting });
         }
 
+        // Preferred Proof & Anchoring Provider Creation Integration. The
+        // "Use Preferred Provider" counterpart of createAnchor() above — the
+        // ONE other place this page ever calls an anchor-creation
+        // coordinator, and the only caller anywhere of
+        // preferredAnchorCreationCoordinator.create() (application/
+        // PreferredPublicationAnchorCreationCoordinator.js, composed by
+        // ui/main.js). Mirrors createPreferredPlacement() below exactly, one
+        // role over.
+        //
+        // Always called with NO anchorType argument — deliberately never
+        // passes one. That absence is exactly what makes create() consult
+        // the stored PROOF_AND_ANCHORING preference instead of short-
+        // circuiting straight to the wrapped coordinator, the identical
+        // contract application/PreferredPublicationAnchorCreationCoordinator
+        // .js's own header documents. This function never resolves a
+        // preference itself, never picks an anchorType, and never
+        // re-implements any part of that decision — it only triggers the
+        // ONE call and displays whatever comes back.
+        //
+        // Writes to `entry.preferredAnchorCreationAttempt` only — never
+        // `entry.creationAttempts[anchorType]` — so a resolved-to-Arweave
+        // preferred attempt can never be confused for, or overwrite, an
+        // explicit "Arweave" button's own result, and vice versa.
+        //
+        // Mirrors createAnchor()'s own try/catch exactly: a thrown error
+        // (nobody signed in, or no publisher registered) is caught HERE, at
+        // the UI boundary, never left to crash the page.
+        async function createPreferredAnchor(entry) {
+            if (!preferredAnchorCreationCoordinator) return;
+            entry.preferredAnchorCreationAttempt = { creating: true, outcome: null, anchor: null, reason: null, error: null, preference: null };
+            try {
+                const result = await preferredAnchorCreationCoordinator.create(entry.publication.id);
+                entry.preferredAnchorCreationAttempt = {
+                    creating: false, outcome: result.outcome, anchor: result.anchor, reason: result.reason, error: null,
+                    preference: result.preference || null
+                };
+                // Re-discover from the catalog so a CREATED anchor
+                // immediately appears in the ordinary evidence list below —
+                // mirrors createAnchor()'s own identical re-discovery above,
+                // one trigger over.
+                loadEvidence(entry);
+                if (result.outcome === ExternalAnchorCreationOutcome.CREATED) {
+                    entry.evidenceExpanded = true;
+                }
+            } catch (error) {
+                entry.preferredAnchorCreationAttempt = { creating: false, outcome: null, anchor: null, reason: null, error: error.message, preference: null };
+            }
+        }
+
+        function preferredCreationView(entry) {
+            return describeCreationAttempt(entry.preferredAnchorCreationAttempt);
+        }
+
+        function preferredCreationBadgeClass(entry) {
+            const state = preferredCreationView(entry).state;
+            return CREATION_BADGE_CLASSES[state] || null;
+        }
+
+        // Deliberately anchorType-agnostic, unlike creationButtonLabel()
+        // above — before a click, this trigger has no anchorType to name
+        // yet; WHICH anchorType it ultimately used is only ever known from
+        // the result itself (surfaced through preferredCreationView()'s own
+        // `anchor`/`message`), never guessed at in the button label.
+        function preferredCreationButtonLabel(entry) {
+            return preferredCreationView(entry).state === ExternalAnchorCreationUiState.CREATING ? 'Creating…' : 'Use Preferred Provider';
+        }
+
         // 0.9.436 — Publications Distribution Section Reorganization.
         // Announcement/Discovery's own two real write actions, wired onto
         // THIS page for the first time. Mirrors
@@ -7147,6 +7245,7 @@ export default {
             canRetrieve, retrieve, recheck,
             describeKnownEvidenceCount, toggleEvidence, verifyAnchor, evidenceBadgeClass, lifecycleNote,
             createAnchor, creationView, creationBadgeClass, creationButtonLabel,
+            createPreferredAnchor, preferredCreationView, preferredCreationBadgeClass, preferredCreationButtonLabel,
             publicationDistributionCommand, multiRelayNostrPublicationDistributionCommand, snapshotDistributionCommand,
             distributePublicationForEntry, discoveryDistributionButtonLabel,
             distributeSnapshot, snapshotDistributionButtonLabel,
@@ -9464,16 +9563,21 @@ export default {
                              creationAttempts state — nothing about the
                              action itself changed, only where it renders.
 
-                             0.9.437 — deliberately no "Configure" link here. Bitcoin/
-                             anchor configuration has no persistent gateway/relay
-                             endpoint of its own to route to (this milestone's own
-                             audit, tests/PublicationsDistributionSectionProductAndUIBoundaryAudit.test.js,
-                             Section E3/E4) — it is wallet-connection-driven, already
-                             rendered inline wherever the anchor action itself occurs.
-                             Adding a link here would point at a Settings view that
-                             does not exist. -->
+                             0.9.437 found no "Configure" link belonged here: Bitcoin/Base
+                             wallet-connection state is not a persisted preference — it already
+                             renders inline wherever the anchor action itself occurs, and no
+                             Settings view existed for the role as a whole. Preferred Proof &
+                             Anchoring Provider Creation Integration adds one now, mirroring
+                             Content's own identical role-heading link immediately above —
+                             /settings/anchor-provider configures the single PROOF_AND_ANCHORING-
+                             wide preferred-provider preference "Use Preferred Provider" below
+                             consumes, never a Bitcoin/Base wallet endpoint (which still has no
+                             persistent concept to configure, and still renders inline, unchanged). -->
                         <div v-if="availableAnchorTypes.length > 0" class="identity-mgmt-distribution-role">
-                            <span class="evidence-convergence-title">Proof / Anchoring</span>
+                            <div class="evidence-discovery-header">
+                                <span class="evidence-convergence-title">Proof / Anchoring</span>
+                                <router-link to="/settings/anchor-provider" class="action-btn action-btn--secondary">Configure</router-link>
+                            </div>
                             <!-- 0.9.514 — Proof/Anchoring Product Completion Reassessment.
                                  A note ABOVE the generic card loop below, never inside it —
                                  tests/ArweaveProofAnchorIntegrationBoundaryAudit.test.js's own
@@ -9535,6 +9639,41 @@ export default {
                                         </button>
                                     </div>
                                 </div>
+                            </div>
+
+                            <!-- Preferred Proof & Anchoring Provider Creation Integration. The
+                                 anchoring counterpart of "Use Preferred Provider" above (Content's
+                                 own version further below) — a SINGLE button that resolves the
+                                 stored PROOF_AND_ANCHORING role preference (core/
+                                 RoleProviderPreference.js) and anchors onto whichever anchorType
+                                 it names, re-resolved on every click by application/
+                                 PreferredPublicationAnchorCreationCoordinator.js — never a default
+                                 silently substituted for an explicit choice. Hidden entirely when
+                                 no preferredAnchorCreationCoordinator was provided, exactly like the
+                                 per-anchorType cards above hide with no creationCoordinator. Never
+                                 offers Base — that substrate keeps its own separate wallet-guided
+                                 flow, untouched by this trigger. -->
+                            <div v-if="preferredAnchorCreationCoordinator" class="evidence-discovery">
+                                <div class="evidence-discovery-header">
+                                    <button class="action-btn action-btn--secondary"
+                                            :disabled="preferredCreationView(entry).state === 'creating'"
+                                            @click="createPreferredAnchor(entry)">
+                                        {{ preferredCreationButtonLabel(entry) }}
+                                    </button>
+                                    <span v-if="preferredCreationView(entry).label" class="peer-badge" :class="preferredCreationBadgeClass(entry)">
+                                        {{ preferredCreationView(entry).label }}
+                                    </span>
+                                </div>
+                                <p v-if="preferredCreationView(entry).message" class="form-hint form-hint--neutral">
+                                    {{ preferredCreationView(entry).message }}
+                                </p>
+                                <p v-if="preferredCreationView(entry).reason" class="form-hint form-hint--neutral">
+                                    {{ preferredCreationView(entry).reason }}
+                                </p>
+                                <dl v-if="preferredCreationView(entry).anchor" class="evidence-fields">
+                                    <div class="evidence-field"><dt>Transaction</dt><dd>{{ preferredCreationView(entry).anchor.locator }}</dd></div>
+                                    <div class="evidence-field"><dt>Content hash</dt><dd>{{ preferredCreationView(entry).anchor.contentHash }}</dd></div>
+                                </dl>
                             </div>
                         </div>
                     </details>

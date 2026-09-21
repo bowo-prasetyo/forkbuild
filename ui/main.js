@@ -119,6 +119,7 @@ import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/CreateSnapshotPlacementOrchestratorUseCase.js';
 import { CreateSnapshotPlacementCreationCoordinatorUseCase } from '../application/CreateSnapshotPlacementCreationCoordinatorUseCase.js';
 import { CreatePreferredSnapshotPlacementCreationCoordinatorUseCase } from '../application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js';
+import { CreatePreferredPublicationAnchorCreationCoordinatorUseCase } from '../application/CreatePreferredPublicationAnchorCreationCoordinatorUseCase.js';
 import { SetRoleProviderPreferenceUseCase } from '../application/SetRoleProviderPreferenceUseCase.js';
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { SetArweaveGatewayConfigurationUseCase } from '../application/SetArweaveGatewayConfigurationUseCase.js';
@@ -1414,6 +1415,26 @@ const { coordinator: publicationAnchorCreationCoordinator } = new CreatePublicat
     publisherRegistry: externalAnchorPublisherRegistry
 });
 
+// Preferred Proof & Anchoring Provider Creation Integration. Wraps the
+// SAME `publicationAnchorCreationCoordinator`/`externalAnchorPublisherRegistry`
+// just built above with a stored PROOF_AND_ANCHORING role provider
+// preference (storage/RoleProviderPreferenceStore.js, 0.9.294) — mirrors
+// 0.9.299's own CONTENT-role wiring, one role over. Reuses the SAME
+// `roleProviderPreferenceStore` instance CONTENT's preference chain already
+// built above (never a second, disconnected store), so all three
+// RoleProviderRole preferences persist under the one shared
+// 'role-provider-preference:by-role' storage key. `createAnchor(entry,
+// anchorType)` in ui/views/DecentralizedPublicationsView.js still always
+// names an explicit anchorType, completely unchanged — that click handler
+// still only ever calls `publicationAnchorCreationCoordinator` above. This
+// coordinator is that same view's separate "Use Preferred Provider" anchor
+// action, the identical shape 0.9.301 already added for Content.
+const { coordinator: preferredPublicationAnchorCreationCoordinator } = new CreatePreferredPublicationAnchorCreationCoordinatorUseCase().execute({
+    publicationAnchorCreationCoordinator,
+    proofRegistry: externalAnchorPublisherRegistry,
+    preferenceStore: roleProviderPreferenceStore
+});
+
 // 0.8.14 — External Evidence Inspection & Locator UX. The presentation-
 // side counterpart of `externalAnchorPublisherRegistry`/
 // `proofVerifierRegistry` above: a THIRD, independent `anchorType ->
@@ -1842,6 +1863,11 @@ app.provide('publicationAnchorCatalog', publicationAnchorCatalog);
 app.provide('publicationEvidenceCoordinator', publicationEvidenceCoordinator);
 // 0.8.11 — Explicit External Anchoring UX.
 app.provide('publicationAnchorCreationCoordinator', publicationAnchorCreationCoordinator);
+// Preferred Proof & Anchoring Provider Creation Integration. The one, only
+// thing that injects this key: ui/views/DecentralizedPublicationsView.js's
+// own "Use Preferred Provider" anchor action, and ui/views/
+// AnchorProviderSettingsView.js's own availableAnchorTypes() read.
+app.provide('preferredPublicationAnchorCreationCoordinator', preferredPublicationAnchorCreationCoordinator);
 // 0.8.4 — External Anchor Publication Over Peers.
 app.provide('publicationAnchorPeerExchange', publicationAnchorPeerExchange);
 // 0.8.5 — Historical Anchor Discovery & Synchronization.

@@ -1,5 +1,6 @@
 import { ExternalAnchorCreationOutcome } from './ExternalAnchorCreationOutcome.js';
 import { ExternalAnchorCreationUiState } from './ExternalAnchorCreationUiState.js';
+import { RoleProviderResolutionStatus } from './RoleAwareProviderResolver.js';
 
 // 0.8.11 — Explicit External Anchoring UX.
 //
@@ -80,6 +81,24 @@ export function describeCreationAttempt(attempt = null) {
                 state: ExternalAnchorCreationUiState.UNAVAILABLE,
                 label: 'No anchor was created',
                 message: 'The external system could not currently be reached. No anchor was created.',
+                anchor: null, reason: attempt.reason
+            };
+        // Preferred Proof & Anchoring Provider Creation Integration. A
+        // preference IS configured, but names an anchorType nothing on this
+        // replica is registered under. Distinct from UNAVAILABLE above: no
+        // publisher was ever resolved, let alone reached, so this never
+        // shares UNAVAILABLE's own UI state or wording — a person is told
+        // WHAT was configured, not merely that "the external system could
+        // not currently be reached." Mirrors application/
+        // SnapshotPlacementCreationView.js's own identical case (0.9.301),
+        // one role over.
+        case RoleProviderResolutionStatus.PROVIDER_NOT_FOUND:
+            return {
+                state: ExternalAnchorCreationUiState.PROVIDER_NOT_FOUND,
+                label: 'Preferred provider not found',
+                message: attempt.preference
+                    ? `Your preferred Proof/Anchoring provider ('${attempt.preference.providerKey}') is not currently registered on this replica. No anchor was created.`
+                    : 'Your preferred Proof/Anchoring provider is not currently registered on this replica. No anchor was created.',
                 anchor: null, reason: attempt.reason
             };
         default:

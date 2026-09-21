@@ -16,6 +16,7 @@ import DecentralizedPublicationsView from '../views/DecentralizedPublicationsVie
 import NetworkSettingsView from '../views/NetworkSettingsView.js';
 import ContentProviderSettingsView from '../views/ContentProviderSettingsView.js';
 import AnnouncementDiscoveryProviderSettingsView from '../views/AnnouncementDiscoveryProviderSettingsView.js';
+import AnchorProviderSettingsView from '../views/AnchorProviderSettingsView.js';
 import ArweaveGatewaySettingsView from '../views/ArweaveGatewaySettingsView.js';
 import IpfsGatewaySettingsView from '../views/IpfsGatewaySettingsView.js';
 import NostrRelaySettingsView from '../views/NostrRelaySettingsView.js';
@@ -95,6 +96,14 @@ const routes = [
     // ui/views/AnnouncementDiscoveryProviderSettingsView.js's own header.
     // Mirrors /settings/content-provider's own shape, one role over.
     { path: '/settings/announcement-discovery-provider', name: 'announcement-discovery-provider-settings', component: AnnouncementDiscoveryProviderSettingsView },
+    // Proof/Anchoring Provider Settings Entry Point. The one ordinary
+    // product path to create/change the persisted PROOF_AND_ANCHORING role
+    // provider preference — see ui/views/AnchorProviderSettingsView.js's
+    // own header. Mirrors /settings/content-provider's own shape, one role
+    // over; lists whichever of Bitcoin/Arweave this replica currently has a
+    // registered publisher for (Base is never listed here — it keeps its
+    // own separate wallet-guided anchoring flow).
+    { path: '/settings/anchor-provider', name: 'anchor-provider-settings', component: AnchorProviderSettingsView },
     // 0.9.366 — Arweave Gateway Settings UI. The one ordinary product path
     // to create/change/clear the persisted Arweave gateway retrieval
     // override (core/ArweaveGatewayConfiguration.js, storage/
