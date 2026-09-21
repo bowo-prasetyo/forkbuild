@@ -751,8 +751,8 @@ async function run() {
         const worldEncounterCompositionSource = await source('application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
         assert(!/ipfs/i.test(worldEncounterCompositionSource), 'H1. World Encounter material discovery composition still never references IPFS — Local + Nostr + Arweave only');
         const mainSourceForIpfs = await source('ui/main.js');
-        const ipfsGatewayUsageCount = (mainSourceForIpfs.match(/new IpfsGatewayContentStore\(\{ gatewayUrl: resolvedIpfsGatewayUrl \}\)/g) || []).length;
-        assert(ipfsGatewayUsageCount === 2, `H1. IpfsGatewayContentStore is still constructed at exactly its two known, narrowly-scoped call sites, now settings-backed — found ${ipfsGatewayUsageCount}`);
+        const ipfsGatewayUsageCount = (mainSourceForIpfs.match(/composeIpfsGatewayContentStore\(resolvedIpfsGatewayUrls\)/g) || []).length;
+        assert(ipfsGatewayUsageCount === 2, `H1. the IPFS gateway content store is still built at exactly its two known, narrowly-scoped call sites, now through composeIpfsGatewayContentStore(resolvedIpfsGatewayUrls) per 0.9.666's own read failover extension — found ${ipfsGatewayUsageCount}`);
         decisions.ipfsGateway = { candidate: 'IPFS Gateway', verdict: 'BUILT (0.9.665)', evidence: 'Narrow, opt-in-per-item failure mode correctly justified DEFER through 0.9.657 — reversed once the hardcoded default itself became permanently unreachable, never merely by resemblance to Arweave.' };
 
         // H2. STUN — still one flat iceServers array, no independently

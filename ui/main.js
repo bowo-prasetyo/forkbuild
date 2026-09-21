@@ -115,6 +115,7 @@ import { CreateLocalSnapshotPlacementViewUseCase } from '../application/CreateLo
 import { CreateSnapshotPlacementViewRegistryUseCase } from '../application/CreateSnapshotPlacementViewRegistryUseCase.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
 import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
+import { IpfsGatewayFailoverContentStore } from '../content/IpfsGatewayFailoverContentStore.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/CreateSnapshotPlacementOrchestratorUseCase.js';
 import { CreateSnapshotPlacementCreationCoordinatorUseCase } from '../application/CreateSnapshotPlacementCreationCoordinatorUseCase.js';
@@ -1000,22 +1001,40 @@ const { discoveryCoordinator: publicationSnapshotPlacementDiscoveryCoordinator }
 // wiring's own comment for why one shared instance is registered into
 // both rather than two independently constructed ones.
 // 0.9.665 — User-Configurable IPFS Gateway Configuration Boundary.
-// Resolved here, ahead of both real IpfsGatewayContentStore construction
-// sites below (this one and the "Observe Content" verifier further down),
-// mirroring the Arweave Gateway resolution below but computed earlier
-// since these two consumers are wired before `app` exists — the use case
-// and app.provide() calls for the settings page itself are added
-// alongside the Arweave Gateway wiring further down, reusing this SAME
-// store instance. See core/IpfsGatewayConfiguration.js's own header for
-// why this reopens a candidate 0.9.373/0.9.385/0.9.657 each deferred.
+// Resolved here, ahead of both real IPFS gateway content store
+// construction sites below (this one and the "Observe Content" verifier
+// further down), mirroring the Arweave Gateway resolution below but
+// computed earlier since these two consumers are wired before `app`
+// exists — the use case and app.provide() calls for the settings page
+// itself are added alongside the Arweave Gateway wiring further down,
+// reusing this SAME store instance. See core/IpfsGatewayConfiguration.js's
+// own header for why this reopens a candidate 0.9.373/0.9.385/0.9.657
+// each deferred.
+//
+// 0.9.666 — IPFS Gateway Read Failover. `resolvedIpfsGatewayUrls` is the
+// full ordered list behind `resolvedIpfsGatewayUrl` above —
+// `resolvedIpfsGatewayUrl` itself stays exactly what it always was (the
+// FIRST configured gateway). `composeIpfsGatewayContentStore()` builds
+// the plain, pre-0.9.666 `IpfsGatewayContentStore` for a single configured
+// gateway — byte-for-byte unchanged behavior — and the new
+// `IpfsGatewayFailoverContentStore` only once a second gateway is
+// actually configured, mirroring the "pick the failover collaborator only
+// for 2+ entries" rule `resolvedArweaveGatewayUrls`' own consumers already
+// hold, below.
 const ipfsGatewayConfigurationStore = new IpfsGatewayConfigurationStore(new LocalStorageProvider());
 const resolvedIpfsGatewayUrl = (ipfsGatewayConfigurationStore.get() || { gatewayUrl: DEFAULT_IPFS_GATEWAY_URL }).gatewayUrl;
+const resolvedIpfsGatewayUrls = (ipfsGatewayConfigurationStore.get() || { gatewayUrls: [DEFAULT_IPFS_GATEWAY_URL] }).gatewayUrls;
+function composeIpfsGatewayContentStore(gatewayUrls) {
+    return gatewayUrls.length > 1
+        ? new IpfsGatewayFailoverContentStore({ gatewayUrls })
+        : new IpfsGatewayContentStore({ gatewayUrl: gatewayUrls[0] });
+}
 const {
     coordinator: publicationSnapshotPlacementResolutionCoordinator,
     storeRegistry: publicationSnapshotPlacementResolutionStoreRegistry
 } = new CreateSnapshotPlacementResolutionCoordinatorUseCase().execute({
     placementCatalog: publicationSnapshotPlacementCatalog,
-    stores: [publicationContentStore, new IpfsGatewayContentStore({ gatewayUrl: resolvedIpfsGatewayUrl })]
+    stores: [publicationContentStore, composeIpfsGatewayContentStore(resolvedIpfsGatewayUrls)]
 });
 
 // The presentation-side counterpart of the resolution wiring above: a
@@ -1804,15 +1823,16 @@ const { coordinator: ipfsRemotePublicationCoordinator } = new CreateIpfsRemotePu
 // milestone's own "Deliberately excluded" list named directly: "no
 // 'Observe Content' button... left deliberately unwired until its own
 // inspection-UI milestone gives a person a place to see it." The
-// contentStore is a fresh content/IpfsGatewayContentStore.js — the SAME
-// class already used, immediately above, to resolve `ipfs://` snapshot
-// placements through a public gateway with no local Kubo daemon
-// required — never a second, disconnected reader. Sharing ONE
+// contentStore is a fresh IPFS gateway content store, built through the
+// SAME composeIpfsGatewayContentStore() helper already used, immediately
+// above, to resolve `ipfs://` snapshot placements through a public
+// gateway with no local Kubo daemon required — never a second,
+// disconnected reader. Sharing ONE
 // ipfsPublicationContentVerificationCoordinator instance app-wide is
 // exactly as safe as sharing ipfsRemotePublicationCoordinator is — it
 // holds no credential and no publication-specific state between calls.
 const { ipfsPublicationContentVerifier } = new CreateIpfsPublicationContentVerifierUseCase().execute({
-    contentStore: new IpfsGatewayContentStore({ gatewayUrl: resolvedIpfsGatewayUrl })
+    contentStore: composeIpfsGatewayContentStore(resolvedIpfsGatewayUrls)
 });
 const { coordinator: ipfsPublicationContentVerificationCoordinator } =
     new CreateIpfsPublicationContentVerificationCoordinatorUseCase().execute({ ipfsPublicationContentVerifier });

@@ -97314,3 +97314,63 @@ described as having been wrong; they were correct given what was known. New, liv
 structural, permanent failure mode for the one hardcoded gateway, discovered through genuine use rather than
 speculation — is what reopened and reversed the question, exactly the standard `0.9.657`'s own Section G set
 for when that should happen.
+
+## 0.9.666 — IPFS Gateway Read Failover
+
+**Type:** implementation. **Production changes:** `core/IpfsGatewayConfiguration.js` (extended to accept
+`gatewayUrls`, a non-empty ordered array, alongside the existing single-string `gatewayUrl` — exactly one of the
+two, never both; the single-string shape remains exactly a one-element list), `storage/
+IpfsGatewayConfigurationStore.js` (reads both the new list shape and a legacy single-`gatewayUrl` payload back
+into the identical one-element-list configuration), `content/IpfsGatewayFailoverContentStore.js` (new — one
+`IpfsGatewayContentStore` per configured gateway, tried in order on read), `application/
+SetIpfsGatewayConfigurationUseCase.js` (also accepts `gatewayUrls`), `ui/views/IpfsGatewaySettingsView.js` (the
+single text input became a multi-line field, one gateway per line, in try order), and `ui/main.js` (both real
+IPFS gateway content store construction sites now go through a new `composeIpfsGatewayContentStore()` helper,
+which builds the plain, pre-0.9.666 `IpfsGatewayContentStore` for a single configured gateway — byte-for-byte
+unchanged behavior — and the new `IpfsGatewayFailoverContentStore` only once a second gateway is actually
+configured). Adds `tests/IpfsGatewayReadFailover.test.js`; extends `tests/IpfsGatewayConfiguration.test.js` and
+`tests/IpfsGatewayConfigurationPersistence.test.js` with the list-shape coverage `0.9.665`'s own single-value
+tests deliberately excluded.
+
+**Reverses the other half of `0.9.665`'s own "what was built, deliberately narrow" section.** That milestone
+mirrored `core/ArweaveGatewayConfiguration.js`'s *pre*-`0.9.440` shape on purpose, reasoning that
+`content/IpfsGatewayContentStore.js`'s own header was explicit it supports exactly one gateway per instance —
+"no list, no automatic fallback... a caller that wants multiple gateways runs multiple instances explicitly."
+That was a true description of the read collaborator that existed at the time, never a permanent ceiling on the
+configuration shape itself. `content/IpfsGatewayFailoverContentStore.js` — the direct structural mirror of
+`content/ArweaveGatewayFailoverContentStore.js` (`0.9.440`), one axis over — is the caller `0.9.665`'s own
+header already invited: it wraps one unmodified `IpfsGatewayContentStore` per configured gateway and tries them
+in order, never reimplementing that class's own wire behavior.
+
+**Why this, now, rather than staying deliberately narrow.** A single configured gateway is still a single
+point of failure — the exact shape of problem `0.9.665` itself exists to work around for the *hardcoded*
+default (`https://ipfs.io`'s bot-detection wall), except now for whichever ONE gateway a person has configured
+instead. Once a person points Verify at, say, Pinata's own gateway, that gateway going down (a real, ordinary
+outage — not the permanent wall `0.9.665` reversed DEFER over) again degrades the same narrow corner of the
+product `0.9.665` closed the seam for, with no recovery beyond manually editing the setting again. Ordered
+failover — content-addressed, byte-identical from any gateway that serves it — captures that resilience with
+none of fan-out's complexity, the identical `MINIMAL_FAILOVER_SEAM` reasoning `0.9.439`'s own audit already
+proved out for Arweave.
+
+**What was built, mirroring Arweave Gateway's own `0.9.440` shape exactly, one axis over.** `gatewayUrl` (a
+single string) or `gatewayUrls` (a non-empty, ordered array) — never both — with the single-string shape
+remaining exactly a one-element list, so every existing caller, test, and persisted payload keeps working
+unmodified. `IpfsGatewayFailoverContentStore` tries each configured gateway in order on `get()`/`has()`; the
+first success returns immediately, and only a `ContentUnavailableError` advances to the next gateway — any
+other error propagates immediately, exactly as it would from a single `IpfsGatewayContentStore`. `put()` is
+untouched: it delegates to the first configured gateway's own store, which is still `IpfsGatewayContentStore`'s
+own unimplemented throw (a read-only HTTPS gateway cannot accept content) — this milestone adds no write
+capability of any kind, mirroring Arweave Gateway's own "write stays single-gateway" rule.
+
+**Deliberately unchanged.** Local Kubo (`content/IpfsContentStore.js`) and remote pinning (`content/
+IpfsRemotePinningContentStore.js`) — the two IPFS *write* paths — remain completely untouched and structurally
+isolated, reconfirmed in `tests/IpfsGatewayReadFailover.test.js`'s own Section I, the identical isolation
+`0.9.373`'s own Section F/G and `0.9.665`'s own Section H already established. No health check, no automatic
+reordering, no per-gateway timeout configuration, no fan-out on a successful read, and no change to what
+"unavailable" means for a caller — see `core/IpfsGatewayConfiguration.js`'s and `content/
+IpfsGatewayFailoverContentStore.js`'s own "deliberately excluded" headers for the full list.
+
+**Classification: `EXTENSION`.** `0.9.665`'s own single-value shape was correct for what existed at the time;
+this milestone is the follow-on `0.9.665`'s own header already named by naming the collaborator it deliberately
+did not build, once a second, real recovery need (a person's own configured gateway, not just the hardcoded
+default) made building it worthwhile.

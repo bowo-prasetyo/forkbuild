@@ -172,8 +172,11 @@ async function run() {
         // call-site COUNT this section actually cares about is unchanged.
         const worldEncounterCompositionSource = await source('application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
         assert(!/ipfs/i.test(worldEncounterCompositionSource), 'A7. World Encounter material discovery composition never references IPFS — Local + Nostr + Arweave only');
-        const ipfsGatewayUsageCount = countOccurrences(mainSource, 'new IpfsGatewayContentStore({ gatewayUrl: resolvedIpfsGatewayUrl })');
-        assert(ipfsGatewayUsageCount === 2, `A7. IpfsGatewayContentStore is still constructed at exactly its two known, opt-in call sites — found ${ipfsGatewayUsageCount}`);
+        // AMENDED FURTHER BY 0.9.666 — IPFS Gateway Read Failover routes
+        // both call sites through composeIpfsGatewayContentStore(resolvedIpfsGatewayUrls)
+        // instead of a direct construction; the call-site count is unchanged.
+        const ipfsGatewayUsageCount = countOccurrences(mainSource, 'composeIpfsGatewayContentStore(resolvedIpfsGatewayUrls)');
+        assert(ipfsGatewayUsageCount === 2, `A7. the IPFS gateway content store is still built at exactly its two known, opt-in call sites — found ${ipfsGatewayUsageCount}`);
 
         // A8. STUN/TURN, Rendezvous, Bitcoin Esplora, Base RPC — reconfirmed
         // unchanged from 0.9.363/0.9.367's own inventory.

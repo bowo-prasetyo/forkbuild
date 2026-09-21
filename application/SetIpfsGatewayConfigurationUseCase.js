@@ -7,6 +7,10 @@ import { IpfsGatewayConfigurationStore } from '../storage/IpfsGatewayConfigurati
 // class alone builds and validates the IpfsGatewayConfiguration and
 // persists it. An invalid URL throws before save() is ever called, so a
 // rejected input leaves whatever was previously on file untouched.
+//
+// 0.9.666 — also accepts `gatewayUrls` (an ordered array), exactly one of
+// the two, never both — forwarded verbatim to core/
+// IpfsGatewayConfiguration.js's own constructor, which alone validates it.
 export class SetIpfsGatewayConfigurationUseCase {
     constructor({ ipfsGatewayConfigurationStore } = {}) {
         if (!(ipfsGatewayConfigurationStore instanceof IpfsGatewayConfigurationStore)) {
@@ -15,8 +19,8 @@ export class SetIpfsGatewayConfigurationUseCase {
         this._store = ipfsGatewayConfigurationStore;
     }
 
-    execute({ gatewayUrl } = {}) {
-        const configuration = new IpfsGatewayConfiguration({ gatewayUrl });
+    execute({ gatewayUrl, gatewayUrls } = {}) {
+        const configuration = new IpfsGatewayConfiguration({ gatewayUrl, gatewayUrls });
         this._store.save(configuration);
         return configuration;
     }

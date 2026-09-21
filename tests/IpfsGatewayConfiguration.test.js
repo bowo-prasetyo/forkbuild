@@ -3,11 +3,11 @@ import { readFile } from 'node:fs/promises';
 import { IpfsGatewayConfiguration, isValidIpfsGatewayUrl, DEFAULT_IPFS_GATEWAY_URL } from '../core/IpfsGatewayConfiguration.js';
 
 // 0.9.665 — User-Configurable IPFS Gateway Configuration Boundary.
-// Mirrors tests/ArweaveGatewayConfiguration.test.js's own Sections A-H
-// exactly, minus its 0.9.440 Section I (gatewayUrls list) — see core/
-// IpfsGatewayConfiguration.js's own header for why this class stays
-// single-value: content/IpfsGatewayContentStore.js only ever supports one
-// gateway per instance.
+// 0.9.666 — IPFS Gateway Read Failover. Mirrors tests/
+// ArweaveGatewayConfiguration.test.js's own Sections A-I exactly, in full
+// now — see core/IpfsGatewayConfiguration.js's own header for how this
+// class came to mirror Arweave Gateway's own 0.9.440 gatewayUrls/failover
+// shape one axis over.
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -113,9 +113,9 @@ async function run() {
     {
         const config = new IpfsGatewayConfiguration({ gatewayUrl: 'https://gateway.pinata.cloud' });
         const json = config.toJSON();
-        assert(JSON.stringify(json) === JSON.stringify({ gatewayUrl: 'https://gateway.pinata.cloud' }), 'F1. toJSON() returns exactly { gatewayUrl }');
+        assert(JSON.stringify(json) === JSON.stringify({ gatewayUrls: ['https://gateway.pinata.cloud'] }), 'F1. toJSON() returns exactly { gatewayUrls } — always the list shape, even for a single-gateway configuration');
         assert(Object.keys(json).length === 1, 'F2. toJSON() carries exactly one field');
-        console.log('✓ Section F: toJSON() is a plain, single-field data shape');
+        console.log('✓ Section F: toJSON() is a plain, single-field data shape, always the list shape');
     }
 
     // ===============================================================
@@ -135,7 +135,7 @@ async function run() {
 
     // ===============================================================
     // Section H — architecture sweep: no persistence, no network, no ui/,
-    // no extra fields, no list/failover, no generic abstraction.
+    // no extra fields, no generic abstraction.
     // ===============================================================
     {
         const configSource = await source('core/IpfsGatewayConfiguration.js');
@@ -145,8 +145,61 @@ async function run() {
         assert(!/from\s*['"][^'"]*ui\//.test(configExecutable), 'H3. no import from ui/ — this is a pure core/ value object');
         assert(!/timeout|retry|healthCheck|priority/i.test(configExecutable), 'H4. none of the speculative fields appear in this file\'s own executable code');
         assert(!/InfrastructureEndpointConfiguration/.test(configExecutable), 'H5. no generic InfrastructureEndpointConfiguration abstraction');
-        assert(!/gatewayUrls/.test(configExecutable), 'H6. no gatewayUrls/list/failover shape — content/IpfsGatewayContentStore.js only ever supports one gateway per instance, so this class deliberately never grows Arweave\'s later multi-gateway extension');
-        console.log('✓ Section H: architecture sweep confirms no persistence, no network call, no ui/ dependency, no speculative fields, and no list/failover shape');
+        console.log('✓ Section H: architecture sweep confirms no persistence, no network call, no ui/ dependency, and no speculative fields');
+    }
+
+    // ===============================================================
+    // Section I — 0.9.666: `gatewayUrls` (an ordered list), and the
+    // single-string shape's continued equivalence to a one-element list.
+    // ===============================================================
+    {
+        // I1. A list of two or more constructs, preserves order, and
+        // .gatewayUrl reads back the FIRST entry.
+        const multi = new IpfsGatewayConfiguration({ gatewayUrls: ['https://a.example', 'https://b.example', 'https://c.example'] });
+        assert(JSON.stringify(multi.gatewayUrls) === JSON.stringify(['https://a.example', 'https://b.example', 'https://c.example']), 'I1. gatewayUrls preserves configured order exactly');
+        assert(multi.gatewayUrl === 'https://a.example', 'I1. gatewayUrl reads back the first configured entry');
+
+        // I2. Reordering [A, B] -> [B, A] changes gatewayUrl/gatewayUrls,
+        // and equals() treats the two as genuinely different configurations
+        // — order IS the policy, never incidental.
+        const ab = new IpfsGatewayConfiguration({ gatewayUrls: ['https://a.example', 'https://b.example'] });
+        const ba = new IpfsGatewayConfiguration({ gatewayUrls: ['https://b.example', 'https://a.example'] });
+        assert(ab.gatewayUrl !== ba.gatewayUrl, 'I2. reordering changes which entry gatewayUrl reads back');
+        assert(!ab.equals(ba), 'I2. equals() treats a reordered list as a different configuration');
+
+        // I3. A single string is exactly a one-element list — the
+        // "old configuration -> one-element list -> same behavior"
+        // compatibility rule this milestone requires.
+        const single = new IpfsGatewayConfiguration({ gatewayUrl: 'https://only.example' });
+        const singleAsList = new IpfsGatewayConfiguration({ gatewayUrls: ['https://only.example'] });
+        assert(single.equals(singleAsList), 'I3. gatewayUrl: X and gatewayUrls: [X] construct value-equal configurations');
+        assert(JSON.stringify(single.gatewayUrls) === JSON.stringify(['https://only.example']), 'I3. a single-gatewayUrl configuration still exposes a one-element gatewayUrls array');
+
+        // I4. Passing both throws — never a silent "one wins."
+        expectThrows(() => new IpfsGatewayConfiguration({ gatewayUrl: 'https://a.example', gatewayUrls: ['https://b.example'] }),
+            'I4. supplying both gatewayUrl and gatewayUrls throws, rather than silently preferring one');
+
+        // I5. An empty gatewayUrls array throws — never "no gateway
+        // configured," which is a caller's own absence to represent, not a
+        // valid-but-empty configuration.
+        expectThrows(() => new IpfsGatewayConfiguration({ gatewayUrls: [] }), 'I5. an empty gatewayUrls array throws');
+        expectThrows(() => new IpfsGatewayConfiguration({ gatewayUrls: 'https://not-an-array.example' }), 'I5. a bare string under the gatewayUrls key (not an array) throws');
+
+        // I6. Every entry is independently validated and normalized —
+        // one malformed entry anywhere in the list throws the whole
+        // construction, and trailing slashes are stripped per entry.
+        expectThrows(() => new IpfsGatewayConfiguration({ gatewayUrls: ['https://good.example', 'not-a-url'] }),
+            'I6. one malformed entry anywhere in the list throws construction of the whole configuration');
+        const trimmed = new IpfsGatewayConfiguration({ gatewayUrls: ['https://a.example/', 'https://b.example///'] });
+        assert(JSON.stringify(trimmed.gatewayUrls) === JSON.stringify(['https://a.example', 'https://b.example']), 'I6. trailing slashes are normalized per entry, identically to the single-gatewayUrl path');
+
+        // I7. gatewayUrls is frozen — no mutation reaches another read.
+        const frozen = new IpfsGatewayConfiguration({ gatewayUrls: ['https://a.example', 'https://b.example'] });
+        assert(Object.isFrozen(frozen.gatewayUrls), 'I7. the returned gatewayUrls array is frozen');
+        expectThrows(() => { frozen.gatewayUrls.push('https://c.example'); }, 'I7. push() on the returned array throws rather than silently mutating this instance');
+        assert(frozen.gatewayUrls.length === 2, 'I7. the attempted mutation left this instance unchanged');
+
+        console.log('✓ Section I: gatewayUrls constructs an ordered, frozen, independently-validated list; a single gatewayUrl string remains exactly a one-element list; both fields together throws; an empty/non-array list throws');
     }
 
     console.log('\n✅ All User-Configurable IPFS Gateway Configuration Boundary tests passed.');

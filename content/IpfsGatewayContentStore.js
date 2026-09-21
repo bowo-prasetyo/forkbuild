@@ -68,6 +68,11 @@ const DEFAULT_TIMEOUT_MS = 5000;
 // one" of any kind. A caller that wants multiple gateways runs multiple
 // instances of this class explicitly and decides for itself how to
 // combine their outcomes; this class makes that decision for nobody.
+//
+// 0.9.666 — that caller now exists: content/IpfsGatewayFailoverContentStore.js
+// wraps one instance of this class per configured gateway and tries them
+// in order on read, never modifying this class itself. This class's own
+// single-gateway contract is unchanged by that addition.
 export class IpfsGatewayContentStore extends ContentStore {
     // `fetchImpl` is an injection point, not a convenience — every
     // deterministic test for this class (tests/IpfsGatewayContentStore

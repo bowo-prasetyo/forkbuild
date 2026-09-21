@@ -183,17 +183,55 @@ async function run() {
     // Section I — this same resolution, confirmed against the REAL
     // ui/main.js composition-root wiring, not merely a re-implementation
     // of the pattern in this test file.
+    //
+    // 0.9.666 — IPFS Gateway Read Failover extends this sweep: both real
+    // construction sites now resolve the FULL ordered gatewayUrls list and
+    // route it through composeIpfsGatewayContentStore(), the same
+    // "byte-for-byte unchanged for a single gateway, failover-capable for
+    // 2+" shape Arweave Gateway's own 0.9.440 consumers already hold.
     // ===============================================================
     {
         const mainSource = await source('ui/main.js');
         assert(mainSource.includes('const ipfsGatewayConfigurationStore = new IpfsGatewayConfigurationStore(new LocalStorageProvider());'),
             'I1. ui/main.js constructs exactly one IpfsGatewayConfigurationStore, over LocalStorageProvider, the same composition-root shape Arweave/Nostr already hold');
         assert(mainSource.includes("const resolvedIpfsGatewayUrl = (ipfsGatewayConfigurationStore.get() || { gatewayUrl: DEFAULT_IPFS_GATEWAY_URL }).gatewayUrl;"),
-            'I2. ui/main.js resolves the effective gateway with the identical "absent -> default, present -> override" pattern Section H proved directly against the store');
-        const gatewayConstructionsWithOption = (mainSource.match(/new IpfsGatewayContentStore\(\{ gatewayUrl: resolvedIpfsGatewayUrl \}\)/g) || []).length;
-        assert(gatewayConstructionsWithOption === 2, `I3. both real IpfsGatewayContentStore construction sites now pass the resolved gatewayUrl — found ${gatewayConstructionsWithOption}`);
+            'I2. ui/main.js still resolves the single effective gateway with the identical "absent -> default, present -> override" pattern Section H proved directly against the store');
+        assert(mainSource.includes("const resolvedIpfsGatewayUrls = (ipfsGatewayConfigurationStore.get() || { gatewayUrls: [DEFAULT_IPFS_GATEWAY_URL] }).gatewayUrls;"),
+            'I2b. ui/main.js also resolves the FULL ordered gatewayUrls list, over the SAME store instance, mirroring resolvedArweaveGatewayUrls\' own 0.9.440 shape');
+        const gatewayConstructionsWithOption = (mainSource.match(/composeIpfsGatewayContentStore\(resolvedIpfsGatewayUrls\)/g) || []).length;
+        assert(gatewayConstructionsWithOption === 2, `I3. both real IPFS gateway content store construction sites now go through composeIpfsGatewayContentStore(resolvedIpfsGatewayUrls) — found ${gatewayConstructionsWithOption}`);
         assert(!/new IpfsGatewayContentStore\(\)/.test(mainSource), 'I4. no construction site passes zero arguments any more — the seam Section A/D of the earlier product-gap audits found unreached is now genuinely wired');
-        console.log('✓ Section I: the effective-gateway resolution this milestone ships is confirmed live inside the real ui/main.js composition root, feeding both real construction sites, not merely proven in isolation');
+        assert(/function composeIpfsGatewayContentStore\(gatewayUrls\)\s*\{[\s\S]*?IpfsGatewayFailoverContentStore[\s\S]*?IpfsGatewayContentStore[\s\S]*?\}/.test(mainSource),
+            'I5. composeIpfsGatewayContentStore() itself picks the plain IpfsGatewayContentStore for a single configured gateway and IpfsGatewayFailoverContentStore only for 2+, mirroring resolvedArweaveGatewayUrls\' own consumers');
+        console.log('✓ Section I: the effective-gateway resolution this milestone ships is confirmed live inside the real ui/main.js composition root, feeding both real construction sites through the failover-aware composition helper, not merely proven in isolation');
+    }
+
+    // ===============================================================
+    // Section K — 0.9.666: gatewayUrls list persistence round-trips, and
+    // a legacy single-gatewayUrl payload still reads back as a genuine
+    // one-element ordered list.
+    // ===============================================================
+    {
+        const store = new IpfsGatewayConfigurationStore(new InMemoryStorageProvider());
+        const original = new IpfsGatewayConfiguration({ gatewayUrls: ['https://a.example', 'https://b.example', 'https://c.example'] });
+        store.save(original);
+
+        const loaded = store.get();
+        assert(loaded instanceof IpfsGatewayConfiguration, 'K1. get() returns a real IpfsGatewayConfiguration instance for a saved list');
+        assert(JSON.stringify(loaded.gatewayUrls) === JSON.stringify(['https://a.example', 'https://b.example', 'https://c.example']), 'K2. the full ordered list survives the round trip');
+        assert(loaded.equals(original), 'K3. the reloaded configuration is value-equal to the original');
+
+        // A payload saved by an earlier build of this codebase —
+        // { gatewayUrl: '...' }, no gatewayUrls key at all — still reads
+        // back exactly as it always did: a genuine one-element list.
+        const legacyBacking = new InMemoryStorageProvider();
+        legacyBacking.save('ipfs-gateway-configuration', { gatewayUrl: 'https://legacy.example' });
+        const legacyStore = new IpfsGatewayConfigurationStore(legacyBacking);
+        const legacyLoaded = legacyStore.get();
+        assert(legacyLoaded instanceof IpfsGatewayConfiguration, 'K4. a legacy single-gatewayUrl payload still round-trips into a real IpfsGatewayConfiguration');
+        assert(JSON.stringify(legacyLoaded.gatewayUrls) === JSON.stringify(['https://legacy.example']), 'K5. …as a genuine one-element gatewayUrls list, byte-identical in effect to what it always meant');
+
+        console.log('✓ Section K: gatewayUrls list persistence round-trips through a real IpfsGatewayConfiguration, and a legacy single-gatewayUrl payload upgrades losslessly into a one-element ordered list');
     }
 
     // ===============================================================
