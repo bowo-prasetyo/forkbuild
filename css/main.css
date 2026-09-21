@@ -3840,6 +3840,7 @@ html, body {
    pages, same card language as .content-provider-settings-view above. */
 .arweave-gateway-settings-view,
 .ipfs-gateway-settings-view,
+.bitcoin-esplora-settings-view,
 .nostr-relay-settings-view,
 .stun-settings-view,
 .turn-server-settings-view,
@@ -3852,6 +3853,7 @@ html, body {
 
 .arweave-gateway-settings-form,
 .ipfs-gateway-settings-form,
+.bitcoin-esplora-settings-form,
 .nostr-relay-settings-form,
 .stun-settings-form,
 .turn-server-settings-form,

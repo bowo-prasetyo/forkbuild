@@ -356,7 +356,12 @@ async function run() {
 
         check(/import \{ CreateBitcoinAnchorProofVerifierUseCase \}/.test(mainCode), 'B5a. sanity: ui/main.js really does import CreateBitcoinAnchorProofVerifierUseCase');
         check(/import \{ CreateArweaveAnchorProofVerifierUseCase \}/.test(mainCode), 'B5b. ...and CreateArweaveAnchorProofVerifierUseCase');
-        check(/const \{ bitcoinProofVerifier \} = new CreateBitcoinAnchorProofVerifierUseCase\(\)\.execute\(\);/.test(mainCode), 'B5c. ...and really constructs a real bitcoinProofVerifier from it');
+        // AMENDED, LATER MILESTONE — Bitcoin's own construction now threads
+        // a settings-backed apiUrl; see tests/
+        // BitcoinEndpointConfigurationUIReachabilityAudit.test.js's own
+        // reopened header for the Bitcoin Endpoint Settings UI this
+        // reflects.
+        check(/const \{ bitcoinProofVerifier \} = new CreateBitcoinAnchorProofVerifierUseCase\(\)\.execute\(\{ apiUrl: resolvedBitcoinEsploraApiUrl \}\);/.test(mainCode), 'B5c. ...and really constructs a real bitcoinProofVerifier from it, now with a settings-backed apiUrl — AMENDED, see comment above');
         check(/proofVerifiers: \[bitcoinProofVerifier\]/.test(mainCode), 'B5d. ...which is really handed into CreateExternalAnchorVerifierUseCase as a live proofVerifier');
         check(/externalAnchorProofVerifierRegistry\.register\(arweaveProofVerifier\)/.test(mainCode), 'B5e. ...and Arweave\'s own real proof verifier is really registered into that SAME live registry instance');
 
