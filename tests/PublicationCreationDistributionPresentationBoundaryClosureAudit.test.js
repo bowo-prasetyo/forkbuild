@@ -732,7 +732,10 @@ async function run() {
         assert(editorViewCode.includes("if (discoveryProvider === 'arweave') {") &&
             editorViewCode.includes('return publicationDistributionCommand({'),
             n('H7. distributeEditorPublication()\'s own Arweave branch still calls publicationDistributionCommand() directly and returns its result untouched — no wrapping happens inside this function'));
-        const distributeEditorPublicationBlock = extractRange(editorViewCode, 'function distributeEditorPublication(publication, discoveryProvider) {', '\n        }\n', 'distributeEditorPublication() body');
+        // AMENDED BY 0.9.670 — Publication Material Storage Selection. The
+        // signature grew two more optional parameters (materialStorage,
+        // remotePinningConfiguration) — marker updated to match.
+        const distributeEditorPublicationBlock = extractRange(editorViewCode, 'function distributeEditorPublication(publication, discoveryProvider, materialStorage, remotePinningConfiguration) {', '\n        }\n', 'distributeEditorPublication() body');
         assert(!distributeEditorPublicationBlock.includes('normalizeDistributionResultForDisplay') && !distributeEditorPublicationBlock.includes('Array.isArray') && !distributeEditorPublicationBlock.includes('[result]'),
             n('H8. distributeEditorPublication() itself contains no array-wrapping, no Array.isArray check, and no reference to the normalization helper — the command contracts remain exactly as provider-specific as they always were'));
 
