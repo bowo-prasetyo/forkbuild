@@ -172,9 +172,9 @@ async function runTests() {
 
         assert(ctx.publicationDistributionExecuting === false, '2. FLAGSHIP — execution returns to idle once the command resolves');
         assert(ctx.publicationDistributionError === null, '3. FLAGSHIP — a successful call leaves no error notice');
-        assert(ctx.publicationDistributionResult.material.uri === 'ar://PostPublishTransactionId1234567890',
-            '4. FLAGSHIP — the panel holds the real upload\'s own material uri');
-        assert(ctx.publicationDistributionResult.discovery.id === 'e'.repeat(64),
+        assert(ctx.publicationDistributionResult[0].material.uri === 'ar://PostPublishTransactionId1234567890',
+            '4. FLAGSHIP — the panel holds the real upload\'s own material uri (publicationDistributionResult is normalized to a one-element array — see OwnPublicationPanel.js\'s own normalizeDistributionResultForDisplay())');
+        assert(ctx.publicationDistributionResult[0].discovery.id === 'e'.repeat(64),
             '5. FLAGSHIP — the panel holds a real, genuinely published Nostr discovery id');
 
         // The SAME app-wide lifecycle store WorldEncounterCanvas's own
@@ -241,7 +241,8 @@ async function runTests() {
     }
 
     // ---------------------------------------------------------------
-    // Section D — success presentation stored verbatim.
+    // Section D — success presentation stored verbatim (up to the
+    // 0.9.671 array normalization — see below).
     // ---------------------------------------------------------------
     {
         const publication = signedPublication({ id: 'pub-post-publish-d' });
@@ -255,10 +256,22 @@ async function runTests() {
         ctx.distributeOwnPublication();
         await flushMicrotasks();
 
-        assert(ctx.publicationDistributionResult === sentinelResult,
-            '13. the exact object the command resolved to is stored verbatim — no copy, no re-wrapping, no new shape');
+        // AMENDED BY 0.9.671 — Publication Distribution Result Shape Fix.
+        // `publicationDistributionCommand` (`distributeWorldEncounterPublication()`,
+        // `ui/views/WorldView.js`) resolves a BARE object only for the
+        // 'arweave' substrate; every other substrate (including this
+        // panel's own 'nostr' default) resolves an ARRAY instead — see
+        // that function's own 0.9.450 header. `distributeOwnPublication()`
+        // now runs every resolved value through
+        // `normalizeDistributionResultForDisplay()` (mirroring
+        // `ui/views/EditorView.js`'s own identical 0.9.526 fix) before
+        // storing it, so a bare object is stored as a one-element array —
+        // the exact same object, at index 0, never copied or mutated.
+        assert(Array.isArray(ctx.publicationDistributionResult) && ctx.publicationDistributionResult.length === 1
+            && ctx.publicationDistributionResult[0] === sentinelResult,
+            '13. the exact object the command resolved to is stored verbatim, at index 0 of a one-element array — no copy, no mutation, only the 0.9.671 array normalization every other production caller (a real "nostr" substrate call) already needs');
 
-        console.log('✓ Section D: a resolved result is stored and exposed exactly as the command produced it');
+        console.log('✓ Section D: a resolved result is stored and exposed exactly as the command produced it, normalized into the same array shape the "nostr" substrate already produces');
     }
 
     // ---------------------------------------------------------------

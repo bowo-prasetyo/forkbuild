@@ -296,10 +296,10 @@ async function run() {
         ctx.distributeOwnPublication();
         await flushMicrotasks();
 
-        assert(ctx.publicationDistributionResult.discovery.id === 'b'.repeat(64),
-            '6. announcement/discovery genuinely ran — the panel holds a real Nostr event id, not a placeholder');
+        assert(ctx.publicationDistributionResult[0].discovery.id === 'b'.repeat(64),
+            '6. announcement/discovery genuinely ran — the panel holds a real Nostr event id, not a placeholder (publicationDistributionResult is normalized to a one-element array — see OwnPublicationPanel.js\'s own normalizeDistributionResultForDisplay())');
         assert(publishedEventTemplate !== null, '7. a real discovery event was actually constructed and handed to the relay');
-        const lifecycle = describePublicationDistributionLifecycle(ctx.publicationDistributionResult);
+        const lifecycle = describePublicationDistributionLifecycle(ctx.publicationDistributionResult[0]);
         assert(lifecycle.discovery.state === PublicationDistributionState.PRESENT && lifecycle.discovery.origin === 'wss://relay.example',
             '8. the announcement resolves to a well-formed, present discovery fact naming its own relay origin');
 
@@ -480,7 +480,7 @@ async function run() {
 
         assert(ctx.publicationDistributionError === null,
             '28. a declined discovery announcement, with material still successfully placed, is not treated as an overall failure');
-        const lifecycle = describePublicationDistributionLifecycle(ctx.publicationDistributionResult);
+        const lifecycle = describePublicationDistributionLifecycle(ctx.publicationDistributionResult[0]);
         assert(lifecycle.material.state === PublicationDistributionState.PRESENT && lifecycle.discovery.state === PublicationDistributionState.ABSENT,
             '29. the lifecycle genuinely records material PRESENT / discovery ABSENT — one destination succeeded, the other did not, independently');
 
