@@ -31,6 +31,7 @@ import { AvatarTerrainConstraint } from './AvatarTerrainConstraint.js';
 import { AvatarStepConstraint } from './AvatarStepConstraint.js';
 import { AvatarTreeConstraint } from './AvatarTreeConstraint.js';
 import { AvatarWaterConstraint } from './AvatarWaterConstraint.js';
+import { AvatarWildlifeConstraint } from './AvatarWildlifeConstraint.js';
 import { AvatarVehicleInteractionController } from './AvatarVehicleInteractionController.js';
 import { VehicleRuntimeInstances } from './VehicleRuntimeInstances.js';
 import { AvatarVehicleMovementController } from './AvatarVehicleMovementController.js';
@@ -1291,7 +1292,11 @@ export class WorldNavigationSession {
             // completely untouched by water depth, unrelated scope for
             // this milestone (see application/AvatarWaterConstraint.js's
             // own header).
-            this._buildAvatarWaterConstraint()
+            this._buildAvatarWaterConstraint(),
+            // Avatar-only, same posture as terrainConstraint/stepConstraint/
+            // waterConstraint above — see
+            // application/AvatarWildlifeConstraint.js's own header.
+            this._buildAvatarWildlifeConstraint()
         );
         // 0.9.83 — built alongside the movement controller, from the
         // same avatarPresenceSession. See
@@ -1631,6 +1636,21 @@ export class WorldNavigationSession {
     // posture _buildAvatarTerrainConstraint() already established.
     _buildAvatarWaterConstraint() {
         return new AvatarWaterConstraint();
+    }
+
+    // Builds the LOCAL avatar's wildlife-collision constraint. Like
+    // _buildAvatarTreeConstraint() above, this needs no state from this
+    // session at all: animal placement is a pure function of (seed, x, z),
+    // always computable for any coordinate regardless of which documents
+    // happen to be streamed in nearby — see
+    // application/AvatarWildlifeConstraint.js's own header.
+    // AvatarWildlifeConstraint's own constructor default (the same shared
+    // DEFAULT_WORLD_SEED every other seed-driven query point in this
+    // codebase reads) is exactly what a real session wants, so nothing is
+    // passed here — always built, unconditionally, the same posture
+    // _buildAvatarTreeConstraint() already established.
+    _buildAvatarWildlifeConstraint() {
+        return new AvatarWildlifeConstraint();
     }
 
     // -----------------------------------------------------------------
