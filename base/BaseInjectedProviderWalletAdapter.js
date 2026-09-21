@@ -44,9 +44,20 @@
 // a real, receivable EIP-1193 answer with nothing useful in it — is the
 // one case this class DOES report as a definite decline, because it is
 // not a thrown error at all.
+// Bug fix — mirrors nostr/NostrInjectedProviderPublisher.js's own
+// DEFAULT_SIGNING_TIMEOUT_MS exactly, one substrate over.
+// `request({ method: 'eth_requestAccounts' })` was never bounded by any
+// timeout at all, so a real wallet extension whose own response never
+// reaches the page (the same "extension background context recycled
+// mid-request" failure mode the Nostr fix addressed) left `connect()`
+// awaiting forever, with no way to recover, even though the wallet's own
+// popup may already have been resolved on its own side.
+const DEFAULT_SIGNING_TIMEOUT_MS = 120000;
+
 export class BaseInjectedProviderWalletAdapter {
-    constructor({ injectedProvider = null } = {}) {
+    constructor({ injectedProvider = null, signingTimeoutMs = DEFAULT_SIGNING_TIMEOUT_MS } = {}) {
         this._injectedProvider = injectedProvider;
+        this._signingTimeoutMs = signingTimeoutMs;
     }
 
     // Matches base/BaseWalletConnection.js's own `provider.connect()`
@@ -59,7 +70,7 @@ export class BaseInjectedProviderWalletAdapter {
 
         let accounts;
         try {
-            accounts = await provider.request({ method: 'eth_requestAccounts' });
+            accounts = await withSigningTimeout(provider.request({ method: 'eth_requestAccounts' }), this._signingTimeoutMs, 'eth_requestAccounts');
         } catch (error) {
             return { connected: false, unavailable: true, reason: error && error.message ? error.message : 'wallet connection request could not be completed' };
         }
@@ -80,4 +91,23 @@ export class BaseInjectedProviderWalletAdapter {
             this._injectedProvider.disconnect();
         }
     }
+}
+
+// withSigningTimeout(promise, ms, method) -> Promise. Resolves/rejects
+// exactly as `promise` does, unless `ms` elapses first, in which case it
+// rejects with an Error naming which RPC call never answered — mirrors
+// nostr/NostrInjectedProviderPublisher.js's own identically-shaped helper,
+// adapted to this file's own convention of folding every thrown error into
+// a plain `reason` string rather than a dedicated timeout subclass, since
+// this file's own caller already reads `error.message` alone.
+function withSigningTimeout(promise, ms, method) {
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+            reject(new Error(`${method} did not respond within ${ms}ms — check for a pending approval popup from your Base-capable wallet`));
+        }, ms);
+        Promise.resolve(promise).then(
+            (value) => { clearTimeout(timer); resolve(value); },
+            (error) => { clearTimeout(timer); reject(error); }
+        );
+    });
 }
