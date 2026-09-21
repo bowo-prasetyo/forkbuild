@@ -1,5 +1,16 @@
 const DEFAULT_GATEWAY_URL = 'https://arweave.net';
 const DEFAULT_TIMEOUT_MS = 15000;
+// Bug fix — mirrors nostr/NostrInjectedProviderPublisher.js's own
+// DEFAULT_SIGNING_TIMEOUT_MS exactly, one substrate over. Neither
+// `injectedProvider.connect()` nor `injectedProvider.sign()` (below) was
+// ever bounded by any timeout at all — unlike the gateway `fetch()` calls
+// this file already wraps in an AbortController — so a real ArConnect/
+// Wander installation whose own response never reaches the page (the
+// identical "an MV3 background service worker recycled mid-request"
+// failure mode that motivated the Nostr fix) left `sign()` awaiting
+// forever, with no way to recover, even though the wallet's own approval
+// popup may already have been resolved on its own side.
+const DEFAULT_SIGNING_TIMEOUT_MS = 120000;
 const DEFAULT_PERMISSIONS = ['SIGN_TRANSACTION'];
 const NOTE_SIZE = 32;
 const MAX_SINGLE_CHUNK_BYTES = 256 * 1024;
@@ -148,6 +159,7 @@ export function createArweaveInjectedProviderSigner({
     gatewayUrl = DEFAULT_GATEWAY_URL,
     fetchImpl = null,
     timeoutMs = DEFAULT_TIMEOUT_MS,
+    signingTimeoutMs = DEFAULT_SIGNING_TIMEOUT_MS,
     permissions = DEFAULT_PERMISSIONS
 } = {}) {
     if (!injectedProvider || typeof injectedProvider.sign !== 'function') {
@@ -192,8 +204,11 @@ export function createArweaveInjectedProviderSigner({
 
         if (typeof injectedProvider.connect === 'function') {
             try {
-                await injectedProvider.connect(permissions);
+                await withSigningTimeout(injectedProvider.connect(permissions), signingTimeoutMs, 'connect()');
             } catch (error) {
+                if (error instanceof SigningTimeoutError) {
+                    throw new Error(`ArweaveInjectedProviderSigner: ${error.message}`);
+                }
                 throw new Error(`ArweaveInjectedProviderSigner: wallet extension rejected connect() — ${describeInjectedProviderError(error)}`);
             }
         }
@@ -263,8 +278,11 @@ export function createArweaveInjectedProviderSigner({
 
         let signed;
         try {
-            signed = await injectedProvider.sign(unsignedTransaction);
+            signed = await withSigningTimeout(injectedProvider.sign(unsignedTransaction), signingTimeoutMs, 'sign()');
         } catch (error) {
+            if (error instanceof SigningTimeoutError) {
+                throw new Error(`ArweaveInjectedProviderSigner: ${error.message}`);
+            }
             throw new Error(`ArweaveInjectedProviderSigner: wallet extension rejected sign() — ${describeInjectedProviderError(error)}`);
         }
         if (!signed || typeof signed.id !== 'string' || signed.id.length === 0) {
@@ -378,6 +396,31 @@ export function createArweaveInjectedProviderSigner({
 
 createArweaveInjectedProviderSigner.DEFAULT_GATEWAY_URL = DEFAULT_GATEWAY_URL;
 createArweaveInjectedProviderSigner.DEFAULT_PERMISSIONS = DEFAULT_PERMISSIONS;
+createArweaveInjectedProviderSigner.DEFAULT_SIGNING_TIMEOUT_MS = DEFAULT_SIGNING_TIMEOUT_MS;
+
+// A distinct Error subclass (rather than a message-sniffing check) so
+// `sign()`'s own catch can tell "the extension never answered" apart from
+// "the extension answered with a rejection" — mirrors nostr/
+// NostrInjectedProviderPublisher.js's own identically-named class exactly,
+// one substrate over.
+class SigningTimeoutError extends Error {}
+
+// withSigningTimeout(promise, ms, label) -> Promise. Resolves/rejects
+// exactly as `promise` does, unless `ms` elapses first, in which case it
+// rejects with a SigningTimeoutError naming which call never answered —
+// mirrors nostr/NostrInjectedProviderPublisher.js's own identically-named
+// helper exactly.
+function withSigningTimeout(promise, ms, label) {
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+            reject(new SigningTimeoutError(`${label} did not respond within ${ms}ms — check for a pending approval popup from your Arweave wallet`));
+        }, ms);
+        promise.then(
+            (value) => { clearTimeout(timer); resolve(value); },
+            (error) => { clearTimeout(timer); reject(error); }
+        );
+    });
+}
 
 // Bounded GET returning trimmed text, or a rejection on a non-2xx response,
 // a timeout, or a transport failure — a genuine gateway failure, never

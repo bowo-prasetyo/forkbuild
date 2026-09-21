@@ -1,4 +1,14 @@
 const NETWORK_NAMES = { livenet: 'mainnet', mainnet: 'mainnet', testnet: 'testnet' };
+// Bug fix — mirrors nostr/NostrInjectedProviderPublisher.js's own
+// DEFAULT_SIGNING_TIMEOUT_MS exactly, one substrate over. None of
+// `requestAccounts()`/`getNetwork()`/`signPsbt()` below was ever bounded
+// by any timeout at all, so a real UniSat installation whose own response
+// never reaches the page (the same "extension background context
+// recycled mid-request" failure mode the Nostr fix addressed) left
+// `connect()`/`signPsbt()` awaiting forever, with no way to recover, even
+// though the wallet's own popup may already have been resolved on its
+// own side.
+const DEFAULT_SIGNING_TIMEOUT_MS = 120000;
 
 // 0.8.58 — Explicit Bitcoin Wallet Connection & Signing UX.
 //
@@ -71,14 +81,16 @@ const NETWORK_NAMES = { livenet: 'mainnet', mainnet: 'mainnet', testnet: 'testne
 // decline, because it is not a thrown error at all, but a real, receivable
 // answer with nothing useful in it.
 export class BitcoinInjectedProviderWalletAdapter {
-    constructor({ injectedProvider = null } = {}) {
+    constructor({ injectedProvider = null, signingTimeoutMs = DEFAULT_SIGNING_TIMEOUT_MS } = {}) {
         this._injectedProvider = injectedProvider;
+        this._signingTimeoutMs = signingTimeoutMs;
     }
 
     // Matches anchoring/BitcoinWalletConnection.js's own `provider.connect()`
     // contract exactly — see this file's own header.
     async connect() {
         const provider = this._injectedProvider;
+        const signingTimeoutMs = this._signingTimeoutMs;
         if (!provider
             || typeof provider.requestAccounts !== 'function'
             || typeof provider.getNetwork !== 'function'
@@ -88,7 +100,7 @@ export class BitcoinInjectedProviderWalletAdapter {
 
         let accounts;
         try {
-            accounts = await provider.requestAccounts();
+            accounts = await withSigningTimeout(provider.requestAccounts(), signingTimeoutMs, 'requestAccounts()', 'Bitcoin');
         } catch (error) {
             return { connected: false, unavailable: true, reason: error && error.message ? error.message : 'wallet connection request could not be completed' };
         }
@@ -98,7 +110,7 @@ export class BitcoinInjectedProviderWalletAdapter {
 
         let rawNetwork;
         try {
-            rawNetwork = await provider.getNetwork();
+            rawNetwork = await withSigningTimeout(provider.getNetwork(), signingTimeoutMs, 'getNetwork()', 'Bitcoin');
         } catch (error) {
             return { connected: false, unavailable: true, reason: `could not read the wallet's network: ${error && error.message ? error.message : 'unknown error'}` };
         }
@@ -125,7 +137,7 @@ export class BitcoinInjectedProviderWalletAdapter {
                 async signPsbt(unsignedPsbt) {
                     const psbtHex = toPsbtHex(unsignedPsbt);
                     try {
-                        const signedHex = await provider.signPsbt(psbtHex);
+                        const signedHex = await withSigningTimeout(provider.signPsbt(psbtHex), signingTimeoutMs, 'signPsbt()', 'Bitcoin');
                         if (typeof signedHex !== 'string' || signedHex.length === 0) {
                             return { signed: false, reason: 'wallet returned no signed PSBT' };
                         }
@@ -158,6 +170,25 @@ export class BitcoinInjectedProviderWalletAdapter {
 // bare hex/base64 string or raw bytes directly, the identical trio every
 // PSBT-accepting method in this codebase's anchoring/ layer already
 // accepts.
+// withSigningTimeout(promise, ms, label, walletName) -> Promise.
+// Resolves/rejects exactly as `promise` does, unless `ms` elapses first, in
+// which case it rejects with an Error naming which call never answered —
+// mirrors nostr/NostrInjectedProviderPublisher.js's own identically-shaped
+// helper, adapted to this file's own convention of folding every thrown
+// error into a plain `reason` string rather than a dedicated timeout
+// subclass, since every caller here already reads `error.message` alone.
+function withSigningTimeout(promise, ms, label, walletName) {
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+            reject(new Error(`${label} did not respond within ${ms}ms — check for a pending approval popup from your ${walletName} wallet`));
+        }, ms);
+        Promise.resolve(promise).then(
+            (value) => { clearTimeout(timer); resolve(value); },
+            (error) => { clearTimeout(timer); reject(error); }
+        );
+    });
+}
+
 function toPsbtHex(unsignedPsbt) {
     if (unsignedPsbt && typeof unsignedPsbt === 'object' && typeof unsignedPsbt.hex === 'string') {
         return unsignedPsbt.hex;
