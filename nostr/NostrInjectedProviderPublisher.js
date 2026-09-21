@@ -1,4 +1,10 @@
 const DEFAULT_TIMEOUT_MS = 6000;
+// Longer than the relay ack timeout above: a real extension often blocks on
+// a human clicking its own approval popup, not just network I/O. Without
+// this, a dropped/lost response (e.g. an MV3 extension service worker
+// recycled mid-request) left getPublicKey()/signEvent() awaiting forever —
+// the popup can show "approved" while the page never hears about it.
+const DEFAULT_SIGNING_TIMEOUT_MS = 120000;
 
 // 0.9.121 — Nostr Injected Provider Publisher.
 //
@@ -97,7 +103,8 @@ const DEFAULT_TIMEOUT_MS = 6000;
 export function createNostrInjectedProviderPublisher({
     injectedProvider = null,
     webSocketImpl = null,
-    timeoutMs = DEFAULT_TIMEOUT_MS
+    timeoutMs = DEFAULT_TIMEOUT_MS,
+    signingTimeoutMs = DEFAULT_SIGNING_TIMEOUT_MS
 } = {}) {
     if (!injectedProvider || typeof injectedProvider.getPublicKey !== 'function' || typeof injectedProvider.signEvent !== 'function') {
         return undefined;
@@ -119,15 +126,18 @@ export function createNostrInjectedProviderPublisher({
         let pubkey;
         let signedEvent;
         try {
-            pubkey = await injectedProvider.getPublicKey();
-            signedEvent = await injectedProvider.signEvent({
+            pubkey = await withSigningTimeout(injectedProvider.getPublicKey(), signingTimeoutMs, 'getPublicKey()');
+            signedEvent = await withSigningTimeout(injectedProvider.signEvent({
                 kind: eventTemplate.kind,
                 tags: eventTemplate.tags,
                 content: eventTemplate.content,
                 created_at: Math.floor(Date.now() / 1000),
                 pubkey
-            });
+            }), signingTimeoutMs, 'signEvent()');
         } catch (error) {
+            if (error instanceof SigningTimeoutError) {
+                throw new Error(`NostrInjectedProviderPublisher: ${error.message}`);
+            }
             throw new Error(`NostrInjectedProviderPublisher: wallet extension rejected getPublicKey()/signEvent() — ${describeInjectedProviderError(error)}`);
         }
 
@@ -137,6 +147,31 @@ export function createNostrInjectedProviderPublisher({
 
         return broadcastSignedEvent({ webSocketCtor, relayUrl, signedEvent, timeoutMs });
     };
+}
+
+// A distinct Error subclass (rather than a message-sniffing check) so
+// publish()'s own catch can tell "the extension never answered" apart from
+// "the extension answered with a rejection" — the two want different
+// wording, since a stuck popup and a declined request are different facts
+// for a person to act on.
+class SigningTimeoutError extends Error {}
+
+// withSigningTimeout(promise, ms, label) -> Promise. Resolves/rejects
+// exactly as `promise` does, unless `ms` elapses first, in which case it
+// rejects with a SigningTimeoutError naming which call never answered. This
+// is what closes the gap left by an extension that drops its own response
+// (e.g. an MV3 background service worker recycled mid-request) — without
+// it, an approved-looking popup can still leave publish() awaiting forever.
+function withSigningTimeout(promise, ms, label) {
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+            reject(new SigningTimeoutError(`${label} did not respond within ${ms}ms — check for a pending approval popup from your Nostr extension`));
+        }, ms);
+        promise.then(
+            (value) => { clearTimeout(timer); resolve(value); },
+            (error) => { clearTimeout(timer); reject(error); }
+        );
+    });
 }
 
 // Opens exactly one WebSocket to `relayUrl`, sends `["EVENT", signedEvent]`
@@ -212,3 +247,4 @@ function describeInjectedProviderError(error) {
 }
 
 createNostrInjectedProviderPublisher.DEFAULT_TIMEOUT_MS = DEFAULT_TIMEOUT_MS;
+createNostrInjectedProviderPublisher.DEFAULT_SIGNING_TIMEOUT_MS = DEFAULT_SIGNING_TIMEOUT_MS;
