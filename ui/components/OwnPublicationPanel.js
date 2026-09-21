@@ -1456,6 +1456,36 @@ import { resolveSavedProviderDefault } from '../../application/SavedProviderDefa
 //   Publication is fully valid whether or not this button is ever clicked,
 //   and a distribution failure never turns a successful local Publication
 //   into a failed one.
+
+// AMENDED BY 0.9.671 — Publication Distribution Result Shape Fix.
+// `publicationDistributionCommand` is `distributeWorldEncounterPublication()`
+// (`ui/views/WorldView.js`, unmodified) — and, per THAT function's own
+// 0.9.450 header, it resolves a BARE `PublicationDistributionResult` only
+// when `discoveryProvider === 'arweave'`; every other choice (`'nostr'`,
+// this panel's own default — see `publicationDiscoveryProvider`'s own
+// initializer, below) resolves an ARRAY instead (one element per
+// configured relay), calling `multiRelayNostrPublicationDistributionCommand()`
+// under the hood. `distributeOwnPublication()` stored that resolved value
+// directly, and the template read `publicationDistributionResult.publication.objectId`
+// straight off it — correct for the bare-object 'arweave' case, but
+// `[].publication` is `undefined` for the array case, so a genuinely
+// successful Nostr-substrate distribution (this panel's own default
+// substrate) crashed Vue's render the instant it resolved, exactly the
+// gap `ui/views/EditorView.js`'s own `normalizeDistributionResultForDisplay()`
+// (0.9.526) already closed once for its sibling "Distribute now" action,
+// one caller over — this is that identical fix, reused here verbatim,
+// never a new normalization convention of its own. See EditorView.js's
+// own 0.9.526 header for why wrapping (never unwrapping) is the right
+// direction: a one-element array already matches the arweave-path shape
+// (`arr[0]`) that the template's own indexing/`v-for` below already
+// expects for the nostr path.
+function normalizeDistributionResultForDisplay(result) {
+    if (Array.isArray(result)) {
+        return result;
+    }
+    return result ? [result] : null;
+}
+
 export default {
     name: 'OwnPublicationPanel',
     props: {
@@ -2271,7 +2301,7 @@ export default {
                 ))
                 .then((result) => {
                     if (requestId === this.publicationDistributionRequestId) {
-                        this.publicationDistributionResult = result;
+                        this.publicationDistributionResult = normalizeDistributionResultForDisplay(result);
                     }
                 })
                 .catch((error) => {
@@ -3159,13 +3189,26 @@ export default {
             >{{ publicationDistributionExecuting ? 'Distributing…' : 'Distribute Publication' }}</button>
 
             <p v-if="publicationDistributionError" class="own-publication-publication-distribution-error">{{ publicationDistributionError }}</p>
-            <dl v-else-if="publicationDistributionResult" class="own-publication-publication-distribution-detail">
+            <!-- 0.9.671 — publicationDistributionResult is always normalized
+                 to an array before it reaches this template (see
+                 normalizeDistributionResultForDisplay(), above): a single
+                 element for the 'arweave' substrate, one element per
+                 configured relay for the 'nostr' substrate (this panel's
+                 own default) — mirroring ui/views/EditorView.js's own
+                 identical 0.9.450/0.9.526 template exactly, one host
+                 component over. Material is uploaded once, shared by every
+                 relay result, so it is read once, from the first element;
+                 Discovery genuinely differs per relay, so every element
+                 gets its own row. -->
+            <dl v-else-if="publicationDistributionResult && publicationDistributionResult.length" class="own-publication-publication-distribution-detail">
                 <dt>Publication</dt>
-                <dd>{{ publicationDistributionResult.publication.objectId }}</dd>
+                <dd>{{ publicationDistributionResult[0].publication.objectId }}</dd>
                 <dt>Material</dt>
-                <dd>{{ publicationDistributionResult.material ? publicationDistributionResult.material.uri : 'Not yet uploaded' }}</dd>
-                <dt>Discovery</dt>
-                <dd>{{ publicationDistributionResult.discovery ? publicationDistributionResult.discovery.id : 'Not yet announced' }}</dd>
+                <dd>{{ publicationDistributionResult[0].material ? publicationDistributionResult[0].material.uri : 'Not yet uploaded' }}</dd>
+                <template v-for="(relayResult, relayIndex) in publicationDistributionResult" :key="relayIndex">
+                    <dt>{{ publicationDistributionResult.length > 1 ? \`Discovery (relay \${relayIndex + 1})\` : 'Discovery' }}</dt>
+                    <dd>{{ relayResult.discovery ? relayResult.discovery.id : 'Not yet announced' }}</dd>
+                </template>
             </dl>
 
             <!-- 0.9.215 — Snapshot Export Capability Integration.

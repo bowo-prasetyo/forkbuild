@@ -668,13 +668,23 @@ async function run() {
             && editorViewSource.indexOf('viewDistributedPublicationInRepository') < editorViewSource.indexOf('</dl>', editorViewSource.indexOf("'Discovery'")),
             n('AMENDED BY 0.9.450 — EditorView.js\'s own <dl class="editor-post-publish-distribution-detail"> now navigates via viewDistributedPublicationInRepository() between the (now per-relay) Discovery row(s) and the closing </dl> — the exact, already-existing insertion point this audit located, never a new panel'));
 
-        // OwnPublicationPanel.js carries the byte-identical PRE-0.9.381
-        // shape, unmodified — confirming Section E's own finding that this
-        // surface needs no link, since it already lives at the
-        // destination.
-        assert(panelSource.includes(
-            '<dt>Discovery</dt>\n                <dd>{{ publicationDistributionResult.discovery ? publicationDistributionResult.discovery.id : \'Not yet announced\' }}</dd>\n            </dl>'),
-            n('OwnPublicationPanel.js\'s own <dl> carries the byte-identical shape — but per Section E, this surface needs no link, since it already lives at the destination'));
+        // AMENDED BY 0.9.671 — OwnPublicationPanel.js's own
+        // publicationDistributionResult shape was fixed to match
+        // ui/views/EditorView.js's own 0.9.450/0.9.526 normalization: a
+        // real, live-reproduced crash (distributeWorldEncounterPublication()
+        // resolves an ARRAY for this panel's own default 'nostr' substrate,
+        // never the bare object this <dl> previously assumed). The
+        // byte-identical PRE-0.9.381 shape this assertion once confirmed no
+        // longer exists, but the finding this Section checks is unaffected:
+        // that fix changed how the result is DISPLAYED, never introduced any
+        // navigation, receipt, or lookup capability of the kind Section I
+        // forbids — this surface still needs no deep-link of its own, since
+        // it already lives at the destination.
+        assert(panelSource.includes("'Discovery'")
+            && panelSource.indexOf("'Discovery'") < panelSource.indexOf('</dl>', panelSource.indexOf("'Discovery'"))
+            && !panelSource.includes('viewDistributedPublicationInRepository')
+            && !panelSource.includes('router'),
+            n('OwnPublicationPanel.js\'s own <dl> still renders a Discovery row (now per-relay, mirroring EditorView.js\'s own 0.9.450/0.9.526 shape) and gained no navigation edge of its own — per Section E, this surface needs no link, since it already lives at the destination'));
 
         console.log('✓ Section H: the exact template seam this audit located — the end of EditorView.js\'s own <dl class="editor-post-publish-distribution-detail">, immediately after the Discovery row — is now where 0.9.381\'s own viewDistributedPublicationInRepository() navigation lives. No new panel, dialog, or section was needed.');
     }

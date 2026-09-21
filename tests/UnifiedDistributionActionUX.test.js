@@ -226,8 +226,8 @@ async function runTests() {
         await ctx.distributeOwnPublicationAndSnapshot();
 
         assert(order.join(',') === 'snapshot,publication', '10. OwnPublicationPanel — the two legs run strictly in sequence, Snapshot then Publication, never concurrently');
-        assert(ctx.publicationDistributionResult.material.uri === 'mat-uri' && ctx.snapshotDistributionResult.contentReference.hash === 'h3',
-            '11. OwnPublicationPanel — each leg still stores its own independent result, unmodified by being triggered together');
+        assert(ctx.publicationDistributionResult[0].material.uri === 'mat-uri' && ctx.snapshotDistributionResult.contentReference.hash === 'h3',
+            '11. OwnPublicationPanel — each leg still stores its own independent result, unmodified by being triggered together (publicationDistributionResult is normalized to a one-element array — see OwnPublicationPanel.js\'s own normalizeDistributionResultForDisplay())');
         assert(ctx.publicationDistributionExecuting === false && ctx.snapshotDistributionExecuting === false,
             '12. OwnPublicationPanel — both legs return to idle once the full sequence completes');
 

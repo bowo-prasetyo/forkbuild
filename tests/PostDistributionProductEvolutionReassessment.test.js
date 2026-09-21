@@ -524,8 +524,15 @@ async function run() {
                editorViewSource.includes('relayResult.discovery ? relayResult.discovery.id : '),
             n('AMENDED BY 0.9.450 — EditorView.js\'s own template actually renders material.uri and discovery.id to the user — the locator is not merely computed and discarded'));
         const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
-        assert(panelSource.includes('{{ publicationDistributionResult.material ? publicationDistributionResult.material.uri : ') &&
-               panelSource.includes('{{ publicationDistributionResult.discovery ? publicationDistributionResult.discovery.id : '),
+        // AMENDED BY 0.9.671 — publicationDistributionResult is now
+        // normalized into the identical one-element-per-relay ARRAY shape
+        // EditorView.js's own distributionResult already uses (see
+        // OwnPublicationPanel.js's own normalizeDistributionResultForDisplay(),
+        // mirroring EditorView.js's own 0.9.526 fix) — the panel's template
+        // was updated to match, one host component over from the check
+        // just above.
+        assert(panelSource.includes('{{ publicationDistributionResult[0].material ? publicationDistributionResult[0].material.uri : ') &&
+               panelSource.includes('relayResult.discovery ? relayResult.discovery.id : '),
             n('OwnPublicationPanel.js renders the identical shape — cross-surface consistent, not an EditorView-only property'));
 
         // C4 — user can discover the publication: a real, always-reachable

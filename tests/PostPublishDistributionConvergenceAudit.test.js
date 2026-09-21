@@ -327,8 +327,8 @@ async function run() {
 
         assert(OWN_PUBLICATION_SURFACE.executing(ctx) === false, '2. FLAGSHIP (Own Publication) — returns to idle once the command resolves');
         assert(OWN_PUBLICATION_SURFACE.error(ctx) === null, '3. FLAGSHIP (Own Publication) — a successful call leaves no error notice');
-        assert(OWN_PUBLICATION_SURFACE.result(ctx).material.uri === 'ar://SharedFlagshipTx1234567890123456',
-            '4. FLAGSHIP (Own Publication) — the panel holds the real upload\'s own material uri');
+        assert(OWN_PUBLICATION_SURFACE.result(ctx)[0].material.uri === 'ar://SharedFlagshipTx1234567890123456',
+            '4. FLAGSHIP (Own Publication) — the panel holds the real upload\'s own material uri (publicationDistributionResult is normalized to a one-element array — see OwnPublicationPanel.js\'s own normalizeDistributionResultForDisplay())');
         assert(sharedLifecycleStore.get(publication.id).material.state === PublicationDistributionState.PRESENT,
             '5. FLAGSHIP (Own Publication) — the SHARED lifecycle store now holds a real fact for this Publication');
 
