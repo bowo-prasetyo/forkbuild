@@ -3624,12 +3624,16 @@ export default {
         // eligible fallback, this replica's own saved Content preference
         // (the injected `defaultContentDistributionProvider` prop) now
         // wins whenever it names one of the backends
-        // `snapshotDistributionStorageTypes` currently lists — see
+        // `snapshotDistributionStorageTypes` currently lists, or
+        // 'remote-pinning' — never registered in that registry (see
+        // content/IpfsRemotePinningContentStore.js's own header), so added
+        // here explicitly alongside it, mirroring OwnPublicationPanel.js's
+        // own identical computed exactly — see
         // application/SavedProviderDefaultChoice.js's own header.
         snapshotDistributionStorage: {
             get() {
                 return this.snapshotDistributionStorageChoice
-                    || resolveSavedProviderDefault(this.defaultContentDistributionProvider, this.snapshotDistributionStorageTypes, null)
+                    || resolveSavedProviderDefault(this.defaultContentDistributionProvider, [...this.snapshotDistributionStorageTypes, 'remote-pinning'], null)
                     || this.snapshotDistributionStorageTypes[0]
                     || 'ar';
             },
@@ -3645,11 +3649,12 @@ export default {
         // `snapshotDistributionStorage`, immediately above, this picker is
         // never limited to a registry's currently-reported backends — all
         // three options are always offered (see the template's own fixed
-        // `<option>` list, below).
+        // `<option>` list, below), including 'remote-pinning' as an
+        // eligible saved-preference default.
         selectedMaterialStorage: {
             get() {
                 return this.selectedMaterialStorageChoice
-                    || resolveSavedProviderDefault(this.defaultContentDistributionProvider, ['ar', 'ipfs'], null)
+                    || resolveSavedProviderDefault(this.defaultContentDistributionProvider, ['ar', 'ipfs', 'remote-pinning'], null)
                     || 'ar';
             },
             set(value) {

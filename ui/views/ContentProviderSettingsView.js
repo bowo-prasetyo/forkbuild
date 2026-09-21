@@ -23,8 +23,9 @@ import { DEFAULT_IPFS_NODE_API_URL } from '../../core/IpfsNodeConfiguration.js';
 // directly. See that use case's own header for the full "smallest possible
 // application capability" reasoning.
 //
-// THE PROVIDER LIST IS NEVER HARDCODED HERE. `availableProviderKeys` comes
-// straight from the SAME `preferredSnapshotPlacementCreationCoordinator`
+// THE PROVIDER LIST COMES FROM THE REGISTRY, WITH ONE DELIBERATE, HARDCODED
+// EXCEPTION. `availableProviderKeys` starts from the SAME
+// `preferredSnapshotPlacementCreationCoordinator`
 // (application/PreferredSnapshotPlacementCreationCoordinator.js, 0.9.299)
 // the Publication Center's own "Use Preferred Provider" trigger already
 // consumes — its `availableStorageTypes()` is a pass-through to the real,
@@ -32,7 +33,27 @@ import { DEFAULT_IPFS_NODE_API_URL } from '../../core/IpfsNodeConfiguration.js';
 // SnapshotPlacementStoreRegistry.js), the identical seam that already keeps
 // that page from ever offering a storage type nobody can actually place
 // onto. This view never asks "is 'ipfs' valid" on its own; it only ever
-// renders whatever that registry already reports.
+// renders whatever that registry already reports — EXCEPT for
+// `'remote-pinning'`, appended here unconditionally. content/
+// IpfsRemotePinningContentStore.js's own `storage` getter self-reports
+// `'ipfs'` (it shares Local Kubo's `ipfs://` locator scheme), so it can
+// never occupy its own key in that registry — see that class's own header,
+// "offering this store as an EXPLICIT alternative to Kubo... requires a
+// second, separately constructed registry," deliberately left unbuilt.
+// Saving `'remote-pinning'` as the CONTENT preference is still a real,
+// well-formed choice (core/RoleProviderPreference.js's own `providerKey` is
+// a shape check only, never a registry-membership check), and
+// PreferredSnapshotPlacementCreationCoordinator.js's own `create()` already
+// reports it back as an explicit PROVIDER_NOT_FOUND outcome — never a
+// crash, never a silent substitution — for a Wanderer who then clicks the
+// registry-driven "Use Preferred Provider" one-click trigger, which
+// genuinely cannot supply the fresh endpoint/credential a pinning provider
+// needs. This one addition exists so a Wanderer who runs no Kubo node,
+// local or remote, can save "Remote Pinning" as their preferred Content
+// default and have the Publication/Snapshot distribution pickers
+// (ui/views/EditorView.js, ui/components/OwnPublicationPanel.js, ui/
+// components/WorldEncounterCanvas.js) open on it, instead of always
+// re-picking it by hand.
 //
 // THIS PAGE NEVER TOUCHES EXPLICIT PLACEMENT. It never imports, injects, or
 // calls `snapshotPlacementCreationCoordinator` (the coordinator behind the
@@ -84,9 +105,10 @@ export default {
             ipfsNodeConfiguration.value ? ipfsNodeConfiguration.value.apiUrl : DEFAULT_IPFS_NODE_API_URL
         ));
 
-        const availableProviderKeys = computed(() =>
-            preferredPlacementCreationCoordinator ? preferredPlacementCreationCoordinator.availableStorageTypes() : []
-        );
+        const availableProviderKeys = computed(() => {
+            const registered = preferredPlacementCreationCoordinator ? preferredPlacementCreationCoordinator.availableStorageTypes() : [];
+            return registered.includes('remote-pinning') ? registered : [...registered, 'remote-pinning'];
+        });
 
         const settings = computed(() => describeRoleProviderPreferenceSettings({
             role: RoleProviderRole.CONTENT,
