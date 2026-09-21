@@ -3,7 +3,24 @@ import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDis
 const DEFAULT_RELAY_URL = 'wss://relay.damus.io';
 const DEFAULT_TAG_NAME = 't';
 const DEFAULT_KIND = 1;
-const DEFAULT_TIMEOUT_MS = 8000;
+// Bug fix — was 8000. `publishImpl` (in production, `nostr/
+// NostrInjectedProviderPublisher.js`'s own `publish()`) can include a real
+// NIP-07 wallet's `getPublicKey()`/`signEvent()` round trip, each already
+// protected by that file's own 120000ms `DEFAULT_SIGNING_TIMEOUT_MS` —
+// added specifically because a real extension (e.g. nos2x) can take a
+// human-perceptible moment to show/process its own approval popup(s), even
+// when the site is pre-approved. An 8-second outer timeout HERE raced that
+// 120-second protection and always won in practice, silently discarding a
+// signature the wallet was still in the middle of producing and turning
+// "Distribute Publication" into either a confusing stall or a premature,
+// mis-attributed "publishImpl timed out" — never the wallet's own, more
+// actionable timeout message. This default is now comfortably larger than
+// the worst case two sequential 120000ms wallet calls plus the 6000ms relay
+// broadcast ack this same `publishImpl` also waits on downstream
+// (`nostr/NostrInjectedProviderPublisher.js`'s own `DEFAULT_TIMEOUT_MS`),
+// so a genuinely stuck wallet is reported by ITS OWN timeout, with its own
+// clearer wording, rather than this file's generic one arriving first.
+const DEFAULT_TIMEOUT_MS = 250000;
 const EVENT_ID_PATTERN = /^[0-9a-f]{64}$/i;
 
 // 0.9.46 — Nostr Publication Discovery Publisher.
