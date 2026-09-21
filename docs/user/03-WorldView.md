@@ -145,42 +145,56 @@ direct discovery does. Either way, a **Source** line beneath Material
 tells you where the inspected content actually came from — **Local**
 (already on this device) or **Decentralized** (retrieved through a
 resolved Arweave/Nostr lead) — a plain fact about this one observation,
-never a trust score. A **Distribution** block tracks whether the
-publication has separately been pushed through Arweave/Nostr
-distribution, reading **Absent** for both **Material** and
-**Discovery** until it has. It also offers a **Distribute Publication**
-button once this device holds the publication's own material — clicking
-it genuinely attempts a real Arweave upload and Nostr announcement, but
-on this device today it always ends in "Distribution could not be
-completed," because no wallet or relay connection is configured yet;
-the button and the attempt are real, the missing piece is host capability,
-not app plumbing.
+never a trust score. Once this device holds the publication's own
+material, a **Distribute** button appears — click it to open a
+**Distribute** dialog rather than leaving every storage picker, button,
+and result permanently on screen. Closing the dialog again (**Close**,
+clicking outside it, or Escape) never loses anything it produced:
+reopening it shows the exact same result, error, or in-flight state you
+left it in — the dialog is pure presentation, nothing about it is tied
+to whether it happens to be open.
 
-Right beneath the Distribution block sits a separate **Snapshot
-Distribution** panel with its own **Distribute Snapshot** button — same
-eligibility (it lights up once this device holds the selected
-publication's own material) and the same "real attempt, honest failure"
-behavior, but a different protocol: Snapshots (see
+If both protocols below are available, a combined **Distribute** button
+sits at the top of the dialog — a one-click convenience that fires
+Distribute Publication and Distribute Snapshot together, for whenever you
+don't want to click twice. It changes nothing about either protocol: each
+still runs independently, each still reports into its own section below,
+and a failure in one is never hidden by, or blocks, the other — it does
+run the two one after another, though, never at the same time, since both
+can end up asking the same connected wallet extension to sign, and two
+signing requests fired at once is a real extension failure mode. The two
+dedicated buttons described next keep working exactly as before —
+useful if you only want one of the two, or want to retry just the half
+that failed.
+
+Below that, a **Distribution** section tracks whether the publication has
+separately been pushed through Arweave/Nostr distribution, reading
+**Absent** for both **Material** and **Discovery** until it has. Pick a
+**Material storage** — **Arweave**, **IPFS (Local Kubo)**, or **IPFS
+(Remote Pinning)** (the last needs a fresh Endpoint and Credential typed
+in every time; nothing about it is ever saved) — and an **Announcement /
+Discovery substrate** (**Nostr** or **Arweave**), then click **Distribute
+Publication**. Clicking it genuinely attempts a real upload and
+announcement, but on this device today it always ends in "Distribution
+could not be completed," because no wallet or relay connection is
+configured yet; the button and the attempt are real, the missing piece is
+host capability, not app plumbing.
+
+A separate **Snapshot Distribution** section, right below it in the same
+dialog, offers its own **Storage** and **Announcement / Discovery
+substrate** pickers and its own **Distribute Snapshot** button — same
+eligibility and the same "real attempt, honest failure" behavior, but a
+different protocol: Snapshots (see
 [Publications & External Evidence](09-PublicationsAndEvidence.md#local-snapshot))
 are placed and discovered independently of Signed Claim distribution, so
-this panel never shares state, history, or a result with the Distribute
-Publication button above it. Clicking it also uploads to Arweave and
-announces over Nostr, then shows exactly what came back: a **Content
-hash**, a **Locator**, and an **Announcement** id — or "No announcement"
-if the Arweave placement succeeded but the Nostr announcement didn't,
-which is reported as a partial result, never an error. A genuine failure
-instead shows a plain "Snapshot distribution could not be completed."
-notice. Neither the button's state nor its result is remembered anywhere
-— selecting a different encounter, or leaving the page, clears it.
-
-When both buttons are available, a single **Distribute** button appears
-above them — a one-click convenience that fires Distribute Publication
-and Distribute Snapshot together, for whenever you don't want to click
-twice. It changes nothing about either protocol: each still runs
-independently, each still reports into its own panel above, and a
-failure in one is never hidden by, or blocks, the other. The two
-dedicated buttons keep working exactly as before — useful if you only
-want one of the two, or want to retry just the half that failed.
+this section never shares state, history, or a result with Distribution
+above it. Clicking it shows exactly what came back: a **Content hash**, a
+**Locator**, and an **Announcement** id — or "No announcement" if the
+placement succeeded but the Nostr announcement didn't, which is reported
+as a partial result, never an error. A genuine failure instead shows a
+plain "Snapshot distribution could not be completed." notice. Neither
+section's state nor its result is remembered anywhere — selecting a
+different encounter, or leaving the page, clears it.
 
 **A publication a peer showed you here doesn't stay stranded in World
 Encounters once it actually resolves.** The moment a peer-shown
@@ -619,27 +633,22 @@ shows which one it is.
 
 Right beside Save/Publish sits a **My Publication** panel, showing your
 current world's title and author once it's actually published, plus its
-own **Distribute Publication** and **Distribute Snapshot** buttons. Both
-are completely separate actions from the identically-named buttons inside
+own **Distribute** button, which opens the exact same kind of
+**Distribute** dialog described above for World Encounters — sharing the
+identical component, so everything about its layout, its combined
+**Distribute** button, its **Distribution**/**Snapshot Distribution**
+sections, their storage/substrate pickers, and their "closing never loses
+a result" behavior is exactly as described in
 [World Encounters](#world-encounters--publications-and-avatars-your-peers-are-sharing)
-— those distribute whichever encountered publication you've selected;
-these two always distribute *your own current world*, and neither shares
-state, history, or a result with the other. Clicking either genuinely
-attempts a real Arweave upload and Nostr announcement, and shows back the
-same **Content hash** / **Locator** / **Announcement** readout (or "No
-announcement" for a placement that succeeded without one, or a plain
-failure notice) that World Encounters' own equivalent panels already do.
-**Distribute Publication** distributes the Signed Claim behind your world
-the same way World Encounters' own Distribute Publication button does;
-**Distribute Snapshot** distributes it under the separate Snapshot
-protocol — see
+above. The one difference is *what* it distributes: World Encounters'
+dialog always acts on whichever encountered publication you've selected;
+this one always acts on *your own current world*, and neither shares
+state, history, or a result with the other — **Distribute Publication**
+here distributes the Signed Claim behind your world the same way World
+Encounters' own button does; **Distribute Snapshot** distributes it under
+the separate Snapshot protocol — see
 [Local Snapshot](09-PublicationsAndEvidence.md#local-snapshot) for what
-that distinction means. A single **Distribute** button sits above both,
-for whenever you just want both pushed out at once — it fires the exact
-same two clicks for you, so you still get two independent readouts below,
-one per protocol; it changes nothing about either protocol; clicking one
-of the two dedicated buttons afterward still works exactly as before, for
-example to retry only the half that failed. Remote IPFS pinning and Bitcoin/Base anchoring stay
+that distinction means. Remote IPFS pinning and Bitcoin/Base anchoring stay
 in the Publications page's own Publication Center (see
 [IPFS Publishing](09-PublicationsAndEvidence.md#ipfs-publishing) and
 [The Bitcoin Anchor Pipeline](09-PublicationsAndEvidence.md#the-bitcoin-anchor-pipeline)) —
