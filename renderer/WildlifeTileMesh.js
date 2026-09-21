@@ -81,12 +81,18 @@ function buildPreset({ bodyRadiusX, bodyRadiusY, bodyRadiusZ, headRadius, headHe
     return {
         bodyGeometry,
         headGeometry,
-        // vertexColors on the body so each instance can be tinted by its
-        // own feature.variant (see buildSpeciesMeshes() below) — the same
-        // "fixed trunk color, per-variant canopy color" split
+        // No vertexColors here — InstancedMesh#setColorAt() (see
+        // buildSpeciesMeshes() below) tints each instance through its own
+        // instanceColor attribute, which three.js applies automatically
+        // whenever it's present. Setting vertexColors:true as well would
+        // make the shader ALSO read a per-vertex 'color' geometry
+        // attribute this geometry never defines; WebGL then supplies the
+        // default (0,0,0) for that missing attribute, multiplying every
+        // instance's color to black regardless of instanceColor — the
+        // same "fixed head color, per-variant body/fur color" split
         // renderer/NaturalFeatureTileMesh.js already uses, mirrored here
         // as "fixed head color, per-variant body/fur color."
-        bodyMaterial: new THREE.MeshStandardMaterial({ vertexColors: true }),
+        bodyMaterial: new THREE.MeshStandardMaterial(),
         headMaterial: new THREE.MeshStandardMaterial({ color: headColor }),
         furColors
     };
