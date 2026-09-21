@@ -411,8 +411,13 @@ async function run() {
             '2. it forwards publicationId/claimedPosition into discoveryPublisher.publish() alongside the pre-existing three fields, unmodified.');
 
         const worldViewSource = await readSource('ui/views/WorldView.js');
-        const distributeFnMatch = worldViewSource.match(/function distributeWorldEncounterSnapshot\(publication, storage, remotePinningConfiguration\)\s*\{[\s\S]*?\n        \}/);
-        assert(distributeFnMatch, '3. WorldView.js#distributeWorldEncounterSnapshot(publication, storage) exists as an isolable function.');
+        // AMENDED BY 0.9.669 — Per-Click Snapshot Announcement/Discovery
+        // Substrate Override. `discoveryProvider` joined `publication`/
+        // `storage`/`remotePinningConfiguration` as a new, optional fourth
+        // parameter — still exactly one `distributeWorldEncounterSnapshot`,
+        // never a second function.
+        const distributeFnMatch = worldViewSource.match(/function distributeWorldEncounterSnapshot\(publication, storage, remotePinningConfiguration, discoveryProvider\)\s*\{[\s\S]*?\n        \}/);
+        assert(distributeFnMatch, '3. AMENDED BY 0.9.669 — WorldView.js#distributeWorldEncounterSnapshot(publication, storage, remotePinningConfiguration, discoveryProvider) exists as an isolable function.');
         const body = distributeFnMatch[0];
         assert(/session\.getPlacementInfoForPublication\(publication\.id\)/.test(body),
             '4. it reads the claim through session.getPlacementInfoForPublication(publication.id) — the same collaborator Section A exercised directly.');

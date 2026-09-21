@@ -3072,7 +3072,10 @@ export default {
         // `selectedDiscoveryProvider`/`snapshotDistributionStorageChoice`'s
         // own initial value, below — never re-read afterward, and never
         // used to override a choice already made on this component. See
-        // application/SavedProviderDefaultChoice.js's own header.
+        // application/PreferredProviderDefaultChoice.js's own header.
+        //
+        // AMENDED BY 0.9.669 — also seeds `selectedSnapshotDiscoveryProvider`'s
+        // own initial value, the identical restraint held one field over.
         defaultDiscoveryDistributionProvider: {
             type: String,
             default: 'nostr'
@@ -3372,6 +3375,17 @@ export default {
             // parent never supplies the prop, behaves exactly as every
             // pre-0.9.667 mount already did.
             selectedDiscoveryProvider: this.defaultDiscoveryDistributionProvider || 'nostr',
+            // AMENDED BY 0.9.669 — Per-Click Snapshot Announcement/Discovery
+            // Substrate Override. The identical kind of page-local choice
+            // as `selectedDiscoveryProvider` immediately above, one action
+            // over — deliberately a SEPARATE field, never shared with it:
+            // distributing a Snapshot and distributing a Publication are
+            // two different operations over two different substrates (see
+            // `snapshotDistributionExecuting`'s own header, below, "no
+            // coupling"), and this component already holds that line for
+            // every other sibling pair it owns. Opens on the identical
+            // injected `defaultDiscoveryDistributionProvider` prop.
+            selectedSnapshotDiscoveryProvider: this.defaultDiscoveryDistributionProvider || 'nostr',
             // 0.9.138 — ephemeral UI interaction state only, mirroring
             // `distributionExecuting`/`distributionError`/`distributionRequestId`
             // (0.9.104) exactly, one collaborator over. `true` for exactly
@@ -5004,7 +5018,7 @@ export default {
             } : undefined;
 
             Promise.resolve()
-                .then(() => this.snapshotDistributionCommand(publication, storage, remotePinningConfiguration))
+                .then(() => this.snapshotDistributionCommand(publication, storage, remotePinningConfiguration, this.selectedSnapshotDiscoveryProvider))
                 .then((result) => {
                     if (requestId === this.snapshotDistributionRequestId) {
                         this.snapshotDistributionResult = result;
@@ -6219,6 +6233,24 @@ export default {
                     </label>
                     <p class="form-hint form-hint--neutral">Nothing here is saved anywhere — entered fresh each time you click Distribute Snapshot.</p>
                 </div>
+
+                <!-- AMENDED BY 0.9.669 — Per-Click Snapshot Announcement/
+                     Discovery Substrate Override. The identical
+                     Announcement/Discovery substrate select the
+                     "Distribute Publication" control above already has
+                     (0.9.430), one action over — applies to all three
+                     Storage choices above, including Remote Pinning. -->
+                <label class="world-encounter-snapshot-distribution-provider-label">
+                    Announcement / Discovery substrate:
+                    <select
+                        v-model="selectedSnapshotDiscoveryProvider"
+                        class="form-select world-encounter-snapshot-distribution-provider-select"
+                        :disabled="snapshotDistributionExecuting"
+                    >
+                        <option value="nostr">Nostr</option>
+                        <option value="arweave">Arweave</option>
+                    </select>
+                </label>
 
                 <!-- 0.9.138 — a request/attempt action, never a claim of
                      success — mirrors the Distribute Publication button

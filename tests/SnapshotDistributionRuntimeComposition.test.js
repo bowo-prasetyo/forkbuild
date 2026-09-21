@@ -586,12 +586,23 @@ async function run() {
             assert(!uiMainCode.includes(term), `39b. ui/main.js still never references '${term}' by name — 0.9.138 calls only the composed functions this file and 0.9.136 already export`);
         }
         assert(uiMainCode.includes('ArweaveContentStore'), "39c. sanity: ui/main.js does now reference 'ArweaveContentStore' — the 0.9.505 Snapshot Placement wiring this update accounts for");
-        const distributionSiteMatch = uiMainCode.match(/const \{ discoveryPublisher: snapshotDiscoveryPublisher \} = composeSnapshotDistributionRuntime\(\{([\s\S]*?)\}\);/);
-        assert(Boolean(distributionSiteMatch), '39d. ui/main.js\'s real Distribution composition call site is found and isolated for inspection — as of 0.9.506, it destructures discoveryPublisher only');
-        assert(!distributionSiteMatch[1].includes('ArweaveContentStore'), "39e. THIS composition's own Distribution call site in ui/main.js still never constructs an ArweaveContentStore directly — Content resolution now goes through application/SnapshotDistributionContentBackendSelection.js instead");
-        assert(!distributionSiteMatch[1].includes('arweaveContentStoreOptions'), "39f. 0.9.506 — the Distribution call site no longer passes composeSnapshotDistributionRuntime() an arweaveContentStoreOptions of its own at all, since it no longer consumes that function's contentStore half");
-        const snapshotDistributionCommandMatch = uiMainCode.match(/const snapshotDistributionCommand = \(bytes, storage = 'ar', publicationId, claimedPosition\) => executeSnapshotDistributionCommand\(\{([\s\S]*?)\}\);/);
-        assert(Boolean(snapshotDistributionCommandMatch), "39g. 0.9.506 — ui/main.js's real snapshotDistributionCommand accepts an explicit (bytes, storage) pair, defaulting storage to 'ar' for pre-0.9.506 callers (0.9.566 — now also (publicationId, claimedPosition), forwarded unmodified)");
+        // AMENDED BY 0.9.669 — Per-Click Snapshot Announcement/Discovery
+        // Substrate Override. THIS composition's own Distribution call
+        // site now calls composeSnapshotDistributionRuntime() TWICE,
+        // once per substrate (nostrSnapshotDiscoveryPublisher/
+        // arweaveSnapshotDiscoveryPublisher), instead of once for
+        // whichever discoveryProvider happened to be saved — so a
+        // per-click override can pick between two already-composed
+        // instances. Each call still destructures discoveryPublisher only.
+        const nostrDistributionSiteMatch = uiMainCode.match(/const \{ discoveryPublisher: nostrSnapshotDiscoveryPublisher \} = composeSnapshotDistributionRuntime\(\{([\s\S]*?)\}\);/);
+        const arweaveDistributionSiteMatch = uiMainCode.match(/const \{ discoveryPublisher: arweaveSnapshotDiscoveryPublisher \} = composeSnapshotDistributionRuntime\(\{([\s\S]*?)\}\);/);
+        assert(Boolean(nostrDistributionSiteMatch) && Boolean(arweaveDistributionSiteMatch), '39d. AMENDED BY 0.9.669 — ui/main.js\'s real Distribution composition call sites (one per substrate) are found and isolated for inspection — each destructures discoveryPublisher only');
+        assert(!nostrDistributionSiteMatch[1].includes('ArweaveContentStore') && !arweaveDistributionSiteMatch[1].includes('ArweaveContentStore'), "39e. THIS composition's own Distribution call sites in ui/main.js still never construct an ArweaveContentStore directly — Content resolution now goes through application/SnapshotDistributionContentBackendSelection.js instead");
+        assert(!nostrDistributionSiteMatch[1].includes('arweaveContentStoreOptions') && !arweaveDistributionSiteMatch[1].includes('arweaveContentStoreOptions'), "39f. 0.9.506 — neither Distribution call site passes composeSnapshotDistributionRuntime() an arweaveContentStoreOptions of its own at all, since neither consumes that function's contentStore half");
+        // AMENDED BY 0.9.669 — `discoveryProvider` joined the parameter
+        // list as a new, optional fifth argument.
+        const snapshotDistributionCommandMatch = uiMainCode.match(/const snapshotDistributionCommand = \(bytes, storage = 'ar', publicationId, claimedPosition, discoveryProvider\) => executeSnapshotDistributionCommand\(\{([\s\S]*?)\}\);/);
+        assert(Boolean(snapshotDistributionCommandMatch), "39g. AMENDED BY 0.9.669 — ui/main.js's real snapshotDistributionCommand accepts an explicit (bytes, storage) pair, defaulting storage to 'ar' for pre-0.9.506 callers (0.9.566 — now also (publicationId, claimedPosition), forwarded unmodified; 0.9.669 — now also discoveryProvider, optional)");
         assert(snapshotDistributionCommandMatch[1].includes('resolveSnapshotDistributionContentStore(snapshotPlacementStoreRegistry, storage)'), '39h. 0.9.506 — snapshotDistributionCommand resolves its contentStore from the SAME snapshotPlacementStoreRegistry Placement already builds, keyed by the caller\'s own storage choice');
 
         console.log('✓ Section I: architectural regression — no browser API, no orchestration entry point, no summary availability flag, no coupling to Signed Claim distribution, composed into ui/main.js through composition-level functions only, never a concrete collaborator class directly, and (as of 0.9.506) Content resolution reuses Placement\'s own shared registry rather than a second, independent ArweaveContentStore instance');

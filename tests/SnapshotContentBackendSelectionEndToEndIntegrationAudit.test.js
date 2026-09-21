@@ -350,7 +350,15 @@ async function run() {
         // account of what is ACTUALLY wired, not what the architecture
         // merely supports.
         check(!mainSource.includes('new ArweaveSnapshotDiscoveryPublisher('), 'A. production constructs no ArweaveSnapshotDiscoveryPublisher — Snapshot Distribution\'s own announcement write-side remains the fixed, single Nostr discoveryPublisher application/SnapshotDistributionCommand.js\'s own header already documents');
-        check((mainSource.match(/composeSnapshotDistributionRuntime\(/g) || []).length === 1, 'A. composeSnapshotDistributionRuntime() — the ONE place a NostrSnapshotDiscoveryPublisher is built for this family — is called exactly once, serving every Content selection');
+        // AMENDED BY 0.9.669 — Per-Click Snapshot Announcement/Discovery
+        // Substrate Override. composeSnapshotDistributionRuntime() — still
+        // the ONE place a discoveryPublisher is built for this family — is
+        // now called twice, once per substrate (Nostr/Arweave), so a
+        // per-click override can pick between two already-composed
+        // instances instead of being locked to whichever one was built at
+        // boot. Every Content selection is still served by the SAME two
+        // instances, never a third construction per storage choice.
+        check((mainSource.match(/composeSnapshotDistributionRuntime\(/g) || []).length === 2, 'A. AMENDED BY 0.9.669 — composeSnapshotDistributionRuntime() is called exactly twice (once per Nostr/Arweave substrate), serving every Content selection');
 
         console.log('✓ A. one creation registry, one resolution registry, one shared Arweave store between them, Distribution reusing the creation registry, no third registry anywhere — and an honest note that Announcement/Discovery\'s own write side is still Nostr-only in production.');
     }

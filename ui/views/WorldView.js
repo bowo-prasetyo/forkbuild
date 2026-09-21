@@ -606,23 +606,32 @@ export default {
             : [];
         // Remote pinning (e.g. Pinata) — the SAME app-wide, stateless
         // `ipfsRemotePublicationCoordinator` ui/views/DecentralizedPublicationsView.js's
-        // own "Publish to Remote IPFS" action already calls, and the SAME
-        // `snapshotDiscoveryPublisher` Nostr instance the app-wide
-        // `snapshotDistributionCommand` already announces through
-        // internally — exposed directly here (never a second instance of
-        // either) so `distributeWorldEncounterSnapshot()` below can offer
-        // Remote Pinning as a THIRD storage choice, alongside the
-        // registry-backed 'ar'/'ipfs' (local Kubo) choices above. Unlike
-        // those two, Remote Pinning needs no pre-registration — it holds
-        // no credential of its own, so it is never listed in
-        // `snapshotDistributionStorageTypes`; a Wanderer configures the
-        // endpoint/credential fresh, per attempt, exactly the way
-        // DecentralizedPublicationsView.js's own ephemeral configuration
-        // draft already works (see application/
+        // own "Publish to Remote IPFS" action already calls — exposed
+        // directly here (never a second instance) so
+        // `distributeWorldEncounterSnapshot()` below can offer Remote
+        // Pinning as a THIRD storage choice, alongside the registry-backed
+        // 'ar'/'ipfs' (local Kubo) choices above. Unlike those two, Remote
+        // Pinning needs no pre-registration — it holds no credential of
+        // its own, so it is never listed in `snapshotDistributionStorageTypes`;
+        // a Wanderer configures the endpoint/credential fresh, per attempt,
+        // exactly the way DecentralizedPublicationsView.js's own ephemeral
+        // configuration draft already works (see application/
         // IpfsRemotePublishingConfiguration.js's own header, "EPHEMERAL BY
         // CONSTRUCTION").
         const ipfsRemotePublicationCoordinator = inject('ipfsRemotePublicationCoordinator', null);
-        const snapshotDiscoveryPublisher = inject('snapshotDiscoveryPublisher', null);
+        // AMENDED BY 0.9.669 — Per-Click Snapshot Announcement/Discovery
+        // Substrate Override. Replaces the single, fixed
+        // `snapshotDiscoveryPublisher` instance this Remote Pinning branch
+        // used to read directly: `resolveSnapshotDiscoveryPublisher(discoveryProvider)`
+        // (ui/main.js's own new resolver, provided alongside the
+        // unmodified `snapshotDistributionCommand` key) picks between the
+        // SAME two already-composed Nostr/Arweave instances
+        // `snapshotDistributionCommand` itself now picks between for the
+        // registry-backed 'ar'/'ipfs' paths — never a second, third
+        // construction of either — so an explicit choice applies
+        // identically regardless of which of the three storage paths a
+        // Wanderer picked.
+        const resolveSnapshotDiscoveryPublisher = inject('resolveSnapshotDiscoveryPublisher', null);
         // 0.9.142 — World View Snapshot Discovery Command. The SAME
         // app-wide `discoverSnapshotCommand` `ui/main.js` now composes
         // (0.9.142's own `composeDiscoverSnapshotRuntime()`, sequenced by
@@ -1497,7 +1506,18 @@ export default {
         // the content is already durably pinned either way, the exact
         // restraint DecentralizedPublicationsView.js's own identical
         // Remote-IPFS-then-Nostr sequence already holds.
-        function distributeWorldEncounterSnapshot(publication, storage, remotePinningConfiguration) {
+        //
+        // AMENDED BY 0.9.669 — `discoveryProvider` joined `publication`/
+        // `storage`/`remotePinningConfiguration` as a new, optional fourth
+        // parameter — 'nostr' | 'arweave' | omitted (the identical
+        // `resolveSnapshotDiscoveryPublisher()`/`snapshotDistributionCommand()`
+        // default, ui/main.js's own persisted ANNOUNCEMENT_AND_DISCOVERY
+        // preference). Forwarded verbatim into both the Remote Pinning
+        // branch's own `resolveSnapshotDiscoveryPublisher(discoveryProvider)`
+        // call and the registry-backed branch's own `snapshotDistributionCommand(
+        // ..., discoveryProvider)` call, below — the SAME explicit choice
+        // applies identically across all three storage paths.
+        function distributeWorldEncounterSnapshot(publication, storage, remotePinningConfiguration, discoveryProvider) {
             if (!publicationContentStore || !publication.contentReference) {
                 return Promise.reject(new Error('Snapshot distribution is not available.'));
             }
@@ -1515,10 +1535,11 @@ export default {
                             throw new Error(outcome.reason || 'Remote IPFS publish failed.');
                         }
                         const contentReference = { hash: outcome.contentHash, uri: outcome.locator, storage: 'ipfs' };
-                        if (!snapshotDiscoveryPublisher) {
+                        const discoveryPublisher = resolveSnapshotDiscoveryPublisher ? resolveSnapshotDiscoveryPublisher(discoveryProvider) : null;
+                        if (!discoveryPublisher) {
                             return { contentReference, announcement: null, announcementError: 'Snapshot distribution is not available.' };
                         }
-                        return snapshotDiscoveryPublisher.publish({ contentHash: outcome.contentHash, locator: outcome.locator, storage: 'ipfs' })
+                        return discoveryPublisher.publish({ contentHash: outcome.contentHash, locator: outcome.locator, storage: 'ipfs' })
                             .then((announcement) => ({ contentReference, announcement }))
                             .catch((error) => {
                                 // Bug fix — a genuine Nostr announcement
@@ -1553,7 +1574,8 @@ export default {
                 snapshotBytes,
                 storage,
                 placementInfo ? placementInfo.publicationId : undefined,
-                placementInfo ? placementInfo.position : undefined
+                placementInfo ? placementInfo.position : undefined,
+                discoveryProvider
             );
         }
 
@@ -4914,7 +4936,19 @@ export default {
                      selection of any kind — reaches the EXACT SAME command
                      boundary, never a second implementation. See
                      ui/components/OwnPublicationPanel.js's own header,
-                     "0.9.347 — Post-Publish Distribution Entry Point." -->
+                     "0.9.347 — Post-Publish Distribution Entry Point."
+
+                     Bug fix — defaultDiscoveryDistributionProvider is
+                     defaultAnnouncementDiscoveryProvider, above: the SAME
+                     resolved preference already handed to
+                     WorldEncounterCanvas below as its own
+                     defaultDiscoveryDistributionProvider prop. Before this
+                     fix, this panel never received it, so its own
+                     "Distribute Publication" button always called
+                     distributeWorldEncounterPublication(publication) with
+                     no discoveryProvider — which that function reads as
+                     "use Nostr" — regardless of what a Wanderer had saved
+                     via /settings/announcement-discovery-provider. -->
                 <OwnPublicationPanel
                     v-if="cameraPosition"
                     :publication="ownPublication"
@@ -4924,6 +4958,7 @@ export default {
                     :snapshotDistributionStorageTypes="snapshotDistributionStorageTypes"
                     :defaultContentDistributionProvider="defaultContentDistributionProvider"
                     :publicationDistributionCommand="distributeWorldEncounterPublication"
+                    :defaultDiscoveryDistributionProvider="defaultAnnouncementDiscoveryProvider"
                     :discoverSnapshotCommand="discoverOwnSnapshot"
                     :exportSnapshotCommand="exportOwnSnapshot"
                     :discoverSnapshotCandidatesCommand="discoverSnapshotCandidatesCommand"

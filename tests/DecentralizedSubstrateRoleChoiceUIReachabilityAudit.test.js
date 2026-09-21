@@ -213,9 +213,16 @@ async function run() {
         // had since 0.9.430 (WorldView.js/DecentralizedPublicationsView.js
         // themselves were never in this section's own scope — see B1/B2,
         // above, both of which name only EditorView.js and
-        // OwnPublicationPanel.js). OwnPublicationPanel.js's own call site
-        // is untouched by 0.9.502 and still has no substrate choice — B10,
-        // below, still passes on that unmodified fact alone.
+        // OwnPublicationPanel.js).
+        // AMENDED BY 0.9.668 — Bug fix. OwnPublicationPanel.js's own call
+        // site no longer passes a publication only either: it gained the
+        // identical `defaultDiscoveryDistributionProvider` prop and
+        // Announcement/Discovery substrate `<select>` WorldEncounterCanvas.js
+        // has held since 0.9.430, closing the exact gap this section
+        // previously named at B10 (below) as a real architectural
+        // asymmetry — before this fix, OwnPublicationPanel's own "Distribute
+        // Publication" button always distributed via Nostr regardless of
+        // the saved ANNOUNCEMENT_AND_DISCOVERY preference.
         const editorSource = await readSource('ui/views/EditorView.js');
         const ownPanelSource = await readSource('ui/components/OwnPublicationPanel.js');
         // AMENDED BY 0.9.450 — Nostr Multi-Relay Publication Distribution
@@ -229,7 +236,7 @@ async function run() {
         // command is STILL injected, which remains true, never that it is
         // the only one.
         assert(/inject\('multiRelayNostrPublicationDistributionCommand', null\)/.test(editorSource), n('B9. AMENDED BY 0.9.450 — ANNOUNCEMENT_AND_DISCOVERY: EditorView.js injects the SAME app-wide distribution command (now multiRelayNostrPublicationDistributionCommand) — since 0.9.502, alongside its own new per-role substrate choice, see above'));
-        assert(/publicationDistributionCommand\(publication\)/.test(ownPanelSource), n('B10. OwnPublicationPanel.js\'s own, separate call site still passes a publication only — no storage, no anchorType, no relay, no substrate identifier of any kind — unmodified by 0.9.502, which touched EditorView.js alone'));
+        assert(/publicationDistributionCommand\(publication, this\.publicationDiscoveryProvider\)/.test(ownPanelSource), n('B10. AMENDED BY 0.9.668 — Bug fix. OwnPublicationPanel.js\'s own, separate call site now forwards its own explicit Announcement/Discovery substrate choice too — no longer publication-only, closing the asymmetry this audit originally found'));
 
         console.log('\n=== SECTION B: REACHABILITY CHAINS ===');
         console.log('✓ Section B: CONTENT and PROOF_AND_ANCHORING each trace a complete, real chain from a registered route through an injected coordinator to a per-item template loop reading a live registry. ANNOUNCEMENT_AND_DISCOVERY traces an equally real chain to an actual, working "Distribute" action — but that chain has no branch point anywhere for a substrate identifier to enter it.');

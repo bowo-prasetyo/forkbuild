@@ -1354,8 +1354,9 @@ import { resolveSavedProviderDefault } from '../../application/SavedProviderDefa
 //   distributeOwnPublication()   (THIS FILE, NEW)
 //           │
 //           ▼
-//   publicationDistributionCommand(publication)   (injected — the SAME
-//                                    `(publication) -> Promise<Publication
+//   publicationDistributionCommand(publication, publicationDiscoveryProvider)
+//                                    (injected — the SAME `(publication,
+//                                    discoveryProvider) -> Promise<Publication
 //                                    DistributionResult | null>` function
 //                                    `ui/views/WorldView.js`'s own
 //                                    `distributeWorldEncounterPublication()`
@@ -1366,6 +1367,18 @@ import { resolveSavedProviderDefault } from '../../application/SavedProviderDefa
 //           │
 //           ▼
 //   publicationDistributionResult | rejection
+//
+// AMENDED BY 0.9.668 — Bug fix. `publicationDiscoveryProvider` joined
+// `publication` as a new, optional second argument on this SAME call —
+// still exactly one `distributeOwnPublication()`, never a second command.
+// Before this fix, this call site forwarded `publication` alone, which
+// `distributeWorldEncounterPublication()` reads as "no discoveryProvider" —
+// always Nostr — regardless of what a Wanderer had saved via
+// /settings/announcement-discovery-provider. See this file's own props
+// header, "defaultDiscoveryDistributionProvider," and the new
+// Announcement/Discovery substrate `<select>` in the template below,
+// mirroring `WorldEncounterCanvas.js`'s own identical `<select>` (0.9.430)
+// exactly, one host component over.
 //
 // NO NEW COMMAND, NO NEW SEQUENCER, NO SELECTEDENCOUNTER OF ANY KIND. This
 // component never imports `application/PublicationDistributionExecutor.js`,
@@ -1496,6 +1509,26 @@ export default {
         defaultContentDistributionProvider: {
             type: String,
             default: null
+        },
+        // Bug fix — this replica's own resolved ANNOUNCEMENT_AND_DISCOVERY
+        // preference, ui/main.js's own `defaultAnnouncementDiscoveryProvider`,
+        // forwarded through ui/views/WorldView.js exactly like
+        // `defaultContentDistributionProvider` immediately above already
+        // is, and the SAME prop `WorldEncounterCanvas`'s own
+        // `defaultDiscoveryDistributionProvider` (0.9.667) already reads
+        // for the identical "Distribute Publication" action. Read only to
+        // seed `publicationDiscoveryProvider`'s own initial value, below
+        // — never re-read afterward, and never used to override a choice
+        // already made on this component. Before this fix, this panel's
+        // own "Distribute Publication" button had no such prop at all and
+        // always distributed via Nostr, regardless of what a Wanderer had
+        // saved via /settings/announcement-discovery-provider.
+        //
+        // AMENDED BY 0.9.669 — also seeds `snapshotDiscoveryProvider`'s own
+        // initial value, the identical restraint held one field over.
+        defaultDiscoveryDistributionProvider: {
+            type: String,
+            default: 'nostr'
         },
         // 0.9.347 — optional. A `(publication) -> Promise<Publication
         // DistributionResult | null>` function, or `null` when the
@@ -1687,6 +1720,17 @@ export default {
             snapshotDistributionError: null,
             snapshotDistributionResult: null,
             snapshotDistributionRequestId: 0,
+            // AMENDED BY 0.9.669 — Per-Click Snapshot Announcement/Discovery
+            // Substrate Override. The identical kind of page-local choice
+            // as `publicationDiscoveryProvider` (below), one action over —
+            // deliberately a SEPARATE field, never shared with it, the
+            // same restraint this file already holds for every other
+            // Snapshot/Publication sibling pair. Opens on the injected
+            // `defaultDiscoveryDistributionProvider` prop, mirroring
+            // `WorldEncounterCanvas.js`'s own identical
+            // `selectedSnapshotDiscoveryProvider` field exactly, one host
+            // component over.
+            snapshotDiscoveryProvider: this.defaultDiscoveryDistributionProvider || 'nostr',
             // Bug fix — backs the snapshotDistributionStorage computed
             // below. `null` until a Wanderer explicitly picks a storage
             // from the picker; the computed's own getter supplies the
@@ -1710,6 +1754,16 @@ export default {
             publicationDistributionError: null,
             publicationDistributionResult: null,
             publicationDistributionRequestId: 0,
+            // Bug fix — this panel's own explicit Announcement/Discovery
+            // substrate choice for the NEXT "Distribute Publication"
+            // click, page-local UI state only — mirrors
+            // `WorldEncounterCanvas`'s own `selectedDiscoveryProvider`
+            // (0.9.430/0.9.667) exactly, one host component over. Opens
+            // on the injected `defaultDiscoveryDistributionProvider` prop
+            // above (this replica's own saved preference, resolved by
+            // ui/main.js, or 'nostr' when none is on file) instead of
+            // hardcoding 'nostr' directly.
+            publicationDiscoveryProvider: this.defaultDiscoveryDistributionProvider || 'nostr',
             snapshotDiscoveryExecuting: false,
             snapshotDiscoveryError: null,
             snapshotDiscoveryResult: null,
@@ -2131,7 +2185,7 @@ export default {
             } : undefined;
 
             Promise.resolve()
-                .then(() => this.snapshotDistributionCommand(publication, storage, remotePinningConfiguration))
+                .then(() => this.snapshotDistributionCommand(publication, storage, remotePinningConfiguration, this.snapshotDiscoveryProvider))
                 .then((result) => {
                     if (requestId === this.snapshotDistributionRequestId) {
                         this.snapshotDistributionResult = result;
@@ -2169,7 +2223,7 @@ export default {
             const requestId = this.publicationDistributionRequestId;
 
             Promise.resolve()
-                .then(() => this.publicationDistributionCommand(publication))
+                .then(() => this.publicationDistributionCommand(publication, this.publicationDiscoveryProvider))
                 .then((result) => {
                     if (requestId === this.publicationDistributionRequestId) {
                         this.publicationDistributionResult = result;
@@ -2889,6 +2943,23 @@ export default {
                 <p class="form-hint form-hint--neutral">Nothing here is saved anywhere — entered fresh each time you click Distribute Snapshot.</p>
             </div>
 
+            <!-- AMENDED BY 0.9.669 — Per-Click Snapshot Announcement/
+                 Discovery Substrate Override. The identical Announcement/
+                 Discovery substrate select "Distribute Publication"
+                 below already has, one action over — applies to all three
+                 Storage choices above, including Remote Pinning. -->
+            <label class="own-publication-distribution-provider-label">
+                Announcement / Discovery substrate:
+                <select
+                    v-model="snapshotDiscoveryProvider"
+                    class="form-select own-publication-distribution-provider-select"
+                    :disabled="snapshotDistributionExecuting"
+                >
+                    <option value="nostr">Nostr</option>
+                    <option value="arweave">Arweave</option>
+                </select>
+            </label>
+
             <!-- Reachable with zero connected peers and an empty World
                  Encounters panel — this action never depends on either.
                  Disabled whenever there is no local Publication yet, or
@@ -2926,6 +2997,29 @@ export default {
                  publicationDistributionCommand. Disabled whenever there is
                  no local Publication yet, or a call is already in
                  flight. -->
+
+            <!-- Bug fix — this panel's own explicit Announcement/
+                 Discovery substrate choice for the NEXT "Distribute
+                 Publication" click below — mirrors
+                 WorldEncounterCanvas's own identical label+select
+                 (0.9.430) exactly. Rendered alongside the action it
+                 configures; never its own panel, never a global settings
+                 surface. -->
+            <label
+                v-if="publicationDistributionCommand"
+                class="own-publication-distribution-provider-label"
+            >
+                Announcement / Discovery substrate:
+                <select
+                    v-model="publicationDiscoveryProvider"
+                    class="form-select own-publication-distribution-provider-select"
+                    :disabled="publicationDistributionExecuting"
+                >
+                    <option value="nostr">Nostr</option>
+                    <option value="arweave">Arweave</option>
+                </select>
+            </label>
+
             <button
                 v-if="publicationDistributionCommand"
                 type="button"

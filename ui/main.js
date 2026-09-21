@@ -3128,29 +3128,68 @@ app.provide('multiRelayNostrPublicationDistributionCommand', multiRelayNostrPubl
 // Publication distribution's own Arweave announcement path already
 // resolved, above — never a second signer, never a second gateway
 // resolution.
-const { discoveryPublisher: snapshotDiscoveryPublisher } = composeSnapshotDistributionRuntime({
-    discoveryProvider: resolvedAnnouncementDiscoveryProvider,
-    nostrSnapshotDiscoveryPublisherOptions: { publishImpl: nostrHostPublisher, discoveryTag: 'forkbuild-snapshot', relayUrls: resolvedNostrRelayUrls },
+// AMENDED BY 0.9.669 — Per-Click Snapshot Announcement/Discovery Substrate
+// Override. Composed once PER SUBSTRATE now, instead of once for whichever
+// `resolvedAnnouncementDiscoveryProvider` happened to be saved when this
+// app loaded, so `snapshotDistributionCommand` (below) can honor an
+// explicit per-click Nostr/Arweave choice — the SAME kind of override
+// `publicationDistributionCommand`/`multiRelayNostrPublicationDistributionCommand`
+// (above) already give Publication distribution since 0.9.430, closing the
+// identical gap for the Snapshot family. Neither call passes
+// `arweaveContentStoreOptions` — Content placement is resolved separately,
+// below, exactly as before this amendment — so this still constructs no
+// second `ArweaveContentStore` of any kind, and still calls
+// `composeSnapshotDistributionRuntime()` from exactly the one call site
+// this file has ever had (now invoked twice from it, once per substrate,
+// never re-invoked per distribution attempt).
+const { discoveryPublisher: nostrSnapshotDiscoveryPublisher } = composeSnapshotDistributionRuntime({
+    discoveryProvider: 'nostr',
+    nostrSnapshotDiscoveryPublisherOptions: { publishImpl: nostrHostPublisher, discoveryTag: 'forkbuild-snapshot', relayUrls: resolvedNostrRelayUrls }
+});
+const { discoveryPublisher: arweaveSnapshotDiscoveryPublisher } = composeSnapshotDistributionRuntime({
+    discoveryProvider: 'arweave',
     arweaveSnapshotDiscoveryPublisherOptions: { discoveryTag: 'forkbuild-snapshot', gatewayUrl: resolvedArweaveGatewayUrl, uploadTaggedTransaction: arweaveAnnouncementUploadTaggedTransaction }
 });
-const snapshotDistributionCommand = (bytes, storage = 'ar', publicationId, claimedPosition) => executeSnapshotDistributionCommand({
+// resolveSnapshotDiscoveryPublisher(discoveryProvider) -> discoveryPublisher.
+// Picks between the two already-composed instances immediately above —
+// never builds a third. Defaults to `resolvedAnnouncementDiscoveryProvider`,
+// preserving every pre-0.9.669 caller's exact behavior when it passes no
+// `discoveryProvider` of its own. Provided app-wide so `ui/views/
+// WorldView.js`'s own Remote Pinning branch can resolve the SAME explicit
+// choice `snapshotDistributionCommand` (below) applies to the registry-backed
+// 'ar'/'ipfs' paths — one resolver, every Snapshot Distribution storage path.
+const resolveSnapshotDiscoveryPublisher = (discoveryProvider = resolvedAnnouncementDiscoveryProvider) =>
+    (discoveryProvider === 'arweave' ? arweaveSnapshotDiscoveryPublisher : nostrSnapshotDiscoveryPublisher);
+app.provide('resolveSnapshotDiscoveryPublisher', resolveSnapshotDiscoveryPublisher);
+// AMENDED BY 0.9.669 — `discoveryProvider` joined `bytes`/`storage`/
+// `publicationId`/`claimedPosition` as a new, optional fifth parameter,
+// defaulting to `resolvedAnnouncementDiscoveryProvider` via
+// `resolveSnapshotDiscoveryPublisher()` immediately above — still exactly
+// one `snapshotDistributionCommand`, never a second command.
+const snapshotDistributionCommand = (bytes, storage = 'ar', publicationId, claimedPosition, discoveryProvider) => executeSnapshotDistributionCommand({
     bytes,
     contentStore: resolveSnapshotDistributionContentStore(snapshotPlacementStoreRegistry, storage),
-    discoveryPublisher: snapshotDiscoveryPublisher,
+    discoveryPublisher: resolveSnapshotDiscoveryPublisher(discoveryProvider),
     publicationId,
     claimedPosition
 });
 app.provide('snapshotDistributionCommand', snapshotDistributionCommand);
 // 0.9.663 — Connect Remote IPFS to Nostr Snapshot Distribution. Exposes the
-// SAME `snapshotDiscoveryPublisher` instance directly — never a second
-// `NostrSnapshotDiscoveryPublisher` construction — so `ui/views/
-// DecentralizedPublicationsView.js#publishToRemoteIpfs()` can announce a
-// Remote IPFS-produced CID via Nostr once that CID already exists, without
-// going through `executeSnapshotDistributionCommand()`'s own
+// SAME default-substrate `discoveryPublisher` instance directly — never a
+// second `NostrSnapshotDiscoveryPublisher`/`ArweaveSnapshotDiscoveryPublisher`
+// construction — so `ui/views/DecentralizedPublicationsView.js#publishToRemoteIpfs()`
+// can announce a Remote IPFS-produced CID once that CID already exists,
+// without going through `executeSnapshotDistributionCommand()`'s own
 // `contentStore.put(bytes)` step (which would re-upload the bytes through a
 // second HTTP pin rather than reuse the CID `IpfsRemotePublicationCoordinator`
 // already obtained). May be `null` — the identical graceful degradation
-// `snapshotDiscoveryPublisher` itself already holds.
+// `resolveSnapshotDiscoveryPublisher()` itself already holds.
+//
+// AMENDED BY 0.9.669 — now `resolveSnapshotDiscoveryPublisher()` called
+// with no argument, so this key still names the exact SAME
+// default-substrate instance it always has — `DecentralizedPublicationsView.js`
+// is unmodified by this amendment and keeps reading this exact key.
+const snapshotDiscoveryPublisher = resolveSnapshotDiscoveryPublisher();
 app.provide('snapshotDiscoveryPublisher', snapshotDiscoveryPublisher);
 // 0.9.506 — the eligible-and-currently-registered Content backend list a
 // caller (ui/views/DecentralizedPublicationsView.js) can offer as an
