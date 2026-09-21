@@ -414,8 +414,11 @@ async function run() {
         check(typeof published.id === 'string' && net.ledger.has(published.id),
             'B3. ...and the constructed publisher genuinely publishes through the real signer/gateway chain — this is not merely a constructor that no longer throws, it is a working publish path');
 
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
-        check(/<option value="arweave">Arweave<\/option>/.test(canvasSource) && !/<option value="arweave"[^>]*disabled/.test(canvasSource),
+        // AMENDED BY 0.9.672 — this <select> now lives in
+        // WorldDistributionDialog.js, one popup over — see that file's
+        // own header.
+        const worldDistributionDialogSource = await source('ui/components/WorldDistributionDialog.js');
+        check(/<option value="arweave">Arweave<\/option>/.test(worldDistributionDialogSource) && !/<option value="arweave"[^>]*disabled/.test(worldDistributionDialogSource),
             'B4. the real <select> still offers "Arweave" as a live, unconditionally clickable choice — a real click, today, now reaches a genuinely working announce path (B1-B3), not a throw');
 
         console.log('✓ Section B: REACHABLE_AND_WIRED. 0.9.492 adopted the fix 0.9.490 built; the live path 0.9.489/0.9.491 found throwing now genuinely publishes.');

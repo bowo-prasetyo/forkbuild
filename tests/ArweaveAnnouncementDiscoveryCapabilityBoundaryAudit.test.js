@@ -275,9 +275,17 @@ async function run() {
 
         // REACHABLE? — the UI control itself is real, unconditional, and
         // never disabled for the "arweave" option specifically.
+        //
+        // AMENDED BY 0.9.672 — World View Distribution Dialog. This
+        // <select> now lives in WorldDistributionDialog.js, one popup
+        // over from a "Distribute" trigger button (a pure presentation
+        // relocation — see that file's own header); its own gating
+        // (:disabled="distributionExecuting", the same busy-state guard,
+        // never an availability guard) is unmodified.
         const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
-        check(/<option value="arweave">Arweave<\/option>/.test(canvasSource), 'B4. REACHABLE? — YES. the real <select> already offers "Arweave" as a live, clickable choice, gated only by :disabled="distributionExecuting" (a busy-state guard, never an availability guard)');
-        check(!/<option value="arweave"[^>]*disabled/.test(canvasSource), 'B5. ...and that <option> itself carries no conditional disabled attribute of its own tied to capability availability');
+        const worldDistributionDialogSource = await source('ui/components/WorldDistributionDialog.js');
+        check(/<option value="arweave">Arweave<\/option>/.test(worldDistributionDialogSource), 'B4. REACHABLE? — YES. the real <select> already offers "Arweave" as a live, clickable choice, gated only by :disabled="distributionExecuting" (a busy-state guard, never an availability guard)');
+        check(!/<option value="arweave"[^>]*disabled/.test(worldDistributionDialogSource), 'B5. ...and that <option> itself carries no conditional disabled attribute of its own tied to capability availability');
 
         // INVOKED? — the precise, live consequence of a real click today:
         // composePublicationDistributionRuntime(), given exactly what

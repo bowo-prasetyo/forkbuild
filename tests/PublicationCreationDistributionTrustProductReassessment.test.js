@@ -230,7 +230,15 @@ async function run() {
         // naming only that publishing (a local, immutable snapshot)
         // succeeded — no claim of discovery, anchoring, storage
         // durability, or third-party verification anywhere near it.
-        const postPublishBlock = extractRange(editorViewSource, '<div v-if="publishedPublication" class="editor-post-publish-action">', '</div>\n                <p v-if="distributionError"', 'post-publish action block');
+        // AMENDED BY 0.9.672 — World View Distribution Dialog. The
+        // substrate label/select and both Distribute/Dismiss buttons that
+        // used to sit together in this block were split: the storage/
+        // substrate pickers moved into EditorDistributionDialog.js (a
+        // pure presentation relocation, see that file's own header), and
+        // this block itself now carries only the message and the
+        // Distribute/Dismiss buttons — an even smaller surface for an
+        // overclaim word to hide in, never a larger one.
+        const postPublishBlock = extractRange(editorViewSource, '<div v-if="publishedPublication" class="editor-post-publish-action">', '</div>\n\n                <EditorDistributionDialog', 'post-publish action block');
         assert(postPublishBlock.includes('Publication published successfully.'),
             n('A1. the post-publish message is the one fixed sentence naming only that local publishing succeeded'));
         assert(!OVERCLAIM_WORDS.test(postPublishBlock.replace('Publication published successfully.', '')),
@@ -305,7 +313,11 @@ async function run() {
         // announced") nor ArweaveAnnouncementPublisher.js's own header
         // claims permanence, verification, or trust — only that an
         // announcement was accepted by a gateway/relay.
-        const dlBlock = extractRange(editorViewSource, '<dl v-else-if="distributionResult && distributionResult.length"', '</dl>', 'distribution result dl');
+        // AMENDED BY 0.9.672 — this <dl> now lives in
+        // EditorDistributionDialog.js, one popup over — see that file's
+        // own header.
+        const distributionDialogSource = await source('ui/components/EditorDistributionDialog.js');
+        const dlBlock = extractRange(distributionDialogSource, '<dl v-else-if="distributionResult && distributionResult.length"', '</dl>', 'distribution result dl');
         assert(!OVERCLAIM_WORDS.test(dlBlock), n('B5. the distribution result <dl> itself (Publication/Material/Discovery/Repository rows) carries no overclaim word'));
         const announcementPublisherSource = await source('application/ArweaveAnnouncementPublisher.js');
         assert(!/\bpermanently published\b/i.test(announcementPublisherSource), n('B6. ArweaveAnnouncementPublisher.js never describes its own action as "permanently published" — an announcement is a gateway-accepted transaction, never a durability claim'));
@@ -393,8 +405,12 @@ async function run() {
         // "fixed" by relaxing the template itself (which would have
         // required rewriting the shared v-for/`[0]` indexing the Nostr
         // branch already depends on).
-        assert(editorViewCode.includes('v-else-if="distributionResult && distributionResult.length"') && editorViewCode.includes('distributionResult[0].publication.objectId'),
-            n('C8. EditorView.js\'s own template still guards on distributionResult.length and indexes distributionResult[0] — unmodified; a bare object handed to this exact template would render nothing'));
+        // AMENDED BY 0.9.672 — this guard/indexing now lives in
+        // EditorDistributionDialog.js, one popup over — see that file's
+        // own header. The guard/indexing shape itself is unmodified.
+        const distributionDialogCode = codeOnly(await source('ui/components/EditorDistributionDialog.js'));
+        assert(distributionDialogCode.includes('v-else-if="distributionResult && distributionResult.length"') && distributionDialogCode.includes('distributionResult[0].publication.objectId'),
+            n('C8. EditorDistributionDialog.js\'s own template still guards on distributionResult.length and indexes distributionResult[0] — unmodified; a bare object handed to this exact template would render nothing'));
 
         // C9. THE FIX — live: the SAME bare, non-array result C6 just
         // proved the command still produces is, after passing through
@@ -577,10 +593,13 @@ async function run() {
         // the OTHER file it shares its distribution result vocabulary
         // with — WorldEncounterCanvas.js's own Material/Discovery panel —
         // by the same precise, marker-bounded extraction technique.
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
-        const canvasDistributionBlock = extractRange(canvasSource, 'class="world-encounter-distribution-panel">', '</dl>', 'WorldEncounterCanvas distribution panel');
+        // AMENDED BY 0.9.672 — this panel now lives in
+        // WorldDistributionDialog.js, one popup over — see that file's
+        // own header.
+        const worldDistributionDialogSource = await source('ui/components/WorldDistributionDialog.js');
+        const canvasDistributionBlock = extractRange(worldDistributionDialogSource, 'class="world-distribution-dialog-lifecycle-detail"', '</dl>', 'WorldDistributionDialog Material/Discovery lifecycle detail');
         assert(!OVERCLAIM_WORDS.test(canvasDistributionBlock),
-            n('G1[WorldEncounterCanvas.js]. the Material/Discovery distribution panel carries no overclaim word'));
+            n('G1[WorldDistributionDialog.js]. the Material/Discovery distribution panel carries no overclaim word'));
 
         // application/*.js files in this family are plain JS — no
         // embedded HTML template, so a whole-file string-literal sweep is

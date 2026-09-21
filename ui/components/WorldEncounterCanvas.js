@@ -1,5 +1,6 @@
 import WorldEncounterMarker from './WorldEncounterMarker.js';
 import WandererMarker from './WandererMarker.js';
+import WorldDistributionDialog from './WorldDistributionDialog.js';
 import { describeWorldFromDiscoveryRegistry } from '../../application/WorldDiscoveryRegistryProjection.js';
 import { describeWorldEncounterInspection } from '../../application/WorldEncounterInspection.js';
 import { describeWorldEncounterSelectionOutcomeFromRegistry, WorldEncounterSelectionOutcomeStatus } from '../../application/WorldEncounterSelectionOutcome.js';
@@ -2862,7 +2863,7 @@ function shortContentHash(contentHash) {
 
 export default {
     name: 'WorldEncounterCanvas',
-    components: { WorldEncounterMarker, WandererMarker },
+    components: { WorldEncounterMarker, WandererMarker, WorldDistributionDialog },
     props: {
         // Exactly `describeWorldEncounterView()`'s own result shape —
         // see this file's own header, "receives the 0.9.2 view directly."
@@ -3359,6 +3360,14 @@ export default {
             // stale response," mirroring `materialInspectionRequestId`
             // (0.9.39) exactly, one layer over.
             distributionRequestId: 0,
+            // 0.9.672 — World View Distribution Dialog. Purely a "is the
+            // popup currently open" flag, the same shape every other
+            // popup-visibility boolean in this codebase already uses —
+            // see WorldDistributionDialog.js's own header. Never read by,
+            // and never written from, either distribution action itself,
+            // and never shared with this file's own, entirely separate
+            // publicationDiscoveryOpen popup.
+            distributionDialogOpen: false,
             // 0.9.430 — the Wanderer's own freely editable choice of
             // Announcement/Discovery substrate for the NEXT "Distribute
             // Publication" click, page-local UI state only — exactly like
@@ -4230,6 +4239,10 @@ export default {
             this.snapshotDistributionError = null;
             this.snapshotDistributionResult = null;
             this.snapshotDistributionRequestId += 1;
+            // 0.9.672 — a fresh selection never leaves a stale World
+            // Distribution Dialog open over whichever encounter was
+            // previously selected.
+            this.distributionDialogOpen = false;
             // 0.9.144 — mirrors the 0.9.138 reset immediately above,
             // exactly, one action over: a fresh selection never carries a
             // stale Snapshot Discovery/Attribution execution/error/result
@@ -4583,6 +4596,7 @@ export default {
                 this.snapshotDistributionError = null;
                 this.snapshotDistributionResult = null;
                 this.snapshotDistributionRequestId += 1;
+                this.distributionDialogOpen = false;
                 this.snapshotDiscoveryExecuting = false;
                 this.snapshotDiscoveryError = null;
                 this.snapshotDiscoveryResult = null;
@@ -6167,248 +6181,51 @@ export default {
                 </dl>
             </div>
 
-            <!-- 0.9.100 — reads exactly distributionLifecycle.material.state /
-                 .discovery.state, the SAME two independent
-                 PublicationDistributionState values
-                 describePublicationDistributionLifecycle() (0.9.50) already
-                 defines. See this file's own header, "0.9.100 — Publication
-                 Distribution Observation." -->
-            <!-- UX-level unification only: a single "Distribute" action for
-                 Wanderers who just want both protocols pushed out at once.
-                 Rendered only when BOTH distributionCommand AND
-                 snapshotDistributionCommand were supplied — when only one
-                 is available, its own dedicated button below already
-                 covers the whole capability. Firing this never changes
-                 either protocol, and never introduces a combined
-                 executing/error/result of its own: it disables while
-                 EITHER underlying action is in flight, and each action's
-                 own panel below keeps reporting its own independent
-                 outcome exactly as it already does when clicked on its
-                 own. -->
-            <div
-                v-if="selectedEncounter && selectedEncounter.kind === 'PUBLICATION' && distributionCommand && snapshotDistributionCommand"
-                class="world-encounter-combined-distribution-panel"
-            >
-                <button
-                    type="button"
-                    class="action-btn world-encounter-combined-distribution-action"
-                    :disabled="!distributablePublication || distributionExecuting || snapshotDistributionExecuting"
-                    @click="distributeSelectedPublicationAndSnapshot"
-                >{{ (distributionExecuting || snapshotDistributionExecuting) ? 'Distributing…' : 'Distribute' }}</button>
-                <p class="world-encounter-combined-distribution-hint form-hint form-hint--neutral">Distributes the Signed Claim and the Snapshot together — each still its own protocol, reported separately below.</p>
-            </div>
+            <!-- 0.9.672 — World View Distribution Dialog. Every
+                 Distribution/Snapshot Distribution storage/substrate
+                 picker, button, lifecycle status, and result display that
+                 used to render inline here now lives in
+                 WorldDistributionDialog.js (see that file's own header) —
+                 a single "Distribute" trigger replaces them all on this
+                 primary screen. Rendered whenever EITHER protocol is
+                 usable at all; the dialog itself renders only the
+                 section(s) that apply, exactly like each protocol's own
+                 dedicated button already only rendered when that
+                 protocol's own command was supplied. -->
+            <button
+                v-if="selectedEncounter && selectedEncounter.kind === 'PUBLICATION' && (distributionCommand || snapshotDistributionCommand)"
+                type="button"
+                class="action-btn world-encounter-distribution-trigger-action"
+                :disabled="!distributablePublication"
+                @click="distributionDialogOpen = true"
+            >Distribute</button>
 
-            <div v-if="selectedEncounter && selectedEncounter.kind === 'PUBLICATION' && distributionLifecycleStore" class="world-encounter-distribution-panel">
-                <h4 class="world-encounter-distribution-title">Distribution</h4>
-                <dl class="world-encounter-distribution-detail">
-                    <dt>Material</dt>
-                    <dd>{{ distributionMaterialState }}</dd>
-                    <!-- 0.9.433 — a genuine second substrate observation
-                         renders one Discovery row per substrate, via the
-                         additive discoveryObservations() below; otherwise
-                         (zero or one observation) this stays byte-identical
-                         to the single pre-0.9.433 row, bound to the
-                         pre-existing distributionDiscoveryState. -->
-                    <template v-if="discoveryObservations.length > 1">
-                        <!-- 0.9.443 — keyed by (discoveryProvider, origin),
-                             never discoveryProvider alone: two Nostr relay
-                             observations now genuinely coexist here, and a
-                             shared "nostr" key would collide, letting Vue
-                             silently reuse one row's DOM for the other. -->
-                        <template v-for="observation in discoveryObservations" :key="observation.discoveryProvider + ':' + observation.origin">
-                            <dt>Discovery ({{ observation.discoveryProvider }})</dt>
-                            <dd>{{ observation.state }}</dd>
-                        </template>
-                    </template>
-                    <template v-else>
-                        <dt>Discovery</dt>
-                        <dd>{{ distributionDiscoveryState }}</dd>
-                    </template>
-                </dl>
-
-                <!-- 0.9.670 — Publication Material Storage Selection. Where
-                     a Publication's own MATERIAL goes — independent of the
-                     Announcement/Discovery substrate select immediately
-                     below, which only ever chose where the ANNOUNCEMENT of
-                     that material's location gets posted. Mirrors the
-                     existing Distribute Snapshot "Storage" picker exactly,
-                     one action over. -->
-                <label
-                    v-if="distributionCommand"
-                    class="world-encounter-snapshot-distribution-storage-label"
-                >
-                    Material storage
-                    <select v-model="selectedMaterialStorage" class="world-encounter-distribution-storage-select" :disabled="distributionExecuting">
-                        <option value="ar">Arweave</option>
-                        <option value="ipfs">IPFS (Local Kubo)</option>
-                        <option value="remote-pinning">IPFS (Remote Pinning)</option>
-                    </select>
-                </label>
-
-                <!-- 0.9.670 — the Remote Pinning endpoint/credential draft
-                     for "Distribute Publication." Renders only when that
-                     storage is selected. Nothing here is saved anywhere —
-                     discarded on reload exactly like the identical
-                     Distribute Snapshot draft below. -->
-                <div v-if="distributionCommand && selectedMaterialStorage === 'remote-pinning'" class="world-encounter-remote-pinning-draft">
-                    <label class="form-field">
-                        <span class="form-label">Endpoint</span>
-                        <input type="text" class="form-input" v-model="publicationRemotePinningDraft.endpoint" placeholder="https://api.pinata.cloud/pinning/pinFileToIPFS" />
-                    </label>
-                    <label class="form-field">
-                        <span class="form-label">Credential (optional)</span>
-                        <input type="password" class="form-input" v-model="publicationRemotePinningDraft.credential" placeholder="Bearer token" />
-                    </label>
-                    <label class="form-field">
-                        <span class="form-label">Request field (optional)</span>
-                        <input type="text" class="form-input" v-model="publicationRemotePinningDraft.requestField" placeholder="file" />
-                    </label>
-                    <label class="form-field">
-                        <span class="form-label">Response field (optional)</span>
-                        <input type="text" class="form-input" v-model="publicationRemotePinningDraft.responseField" placeholder="cid (Pinata: IpfsHash)" />
-                    </label>
-                    <p class="form-hint form-hint--neutral">Nothing here is saved anywhere — entered fresh each time you click Distribute Publication.</p>
-                </div>
-
-                <!-- 0.9.430 — the Wanderer's own explicit Announcement/
-                     Discovery substrate choice for the NEXT click below —
-                     see this file's own header, "0.9.430 — Announcement/
-                     Discovery Provider Selection Reachability." Rendered
-                     alongside the action it configures; never its own
-                     panel, never a global settings surface. -->
-                <label
-                    v-if="distributionCommand"
-                    class="world-encounter-distribution-provider-label"
-                >
-                    Announcement / Discovery substrate:
-                    <select
-                        v-model="selectedDiscoveryProvider"
-                        class="form-select world-encounter-distribution-provider-select"
-                        :disabled="distributionExecuting"
-                    >
-                        <option value="nostr">Nostr</option>
-                        <option value="arweave">Arweave</option>
-                    </select>
-                </label>
-
-                <!-- 0.9.104 — a request/attempt action, never a claim of
-                     success; see this file's own header, "0.9.104 — World
-                     View Publication Distribution Action." Rendered only
-                     when a caller supplied a distributionCommand; disabled
-                     whenever there is nothing distributable yet for this
-                     selection, or a call is already in flight. -->
-                <button
-                    v-if="distributionCommand"
-                    type="button"
-                    class="action-btn world-encounter-distribution-action"
-                    :disabled="!distributablePublication || distributionExecuting"
-                    @click="distributeSelectedPublication"
-                >{{ distributionExecuting ? 'Distributing…' : 'Distribute Publication' }}</button>
-
-                <p v-if="distributionError" class="world-encounter-distribution-error">{{ distributionError }}</p>
-            </div>
-
-            <!-- 0.9.138 — a SEPARATE panel from Distribution, immediately
-                 above: Snapshot distribution is a different protocol than
-                 Signed Claim distribution (see application/
-                 SnapshotDistributionCommand.js's own header, "no coupling
-                 to Signed Claim distribution"), so it gets its own action
-                 and its own result display, never folded into the
-                 Material/Discovery dl above. Rendered only when a caller
-                 supplied a snapshotDistributionCommand; independent of
-                 distributionLifecycleStore, which this panel never reads. -->
-            <div v-if="selectedEncounter && selectedEncounter.kind === 'PUBLICATION' && snapshotDistributionCommand" class="world-encounter-snapshot-distribution-panel">
-                <h4 class="world-encounter-snapshot-distribution-title">Snapshot Distribution</h4>
-
-                <!-- Bug fix — the Arweave/IPFS storage choice, PLUS a
-                     third "Remote Pinning" option (e.g. Pinata) that
-                     needs no pre-registered backend — always offered,
-                     regardless of what snapshotDistributionStorageTypes
-                     reports for the other two. -->
-                <label class="world-encounter-snapshot-distribution-storage-label">
-                    Storage
-                    <select v-model="snapshotDistributionStorage" class="world-encounter-snapshot-distribution-storage-select" :disabled="snapshotDistributionExecuting">
-                        <option v-for="storage in snapshotDistributionStorageTypes" :key="storage" :value="storage">{{ storage === 'ipfs' ? 'IPFS (Local Kubo)' : 'Arweave' }}</option>
-                        <option value="remote-pinning">IPFS (Remote Pinning)</option>
-                    </select>
-                </label>
-
-                <!-- Bug fix — the Remote Pinning endpoint/credential
-                     draft. Renders only when that storage is selected.
-                     Nothing here is saved anywhere. -->
-                <div v-if="snapshotDistributionStorage === 'remote-pinning'" class="world-encounter-remote-pinning-draft">
-                    <label class="form-field">
-                        <span class="form-label">Endpoint</span>
-                        <input type="text" class="form-input" v-model="remotePinningDraft.endpoint" placeholder="https://api.pinata.cloud/pinning/pinFileToIPFS" />
-                    </label>
-                    <label class="form-field">
-                        <span class="form-label">Credential (optional)</span>
-                        <input type="password" class="form-input" v-model="remotePinningDraft.credential" placeholder="Bearer token" />
-                    </label>
-                    <label class="form-field">
-                        <span class="form-label">Request field (optional)</span>
-                        <input type="text" class="form-input" v-model="remotePinningDraft.requestField" placeholder="file" />
-                    </label>
-                    <label class="form-field">
-                        <span class="form-label">Response field (optional)</span>
-                        <input type="text" class="form-input" v-model="remotePinningDraft.responseField" placeholder="cid (Pinata: IpfsHash)" />
-                    </label>
-                    <p class="form-hint form-hint--neutral">Nothing here is saved anywhere — entered fresh each time you click Distribute Snapshot.</p>
-                </div>
-
-                <!-- AMENDED BY 0.9.669 — Per-Click Snapshot Announcement/
-                     Discovery Substrate Override. The identical
-                     Announcement/Discovery substrate select the
-                     "Distribute Publication" control above already has
-                     (0.9.430), one action over — applies to all three
-                     Storage choices above, including Remote Pinning. -->
-                <label class="world-encounter-snapshot-distribution-provider-label">
-                    Announcement / Discovery substrate:
-                    <select
-                        v-model="selectedSnapshotDiscoveryProvider"
-                        class="form-select world-encounter-snapshot-distribution-provider-select"
-                        :disabled="snapshotDistributionExecuting"
-                    >
-                        <option value="nostr">Nostr</option>
-                        <option value="arweave">Arweave</option>
-                    </select>
-                </label>
-
-                <!-- 0.9.138 — a request/attempt action, never a claim of
-                     success — mirrors the Distribute Publication button
-                     immediately above, exactly. Disabled whenever there is
-                     nothing distributable yet for this selection, or a call
-                     is already in flight. -->
-                <button
-                    type="button"
-                    class="action-btn world-encounter-snapshot-distribution-action"
-                    :disabled="!distributablePublication || snapshotDistributionExecuting"
-                    @click="distributeSelectedSnapshot"
-                >{{ snapshotDistributionExecuting ? 'Distributing…' : 'Distribute Snapshot' }}</button>
-
-                <!-- 0.9.138 — the resolved contentReference/announcement,
-                     rendered verbatim, never reinterpreted or collapsed
-                     into a single success/failure verdict — see this
-                     component's own snapshotDistributionCommand prop
-                     comment. announcement is legitimately null (Arweave
-                     placement succeeded, Nostr announcement did not — see
-                     application/SnapshotDistributionCommand.js's own
-                     header, "a successful placement is never rolled back")
-                     — shown as "No announcement," never as an error. -->
-                <p v-if="snapshotDistributionError" class="world-encounter-snapshot-distribution-error">{{ snapshotDistributionError }}</p>
-                <dl v-else-if="snapshotDistributionResult" class="world-encounter-snapshot-distribution-detail">
-                    <dt>Content hash</dt>
-                    <dd>{{ snapshotDistributionResult.contentReference.hash }}</dd>
-                    <dt>Locator</dt>
-                    <dd>{{ snapshotDistributionResult.contentReference.uri }}</dd>
-                    <dt>Announcement</dt>
-                    <!-- Bug fix — announcementError (Remote Pinning only)
-                         shows the real, sanitized cause instead of an
-                         indistinguishable-from-a-decline "No announcement."
-                         undefined for Arweave/Local Kubo, unchanged. -->
-                    <dd>{{ snapshotDistributionResult.announcement ? snapshotDistributionResult.announcement.id : (snapshotDistributionResult.announcementError || 'No announcement') }}</dd>
-                </dl>
-            </div>
+            <WorldDistributionDialog
+                v-if="distributionDialogOpen"
+                :can-distribute-publication="Boolean(distributionCommand)"
+                :can-distribute-snapshot="Boolean(snapshotDistributionCommand)"
+                :has-subject="Boolean(distributablePublication)"
+                :distribution-executing="distributionExecuting"
+                :distribution-error="distributionError"
+                :show-distribution-lifecycle="Boolean(distributionLifecycleStore)"
+                :distribution-material-state="distributionMaterialState"
+                :distribution-discovery-state="distributionDiscoveryState"
+                :discovery-observations="discoveryObservations"
+                v-model:discovery-provider="selectedDiscoveryProvider"
+                v-model:material-storage="selectedMaterialStorage"
+                :material-remote-pinning-draft="publicationRemotePinningDraft"
+                :snapshot-distribution-executing="snapshotDistributionExecuting"
+                :snapshot-distribution-error="snapshotDistributionError"
+                :snapshot-distribution-result="snapshotDistributionResult"
+                :snapshot-distribution-storage-types="snapshotDistributionStorageTypes"
+                v-model:snapshot-storage="snapshotDistributionStorage"
+                :snapshot-remote-pinning-draft="remotePinningDraft"
+                v-model:snapshot-discovery-provider="selectedSnapshotDiscoveryProvider"
+                @close="distributionDialogOpen = false"
+                @distribute-both="distributeSelectedPublicationAndSnapshot"
+                @distribute-publication="distributeSelectedPublication"
+                @distribute-snapshot="distributeSelectedSnapshot"
+            />
 
             <!-- 0.9.144 — a SEPARATE panel from Snapshot Distribution,
                  immediately above, mirroring its own "Divergence 2"

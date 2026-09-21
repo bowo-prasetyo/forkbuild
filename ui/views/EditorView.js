@@ -54,6 +54,7 @@ import MetadataEditorDialog from '../components/MetadataEditorDialog.js';
 import CreateBlueprintDialog from '../components/CreateBlueprintDialog.js';
 import StructureInfoPanel from '../components/StructureInfoPanel.js';
 import ForkFailureDialog from '../components/ForkFailureDialog.js';
+import EditorDistributionDialog from '../components/EditorDistributionDialog.js';
 import { editorEntryContextFromQuery } from '../../core/EditorEntryContext.js';
 import { deriveBlueprintFingerprint, describeBlueprintFingerprint } from '../../core/BlueprintFingerprint.js';
 import { BLUEPRINT_ATTRIBUTION_KIND } from '../../core/BlueprintAttribution.js';
@@ -79,7 +80,7 @@ const SAVE_FAILURE_MESSAGE = 'Save failed — your changes are still here, but w
 
 export default {
     name: 'EditorView',
-    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, SelectionInspector, CommandPalette, KeyboardShortcutsOverlay, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog },
+    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, SelectionInspector, CommandPalette, KeyboardShortcutsOverlay, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog },
     template: `
         <div class="editor-view">
             <Toolbar
@@ -128,255 +129,52 @@ export default {
                 <div v-if="publishedPublication" class="editor-post-publish-action">
                     <span class="editor-post-publish-message">Publication published successfully.</span>
 
-                    <!-- UX-level unification only: a single "Distribute"
-                         action for Wanderers who just want both protocols
-                         pushed out at once — mirrors
-                         ui/components/OwnPublicationPanel.js's own
-                         identical combined panel (and
-                         ui/components/WorldEncounterCanvas.js's own)
-                         verbatim, one host view over. Rendered only when
-                         BOTH canDistributeSnapshot AND
-                         canDistributePublication are true — when only one
-                         is available, its own dedicated button below
-                         already covers the whole capability. Firing this
-                         never changes either protocol, and never
-                         introduces a combined executing/error/result of
-                         its own: it disables while EITHER underlying
-                         action is in flight, and each action's own section
-                         below keeps reporting its own independent outcome
-                         exactly as it already does when clicked on its
-                         own. -->
-                    <div v-if="canDistributeSnapshot && canDistributePublication" class="editor-post-publish-combined-distribution-panel">
-                        <button
-                            type="button"
-                            class="action-btn action-btn--primary editor-post-publish-combined-distribution-action"
-                            :disabled="snapshotDistributionExecuting || distributionExecuting"
-                            @click="distributePublishedDocumentAndSnapshot"
-                        >{{ (snapshotDistributionExecuting || distributionExecuting) ? 'Distributing…' : 'Distribute' }}</button>
-                        <p class="editor-post-publish-combined-distribution-hint form-hint form-hint--neutral">Distributes the Signed Claim and the Snapshot together — each still its own protocol, reported separately below.</p>
-                    </div>
-
-                    <!-- Snapshot Distribution — distributes the
-                         Publication's own raw MATERIAL bytes directly
-                         (Arweave/IPFS/Remote Pinning), entirely separate
-                         from "Distribute now" below (which announces the
-                         Publication itself). Mirrors
-                         ui/components/OwnPublicationPanel.js's own
-                         "Distribute Snapshot" section verbatim, one caller
-                         over, including its ordering (Snapshot before
-                         Publication). Rendered only when a usable Snapshot
-                         distribution capability exists at all — see
-                         canDistributeSnapshot's own comment. Reachable the
-                         moment a publish succeeds: PublishDocumentUseCase's
-                         own automatic initial placement (0.2.23) already
-                         gives every freshly-published Publication a real
-                         contentReference before this overlay ever renders,
-                         so there is no "not placed yet" gap to wait out
-                         here — see docs/Principles.md, "A Publication Is
-                         What; A Placement Is Where." -->
-                    <label
-                        v-if="canDistributeSnapshot"
-                        class="editor-post-publish-storage-label"
-                    >
-                        Snapshot storage
-                        <select v-model="selectedSnapshotStorage" class="editor-post-publish-storage-select" :disabled="snapshotDistributionExecuting">
-                            <option value="ar">Arweave</option>
-                            <option value="ipfs">IPFS (Local Kubo)</option>
-                            <option value="remote-pinning">IPFS (Remote Pinning)</option>
-                        </select>
-                    </label>
-
-                    <!-- The Remote Pinning endpoint/credential draft for
-                         "Distribute Snapshot." The SAME remotePinningDraft
-                         "Distribute now" above uses — never a second
-                         draft, mirroring OwnPublicationPanel.js's own
-                         single, shared draft exactly. -->
-                    <div v-if="canDistributeSnapshot && selectedSnapshotStorage === 'remote-pinning'" class="editor-post-publish-remote-pinning-draft">
-                        <label class="form-field">
-                            <span class="form-label">Endpoint</span>
-                            <input type="text" class="form-input" v-model="remotePinningDraft.endpoint" placeholder="https://api.pinata.cloud/pinning/pinFileToIPFS" />
-                        </label>
-                        <label class="form-field">
-                            <span class="form-label">Credential (optional)</span>
-                            <input type="password" class="form-input" v-model="remotePinningDraft.credential" placeholder="Bearer token" />
-                        </label>
-                        <label class="form-field">
-                            <span class="form-label">Request field (optional)</span>
-                            <input type="text" class="form-input" v-model="remotePinningDraft.requestField" placeholder="file" />
-                        </label>
-                        <label class="form-field">
-                            <span class="form-label">Response field (optional)</span>
-                            <input type="text" class="form-input" v-model="remotePinningDraft.responseField" placeholder="cid (Pinata: IpfsHash)" />
-                        </label>
-                        <p class="form-hint form-hint--neutral">Nothing here is saved anywhere — entered fresh each time you click Distribute Snapshot.</p>
-                    </div>
-
-                    <label
-                        v-if="canDistributeSnapshot"
-                        class="editor-post-publish-provider-label"
-                    >
-                        Announcement / Discovery substrate:
-                        <select
-                            v-model="snapshotDiscoveryProvider"
-                            class="form-select editor-post-publish-provider-select"
-                            :disabled="snapshotDistributionExecuting"
-                        >
-                            <option value="nostr">Nostr</option>
-                            <option value="arweave">Arweave</option>
-                        </select>
-                    </label>
+                    <!-- 0.9.672 — Editor View Distribution Dialog. Every
+                         Snapshot/Publication storage/substrate picker,
+                         button, and result display that used to render
+                         inline here now lives in EditorDistributionDialog.js
+                         (see that file's own header) — a single "Distribute"
+                         trigger replaces them all on this primary screen.
+                         Rendered whenever EITHER protocol is usable at all;
+                         the dialog itself renders only the section(s) that
+                         apply, exactly like each protocol's own dedicated
+                         button already only rendered when that protocol's
+                         own command was supplied. -->
                     <button
-                        v-if="canDistributeSnapshot"
+                        v-if="canDistributeSnapshot || canDistributePublication"
                         type="button"
-                        class="action-btn action-btn--primary editor-post-publish-distribute-snapshot-btn"
-                        :disabled="snapshotDistributionExecuting"
-                        @click="distributePublishedSnapshot"
-                    >{{ snapshotDistributionExecuting ? 'Distributing…' : 'Distribute Snapshot' }}</button>
-                    <p v-if="snapshotDistributionError" class="editor-post-publish-distribution-error">{{ snapshotDistributionError }}</p>
-                    <dl v-else-if="snapshotDistributionResult" class="editor-post-publish-distribution-detail">
-                        <dt>Content hash</dt>
-                        <dd>{{ snapshotDistributionResult.contentReference.hash }}</dd>
-                        <dt>Locator</dt>
-                        <dd>{{ snapshotDistributionResult.contentReference.uri }}</dd>
-                        <dt>Announcement</dt>
-                        <!-- announcementError (Remote Pinning only) shows
-                             the real, sanitized cause a Nostr announcement
-                             failed, mirroring OwnPublicationPanel.js's own
-                             identical row verbatim. undefined for the
-                             Arweave/Local Kubo paths, so they render
-                             exactly as before. -->
-                        <dd>{{ snapshotDistributionResult.announcement ? snapshotDistributionResult.announcement.id : (snapshotDistributionResult.announcementError || 'No announcement') }}</dd>
-                    </dl>
-
-                    <!-- 0.9.502 — Editor Announcement/Discovery Provider
-                         Selection. The Wanderer's own explicit Nostr/
-                         Arweave substrate choice for the NEXT click below —
-                         mirrors WorldEncounterCanvas.js's own identical
-                         "Announcement / Discovery substrate" control
-                         (0.9.430) verbatim, one caller over. Rendered
-                         alongside the action it configures; never its own
-                         panel, never a global settings surface. -->
-                    <!-- 0.9.670 — Publication Material Storage Selection.
-                         Where the Publication's own MATERIAL goes —
-                         independent of the Announcement/Discovery substrate
-                         select immediately below. -->
-                    <label
-                        v-if="canDistributePublication"
-                        class="editor-post-publish-storage-label"
-                    >
-                        Material storage
-                        <select v-model="selectedMaterialStorage" class="editor-post-publish-storage-select" :disabled="distributionExecuting">
-                            <option value="ar">Arweave</option>
-                            <option value="ipfs">IPFS (Local Kubo)</option>
-                            <option value="remote-pinning">IPFS (Remote Pinning)</option>
-                        </select>
-                    </label>
-
-                    <!-- 0.9.670 — the Remote Pinning endpoint/credential
-                         draft for "Distribute now." Renders only when that
-                         storage is selected. Nothing here is saved anywhere
-                         — discarded on reload. -->
-                    <div v-if="canDistributePublication && selectedMaterialStorage === 'remote-pinning'" class="editor-post-publish-remote-pinning-draft">
-                        <label class="form-field">
-                            <span class="form-label">Endpoint</span>
-                            <input type="text" class="form-input" v-model="remotePinningDraft.endpoint" placeholder="https://api.pinata.cloud/pinning/pinFileToIPFS" />
-                        </label>
-                        <label class="form-field">
-                            <span class="form-label">Credential (optional)</span>
-                            <input type="password" class="form-input" v-model="remotePinningDraft.credential" placeholder="Bearer token" />
-                        </label>
-                        <label class="form-field">
-                            <span class="form-label">Request field (optional)</span>
-                            <input type="text" class="form-input" v-model="remotePinningDraft.requestField" placeholder="file" />
-                        </label>
-                        <label class="form-field">
-                            <span class="form-label">Response field (optional)</span>
-                            <input type="text" class="form-input" v-model="remotePinningDraft.responseField" placeholder="cid (Pinata: IpfsHash)" />
-                        </label>
-                        <p class="form-hint form-hint--neutral">Nothing here is saved anywhere — entered fresh each time you click Distribute now.</p>
-                    </div>
-
-                    <label
-                        v-if="canDistributePublication"
-                        class="editor-post-publish-provider-label"
-                    >
-                        Announcement / Discovery substrate:
-                        <select
-                            v-model="selectedDiscoveryProvider"
-                            class="form-select editor-post-publish-provider-select"
-                            :disabled="distributionExecuting"
-                        >
-                            <option value="nostr">Nostr</option>
-                            <option value="arweave">Arweave</option>
-                        </select>
-                    </label>
-                    <button
-                        v-if="canDistributePublication"
-                        type="button"
-                        class="action-btn action-btn--primary editor-post-publish-distribute-btn"
-                        :disabled="distributionExecuting"
-                        @click="distributePublishedDocument"
-                    >{{ distributionExecuting ? 'Distributing…' : 'Distribute now' }}</button>
+                        class="action-btn action-btn--primary editor-post-publish-distribute-trigger"
+                        @click="distributionDialogOpen = true"
+                    >Distribute</button>
                     <button
                         type="button"
                         class="action-btn action-btn--secondary editor-post-publish-dismiss-btn"
                         @click="dismissPublishAction"
                     >Dismiss</button>
                 </div>
-                <p v-if="distributionError" class="editor-post-publish-distribution-error">{{ distributionError }}</p>
-                <!-- AMENDED BY 0.9.450 — distributionResult is now an ARRAY,
-                     one PublicationDistributionResult per configured Nostr
-                     relay (see distributeEditorPublication()'s own 0.9.450
-                     amendment). Material is uploaded once, shared by every
-                     relay result (the multi-relay distribution flow's own
-                     "one material upload, shared across every relay"
-                     invariant), so it is read once, from the first element;
-                     Discovery genuinely differs per relay, so every element
-                     gets its own row — never collapsed into one aggregate
-                     line.
 
-                     AMENDED BY 0.9.526 — this v-else-if's own ".length"
-                     guard, and every "[0]"/v-for indexing below it,
-                     assume distributionResult is ALWAYS an array — true
-                     for every pre-0.9.502 (Nostr-only) caller, but not for
-                     0.9.502's own 'arweave' selection, whose command
-                     resolves a bare PublicationDistributionResult.
-                     distributePublishedDocument()'s own
-                     normalizeDistributionResultForDisplay() (see that
-                     function's own 0.9.526 header) now wraps a bare
-                     result into this identical one-element shape before
-                     it ever reaches this ref, so this template needed no
-                     change of its own to correctly display either
-                     substrate — see that fix's own header for the gap
-                     this closes (a successful Arweave-selected
-                     distribution previously rendered nothing at all). -->
-                <dl v-else-if="distributionResult && distributionResult.length" class="editor-post-publish-distribution-detail">
-                    <dt>Publication</dt>
-                    <dd>{{ distributionResult[0].publication.objectId }}</dd>
-                    <dt>Material</dt>
-                    <dd>{{ distributionResult[0].material ? distributionResult[0].material.uri : 'Not yet uploaded' }}</dd>
-                    <template v-for="(relayResult, relayIndex) in distributionResult" :key="relayIndex">
-                        <dt>{{ distributionResult.length > 1 ? \`Discovery (relay \${relayIndex + 1})\` : 'Discovery' }}</dt>
-                        <dd>{{ relayResult.discovery ? relayResult.discovery.id : 'Not yet announced' }}</dd>
-                    </template>
-                    <!-- 0.9.381 — EditorView Distribution Result -> Repository
-                         Navigation. The exact seam 0.9.380's own audit located:
-                         immediately after the Discovery row, inside the SAME
-                         <dl>, never a new panel. Rendered only while there is a
-                         real documentId to navigate to — no documentId, no row
-                         at all, per that audit's own Section F "graceful
-                         inability to navigate, never a thrown error." -->
-                    <template v-if="publishedPublication && publishedPublication.documentId">
-                        <dt>Repository</dt>
-                        <dd>
-                            <button
-                                type="button"
-                                class="action-btn action-btn--secondary editor-post-publish-distribution-view-btn"
-                                @click="viewDistributedPublicationInRepository"
-                            >Explore</button>
-                        </dd>
-                    </template>
-                </dl>
+                <EditorDistributionDialog
+                    v-if="distributionDialogOpen"
+                    :can-distribute-snapshot="canDistributeSnapshot"
+                    :can-distribute-publication="canDistributePublication"
+                    :snapshot-distribution-executing="snapshotDistributionExecuting"
+                    :snapshot-distribution-error="snapshotDistributionError"
+                    :snapshot-distribution-result="snapshotDistributionResult"
+                    v-model:snapshot-storage="selectedSnapshotStorage"
+                    v-model:snapshot-discovery-provider="snapshotDiscoveryProvider"
+                    :distribution-executing="distributionExecuting"
+                    :distribution-error="distributionError"
+                    :distribution-result="distributionResult"
+                    v-model:material-storage="selectedMaterialStorage"
+                    v-model:discovery-provider="selectedDiscoveryProvider"
+                    :remote-pinning-draft="remotePinningDraft"
+                    :document-id="publishedPublication ? publishedPublication.documentId : null"
+                    @close="distributionDialogOpen = false"
+                    @distribute-both="distributePublishedDocumentAndSnapshot"
+                    @distribute-publication="distributePublishedDocument"
+                    @distribute-snapshot="distributePublishedSnapshot"
+                    @view-in-repository="viewDistributedPublicationInRepository"
+                />
             </div>
             <div class="editor-body">
                 <div class="sidebar">
@@ -1850,6 +1648,15 @@ export default {
         const snapshotDistributionResult = ref(null);
         let snapshotDistributionRequestId = 0;
 
+        // 0.9.672 — Editor View Distribution Dialog. Purely a "is the
+        // popup currently open" flag, mirroring OwnPublicationPanel.js's
+        // own pre-existing diagnosticToolsOpen exactly — see
+        // EditorDistributionDialog.js's own header. Never read by, and
+        // never written from, either distribution action itself; reset
+        // alongside the rest of this ephemeral family below so a stale
+        // dialog never carries over to a different published Publication.
+        const distributionDialogOpen = ref(false);
+
         // Toolbar's own `@published` handler — the ONLY place
         // publishedPublication is ever written to a non-null value.
         // Publishing itself never calls distributeEditorPublication() or
@@ -1868,6 +1675,7 @@ export default {
             snapshotDistributionError.value = null;
             snapshotDistributionResult.value = null;
             snapshotDistributionRequestId += 1;
+            distributionDialogOpen.value = false;
         }
 
         // The action's own dismiss — if the user ignores or dismisses it,
@@ -1884,6 +1692,7 @@ export default {
             snapshotDistributionError.value = null;
             snapshotDistributionResult.value = null;
             snapshotDistributionRequestId += 1;
+            distributionDialogOpen.value = false;
         }
 
         // The only writer of distributionExecuting/distributionError/
@@ -2900,6 +2709,7 @@ export default {
             snapshotDistributionError,
             snapshotDistributionResult,
             distributePublishedSnapshot,
+            distributionDialogOpen,
             publishedPublication,
             distributionExecuting,
             distributionError,

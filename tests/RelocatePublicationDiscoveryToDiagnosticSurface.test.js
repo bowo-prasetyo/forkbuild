@@ -322,12 +322,23 @@ async function run() {
         // own contextual copy, and OwnPublicationPanel's own standing copy)
         // still gate exactly as 0.9.359 confirmed, completely unaffected by
         // this relocation.
-        assert(/<div v-if="selectedEncounter && selectedEncounter\.kind === 'PUBLICATION' && distributionLifecycleStore" class="world-encounter-distribution-panel">/.test(canvasSource),
-            'H1. Distribute Publication (WorldEncounterCanvas) still gates on a selected PUBLICATION encounter, unmoved');
-        assert(/<div v-if="selectedEncounter && selectedEncounter\.kind === 'PUBLICATION' && snapshotDistributionCommand" class="world-encounter-snapshot-distribution-panel">/.test(canvasSource),
-            'H1. Distribute Snapshot (WorldEncounterCanvas) still gates on a selected PUBLICATION encounter, unmoved');
-        assert(/:disabled="!publication \|\| snapshotDistributionExecuting"[\s\S]{0,40}@click="distributeOwnSnapshot"/.test(ownPanelSource),
-            'H1. OwnPublicationPanel\'s own Distribute Snapshot remains a standing, always-rendered control — unmoved and untouched');
+        //
+        // AMENDED BY 0.9.672 — World View Distribution Dialog. Distribute
+        // Publication/Distribute Snapshot no longer render as two
+        // separately-classed panels/buttons in either file — a single,
+        // identically-gated "Distribute" trigger opens the SEPARATE
+        // WorldDistributionDialog.js popup (never this milestone's own
+        // Publication Discovery popup), a pure presentation relocation
+        // (see that dialog file's own header) that changes neither gate.
+        assert(/<button\s+v-if="selectedEncounter && selectedEncounter\.kind === 'PUBLICATION' && \(distributionCommand \|\| snapshotDistributionCommand\)"[\s\S]{0,200}world-encounter-distribution-trigger-action/.test(canvasSource),
+            'H1. Distribute (Publication + Snapshot, WorldEncounterCanvas) still gates on a selected PUBLICATION encounter, unmoved — now via one shared trigger');
+        // 0.9.672 also gates this trigger on "either command exists" —
+        // Distribute Snapshot's own button previously had no v-if of its
+        // own at all (unconditional, only :disabled) — a minor, intentional
+        // tightening bundled with the relocation, never a behavior this
+        // milestone's own claim depended on.
+        assert(/<button\s+v-if="snapshotDistributionCommand \|\| publicationDistributionCommand"[\s\S]{0,200}own-publication-distribution-trigger-action/.test(ownPanelSource),
+            'H1. OwnPublicationPanel\'s own Distribute trigger remains present and reachable — unmoved in substance, now gated on whether either command exists at all');
 
         // H2. Content Comparison's two panels still gate exactly as before
         // — untouched by this milestone.
@@ -340,13 +351,17 @@ async function run() {
         // markup is nested inside the new publicationDiscoveryOpen wrapper
         // — confirmed positionally: all four appear BEFORE the new overlay
         // opens in source order, never inside it.
+        //
+        // AMENDED BY 0.9.672 — Distribute Publication/Distribute Snapshot's
+        // two separately-classed panels collapsed into one shared trigger
+        // button (see Section H1's own amendment); checked here by that
+        // trigger's own class instead.
         const overlayIndex = canvasSource.indexOf('v-if="publicationDiscoveryOpen"');
-        const distributionIndex = canvasSource.indexOf('class="world-encounter-distribution-panel"');
-        const snapshotDistributionIndex = canvasSource.indexOf('class="world-encounter-snapshot-distribution-panel"');
+        const distributionIndex = canvasSource.indexOf('world-encounter-distribution-trigger-action');
         const compareIndex = canvasSource.indexOf('class="world-snapshot-comparison-panel"');
         const contentComparisonIndex = canvasSource.indexOf('class="world-snapshot-content-comparison-panel"');
-        assert([distributionIndex, snapshotDistributionIndex, compareIndex, contentComparisonIndex].every((i) => i !== -1 && i < overlayIndex),
-            'H3. Snapshot Distribution and Content Comparison markup all precede, and sit entirely outside, the new Publication Discovery popup');
+        assert([distributionIndex, compareIndex, contentComparisonIndex].every((i) => i !== -1 && i < overlayIndex),
+            'H3. Distribute trigger and Content Comparison markup all precede, and sit entirely outside, the new Publication Discovery popup');
 
         // H4. Ordinary World Encounter interactions (selecting/deselecting a
         // marker) are untouched — selectEncounter() never reads or writes

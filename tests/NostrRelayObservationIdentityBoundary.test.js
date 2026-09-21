@@ -484,8 +484,12 @@ async function run() {
         // Confirmed live against the real template text: the :key this
         // milestone amended is no longer discoveryProvider alone (which
         // would collide for two Nostr observations), but includes origin.
+        // AMENDED BY 0.9.672 — this v-for now lives in
+        // WorldDistributionDialog.js, one popup over — see that file's
+        // own header.
         const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
-        assert(/:key="observation\.discoveryProvider \+ ':' \+ observation\.origin"/.test(canvasSource), n('J3. CONFIRMED FROM THE TEMPLATE: WorldEncounterCanvas.js\'s own v-for key is (discoveryProvider, origin), not discoveryProvider alone — two Nostr relay rows never share one Vue key'));
+        const dialogSource = await source('ui/components/WorldDistributionDialog.js');
+        assert(/:key="observation\.discoveryProvider \+ ':' \+ observation\.origin"/.test(dialogSource), n('J3. CONFIRMED FROM THE TEMPLATE: WorldDistributionDialog.js\'s own v-for key is (discoveryProvider, origin), not discoveryProvider alone — two Nostr relay rows never share one Vue key'));
         const publicationsViewSource = await source('ui/views/DecentralizedPublicationsView.js');
         assert(/:key="observation\.discoveryProvider \+ ':' \+ observation\.origin"/.test(publicationsViewSource), n('J4. CONFIRMED FROM THE TEMPLATE: ui/views/DecentralizedPublicationsView.js\'s own v-for key is likewise (discoveryProvider, origin) — the same fix applied at both real UI call sites'));
 

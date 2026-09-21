@@ -88,6 +88,7 @@ async function run() {
     const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
     const canvasCodeOnly = codeOnlySource(canvasSource);
     const ownPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+    const dialogSource = await rawSource('ui/components/WorldDistributionDialog.js');
     const roadmap = await rawSource('docs/Roadmap.md');
 
     console.log('Running Post-World-View-Clutter Product Reassessment tests...\n');
@@ -105,10 +106,17 @@ async function run() {
         // selection-independent PANELS remain — one standing BUTTON does,
         // and a single trigger button is not the "several accumulated
         // controls" 0.9.359's own problem statement described.
+        // AMENDED BY 0.9.672 — World View Distribution Dialog. The
+        // Distribution/Snapshot Distribution panels this section
+        // originally found (as two separately-classed, selection-gated
+        // `<div>`s) were themselves relocated: their interactive bodies
+        // now live in WorldDistributionDialog.js (a pure presentation
+        // move, see that file's own header), and WorldEncounterCanvas.js
+        // renders a SINGLE selection-gated trigger button in their place
+        // — a further reduction in what stands in the template at rest,
+        // never a reintroduction of the clutter this arc already closed.
         const restPanels = [
             ['world-encounter-discovery-panel', false], // now inside the popup, never at rest
-            ['world-encounter-distribution-panel', true], // gated on selectedEncounter
-            ['world-encounter-snapshot-distribution-panel', true],
             ['world-snapshot-comparison-panel', true],
             ['world-snapshot-content-comparison-panel', true]
         ];
@@ -120,9 +128,14 @@ async function run() {
                 assert(div.test(canvasSource), `A1. ${cssClass} still gates on selection-derived state, not on being standing`);
             }
         }
-        // The one remaining standing control at rest is the trigger itself.
+        assert(/<button\s+v-if="selectedEncounter[^"]*"[\s\S]{0,260}world-encounter-distribution-trigger-action/.test(canvasSource),
+            'A1. Distribute now renders as a single selection-gated trigger button, never a standing panel');
+        // The one remaining standing (selection-INDEPENDENT) control at
+        // rest is the Publication Discovery trigger itself — Distribute's
+        // own trigger is selection-gated, so it does not count against
+        // this claim.
         assert(/<button\s+v-if="discoveryCommand"[\s\S]{0,120}world-encounter-publication-discovery-trigger/.test(canvasSource),
-            'A1. the ONE standing control left in WorldEncounterCanvas.js at rest is the Publication Discovery trigger button');
+            'A1. the ONE standing, selection-INDEPENDENT control left in WorldEncounterCanvas.js at rest is the Publication Discovery trigger button');
 
         // A2. The trigger is a single button, never a panel — it renders no
         // input, no result, no vocabulary of its own; it merely toggles
@@ -163,8 +176,14 @@ async function run() {
         inventory.push({ control: 'Material / Verification panel', location: 'WorldEncounterCanvas', classification: 'CONTEXTUAL WORKFLOW', evidence: 'gated on selectedEncounter && materialInspection' });
         inventory.push({ control: 'Distribute Publication / Distribute Snapshot / Discover Snapshot (selected)', location: 'WorldEncounterCanvas', classification: 'CONTEXTUAL WORKFLOW', evidence: "gated on selectedEncounter && selectedEncounter.kind === 'PUBLICATION' (reconfirmed below)" });
 
-        assert(divGatedOn(canvasSource, "selectedEncounter && selectedEncounter.kind === 'PUBLICATION' && distributionLifecycleStore", 'world-encounter-distribution-panel'),
-            'B1. Distribute Publication still gates on a selected PUBLICATION encounter');
+        // AMENDED BY 0.9.672 — Distribute Publication/Distribute Snapshot's
+        // shared entry point is now the single Distribute trigger button
+        // (see Section A's own amendment); the underlying two protocols'
+        // own storage/substrate pickers, buttons, and results live in
+        // WorldDistributionDialog.js, opened by that trigger, never
+        // rendered inline in this file any more.
+        assert(/<button\s+v-if="selectedEncounter[^"]*"[\s\S]{0,260}world-encounter-distribution-trigger-action/.test(canvasSource),
+            'B1. Distribute still gates on a selected PUBLICATION encounter');
 
         // B2. OwnPublicationPanel's own standing surface — every button here
         // was audited, individually, by the arc that built it. Re-checked
@@ -176,8 +195,6 @@ async function run() {
             'B2. OwnPublicationPanel still never gates any v-if on selectedEncounter — reconfirmed unchanged since 0.9.359');
         const ownControls = [
             ['Unpublish', 'Unpublish', 'IMPORTANT WORKFLOW', 'the only retraction action for one\'s own Publication'],
-            ['Distribute Snapshot', 'Distribute Snapshot', 'IMPORTANT WORKFLOW', 'sole local entry point (0.9.140/0.9.359 Section D, reconfirmed)'],
-            ['Distribute Publication', 'Distribute Publication', 'IMPORTANT WORKFLOW', 'sole zero-selection entry point (0.9.347)'],
             ['Export Snapshot', 'Export Snapshot', 'IMPORTANT WORKFLOW', 'sole export action for one\'s own current Snapshot'],
             ['Check Snapshot Match', 'Check Snapshot Match', 'MANUAL INSPECTION, standing', 'attribution-oriented resolution over one\'s own Publication, not a recovery pipeline'],
             ['Diagnostic Tools trigger', 'Diagnostic Tools', 'DIAGNOSTIC/RECOVERY, already relocated', 'the entire manual candidate-browse/resolve/materialize/place/register pipeline (0.9.151-0.9.172) lives behind this popup since 0.9.324']
@@ -187,6 +204,18 @@ async function run() {
                 `B2. OwnPublicationPanel still renders "${needle}" (as a literal label or template expression)`);
             inventory.push({ control: name, location: 'OwnPublicationPanel', classification, evidence });
         }
+        // AMENDED BY 0.9.672 — World View Distribution Dialog. "Distribute
+        // Snapshot" and "Distribute Publication" are no longer two
+        // separately-labeled, always-standing buttons in this file — a
+        // single "Distribute" trigger (sole zero-selection entry point,
+        // unchanged from 0.9.347's own finding) opens
+        // WorldDistributionDialog.js, which still carries both labels
+        // verbatim, one popup over.
+        assert(ownPanelSource.includes('own-publication-distribution-trigger-action') && ownPanelSource.includes('>Distribute<'),
+            'B2. OwnPublicationPanel still renders a standing "Distribute" trigger — sole zero-selection entry point (0.9.347), now opening a dialog rather than rendering inline (0.9.672)');
+        assert(dialogSource.includes("'Distribute Snapshot'") && dialogSource.includes("'Distribute Publication'"),
+            'B2. WorldDistributionDialog.js still carries both "Distribute Snapshot" and "Distribute Publication" verbatim, one popup over from OwnPublicationPanel.js');
+        inventory.push({ control: 'Distribute (Snapshot + Publication)', location: 'OwnPublicationPanel -> WorldDistributionDialog', classification: 'IMPORTANT WORKFLOW', evidence: 'sole zero-selection entry point (0.9.347), now behind one trigger + popup (0.9.672) rather than two standing buttons' });
 
         // B3. WorldView.js's own standing toolbar and sections.
         const navRow = sliceForward(worldViewSource, /world-view-actions--navigation/, 1200);
@@ -211,10 +240,20 @@ async function run() {
         // WorldEncounterCanvas.js only; Snapshot Distribution's own two
         // gates (WorldEncounterCanvas's contextual copy, OwnPublicationPanel's
         // standing copy) are unaffected by that diff, reconfirmed fresh.
-        assert(divGatedOn(canvasSource, "selectedEncounter && selectedEncounter.kind === 'PUBLICATION' && snapshotDistributionCommand", 'world-encounter-snapshot-distribution-panel'),
-            'C1a. WorldEncounterCanvas\'s Snapshot Distribution copy still gates on a selected PUBLICATION encounter — unchanged');
-        assert(/:disabled="!publication \|\| snapshotDistributionExecuting"[\s\S]{0,40}@click="distributeOwnSnapshot"/.test(ownPanelSource),
-            'C1b. OwnPublicationPanel\'s Distribute Snapshot still has no v-if beyond its command-prop gate — unchanged');
+        //
+        // AMENDED BY 0.9.672 — both copies now share the SAME "Distribute"
+        // trigger their own Publication Distribution copy already shares
+        // (see Section A/B1's own amendment) — Snapshot Distribution's
+        // own gate is unaffected in substance (still exactly
+        // WorldEncounterCanvas's own selectedEncounter-scoped condition /
+        // OwnPublicationPanel's own command-prop-only gate), just no
+        // longer a SEPARATE, individually-classed panel/button of its own.
+        assert(/<button\s+v-if="selectedEncounter[^"]*"[\s\S]{0,260}world-encounter-distribution-trigger-action/.test(canvasSource),
+            'C1a. WorldEncounterCanvas\'s Snapshot Distribution copy still gates on a selected PUBLICATION encounter — unchanged (now via the shared Distribute trigger)');
+        assert(/:disabled="!hasSubject \|\| snapshotDistributionExecuting"[\s\S]{0,40}\$emit\('distribute-snapshot'\)/.test(dialogSource),
+            'C1b. WorldDistributionDialog.js\'s Distribute Snapshot button still has no gate beyond hasSubject/executing — unchanged, one popup over');
+        assert(!/v-if="[^"]*"[\s\S]{0,120}@distribute-snapshot="distributeOwnSnapshot"/.test(ownPanelSource),
+            'C1b. OwnPublicationPanel.js still forwards distribute-snapshot with no v-if of its own beyond the dialog\'s own open flag');
         const bothBindSameFn = /:snapshotDistributionCommand="distributeWorldEncounterSnapshot"/.test(worldViewSource)
             && countMatches(worldViewSource, /:snapshotDistributionCommand="distributeWorldEncounterSnapshot"/g) === 2;
         assert(bothBindSameFn, 'C1c. Both mounts still bind the SAME distributeWorldEncounterSnapshot function — two entry points, one command, reconfirmed post-0.9.360');
@@ -268,9 +307,12 @@ async function run() {
         // own example describes (removing C making D "the next thing your
         // eye lands on") — the opposite direction: the surface got smaller,
         // not concentrated onto a remaining control.
+        // AMENDED BY 0.9.672 — world-encounter-distribution-panel/
+        // world-encounter-snapshot-distribution-panel no longer exist as
+        // separately-classed `<div>`s (see Section A/C's own amendment);
+        // their shared trigger button is checked separately, below, by
+        // its own distinct v-if pattern.
         const preExistingRestControls = [
-            'world-encounter-distribution-panel',
-            'world-encounter-snapshot-distribution-panel',
             'world-encounter-snapshot-discovery-panel',
             'world-snapshot-comparison-panel',
             'world-snapshot-content-comparison-panel'
@@ -285,6 +327,10 @@ async function run() {
             assert(!/publicationDiscoveryOpen|discoveryCommand/.test(gateMatch[1]),
                 `D2. ${cssClass}'s own gate ("${gateMatch[1]}") is independent of the relocated Publication Discovery trigger/popup — its visibility rule did not change as a side effect of 0.9.360`);
         }
+        const distributeTriggerGate = /<button\s+v-if="([^"]*)"[\s\S]{0,260}world-encounter-distribution-trigger-action/.exec(canvasSource);
+        assert(distributeTriggerGate, 'D2. the Distribute trigger still has a traceable v-if gate');
+        assert(!/publicationDiscoveryOpen|discoveryCommand/.test(distributeTriggerGate[1]),
+            'D2. the Distribute trigger\'s own gate is independent of the relocated Publication Discovery trigger/popup');
 
         // D3. OwnPublicationPanel's own buttons — the plausible place a
         // "newly exposed clutter" candidate would live, since it is the

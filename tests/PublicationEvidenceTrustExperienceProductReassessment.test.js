@@ -364,8 +364,11 @@ async function run() {
         const decentralizedViewSource = await source('ui/views/DecentralizedPublicationsView.js');
         check(decentralizedViewSource.includes('STORAGE_TYPE_LABELS') && decentralizedViewSource.includes('ANCHOR_TYPE_LABELS'),
             'F3a. STORAGE_TYPE_LABELS (content backend) and ANCHOR_TYPE_LABELS (anchor destination) stay two separate maps in the same file');
-        const editorSource = await source('ui/views/EditorView.js');
-        check(editorSource.includes('value="nostr"') && editorSource.includes('value="arweave"'),
+        // AMENDED BY 0.9.672 — this picker now lives in
+        // EditorDistributionDialog.js, one popup over — see that file's
+        // own header.
+        const editorDistributionDialogSource = await source('ui/components/EditorDistributionDialog.js');
+        check(editorDistributionDialogSource.includes('value="nostr"') && editorDistributionDialogSource.includes('value="arweave"'),
             'F3b. the Discovery substrate picker (nostr/arweave, full words) is a third, independent vocabulary');
 
         console.log('✓ Section F: anchoring stays structurally decoupled from storage/discoveryProvider; content-backend and anchor codes for the SAME network (Arweave) are deliberately different string literals (\'ar\' vs \'arweave\'), so no accidental cross-substrate coupling is even representable');
@@ -533,11 +536,30 @@ async function run() {
         // milestone's own additions (materialProvenance/observation/
         // provenance) the regression guard's own closed list never
         // absorbed.
+        //
+        // AMENDED BY 0.9.672 — World View Distribution Dialog. That,
+        // separately-scoped, pure-presentation relocation moved
+        // WorldEncounterCanvas.js's own `discoveryObservations` v-for
+        // (its `:key="observation.discoveryProvider + ':' + observation.origin"`
+        // expression, the ONE non-allowlisted `.origin` accessor 23b
+        // found) into WorldDistributionDialog.js — incidentally curing
+        // 23b's own staleness by removing the access from this file
+        // entirely, never by extending its allowlist. That unmasks a
+        // SECOND, independently pre-existing staleness in the SAME
+        // regression guard, one check later: assertion 28's own
+        // identity-vocabulary allowlist never absorbed `shortIdentityId`
+        // (a long-standing Peer-marker display helper, unrelated to
+        // Commentary authorship/viewer identity, and unrelated to this
+        // milestone's own fix) — previously unreachable because 23b
+        // always failed first. Re-verified live: on a tree with 0.9.672
+        // applied, LiveWorldViewRegistrySubscription.test.js now fails at
+        // 28, not 23b — named for the record here too, deliberately not
+        // fixed in either file.
         const result = runLive('tests/LiveWorldViewRegistrySubscription.test.js');
-        check(!result.passed && result.output.includes('23b.'),
-            `J2. tests/LiveWorldViewRegistrySubscription.test.js's own assertion 23b still fails on current source, identically to a clean pre-fix tree — confirming this staleness is real, current, and pre-existing, not caused by this milestone: ${result.output.slice(-600)}`);
+        check(!result.passed && (result.output.includes('23b.') || result.output.includes('28.')),
+            `J2. tests/LiveWorldViewRegistrySubscription.test.js's own regression guard still fails on current source (at 23b, or — after 0.9.672's own incidental relocation — at 28), identically to a clean pre-fix tree once that relocation is accounted for: confirming this staleness is real, current, and pre-existing, not caused by this milestone: ${result.output.slice(-600)}`);
 
-        console.log('✓ Section J: no new trust/rank/confidence vocabulary introduced by this milestone\'s own fix. One pre-existing, unrelated regression-guard staleness finding NAMED for the record — tests/LiveWorldViewRegistrySubscription.test.js\'s own assertion 23b, a closed .origin-access list later, unrelated milestones\' own legitimate provenance additions outdated — deliberately not fixed here.');
+        console.log('✓ Section J: no new trust/rank/confidence vocabulary introduced by this milestone\'s own fix. Pre-existing, unrelated regression-guard staleness NAMED for the record — tests/LiveWorldViewRegistrySubscription.test.js\'s own closed .origin-access list (23b) and identity-vocabulary allowlist (28, unmasked by 0.9.672\'s own unrelated relocation) both went stale as later, legitimate milestones added fields neither list absorbed — deliberately not fixed here.');
     }
 
     // ===============================================================

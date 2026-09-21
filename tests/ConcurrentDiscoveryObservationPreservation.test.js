@@ -360,8 +360,13 @@ async function run() {
 
         // The real template genuinely contains the v-for this computed
         // feeds, scoped to the Discovery row alone.
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
-        assert(/v-for="observation in discoveryObservations"/.test(canvasSource), n('H7. the real Distribution panel template contains the v-for over discoveryObservations — confirmed live, not merely inferred from the computed alone'));
+        //
+        // AMENDED BY 0.9.672 — this template now lives in
+        // WorldDistributionDialog.js, one popup over — see that file's
+        // own header. discoveryObservations itself remains
+        // WorldEncounterCanvas.js's own computed, unmodified.
+        const dialogSource = await source('ui/components/WorldDistributionDialog.js');
+        assert(/v-for="observation in discoveryObservations"/.test(dialogSource), n('H7. the real Distribution panel template contains the v-for over discoveryObservations — confirmed live, not merely inferred from the computed alone'));
 
         console.log('✓ Section H: the UI genuinely renders every current discovery observation, degrading safely when there is only one (or none), through the real component export');
     }

@@ -215,7 +215,17 @@ async function runTests() {
     // ---------------------------------------------------------------
     {
         const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
-        const clickHandlers = new Set((panelSource.match(/@click="[a-zA-Z]+/g) || []).map((s) => s.replace('@click="', '')));
+        // AMENDED BY 0.9.672 — World View Distribution Dialog.
+        // distributeOwnSnapshot() is no longer wired via a literal
+        // `@click="..."` in THIS file's own template — it moved into
+        // WorldDistributionDialog.js (a pure presentation relocation, see
+        // that file's own header), reached here via a custom
+        // `@distribute-snapshot` event binding instead. Both binding
+        // styles count as "wired" for this section's own purpose.
+        const clickHandlers = new Set(
+            (panelSource.match(/@(?:click|distribute-[a-zA-Z-]+)="[a-zA-Z]+/g) || [])
+                .map((s) => s.replace(/^@(?:click|distribute-[a-zA-Z-]+)="/, ''))
+        );
         assert(clickHandlers.size >= 9, `D1. OwnPublicationPanel.js still wires at least 9 distinct actions (found ${clickHandlers.size})`);
         assert([...clickHandlers].some((h) => /^unpublish|^retract/i.test(h)), 'D2. an unpublish/retract-shaped handler remains wired');
         assert(clickHandlers.has('discoverOwnSnapshot') && clickHandlers.has('discoverSnapshotCandidates') && clickHandlers.has('distributeOwnSnapshot'), 'D3. OwnPublicationPanel.js still wires Snapshot discovery/distribution actions alongside Publication');
