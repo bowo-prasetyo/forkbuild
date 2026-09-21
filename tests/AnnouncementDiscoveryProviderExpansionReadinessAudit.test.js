@@ -248,7 +248,19 @@ async function run() {
         assert(/import \{ executePublicationDistributionCommand(, executeMultiRelayNostrPublicationDistributionCommand)? \} from '\.\/PublicationDistributionCommand\.js';/.test(compositionSource), n('B3. AMENDED BY 0.9.447 — PublicationDistributionCommandComposition.js imports executePublicationDistributionCommand (now alongside its new, additive multi-relay sibling)'));
         assert(/import \{ orchestratePublicationDistribution \} from '\.\/PublicationDistributionOrchestrator\.js';/.test(commandSource), n('B4. PublicationDistributionCommand.js imports orchestratePublicationDistribution'));
         assert(/import \{ composePublicationDistributionRuntime \} from '\.\/PublicationDistributionRuntimeComposition\.js';/.test(orchestratorSource), n('B5. PublicationDistributionOrchestrator.js imports composePublicationDistributionRuntime'));
-        assert(/import \{ ArweavePublicationMaterialUploader \}/.test(runtimeSource) && /import \{ NostrPublicationDiscoveryPublisher \}/.test(runtimeSource), n('B6. PublicationDistributionRuntimeComposition.js imports both concrete collaborators — the bottom of the chain'));
+        // AMENDED BY 0.9.670 — Publication Material Storage Selection. The
+        // uploader half of the chain grew one more hop: this file no longer
+        // imports `ArweavePublicationMaterialUploader` directly — it imports
+        // `composePublicationMaterialUploader` from the new
+        // `PublicationMaterialUploaderComposition.js` (the SAME selection
+        // seam `discoveryProvider` already has for the publisher half,
+        // extended here to the uploader half for the first time), which
+        // itself imports the concrete collaborator. The publisher half is
+        // untouched — `NostrPublicationDiscoveryPublisher` is still imported
+        // directly, right here.
+        const materialUploaderCompositionSource = await readSource('application/PublicationMaterialUploaderComposition.js');
+        assert(/import \{ composePublicationMaterialUploader \} from '\.\/PublicationMaterialUploaderComposition\.js';/.test(runtimeSource) && /import \{ NostrPublicationDiscoveryPublisher \}/.test(runtimeSource), n('B6. PublicationDistributionRuntimeComposition.js imports composePublicationMaterialUploader (0.9.670) and the concrete Nostr publisher directly'));
+        assert(/import \{ ArweavePublicationMaterialUploader \}/.test(materialUploaderCompositionSource), n('B6b. AMENDED BY 0.9.670 — application/PublicationMaterialUploaderComposition.js imports the concrete Arweave uploader — the bottom of the chain moved one file deeper, never removed'));
 
         // Identity is constructed exactly once, in ui/main.js.
         const composeCallCount = (mainSource.match(/composePublicationDistributionCommand\(\{/g) || []).length;
@@ -282,10 +294,17 @@ async function run() {
         // milestone touched anything) — confirmed failing even on this
         // audit's own pre-0.9.430 content; corrected here alongside B9-B11
         // for the same file family.
-        assert(/composePublicationDistributionCommand\(\{ lifecycleStore, arweaveUploaderOptions, nostrPublisherOptions, arweaveAnnouncementPublisherOptions \} = \{\}\)/.test(compositionSource), n('B9. PublicationDistributionCommandComposition.js accepts arweaveUploaderOptions/nostrPublisherOptions/arweaveAnnouncementPublisherOptions as opaque per-call constructor arguments'));
-        assert(/executePublicationDistributionCommand\(\{[\s\S]{0,200}arweaveUploaderOptions,\s*\n\s*discoveryProvider,\s*\n\s*nostrPublisherOptions,\s*\n\s*arweaveAnnouncementPublisherOptions,/.test(commandSource), n('B10. PublicationDistributionCommand.js accepts all four as opaque per-call function arguments'));
-        assert(/arweaveUploaderOptions,\s*\n\s*discoveryProvider,\s*\n\s*nostrPublisherOptions,\s*\n\s*arweaveAnnouncementPublisherOptions\s*\n\} = \{\}\) \{/.test(orchestratorSource), n('B11. PublicationDistributionOrchestrator.js accepts all four as opaque per-call function arguments'));
-        assert(/arweaveUploaderOptions = \{\},\s*\n\s*discoveryProvider = 'nostr',\s*\n\s*nostrPublisherOptions = \{\},\s*\n\s*arweaveAnnouncementPublisherOptions = \{\}\s*\n\} = \{\}\) \{/.test(runtimeSource), n('B12. PublicationDistributionRuntimeComposition.js accepts all four as opaque per-call function arguments, only here finally constructing the two concrete collaborators (selected by discoveryProvider, never both)'));
+        // AMENDED BY 0.9.670 — Publication Material Storage Selection. Each
+        // regex below now also tolerates the new `ipfsNodeOptions`/
+        // `materialStorage`/`remotePinningProviderOptions` fields 0.9.670
+        // threaded alongside the original four at every one of these same
+        // four layers — the identical "opaque per-call/pre-bound argument"
+        // treatment, never read or reinterpreted by any of them, extended
+        // to the uploader's own new selection inputs.
+        assert(/composePublicationDistributionCommand\(\{ lifecycleStore, arweaveUploaderOptions, ipfsNodeOptions, nostrPublisherOptions, arweaveAnnouncementPublisherOptions \} = \{\}\)/.test(compositionSource), n('B9. PublicationDistributionCommandComposition.js accepts arweaveUploaderOptions/ipfsNodeOptions/nostrPublisherOptions/arweaveAnnouncementPublisherOptions as opaque per-call constructor arguments'));
+        assert(/executePublicationDistributionCommand\(\{[\s\S]{0,200}materialStorage,\s*\n\s*ipfsNodeOptions,\s*\n\s*remotePinningProviderOptions,\s*\n\s*arweaveUploaderOptions,\s*\n\s*discoveryProvider,\s*\n\s*nostrPublisherOptions,\s*\n\s*arweaveAnnouncementPublisherOptions,/.test(commandSource), n('B10. PublicationDistributionCommand.js accepts all seven as opaque per-call function arguments'));
+        assert(/materialStorage,\s*\n\s*ipfsNodeOptions,\s*\n\s*remotePinningProviderOptions,\s*\n\s*arweaveUploaderOptions,\s*\n\s*discoveryProvider,\s*\n\s*nostrPublisherOptions,\s*\n\s*arweaveAnnouncementPublisherOptions\s*\n\} = \{\}\) \{/.test(orchestratorSource), n('B11. PublicationDistributionOrchestrator.js accepts all seven as opaque per-call function arguments'));
+        assert(/arweaveUploaderOptions = \{\},\s*\n\s*materialStorage = 'ar',\s*\n\s*ipfsNodeOptions = \{\},\s*\n\s*remotePinningProviderOptions = \{\},\s*\n\s*discoveryProvider = 'nostr',\s*\n\s*nostrPublisherOptions = \{\},\s*\n\s*arweaveAnnouncementPublisherOptions = \{\}\s*\n\} = \{\}\) \{/.test(runtimeSource), n('B12. PublicationDistributionRuntimeComposition.js accepts all seven as opaque per-call function arguments, only here finally constructing the uploader (selected by materialStorage, 0.9.670) and discovery publisher (selected by discoveryProvider, never both of either pair)'));
 
         console.log('\n=== SECTION B: THE COMPLETE PIPELINE TRACE ===');
         console.log('  ui/main.js  --(construct, once)-->  PublicationDistributionCommandComposition.js');
@@ -354,7 +373,12 @@ async function run() {
         // purely through `...request`'s own spread, unoverridden — see
         // that file's own header, "discoveryProvider is deliberately NOT
         // added to that pre-bound set."
-        assert(/return \(request\) => executePublicationDistributionCommand\(\{\s*\n\s*\.\.\.request,\s*\n\s*arweaveUploaderOptions,\s*\n\s*nostrPublisherOptions,\s*\n\s*arweaveAnnouncementPublisherOptions,\s*\n\s*lifecycleStore\s*\n\s*\}\);/.test(compositionSource), n('E2. confirmed in the real code, not only the header: `...request` is spread FIRST, then arweaveUploaderOptions/nostrPublisherOptions/arweaveAnnouncementPublisherOptions/lifecycleStore are set explicitly, so a `request.arweaveUploaderOptions` (etc.) a caller supplied would be silently overwritten, never honored — while `request.discoveryProvider` passes through unoverridden, the one deliberate exception'));
+        // AMENDED BY 0.9.670 — `ipfsNodeOptions` joined the
+        // explicitly-set fields, spread-then-override, the identical
+        // treatment `arweaveUploaderOptions` etc. already get — see this
+        // section's own header, extended here to the uploader's own new
+        // device-level collaborator.
+        assert(/return \(request\) => executePublicationDistributionCommand\(\{\s*\n\s*\.\.\.request,\s*\n\s*arweaveUploaderOptions,\s*\n\s*ipfsNodeOptions,\s*\n\s*nostrPublisherOptions,\s*\n\s*arweaveAnnouncementPublisherOptions,\s*\n\s*lifecycleStore\s*\n\s*\}\);/.test(compositionSource), n('E2. confirmed in the real code, not only the header: `...request` is spread FIRST, then arweaveUploaderOptions/ipfsNodeOptions/nostrPublisherOptions/arweaveAnnouncementPublisherOptions/lifecycleStore are set explicitly, so a `request.arweaveUploaderOptions` (etc.) a caller supplied would be silently overwritten, never honored — while `request.discoveryProvider`/`request.materialStorage`/`request.remotePinningProviderOptions` pass through unoverridden, the deliberate exceptions'));
 
         const mainSource = await readSource('ui/main.js');
         assert(/app\.provide\('publicationDistributionCommand', publicationDistributionCommand\);/.test(mainSource), n('E3. the ONE composed command this produces is provide()\'d exactly once, app-wide, at boot — every later inject() in this app receives the SAME fixed function reference'));

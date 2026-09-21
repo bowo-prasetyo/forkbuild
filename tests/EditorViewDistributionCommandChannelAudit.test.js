@@ -182,7 +182,11 @@ async function run() {
         // that choice belongs at a caller boundary, never computed here.
         // The contract's own SHAPE is otherwise unchanged: still a plain,
         // non-`async` function calling exactly one thing.
-        assert(worldViewCode.includes('function distributeWorldEncounterPublication(publication, discoveryProvider)') &&
+        //
+        // AMENDED BY 0.9.670 — Publication Material Storage Selection. The
+        // signature grew two more optional parameters (materialStorage,
+        // remotePinningConfiguration) — updated to match.
+        assert(worldViewCode.includes('function distributeWorldEncounterPublication(publication, discoveryProvider, materialStorage, remotePinningConfiguration)') &&
                worldViewCode.includes('return publicationDistributionCommand({') &&
                worldViewCode.includes('serializedMaterial: JSON.stringify(publication.toJSON())'),
             '5. WorldView.js\'s own distributeWorldEncounterPublication(publication, discoveryProvider) is the smallest callable contract: a TWO-argument (publication, discoveryProvider) -> Promise function that adds exactly two fields (serializedMaterial, discoveryProvider) to the injected command\'s own request shape');

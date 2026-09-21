@@ -1,4 +1,4 @@
-import { ArweavePublicationMaterialUploader } from './ArweavePublicationMaterialUploader.js';
+import { composePublicationMaterialUploader } from './PublicationMaterialUploaderComposition.js';
 import { describePublicationDistribution } from './PublicationDistributionDescriptor.js';
 import { describePublicationDistributionResult } from './PublicationDistributionResult.js';
 import { NostrMultiRelayPublicationDiscoveryPublisher } from './NostrMultiRelayPublicationDiscoveryPublisher.js';
@@ -25,7 +25,8 @@ import { NostrMultiRelayPublicationDiscoveryPublisher } from './NostrMultiRelayP
 //   application/NostrMultiRelayPublicationDistributionOrchestrator.js  ★ (THIS)
 //        orchestrateMultiRelayNostrPublicationDistribution({ ... })
 //                    │
-//                    ├──► new ArweavePublicationMaterialUploader(...)   (0.9.45, unmodified)
+//                    ├──► composePublicationMaterialUploader(...)   (0.9.670 — see that
+//                    │        file's own header; 'ar' by default, unchanged)
 //                    ├──► uploader.upload(serializedMaterial)   -> materialUri | null
 //                    ├──► describePublicationDistribution({ ... })   (0.9.44, unmodified)   -> { material, discoveryEnvelope } | null
 //                    ├──► new NostrMultiRelayPublicationDiscoveryPublisher(...)   (this milestone)
@@ -95,6 +96,21 @@ import { NostrMultiRelayPublicationDiscoveryPublisher } from './NostrMultiRelayP
 //   Exactly as `PublicationDistributionRuntimeComposition.js`'s own header
 //   already holds for `nostrPublisherOptions.relayUrl` — a caller supplies
 //   the array; this file neither defaults nor discovers one.
+//
+// AMENDED BY 0.9.670 — Publication Material Storage Selection. This file no
+// longer constructs `new ArweavePublicationMaterialUploader(arweaveUploaderOptions)`
+// directly and unconditionally — the exact same bug report named for
+// `PublicationDistributionRuntimeComposition.js`'s own identical literal
+// construction applied here too, since choosing Nostr as the announcement
+// substrate (this file's own entire reason to exist) reaches this
+// construction, not that one. `materialStorage`/`ipfsNodeOptions`/
+// `remotePinningProviderOptions` join this file's own parameters and are
+// forwarded, verbatim, to `application/PublicationMaterialUploaderComposition.js`'s
+// own `composePublicationMaterialUploader()` — the SAME selector
+// `PublicationDistributionRuntimeComposition.js` now also calls, so the two
+// files can never disagree about what a given `materialStorage` value
+// means. An omitted `materialStorage` still resolves to `'ar'`, exactly
+// where it already did — every existing caller's behavior is unchanged.
 
 function isNonEmptyString(value) {
     return typeof value === 'string' && value.length > 0;
@@ -126,10 +142,17 @@ export function orchestrateMultiRelayNostrPublicationDistribution({
     serializedMaterial,
     materialStorage,
     arweaveUploaderOptions,
+    ipfsNodeOptions,
+    remotePinningProviderOptions,
     nostrRelayUrls,
     nostrPublisherOptions = {}
 } = {}) {
-    const uploader = new ArweavePublicationMaterialUploader(arweaveUploaderOptions);
+    const uploader = composePublicationMaterialUploader({
+        materialStorage,
+        arweaveUploaderOptions,
+        ipfsNodeOptions,
+        remotePinningProviderOptions
+    });
     const multiRelayPublisher = new NostrMultiRelayPublicationDiscoveryPublisher({
         relayUrls: nostrRelayUrls,
         ...nostrPublisherOptions

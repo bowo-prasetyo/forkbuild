@@ -233,7 +233,11 @@ async function run() {
         // exact gap A7 (below) used to name — before this fix, this
         // button always distributed via Nostr regardless of the saved
         // ANNOUNCEMENT_AND_DISCOVERY preference.
-        assert(/publicationDistributionCommand\(publication, this\.publicationDiscoveryProvider\)/.test(codeOnly(ownPanelSource)), n('A4. AMENDED BY 0.9.668 — "Distribute Publication" now also forwards its own explicit discovery substrate choice, the SAME shape WorldEncounterCanvas\'s own sibling action already used'));
+        // AMENDED BY 0.9.670 — Publication Material Storage Selection. This
+        // call site gained more forwarded arguments and was reformatted
+        // across multiple lines — the regex now tolerates whitespace/
+        // newlines and trailing arguments.
+        assert(/publicationDistributionCommand\(\s*publication,\s*this\.publicationDiscoveryProvider/.test(codeOnly(ownPanelSource)), n('A4. AMENDED BY 0.9.668 — "Distribute Publication" now also forwards its own explicit discovery substrate choice, the SAME shape WorldEncounterCanvas\'s own sibling action already used'));
         assert(!/Anchor|Bitcoin/.test(codeOnly(ownPanelSource)), n('A5. OwnPublicationPanel.js\'s own real code (comments stripped) contains no Proof/Anchoring action of any kind — its own header mentions "Bitcoin anchoring" only in prose, as a deliberate exclusion, never in any actual button, prop, or method'));
 
         // WorldEncounterCanvas.js — the identical two combined actions,

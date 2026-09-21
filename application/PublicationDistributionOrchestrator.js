@@ -198,6 +198,24 @@ import { executePublicationDistribution } from './PublicationDistributionExecuto
 //   restraint 0.9.36's, 0.9.43's, and 0.9.47's own headers already hold
 //   for their own composed results.
 //
+// AMENDED BY 0.9.670 — Publication Material Storage Selection.
+// `materialStorage`/`ipfsNodeOptions`/`remotePinningProviderOptions`
+// join `arweaveUploaderOptions` and are forwarded verbatim to
+// `composePublicationDistributionRuntime()`'s own new selector — see that
+// file's own "AMENDED BY 0.9.670" header. `materialStorage` is no longer
+// ALSO forwarded to `executePublicationDistribution()` as a label override:
+// now that every uploader `composePublicationDistributionRuntime()` can
+// build reports its own accurate `storage` getter ('ar', or 'ipfs' for
+// either non-Arweave choice), `executePublicationDistribution()`'s own
+// existing `materialUploader.storage` fallback already produces the
+// correct label in every case — forwarding the selector value itself would
+// have mislabeled a `'remote-pinning'` choice, which is a MECHANISM choice
+// distinct from the `'ipfs'` SCHEME `distribution.material.storage` (0.9.44)
+// actually records; the identical `'remote-pinning'`-storage-is-'ipfs'
+// distinction `ui/views/WorldView.js`'s own pre-existing Snapshot Remote
+// Pinning path already draws. No prior caller ever set `materialStorage`
+// here, so this is a change in dormant capability only.
+//
 // AMENDED BY 0.9.430 — Announcement/Discovery Provider Selection
 // Reachability. 0.9.429's own audit found this file to be the exact
 // MECHANISM_GAP standing between a real caller and 0.9.428's already-real
@@ -237,6 +255,8 @@ export function orchestratePublicationDistribution({
     publication,
     serializedMaterial,
     materialStorage,
+    ipfsNodeOptions,
+    remotePinningProviderOptions,
     arweaveUploaderOptions,
     discoveryProvider,
     nostrPublisherOptions,
@@ -244,6 +264,9 @@ export function orchestratePublicationDistribution({
 } = {}) {
     const runtime = composePublicationDistributionRuntime({
         arweaveUploaderOptions,
+        materialStorage,
+        ipfsNodeOptions,
+        remotePinningProviderOptions,
         discoveryProvider,
         nostrPublisherOptions,
         arweaveAnnouncementPublisherOptions
@@ -252,7 +275,6 @@ export function orchestratePublicationDistribution({
     return executePublicationDistribution({
         publication,
         serializedMaterial,
-        materialStorage,
         materialUploader: runtime.uploader,
         distributionDescriptor: runtime.describeDistribution,
         discoveryPublisher: runtime.publisher

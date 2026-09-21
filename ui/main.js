@@ -2996,9 +2996,18 @@ const publicationDistributionRuntimeProvider = createPublicationDistributionRunt
 // it is actually usable right now (a wallet is connected) remains entirely
 // `resolveArweaveAnnouncementPublisherOptions()`'s own decision, unchanged.
 const { arweaveUploaderOptions, nostrPublisherOptions, arweaveAnnouncementPublisherOptions } = resolvePublicationDistributionRuntimeConfiguration(publicationDistributionRuntimeProvider.resolveRuntimeCapabilities());
+// 0.9.670 — Publication Material Storage Selection. `resolvedIpfsNodeApiUrl`
+// is the SAME device-level local Kubo API url `publicationContentStore`'s
+// own sibling registration (above) already resolves — never a second read
+// of this device's own IPFS node configuration. `materialStorage`/
+// `remotePinningProviderOptions` are deliberately NOT resolved here — see
+// `application/PublicationDistributionCommandComposition.js`'s own "AMENDED
+// BY 0.9.670" header for why both stay a per-request choice instead.
+const ipfsNodeOptions = { apiUrl: resolvedIpfsNodeApiUrl };
 const publicationDistributionCommand = composePublicationDistributionCommand({
     lifecycleStore: publicationDistributionLifecycleStore,
     arweaveUploaderOptions,
+    ipfsNodeOptions,
     nostrPublisherOptions,
     arweaveAnnouncementPublisherOptions
 });
@@ -3033,6 +3042,7 @@ app.provide('publicationDistributionCommand', publicationDistributionCommand);
 const multiRelayNostrPublicationDistributionCommand = composeMultiRelayNostrPublicationDistributionCommand({
     lifecycleStore: publicationDistributionLifecycleStore,
     arweaveUploaderOptions,
+    ipfsNodeOptions,
     nostrRelayUrls: resolvedNostrRelayUrls,
     nostrPublisherOptions
 });

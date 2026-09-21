@@ -575,9 +575,12 @@ async function run() {
         // shape, the same convention this file's own header already
         // establishes for a stale assumption a later milestone corrects.
         const editorViewCode = await codeOnlySource('ui/views/EditorView.js');
+        // AMENDED BY 0.9.670 — Publication Material Storage Selection. The
+        // signature grew two more optional parameters (materialStorage,
+        // remotePinningConfiguration) — updated to match.
         assert(editorViewCode.includes("inject('multiRelayNostrPublicationDistributionCommand', null)")
             && editorViewCode.includes("inject('publicationDistributionCommand', null)")
-            && editorViewCode.includes('function distributeEditorPublication(publication, discoveryProvider)'),
+            && editorViewCode.includes('function distributeEditorPublication(publication, discoveryProvider, materialStorage, remotePinningConfiguration)'),
             '35. AMENDED BY 0.9.502 — EditorView.js still has its own distribution-command wiring (0.9.377\'s own Path 2), now through EITHER multiRelayNostrPublicationDistributionCommand or publicationDistributionCommand, selected by its own new discoveryProvider choice');
 
         // No forbidden shortcut vocabulary (a generic notification

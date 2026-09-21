@@ -405,7 +405,10 @@ async function runTests() {
         // optional second parameter, forwarded into the same request object —
         // this function still calls exactly one thing, the injected
         // `publicationDistributionCommand`, never a second command.
-        assert(viewCodeOnly.includes('function distributeWorldEncounterPublication(publication, discoveryProvider)')
+        // AMENDED BY 0.9.670 — Publication Material Storage Selection. The
+        // signature grew two more optional parameters (materialStorage,
+        // remotePinningConfiguration) — updated to match.
+        assert(viewCodeOnly.includes('function distributeWorldEncounterPublication(publication, discoveryProvider, materialStorage, remotePinningConfiguration)')
             && viewCodeOnly.includes('return publicationDistributionCommand({'),
             '33. distributeWorldEncounterPublication calls the injected publicationDistributionCommand — never a second command');
         assert(!/ArweavePublicationMaterialUploader|NostrPublicationDiscoveryPublisher|PublicationDistributionExecutor|PublicationDistributionOrchestrator|PublicationDistributionRuntimeComposition|orchestratePublicationDistribution/.test(viewCodeOnly),

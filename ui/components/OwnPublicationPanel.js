@@ -1764,6 +1764,20 @@ export default {
             // ui/main.js, or 'nostr' when none is on file) instead of
             // hardcoding 'nostr' directly.
             publicationDiscoveryProvider: this.defaultDiscoveryDistributionProvider || 'nostr',
+            // 0.9.670 — backs the publicationMaterialStorage computed
+            // above. `null` until a Wanderer explicitly picks a storage
+            // from the picker; the computed's own getter supplies the
+            // default until then — mirrors snapshotDistributionStorageChoice
+            // exactly, one action over.
+            publicationMaterialStorageChoice: null,
+            // 0.9.670 — this panel's own Remote Pinning (e.g. Pinata)
+            // endpoint/credential draft for "Distribute Publication" —
+            // mirrors remotePinningDraft exactly, one action over.
+            // Deliberately a SEPARATE object, never shared with it — the
+            // same restraint this file already holds for every other
+            // Snapshot/Publication sibling pair. Never persisted anywhere;
+            // discarded on reload.
+            publicationRemotePinningDraft: { endpoint: '', credential: '', requestField: '', responseField: '' },
             snapshotDiscoveryExecuting: false,
             snapshotDiscoveryError: null,
             snapshotDiscoveryResult: null,
@@ -1955,6 +1969,32 @@ export default {
             },
             set(value) {
                 this.snapshotDistributionStorageChoice = value;
+            }
+        },
+        // 0.9.670 — Publication Material Storage Selection. The identical
+        // "Announcement/Discovery substrate is not the only choice"
+        // capability `snapshotDistributionStorage` (above) already offers
+        // for "Distribute Snapshot," one action over, for "Distribute
+        // Publication." Unlike `snapshotDistributionStorage`, this picker
+        // is never limited to whichever backends a registry currently
+        // reports — `application/PublicationMaterialUploaderComposition.js`
+        // can always construct any of the three, so all three are always
+        // offered (see the template's own fixed `<option>` list, below).
+        // Falls back to `'ar'` — the exact historical, silent default this
+        // capability already had before this picker existed — unless this
+        // replica's own saved Content preference (0.9.667) names one of the
+        // three. `'remote-pinning'` is never inherited as a default, the
+        // identical restraint `snapshotDistributionStorage` already holds,
+        // for the identical reason — it needs a fresh endpoint/credential
+        // typed in every time.
+        publicationMaterialStorage: {
+            get() {
+                return this.publicationMaterialStorageChoice
+                    || resolveSavedProviderDefault(this.defaultContentDistributionProvider, ['ar', 'ipfs'], null)
+                    || 'ar';
+            },
+            set(value) {
+                this.publicationMaterialStorageChoice = value;
             }
         }
     },
@@ -2223,7 +2263,12 @@ export default {
             const requestId = this.publicationDistributionRequestId;
 
             Promise.resolve()
-                .then(() => this.publicationDistributionCommand(publication, this.publicationDiscoveryProvider))
+                .then(() => this.publicationDistributionCommand(
+                    publication,
+                    this.publicationDiscoveryProvider,
+                    this.publicationMaterialStorage,
+                    this.publicationMaterialStorage === 'remote-pinning' ? this.publicationRemotePinningDraft : undefined
+                ))
                 .then((result) => {
                     if (requestId === this.publicationDistributionRequestId) {
                         this.publicationDistributionResult = result;
@@ -3005,6 +3050,54 @@ export default {
                  (0.9.430) exactly. Rendered alongside the action it
                  configures; never its own panel, never a global settings
                  surface. -->
+            <!-- 0.9.670 — Publication Material Storage Selection. Where a
+                 Publication's own MATERIAL (the signed record itself) goes
+                 — entirely independent of the Announcement/Discovery
+                 substrate select immediately below, which only ever chose
+                 where the ANNOUNCEMENT of that material's location gets
+                 posted. Mirrors the existing "Storage" picker above
+                 (Distribute Snapshot) exactly, one action over — all three
+                 options are always offered; see publicationMaterialStorage's
+                 own header for why this picker is never limited to a
+                 registry's currently-reported backends the way Distribute
+                 Snapshot's own picker is. -->
+            <label
+                v-if="publicationDistributionCommand"
+                class="own-publication-distribution-storage-label"
+            >
+                Material storage
+                <select v-model="publicationMaterialStorage" class="own-publication-distribution-storage-select" :disabled="publicationDistributionExecuting">
+                    <option value="ar">Arweave</option>
+                    <option value="ipfs">IPFS (Local Kubo)</option>
+                    <option value="remote-pinning">IPFS (Remote Pinning)</option>
+                </select>
+            </label>
+
+            <!-- 0.9.670 — the Remote Pinning endpoint/credential draft for
+                 "Distribute Publication." Renders only when that storage is
+                 selected. Nothing here is saved anywhere — discarded on
+                 reload exactly like the identical Distribute Snapshot draft
+                 above. -->
+            <div v-if="publicationDistributionCommand && publicationMaterialStorage === 'remote-pinning'" class="own-publication-remote-pinning-draft">
+                <label class="form-field">
+                    <span class="form-label">Endpoint</span>
+                    <input type="text" class="form-input" v-model="publicationRemotePinningDraft.endpoint" placeholder="https://api.pinata.cloud/pinning/pinFileToIPFS" />
+                </label>
+                <label class="form-field">
+                    <span class="form-label">Credential (optional)</span>
+                    <input type="password" class="form-input" v-model="publicationRemotePinningDraft.credential" placeholder="Bearer token" />
+                </label>
+                <label class="form-field">
+                    <span class="form-label">Request field (optional)</span>
+                    <input type="text" class="form-input" v-model="publicationRemotePinningDraft.requestField" placeholder="file" />
+                </label>
+                <label class="form-field">
+                    <span class="form-label">Response field (optional)</span>
+                    <input type="text" class="form-input" v-model="publicationRemotePinningDraft.responseField" placeholder="cid (Pinata: IpfsHash)" />
+                </label>
+                <p class="form-hint form-hint--neutral">Nothing here is saved anywhere — entered fresh each time you click Distribute Publication.</p>
+            </div>
+
             <label
                 v-if="publicationDistributionCommand"
                 class="own-publication-distribution-provider-label"
