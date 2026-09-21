@@ -597,7 +597,7 @@ export default {
         // `snapshotDistributionStorageTypes` immediately below already
         // establishes, so each can seed its own picker's initial choice
         // rather than hardcoding 'nostr'/the first eligible backend
-        // unconditionally. See application/PreferredProviderDefaultChoice.js's
+        // unconditionally. See application/SavedProviderDefaultChoice.js's
         // own header.
         const defaultAnnouncementDiscoveryProvider = inject('defaultAnnouncementDiscoveryProvider', 'nostr');
         const defaultContentDistributionProvider = inject('defaultContentDistributionProvider', null);

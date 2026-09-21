@@ -6,7 +6,7 @@ import { describeWorldEncounterSelectionOutcomeFromRegistry, WorldEncounterSelec
 import { inspectWorldEncounterMaterial } from '../../application/WorldEncounterMaterialInspection.js';
 import { createId } from '../../core/createId.js';
 import { sanitizeDistributionErrorMessage } from '../../application/DistributionErrorMessageSanitizer.js';
-import { resolvePreferredProviderDefault } from '../../application/PreferredProviderDefaultChoice.js';
+import { resolveSavedProviderDefault } from '../../application/SavedProviderDefaultChoice.js';
 // 0.9.474 — Admit World-Encountered Publications into App-Wide Discovery.
 // `Publication` (never previously imported here) is needed for exactly one
 // check: `loading.status === 'AVAILABLE' && loading.material instanceof
@@ -3072,7 +3072,7 @@ export default {
         // `selectedDiscoveryProvider`/`snapshotDistributionStorageChoice`'s
         // own initial value, below — never re-read afterward, and never
         // used to override a choice already made on this component. See
-        // application/PreferredProviderDefaultChoice.js's own header.
+        // application/SavedProviderDefaultChoice.js's own header.
         defaultDiscoveryDistributionProvider: {
             type: String,
             default: 'nostr'
@@ -3591,11 +3591,11 @@ export default {
         // (the injected `defaultContentDistributionProvider` prop) now
         // wins whenever it names one of the backends
         // `snapshotDistributionStorageTypes` currently lists — see
-        // application/PreferredProviderDefaultChoice.js's own header.
+        // application/SavedProviderDefaultChoice.js's own header.
         snapshotDistributionStorage: {
             get() {
                 return this.snapshotDistributionStorageChoice
-                    || resolvePreferredProviderDefault(this.defaultContentDistributionProvider, this.snapshotDistributionStorageTypes, null)
+                    || resolveSavedProviderDefault(this.defaultContentDistributionProvider, this.snapshotDistributionStorageTypes, null)
                     || this.snapshotDistributionStorageTypes[0]
                     || 'ar';
             },
