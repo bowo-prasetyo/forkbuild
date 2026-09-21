@@ -100,7 +100,17 @@ function buildPreset({ trunkRadiusTop, trunkRadiusBottom, trunkHeight, canopy, c
         // core/TerrainSurface.js#SURFACE_PALETTE already applies to ground
         // color, extended here to every species this milestone introduces.
         trunkMaterial: new THREE.MeshStandardMaterial({ color: trunkColor }),
-        canopyMaterial: new THREE.MeshStandardMaterial({ vertexColors: true }),
+        // No vertexColors here — InstancedMesh#setColorAt() (see
+        // buildSpeciesMeshes() below) tints each instance through its own
+        // instanceColor attribute, which three.js applies automatically
+        // whenever it's present. Setting vertexColors:true as well would
+        // make the shader ALSO read a per-vertex 'color' geometry
+        // attribute this geometry never defines; WebGL then supplies the
+        // default (0,0,0) for that missing attribute, multiplying every
+        // instance's color to black regardless of instanceColor — the
+        // actual cause of canopies rendering near-black no matter how
+        // bright canopyColors below is tuned.
+        canopyMaterial: new THREE.MeshStandardMaterial(),
         canopyColors
     };
 }
