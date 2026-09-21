@@ -103,6 +103,9 @@ export default {
             <p class="form-hint form-hint--neutral">
                 Choose which decentralized substrate "Use Preferred Provider" anchors new Proof/Anchoring evidence onto in the Publication Center. This never changes what the explicit per-substrate anchor buttons there do, and never affects Base's own separate wallet-guided anchoring flow.
             </p>
+            <p class="form-hint form-hint--neutral">
+                Base isn't offered here because every Base anchor requires reviewing and signing a wallet transaction at the moment it's created — it can't fire silently in the background the way a preferred provider does. Use Base's own anchor button in the Publication Center instead.
+            </p>
 
             <div v-if="settings.length" class="anchor-provider-settings-form">
                 <label v-for="opt in settings" :key="opt.providerKey" class="anchor-provider-option">
