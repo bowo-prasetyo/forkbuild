@@ -1,5 +1,6 @@
 import { reactive, ref, computed, onMounted, onBeforeUnmount, inject } from 'vue';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
+import { resolvePreferredProviderDefault } from '../../application/PreferredProviderDefaultChoice.js';
 import { PublicationResolutionOutcome } from '../../application/PublicationResolutionOutcome.js';
 import { resolvePublicationView, describePublicationOutcome, describeRetrieval } from '../../application/PublicationResolutionView.js';
 // 0.9.337 — Wire Resolved Decentralized Publications into Repository
@@ -1185,6 +1186,16 @@ export default {
         // plain array, never recomputed reactively, since the underlying
         // registry is populated once at composition-root startup.
         const snapshotDistributionAvailableStorageTypesCommand = inject('snapshotDistributionAvailableStorageTypes', null);
+        // 0.9.667 — Role Provider Preference As Dropdown Default. The SAME
+        // resolved ANNOUNCEMENT_AND_DISCOVERY/CONTENT preferences ui/main.js
+        // already computes once at boot (from the SAME roleProviderPreferenceStore
+        // ContentProviderSettingsView.js/AnnouncementDiscoveryProviderSettingsView.js
+        // save into) — read here only to seed each entry's own picker below
+        // at construction time; never re-read afterward, and never used to
+        // override a choice a Wanderer has already made on this page. See
+        // application/PreferredProviderDefaultChoice.js's own header.
+        const defaultAnnouncementDiscoveryProvider = inject('defaultAnnouncementDiscoveryProvider', 'nostr');
+        const defaultContentDistributionProvider = inject('defaultContentDistributionProvider', null);
         const snapshotDistributionStorageTypes = snapshotDistributionAvailableStorageTypesCommand
             ? snapshotDistributionAvailableStorageTypesCommand()
             : [];
@@ -3358,7 +3369,18 @@ export default {
                 // — the durable record stays entirely
                 // publicationDistributionLifecycleStore's own, read
                 // fresh through discoveryObservationsView(entry) below.
-                discoveryDistributionProvider: 'nostr',
+                //
+                // 0.9.667 — opens on this replica's own saved Announcement/
+                // Discovery preference when one is on file and is still one
+                // of the two real substrates this page offers ('nostr' or
+                // 'arweave'); falls back to 'nostr' — this field's own
+                // pre-0.9.667 default — otherwise. Still just this entry's
+                // OWN initial choice: changing the select afterward, or
+                // saving a different preference later, never reaches back
+                // into an already-constructed entry.
+                discoveryDistributionProvider: resolvePreferredProviderDefault(
+                    defaultAnnouncementDiscoveryProvider, ['nostr', 'arweave'], 'nostr'
+                ),
                 discoveryDistributionAttempt: null,
                 // 0.9.506 — Make Snapshot Distribution Content Backend
                 // Selectable. THIS entry's own explicit IPFS/Arweave
@@ -3370,7 +3392,16 @@ export default {
                 // use; falls back to `'ar'` — this family's own pre-0.9.506
                 // behavior — only when nothing is currently eligible at
                 // all.
-                snapshotDistributionStorage: snapshotDistributionStorageTypes[0] || 'ar',
+                //
+                // 0.9.667 — that first-eligible fallback now yields to this
+                // replica's own saved Content preference whenever it names
+                // one of the backends `snapshotDistributionStorageTypes`
+                // currently lists — see `discoveryDistributionProvider`
+                // immediately above for the identical restraint, one role
+                // over.
+                snapshotDistributionStorage: resolvePreferredProviderDefault(
+                    defaultContentDistributionProvider, snapshotDistributionStorageTypes, snapshotDistributionStorageTypes[0] || 'ar'
+                ),
                 snapshotDistributionAttempt: null
             })));
             await Promise.all(entries.filter((entry) => !entry.view && !entry.checking).map(resolveEntry));

@@ -153,7 +153,15 @@ export default {
         // to show the compose form or a sign-in hint, and to resolve
         // `viewerIdentityId` below — this component never authenticates
         // or derives an identity itself.
-        identityUseCase: { default: null }
+        identityUseCase: { default: null },
+        // 0.9.667 — Role Provider Preference As Dropdown Default. The SAME
+        // app-wide `defaultAnnouncementDiscoveryProvider` ui/main.js
+        // resolves once at boot (from this replica's own saved
+        // ANNOUNCEMENT_AND_DISCOVERY preference, falling back to 'nostr')
+        // — read only to seed `selectedDiscoveryProvider` below at
+        // construction time. See application/PreferredProviderDefaultChoice.js's
+        // own header.
+        defaultAnnouncementDiscoveryProvider: { default: null }
     },
     props: {
         publication: { type: Object, required: true },
@@ -202,11 +210,17 @@ export default {
             // retry of the old one.
             pendingCommentaryDraft: null,
             // 0.9.638 — the Wanderer's current substrate choice for the
-            // NEXT submission. Defaults to 'nostr', matching
-            // EditorView.js's own selectedDiscoveryProvider default and
-            // ui/main.js's own application-level fallback (0.9.637
-            // Section F). Never persisted.
-            selectedDiscoveryProvider: 'nostr',
+            // NEXT submission. Never persisted — a change here lives only
+            // as long as this card does.
+            //
+            // 0.9.667 — opens on the SAME injected
+            // `defaultAnnouncementDiscoveryProvider` above (this replica's
+            // own saved preference, or 'nostr' when none is on file),
+            // rather than hardcoding 'nostr' directly — still matching
+            // EditorView.js's own `selectedDiscoveryProvider` default and
+            // ui/main.js's own application-level fallback (0.9.637 Section
+            // F) for anyone who has never saved a preference.
+            selectedDiscoveryProvider: this.defaultAnnouncementDiscoveryProvider || 'nostr',
             // 0.9.638 — which substrate the MOST RECENT successful
             // submission requested, for the honest status line below.
             // `null` until a first successful submit. Never a

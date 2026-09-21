@@ -168,8 +168,22 @@ async function run() {
         assert(optionMatches.length === 2,
             n(`A4. exactly two <option> elements exist anywhere in this file (found ${optionMatches.length}) — the currently supported choices, no more, no fewer`));
 
-        assert(/const selectedDiscoveryProvider = ref\('nostr'\);/.test(editorSource),
-            n('A5. selectedDiscoveryProvider defaults to \'nostr\' — matching PublicationDistributionRuntimeComposition.js\'s own default, so a mount that never touches the control behaves exactly as every pre-0.9.502 mount already did'));
+        // AMENDED BY 0.9.667 — Role Provider Preference As Dropdown
+        // Default. selectedDiscoveryProvider no longer hardcodes 'nostr'
+        // directly; it now opens on the injected defaultAnnouncementDiscoveryProvider
+        // (ui/main.js's own resolved ANNOUNCEMENT_AND_DISCOVERY preference,
+        // itself falling back to 'nostr' when nothing is saved) — the exact
+        // "preference is read only as the DEFAULT when no explicit choice
+        // is made" restraint ui/views/AnnouncementDiscoveryProviderSettingsView.js's
+        // own header already promised. A mount that never touches the
+        // control, and whose parent never supplies the injection (e.g. a
+        // test harness), still defaults to 'nostr' — the inject's own
+        // fallback — so every pre-0.9.502 mount's behavior is unchanged for
+        // anyone who has never saved a preference.
+        assert(/const defaultAnnouncementDiscoveryProvider = inject\('defaultAnnouncementDiscoveryProvider',\s*'nostr'\);/.test(editorSource),
+            n('A5a. defaultAnnouncementDiscoveryProvider is injected with an explicit \'nostr\' fallback'));
+        assert(/const selectedDiscoveryProvider = ref\(defaultAnnouncementDiscoveryProvider\);/.test(editorSource),
+            n('A5b. selectedDiscoveryProvider opens on that injected default — matching PublicationDistributionRuntimeComposition.js\'s own \'nostr\' default whenever nothing has been saved, so a mount that never touches the control, and whose parent injects nothing, behaves exactly as every pre-0.9.502 mount already did'));
 
         // Rendered alongside the SAME action it configures, gated on
         // canDistributePublication — never its own always-visible panel.

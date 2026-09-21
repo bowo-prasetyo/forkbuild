@@ -590,6 +590,17 @@ export default {
         // "Distribute Snapshot" button, rather than silently defaulting
         // to Arweave the way this function always used to.
         const snapshotDistributionAvailableStorageTypesCommand = inject('snapshotDistributionAvailableStorageTypes', null);
+        // 0.9.667 — Role Provider Preference As Dropdown Default. The SAME
+        // resolved ANNOUNCEMENT_AND_DISCOVERY/CONTENT preferences ui/main.js
+        // already computes once at boot — forwarded to OwnPublicationPanel/
+        // WorldEncounterCanvas as props, the identical pattern
+        // `snapshotDistributionStorageTypes` immediately below already
+        // establishes, so each can seed its own picker's initial choice
+        // rather than hardcoding 'nostr'/the first eligible backend
+        // unconditionally. See application/PreferredProviderDefaultChoice.js's
+        // own header.
+        const defaultAnnouncementDiscoveryProvider = inject('defaultAnnouncementDiscoveryProvider', 'nostr');
+        const defaultContentDistributionProvider = inject('defaultContentDistributionProvider', null);
         const snapshotDistributionStorageTypes = snapshotDistributionAvailableStorageTypesCommand
             ? snapshotDistributionAvailableStorageTypesCommand()
             : [];
@@ -4750,6 +4761,8 @@ export default {
             distributeWorldEncounterPublication,
             distributeWorldEncounterSnapshot,
             snapshotDistributionStorageTypes,
+            defaultAnnouncementDiscoveryProvider,
+            defaultContentDistributionProvider,
             discoverOwnSnapshot,
             exportOwnSnapshot,
             discoverSnapshotCandidatesCommand,
@@ -4909,6 +4922,7 @@ export default {
                     :placePublicationCommand="placeOwnPublication"
                     :snapshotDistributionCommand="distributeWorldEncounterSnapshot"
                     :snapshotDistributionStorageTypes="snapshotDistributionStorageTypes"
+                    :defaultContentDistributionProvider="defaultContentDistributionProvider"
                     :publicationDistributionCommand="distributeWorldEncounterPublication"
                     :discoverSnapshotCommand="discoverOwnSnapshot"
                     :exportSnapshotCommand="exportOwnSnapshot"
@@ -5268,6 +5282,8 @@ export default {
                         :distributionCommand="distributeWorldEncounterPublication"
                         :snapshotDistributionCommand="distributeWorldEncounterSnapshot"
                         :snapshotDistributionStorageTypes="snapshotDistributionStorageTypes"
+                        :defaultDiscoveryDistributionProvider="defaultAnnouncementDiscoveryProvider"
+                        :defaultContentDistributionProvider="defaultContentDistributionProvider"
                         :discoverSnapshotCommand="discoverOwnSnapshot"
                         :worldDiscoveryLeadRegistry="worldDiscoveryLeadRegistry"
                         :getPublicationCommentariesCommand="getPublicationCommentariesCommand"

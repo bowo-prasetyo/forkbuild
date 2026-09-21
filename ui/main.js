@@ -122,6 +122,7 @@ import { CreateSnapshotPlacementCreationCoordinatorUseCase } from '../applicatio
 import { CreatePreferredSnapshotPlacementCreationCoordinatorUseCase } from '../application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js';
 import { CreatePreferredPublicationAnchorCreationCoordinatorUseCase } from '../application/CreatePreferredPublicationAnchorCreationCoordinatorUseCase.js';
 import { SetRoleProviderPreferenceUseCase } from '../application/SetRoleProviderPreferenceUseCase.js';
+import { resolvePreferredProviderDefault } from '../application/PreferredProviderDefaultChoice.js';
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { SetArweaveGatewayConfigurationUseCase } from '../application/SetArweaveGatewayConfigurationUseCase.js';
 import { PublicationCatalogDiscoveryProvider } from '../discovery/PublicationCatalogDiscoveryProvider.js';
@@ -2031,6 +2032,16 @@ app.provide('preferredSnapshotPlacementCreationCoordinator', preferredSnapshotPl
 // either of these two keys.
 app.provide('roleProviderPreferenceStore', roleProviderPreferenceStore);
 app.provide('setRoleProviderPreferenceUseCase', setRoleProviderPreferenceUseCase);
+// 0.9.667 — Role Provider Preference As Dropdown Default. `resolvedAnnouncementDiscoveryProvider`
+// itself (computed above from this SAME `roleProviderPreferenceStore`) provided
+// under its own name so this replica's own Announcement/Discovery substrate
+// pickers (ui/views/DecentralizedPublicationsView.js, ui/views/EditorView.js,
+// ui/components/WorldEncounterCanvas.js, ui/components/PublicationCard.js) can
+// each open on it, instead of every one of them hardcoding 'nostr'
+// independently. Still only ever a seed value for a picker's OWN local
+// selection state — never a second source of truth, and never read again
+// once a picker has mounted.
+app.provide('defaultAnnouncementDiscoveryProvider', resolvedAnnouncementDiscoveryProvider);
 // 0.8.33 — Local Snapshot Content Availability & Integrity UX.
 app.provide('localSnapshotContentAvailabilityUseCase', localSnapshotContentAvailabilityUseCase);
 app.provide('snapshotContentMaterializationCoordinator', snapshotContentMaterializationCoordinator);
@@ -3147,6 +3158,25 @@ app.provide('snapshotDiscoveryPublisher', snapshotDiscoveryPublisher);
 // re-deriving that list itself.
 const snapshotDistributionAvailableStorageTypes = () => availableSnapshotDistributionStorageTypes(snapshotPlacementStoreRegistry);
 app.provide('snapshotDistributionAvailableStorageTypes', snapshotDistributionAvailableStorageTypes);
+
+// 0.9.667 — Role Provider Preference As Dropdown Default. The SAME CONTENT
+// role preference `preferredSnapshotPlacementCreationCoordinator` already
+// resolves through (above), read here only to seed which storage backend
+// this replica's own Content/Snapshot-distribution pickers (ui/views/
+// DecentralizedPublicationsView.js, ui/components/WorldEncounterCanvas.js,
+// ui/components/OwnPublicationPanel.js) open on — never used to override a
+// pick already made, and never itself a placement/distribution trigger. See
+// application/PreferredProviderDefaultChoice.js's own header. Falls back to
+// `null` — "no preference to prefer" — exactly like `resolvedAnnouncementDiscoveryProvider`
+// below falls back to 'nostr'; each picker's own existing "first eligible
+// backend" fallback already handles a `null` here unchanged.
+const contentDistributionProviderPreference = roleProviderPreferenceStore.get(RoleProviderRole.CONTENT);
+const resolvedContentDistributionProvider = resolvePreferredProviderDefault(
+    contentDistributionProviderPreference ? contentDistributionProviderPreference.providerKey : null,
+    snapshotDistributionAvailableStorageTypes(),
+    null
+);
+app.provide('defaultContentDistributionProvider', resolvedContentDistributionProvider);
 
 // 0.9.320 — Explicit Place Naming Publication Action.
 //
