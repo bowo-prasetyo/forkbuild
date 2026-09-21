@@ -530,8 +530,8 @@ async function run() {
     {
         const mainSource = await codeOnlySource('ui/main.js');
 
-        const placementSiteMatch = mainSource.match(/stores:\s*\[publicationContentStore,\s*new IpfsContentStore\(\)\]/);
-        check(Boolean(placementSiteMatch), 'J. ui/main.js\'s real Placement composition site registers exactly [publicationContentStore (local), new IpfsContentStore()] — Local + IPFS, never Arweave');
+        const placementSiteMatch = mainSource.match(/stores:\s*\[publicationContentStore,\s*new IpfsContentStore\(\{ apiUrl: resolvedIpfsNodeApiUrl \}\)\]/);
+        check(Boolean(placementSiteMatch), 'J. ui/main.js\'s real Placement composition site registers exactly [publicationContentStore (local), new IpfsContentStore({ apiUrl: resolvedIpfsNodeApiUrl })] — Local + IPFS, never Arweave');
 
         const distributionSiteMatch = mainSource.match(/const snapshotDistributionCommand = \(bytes, storage = 'ar', publicationId, claimedPosition\) => executeSnapshotDistributionCommand\(\{([\s\S]*?)\}\);/);
         check(Boolean(distributionSiteMatch), 'J. ui/main.js\'s real Distribution command call site is found and isolated for inspection');

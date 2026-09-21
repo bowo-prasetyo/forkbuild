@@ -266,9 +266,19 @@ async function run() {
             '37. content/IpfsRemotePinningContentStore.js (remote pinning, the OTHER write path) never references the new gateway configuration classes either');
 
         const mainSource = await source('ui/main.js');
-        assert(mainSource.includes('stores: [publicationContentStore, new IpfsContentStore()]'),
-            '38. the CREATION registry still constructs local Kubo with zero arguments, completely unaffected by this milestone\'s read-path gateway override');
-        console.log('✓ Section H: both IPFS write paths remain completely unaffected by a gateway saved through the settings entry point — read-path configuration stays structurally isolated from write-path configuration, exactly as before this milestone');
+        // core/IpfsNodeConfiguration.js (a later, sibling milestone) gave the
+        // CREATION registry's own IpfsContentStore construction a real
+        // apiUrl argument — but a SEPARATE resolved value
+        // (resolvedIpfsNodeApiUrl, its own store/use case), never this
+        // suite's own read-path resolvedIpfsGatewayUrl/resolvedIpfsGatewayUrls.
+        // The assertion this milestone actually cares about — a gateway
+        // saved through THIS settings entry point never reaches local Kubo —
+        // still holds; it just no longer means "zero arguments."
+        assert(mainSource.includes('stores: [publicationContentStore, new IpfsContentStore({ apiUrl: resolvedIpfsNodeApiUrl })]'),
+            '38. the CREATION registry constructs local Kubo with resolvedIpfsNodeApiUrl — a separate, write-path-only override, never this milestone\'s own read-path resolvedIpfsGatewayUrl/resolvedIpfsGatewayUrls');
+        assert(!/new IpfsContentStore\(\{[^}]*resolvedIpfsGatewayUrl/.test(mainSource),
+            '38b. local Kubo construction never threads this milestone\'s own read-path gateway resolution into its apiUrl');
+        console.log('✓ Section H: both IPFS write paths remain completely unaffected by a gateway saved through the settings entry point — read-path configuration stays structurally isolated from write-path configuration (which, since a later milestone, has its own separate, equally isolated override)');
     }
 
     // ===============================================================

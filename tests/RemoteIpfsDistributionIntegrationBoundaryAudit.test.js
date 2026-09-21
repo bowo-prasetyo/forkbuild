@@ -161,7 +161,7 @@ async function run() {
         // (Kubo) under 'ipfs' in the SAME registry
         // resolveSnapshotDistributionContentStore() reads from.
         const mainSource = await source('ui/main.js');
-        assert(/stores:\s*\[publicationContentStore,\s*new IpfsContentStore\(\)\]/.test(mainSource),
+        assert(/stores:\s*\[publicationContentStore,\s*new IpfsContentStore\(\{ apiUrl: resolvedIpfsNodeApiUrl \}\)\]/.test(mainSource),
             n('A2. ui/main.js constructs the CREATION-side SnapshotPlacementStoreRegistry (the same registry resolveSnapshotDistributionContentStore() reads) with a real content/IpfsContentStore.js (Kubo) registered for \'ipfs\', confirmed against current source.'));
         assert(/resolveSnapshotDistributionContentStore\(snapshotPlacementStoreRegistry, storage\)/.test(mainSource),
             n('A3. ui/main.js\'s own snapshotDistributionCommand closure resolves its contentStore from exactly that registry, by storage name, confirmed against current source — this IS the production "Editor/Snapshot -> IPFS upload -> CID -> Snapshot registry -> Nostr announcement" pipeline the requesting brief\'s own diagram describes.'));

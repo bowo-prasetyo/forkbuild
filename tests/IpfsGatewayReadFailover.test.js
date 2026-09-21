@@ -242,8 +242,12 @@ async function run() {
         assert(!pinningSource.includes('IpfsGatewayFailoverContentStore'), 'I2. content/IpfsRemotePinningContentStore.js (remote pinning) never references the new failover class either');
 
         const mainSource = await source('ui/main.js');
-        assert(mainSource.includes('stores: [publicationContentStore, new IpfsContentStore()]'),
-            'I3. the CREATION registry still constructs local Kubo with zero arguments, completely unaffected by this milestone\'s read-path gateway failover');
+        // A later, sibling milestone (core/IpfsNodeConfiguration.js) gave
+        // this construction site a real apiUrl argument, from its own
+        // separate resolvedIpfsNodeApiUrl — never this milestone's own
+        // read-path gatewayUrls/failover resolution.
+        assert(mainSource.includes('stores: [publicationContentStore, new IpfsContentStore({ apiUrl: resolvedIpfsNodeApiUrl })]'),
+            'I3. the CREATION registry constructs local Kubo with resolvedIpfsNodeApiUrl — a separate, write-path-only override — completely unaffected by this milestone\'s read-path gateway failover');
         console.log('✓ Section I: both IPFS write paths remain structurally isolated from this read-path failover milestone');
     }
 
