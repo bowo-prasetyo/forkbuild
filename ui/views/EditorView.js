@@ -1455,11 +1455,19 @@ export default {
         // page-local UI state only, mirroring `WorldEncounterCanvas.js`'s
         // own `selectedDiscoveryProvider` (0.9.430) exactly, one caller
         // over: never persisted, never synchronized, never reset on a
-        // fresh publish. Defaults to `'nostr'`, matching
-        // `PublicationDistributionRuntimeComposition.js`'s own default, so
-        // this view behaves exactly as every pre-0.9.502 mount already did
-        // until the Wanderer explicitly picks Arweave.
-        const selectedDiscoveryProvider = ref('nostr');
+        // fresh publish.
+        //
+        // 0.9.667 — Role Provider Preference As Dropdown Default. Opens on
+        // this replica's own saved Announcement/Discovery preference
+        // (ui/main.js's own `defaultAnnouncementDiscoveryProvider`, resolved
+        // once at boot from the SAME roleProviderPreferenceStore
+        // AnnouncementDiscoveryProviderSettingsView.js saves into) when one
+        // is on file; falls back to `'nostr'` — matching
+        // `PublicationDistributionRuntimeComposition.js`'s own default —
+        // exactly as every pre-0.9.667 mount already did, for anyone who has
+        // never saved a preference.
+        const defaultAnnouncementDiscoveryProvider = inject('defaultAnnouncementDiscoveryProvider', 'nostr');
+        const selectedDiscoveryProvider = ref(defaultAnnouncementDiscoveryProvider);
 
         // Whether ANY distribution capability exists at all — read only to
         // decide whether to render the action/select in the first place.

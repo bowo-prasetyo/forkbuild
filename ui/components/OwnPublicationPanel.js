@@ -6,6 +6,7 @@ import { resolveSnapshotWorldPositionClaim } from '../../application/SnapshotWor
 import { SnapshotWorldPositionClaimOutcome } from '../../application/SnapshotWorldPositionClaimOutcome.js';
 import { createId } from '../../core/createId.js';
 import { sanitizeDistributionErrorMessage } from '../../application/DistributionErrorMessageSanitizer.js';
+import { resolvePreferredProviderDefault } from '../../application/PreferredProviderDefaultChoice.js';
 
 // 0.9.140 — Own Publication Distribution Entry Point.
 //
@@ -1485,6 +1486,17 @@ export default {
             type: Array,
             default: () => []
         },
+        // 0.9.667 — Role Provider Preference As Dropdown Default. This
+        // replica's own resolved CONTENT preference, ui/main.js's own
+        // `defaultContentDistributionProvider`, forwarded through
+        // ui/views/WorldView.js exactly like `snapshotDistributionStorageTypes`
+        // immediately above already is. Read only to seed
+        // `snapshotDistributionStorage`'s own initial choice, below — see
+        // application/PreferredProviderDefaultChoice.js's own header.
+        defaultContentDistributionProvider: {
+            type: String,
+            default: null
+        },
         // 0.9.347 — optional. A `(publication) -> Promise<Publication
         // DistributionResult | null>` function, or `null` when the
         // capability is unavailable — see this file's own header,
@@ -1874,9 +1886,18 @@ export default {
         // "Remote Pinning" option) — it needs a fresh endpoint/credential
         // typed in every time, so it is only ever reached through an
         // explicit Wanderer selection, never inherited automatically.
+        //
+        // 0.9.667 — this replica's own saved Content preference (the
+        // injected `defaultContentDistributionProvider` prop) now wins over
+        // that "first eligible" fallback whenever it names one of the
+        // backends `snapshotDistributionStorageTypes` currently lists — see
+        // application/PreferredProviderDefaultChoice.js's own header.
         snapshotDistributionStorage: {
             get() {
-                return this.snapshotDistributionStorageChoice || this.snapshotDistributionStorageTypes[0] || 'ar';
+                return this.snapshotDistributionStorageChoice
+                    || resolvePreferredProviderDefault(this.defaultContentDistributionProvider, this.snapshotDistributionStorageTypes, null)
+                    || this.snapshotDistributionStorageTypes[0]
+                    || 'ar';
             },
             set(value) {
                 this.snapshotDistributionStorageChoice = value;

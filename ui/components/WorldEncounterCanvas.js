@@ -6,6 +6,7 @@ import { describeWorldEncounterSelectionOutcomeFromRegistry, WorldEncounterSelec
 import { inspectWorldEncounterMaterial } from '../../application/WorldEncounterMaterialInspection.js';
 import { createId } from '../../core/createId.js';
 import { sanitizeDistributionErrorMessage } from '../../application/DistributionErrorMessageSanitizer.js';
+import { resolvePreferredProviderDefault } from '../../application/PreferredProviderDefaultChoice.js';
 // 0.9.474 — Admit World-Encountered Publications into App-Wide Discovery.
 // `Publication` (never previously imported here) is needed for exactly one
 // check: `loading.status === 'AVAILABLE' && loading.material instanceof
@@ -3062,6 +3063,24 @@ export default {
             type: Array,
             default: () => []
         },
+        // 0.9.667 — Role Provider Preference As Dropdown Default. This
+        // replica's own resolved ANNOUNCEMENT_AND_DISCOVERY/CONTENT
+        // preferences, ui/main.js's own `defaultAnnouncementDiscoveryProvider`/
+        // `defaultContentDistributionProvider`, forwarded through
+        // ui/views/WorldView.js exactly like `snapshotDistributionStorageTypes`
+        // immediately above already is. Read only to seed
+        // `selectedDiscoveryProvider`/`snapshotDistributionStorageChoice`'s
+        // own initial value, below — never re-read afterward, and never
+        // used to override a choice already made on this component. See
+        // application/PreferredProviderDefaultChoice.js's own header.
+        defaultDiscoveryDistributionProvider: {
+            type: String,
+            default: 'nostr'
+        },
+        defaultContentDistributionProvider: {
+            type: String,
+            default: null
+        },
         // 0.9.111 — optional. A `({ objectId, discoveryTag }) -> Promise<{
         // discovery, resolution, inspection }>` function — see this file's
         // own header, "discoveryCommand is the one new collaborator this
@@ -3341,13 +3360,18 @@ export default {
             // Announcement/Discovery substrate for the NEXT "Distribute
             // Publication" click, page-local UI state only — exactly like
             // `wandererPosition`/`selectedEncounter` above, never persisted,
-            // never synchronized. Defaults to `'nostr'`, matching the
-            // identical default `PublicationDistributionRuntimeComposition.js`
-            // itself already holds, so a mount that never touches this
-            // control behaves exactly as every pre-0.9.430 mount already
-            // did. See this file's own header, "0.9.430 — Announcement/
-            // Discovery Provider Selection."
-            selectedDiscoveryProvider: 'nostr',
+            // never synchronized. See this file's own header, "0.9.430 —
+            // Announcement/Discovery Provider Selection."
+            //
+            // 0.9.667 — opens on the injected `defaultDiscoveryDistributionProvider`
+            // prop above (this replica's own saved preference, resolved by
+            // ui/main.js, or 'nostr' when none is on file) instead of
+            // hardcoding 'nostr' directly — matching the identical default
+            // `PublicationDistributionRuntimeComposition.js` itself already
+            // holds, so a mount that never touches this control, and whose
+            // parent never supplies the prop, behaves exactly as every
+            // pre-0.9.667 mount already did.
+            selectedDiscoveryProvider: this.defaultDiscoveryDistributionProvider || 'nostr',
             // 0.9.138 — ephemeral UI interaction state only, mirroring
             // `distributionExecuting`/`distributionError`/`distributionRequestId`
             // (0.9.104) exactly, one collaborator over. `true` for exactly
@@ -3561,9 +3585,19 @@ export default {
         // Bug fix — the Arweave/IPFS choice the "Distribute Snapshot"
         // picker shows and distributeSelectedSnapshot() reads, mirroring
         // OwnPublicationPanel.js's own identical computed exactly.
+        //
+        // 0.9.667 — between an explicit Wanderer choice and the first-
+        // eligible fallback, this replica's own saved Content preference
+        // (the injected `defaultContentDistributionProvider` prop) now
+        // wins whenever it names one of the backends
+        // `snapshotDistributionStorageTypes` currently lists — see
+        // application/PreferredProviderDefaultChoice.js's own header.
         snapshotDistributionStorage: {
             get() {
-                return this.snapshotDistributionStorageChoice || this.snapshotDistributionStorageTypes[0] || 'ar';
+                return this.snapshotDistributionStorageChoice
+                    || resolvePreferredProviderDefault(this.defaultContentDistributionProvider, this.snapshotDistributionStorageTypes, null)
+                    || this.snapshotDistributionStorageTypes[0]
+                    || 'ar';
             },
             set(value) {
                 this.snapshotDistributionStorageChoice = value;
