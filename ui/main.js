@@ -147,6 +147,9 @@ import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfi
 import { DEFAULT_IPFS_GATEWAY_URL } from '../core/IpfsGatewayConfiguration.js';
 import { IpfsGatewayConfigurationStore } from '../storage/IpfsGatewayConfigurationStore.js';
 import { SetIpfsGatewayConfigurationUseCase } from '../application/SetIpfsGatewayConfigurationUseCase.js';
+import { DEFAULT_BITCOIN_ESPLORA_API_URL } from '../core/BitcoinEsploraConfiguration.js';
+import { BitcoinEsploraConfigurationStore } from '../storage/BitcoinEsploraConfigurationStore.js';
+import { SetBitcoinEsploraConfigurationUseCase } from '../application/SetBitcoinEsploraConfigurationUseCase.js';
 import { DEFAULT_IPFS_NODE_API_URL } from '../core/IpfsNodeConfiguration.js';
 import { IpfsNodeConfigurationStore } from '../storage/IpfsNodeConfigurationStore.js';
 import { SetIpfsNodeConfigurationUseCase } from '../application/SetIpfsNodeConfigurationUseCase.js';
@@ -341,6 +344,30 @@ const resolvedRendezvousUrls = (rendezvousConfigurationStore.get() || { urls: DE
 // and the store itself are provided app-wide below so ui/views/
 // RendezvousSettingsView.js is the one thing that ever injects either.
 const setRendezvousConfigurationUseCase = new SetRendezvousConfigurationUseCase({ rendezvousConfigurationStore });
+// Bitcoin Endpoint Settings. `core/BitcoinEsploraConfiguration.js` /
+// `storage/BitcoinEsploraConfigurationStore.js` give a user's own Esplora-
+// compatible endpoint override a real, validated, durable home — the direct
+// structural mirror of `arweaveGatewayConfigurationStore` below, applied
+// here instead because the four Bitcoin Esplora construction sites below
+// (`bitcoinProofVerifier`, `bitcoinEsploraTransactionConfirmationObserver`,
+// `bitcoinEsploraWalletFundingSource`, `bitcoinEsploraTransactionBroadcaster`)
+// need `resolvedBitcoinEsploraApiUrl` immediately, well before
+// `arweaveGatewayConfigurationStore` itself is constructed further down this
+// file. `bitcoinEsploraConfigurationStore.get()` returns `null` when the
+// user has never saved an override — the identical "absence stays
+// meaningful" rule every sibling endpoint store already holds — so
+// `resolvedBitcoinEsploraApiUrl` falls back to
+// `DEFAULT_BITCOIN_ESPLORA_API_URL` only then, never persisting that
+// fallback as if it were a saved preference.
+const bitcoinEsploraConfigurationStore = new BitcoinEsploraConfigurationStore(new LocalStorageProvider());
+const resolvedBitcoinEsploraApiUrl = (bitcoinEsploraConfigurationStore.get() || { apiUrl: DEFAULT_BITCOIN_ESPLORA_API_URL }).apiUrl;
+// Bitcoin Endpoint Settings UI. The WRITE half of the settings entry point,
+// wired against this SAME store instance (never a second, disconnected
+// BitcoinEsploraConfigurationStore) — see application/
+// SetBitcoinEsploraConfigurationUseCase.js's own header. Both this use case
+// and the store itself are provided app-wide below so ui/views/
+// BitcoinEsploraSettingsView.js is the one thing that ever injects either.
+const setBitcoinEsploraConfigurationUseCase = new SetBitcoinEsploraConfigurationUseCase({ bitcoinEsploraConfigurationStore });
 const discoveryBootstrap = new DiscoveryBootstrap({
     // 0.9.388 — `resolvedRendezvousUrls`, no longer the hard-coded
     // `DEFAULT_RENDEZVOUS_URLS` literal. `RendezvousDiscoveryProvider` and
@@ -1364,7 +1391,7 @@ const { coordinator: publicationKnowledgeSynchronizationCoordinator } = new Crea
     placementDiscoveryCoordinator: publicationSnapshotPlacementDiscoveryCoordinator,
     connectedPeerRegistry: peerSessionManager.registry
 });
-const { bitcoinProofVerifier } = new CreateBitcoinAnchorProofVerifierUseCase().execute();
+const { bitcoinProofVerifier } = new CreateBitcoinAnchorProofVerifierUseCase().execute({ apiUrl: resolvedBitcoinEsploraApiUrl });
 // 0.9.425 — `proofVerifierRegistry` is captured here (as
 // `externalAnchorProofVerifierRegistry`) alongside `externalAnchorVerifier`
 // itself, purely so this file's own later Arweave wiring can `.register()`
@@ -1492,7 +1519,7 @@ const { evidenceViewRegistry: externalAnchorEvidenceViewRegistry } = new CreateE
 // confirmation status requires no wallet and no private key, exactly like
 // `bitcoinProofVerifier` above, which this reconciliation view reuses
 // UNCHANGED rather than constructing a second, disconnected instance.
-const { bitcoinEsploraTransactionConfirmationObserver } = new CreateBitcoinEsploraTransactionConfirmationObserverUseCase().execute();
+const { bitcoinEsploraTransactionConfirmationObserver } = new CreateBitcoinEsploraTransactionConfirmationObserverUseCase().execute({ apiUrl: resolvedBitcoinEsploraApiUrl });
 const { bitcoinAnchorConfirmationObserver } = new CreateBitcoinAnchorConfirmationObserverUseCase().execute({
     confirmationSource: bitcoinEsploraTransactionConfirmationObserver
 });
@@ -1534,7 +1561,7 @@ const { bitcoinWalletConnection } = new CreateBitcoinWalletConnectionUseCase().e
 // anchoring/BitcoinWalletFundingObserver.js's own header on why this class
 // only ever OBSERVES an account's own spendable outputs — it never selects,
 // signs, or spends anything itself.
-const { bitcoinEsploraWalletFundingSource } = new CreateBitcoinEsploraWalletFundingSourceUseCase().execute();
+const { bitcoinEsploraWalletFundingSource } = new CreateBitcoinEsploraWalletFundingSourceUseCase().execute({ apiUrl: resolvedBitcoinEsploraApiUrl });
 const { bitcoinWalletFundingObserver } = new CreateBitcoinWalletFundingObserverUseCase().execute({
     fundingSource: bitcoinEsploraWalletFundingSource
 });
@@ -1756,7 +1783,7 @@ const { coordinator: bitcoinAnchorSignedPsbtFinalizationCoordinator } = new Crea
 // milestone; `bitcoinAnchorBroadcastCoordinator` is a deliberately thin
 // wiring on top of it, mirroring exactly how `bitcoinAnchorSignedPsbtFinalizationCoordinator`
 // immediately above wires the 0.8.51 finalizer one stage earlier.
-const { bitcoinEsploraTransactionBroadcaster } = new CreateBitcoinEsploraTransactionBroadcasterUseCase().execute();
+const { bitcoinEsploraTransactionBroadcaster } = new CreateBitcoinEsploraTransactionBroadcasterUseCase().execute({ apiUrl: resolvedBitcoinEsploraApiUrl });
 const { bitcoinAnchorTransactionBroadcaster } = new CreateBitcoinAnchorTransactionBroadcasterUseCase().execute({
     broadcaster: bitcoinEsploraTransactionBroadcaster
 });
@@ -2310,6 +2337,17 @@ app.provide('setTurnServerConfigurationUseCase', setTurnServerConfigurationUseCa
 // `nostrRelayConfigurationStore` already hold above.
 app.provide('rendezvousConfigurationStore', rendezvousConfigurationStore);
 app.provide('setRendezvousConfigurationUseCase', setRendezvousConfigurationUseCase);
+
+// Bitcoin Endpoint Settings UI. `bitcoinEsploraConfigurationStore` and
+// `setBitcoinEsploraConfigurationUseCase` were already constructed earlier
+// in this file (needed immediately, to build the four Bitcoin Esplora
+// consumer classes above) — provided app-wide here, alongside the other
+// settings stores/use cases, so ui/views/BitcoinEsploraSettingsView.js is
+// the one thing that ever injects either, the identical shape
+// `arweaveGatewayConfigurationStore`/`iceServerConfigurationStore` already
+// hold above.
+app.provide('bitcoinEsploraConfigurationStore', bitcoinEsploraConfigurationStore);
+app.provide('setBitcoinEsploraConfigurationUseCase', setBitcoinEsploraConfigurationUseCase);
 
 const nostrRelayQueryClient = createNostrRelayQueryClient({});
 // 0.9.451 — Nostr Publication Relay Set Discovery Alignment. Publication

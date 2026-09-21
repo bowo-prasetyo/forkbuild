@@ -178,8 +178,15 @@ async function run() {
         // Bitcoin's and Arweave's own registrations remain exactly as
         // 0.9.464's own Section B5 already found them — this milestone
         // adds a registration, it never disturbs an existing one.
-        check(/const \{ bitcoinProofVerifier \} = new CreateBitcoinAnchorProofVerifierUseCase\(\)\.execute\(\);/.test(mainCode),
-            'A4. Bitcoin\'s own proof verifier construction is unchanged');
+        //
+        // AMENDED, LATER MILESTONE — Bitcoin's own construction now passes
+        // a settings-backed apiUrl (see tests/
+        // BitcoinEndpointConfigurationUIReachabilityAudit.test.js's own
+        // reopened header for the Bitcoin Endpoint Settings UI this
+        // reflects); the registration/seeding shape this section actually
+        // cares about is otherwise untouched.
+        check(/const \{ bitcoinProofVerifier \} = new CreateBitcoinAnchorProofVerifierUseCase\(\)\.execute\(\{ apiUrl: resolvedBitcoinEsploraApiUrl \}\);/.test(mainCode),
+            'A4. Bitcoin\'s own proof verifier construction now threads the settings-backed apiUrl — AMENDED, see comment above');
         check(/proofVerifiers: \[bitcoinProofVerifier\]/.test(mainCode),
             'A5. ...and still seeds CreateExternalAnchorVerifierUseCase the same way');
         check(/externalAnchorProofVerifierRegistry\.register\(arweaveProofVerifier\)/.test(mainCode),

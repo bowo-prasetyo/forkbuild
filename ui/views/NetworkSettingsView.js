@@ -46,6 +46,12 @@ export default {
                     </router-link>
                 </li>
                 <li>
+                    <router-link to="/settings/bitcoin-esplora" class="network-settings-link">
+                        <span class="network-settings-link-title">Bitcoin Endpoint</span>
+                        <span class="form-hint form-hint--neutral">Esplora-compatible endpoint used for Bitcoin anchor broadcasting, confirmation, funding lookups, and proof verification.</span>
+                    </router-link>
+                </li>
+                <li>
                     <!-- UNIFIED — this row used to link to two separate
                          pages: "Nostr Relay" (Snapshot/Place Naming
                          discovery only) and "Nostr Publication Relays"

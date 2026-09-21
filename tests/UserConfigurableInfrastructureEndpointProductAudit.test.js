@@ -259,7 +259,18 @@ async function run() {
         // configuration, which remains resolvedIpfsGatewayUrl(s) above.
         assert(mainSource.includes('new IpfsContentStore({ apiUrl: resolvedIpfsNodeApiUrl })'), 'C3. ui/main.js constructs IpfsContentStore with resolvedIpfsNodeApiUrl — its own separate, write-path-only override — unaffected by 0.9.665\'s read-path gateway configuration');
         assert(mainSource.includes('new CreateBaseJsonRpcClientUseCase().execute()'), 'C3. ui/main.js resolves the Base RPC client with zero arguments to execute()');
-        assert(mainSource.includes('new CreateBitcoinEsploraTransactionBroadcasterUseCase().execute()'), 'C3. ui/main.js resolves the Esplora broadcaster with zero arguments to execute()');
+        // AMENDED, LATER MILESTONE — reverses this section's own Bitcoin
+        // Esplora finding specifically: core/BitcoinEsploraConfiguration.js/
+        // storage/BitcoinEsploraConfigurationStore.js now give Bitcoin
+        // Esplora the identical settings-backed override Arweave/IPFS
+        // Gateway already hold, on the exact "the default endpoint was down
+        // and blocked a real anchor/verification action" reopening
+        // condition this codebase's own later Bitcoin audit names — see
+        // tests/BitcoinEndpointConfigurationUIReachabilityAudit.test.js's
+        // own reopened header. Base RPC remains untouched by this — it
+        // keeps its own separate wallet-guided flow, deliberately out of
+        // scope for this reopening.
+        assert(mainSource.includes('new CreateBitcoinEsploraTransactionBroadcasterUseCase().execute({ apiUrl: resolvedBitcoinEsploraApiUrl })'), 'C3. ui/main.js resolves the Esplora broadcaster with a settings-backed apiUrl — AMENDED, see comment above');
 
         // C4. Confirmed structurally for the Create*UseCase wrappers too:
         // they forward `rpcUrl`/`apiUrl` only if a caller supplies one —

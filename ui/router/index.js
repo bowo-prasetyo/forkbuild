@@ -19,6 +19,7 @@ import AnnouncementDiscoveryProviderSettingsView from '../views/AnnouncementDisc
 import AnchorProviderSettingsView from '../views/AnchorProviderSettingsView.js';
 import ArweaveGatewaySettingsView from '../views/ArweaveGatewaySettingsView.js';
 import IpfsGatewaySettingsView from '../views/IpfsGatewaySettingsView.js';
+import BitcoinEsploraSettingsView from '../views/BitcoinEsploraSettingsView.js';
 import NostrRelaySettingsView from '../views/NostrRelaySettingsView.js';
 import StunSettingsView from '../views/StunSettingsView.js';
 import TurnServerSettingsView from '../views/TurnServerSettingsView.js';
@@ -122,6 +123,21 @@ const routes = [
     // storage/IpfsGatewayConfigurationStore.js), mirroring
     // /settings/arweave-gateway's own shape exactly.
     { path: '/settings/ipfs-gateway', name: 'ipfs-gateway-settings', component: IpfsGatewaySettingsView },
+    // Bitcoin Endpoint Settings UI. Reopens the DEFER verdict
+    // tests/BitcoinEndpointConfigurationUIReachabilityAudit.test.js's own
+    // Section G recorded seven times over: the shared Esplora-compatible
+    // endpoint behind Bitcoin anchor broadcast, confirmation observation,
+    // wallet-funding lookups, and OP_RETURN proof verification
+    // (anchoring/BitcoinEsplora*.js, anchoring/BitcoinOpReturnProofVerifier.js)
+    // had no user-facing override — if the deployment default ever goes
+    // down, there was no way for a person to route around it. The one
+    // ordinary product path to create/change/clear the persisted override
+    // (core/BitcoinEsploraConfiguration.js, storage/
+    // BitcoinEsploraConfigurationStore.js) — see ui/views/
+    // BitcoinEsploraSettingsView.js's own header. Mirrors
+    // /settings/arweave-gateway's own shape, one field instead of an
+    // ordered list.
+    { path: '/settings/bitcoin-esplora', name: 'bitcoin-esplora-settings', component: BitcoinEsploraSettingsView },
     // 0.9.371 — Nostr Relay Settings UI. The one ordinary product path to
     // create/change/clear the persisted Nostr relay set
     // (core/NostrRelayConfiguration.js, storage/NostrRelayConfigurationStore.js,
