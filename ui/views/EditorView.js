@@ -127,6 +127,35 @@ export default {
             <div v-if="publishedPublication || distributionError || (distributionResult && distributionResult.length) || snapshotDistributionError || snapshotDistributionResult" class="editor-post-publish-overlay">
                 <div v-if="publishedPublication" class="editor-post-publish-action">
                     <span class="editor-post-publish-message">Publication published successfully.</span>
+
+                    <!-- UX-level unification only: a single "Distribute"
+                         action for Wanderers who just want both protocols
+                         pushed out at once — mirrors
+                         ui/components/OwnPublicationPanel.js's own
+                         identical combined panel (and
+                         ui/components/WorldEncounterCanvas.js's own)
+                         verbatim, one host view over. Rendered only when
+                         BOTH canDistributeSnapshot AND
+                         canDistributePublication are true — when only one
+                         is available, its own dedicated button below
+                         already covers the whole capability. Firing this
+                         never changes either protocol, and never
+                         introduces a combined executing/error/result of
+                         its own: it disables while EITHER underlying
+                         action is in flight, and each action's own section
+                         below keeps reporting its own independent outcome
+                         exactly as it already does when clicked on its
+                         own. -->
+                    <div v-if="canDistributeSnapshot && canDistributePublication" class="editor-post-publish-combined-distribution-panel">
+                        <button
+                            type="button"
+                            class="action-btn action-btn--primary editor-post-publish-combined-distribution-action"
+                            :disabled="snapshotDistributionExecuting || distributionExecuting"
+                            @click="distributePublishedDocumentAndSnapshot"
+                        >{{ (snapshotDistributionExecuting || distributionExecuting) ? 'Distributing…' : 'Distribute' }}</button>
+                        <p class="editor-post-publish-combined-distribution-hint form-hint form-hint--neutral">Distributes the Signed Claim and the Snapshot together — each still its own protocol, reported separately below.</p>
+                    </div>
+
                     <!-- Snapshot Distribution — distributes the
                          Publication's own raw MATERIAL bytes directly
                          (Arweave/IPFS/Remote Pinning), entirely separate
@@ -1918,7 +1947,7 @@ export default {
             distributionError.value = null;
             distributionRequestId += 1;
             const requestId = distributionRequestId;
-            Promise.resolve()
+            return Promise.resolve()
                 .then(() => distributeEditorPublication(
                     publication,
                     selectedDiscoveryProvider.value,
@@ -1972,7 +2001,7 @@ export default {
             snapshotDistributionError.value = null;
             snapshotDistributionRequestId += 1;
             const requestId = snapshotDistributionRequestId;
-            Promise.resolve()
+            return Promise.resolve()
                 .then(() => distributeEditorSnapshot(
                     publication,
                     selectedSnapshotStorage.value,
@@ -1996,6 +2025,30 @@ export default {
                         snapshotDistributionExecuting.value = false;
                     }
                 });
+        }
+
+        // UX-level convenience only: fires the two already-independent
+        // actions above from one click — mirrors
+        // ui/components/OwnPublicationPanel.js's own
+        // distributeOwnPublicationAndSnapshot() (and
+        // ui/components/WorldEncounterCanvas.js's own
+        // distributeSelectedPublicationAndSnapshot()) exactly, one host
+        // view over. Each keeps its own protocol, its own executing/error/
+        // result state, and its own outcome display — this never
+        // introduces a combined result or an aggregate status, and a
+        // failure in one never stops or hides the other. Run
+        // SEQUENTIALLY, never concurrently — both legs can end up signing
+        // through the SAME injected browser extension, and firing two
+        // signing requests at once is a real-world extension failure mode
+        // (no popup ever shown, no response ever received), not a race
+        // either leg's own code could detect. Snapshot runs first, then
+        // Publication, matching this view's own template order (the
+        // Snapshot section renders above the Publication section) — the
+        // identical ordering OwnPublicationPanel.js's own combined action
+        // already holds, one caller over.
+        function distributePublishedDocumentAndSnapshot() {
+            return Promise.resolve(distributePublishedSnapshot())
+                .then(() => distributePublishedDocument());
         }
 
         // 0.9.381 — EditorView Distribution Result -> Repository
@@ -2853,6 +2906,7 @@ export default {
             distributionResult,
             onDocumentPublished,
             distributePublishedDocument,
+            distributePublishedDocumentAndSnapshot,
             dismissPublishAction,
             viewDistributedPublicationInRepository,
             documentInfo,

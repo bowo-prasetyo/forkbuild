@@ -4,6 +4,7 @@ import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { Publication } from '../publisher/Publication.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
+import { sanitizeDistributionErrorMessage } from '../application/DistributionErrorMessageSanitizer.js';
 
 // UX-level distribution unification.
 //
@@ -105,9 +106,81 @@ function tick() {
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
 
+async function readSource(relativePath) {
+    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
+}
+
 async function codeOnlySource(relativePath) {
-    const text = await readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
+    const text = await readSource(relativePath);
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
+}
+
+function extractRange(source, startMarker, endMarker, label) {
+    const start = source.indexOf(startMarker);
+    if (start === -1) throw new Error(`${label || startMarker}: start marker not found`);
+    const end = source.indexOf(endMarker, start);
+    if (end === -1) throw new Error(`${label || startMarker}: end marker not found after start`);
+    return source.slice(start, end);
+}
+
+// EditorView.js imports 'vue' at module top level, so this repo's plain
+// `node tests/*.test.js` runner cannot import it directly — the SAME
+// constraint tests/EditorViewPostPublishDistributionAction.test.js's own
+// buildHarness() already documents. This harness uses the identical
+// technique (marker-to-marker extraction of the REAL, CURRENT 0.9.377/
+// 0.9.450/0.9.502/0.9.671 post-publish distribution block, never hand-
+// retyped, executed via `new Function(...)` against fake `ref`/`inject`
+// implementations), but ALSO wires `snapshotDistributionCommand`/
+// `publicationContentStore` — the two collaborators
+// `EditorViewPostPublishDistributionAction.test.js`'s own harness leaves
+// unwired (leaving canDistributeSnapshot permanently false there) —
+// because this file's own Section F needs BOTH legs reachable to prove
+// the SAME sequential contract Sections A/D already prove for
+// WorldEncounterCanvas/OwnPublicationPanel.
+function buildEditorViewHarness(editorViewSource, {
+    multiRelayNostrPublicationDistributionCommand = null,
+    publicationDistributionCommand = null,
+    snapshotDistributionCommand = null,
+    publicationContentStore = null
+} = {}) {
+    const blockSource = extractRange(
+        editorViewSource,
+        "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
+        '// ------------------------- 0.2.21 document lifecycle ------------',
+        '0.9.377/0.9.450/0.9.502/0.9.671 post-publish distribution block'
+    );
+
+    function ref(initial) { return { value: initial }; }
+    const injected = {
+        multiRelayNostrPublicationDistributionCommand,
+        publicationDistributionCommand,
+        snapshotDistributionCommand,
+        publicationContentStore
+    };
+    function inject(key, fallback) {
+        return Object.prototype.hasOwnProperty.call(injected, key) && injected[key] !== null
+            ? injected[key]
+            : fallback;
+    }
+
+    // eslint-disable-next-line no-new-func
+    const factory = new Function(
+        'inject', 'ref', 'sanitizeDistributionErrorMessage',
+        `${blockSource}\nreturn {
+            publishedPublication,
+            distributionExecuting,
+            distributionError,
+            distributionResult,
+            snapshotDistributionExecuting,
+            snapshotDistributionError,
+            snapshotDistributionResult,
+            onDocumentPublished,
+            distributePublishedDocument,
+            distributePublishedSnapshot,
+            distributePublishedDocumentAndSnapshot
+        };`
+    );
+    return factory(inject, ref, sanitizeDistributionErrorMessage);
 }
 
 async function runTests() {
@@ -235,12 +308,72 @@ async function runTests() {
     }
 
     // ---------------------------------------------------------------
+    // Section F — EditorView: the identical sequential contract, one
+    // more surface over ("Publication published successfully" post-
+    // publish overlay) — Snapshot first, then Publication, matching this
+    // view's own template order (the Snapshot section renders above the
+    // Publication section, byte-for-byte the same visual order
+    // OwnPublicationPanel.js's own Section D already holds).
+    // ---------------------------------------------------------------
+    {
+        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const publication = new Publication({ id: 'pub-unify-f', documentId: 'doc-f', contentReference: { hash: 'pub-unify-f-hash' } });
+        const order = [];
+
+        const harness = buildEditorViewHarness(editorViewSource, {
+            snapshotDistributionCommand: () => { order.push('snapshot'); return Promise.resolve({ contentReference: { hash: 'h4', uri: 'u4' }, announcement: null }); },
+            multiRelayNostrPublicationDistributionCommand: () => { order.push('publication'); return Promise.resolve([{ publication: { kind: 'PUBLICATION', objectId: publication.id }, material: { uri: 'mat-uri-2' }, discovery: { id: 'evt-3' } }]); },
+            publicationContentStore: { get: () => 'snapshot-bytes' }
+        });
+        harness.onDocumentPublished(publication);
+
+        await harness.distributePublishedDocumentAndSnapshot();
+
+        assert(order.join(',') === 'snapshot,publication', '18. EditorView — the two legs run strictly in sequence, Snapshot then Publication, never concurrently');
+        assert(harness.distributionResult.value[0].material.uri === 'mat-uri-2' && harness.snapshotDistributionResult.value.contentReference.hash === 'h4',
+            '19. EditorView — each leg still stores its own independent result, unmodified by being triggered together');
+        assert(harness.distributionExecuting.value === false && harness.snapshotDistributionExecuting.value === false,
+            '20. EditorView — both legs return to idle once the full sequence completes');
+
+        console.log('✓ Section F: EditorView — the identical one-click, sequential-legs contract holds for the post-publish "Distribute now"/"Distribute Snapshot" pair too');
+    }
+
+    // ---------------------------------------------------------------
+    // Section G — EditorView: a rejection on the first leg never blocks,
+    // skips, or hides the second leg's own independent outcome — the
+    // identical restraint Section B already proves for
+    // WorldEncounterCanvas.
+    // ---------------------------------------------------------------
+    {
+        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const publication = new Publication({ id: 'pub-unify-g', documentId: 'doc-g', contentReference: { hash: 'pub-unify-g-hash' } });
+        let publicationCalls = 0;
+
+        const harness = buildEditorViewHarness(editorViewSource, {
+            snapshotDistributionCommand: () => Promise.reject(new Error('material storage rejected the upload')),
+            multiRelayNostrPublicationDistributionCommand: () => { publicationCalls += 1; return Promise.resolve([{ publication: { kind: 'PUBLICATION', objectId: publication.id }, material: null, discovery: { id: 'evt-4' } }]); },
+            publicationContentStore: { get: () => 'snapshot-bytes' }
+        });
+        harness.onDocumentPublished(publication);
+
+        await harness.distributePublishedDocumentAndSnapshot();
+
+        assert(typeof harness.snapshotDistributionError.value === 'string' && harness.snapshotDistributionError.value.length > 0,
+            '21. EditorView — the failing Snapshot leg reports its own honest failure');
+        assert(publicationCalls === 1 && harness.distributionError.value === null && harness.distributionResult.value[0].discovery.id === 'evt-4',
+            '22. EditorView — the Snapshot leg\'s rejection never skips, cancels, or taints the Publication leg that runs after it');
+
+        console.log('✓ Section G: EditorView — a failure on the first leg never blocks, skips, or hides the second leg\'s own independent outcome');
+    }
+
+    // ---------------------------------------------------------------
     // Section E — no new coupling, no aggregate status, no generic
     // fan-out API. The combined action is additive convenience only.
     // ---------------------------------------------------------------
     {
         const canvasCode = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
         const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const editorCode = await codeOnlySource('ui/views/EditorView.js');
 
         assert((canvasCode.match(/this\.distributionCommand\(/g) || []).length === 1,
             '13. WorldEncounterCanvas.js still calls distributionCommand from exactly one place');
@@ -250,14 +383,19 @@ async function runTests() {
             '15. OwnPublicationPanel.js still calls publicationDistributionCommand from exactly one place');
         assert((panelCode.match(/this\.snapshotDistributionCommand\(/g) || []).length === 1,
             '16. OwnPublicationPanel.js still calls snapshotDistributionCommand from exactly one place');
+        assert((editorCode.match(/\.then\(\(\) => distributeEditorPublication\(/g) || []).length === 1,
+            '23. EditorView.js still calls distributeEditorPublication from exactly one place');
+        assert((editorCode.match(/\.then\(\(\) => distributeEditorSnapshot\(/g) || []).length === 1,
+            '24. EditorView.js still calls distributeEditorSnapshot from exactly one place');
 
         const forbidden = [/distributePublication\(publication,\s*targets\)/, /MULTI_SUCCESS|AGGREGATE_(SUCCESS|STATUS)/, /combinedDistributionResult/, /combinedDistributionError/, /Promise\.all(?:Settled)?\(/];
         for (const pattern of forbidden) {
             assert(!pattern.test(canvasCode), `17[${pattern}]. WorldEncounterCanvas.js carries no aggregate/fan-out/concurrent-launch vocabulary`);
             assert(!pattern.test(panelCode), `17[${pattern}]. OwnPublicationPanel.js carries no aggregate/fan-out/concurrent-launch vocabulary`);
+            assert(!pattern.test(editorCode), `17[${pattern}]. EditorView.js carries no aggregate/fan-out/concurrent-launch vocabulary`);
         }
 
-        console.log('✓ Section E: the combined action adds no aggregate status, no generic fan-out API, and no concurrent-launch (Promise.all) of the two legs');
+        console.log('✓ Section E: the combined action adds no aggregate status, no generic fan-out API, and no concurrent-launch (Promise.all) of the two legs, on any of the three surfaces');
     }
 
     console.log(`\n✅ All Unified Distribution Action UX tests passed (${assertionCount} assertions).`);
