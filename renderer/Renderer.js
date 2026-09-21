@@ -8,6 +8,7 @@ import { TerrainStreamingController } from './TerrainStreamingController.js';
 import { buildTerrainTileMesh } from './TerrainTileMesh.js';
 import { buildNaturalFeatureTileMesh } from './NaturalFeatureTileMesh.js';
 import { buildWaterTileMesh } from './WaterTileMesh.js';
+import { buildWildlifeTileMesh } from './WildlifeTileMesh.js';
 import { terrainHeightAt as computeTerrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 
 const SKY_COLOR = 0x87ceeb;
@@ -101,6 +102,28 @@ export class Renderer {
             true
         );
 
+        // 0.9.667 — Deterministic World Wildlife. A FOURTH instance of
+        // the exact same TerrainStreamingController class, following the
+        // identical precedent 0.2.88 set for vegetation and 0.2.89 set
+        // for water — never a new streaming system, never a
+        // WildlifeStreamingController. Wildlife shares the ground's tile
+        // grid and load/unload orchestration by construction, differing
+        // only in what its tileFactory builds: static deer/rabbit
+        // decorations (renderer/WildlifeTileMesh.js) instead of colored
+        // ground, trees, or water. See core/WildlifeField.js's own header
+        // for why animals are recomputed per tile, never persisted, the
+        // identical "sampled, never stored" discipline vegetation already
+        // established.
+        this._wildlifeStreaming = new TerrainStreamingController(
+            this._sceneManager,
+            (tx, tz) => buildWildlifeTileMesh(tx, tz, DEFAULT_WORLD_SEED)
+        );
+        this._wildlifeStreaming.update(
+            this._cameraController.camera.position.x,
+            this._cameraController.camera.position.z,
+            true
+        );
+
         // 0.2.36 — a generic per-frame hook, deliberately NOT
         // avatar-specific (Renderer "owns the visualization pipeline
         // only" per this file's own header): any collaborator that
@@ -176,6 +199,7 @@ export class Renderer {
         this._terrainStreaming.dispose();
         this._vegetationStreaming.dispose();
         this._waterStreaming.dispose();
+        this._wildlifeStreaming.dispose();
         window.removeEventListener('resize', this._onResize);
         this._cameraController.dispose();
         this._container.removeChild(this._webglRenderer.domElement);
@@ -187,6 +211,7 @@ export class Renderer {
         this._terrainStreaming.update(this._cameraController.camera.position.x, this._cameraController.camera.position.z);
         this._vegetationStreaming.update(this._cameraController.camera.position.x, this._cameraController.camera.position.z);
         this._waterStreaming.update(this._cameraController.camera.position.x, this._cameraController.camera.position.z);
+        this._wildlifeStreaming.update(this._cameraController.camera.position.x, this._cameraController.camera.position.z);
         for (const listener of this._frameListeners) {
             listener(deltaSeconds);
         }

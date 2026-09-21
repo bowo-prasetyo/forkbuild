@@ -97374,3 +97374,48 @@ IpfsGatewayFailoverContentStore.js`'s own "deliberately excluded" headers for th
 this milestone is the follow-on `0.9.665`'s own header already named by naming the collaborator it deliberately
 did not build, once a second, real recovery need (a person's own configured gateway, not just the hardcoded
 default) made building it worthwhile.
+
+## 0.9.667 — Deterministic World Wildlife
+
+**Type:** implementation. **Production changes:** `core/WildlifeField.js` (new — `wildlifeInRegion(seed, minX,
+minZ, maxX, maxZ)`, a pure function placing DEER/RABBIT on their own coarse, jittered lattice
+(`WILDLIFE_LATTICE_SPACING = 10`), gated by `core/TerrainEcology.js#ecologyZoneAt()` (FOREST hosts DEER,
+GRASSLAND hosts RABBIT, every other zone stays animal-free) and vetoed by `core/Hydrology.js#isRiverAt()`, the
+identical shape `core/NaturalFeatureField.js` already established for trees in `0.2.88`), `renderer/
+WildlifeTileMesh.js` (new — the renderer-side counterpart, building one low-poly body/head `THREE.InstancedMesh`
+pair per species present in a tile, mirroring `renderer/NaturalFeatureTileMesh.js`'s own trunk/canopy
+instancing), and `renderer/Renderer.js` (a fourth `TerrainStreamingController` instance, `_wildlifeStreaming`,
+wired in and disposed alongside `_terrainStreaming`/`_vegetationStreaming`/`_waterStreaming`). Adds `tests/
+WildlifeField.test.js`, mirroring `tests/NaturalFeatureField.test.js`'s own section shape (determinism,
+tile-partition, zone/species correlation, elevation correctness, streaming-order-independence, river veto).
+
+**Extends the exact "sampled, never stored" ecology arc `0.2.76`→`0.2.89` already built**, one layer further:
+`TerrainHeightField` answers "how high," `TerrainSurface` answers "what does it look like," `TerrainEcology`
+answers "what kind of natural environment is this," `NaturalFeatureField` answers "what naturally grows here,"
+and `WildlifeField` now answers "what lives here." Every animal is a pure function of `(seed, x, z)` — no
+`AnimalRecord`, no `Math.random`, no persisted state — so a deer or rabbit streams in and out with its tile
+exactly the way a tree already does, and two replicas (or the same replica returning after roaming away)
+recompute the byte-identical animal at the byte-identical position.
+
+**What was built, deliberately narrow, mirroring `core/NaturalFeatureField.js` one axis over.** A coarser
+lattice than trees (`WILDLIFE_LATTICE_SPACING = 10` vs `TREE_LATTICE_SPACING = 4`, still an exact divisor of
+`TERRAIN_TILE_SIZE`) and stricter per-zone density thresholds, so a world reads as having occasional wildlife,
+never a population as dense as its own forests. Each of the two zones that already host trees (FOREST,
+GRASSLAND) hosts exactly one animal species — no climate blend the way tree species blend by moisture, no
+third zone, no legs/ears/tail modeled on the renderer side (two low-poly spheres per species: an elongated-body
+ellipsoid under a smaller head, the same restraint trees get with a trunk cylinder under a canopy primitive).
+
+**Deliberately not yet, named rather than hidden:** persisting a single placed animal anywhere; movement,
+wandering, flocking, fleeing, grazing animation, or any tick/AI of any kind — every animal here is a static
+decoration at a fixed point, the identical posture `0.2.88` itself shipped for trees before any later milestone
+considered motion; collision with trees, buildings, avatars, or other animals; ownership or interaction of any
+kind; species blending by climate the way `core/NaturalFeatureField.js#TREE_SPECIES` blends by moisture; and a
+third ecology zone ever hosting an animal. A genuinely moving/AI-driven wildlife population is a plausible
+future milestone, but would need its own persistence/reconciliation strategy distinct from "recomputed fresh
+per tile query" — see `core/NaturalFeatureField.js`'s own header for why that discipline exists and why it does
+not, by itself, extend to anything that needs to remember state between frames.
+
+**Classification: `EXTENSION`.** `core/NaturalFeatureField.js`'s own header already named "a second feature
+TYPE beyond TREE" and animal life as directions deliberately excluded from `0.2.88`'s scope, not permanently
+foreclosed; this milestone is the sibling module that answer invites, built the same way `Hydrology` (`0.2.89`)
+was built as Ecology's sibling rather than its dependent.

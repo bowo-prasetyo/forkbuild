@@ -5941,7 +5941,46 @@ tints instead of truly pooling, or a river rendered as a flat raft
 floating disconnected from the terrain beneath it — this principle is
 why the two get different treatment on purpose.
 
-### A Structure Placement References Content, It Never Copies It (0.2.90)
+### Wildlife Is A Fifth Pure Function Layered On Terrain, Sibling To Natural Features, Never A New Ground Truth (0.9.667)
+
+`core/WildlifeField.js#wildlifeInRegion(seed, minX, minZ, maxX, maxZ)`
+answers "what lives here," a genuinely different question from
+`core/NaturalFeatureField.js`'s own "what naturally grows here" — and,
+like every sibling before it, does not invent a second opinion about the
+world's geography to answer it. It CONSULTS `core/TerrainEcology.js#ecologyZoneAt()`
+directly (FOREST hosts DEER, GRASSLAND hosts RABBIT, every other zone
+stays animal-free) and `core/Hydrology.js#isRiverAt()` for its own river
+veto, the same "second/third/fourth/fifth pure function of the identical
+`(seed, x, z)` triple" discipline this file's own chain of principles has
+established since 0.2.79. `WildlifeField` is deliberately Natural
+Feature's SIBLING, not its dependent — an animal's position is never
+derived from, or checked against, a tree's own position, the same
+"no import cycle, no ordering dependency" posture `Hydrology`'s own
+principle above established relative to `TerrainEcology`. Every animal
+this file returns is recomputed from a fixed, jittered lattice keyed on
+nothing but `(seed, x, z)` — there is no `AnimalRecord` anywhere in this
+codebase, and none is needed for a deer or rabbit to stream in and out
+with its tile exactly the way a tree already does; `tests/
+WildlifeField.test.js`'s own FLAGSHIP section proves this directly, the
+identical streaming-order-independence proof `tests/
+NaturalFeatureField.test.js`'s own FLAGSHIP already gives for trees.
+
+### A Sparser Population Is A Coarser Lattice And Stricter Thresholds, Never A Second Kind Of Gate (0.9.667)
+
+A world with as many animals as trees would read as a farm, not a
+wilderness — but `core/WildlifeField.js` does not reach for a new kind of
+mechanism to stay sparse. It reuses exactly the shape
+`core/NaturalFeatureField.js` already established (a fixed jittered
+lattice, thresholded against a decorrelated density noise field, gated by
+ecology zone) and turns only the two knobs that shape already exposes:
+`WILDLIFE_LATTICE_SPACING` (10, coarser than `TREE_LATTICE_SPACING`'s 4,
+while remaining an exact divisor of `TERRAIN_TILE_SIZE` so the identical
+no-seam tile partition guarantee still holds) and its own per-zone density
+thresholds (stricter than either tree threshold). "Wildlife should be
+rarer than trees" is answered entirely by parameters, never by a second
+placement algorithm, a distance-from-tree exclusion check, or a global
+population cap — the same restraint that keeps this file a sibling of
+`core/NaturalFeatureField.js` rather than a fork of it.
 
 `core/StructurePlacement.js` carries a `documentId`, a `position`, and a
 `rotation` — nothing else. It is the same shape as `core/WorldPlacement.js`
