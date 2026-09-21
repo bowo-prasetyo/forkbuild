@@ -4157,7 +4157,7 @@ export default {
         // `materialInspection`/`distributablePublication` — this never
         // waits on material loading, fetching, or verification.
         encounterCommentaryPublicationId() {
-            if (!this.selectedEncounterInspection || this.selectedEncounterInspection.kind !== 'PUBLICATION') {
+            if (!this.selectedEncounter || !this.selectedEncounterInspection || this.selectedEncounterInspection.kind !== 'PUBLICATION') {
                 return null;
             }
             return this.selectedEncounter.objectId;
