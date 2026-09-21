@@ -2287,6 +2287,15 @@ export default {
                     }
                 });
         },
+        // UX-level convenience only: fires the two already-independent
+        // actions above from one click. Each keeps its own protocol, its
+        // own executing/error/result state, and its own outcome display —
+        // this never introduces a combined result or an aggregate status,
+        // and a failure in one never stops or hides the other.
+        distributeOwnPublicationAndSnapshot() {
+            this.distributeOwnSnapshot();
+            this.distributeOwnPublication();
+        },
         // 0.9.142 — the only writer of `snapshotDiscoveryExecuting`/
         // `snapshotDiscoveryError`/`snapshotDiscoveryResult`, and the
         // only caller of `discoverSnapshotCommand` in this file — mirrors
@@ -2947,6 +2956,28 @@ export default {
                 :disabled="!publication"
                 @click="unpublishOwnPublication"
             >Unpublish</button>
+
+            <!-- UX-level unification only: a single "Distribute" action for
+                 Wanderers who just want both protocols pushed out at once.
+                 Rendered only when BOTH snapshotDistributionCommand AND
+                 publicationDistributionCommand were supplied — when only
+                 one is available, its own dedicated button below already
+                 covers the whole capability. Firing this never changes
+                 either protocol, and never introduces a combined
+                 executing/error/result of its own: it disables while
+                 EITHER underlying action is in flight, and each action's
+                 own section below keeps reporting its own independent
+                 outcome exactly as it already does when clicked on its
+                 own. -->
+            <div v-if="snapshotDistributionCommand && publicationDistributionCommand" class="own-publication-combined-distribution-panel">
+                <button
+                    type="button"
+                    class="action-btn own-publication-combined-distribution-action"
+                    :disabled="!publication || snapshotDistributionExecuting || publicationDistributionExecuting"
+                    @click="distributeOwnPublicationAndSnapshot"
+                >{{ (snapshotDistributionExecuting || publicationDistributionExecuting) ? 'Distributing…' : 'Distribute' }}</button>
+                <p class="own-publication-combined-distribution-hint form-hint form-hint--neutral">Distributes the Signed Claim and the Snapshot together — each still its own protocol, reported separately below.</p>
+            </div>
 
             <!-- Bug fix — the Arweave/IPFS storage choice, mirroring
                  ui/views/DecentralizedPublicationsView.js's own picker,

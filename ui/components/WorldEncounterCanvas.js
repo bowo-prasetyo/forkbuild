@@ -5072,6 +5072,15 @@ export default {
                     }
                 });
         },
+        // UX-level convenience only: fires the two already-independent
+        // actions above from one click. Each keeps its own protocol, its
+        // own executing/error/result state, and its own outcome display —
+        // this never introduces a combined result or an aggregate status,
+        // and a failure in one never stops or hides the other.
+        distributeSelectedPublicationAndSnapshot() {
+            this.distributeSelectedPublication();
+            this.distributeSelectedSnapshot();
+        },
         // 0.9.144 — the only writer of `snapshotDiscoveryExecuting`/
         // `snapshotDiscoveryError`/`snapshotDiscoveryResult`/
         // `snapshotAttributionResult`, and the only caller of
@@ -6155,6 +6164,31 @@ export default {
                  describePublicationDistributionLifecycle() (0.9.50) already
                  defines. See this file's own header, "0.9.100 — Publication
                  Distribution Observation." -->
+            <!-- UX-level unification only: a single "Distribute" action for
+                 Wanderers who just want both protocols pushed out at once.
+                 Rendered only when BOTH distributionCommand AND
+                 snapshotDistributionCommand were supplied — when only one
+                 is available, its own dedicated button below already
+                 covers the whole capability. Firing this never changes
+                 either protocol, and never introduces a combined
+                 executing/error/result of its own: it disables while
+                 EITHER underlying action is in flight, and each action's
+                 own panel below keeps reporting its own independent
+                 outcome exactly as it already does when clicked on its
+                 own. -->
+            <div
+                v-if="selectedEncounter && selectedEncounter.kind === 'PUBLICATION' && distributionCommand && snapshotDistributionCommand"
+                class="world-encounter-combined-distribution-panel"
+            >
+                <button
+                    type="button"
+                    class="action-btn world-encounter-combined-distribution-action"
+                    :disabled="!distributablePublication || distributionExecuting || snapshotDistributionExecuting"
+                    @click="distributeSelectedPublicationAndSnapshot"
+                >{{ (distributionExecuting || snapshotDistributionExecuting) ? 'Distributing…' : 'Distribute' }}</button>
+                <p class="world-encounter-combined-distribution-hint form-hint form-hint--neutral">Distributes the Signed Claim and the Snapshot together — each still its own protocol, reported separately below.</p>
+            </div>
+
             <div v-if="selectedEncounter && selectedEncounter.kind === 'PUBLICATION' && distributionLifecycleStore" class="world-encounter-distribution-panel">
                 <h4 class="world-encounter-distribution-title">Distribution</h4>
                 <dl class="world-encounter-distribution-detail">

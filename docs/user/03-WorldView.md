@@ -173,6 +173,15 @@ instead shows a plain "Snapshot distribution could not be completed."
 notice. Neither the button's state nor its result is remembered anywhere
 — selecting a different encounter, or leaving the page, clears it.
 
+When both buttons are available, a single **Distribute** button appears
+above them — a one-click convenience that fires Distribute Publication
+and Distribute Snapshot together, for whenever you don't want to click
+twice. It changes nothing about either protocol: each still runs
+independently, each still reports into its own panel above, and a
+failure in one is never hidden by, or blocks, the other. The two
+dedicated buttons keep working exactly as before — useful if you only
+want one of the two, or want to retry just the half that failed.
+
 **A publication a peer showed you here doesn't stay stranded in World
 Encounters once it actually resolves.** The moment a peer-shown
 publication's Material reaches **Available** — its content genuinely
@@ -625,7 +634,12 @@ the same way World Encounters' own Distribute Publication button does;
 **Distribute Snapshot** distributes it under the separate Snapshot
 protocol — see
 [Local Snapshot](09-PublicationsAndEvidence.md#local-snapshot) for what
-that distinction means. Remote IPFS pinning and Bitcoin/Base anchoring stay
+that distinction means. A single **Distribute** button sits above both,
+for whenever you just want both pushed out at once — it fires the exact
+same two clicks for you, so you still get two independent readouts below,
+one per protocol; it changes nothing about either protocol; clicking one
+of the two dedicated buttons afterward still works exactly as before, for
+example to retry only the half that failed. Remote IPFS pinning and Bitcoin/Base anchoring stay
 in the Publications page's own Publication Center (see
 [IPFS Publishing](09-PublicationsAndEvidence.md#ipfs-publishing) and
 [The Bitcoin Anchor Pipeline](09-PublicationsAndEvidence.md#the-bitcoin-anchor-pipeline)) —
