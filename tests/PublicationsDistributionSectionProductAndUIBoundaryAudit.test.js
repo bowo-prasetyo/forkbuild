@@ -215,13 +215,18 @@ async function run() {
         // commentary) is unrelated distribution functionality.
         assert(/'Distribute Snapshot'/.test(ownPanelSource), n('A1. OwnPublicationPanel.js: a real "Distribute Snapshot" action exists'));
         assert(/'Distribute Publication'/.test(ownPanelSource), n('A2. ...and a real "Distribute Publication" action exists'));
-        // Bug fix — "Distribute Snapshot" now also passes an explicit
-        // Arweave/IPFS/Remote-Pinning storage choice (mirroring
+        // AMENDED BY 0.9.669 — Per-Click Snapshot Announcement/Discovery
+        // Substrate Override. "Distribute Snapshot" now ALSO forwards this
+        // panel's own explicit `snapshotDiscoveryProvider` choice, closing
+        // the parity gap between it and "Distribute Publication" (A4,
+        // below) — before this fix, Snapshot's own announcement substrate
+        // was fixed at app load with no per-click override, unlike
+        // Publication's (since 0.9.668). It still also passes its own
+        // explicit Arweave/IPFS/Remote-Pinning storage choice (mirroring
         // DecentralizedPublicationsView.js's own CONTENT storage picker,
-        // A9 below) rather than always silently defaulting to Arweave,
-        // plus a Remote-Pinning endpoint/credential draft (read only when
-        // that third storage is actually selected).
-        assert(/snapshotDistributionCommand\(publication, storage, remotePinningConfiguration\)/.test(codeOnly(ownPanelSource)), n('A3. "Distribute Snapshot" calls its command with the publication plus its own explicit storage choice — no substrate or role parameter of its own'));
+        // A9 below), plus a Remote-Pinning endpoint/credential draft (read
+        // only when that third storage is actually selected).
+        assert(/snapshotDistributionCommand\(publication, storage, remotePinningConfiguration, this\.snapshotDiscoveryProvider\)/.test(codeOnly(ownPanelSource)), n('A3. AMENDED BY 0.9.669 — "Distribute Snapshot" calls its command with the publication, its own explicit storage choice, AND its own explicit Announcement/Discovery substrate choice — no longer a role parameter Snapshot alone lacked'));
         // AMENDED BY 0.9.668 — Bug fix. "Distribute Publication" no longer
         // takes only the publication: it now also forwards this panel's
         // own explicit `publicationDiscoveryProvider` choice, closing the
@@ -235,9 +240,12 @@ async function run() {
         // structurally distinct component, same underlying commands (see
         // Section B). AMENDED BY 0.9.668 — OwnPublicationPanel gained the
         // identical discovery-substrate <select> (0.9.430) this section
-        // used to say only WorldEncounterCanvas had; see A4, above.
+        // used to say only WorldEncounterCanvas had for Publication; see
+        // A4, above. AMENDED BY 0.9.669 — and both files now ALSO give
+        // Snapshot its own separate substrate <select>, see A3/A7.
         assert(/'Distribute Publication'/.test(canvasSource) && /'Distribute Snapshot'/.test(canvasSource), n('A6. WorldEncounterCanvas.js exposes the identical two action labels'));
-        assert(/<select[\s\S]{0,80}v-model="selectedDiscoveryProvider"/.test(canvasSource), n('A7. ...and a real Announcement/Discovery substrate <select> (Nostr/Arweave) — AMENDED BY 0.9.668: OwnPublicationPanel.js\'s own sibling action (A2/A4) now has the equivalent control too, see A4\'s own amendment above'));
+        assert(/<select[\s\S]{0,80}v-model="selectedDiscoveryProvider"/.test(canvasSource), n('A7. ...and a real Announcement/Discovery substrate <select> (Nostr/Arweave) for Publication — AMENDED BY 0.9.668: OwnPublicationPanel.js\'s own sibling action (A2/A4) now has the equivalent control too, see A4\'s own amendment above'));
+        assert(/<select[\s\S]{0,80}v-model="selectedSnapshotDiscoveryProvider"/.test(canvasSource), n('A7b. AMENDED BY 0.9.669 — a SEPARATE Announcement/Discovery substrate <select> exists for Snapshot too, closing the parity gap A3 (above) names — OwnPublicationPanel.js\'s own sibling action has the equivalent control, see A3\'s own amendment above'));
         assert(!/Anchor|Bitcoin/.test(canvasSource) || /Anchors<\/dt>/.test(canvasSource), n('A8. WorldEncounterCanvas.js has no Proof/Anchoring distribution action either (an incidental, unrelated "Anchors" label elsewhere in the file, if present, is not a distribution action)'));
 
         // DecentralizedPublicationsView.js — the other two roles, already

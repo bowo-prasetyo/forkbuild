@@ -265,8 +265,11 @@ async function run() {
     // ===============================================================
     {
         const mainSource = await rawSource('ui/main.js');
-        check(/const snapshotDistributionCommand = \(bytes, storage = 'ar', publicationId, claimedPosition\)/.test(mainSource),
-            "H. an omitted `storage` argument still defaults to 'ar' — every caller that has not been updated keeps its exact pre-0.9.506 Arweave-only behavior");
+        // AMENDED BY 0.9.669 — `discoveryProvider` joined the parameter
+        // list as a new, optional fifth argument — `storage`'s own default
+        // is unaffected by that addition.
+        check(/const snapshotDistributionCommand = \(bytes, storage = 'ar', publicationId, claimedPosition, discoveryProvider\)/.test(mainSource),
+            "H. AMENDED BY 0.9.669 — an omitted `storage` argument still defaults to 'ar' — every caller that has not been updated keeps its exact pre-0.9.506 Arweave-only behavior");
 
         const viewSource = await rawSource('ui/views/DecentralizedPublicationsView.js');
         // AMENDED BY 0.9.667 — the SAME 'ar' fallback, now the third

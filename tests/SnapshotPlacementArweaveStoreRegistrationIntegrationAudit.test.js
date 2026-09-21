@@ -413,8 +413,10 @@ async function run() {
         const distributionCommandSource = await codeOnlySource('application/SnapshotDistributionCommand.js');
         check(!distributionCommandSource.includes('SnapshotPlacementStoreRegistry'), 'J. application/SnapshotDistributionCommand.js never references SnapshotPlacementStoreRegistry — still untouched, exactly as this milestone left it');
 
-        const distributionSiteMatch = mainCodeOnly.match(/const snapshotDistributionCommand = \(bytes, storage = 'ar', publicationId, claimedPosition\) => executeSnapshotDistributionCommand\(\{([\s\S]*?)\}\);/);
-        check(Boolean(distributionSiteMatch), 'J. ui/main.js\'s real Distribution command call site is found for inspection');
+        // AMENDED BY 0.9.669 — `discoveryProvider` joined the parameter
+        // list as a new, optional fifth argument.
+        const distributionSiteMatch = mainCodeOnly.match(/const snapshotDistributionCommand = \(bytes, storage = 'ar', publicationId, claimedPosition, discoveryProvider\) => executeSnapshotDistributionCommand\(\{([\s\S]*?)\}\);/);
+        check(Boolean(distributionSiteMatch), 'J. AMENDED BY 0.9.669 — ui/main.js\'s real Distribution command call site is found for inspection');
         const distributionSiteBody = distributionSiteMatch[1];
         check(distributionSiteBody.includes('snapshotPlacementStoreRegistry'), 'J. as of 0.9.506, the Distribution command DOES read snapshotPlacementStoreRegistry — the SAME CREATION registry this file\'s own instance-sharing proof (Section I) already covers, reused rather than duplicated');
         check(!distributionSiteBody.includes('new ArweaveContentStore'), 'J. the Distribution command call site still never constructs an ArweaveContentStore directly — resolution goes through application/SnapshotDistributionContentBackendSelection.js instead');
