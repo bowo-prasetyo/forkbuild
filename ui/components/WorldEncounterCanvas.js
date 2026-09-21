@@ -5000,7 +5000,7 @@ export default {
             this.distributionRequestId += 1;
             const requestId = this.distributionRequestId;
 
-            Promise.resolve()
+            return Promise.resolve()
                 .then(() => this.distributionCommand(
                     publication,
                     this.selectedDiscoveryProvider,
@@ -5052,7 +5052,7 @@ export default {
                 responseField: this.remotePinningDraft.responseField || null
             } : undefined;
 
-            Promise.resolve()
+            return Promise.resolve()
                 .then(() => this.snapshotDistributionCommand(publication, storage, remotePinningConfiguration, this.selectedSnapshotDiscoveryProvider))
                 .then((result) => {
                     if (requestId === this.snapshotDistributionRequestId) {
@@ -5076,10 +5076,19 @@ export default {
         // actions above from one click. Each keeps its own protocol, its
         // own executing/error/result state, and its own outcome display —
         // this never introduces a combined result or an aggregate status,
-        // and a failure in one never stops or hides the other.
+        // and a failure in one never stops or hides the other. Run
+        // SEQUENTIALLY, never concurrently: both legs can end up signing
+        // through the SAME injected browser extension (e.g. a NIP-07
+        // provider used for both Nostr announcements), and firing two
+        // signing requests at once is a real-world extension failure mode
+        // (no popup ever shown, no response ever received) rather than a
+        // race either leg's own code can detect or recover from — see
+        // arweave/ArweaveInjectedProviderSigner.js's/nostr/
+        // NostrInjectedProviderPublisher.js's own "MV3 background service
+        // worker recycled mid-request" note.
         distributeSelectedPublicationAndSnapshot() {
-            this.distributeSelectedPublication();
-            this.distributeSelectedSnapshot();
+            return Promise.resolve(this.distributeSelectedPublication())
+                .then(() => this.distributeSelectedSnapshot());
         },
         // 0.9.144 — the only writer of `snapshotDiscoveryExecuting`/
         // `snapshotDiscoveryError`/`snapshotDiscoveryResult`/

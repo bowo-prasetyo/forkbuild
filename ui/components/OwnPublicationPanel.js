@@ -2224,7 +2224,7 @@ export default {
                 responseField: this.remotePinningDraft.responseField || null
             } : undefined;
 
-            Promise.resolve()
+            return Promise.resolve()
                 .then(() => this.snapshotDistributionCommand(publication, storage, remotePinningConfiguration, this.snapshotDiscoveryProvider))
                 .then((result) => {
                     if (requestId === this.snapshotDistributionRequestId) {
@@ -2262,7 +2262,7 @@ export default {
             this.publicationDistributionRequestId += 1;
             const requestId = this.publicationDistributionRequestId;
 
-            Promise.resolve()
+            return Promise.resolve()
                 .then(() => this.publicationDistributionCommand(
                     publication,
                     this.publicationDiscoveryProvider,
@@ -2291,10 +2291,16 @@ export default {
         // actions above from one click. Each keeps its own protocol, its
         // own executing/error/result state, and its own outcome display —
         // this never introduces a combined result or an aggregate status,
-        // and a failure in one never stops or hides the other.
+        // and a failure in one never stops or hides the other. Run
+        // SEQUENTIALLY, never concurrently — see WorldEncounterCanvas.js's
+        // own distributeSelectedPublicationAndSnapshot() for why: both legs
+        // can end up signing through the SAME injected browser extension,
+        // and firing two signing requests at once is a real-world
+        // extension failure mode (no popup ever shown, no response ever
+        // received), not a race either leg's own code could detect.
         distributeOwnPublicationAndSnapshot() {
-            this.distributeOwnSnapshot();
-            this.distributeOwnPublication();
+            return Promise.resolve(this.distributeOwnSnapshot())
+                .then(() => this.distributeOwnPublication());
         },
         // 0.9.142 — the only writer of `snapshotDiscoveryExecuting`/
         // `snapshotDiscoveryError`/`snapshotDiscoveryResult`, and the
