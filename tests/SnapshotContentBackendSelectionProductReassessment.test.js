@@ -105,7 +105,7 @@ async function run() {
             "B. the eligible Content backend set is exactly {IPFS, Arweave} — frozen, closed, no third option");
 
         const mainSource = await rawSource('ui/main.js');
-        check(mainSource.includes('stores: [publicationContentStore, new IpfsContentStore()]'),
+        check(mainSource.includes('stores: [publicationContentStore, new IpfsContentStore({ apiUrl: resolvedIpfsNodeApiUrl })]'),
             'B. production registers a real IPFS store into the same registry Distribution reads from');
         check(mainSource.includes('snapshotPlacementStoreRegistry.register(arweaveSnapshotPlacementContentStore)'),
             'B. ...and a real Arweave store — both eligible backends are genuinely registered on a stock production build, not merely eligible-in-principle');
@@ -232,7 +232,7 @@ async function run() {
             "G. 'local' is documented and enforced as excluded from Distribution's own eligible set");
 
         const mainSource = await rawSource('ui/main.js');
-        check(mainSource.includes('stores: [publicationContentStore, new IpfsContentStore()]'),
+        check(mainSource.includes('stores: [publicationContentStore, new IpfsContentStore({ apiUrl: resolvedIpfsNodeApiUrl })]'),
             "G. 'local' remains a genuinely registered, usable Placement backend (publicationContentStore, storage 'local')");
 
         check(!(await rawSource('application/SnapshotDistributionContentBackendSelection.js')).match(/CreateSnapshotPlacementOrchestratorUseCase|CreateExternalSnapshotPlacementUseCase/),

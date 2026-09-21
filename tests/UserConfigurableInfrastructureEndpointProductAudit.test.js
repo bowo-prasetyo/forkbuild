@@ -252,7 +252,12 @@ async function run() {
         const mainSource = await rawSource('ui/main.js');
         const composeIpfsGatewayContentStoreCallCount = (mainSource.match(/composeIpfsGatewayContentStore\(resolvedIpfsGatewayUrls\)/g) || []).length;
         assert(composeIpfsGatewayContentStoreCallCount === 2, `C3. ui/main.js constructs its IPFS gateway content store through composeIpfsGatewayContentStore(resolvedIpfsGatewayUrls) at both real call sites — AMENDED 0.9.666, see comment above — found ${composeIpfsGatewayContentStoreCallCount}`);
-        assert(mainSource.includes('new IpfsContentStore()'), 'C3. ui/main.js constructs IpfsContentStore with zero arguments — unaffected: this is the local Kubo WRITE path, deliberately untouched by 0.9.665\'s read-path gateway configuration');
+        // AMENDED FURTHER, LATER MILESTONE — core/IpfsNodeConfiguration.js
+        // gave this WRITE path its own, separate, equally user-configurable
+        // apiUrl override (resolvedIpfsNodeApiUrl, its own store/use case) —
+        // still completely untouched by 0.9.665's own read-path gateway
+        // configuration, which remains resolvedIpfsGatewayUrl(s) above.
+        assert(mainSource.includes('new IpfsContentStore({ apiUrl: resolvedIpfsNodeApiUrl })'), 'C3. ui/main.js constructs IpfsContentStore with resolvedIpfsNodeApiUrl — its own separate, write-path-only override — unaffected by 0.9.665\'s read-path gateway configuration');
         assert(mainSource.includes('new CreateBaseJsonRpcClientUseCase().execute()'), 'C3. ui/main.js resolves the Base RPC client with zero arguments to execute()');
         assert(mainSource.includes('new CreateBitcoinEsploraTransactionBroadcasterUseCase().execute()'), 'C3. ui/main.js resolves the Esplora broadcaster with zero arguments to execute()');
 
@@ -271,6 +276,16 @@ async function run() {
         // return-shape comment in WorldView.js, describing what a claim
         // publish already resolved to) are result vocabulary, never a
         // configuration input.
+        //
+        // AMENDED, LATER MILESTONE — 127.0.0.1:5001 is now the ONE
+        // deliberate exception. core/IpfsNodeConfiguration.js's own
+        // DEFAULT_IPFS_NODE_API_URL built the exact product surface this
+        // Section's own closing comment names as still missing: a real
+        // settings field, on ui/views/ContentProviderSettingsView.js, for
+        // the local-Kubo WRITE-path endpoint this file's own C3 above
+        // shows is now genuinely configurable in production. The audit's
+        // own verdict for every OTHER host, and every OTHER file, is
+        // unchanged.
         const inventoryHosts = ['arweave.net', 'ipfs.io', '127.0.0.1:5001', 'relay.damus.io', 'blockstream.info', 'mainnet.base.org', 'metered.live'];
         const nonCompositionRootUiFiles = [
             'ui/views/WorldView.js', 'ui/views/ContentProviderSettingsView.js', 'ui/views/AvatarSettingsView.js'
@@ -278,6 +293,10 @@ async function run() {
         for (const file of nonCompositionRootUiFiles) {
             const source = await rawSource(file);
             for (const host of inventoryHosts) {
+                if (file === 'ui/views/ContentProviderSettingsView.js' && host === '127.0.0.1:5001') {
+                    assert(source.includes(host), `C5. ${file} DOES now reference "${host}" — its own new IPFS Node settings field displays the deployment default, the live product surface this Section's own closing comment named as missing`);
+                    continue;
+                }
                 assert(!source.includes(host), `C5. ${file} never references the endpoint host "${host}" — no live wiring exists outside the composition root`);
             }
         }

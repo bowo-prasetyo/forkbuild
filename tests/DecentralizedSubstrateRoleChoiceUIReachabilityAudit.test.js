@@ -162,7 +162,7 @@ async function run() {
         // Real registered provider counts today, from the one real
         // composition root — never assumed from capability alone.
         const mainSource = await readSource('ui/main.js');
-        const contentProviderCount = /stores: \[publicationContentStore, new IpfsContentStore\(\)\]/.test(mainSource) ? 2 : 0;
+        const contentProviderCount = /stores: \[publicationContentStore, new IpfsContentStore\(\{ apiUrl: resolvedIpfsNodeApiUrl \}\)\]/.test(mainSource) ? 2 : 0;
         const proofPublisherCount = /publishers: \[bitcoinAnchorPublisher\]/.test(mainSource) ? 1 : 0;
         assert(contentProviderCount === 2, n(`A8. CONTENT has two real registered providers today (found ${contentProviderCount})`));
         assert(proofPublisherCount === 1, n(`A9. PROOF_AND_ANCHORING has exactly one real registered publisher today (found ${proofPublisherCount}) — unchanged since 0.9.304`));

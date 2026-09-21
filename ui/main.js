@@ -147,6 +147,9 @@ import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfi
 import { DEFAULT_IPFS_GATEWAY_URL } from '../core/IpfsGatewayConfiguration.js';
 import { IpfsGatewayConfigurationStore } from '../storage/IpfsGatewayConfigurationStore.js';
 import { SetIpfsGatewayConfigurationUseCase } from '../application/SetIpfsGatewayConfigurationUseCase.js';
+import { DEFAULT_IPFS_NODE_API_URL } from '../core/IpfsNodeConfiguration.js';
+import { IpfsNodeConfigurationStore } from '../storage/IpfsNodeConfigurationStore.js';
+import { SetIpfsNodeConfigurationUseCase } from '../application/SetIpfsNodeConfigurationUseCase.js';
 import { DEFAULT_NOSTR_RELAY_URL } from '../core/NostrRelayConfiguration.js';
 import { NostrRelayConfigurationStore } from '../storage/NostrRelayConfigurationStore.js';
 import { SetNostrRelayConfigurationUseCase } from '../application/SetNostrRelayConfigurationUseCase.js';
@@ -1023,6 +1026,14 @@ const { discoveryCoordinator: publicationSnapshotPlacementDiscoveryCoordinator }
 // hold, below.
 const ipfsGatewayConfigurationStore = new IpfsGatewayConfigurationStore(new LocalStorageProvider());
 const resolvedIpfsGatewayUrl = (ipfsGatewayConfigurationStore.get() || { gatewayUrl: DEFAULT_IPFS_GATEWAY_URL }).gatewayUrl;
+// User-Configurable IPFS Node API URL. Resolved here, ahead of the real
+// Kubo `IpfsContentStore` construction site below — the WRITE-path
+// counterpart of `ipfsGatewayConfigurationStore` immediately above, which
+// governs READING already-placed `ipfs://` content instead. Separate store,
+// separate storage key, never confused for one another — see core/
+// IpfsNodeConfiguration.js's own header.
+const ipfsNodeConfigurationStore = new IpfsNodeConfigurationStore(new LocalStorageProvider());
+const resolvedIpfsNodeApiUrl = (ipfsNodeConfigurationStore.get() || { apiUrl: DEFAULT_IPFS_NODE_API_URL }).apiUrl;
 const resolvedIpfsGatewayUrls = (ipfsGatewayConfigurationStore.get() || { gatewayUrls: [DEFAULT_IPFS_GATEWAY_URL] }).gatewayUrls;
 function composeIpfsGatewayContentStore(gatewayUrls) {
     return gatewayUrls.length > 1
@@ -1122,7 +1133,7 @@ const {
     contentResolver: publicationCatalogContentResolver,
     placementCatalog: publicationSnapshotPlacementCatalog,
     identityProvider,
-    stores: [publicationContentStore, new IpfsContentStore()],
+    stores: [publicationContentStore, new IpfsContentStore({ apiUrl: resolvedIpfsNodeApiUrl })],
     knowledgeStore: placementKnowledgeStore,
     peerExchange: publicationSnapshotPlacementPeerExchange
 });
@@ -2192,6 +2203,14 @@ app.provide('setArweaveGatewayConfigurationUseCase', setArweaveGatewayConfigurat
 const setIpfsGatewayConfigurationUseCase = new SetIpfsGatewayConfigurationUseCase({ ipfsGatewayConfigurationStore });
 app.provide('ipfsGatewayConfigurationStore', ipfsGatewayConfigurationStore);
 app.provide('setIpfsGatewayConfigurationUseCase', setIpfsGatewayConfigurationUseCase);
+
+// IPFS Node Settings UI. The WRITE half of the settings entry point, wired
+// against the SAME ipfsNodeConfigurationStore instance resolved earlier in
+// this file (never a second, disconnected store) — see application/
+// SetIpfsNodeConfigurationUseCase.js's own header.
+const setIpfsNodeConfigurationUseCase = new SetIpfsNodeConfigurationUseCase({ ipfsNodeConfigurationStore });
+app.provide('ipfsNodeConfigurationStore', ipfsNodeConfigurationStore);
+app.provide('setIpfsNodeConfigurationUseCase', setIpfsNodeConfigurationUseCase);
 
 // 0.9.369 — Nostr Relay Configuration Boundary.
 //

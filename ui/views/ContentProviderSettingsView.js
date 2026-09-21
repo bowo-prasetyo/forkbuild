@@ -1,6 +1,7 @@
 import { ref, computed, inject, onMounted } from 'vue';
 import { RoleProviderRole } from '../../core/RoleProviderRole.js';
 import { describeRoleProviderPreferenceSettings } from '../../application/RoleProviderPreferenceSettingsView.js';
+import { DEFAULT_IPFS_NODE_API_URL } from '../../core/IpfsNodeConfiguration.js';
 
 // 0.9.302 — Content Provider Preference Settings Entry Point.
 //
@@ -43,17 +44,45 @@ import { describeRoleProviderPreferenceSettings } from '../../application/RolePr
 // ONLY CONTENT. This view hardcodes `RoleProviderRole.CONTENT` — there is
 // no role selector, and no Discovery or Proof & Anchoring section — exactly
 // the "deliberately narrow" scope that milestone's own brief names.
+//
+// IPFS NODE URL — A SEPARATE SETTING, NEVER THE PROVIDER PREFERENCE ITSELF.
+// The "IPFS Node" field below configures WHERE the 'ipfs' backend places
+// content (content/IpfsContentStore.js's own `apiUrl`, persisted through
+// storage/IpfsNodeConfigurationStore.js) — a local Kubo node, a remote one,
+// whatever a person points it at. It never changes WHICH backend "Use
+// Preferred Provider" selects; that stays exactly the radio-button choice
+// above, untouched by this field. This view still never constructs an
+// IpfsNodeConfiguration itself — it only reads one back from
+// ipfsNodeConfigurationStore.get() to display what's on file, and saves a
+// change through setIpfsNodeConfigurationUseCase.execute({ apiUrl }), the
+// identical read/write split ui/views/IpfsGatewaySettingsView.js already
+// holds for the separate, read-path gateway setting. A change saved here
+// takes effect on the next application load only — ui/main.js resolves
+// ipfsNodeConfigurationStore.get() once at startup.
 export default {
     name: 'ContentProviderSettingsView',
     setup() {
         const preferenceStore = inject('roleProviderPreferenceStore', null);
         const setRoleProviderPreferenceUseCase = inject('setRoleProviderPreferenceUseCase', null);
         const preferredPlacementCreationCoordinator = inject('preferredSnapshotPlacementCreationCoordinator', null);
+        const ipfsNodeConfigurationStore = inject('ipfsNodeConfigurationStore', null);
+        const setIpfsNodeConfigurationUseCase = inject('setIpfsNodeConfigurationUseCase', null);
 
         const preference = ref(null);
         const selectedProviderKey = ref(null);
         const saveError = ref(null);
         const saveStatus = ref('idle'); // 'idle' | 'saving' | 'saved'
+
+        const ipfsNodeConfiguration = ref(null);
+        const ipfsNodeApiUrlInput = ref('');
+        const ipfsNodeSaveError = ref(null);
+        const ipfsNodeSaveStatus = ref('idle'); // 'idle' | 'saving' | 'saved'
+        const ipfsNodeClearStatus = ref('idle'); // 'idle' | 'cleared'
+
+        const hasIpfsNodeOverride = computed(() => ipfsNodeConfiguration.value !== null);
+        const effectiveIpfsNodeApiUrl = computed(() => (
+            ipfsNodeConfiguration.value ? ipfsNodeConfiguration.value.apiUrl : DEFAULT_IPFS_NODE_API_URL
+        ));
 
         const availableProviderKeys = computed(() =>
             preferredPlacementCreationCoordinator ? preferredPlacementCreationCoordinator.availableStorageTypes() : []
@@ -92,9 +121,55 @@ export default {
             }
         }
 
-        onMounted(load);
+        // Re-reads the store fresh on every load — the identical restraint
+        // `load()` above already holds for the provider preference itself.
+        function loadIpfsNodeConfiguration() {
+            if (!ipfsNodeConfigurationStore) return;
+            ipfsNodeConfiguration.value = ipfsNodeConfigurationStore.get();
+            ipfsNodeApiUrlInput.value = ipfsNodeConfiguration.value ? ipfsNodeConfiguration.value.apiUrl : '';
+        }
 
-        return { settings, selectedProviderKey, saveError, saveStatus, save };
+        function saveIpfsNodeConfiguration() {
+            if (!setIpfsNodeConfigurationUseCase || !ipfsNodeApiUrlInput.value.trim()) return;
+            ipfsNodeSaveError.value = null;
+            ipfsNodeClearStatus.value = 'idle';
+            ipfsNodeSaveStatus.value = 'saving';
+            try {
+                ipfsNodeConfiguration.value = setIpfsNodeConfigurationUseCase.execute({ apiUrl: ipfsNodeApiUrlInput.value.trim() });
+                ipfsNodeApiUrlInput.value = ipfsNodeConfiguration.value.apiUrl;
+                ipfsNodeSaveStatus.value = 'saved';
+            } catch (error) {
+                ipfsNodeSaveStatus.value = 'idle';
+                ipfsNodeSaveError.value = error.message;
+            }
+        }
+
+        // The one way back to "no override, use the deployment default" —
+        // mirrors ui/views/IpfsGatewaySettingsView.js's own
+        // useDeploymentDefault() exactly: calls store.clear(), never
+        // save({ apiUrl: DEFAULT_IPFS_NODE_API_URL }), so "no preference" is
+        // never wrongly turned into an explicit one that happens to match it.
+        function useIpfsNodeDeploymentDefault() {
+            if (!ipfsNodeConfigurationStore) return;
+            ipfsNodeConfigurationStore.clear();
+            ipfsNodeConfiguration.value = null;
+            ipfsNodeApiUrlInput.value = '';
+            ipfsNodeSaveError.value = null;
+            ipfsNodeSaveStatus.value = 'idle';
+            ipfsNodeClearStatus.value = 'cleared';
+        }
+
+        onMounted(() => {
+            load();
+            loadIpfsNodeConfiguration();
+        });
+
+        return {
+            settings, selectedProviderKey, saveError, saveStatus, save,
+            hasIpfsNodeOverride, effectiveIpfsNodeApiUrl, ipfsNodeApiUrlInput,
+            ipfsNodeSaveError, ipfsNodeSaveStatus, ipfsNodeClearStatus,
+            saveIpfsNodeConfiguration, useIpfsNodeDeploymentDefault
+        };
     },
     template: `
         <section class="content-provider-settings-view">
@@ -117,6 +192,36 @@ export default {
             <p v-else class="form-hint form-hint--neutral">
                 No content providers are currently registered on this replica.
             </p>
+
+            <h2>IPFS Node</h2>
+            <p class="form-hint form-hint--neutral">
+                The node the 'IPFS' backend places new Content onto — your own local Kubo node, or a remote one you
+                point it at instead. This never changes which backend "Use Preferred Provider" selects above, and
+                never changes the separate IPFS Gateway setting used for reading already-placed IPFS content.
+            </p>
+
+            <p v-if="hasIpfsNodeOverride" class="form-hint form-hint--neutral">
+                Current override: {{ effectiveIpfsNodeApiUrl }}
+            </p>
+            <p v-else class="form-hint form-hint--neutral">
+                No override configured. Currently using the deployment default: {{ effectiveIpfsNodeApiUrl }}
+            </p>
+
+            <div class="ipfs-node-settings-form">
+                <input
+                    type="text"
+                    v-model="ipfsNodeApiUrlInput"
+                    placeholder="http://127.0.0.1:5001"
+                    class="ipfs-node-api-url-input"
+                />
+
+                <p v-if="ipfsNodeSaveError" class="form-hint">{{ ipfsNodeSaveError }}</p>
+                <p v-if="ipfsNodeSaveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
+                <p v-if="ipfsNodeClearStatus === 'cleared'" class="form-hint form-hint--neutral">Cleared — now using the deployment default.</p>
+
+                <button class="action-btn action-btn--primary" @click="saveIpfsNodeConfiguration" :disabled="ipfsNodeSaveStatus === 'saving' || !ipfsNodeApiUrlInput.trim()">Save</button>
+                <button class="action-btn" @click="useIpfsNodeDeploymentDefault" :disabled="ipfsNodeSaveStatus === 'saving'">Use Deployment Default</button>
+            </div>
         </section>
     `
 };
