@@ -659,13 +659,20 @@ export class AvatarMovementController {
     // `stepConstraint` — see application/AvatarWaterConstraint.js's own
     // header. A controller built without one computes none of this and
     // behaves exactly as it did before this milestone.
-    constructor(avatarPresenceSession, movementConstraint = null, terrainConstraint = null, stepConstraint = null, treeConstraint = null, waterConstraint = null) {
+    //
+    // `wildlifeConstraint` (optional, same posture again) is APPENDED
+    // last of all — animal occupancy is a purely horizontal (X/Z)
+    // constraint, the direct structural twin of `treeConstraint`, run in
+    // its own separate pass against a different candidate set — see
+    // application/AvatarWildlifeConstraint.js's own header.
+    constructor(avatarPresenceSession, movementConstraint = null, terrainConstraint = null, stepConstraint = null, treeConstraint = null, waterConstraint = null, wildlifeConstraint = null) {
         this._avatarPresenceSession = avatarPresenceSession;
         this._movementConstraint = movementConstraint;
         this._terrainConstraint = terrainConstraint;
         this._stepConstraint = stepConstraint;
         this._treeConstraint = treeConstraint;
         this._waterConstraint = waterConstraint;
+        this._wildlifeConstraint = wildlifeConstraint;
         this._keys = { forward: false, backward: false, left: false, right: false, running: false, jumpHeld: false };
         this._verticalVelocity = 0;
         this._grounded = true;
@@ -721,6 +728,8 @@ export class AvatarMovementController {
         this._collidedWithTree = false;
         // 0.9.634 — same posture again, for the water-depth equivalent.
         this._blockedByWaterDepth = false;
+        // Same posture again, for the animal-collision equivalent.
+        this._collidedWithWildlife = false;
     }
 
     // Returns true when `key` is one this controller understands (so
@@ -1074,6 +1083,20 @@ export class AvatarMovementController {
             this._collidedWithTree = treeResult.collided;
         }
 
+        // Applied LAST of all, after tree collision has already resolved
+        // `finalPosition`: animal occupancy is the same purely horizontal
+        // (X/Z) constraint tree occupancy is, run in its own separate pass
+        // against a different candidate set — see
+        // application/AvatarWildlifeConstraint.js's own header.
+        this._collidedWithWildlife = false;
+        if (this._wildlifeConstraint) {
+            const wildlifeResult = this._wildlifeConstraint.apply(currentPosition, finalPosition, {
+                avatarRadius: this._resolvedCollisionRadius()
+            });
+            finalPosition = wildlifeResult.position;
+            this._collidedWithWildlife = wildlifeResult.collided;
+        }
+
         const positionChanged = !samePosition(finalPosition, current.position);
         const rotationChanged = Math.abs(result.rotationY - currentRotationY) > EPSILON;
         const animationChanged = result.animation !== current.animation;
@@ -1126,6 +1149,15 @@ export class AvatarMovementController {
     // any other internal logic reads.
     isBlockedByWaterDepth() {
         return this._blockedByWaterDepth;
+    }
+
+    // Whether the MOST RECENT tick's desired movement was altered by an
+    // animal's own collision circle. Same posture as isCollidedWithTree()
+    // and every other constraint flag above: transient, recomputed fresh
+    // every tick, never persisted, never part of AvatarPresence. A debug/UI
+    // surface, not something any other internal logic reads.
+    isCollidedWithWildlife() {
+        return this._collidedWithWildlife;
     }
 
     // 0.9.63 — whether the MOST RECENT tick's desired movement was

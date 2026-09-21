@@ -449,9 +449,9 @@ async function runTests() {
         // longer matches the real, current source (a fifth parameter now
         // follows `treeConstraint = null`) — this is the predicted
         // pattern being followed, not a broken one.
-        const constructorMatch = controllerSource.match(/constructor\(avatarPresenceSession, movementConstraint = null, terrainConstraint = null, stepConstraint = null, treeConstraint = null, waterConstraint = null\)/);
+        const constructorMatch = controllerSource.match(/constructor\(avatarPresenceSession, movementConstraint = null, terrainConstraint = null, stepConstraint = null, treeConstraint = null, waterConstraint = null, wildlifeConstraint = null\)/);
         assert(constructorMatch !== null,
-            '21. AMENDED BY 0.9.634: AvatarMovementController\'s own constructor now accepts FIVE independent, optional, append-only constraints (movementConstraint/terrainConstraint/stepConstraint/treeConstraint/waterConstraint, each defaulting to null, added one per milestone since 0.2.42/0.2.77/0.3.2/0.9.63/0.9.634) — confirmed against its real, current source text; the water-depth constraint slot this section predicted now exists, following the already-four-times-precedented pattern verbatim');
+            '21. AMENDED: AvatarMovementController\'s own constructor now accepts SIX independent, optional, append-only constraints (movementConstraint/terrainConstraint/stepConstraint/treeConstraint/waterConstraint/wildlifeConstraint, each defaulting to null, added one per milestone since 0.2.42/0.2.77/0.3.2/0.9.63/0.9.634) — confirmed against its real, current source text; a wildlife-collision constraint slot now exists too, following the already-five-times-precedented pattern verbatim');
 
         const riverGateResult = candidateWaterDepthConstraint(seed, { x: river.x - 1, y: 0, z: river.z }, { x: river.x, y: 0, z: river.z }, MAX_WALKING_DEPTH_CANDIDATE);
         assert(riverGateResult.blocked === false,
