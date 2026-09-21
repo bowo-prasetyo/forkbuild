@@ -37,6 +37,7 @@ import RecoveryBanner from '../components/RecoveryBanner.js';
 import TransformFeedback from '../components/TransformFeedback.js';
 import { CreatePublisherUseCase } from '../../application/CreatePublisherUseCase.js';
 import { sanitizeDistributionErrorMessage } from '../../application/DistributionErrorMessageSanitizer.js';
+import { IpfsRemotePublicationState } from '../../application/IpfsRemotePublicationState.js';
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
 import { CreateBlueprintAttributionUseCase } from '../../application/CreateBlueprintAttributionUseCase.js';
 import { CreateBlueprintLineageUseCase } from '../../application/CreateBlueprintLineageUseCase.js';
@@ -123,9 +124,101 @@ export default {
                  for a banner that must always be seen the instant it
                  appears: a full-width bar at the TOP of the view, ahead
                  of the viewport, never behind or below it. -->
-            <div v-if="publishedPublication || distributionError || (distributionResult && distributionResult.length)" class="editor-post-publish-overlay">
+            <div v-if="publishedPublication || distributionError || (distributionResult && distributionResult.length) || snapshotDistributionError || snapshotDistributionResult" class="editor-post-publish-overlay">
                 <div v-if="publishedPublication" class="editor-post-publish-action">
                     <span class="editor-post-publish-message">Publication published successfully.</span>
+                    <!-- Snapshot Distribution — distributes the
+                         Publication's own raw MATERIAL bytes directly
+                         (Arweave/IPFS/Remote Pinning), entirely separate
+                         from "Distribute now" below (which announces the
+                         Publication itself). Mirrors
+                         ui/components/OwnPublicationPanel.js's own
+                         "Distribute Snapshot" section verbatim, one caller
+                         over, including its ordering (Snapshot before
+                         Publication). Rendered only when a usable Snapshot
+                         distribution capability exists at all — see
+                         canDistributeSnapshot's own comment. Reachable the
+                         moment a publish succeeds: PublishDocumentUseCase's
+                         own automatic initial placement (0.2.23) already
+                         gives every freshly-published Publication a real
+                         contentReference before this overlay ever renders,
+                         so there is no "not placed yet" gap to wait out
+                         here — see docs/Principles.md, "A Publication Is
+                         What; A Placement Is Where." -->
+                    <label
+                        v-if="canDistributeSnapshot"
+                        class="editor-post-publish-storage-label"
+                    >
+                        Snapshot storage
+                        <select v-model="selectedSnapshotStorage" class="editor-post-publish-storage-select" :disabled="snapshotDistributionExecuting">
+                            <option value="ar">Arweave</option>
+                            <option value="ipfs">IPFS (Local Kubo)</option>
+                            <option value="remote-pinning">IPFS (Remote Pinning)</option>
+                        </select>
+                    </label>
+
+                    <!-- The Remote Pinning endpoint/credential draft for
+                         "Distribute Snapshot." The SAME remotePinningDraft
+                         "Distribute now" above uses — never a second
+                         draft, mirroring OwnPublicationPanel.js's own
+                         single, shared draft exactly. -->
+                    <div v-if="canDistributeSnapshot && selectedSnapshotStorage === 'remote-pinning'" class="editor-post-publish-remote-pinning-draft">
+                        <label class="form-field">
+                            <span class="form-label">Endpoint</span>
+                            <input type="text" class="form-input" v-model="remotePinningDraft.endpoint" placeholder="https://api.pinata.cloud/pinning/pinFileToIPFS" />
+                        </label>
+                        <label class="form-field">
+                            <span class="form-label">Credential (optional)</span>
+                            <input type="password" class="form-input" v-model="remotePinningDraft.credential" placeholder="Bearer token" />
+                        </label>
+                        <label class="form-field">
+                            <span class="form-label">Request field (optional)</span>
+                            <input type="text" class="form-input" v-model="remotePinningDraft.requestField" placeholder="file" />
+                        </label>
+                        <label class="form-field">
+                            <span class="form-label">Response field (optional)</span>
+                            <input type="text" class="form-input" v-model="remotePinningDraft.responseField" placeholder="cid (Pinata: IpfsHash)" />
+                        </label>
+                        <p class="form-hint form-hint--neutral">Nothing here is saved anywhere — entered fresh each time you click Distribute Snapshot.</p>
+                    </div>
+
+                    <label
+                        v-if="canDistributeSnapshot"
+                        class="editor-post-publish-provider-label"
+                    >
+                        Announcement / Discovery substrate:
+                        <select
+                            v-model="snapshotDiscoveryProvider"
+                            class="form-select editor-post-publish-provider-select"
+                            :disabled="snapshotDistributionExecuting"
+                        >
+                            <option value="nostr">Nostr</option>
+                            <option value="arweave">Arweave</option>
+                        </select>
+                    </label>
+                    <button
+                        v-if="canDistributeSnapshot"
+                        type="button"
+                        class="action-btn action-btn--primary editor-post-publish-distribute-snapshot-btn"
+                        :disabled="snapshotDistributionExecuting"
+                        @click="distributePublishedSnapshot"
+                    >{{ snapshotDistributionExecuting ? 'Distributing…' : 'Distribute Snapshot' }}</button>
+                    <p v-if="snapshotDistributionError" class="editor-post-publish-distribution-error">{{ snapshotDistributionError }}</p>
+                    <dl v-else-if="snapshotDistributionResult" class="editor-post-publish-distribution-detail">
+                        <dt>Content hash</dt>
+                        <dd>{{ snapshotDistributionResult.contentReference.hash }}</dd>
+                        <dt>Locator</dt>
+                        <dd>{{ snapshotDistributionResult.contentReference.uri }}</dd>
+                        <dt>Announcement</dt>
+                        <!-- announcementError (Remote Pinning only) shows
+                             the real, sanitized cause a Nostr announcement
+                             failed, mirroring OwnPublicationPanel.js's own
+                             identical row verbatim. undefined for the
+                             Arweave/Local Kubo paths, so they render
+                             exactly as before. -->
+                        <dd>{{ snapshotDistributionResult.announcement ? snapshotDistributionResult.announcement.id : (snapshotDistributionResult.announcementError || 'No announcement') }}</dd>
+                    </dl>
+
                     <!-- 0.9.502 — Editor Announcement/Discovery Provider
                          Selection. The Wanderer's own explicit Nostr/
                          Arweave substrate choice for the NEXT click below —
@@ -1490,6 +1583,24 @@ export default {
         // second composition root.
         const publicationDistributionCommand = inject('publicationDistributionCommand', null);
 
+        // Snapshot Distribution — distributes the Publication's own
+        // MATERIAL bytes directly (Arweave/IPFS/Remote Pinning), entirely
+        // separate from announcing the Publication itself above. The SAME
+        // three app-wide collaborators `ui/views/WorldView.js`'s own
+        // distributeWorldEncounterSnapshot() already injects, one caller
+        // over: `snapshotDistributionCommand` for the registry-backed
+        // 'ar'/'ipfs' paths, `publicationContentStore` to read the actual
+        // bytes from `publication.contentReference`, and
+        // `ipfsRemotePublicationCoordinator`/`resolveSnapshotDiscoveryPublisher`
+        // for the separate Remote Pinning path (see that function's own
+        // header for why Remote Pinning never goes through
+        // `snapshotDistributionCommand` at all). Never a second
+        // composition, never a new command.
+        const snapshotDistributionCommand = inject('snapshotDistributionCommand', null);
+        const publicationContentStore = inject('publicationContentStore', null);
+        const ipfsRemotePublicationCoordinator = inject('ipfsRemotePublicationCoordinator', null);
+        const resolveSnapshotDiscoveryPublisher = inject('resolveSnapshotDiscoveryPublisher', null);
+
         // The Wanderer's own freely editable choice of Announcement/
         // Discovery substrate for the NEXT "Distribute now" click —
         // page-local UI state only, mirroring `WorldEncounterCanvas.js`'s
@@ -1538,6 +1649,36 @@ export default {
         // boolean, not a computed: both injected commands are fixed,
         // app-wide values that never change after this view mounts.
         const canDistributePublication = Boolean(multiRelayNostrPublicationDistributionCommand || publicationDistributionCommand);
+
+        // Same restraint, one action over: whether Snapshot distribution
+        // has anywhere to go at all — either the registry-backed command
+        // (Arweave/local IPFS) or the Remote Pinning path (which needs
+        // both the coordinator AND a way to resolve a discovery
+        // publisher). `publicationContentStore` is required either way —
+        // it is how this view turns "which Publication" into "which
+        // bytes" — see distributeEditorSnapshot() below.
+        const canDistributeSnapshot = Boolean(
+            publicationContentStore
+            && (snapshotDistributionCommand || (ipfsRemotePublicationCoordinator && resolveSnapshotDiscoveryPublisher))
+        );
+
+        // The Wanderer's own Snapshot Storage/Announcement choice for the
+        // NEXT "Distribute Snapshot" click — page-local UI state only,
+        // mirroring OwnPublicationPanel.js's own
+        // snapshotDistributionStorage/snapshotDiscoveryProvider pair
+        // exactly, one caller over. Independent of selectedMaterialStorage/
+        // selectedDiscoveryProvider above: Publication distribution and
+        // Snapshot distribution are two separate actions with two separate
+        // storage/substrate choices — see this file's own new
+        // distributeEditorSnapshot() header. `remotePinningDraft` above is
+        // reused verbatim for this action too, exactly like
+        // OwnPublicationPanel.js's own single, shared draft.
+        const selectedSnapshotStorage = ref(
+            defaultContentDistributionProvider === 'ar' || defaultContentDistributionProvider === 'ipfs'
+                ? defaultContentDistributionProvider
+                : 'ar'
+        );
+        const snapshotDiscoveryProvider = ref(defaultAnnouncementDiscoveryProvider);
 
         // The smallest callable contract 0.9.376's own Section A/D
         // identified — identical in shape to WorldView.js's own
@@ -1591,6 +1732,65 @@ export default {
             });
         }
 
+        // Distributes the Publication's own raw SNAPSHOT bytes — never the
+        // serialized Publication object distributeEditorPublication()
+        // sends above. Byte-for-byte the same shape and behavior as
+        // WorldView.js's own distributeWorldEncounterSnapshot(), one
+        // caller over, with exactly one deliberate omission: that function
+        // also forwards a `claimedPosition` read from
+        // `session.getPlacementInfoForPublication()` — this view injects
+        // no WorldNavigationSession at all (it has no spatial/placement
+        // concerns of its own), so `claimedPosition`/`publicationId` are
+        // always left `undefined` here, the exact same degraded-but-
+        // tolerated path that function already holds for a Publication
+        // with no authoritative WorldPlacement.
+        function distributeEditorSnapshot(publication, storage, remotePinningConfiguration, discoveryProvider) {
+            if (!publicationContentStore || !publication.contentReference) {
+                return Promise.reject(new Error('Snapshot distribution is not available.'));
+            }
+            const snapshotBytes = publicationContentStore.get(publication.contentReference);
+            if (snapshotBytes === null || snapshotBytes === undefined) {
+                return Promise.reject(new Error('Snapshot distribution is not available.'));
+            }
+            if (storage === 'remote-pinning') {
+                if (!ipfsRemotePublicationCoordinator) {
+                    return Promise.reject(new Error('Snapshot distribution is not available.'));
+                }
+                return ipfsRemotePublicationCoordinator.publish({ bytes: snapshotBytes, configuration: remotePinningConfiguration })
+                    .then((outcome) => {
+                        if (outcome.state !== IpfsRemotePublicationState.PUBLISHED) {
+                            throw new Error(outcome.reason || 'Remote IPFS publish failed.');
+                        }
+                        const contentReference = { hash: outcome.contentHash, uri: outcome.locator, storage: 'ipfs' };
+                        const discoveryPublisher = resolveSnapshotDiscoveryPublisher ? resolveSnapshotDiscoveryPublisher(discoveryProvider) : null;
+                        if (!discoveryPublisher) {
+                            return { contentReference, announcement: null, announcementError: 'Snapshot distribution is not available.' };
+                        }
+                        return discoveryPublisher.publish({ contentHash: outcome.contentHash, locator: outcome.locator, storage: 'ipfs' })
+                            .then((announcement) => ({ contentReference, announcement }))
+                            .catch((error) => {
+                                // Same restraint as WorldView.js's own
+                                // identical catch: the content is already
+                                // durably pinned regardless of whether the
+                                // Nostr/Arweave announcement itself
+                                // succeeded, so a real announcement
+                                // failure never fails the whole attempt —
+                                // it surfaces as announcementError instead.
+                                console.error('Snapshot Nostr announcement failed:', error);
+                                return {
+                                    contentReference,
+                                    announcement: null,
+                                    announcementError: sanitizeDistributionErrorMessage(error) || 'Announcement could not be completed.'
+                                };
+                            });
+                    });
+            }
+            if (!snapshotDistributionCommand) {
+                return Promise.reject(new Error('Snapshot distribution is not available.'));
+            }
+            return snapshotDistributionCommand(snapshotBytes, storage, undefined, undefined, discoveryProvider);
+        }
+
         // The exact just-published Publication — replaced wholesale by
         // each successful publish, never merged with a prior one. A later
         // publish superseding an earlier one's still-visible action is
@@ -1611,6 +1811,16 @@ export default {
         const distributionResult = ref(null);
         let distributionRequestId = 0;
 
+        // The identical ephemeral family, one action over, for Snapshot
+        // distribution — entirely independent state, never shared with
+        // distributionExecuting/distributionError/distributionResult
+        // above (mirrors OwnPublicationPanel.js's own two separate
+        // families exactly).
+        const snapshotDistributionExecuting = ref(false);
+        const snapshotDistributionError = ref(null);
+        const snapshotDistributionResult = ref(null);
+        let snapshotDistributionRequestId = 0;
+
         // Toolbar's own `@published` handler — the ONLY place
         // publishedPublication is ever written to a non-null value.
         // Publishing itself never calls distributeEditorPublication() or
@@ -1625,6 +1835,10 @@ export default {
             distributionError.value = null;
             distributionResult.value = null;
             distributionRequestId += 1;
+            snapshotDistributionExecuting.value = false;
+            snapshotDistributionError.value = null;
+            snapshotDistributionResult.value = null;
+            snapshotDistributionRequestId += 1;
         }
 
         // The action's own dismiss — if the user ignores or dismisses it,
@@ -1637,6 +1851,10 @@ export default {
             distributionError.value = null;
             distributionResult.value = null;
             distributionRequestId += 1;
+            snapshotDistributionExecuting.value = false;
+            snapshotDistributionError.value = null;
+            snapshotDistributionResult.value = null;
+            snapshotDistributionRequestId += 1;
         }
 
         // The only writer of distributionExecuting/distributionError/
@@ -1734,6 +1952,48 @@ export default {
                 .then(() => {
                     if (requestId === distributionRequestId) {
                         distributionExecuting.value = false;
+                    }
+                });
+        }
+
+        // The only writer of snapshotDistributionExecuting/
+        // snapshotDistributionError/snapshotDistributionResult, and the
+        // only caller of distributeEditorSnapshot in this view — mirrors
+        // distributePublishedDocument() immediately above exactly, one
+        // action over. A no-op whenever there is no publishedPublication,
+        // no usable snapshot distribution capability at all, or a call is
+        // already in flight.
+        function distributePublishedSnapshot() {
+            const publication = publishedPublication.value;
+            if (!publication || !canDistributeSnapshot || snapshotDistributionExecuting.value) {
+                return;
+            }
+            snapshotDistributionExecuting.value = true;
+            snapshotDistributionError.value = null;
+            snapshotDistributionRequestId += 1;
+            const requestId = snapshotDistributionRequestId;
+            Promise.resolve()
+                .then(() => distributeEditorSnapshot(
+                    publication,
+                    selectedSnapshotStorage.value,
+                    selectedSnapshotStorage.value === 'remote-pinning' ? remotePinningDraft.value : undefined,
+                    snapshotDiscoveryProvider.value
+                ))
+                .then((result) => {
+                    if (requestId === snapshotDistributionRequestId) {
+                        snapshotDistributionResult.value = result;
+                    }
+                })
+                .catch((error) => {
+                    if (requestId === snapshotDistributionRequestId) {
+                        console.error('Snapshot distribution failed:', error);
+                        snapshotDistributionError.value = sanitizeDistributionErrorMessage(error)
+                            || 'Snapshot distribution could not be completed.';
+                    }
+                })
+                .then(() => {
+                    if (requestId === snapshotDistributionRequestId) {
+                        snapshotDistributionExecuting.value = false;
                     }
                 });
         }
@@ -2580,6 +2840,13 @@ export default {
             selectedDiscoveryProvider,
             selectedMaterialStorage,
             remotePinningDraft,
+            canDistributeSnapshot,
+            selectedSnapshotStorage,
+            snapshotDiscoveryProvider,
+            snapshotDistributionExecuting,
+            snapshotDistributionError,
+            snapshotDistributionResult,
+            distributePublishedSnapshot,
             publishedPublication,
             distributionExecuting,
             distributionError,

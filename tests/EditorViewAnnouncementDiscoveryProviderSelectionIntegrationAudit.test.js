@@ -541,8 +541,17 @@ async function run() {
     {
         // Snapshot-family isolation (structurally separate role — see
         // application/SnapshotDistributionCommand.js's own header).
-        assert(!/SnapshotDiscoveryPublisher|SnapshotDistributionCommand|SnapshotDistributionRuntimeComposition|SnapshotCandidateDiscovery/.test(editorViewSource),
-            n('G1. EditorView.js references none of the Snapshot-family discovery/distribution classes'));
+        // AMENDED — scoped to distributeEditorPublication()'s own body,
+        // not the whole file: a later, independently-scoped milestone
+        // gave EditorView.js its own, separate "Distribute Snapshot"
+        // action (distributeEditorSnapshot(), mirroring WorldView.js's
+        // own distributeWorldEncounterSnapshot()), so the file as a whole
+        // now legitimately references the Snapshot family — the real,
+        // still-true invariant is that THIS milestone's own Publication
+        // distribution selector never does.
+        const publicationDistributionFnBody = extractRange(editorViewCode, 'function distributeEditorPublication(publication, discoveryProvider, materialStorage, remotePinningConfiguration) {', '\n        }\n', 'distributeEditorPublication() body');
+        assert(!/SnapshotDiscoveryPublisher|SnapshotDistributionCommand|SnapshotDistributionRuntimeComposition|SnapshotCandidateDiscovery/.test(publicationDistributionFnBody),
+            n('G1. distributeEditorPublication() references none of the Snapshot-family discovery/distribution classes'));
 
         // Publication identity / Repository navigation: the existing
         // "Explore" action reads ONLY publishedPublication.value.documentId
@@ -799,21 +808,39 @@ async function run() {
     }
 
     // ===============================================================
-    // Section L — scope boundary: this milestone changes no production
-    // file, only adds its own test.
+    // Section L — scope boundary. ORIGINALLY (0.9.502): this milestone
+    // changed no production file, only added its own test — a live
+    // `git status --porcelain` check that, like G2's own identical
+    // caveat above, could only ever describe THIS milestone's own diff
+    // at the moment it was authored. AMENDED — a later, independently-
+    // scoped milestone legitimately gives EditorView.js its own,
+    // separate "Distribute Snapshot" action (distributeEditorSnapshot(),
+    // mirroring WorldView.js's own distributeWorldEncounterSnapshot());
+    // G1, above, already carries this section's real, durable invariant
+    // precisely — 0.9.502's OWN distributeEditorPublication() still
+    // touches no Snapshot-family class, regardless of what else
+    // EditorView.js now also contains. The two test files below are that
+    // later milestone's own required updates — the Snapshot-family
+    // isolation check in each had to move from "the whole file never
+    // mentions it" to "distributeEditorPublication() never mentions it",
+    // since the whole-file version is no longer true, by design.
     // ===============================================================
     {
         const statusOutput = execSync('git status --porcelain', { cwd: SOURCE_ROOT }).toString();
         const changed = statusOutput.split('\n').map((line) => line.slice(3).trim()).filter(Boolean);
         const AUTHORIZED = new Set([
             'tests.html',
-            'tests/EditorViewAnnouncementDiscoveryProviderSelectionIntegrationAudit.test.js'
+            'tests/EditorViewAnnouncementDiscoveryProviderSelectionIntegrationAudit.test.js',
+            // Snapshot Distribution for EditorView.js (later milestone) —
+            // see this section's own AMENDED comment, above.
+            'ui/views/EditorView.js',
+            'tests/EditorViewAnnouncementDiscoveryProviderSelection.test.js'
         ]);
         const unauthorized = changed.filter((f) => !AUTHORIZED.has(f));
         assert(unauthorized.length === 0,
-            n(`L1. every changed/added file is this milestone's own test registration and test file (found unauthorized: ${JSON.stringify(unauthorized)}) — a genuine test-only production integration audit`));
+            n(`L1. every changed/added file is either this milestone's own test file or a later, independently-scoped milestone's own authorized change (found unauthorized: ${JSON.stringify(unauthorized)})`));
 
-        console.log('✓ Section L: zero production changes — this milestone is exactly the test-only integration audit it claims to be');
+        console.log('✓ Section L: every changed file is accounted for — this milestone itself remains test-only; EditorView.js\'s own production change belongs to a later, separate Snapshot Distribution milestone');
     }
 
     console.log(`\n✅ All EditorViewAnnouncementDiscoveryProviderSelectionIntegrationAudit tests passed (${assertionCount} assertions).`);
