@@ -22,15 +22,22 @@ import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterM
 // Publication authorship. The combined action never merges their
 // results, never introduces an aggregate status, and never changes what
 // either command is called with — it only saves a click.
+//
+// SEQUENTIAL, NEVER CONCURRENT. Both legs can end up signing through the
+// SAME injected browser extension (most plausibly a NIP-07 Nostr
+// provider used for both protocols' own announcement step). A real
+// nos2x installation was observed hanging indefinitely — no approval
+// popup shown at all, on either leg — when both signing flows were
+// fired at once, well past either leg's own documented worst-case
+// signing timeout (120s). Running the two legs one after another,
+// exactly as if a Wanderer had clicked each button by hand in sequence,
+// avoids ever presenting a browser extension with two concurrent
+// signing requests.
 
 let assertionCount = 0;
 function assert(condition, message) {
     assertionCount += 1;
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function flushMicrotasks() {
-    return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
 function canvasCtx(overrides = {}) {
@@ -89,6 +96,13 @@ function panelCtx(overrides = {}) {
     };
 }
 
+// A promise that resolves on the next macrotask, deep enough to drain
+// every microtask hop in a multi-step .then() chain — used only to prove
+// a leg has NOT yet started, never to wait out a leg that has.
+function tick() {
+    return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
 const SOURCE_ROOT = new URL('../', import.meta.url);
 
 async function codeOnlySource(relativePath) {
@@ -98,69 +112,78 @@ async function codeOnlySource(relativePath) {
 
 async function runTests() {
     // ---------------------------------------------------------------
-    // Section A — WorldEncounterCanvas: one click reaches both commands,
-    // exactly once each, with the SAME selected Publication.
+    // Section A — WorldEncounterCanvas: the combined click runs the two
+    // legs SEQUENTIALLY (Publication, then Snapshot) — the Snapshot leg
+    // never starts while the Publication leg is still in flight, and
+    // both still reach their own independent, correct result.
     // ---------------------------------------------------------------
     {
         const publication = new Publication({ id: 'pub-unify-a', documentId: 'doc-a', contentReference: { hash: 'pub-unify-a-hash' } });
-        let publicationCalls = 0;
-        let snapshotCalls = 0;
-        let receivedByPublicationCommand = null;
-        let receivedBySnapshotCommand = null;
+        const order = [];
+        let resolvePublication;
 
         const ctx = canvasCtx({
-            distributionCommand: (pub) => { publicationCalls += 1; receivedByPublicationCommand = pub; return Promise.resolve({ publication: pub, material: null, discovery: null }); },
-            snapshotDistributionCommand: (pub) => { snapshotCalls += 1; receivedBySnapshotCommand = pub; return Promise.resolve({ contentReference: { hash: 'h', uri: 'u' }, announcement: null }); }
+            distributionCommand: (pub) => {
+                order.push('publication-start');
+                return new Promise((resolve) => { resolvePublication = () => { order.push('publication-end'); resolve({ publication: pub, material: null, discovery: null }); }; });
+            },
+            snapshotDistributionCommand: (pub) => {
+                order.push('snapshot-start');
+                return Promise.resolve({ contentReference: { hash: 'h', uri: 'u' }, announcement: null });
+            }
         });
         ctx.selectedEncounter = { kind: 'PUBLICATION', objectId: publication.id };
         ctx.materialInspection = { loading: { status: WorldEncounterMaterialLoadStatus.AVAILABLE, material: publication } };
 
-        ctx.distributeSelectedPublicationAndSnapshot();
-        assert(ctx.distributionExecuting === true, '1. the Publication leg enters executing state synchronously');
-        assert(ctx.snapshotDistributionExecuting === true, '2. the Snapshot leg enters executing state synchronously');
+        const combined = ctx.distributeSelectedPublicationAndSnapshot();
+        assert(ctx.distributionExecuting === true, '1. the Publication leg starts synchronously');
 
-        await flushMicrotasks();
+        await tick();
+        assert(order.join(',') === 'publication-start', '2. the Snapshot leg has NOT started yet — it never fires while the Publication leg is still awaiting its own (here: unresolved) command');
+        assert(ctx.snapshotDistributionExecuting === false, '3. snapshotDistributionExecuting confirms the Snapshot leg is genuinely idle, not merely un-observed');
 
-        assert(publicationCalls === 1, '3. distributionCommand was called exactly once');
-        assert(snapshotCalls === 1, '4. snapshotDistributionCommand was called exactly once');
-        assert(receivedByPublicationCommand === publication && receivedBySnapshotCommand === publication,
-            '5. both commands received the exact same selected Publication object');
+        resolvePublication();
+        await combined;
+
+        assert(order.join(',') === 'publication-start,publication-end,snapshot-start',
+            '4. the Snapshot leg starts only after the Publication leg has fully settled — never concurrently with it');
         assert(ctx.distributionExecuting === false && ctx.snapshotDistributionExecuting === false,
-            '6. both legs return to idle once their own command resolves');
+            '5. both legs return to idle once the full sequence completes');
         assert(ctx.snapshotDistributionResult.contentReference.hash === 'h',
-            '7. the Snapshot leg still stores its own resolved result exactly as distributeSelectedSnapshot() alone already would');
+            '6. the Snapshot leg still stores its own resolved result exactly as distributeSelectedSnapshot() alone already would');
 
-        console.log('✓ Section A: WorldEncounterCanvas — one click reaches both already-independent commands, exactly once each, with the same Publication');
+        console.log('✓ Section A: WorldEncounterCanvas — the combined action runs Publication then Snapshot strictly in sequence, never concurrently');
     }
 
     // ---------------------------------------------------------------
-    // Section B — WorldEncounterCanvas: the two legs never share fate.
-    // A rejection on one side never blocks, cancels, or hides the other.
+    // Section B — WorldEncounterCanvas: sequencing never turns into
+    // shared fate. A rejection on the first leg still lets the second
+    // leg run (and succeed) right afterward.
     // ---------------------------------------------------------------
     {
         const publication = new Publication({ id: 'pub-unify-b', documentId: 'doc-b', contentReference: { hash: 'pub-unify-b-hash' } });
+        let snapshotCalls = 0;
         const ctx = canvasCtx({
             distributionCommand: () => Promise.reject(new Error('material storage rejected the upload')),
-            snapshotDistributionCommand: () => Promise.resolve({ contentReference: { hash: 'ok-hash', uri: 'ok-uri' }, announcement: { id: 'evt-1' } })
+            snapshotDistributionCommand: () => { snapshotCalls += 1; return Promise.resolve({ contentReference: { hash: 'ok-hash', uri: 'ok-uri' }, announcement: { id: 'evt-1' } }); }
         });
         ctx.selectedEncounter = { kind: 'PUBLICATION', objectId: publication.id };
         ctx.materialInspection = { loading: { status: WorldEncounterMaterialLoadStatus.AVAILABLE, material: publication } };
 
-        ctx.distributeSelectedPublicationAndSnapshot();
-        await flushMicrotasks();
+        await ctx.distributeSelectedPublicationAndSnapshot();
 
         assert(typeof ctx.distributionError === 'string' && ctx.distributionError.length > 0,
-            '8. the failing Publication leg reports its own honest failure');
-        assert(ctx.snapshotDistributionError === null && ctx.snapshotDistributionResult.contentReference.hash === 'ok-hash',
-            '9. the succeeding Snapshot leg is completely unaffected by the other leg\'s rejection — no shared fate, no cross-cancellation');
+            '7. the failing Publication leg reports its own honest failure');
+        assert(snapshotCalls === 1 && ctx.snapshotDistributionError === null && ctx.snapshotDistributionResult.contentReference.hash === 'ok-hash',
+            '8. the Publication leg\'s rejection never skips, cancels, or taints the Snapshot leg that runs after it');
 
-        console.log('✓ Section B: WorldEncounterCanvas — a failure on one leg never blocks or hides the other\'s independent outcome');
+        console.log('✓ Section B: WorldEncounterCanvas — a failure on the first leg never blocks, skips, or hides the second leg\'s own independent outcome');
     }
 
     // ---------------------------------------------------------------
-    // Section C — WorldEncounterCanvas: while either leg is already
-    // in flight, the combined click is a no-op for that leg — mirrors
-    // each individual action's own existing re-entrancy guard exactly.
+    // Section C — WorldEncounterCanvas: a second combined click while
+    // the first is still mid-sequence never starts an overlapping call
+    // for whichever leg is currently in flight.
     // ---------------------------------------------------------------
     {
         const publication = new Publication({ id: 'pub-unify-c', documentId: 'doc-c', contentReference: { hash: 'pub-unify-c-hash' } });
@@ -173,43 +196,42 @@ async function runTests() {
         ctx.selectedEncounter = { kind: 'PUBLICATION', objectId: publication.id };
         ctx.materialInspection = { loading: { status: WorldEncounterMaterialLoadStatus.AVAILABLE, material: publication } };
 
+        const first = ctx.distributeSelectedPublicationAndSnapshot();
         ctx.distributeSelectedPublicationAndSnapshot();
-        ctx.distributeSelectedPublicationAndSnapshot();
-        await flushMicrotasks();
-        assert(publicationCalls === 1, '10. a second combined click while the Publication leg is still in flight never starts a second, overlapping call');
+        await tick();
+        assert(publicationCalls === 1, '9. a second combined click while the Publication leg is still in flight never starts a second, overlapping call');
 
         resolvePublication({ publication, material: null, discovery: null });
-        await flushMicrotasks();
+        await first;
 
         console.log('✓ Section C: WorldEncounterCanvas — the combined action never overlaps a leg that is already in flight, the identical restraint each individual action already holds');
     }
 
     // ---------------------------------------------------------------
-    // Section D — OwnPublicationPanel: the identical contract, one
-    // surface over ("My Publication," never World Encounters).
+    // Section D — OwnPublicationPanel: the identical sequential
+    // contract, one surface over ("My Publication," never World
+    // Encounters) — Snapshot first, then Publication, matching this
+    // panel's own template order.
     // ---------------------------------------------------------------
     {
         const publication = new Publication({ id: 'pub-unify-d', documentId: 'doc-d', contentReference: { hash: 'pub-unify-d-hash' } });
-        let publicationCalls = 0;
-        let snapshotCalls = 0;
+        const order = [];
 
         const ctx = panelCtx({
             publication,
-            publicationDistributionCommand: () => { publicationCalls += 1; return Promise.resolve({ publication, material: { uri: 'mat-uri' }, discovery: { id: 'evt-2' } }); },
-            snapshotDistributionCommand: () => { snapshotCalls += 1; return Promise.resolve({ contentReference: { hash: 'h3', uri: 'u3' }, announcement: null }); }
+            snapshotDistributionCommand: () => { order.push('snapshot'); return Promise.resolve({ contentReference: { hash: 'h3', uri: 'u3' }, announcement: null }); },
+            publicationDistributionCommand: () => { order.push('publication'); return Promise.resolve({ publication, material: { uri: 'mat-uri' }, discovery: { id: 'evt-2' } }); }
         });
 
-        ctx.distributeOwnPublicationAndSnapshot();
-        assert(ctx.publicationDistributionExecuting === true && ctx.snapshotDistributionExecuting === true,
-            '11. OwnPublicationPanel — both legs enter executing state synchronously on one click');
+        await ctx.distributeOwnPublicationAndSnapshot();
 
-        await flushMicrotasks();
-
-        assert(publicationCalls === 1 && snapshotCalls === 1, '12. OwnPublicationPanel — both commands were called exactly once');
+        assert(order.join(',') === 'snapshot,publication', '10. OwnPublicationPanel — the two legs run strictly in sequence, Snapshot then Publication, never concurrently');
         assert(ctx.publicationDistributionResult.material.uri === 'mat-uri' && ctx.snapshotDistributionResult.contentReference.hash === 'h3',
-            '13. OwnPublicationPanel — each leg still stores its own independent result, unmodified by being triggered together');
+            '11. OwnPublicationPanel — each leg still stores its own independent result, unmodified by being triggered together');
+        assert(ctx.publicationDistributionExecuting === false && ctx.snapshotDistributionExecuting === false,
+            '12. OwnPublicationPanel — both legs return to idle once the full sequence completes');
 
-        console.log('✓ Section D: OwnPublicationPanel — the identical one-click, two-independent-legs contract holds for "My Publication" too');
+        console.log('✓ Section D: OwnPublicationPanel — the identical one-click, sequential-legs contract holds for "My Publication" too');
     }
 
     // ---------------------------------------------------------------
@@ -221,21 +243,21 @@ async function runTests() {
         const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
 
         assert((canvasCode.match(/this\.distributionCommand\(/g) || []).length === 1,
-            '14. WorldEncounterCanvas.js still calls distributionCommand from exactly one place');
+            '13. WorldEncounterCanvas.js still calls distributionCommand from exactly one place');
         assert((canvasCode.match(/this\.snapshotDistributionCommand\(/g) || []).length === 1,
-            '15. WorldEncounterCanvas.js still calls snapshotDistributionCommand from exactly one place');
+            '14. WorldEncounterCanvas.js still calls snapshotDistributionCommand from exactly one place');
         assert((panelCode.match(/this\.publicationDistributionCommand\(/g) || []).length === 1,
-            '16. OwnPublicationPanel.js still calls publicationDistributionCommand from exactly one place');
+            '15. OwnPublicationPanel.js still calls publicationDistributionCommand from exactly one place');
         assert((panelCode.match(/this\.snapshotDistributionCommand\(/g) || []).length === 1,
-            '17. OwnPublicationPanel.js still calls snapshotDistributionCommand from exactly one place');
+            '16. OwnPublicationPanel.js still calls snapshotDistributionCommand from exactly one place');
 
-        const forbidden = [/distributePublication\(publication,\s*targets\)/, /MULTI_SUCCESS|AGGREGATE_(SUCCESS|STATUS)/, /combinedDistributionResult/, /combinedDistributionError/];
+        const forbidden = [/distributePublication\(publication,\s*targets\)/, /MULTI_SUCCESS|AGGREGATE_(SUCCESS|STATUS)/, /combinedDistributionResult/, /combinedDistributionError/, /Promise\.all(?:Settled)?\(/];
         for (const pattern of forbidden) {
-            assert(!pattern.test(canvasCode), `18[${pattern}]. WorldEncounterCanvas.js carries no aggregate/fan-out vocabulary`);
-            assert(!pattern.test(panelCode), `18[${pattern}]. OwnPublicationPanel.js carries no aggregate/fan-out vocabulary`);
+            assert(!pattern.test(canvasCode), `17[${pattern}]. WorldEncounterCanvas.js carries no aggregate/fan-out/concurrent-launch vocabulary`);
+            assert(!pattern.test(panelCode), `17[${pattern}]. OwnPublicationPanel.js carries no aggregate/fan-out/concurrent-launch vocabulary`);
         }
 
-        console.log('✓ Section E: the combined action adds no aggregate status and no generic fan-out API — each protocol\'s own call site, and own result field, stays exactly as it already was');
+        console.log('✓ Section E: the combined action adds no aggregate status, no generic fan-out API, and no concurrent-launch (Promise.all) of the two legs');
     }
 
     console.log(`\n✅ All Unified Distribution Action UX tests passed (${assertionCount} assertions).`);
