@@ -24,11 +24,16 @@ top-level [docs/](..) folder.
    nearby, including each publication's current material/verification
    status (now also reachable through a resolved decentralized lead, not
    only content this device already holds), where that material actually
-   came from, its distribution status and a **Distribute Publication**
-   action, a separate, independent **Snapshot Distribution** panel with
-   its own **Distribute Snapshot** action for that publication's Snapshot
-   protocol — both also reachable straight from **My Publication** for
-   your own current world, with no marker selection required — a
+   came from, its distribution status and a **Distribute** trigger — tucked
+   behind its own dialog, like Publication Discovery below, rather than
+   left inline — opening onto a **Distribute Publication** action, a
+   separate, independent **Snapshot Distribution** section with its own
+   **Distribute Snapshot** action for that publication's Snapshot
+   protocol, and a combined one-click **Distribute** for firing both
+   (sequentially, never at once, so both never end up racing the same
+   signing extension) — all three also reachable straight from **My
+   Publication**'s own identical dialog for your own current world, with
+   no marker selection required — a
    **Publication Discovery** popup, tucked behind its own trigger to keep
    the main screen uncluttered, holding a **Discover Publication** search
    that queries Arweave/Nostr directly by publication id and a discovery
@@ -63,10 +68,12 @@ top-level [docs/](..) folder.
    complete — a denying license or currently-unavailable material —
    with a **Back to Publication** way out instead of a blank, stranded
    Editor document, browsing the Repository's searchable, sortable,
-   paginated catalog, and, the instant a publish succeeds, a **Distribute
-   now** action right there in the Editor for pushing that exact
-   publication onto Arweave/Nostr without a trip to World View, including
-   a **Repository** link straight back to it once distributed.
+   paginated catalog, and, the instant a publish succeeds, a **Distribute**
+   trigger right there in the Editor opening its own dialog — mirroring
+   World View's own — for pushing that exact publication (and,
+   independently or together in one click, its Snapshot) onto
+   Arweave/Nostr without a trip to World View, including a **Repository**
+   link straight back to it once distributed.
 5. **[Identity & Login](05-IdentityAndLogin.md)** — your cryptographic
    identity, the vault (locking/unlocking), and backing it up with
    export/import.
@@ -108,7 +115,11 @@ top-level [docs/](..) folder.
    public, user-overridable IPFS gateway, with no local node required), a
    standing **Content Provider** preference (its own settings page) so a
    **Use Preferred Provider** button can create a placement on your saved
-   backend without naming one each time, three further standing
+   backend without naming one each time — now also offering **IPFS
+   (Remote Pinning)** as a savable Content default even on a replica with
+   no content backend registered at all, so the Editor's, World View's,
+   and My Publication's own Distribute dialogs open pre-selected on it too
+   without you having to run a Kubo node, local or remote — three further standing
    overrides — **Arweave Gateway**, **IPFS Gateway**, and **Nostr
    Relay**, each its own settings page — for replacing which endpoint
    every Arweave retrieval, IPFS gateway retrieval, and Nostr discovery

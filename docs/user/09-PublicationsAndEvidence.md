@@ -1728,8 +1728,28 @@ the next time you click it. Outcomes:
 | **No placement was created** | Nothing is saved for Content yet, so this behaves exactly like clicking a placement button with no backend named at all. |
 | **Preferred provider not found** | A preference is saved, but names a backend this replica no longer has registered — you're told exactly what was configured, never silently switched to another one. |
 
-If no content providers are currently registered on this replica, the
-Content Provider settings page says so and offers nothing to choose.
+**IPFS (Remote Pinning)** is always offered as a choice here too, even on
+a replica with no content backend registered at all — it exists purely so
+a Wanderer who runs no Kubo node, local or remote, can still save a
+standing Content default. Saving it here never makes **Use Preferred
+Provider** itself work for Remote Pinning — that backend needs a fresh
+Endpoint and Credential typed in by hand every time (see
+[IPFS Publishing](#ipfs-publishing) below), which this one-click button
+can't supply — so clicking it with Remote Pinning saved always reports
+**Preferred provider not found**, honestly, rather than a crash or a
+silent substitution. What saving it *does* do is pre-select **IPFS
+(Remote Pinning)** in the Material storage/Snapshot storage pickers
+inside the Editor's, World View's, and My Publication's own **Distribute**
+dialogs (see
+[Distributing straight from the Editor](04-PublishingAndForking.md#distributing-straight-from-the-editor)
+and
+[World Encounters](03-WorldView.md#world-encounters--publications-and-avatars-your-peers-are-sharing)),
+so you no longer have to re-pick it by hand on every visit there either —
+the Endpoint/Credential fields in those dialogs still always open empty.
+
+**IPFS (Remote Pinning)** aside, the rest of the list still only ever
+shows a backend this replica has genuinely registered — if none is, it's
+the only option on the page.
 
 ### The Snapshot Placements list
 
