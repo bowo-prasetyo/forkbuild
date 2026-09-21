@@ -141,19 +141,29 @@ async function run() {
     // ===============================================================
     {
         const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        // AMENDED BY 0.9.672 — World View Distribution Dialog. This
+        // <select> now lives in WorldDistributionDialog.js, one popup
+        // over from a "Distribute" trigger button (a pure presentation
+        // relocation — see that file's own header). WorldEncounterCanvas.js
+        // still owns selectedDiscoveryProvider itself (page-local UI
+        // state, unmodified) and threads it down via v-model on the
+        // dialog component.
+        const dialogSource = await source('ui/components/WorldDistributionDialog.js');
 
-        assert(/<select[^>]*v-model="selectedDiscoveryProvider"/.test(canvasSource),
-            n('A1. WorldEncounterCanvas.js renders a <select> bound to selectedDiscoveryProvider'));
-        assert(/<option value="nostr">Nostr<\/option>/.test(canvasSource),
+        assert(/v-model:discovery-provider="selectedDiscoveryProvider"/.test(canvasSource),
+            n('A1. WorldEncounterCanvas.js still threads selectedDiscoveryProvider into the dialog'));
+        assert(/<select[^>]*v-model="discoveryProviderModel"/.test(dialogSource),
+            n('A1b. WorldDistributionDialog.js itself still renders the real <select> that choice controls'));
+        assert(/<option value="nostr">Nostr<\/option>/.test(dialogSource),
             n('A2. exactly one option offers Nostr'));
-        assert(/<option value="arweave">Arweave<\/option>/.test(canvasSource),
+        assert(/<option value="arweave">Arweave<\/option>/.test(dialogSource),
             n('A3. exactly one option offers Arweave'));
 
-        const optionMatches = canvasSource.match(/<option value="[^"]*">/g) || [];
+        const optionMatches = dialogSource.match(/<option value="[^"]*">/g) || [];
         assert(optionMatches.length === 2,
             n(`A4. exactly two <option> elements exist anywhere in this file (found ${optionMatches.length}) — the currently supported choices, no more, no fewer`));
 
-        assert(/selectedDiscoveryProvider: 'nostr'/.test(canvasSource),
+        assert(/selectedDiscoveryProvider: this\.defaultDiscoveryDistributionProvider \|\| 'nostr'/.test(canvasSource),
             n('A5. selectedDiscoveryProvider defaults to \'nostr\' in data() — matching PublicationDistributionRuntimeComposition.js\'s own default, so a mount that never touches the control behaves exactly as every pre-0.9.430 mount already did'));
 
         // The control is rendered alongside the existing action, gated on

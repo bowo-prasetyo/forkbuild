@@ -702,13 +702,27 @@ async function run() {
         // gated on the identical canDistributePublication guard — neither
         // renders unconditionally, and dismissal stays ungated (a
         // published-but-undistributable action can still be dismissed).
-        const actionBlock = extractRange(editorViewSource, '<div v-if="publishedPublication" class="editor-post-publish-action">', '</div>\n                <p v-if="distributionError"', 'post-publish action block');
-        const selectGate = extractRange(actionBlock, 'v-if="canDistributePublication"\n                        class="editor-post-publish-provider-label"', '</select>', 'select gate');
-        assert(selectGate.includes('v-model="selectedDiscoveryProvider"'), n('I1. the substrate <select> is gated on canDistributePublication'));
-        const buttonGate = extractRange(actionBlock, 'v-if="canDistributePublication"\n                        type="button"\n                        class="action-btn action-btn--primary editor-post-publish-distribute-btn"', '</button>', 'button gate');
-        assert(buttonGate.includes('@click="distributePublishedDocument"'), n('I2. the "Distribute now" button carries the identical canDistributePublication gate'));
+        //
+        // AMENDED BY 0.9.672 — Editor View Distribution Dialog. The
+        // substrate <select> and the "Distribute now" button both moved
+        // into EditorDistributionDialog.js (a pure presentation
+        // relocation — see that file's own header), where they now share
+        // ONE parent-level `v-if="canDistributePublication"` on the
+        // section that contains them both, rather than two individually
+        // repeated gates — the identical guard, applied once instead of
+        // twice. EditorView.js's own action block still holds only the
+        // message, the "Distribute" trigger, and Dismiss.
+        const actionBlock = extractRange(editorViewSource, '<div v-if="publishedPublication" class="editor-post-publish-action">', '</div>\n\n                <EditorDistributionDialog', 'post-publish action block');
         const dismissBlock = extractRange(actionBlock, '<button\n                        type="button"\n                        class="action-btn action-btn--secondary editor-post-publish-dismiss-btn"', '</button>', 'dismiss button');
         assert(!/v-if=/.test(dismissBlock), n('I3. the Dismiss button carries no canDistributePublication (or any other) gate — dismissal is always available once the action is showing'));
+
+        const dialogSource = await source('ui/components/EditorDistributionDialog.js');
+        const publicationSectionOpenIndex = dialogSource.indexOf('<div v-if="canDistributePublication" class="editor-distribution-dialog-section');
+        assert(publicationSectionOpenIndex !== -1, n('I1a. the Publication section is gated on canDistributePublication'));
+        const selectIndex = dialogSource.indexOf('v-model="discoveryProviderModel"', publicationSectionOpenIndex);
+        const buttonIndex = dialogSource.indexOf("$emit('distribute-publication')", publicationSectionOpenIndex);
+        assert(selectIndex > publicationSectionOpenIndex, n('I1. the substrate <select> sits inside the section gated on canDistributePublication'));
+        assert(buttonIndex > publicationSectionOpenIndex, n('I2. the "Distribute now" button sits inside the SAME section — the identical canDistributePublication gate, applied once for both'));
 
         // The selector's mere existence never implies either provider is
         // actually usable: with only ONE command wired, selecting the

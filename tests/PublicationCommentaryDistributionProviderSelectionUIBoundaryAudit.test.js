@@ -129,8 +129,13 @@ async function run() {
     // ===============================================================
     {
         const editorSource = await rawSource('ui/views/EditorView.js');
-        assert(/<option value="nostr">Nostr<\/option>\s*<option value="arweave">Arweave<\/option>/.test(editorSource),
-            n('ui/views/EditorView.js renders a real <select> with exactly two options, valued "nostr"/"arweave" — the application-layer vocabulary, never a presentational label like "permanent" or "fast"'));
+        // AMENDED BY 0.9.672 — World/Editor Distribution Dialog. This
+        // <select> now lives in EditorDistributionDialog.js, one popup
+        // over from a "Distribute" trigger button (a pure presentation
+        // relocation — see that file's own header).
+        const editorDialogSource = await rawSource('ui/components/EditorDistributionDialog.js');
+        assert(/<option value="nostr">Nostr<\/option>\s*<option value="arweave">Arweave<\/option>/.test(editorDialogSource),
+            n('ui/components/EditorDistributionDialog.js renders a real <select> with exactly two options, valued "nostr"/"arweave" — the application-layer vocabulary, never a presentational label like "permanent" or "fast"'));
         assert(/const selectedDiscoveryProvider = ref\('nostr'\);/.test(editorSource),
             n('EditorView.js\'s own selection state defaults to \'nostr\' — matching the backend\'s own default exactly (Section F)'));
         assert(/:disabled="distributionExecuting"/.test(editorSource) && /class="form-select editor-post-publish-provider-select"/.test(editorSource),

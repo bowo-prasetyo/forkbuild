@@ -195,12 +195,22 @@ async function run() {
     // ===============================================================
     {
         const editorSource = await source('ui/views/EditorView.js');
+        // AMENDED BY 0.9.672 — Editor View Distribution Dialog. This
+        // <select> now lives in EditorDistributionDialog.js, one popup
+        // over from a "Distribute" trigger button (a pure presentation
+        // relocation — see that file's own header). EditorView.js still
+        // owns selectedDiscoveryProvider itself (page-local UI state,
+        // unmodified) and threads it down via v-model on the dialog
+        // component.
+        const dialogSource = await source('ui/components/EditorDistributionDialog.js');
 
-        assert(/<select[^>]*v-model="selectedDiscoveryProvider"/.test(editorSource),
-            n('A1. EditorView.js renders a <select> bound to selectedDiscoveryProvider'));
-        assert(/<option value="nostr">Nostr<\/option>/.test(editorSource),
+        assert(/v-model:discovery-provider="selectedDiscoveryProvider"/.test(editorSource),
+            n('A1. EditorView.js still threads selectedDiscoveryProvider into the dialog'));
+        assert(/<select[^>]*v-model="discoveryProviderModel"/.test(dialogSource),
+            n('A1b. EditorDistributionDialog.js itself still renders the real <select> that choice controls'));
+        assert(/<option value="nostr">Nostr<\/option>/.test(dialogSource),
             n('A2. exactly one option offers Nostr'));
-        assert(/<option value="arweave">Arweave<\/option>/.test(editorSource),
+        assert(/<option value="arweave">Arweave<\/option>/.test(dialogSource),
             n('A3. exactly one option offers Arweave'));
 
         // AMENDED BY 0.9.670 — Publication Material Storage Selection. This
@@ -213,11 +223,11 @@ async function run() {
         // entirely separate from discoveryProvider, mirroring
         // OwnPublicationPanel.js's own identical addition), so a file-wide
         // count of 2 no longer holds. The assertion now scopes to the
-        // `<select v-model="selectedDiscoveryProvider">` element alone,
+        // `<select v-model="discoveryProviderModel">` element alone,
         // preserving the original intent exactly: THAT select still offers
         // exactly Nostr and Arweave, no more, no fewer.
-        const discoveryProviderSelectMatch = editorSource.match(/<select\s+v-model="selectedDiscoveryProvider"[\s\S]*?<\/select>/);
-        assert(discoveryProviderSelectMatch !== null, n('A4a. the selectedDiscoveryProvider <select> element is isolable'));
+        const discoveryProviderSelectMatch = dialogSource.match(/<select\s+v-model="discoveryProviderModel"[\s\S]*?<\/select>/);
+        assert(discoveryProviderSelectMatch !== null, n('A4a. the discoveryProviderModel <select> element is isolable'));
         const optionMatches = (discoveryProviderSelectMatch ? discoveryProviderSelectMatch[0] : '').match(/<option value="[^"]*">/g) || [];
         assert(optionMatches.length === 2,
             n(`A4. exactly two <option> elements exist inside the selectedDiscoveryProvider <select> (found ${optionMatches.length}) — the currently supported choices, no more, no fewer`));
@@ -241,10 +251,15 @@ async function run() {
 
         // Rendered alongside the SAME action it configures, gated on
         // canDistributePublication — never its own always-visible panel.
-        const selectIndex = editorSource.indexOf('v-model="selectedDiscoveryProvider"');
-        const precedingWindow = editorSource.slice(Math.max(0, selectIndex - 400), selectIndex);
-        assert(/v-if="canDistributePublication"/.test(precedingWindow),
-            n('A6. the substrate control is gated on canDistributePublication — the same guard the "Distribute now" button itself now uses, never rendered unconditionally'));
+        // AMENDED BY 0.9.672 — that gate now lives in
+        // EditorDistributionDialog.js's own template, one popup over,
+        // wrapping the entire Publication section (Material storage,
+        // substrate select, and "Distribute now" button together) rather
+        // than the substrate select alone.
+        const selectIndex = dialogSource.indexOf('v-model="discoveryProviderModel"');
+        const sectionOpenIndex = dialogSource.lastIndexOf('<div v-if="canDistributePublication" class="editor-distribution-dialog-section', selectIndex);
+        assert(sectionOpenIndex !== -1 && sectionOpenIndex < selectIndex,
+            n('A6. the substrate control sits inside the SAME section gated on canDistributePublication — the same guard the "Distribute now" button itself now uses, never rendered unconditionally'));
 
         console.log('✓ Section A: EditorView.js\'s own post-publish overlay exposes exactly the two currently supported Announcement/Discovery substrates, Nostr and Arweave, defaulting to Nostr');
     }
