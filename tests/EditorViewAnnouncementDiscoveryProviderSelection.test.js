@@ -27,7 +27,12 @@ import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncement
 // NostrSnapshotDiscoveryPublisher/ArweaveSnapshotDiscoveryPublisher pair
 // (0.9.133/0.9.498), which is a structurally separate role from
 // Publication distribution — see application/SnapshotDistributionCommand.js's
-// own header, "No coupling to Signed Claim distribution."
+// own header, "No coupling to Signed Claim distribution." (A later,
+// independently-scoped milestone gave EditorView.js its own, separate
+// "Distribute Snapshot" action — Section G below now checks the real,
+// still-true invariant precisely: THIS milestone's own
+// distributeEditorPublication() never touches that family, never that
+// EditorView.js as a whole never mentions it.)
 //
 //   EditorView.js's own post-publish overlay
 //        │
@@ -59,9 +64,12 @@ import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncement
 //      constructs provider-specific configuration of any kind.
 //   F. No regression — OwnPublicationPanel.js's own, separate call site
 //      is unmodified and still Nostr-only.
-//   G. Snapshot-family isolation — this milestone never touches
-//      NostrSnapshotDiscoveryPublisher/ArweaveSnapshotDiscoveryPublisher
-//      or the Snapshot distribution seam.
+//   G. Snapshot-family isolation — distributeEditorPublication() itself
+//      never touches NostrSnapshotDiscoveryPublisher/
+//      ArweaveSnapshotDiscoveryPublisher or the Snapshot distribution
+//      seam (checked precisely by function body, not a file-wide grep —
+//      EditorView.js later gained its own, separate Snapshot distribution
+//      action, unrelated to this one).
 //   H. Production boundary — only the files this milestone names are
 //      changed in the current working tree.
 //
@@ -86,6 +94,37 @@ async function source(relativePath) {
 }
 function codeOnly(text) {
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
+}
+
+// AMENDED — Section G below used to grep the ENTIRE file for the
+// Snapshot-family names. A later, deliberately-scoped milestone (adding
+// EditorView.js's own "Distribute Snapshot" action, mirroring
+// WorldView.js's own distributeWorldEncounterSnapshot()) legitimately
+// gives EditorView.js its first real references to that family — a
+// second, independent capability, never a coupling of the two. This
+// helper extracts just ONE function's own text by brace-balance, so
+// Section G's real, still-true invariant (0.9.502's OWN
+// distributeEditorPublication()/selectedDiscoveryProvider substrate
+// choice for Publication distribution never reads or touches the
+// Snapshot family) can still be checked precisely, independent of
+// whatever else the file now also contains.
+function extractFunctionBody(source, functionName) {
+    const startMatch = source.match(new RegExp(`function\\s+${functionName}\\s*\\([^)]*\\)\\s*\\{`));
+    if (!startMatch) {
+        throw new Error(`extractFunctionBody: "${functionName}" not found`);
+    }
+    const braceStart = startMatch.index + startMatch[0].length - 1;
+    let depth = 0;
+    for (let i = braceStart; i < source.length; i++) {
+        if (source[i] === '{') depth += 1;
+        else if (source[i] === '}') {
+            depth -= 1;
+            if (depth === 0) {
+                return source.slice(startMatch.index, i + 1);
+            }
+        }
+    }
+    throw new Error(`extractFunctionBody: unbalanced braces for "${functionName}"`);
 }
 
 function makeFakeArweaveSubstrate() {
@@ -368,12 +407,17 @@ async function run() {
     }
 
     // ===============================================================
-    // Section G — Snapshot-family isolation.
+    // Section G — Snapshot-family isolation, scoped to THIS milestone's
+    // own distributeEditorPublication()/selectedDiscoveryProvider seam
+    // (see extractFunctionBody's own header for why the file-wide grep
+    // this section used to run no longer holds).
     // ===============================================================
     {
         const editorSource = await source('ui/views/EditorView.js');
-        assert(!/SnapshotDiscoveryPublisher|SnapshotDistributionCommand|SnapshotDistributionRuntimeComposition/.test(editorSource),
-            n('G1. EditorView.js references none of the Snapshot-family (NostrSnapshotDiscoveryPublisher/ArweaveSnapshotDiscoveryPublisher/SnapshotDistributionCommand) classes — this milestone is entirely within the Publication (Signed Claim) distribution family, structurally separate per application/SnapshotDistributionCommand.js\'s own header'));
+        const snapshotFamilyPattern = /SnapshotDiscoveryPublisher|SnapshotDistributionCommand|SnapshotDistributionRuntimeComposition/;
+        const publicationDistributionFunction = extractFunctionBody(editorSource, 'distributeEditorPublication');
+        assert(!snapshotFamilyPattern.test(publicationDistributionFunction),
+            n('G1. distributeEditorPublication() — 0.9.502\'s own Announcement/Discovery substrate choice for Publication distribution — references none of the Snapshot-family (NostrSnapshotDiscoveryPublisher/ArweaveSnapshotDiscoveryPublisher/SnapshotDistributionCommand) classes, structurally separate per application/SnapshotDistributionCommand.js\'s own header'));
 
         // G2 used to assert `git status --porcelain` was empty for the
         // Snapshot-family files listed above — a live working-tree check
@@ -383,10 +427,15 @@ async function run() {
         // (Announcement/Discovery Provider Selection, extended to the
         // Snapshot and Place Naming families) legitimately touches
         // application/SnapshotDistributionRuntimeComposition.js — G1, above,
-        // already carries this section's real, durable invariant: EditorView.js
-        // itself never references any Snapshot-family class, regardless of
-        // what those files independently contain.
-        console.log('✓ Section G: EditorView.js never references the Snapshot-family discovery/distribution seam — Announcement/Discovery Provider Selection for Publications is structurally separate from EditorView.js, independent of what those files themselves later contain');
+        // already carries this section's real, durable invariant, now
+        // precisely scoped: distributeEditorPublication() itself never
+        // references any Snapshot-family class, regardless of what those
+        // files independently contain, OR what OTHER, independent
+        // capabilities EditorView.js later gains (a later milestone gave
+        // it its own, separate "Distribute Snapshot" action — see
+        // ui/views/EditorView.js's own distributeEditorSnapshot(), never
+        // called by or coupled to distributeEditorPublication() itself).
+        console.log('✓ Section G: distributeEditorPublication() never references the Snapshot-family discovery/distribution seam — Announcement/Discovery Provider Selection for Publications stays structurally separate from Snapshot distribution, even now that EditorView.js hosts both as independent actions');
     }
 
     // ===============================================================

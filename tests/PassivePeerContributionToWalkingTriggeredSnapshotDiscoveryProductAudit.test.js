@@ -766,7 +766,13 @@ async function run() {
         // the same reason). Amended to exclude exactly 0.9.597's own,
         // already-accounted-for files, while still catching any OTHER,
         // unexpected production drift.
-        const expectedLaterMilestoneFiles = new Set(['application/CreateWorldViewUseCase.js', 'application/WorldNavigationSession.js', 'ui/views/WorldView.js']);
+        // AMENDED again — EditorView.js's own, separately-justified
+        // Snapshot Distribution action (mirroring WorldView.js's own
+        // distributeWorldEncounterSnapshot(), never touching
+        // PublicationSnapshotPlacementPeerConnectionSync or any of the
+        // files this section's own header names) is likewise expected,
+        // same reasoning as the 0.9.597 files already excepted above.
+        const expectedLaterMilestoneFiles = new Set(['application/CreateWorldViewUseCase.js', 'application/WorldNavigationSession.js', 'ui/views/WorldView.js', 'ui/views/EditorView.js']);
         const unexpectedNonTestFiles = changedNonTestFiles.split('\n').filter(Boolean)
             .filter((f) => !expectedLaterMilestoneFiles.has(f));
         assert(unexpectedNonTestFiles.length === 0, `1. AMENDED BY 0.9.597 — no UNEXPECTED production file is modified by this milestone (0.9.597's own, separately-justified files excepted) — found: ${unexpectedNonTestFiles.join(', ') || 'none'}.`);
