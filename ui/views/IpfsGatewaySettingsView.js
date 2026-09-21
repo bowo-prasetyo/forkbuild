@@ -1,16 +1,12 @@
 import { ref, computed, inject, onMounted } from 'vue';
 import { DEFAULT_IPFS_GATEWAY_URL } from '../../core/IpfsGatewayConfiguration.js';
 
-// 0.9.665 — IPFS Gateway Settings UI. Mirrors ui/views/
-// ArweaveGatewaySettingsView.js's own pre-multi-gateway shape: a single
-// URL input, not a multi-line list — content/IpfsGatewayContentStore.js
-// only ever supports one gateway per instance (see core/
-// IpfsGatewayConfiguration.js's own header).
+// 0.9.665 — IPFS Gateway Settings UI.
 //
 // THIS VIEW NEVER CONSTRUCTS OR INTERPRETS AN IpfsGatewayConfiguration
 // ITSELF — it only reads one back from ipfsGatewayConfigurationStore.get()
 // to display what's on file, and saves a change through
-// setIpfsGatewayConfigurationUseCase.execute({ gatewayUrl }). An invalid
+// setIpfsGatewayConfigurationUseCase.execute({ gatewayUrls }). An invalid
 // URL is rejected by that use case's own construction step; this view
 // only ever displays whatever message that throw carries.
 //
@@ -23,6 +19,16 @@ import { DEFAULT_IPFS_GATEWAY_URL } from '../../core/IpfsGatewayConfiguration.js
 // A CHANGE SAVED HERE TAKES EFFECT ON THE NEXT APPLICATION LOAD ONLY —
 // ui/main.js resolves ipfsGatewayConfigurationStore.get() once at startup;
 // this view performs no live re-composition of its own.
+//
+// 0.9.666 — ONE GATEWAY PER LINE, IN TRY ORDER, mirroring ui/views/
+// ArweaveGatewaySettingsView.js's own 0.9.440 shape exactly: the single
+// text input became a multi-line field; each non-empty line is one
+// gateway URL, and the ORDER of the lines is the order gateways are tried
+// on a read — see content/IpfsGatewayFailoverContentStore.js. A single
+// line still behaves exactly as the single input always did. This view
+// still performs no ordering decision of its own: it only ever splits the
+// textarea into lines and hands the resulting array to
+// setIpfsGatewayConfigurationUseCase.execute({ gatewayUrls }).
 export default {
     name: 'IpfsGatewaySettingsView',
     setup() {
@@ -30,6 +36,7 @@ export default {
         const setIpfsGatewayConfigurationUseCase = inject('setIpfsGatewayConfigurationUseCase', null);
 
         const configuration = ref(null);
+        // One gateway URL per line, in the order they should be tried.
         const gatewayUrlInput = ref('');
         const saveError = ref(null);
         const saveStatus = ref('idle'); // 'idle' | 'saving' | 'saved'
@@ -43,7 +50,19 @@ export default {
         function load() {
             if (!store) return;
             configuration.value = store.get();
-            gatewayUrlInput.value = configuration.value ? configuration.value.gatewayUrl : '';
+            gatewayUrlInput.value = configuration.value ? configuration.value.gatewayUrls.join('\n') : '';
+        }
+
+        // Splits the textarea into one trimmed URL per non-empty line —
+        // the ONLY interpretation this view performs; every other rule
+        // (what counts as a valid URL, whether the list is non-empty)
+        // stays inside core/IpfsGatewayConfiguration.js's own constructor,
+        // reached through the use case below.
+        function parseGatewayUrls() {
+            return gatewayUrlInput.value
+                .split('\n')
+                .map((line) => line.trim())
+                .filter((line) => line.length > 0);
         }
 
         function save() {
@@ -52,8 +71,8 @@ export default {
             clearStatus.value = 'idle';
             saveStatus.value = 'saving';
             try {
-                configuration.value = setIpfsGatewayConfigurationUseCase.execute({ gatewayUrl: gatewayUrlInput.value.trim() });
-                gatewayUrlInput.value = configuration.value.gatewayUrl;
+                configuration.value = setIpfsGatewayConfigurationUseCase.execute({ gatewayUrls: parseGatewayUrls() });
+                gatewayUrlInput.value = configuration.value.gatewayUrls.join('\n');
                 saveStatus.value = 'saved';
             } catch (error) {
                 saveStatus.value = 'idle';
@@ -82,29 +101,30 @@ export default {
         <section class="ipfs-gateway-settings-view">
             <h1>IPFS Gateway</h1>
             <p class="form-hint form-hint--neutral">
-                Gateway used for retrieving IPFS content — resolving an ipfs:// Snapshot Placement, and the
-                "Verify IPFS Content" check on the Publications page. This setting affects retrieval only; it
-                never changes where your own content gets pinned or published. The deployment default,
+                Gateway(s) used for retrieving IPFS content — resolving an ipfs:// Snapshot Placement, and the
+                "Verify IPFS Content" check on the Publications page. One per line, in the order they should be
+                tried — if the first does not respond, the next one is used. This setting affects retrieval only;
+                it never changes where your own content gets pinned or published. The deployment default,
                 https://ipfs.io, sits behind a bot-detection check that blocks ordinary programmatic requests
                 for some people — if Verify keeps failing with "Failed to fetch" even though your content
                 resolves fine through your pinning provider's own gateway (for example
-                https://gateway.pinata.cloud), point this setting at that gateway instead.
+                https://gateway.pinata.cloud), add that gateway here, either instead of or ahead of the default.
             </p>
 
             <p v-if="hasOverride" class="form-hint form-hint--neutral">
-                Current override: {{ configuration.gatewayUrl }}
+                Current override(s): {{ configuration.gatewayUrls.join(', ') }}
             </p>
             <p v-else class="form-hint form-hint--neutral">
                 No override configured. Currently using the deployment default: {{ effectiveGatewayUrl }}
             </p>
 
             <div class="ipfs-gateway-settings-form">
-                <input
-                    type="text"
+                <textarea
                     v-model="gatewayUrlInput"
                     placeholder="https://gateway.pinata.cloud"
-                    class="form-input ipfs-gateway-input"
-                />
+                    rows="4"
+                    class="ipfs-gateway-input"
+                ></textarea>
 
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
                 <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>

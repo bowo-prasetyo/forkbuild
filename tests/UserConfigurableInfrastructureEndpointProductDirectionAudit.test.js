@@ -270,8 +270,8 @@ async function run() {
         const ipfsGatewaySource = await source('content/IpfsGatewayContentStore.js');
         assert(ipfsGatewaySource.includes("const DEFAULT_GATEWAY_URL = 'https://ipfs.io'"), n('B3. IPFS Gateway — unchanged default, unchanged file'));
         const mainSource = await source('ui/main.js');
-        const gatewayConstructionCount = (mainSource.match(/new IpfsGatewayContentStore\(\{ gatewayUrl: resolvedIpfsGatewayUrl \}\)/g) || []).length;
-        assert(gatewayConstructionCount === 2, n(`B3. IPFS Gateway — still exactly two construction sites in ui/main.js, now settings-backed rather than opt-in-with-no-override (found ${gatewayConstructionCount}) — see docs/Roadmap.md, "0.9.665"`));
+        const gatewayConstructionCount = (mainSource.match(/composeIpfsGatewayContentStore\(resolvedIpfsGatewayUrls\)/g) || []).length;
+        assert(gatewayConstructionCount === 2, n(`B3. IPFS Gateway — still exactly two construction sites in ui/main.js, now settings-backed rather than opt-in-with-no-override (found ${gatewayConstructionCount}) — see docs/Roadmap.md, "0.9.665"/"0.9.666"`));
         inventory.ipfsGateway = { file: 'content/IpfsGatewayContentStore.js', consumers: gatewayConstructionCount };
 
         const baseRpcSource = await source('base/BaseJsonRpcClient.js');

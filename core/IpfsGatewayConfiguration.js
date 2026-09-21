@@ -19,15 +19,6 @@ const DEFAULT_IPFS_GATEWAY_URL = 'https://ipfs.io';
 // for anyone, indefinitely," with no code-level workaround. A DEFER
 // verdict about severity of an occasional outage does not survive that.
 //
-// Mirrors core/ArweaveGatewayConfiguration.js's own pre-multi-gateway
-// (0.9.364-era) single-value shape exactly, deliberately WITHOUT that
-// file's later 0.9.440 gatewayUrls/failover extension:
-// content/IpfsGatewayContentStore.js's own header is explicit that it
-// supports exactly one gateway per instance, "no list, no automatic
-// fallback... a caller that wants multiple gateways runs multiple
-// instances explicitly" — so this configuration shape stays a single
-// `gatewayUrl`, never a list.
-//
 // A VALUE OBJECT, NEVER A DEFAULT-INJECTING ONE — the same rule
 // ArweaveGatewayConfiguration.js holds. "No override configured" is
 // represented by the ABSENCE of an instance (storage/
@@ -52,27 +43,107 @@ export function isValidIpfsGatewayUrl(value) {
     return parsed.protocol === 'http:' || parsed.protocol === 'https:';
 }
 
+// 0.9.666 — IPFS Gateway Read Failover.
+//
+// Reverses the OTHER half of core/ArweaveGatewayConfiguration.js's own
+// pre-0.9.440 shape this file used to mirror exactly: that file's own
+// 0.9.365-era header explicitly excluded IPFS from its later 0.9.440
+// gatewayUrls/failover extension, reasoning that content/
+// IpfsGatewayContentStore.js "only ever supports one gateway per
+// instance." That reasoning described an existing LIMIT of the read
+// collaborator, never a constraint this configuration shape had to keep
+// forever — content/IpfsGatewayFailoverContentStore.js (this same
+// milestone) is the new collaborator that removes it, the identical
+// "one collaborator per configured gatewayUrls length" shape content/
+// ArweaveGatewayFailoverContentStore.js already established. This class
+// now mirrors core/ArweaveGatewayConfiguration.js's own 0.9.440 shape in
+// full, one axis over: a single `gatewayUrl` string is still accepted,
+// unchanged, and now means exactly "a one-element ordered list." A caller
+// wanting more than one gateway passes `gatewayUrls` (a non-empty array,
+// in priority order) instead — never both in the same call.
+//
+//   { gatewayUrl: 'https://a.example' }            (still valid, unchanged)
+//        │                                          == one-element list
+//        ▼
+//   { gatewayUrls: ['https://a.example', 'https://b.example'] }   (new)
+//        │
+//        ▼
+//   core/IpfsGatewayConfiguration.js   ★ (THIS)
+//        .gatewayUrl   — the FIRST configured url, unchanged shape, for
+//                         every caller that only ever wanted a single value
+//        .gatewayUrls  — the FULL ordered list, new, for a caller building
+//                         an ordered-failover read collaborator
+//
+// WRITE/PUBLISHING IS UNTOUCHED. content/IpfsGatewayContentStore.js's own
+// put() is unimplemented on purpose (a read-only HTTPS gateway cannot
+// accept content) — this class configures ordered READ failover only,
+// exactly like the two real call sites it feeds: resolving an ipfs://
+// Snapshot Placement, and the "Verify IPFS Content" check. Local Kubo
+// (content/IpfsContentStore.js) and remote pinning (content/
+// IpfsRemotePinningContentStore.js) — the actual IPFS *write* paths —
+// remain completely untouched and structurally isolated from this setting.
+//
+// DELIBERATELY EXCLUDED — NOT THIS FILE'S JOB, STILL.
+// - **Persistence of any kind.** See storage/IpfsGatewayConfigurationStore.js.
+// - **A network call of any kind, ever, for any reason.** Held for every
+//   entry in `gatewayUrls` too, not just the first.
+// - **`timeout`/`retry`/`healthCheck`/`priority` fields, or any field
+//   beyond `gatewayUrl`/`gatewayUrls`.** Ordering IS the priority.
+// - **Choosing WHICH order to try gateways in, or what "unavailable"
+//   means.** That policy lives in content/IpfsGatewayFailoverContentStore.js,
+//   never in this plain value object.
 export class IpfsGatewayConfiguration {
-    constructor({ gatewayUrl } = {}) {
-        if (!isValidIpfsGatewayUrl(gatewayUrl)) {
-            throw new Error(`IpfsGatewayConfiguration: invalid gatewayUrl "${gatewayUrl}"`);
+    // Exactly one of `gatewayUrl` (a single string) or `gatewayUrls` (a
+    // non-empty array, in priority order) is accepted; passing both
+    // throws, exactly like passing neither already did. `gatewayUrl: ['a',
+    // 'b']` still throws — an array is never valid under the singular key,
+    // only under `gatewayUrls`.
+    constructor({ gatewayUrl, gatewayUrls } = {}) {
+        if (gatewayUrl !== undefined && gatewayUrls !== undefined) {
+            throw new Error('IpfsGatewayConfiguration: pass exactly one of gatewayUrl or gatewayUrls, never both');
         }
-        // Trailing-slash normalization mirrors content/
-        // IpfsGatewayContentStore.js's own constructor exactly, so a
-        // configuration built here composes the identical `/ipfs/<cid>`
-        // path that store already does.
-        this._gatewayUrl = gatewayUrl.trim().replace(/\/+$/, '');
+        const candidates = gatewayUrls !== undefined ? gatewayUrls : [gatewayUrl];
+        if (!Array.isArray(candidates) || candidates.length === 0) {
+            throw new Error('IpfsGatewayConfiguration: gatewayUrls must be a non-empty array');
+        }
+        this._gatewayUrls = Object.freeze(candidates.map((url) => {
+            if (!isValidIpfsGatewayUrl(url)) {
+                throw new Error(`IpfsGatewayConfiguration: invalid gatewayUrl "${url}"`);
+            }
+            // Trailing-slash normalization mirrors content/
+            // IpfsGatewayContentStore.js's own constructor exactly, so a
+            // configuration built here composes the identical `/ipfs/<cid>`
+            // path that store already does.
+            return url.trim().replace(/\/+$/, '');
+        }));
         Object.freeze(this);
     }
 
-    get gatewayUrl() { return this._gatewayUrl; }
+    // The first configured gateway — unchanged shape/meaning for every
+    // caller that only ever wanted a single value.
+    get gatewayUrl() { return this._gatewayUrls[0]; }
 
+    // The full ordered list, one entry per configured gateway — always at
+    // least one entry, even when this instance was constructed from the
+    // singular `gatewayUrl` shape.
+    get gatewayUrls() { return this._gatewayUrls; }
+
+    // Value equality, never identity. Order matters: [A, B] and [B, A] are
+    // different configurations, since order IS the failover policy.
     equals(other) {
-        return other instanceof IpfsGatewayConfiguration && other.gatewayUrl === this.gatewayUrl;
+        return other instanceof IpfsGatewayConfiguration &&
+            other._gatewayUrls.length === this._gatewayUrls.length &&
+            other._gatewayUrls.every((url, index) => url === this._gatewayUrls[index]);
     }
 
+    // Plain-data convenience for storage/IpfsGatewayConfigurationStore.js —
+    // this class itself never calls it, and never reads or writes any
+    // storage key on its own. Always the list shape, even for a
+    // single-gateway configuration — storage/IpfsGatewayConfigurationStore.js's
+    // own get() reads a legacy single-gatewayUrl payload back into the
+    // identical one-element-list configuration this would have produced.
     toJSON() {
-        return { gatewayUrl: this._gatewayUrl };
+        return { gatewayUrls: [...this._gatewayUrls] };
     }
 }
 

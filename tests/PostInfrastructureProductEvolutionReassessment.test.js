@@ -135,8 +135,8 @@ async function run() {
         assert(routerSource.includes("path: '/settings/ipfs-gateway'"), 'A3. /settings/ipfs-gateway route registered');
         assert(networkSettingsSource.includes('to="/settings/ipfs-gateway"'), 'A3. IPFS Gateway settings reachable from the Network Settings hub');
         const mainSource = await rawSource('ui/main.js');
-        const ipfsGatewayConstructionCount = (mainSource.match(/new IpfsGatewayContentStore\(\{ gatewayUrl: resolvedIpfsGatewayUrl \}\)/g) || []).length;
-        assert(ipfsGatewayConstructionCount === 2, `A3. IpfsGatewayContentStore is still constructed at exactly the same two sites in ui/main.js, now with a resolved gatewayUrl — found ${ipfsGatewayConstructionCount}`);
+        const ipfsGatewayConstructionCount = (mainSource.match(/composeIpfsGatewayContentStore\(resolvedIpfsGatewayUrls\)/g) || []).length;
+        assert(ipfsGatewayConstructionCount === 2, `A3. the IPFS gateway content store is still built at exactly the same two sites in ui/main.js, now through composeIpfsGatewayContentStore(resolvedIpfsGatewayUrls) per 0.9.666's own read failover extension — found ${ipfsGatewayConstructionCount}`);
 
         // A4. IPFS Kubo API and TURN — SEPARATE_PRODUCT, reconfirmed:
         // a local-node identity question and a dynamic-credential fetch,

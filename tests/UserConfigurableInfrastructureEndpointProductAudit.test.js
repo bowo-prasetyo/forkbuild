@@ -241,8 +241,17 @@ async function run() {
         // settings-backed gatewayUrl for both IpfsGatewayContentStore call
         // sites, the identical shape Arweave Gateway already held when this
         // section was first written.
+        //
+        // AMENDED FURTHER BY 0.9.666 — IPFS Gateway Read Failover mirrors
+        // Arweave Gateway's own 0.9.440 extension: both real call sites now
+        // go through composeIpfsGatewayContentStore(resolvedIpfsGatewayUrls),
+        // which still builds a plain IpfsGatewayContentStore for a single
+        // configured gateway (byte-for-byte unchanged) and the new
+        // IpfsGatewayFailoverContentStore only once a second gateway is
+        // configured.
         const mainSource = await rawSource('ui/main.js');
-        assert(mainSource.includes('new IpfsGatewayContentStore({ gatewayUrl: resolvedIpfsGatewayUrl })'), 'C3. ui/main.js constructs IpfsGatewayContentStore with a resolved, settings-backed gatewayUrl (x2 call sites) — AMENDED 0.9.665, see comment above');
+        const composeIpfsGatewayContentStoreCallCount = (mainSource.match(/composeIpfsGatewayContentStore\(resolvedIpfsGatewayUrls\)/g) || []).length;
+        assert(composeIpfsGatewayContentStoreCallCount === 2, `C3. ui/main.js constructs its IPFS gateway content store through composeIpfsGatewayContentStore(resolvedIpfsGatewayUrls) at both real call sites — AMENDED 0.9.666, see comment above — found ${composeIpfsGatewayContentStoreCallCount}`);
         assert(mainSource.includes('new IpfsContentStore()'), 'C3. ui/main.js constructs IpfsContentStore with zero arguments — unaffected: this is the local Kubo WRITE path, deliberately untouched by 0.9.665\'s read-path gateway configuration');
         assert(mainSource.includes('new CreateBaseJsonRpcClientUseCase().execute()'), 'C3. ui/main.js resolves the Base RPC client with zero arguments to execute()');
         assert(mainSource.includes('new CreateBitcoinEsploraTransactionBroadcasterUseCase().execute()'), 'C3. ui/main.js resolves the Esplora broadcaster with zero arguments to execute()');

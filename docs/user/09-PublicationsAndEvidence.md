@@ -1904,12 +1904,21 @@ started with until you reload.
 ### IPFS Gateway
 
 Open **IPFS Gateway** in the top bar (`/settings/ipfs-gateway`). It works
-like a single-gateway version of Arweave Gateway above — one gateway URL,
-never a list or a failover order — with the same "Current override" / "No
+just like Arweave Gateway above — enter one gateway URL per line, in the
+order you want them tried, with the same "Current override(s)" / "No
 override configured" display against the deployment default,
-`https://ipfs.io`, the same free-text input, and the same **Save** /
-**Use Deployment Default** buttons and shape-only validation (a valid
-`http:`/`https:` URL, never a reachability check).
+`https://ipfs.io`, and the same **Save** / **Use Deployment Default**
+buttons and shape-only validation (a valid `http:`/`https:` URL, never a
+reachability check).
+
+If you list more than one gateway, they're tried in the order you entered
+them: a read first tries your top gateway, and only moves on to the next
+one if that gateway is unreachable or returns an error — the moment one of
+them answers, the rest are left alone. This never changes *what* gets
+retrieved, only *where from* — IPFS content is addressed by its own
+content id, so any gateway that has it returns the exact same bytes. A
+single gateway (or the original single-URL setting from before this
+failover feature existed) behaves exactly as it always has.
 
 This setting affects retrieval only, exactly like Arweave Gateway — never
 where your own content gets pinned or published. It's consulted wherever
@@ -1922,9 +1931,13 @@ deployment default exists specifically because the built-in one,
 blocks ordinary programmatic requests for some people — if a **Verify**
 or **Resolve** keeps failing with "Failed to fetch" even though the
 content is genuinely retrievable (for example, through your own pinning
-provider's gateway, like `https://gateway.pinata.cloud`), pointing this
-setting at that gateway instead is the fix. Exactly like every other
-setting on this page, a change here only takes effect on the next app
+provider's gateway, like `https://gateway.pinata.cloud`), adding that
+gateway here, either instead of or ahead of the default, is the fix.
+Listing a second gateway also gives you a plain resilience benefit
+independent of that bot-detection wall: if your own top choice ever goes
+down, a read falls through to the next one automatically instead of
+failing outright. Exactly like every other setting on this page, a change
+here only takes effect on the next app
 load.
 
 ### Nostr Relay

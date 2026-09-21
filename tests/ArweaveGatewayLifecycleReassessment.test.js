@@ -557,8 +557,8 @@ async function run() {
         // gateway is now PERMANENTLY unreachable by ordinary programmatic
         // requests (a bot-detection wall) — DEFER was reversed to BUILD.
         const mainSource = await source('ui/main.js');
-        const ipfsGatewayUsageCount = (mainSource.match(/new IpfsGatewayContentStore\(\{ gatewayUrl: resolvedIpfsGatewayUrl \}\)/g) || []).length;
-        assert(ipfsGatewayUsageCount === 2, `H1. IpfsGatewayContentStore is constructed at exactly its two known, narrowly-scoped call sites (Snapshot placement resolution, content verification), now settings-backed — found ${ipfsGatewayUsageCount}`);
+        const ipfsGatewayUsageCount = (mainSource.match(/composeIpfsGatewayContentStore\(resolvedIpfsGatewayUrls\)/g) || []).length;
+        assert(ipfsGatewayUsageCount === 2, `H1. the IPFS gateway content store is built at exactly its two known, narrowly-scoped call sites (Snapshot placement resolution, content verification), now settings-backed and, per 0.9.666, failover-capable — found ${ipfsGatewayUsageCount}`);
         decisions.ipfsGateway = {
             candidate: 'IPFS Gateway',
             evidence: 'Narrow, opt-in failure mode correctly justified DEFER here (0.9.367) against an occasional-outage read — reversed by 0.9.665 once the hardcoded default itself became permanently unreachable by ordinary programmatic requests, a structurally different fact.',
