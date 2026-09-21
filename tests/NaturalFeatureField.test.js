@@ -1,7 +1,7 @@
 import {
-    naturalFeaturesInRegion, forestDensityAt, FEATURE_TYPE, TREE_LATTICE_SPACING
+    naturalFeaturesInRegion, forestDensityAt, FEATURE_TYPE, TREE_LATTICE_SPACING, TREE_SPECIES
 } from '../core/NaturalFeatureField.js';
-import { ecologyZoneAt, ECOLOGY_ZONE } from '../core/TerrainEcology.js';
+import { ecologyZoneAt, ECOLOGY_ZONE, moistureAt } from '../core/TerrainEcology.js';
 import { isRiverAt } from '../core/Hydrology.js';
 import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { TERRAIN_TILE_SIZE, tileCoordinateForPosition } from '../core/TerrainTiling.js';
@@ -52,6 +52,7 @@ async function runTests() {
             assert(feature.rotationY >= 0 && feature.rotationY < Math.PI * 2, '6. rotationY stays within one full turn');
             assert(feature.scale >= 0.7 && feature.scale < 1.3, '7. scale stays within its declared [0.7, 1.3) range');
             assert(Number.isInteger(feature.variant) && feature.variant >= 0 && feature.variant < 3, '8. variant is one of 0, 1, 2');
+            assert(Object.values(TREE_SPECIES).includes(feature.species), `8b. species is one of TREE_SPECIES (got ${feature.species})`);
         }
 
         // A different seed produces a genuinely different placement.
@@ -130,6 +131,43 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
+    // Section C2: species is climate-driven — GRASSLAND is always SCRUB,
+    // FOREST splits into CONIFER (wetter) and BROADLEAF (drier) by the
+    // exact same moistureAt() field that already draws the FOREST line
+    // -------------------------------------------------------------
+    {
+        const features = naturalFeaturesInRegion(DEFAULT_WORLD_SEED, -600, -600, 600, 600);
+        assert(features.length > 0, '17b. Setup: a wide scan finds trees to check');
+
+        let conifer = 0, broadleaf = 0, scrub = 0;
+        for (const f of features) {
+            if (f.zone === ECOLOGY_ZONE.GRASSLAND) {
+                assert(f.species === TREE_SPECIES.SCRUB, `17c. Every GRASSLAND tree is SCRUB (got ${f.species})`);
+            } else {
+                assert(f.species === TREE_SPECIES.CONIFER || f.species === TREE_SPECIES.BROADLEAF,
+                    `17d. Every FOREST tree is CONIFER or BROADLEAF (got ${f.species})`);
+            }
+            if (f.species === TREE_SPECIES.CONIFER) conifer++;
+            else if (f.species === TREE_SPECIES.BROADLEAF) broadleaf++;
+            else scrub++;
+        }
+        assert(conifer > 0 && broadleaf > 0 && scrub > 0,
+            `17e. FLAGSHIP-adjacent: a wide-enough scan produces all three species (conifer ${conifer}, broadleaf ${broadleaf}, scrub ${scrub}), never just one`);
+
+        // Determinism: species is a pure function of (seed, x, z) — same
+        // shape as Section D's own Y check below, applied to species.
+        for (const f of features) {
+            if (f.zone !== ECOLOGY_ZONE.FOREST) continue;
+            const moisture = moistureAt(DEFAULT_WORLD_SEED, f.x, f.z);
+            if (f.species === TREE_SPECIES.CONIFER) {
+                assert(moisture > 0.75, `17f. A CONIFER tree's own moisture reads on the wet side of the species threshold (got ${moisture.toFixed(3)})`);
+            } else {
+                assert(moisture < 0.85, `17g. A BROADLEAF tree's own moisture reads on the dry side of the species threshold (got ${moisture.toFixed(3)})`);
+            }
+        }
+    }
+
+    // -------------------------------------------------------------
     // Section D: a feature's own Y always matches terrainHeightAt()
     // exactly at its own (x, z)
     // -------------------------------------------------------------
@@ -163,7 +201,7 @@ async function runTests() {
             for (const { tx, tz } of order) {
                 const { minX, minZ, maxX, maxZ } = tileBounds(tx, tz);
                 for (const f of naturalFeaturesInRegion(DEFAULT_WORLD_SEED, minX, minZ, maxX, maxZ)) {
-                    found.add(`${f.x},${f.z},${f.y},${f.rotationY},${f.scale},${f.variant}`);
+                    found.add(`${f.x},${f.z},${f.y},${f.rotationY},${f.scale},${f.variant},${f.species}`);
                 }
             }
             return found;

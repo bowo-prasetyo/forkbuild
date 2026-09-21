@@ -32,11 +32,27 @@
 // per-vertex world-coordinate sampling already gives terrain color.
 
 import { terrainHeightAt } from './TerrainHeightField.js';
-import { ecologyZoneAt, ECOLOGY_ZONE } from './TerrainEcology.js';
+import { ecologyZoneAt, ECOLOGY_ZONE, moistureAt } from './TerrainEcology.js';
 import { isRiverAt } from './Hydrology.js';
 
 export const FEATURE_TYPE = Object.freeze({
     TREE: 'TREE'
+});
+
+// What SPECIES a tree is — a property of the tree itself, orthogonal to
+// FEATURE_TYPE (every species here is still exactly one FEATURE_TYPE.TREE;
+// this is not the "second feature TYPE" this file's own header elsewhere
+// declares deliberately absent). Regions of the world grow different
+// species for the SAME reason they grow trees at different densities at
+// all: climate, via core/TerrainEcology.js#moistureAt() — the same broad,
+// low-frequency field that already draws the FOREST/GRASSLAND line. A
+// species boundary therefore always sits alongside a climate boundary
+// that's already visible in the terrain, never as an unrelated,
+// arbitrary-looking overlay.
+export const TREE_SPECIES = Object.freeze({
+    CONIFER: 'CONIFER',     // the wettest FOREST interior
+    BROADLEAF: 'BROADLEAF', // the drier, transitional half of FOREST
+    SCRUB: 'SCRUB'          // sparse, hardy GRASSLAND fringe trees
 });
 
 // 40 / 4 = 10 cells per terrain tile edge — see this file's own header
@@ -120,6 +136,32 @@ const JITTER_Z_SEED_OFFSET = 0x4a495a5a;  // 'JITZ'
 const ROTATION_SEED_OFFSET = 0x524f5441;  // 'ROTA'
 const SCALE_SEED_OFFSET = 0x5343414c;     // 'SCAL'
 const VARIANT_SEED_OFFSET = 0x56415249;   // 'VARI'
+const SPECIES_BLEND_SEED_OFFSET = 0x53504543; // 'SPEC'
+
+// Within FOREST, moisture (already in [0.60, 1.0) — see
+// core/TerrainEcology.js#FOREST_MOISTURE_THRESHOLD) splits into a wetter
+// CONIFER half and a drier, transitional BROADLEAF half. A narrow blend
+// margin straddles the threshold so the species line fades the same way
+// forest density itself fades at the FOREST/GRASSLAND boundary, rather
+// than cutting a visibly hard edge through one contiguous forest.
+const CONIFER_MOISTURE_THRESHOLD = 0.80;
+const SPECIES_BLEND_MARGIN = 0.03;
+
+// Which species a tree is, given the zone and moisture already resolved
+// for its own position — GRASSLAND's sparse fringe trees are always the
+// hardy SCRUB species; FOREST splits by moisture as described above, with
+// a probabilistic (not averaged) coin flip inside the narrow blend band
+// so any single tree is always fully one species, never some
+// impossible in-between.
+function speciesForCell(seed, zone, moisture, cellX, cellZ) {
+    if (zone === ECOLOGY_ZONE.GRASSLAND) return TREE_SPECIES.SCRUB;
+
+    const t = (moisture - CONIFER_MOISTURE_THRESHOLD) / SPECIES_BLEND_MARGIN;
+    if (t >= 1) return TREE_SPECIES.CONIFER;
+    if (t <= -1) return TREE_SPECIES.BROADLEAF;
+    const blend = hash2D(seed + SPECIES_BLEND_SEED_OFFSET, cellX, cellZ);
+    return blend < (t + 1) / 2 ? TREE_SPECIES.CONIFER : TREE_SPECIES.BROADLEAF;
+}
 
 // Broad and continuous, independently of core/TerrainEcology.js's own
 // moistureAt() by design — see this file's own header for why a forest's
@@ -172,6 +214,7 @@ function featureForCell(seed, cellX, cellZ) {
     const rotationY = hash2D(seed + ROTATION_SEED_OFFSET, cellX, cellZ) * Math.PI * 2;
     const scale = 0.7 + hash2D(seed + SCALE_SEED_OFFSET, cellX, cellZ) * 0.6; // [0.7, 1.3)
     const variant = Math.floor(hash2D(seed + VARIANT_SEED_OFFSET, cellX, cellZ) * 3); // 0, 1, or 2
+    const species = speciesForCell(seed, zone, moistureAt(seed, x, z), cellX, cellZ);
 
     return {
         type: FEATURE_TYPE.TREE,
@@ -180,6 +223,7 @@ function featureForCell(seed, cellX, cellZ) {
         rotationY,
         scale,
         variant,
+        species,
         zone
     };
 }
