@@ -3219,10 +3219,23 @@ app.provide('snapshotDistributionAvailableStorageTypes', snapshotDistributionAva
 // `null` — "no preference to prefer" — exactly like `resolvedAnnouncementDiscoveryProvider`
 // below falls back to 'nostr'; each picker's own existing "first eligible
 // backend" fallback already handles a `null` here unchanged.
+//
+// 'remote-pinning' is appended to the eligible list alongside the real
+// registry types — content/IpfsRemotePinningContentStore.js's own
+// `storage` getter self-reports 'ipfs', so it never occupies its own key
+// in `snapshotPlacementStoreRegistry` (see that class's own header) and
+// `snapshotDistributionAvailableStorageTypes()` above can never list it.
+// Without this, a saved CONTENT preference of 'remote-pinning'
+// (ui/views/ContentProviderSettingsView.js) would fail
+// `resolveSavedProviderDefault()`'s own membership check here and
+// silently resolve to `null` — every picker would then fall through to
+// ITS OWN unrelated fallback ('ar' for Material storage, the first
+// registered type for Snapshot storage) instead of honoring what was
+// actually saved.
 const contentDistributionProviderPreference = roleProviderPreferenceStore.get(RoleProviderRole.CONTENT);
 const resolvedContentDistributionProvider = resolveSavedProviderDefault(
     contentDistributionProviderPreference ? contentDistributionProviderPreference.providerKey : null,
-    snapshotDistributionAvailableStorageTypes(),
+    [...snapshotDistributionAvailableStorageTypes(), 'remote-pinning'],
     null
 );
 app.provide('defaultContentDistributionProvider', resolvedContentDistributionProvider);
