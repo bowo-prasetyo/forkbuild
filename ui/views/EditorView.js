@@ -134,6 +134,46 @@ export default {
                          (0.9.430) verbatim, one caller over. Rendered
                          alongside the action it configures; never its own
                          panel, never a global settings surface. -->
+                    <!-- 0.9.670 — Publication Material Storage Selection.
+                         Where the Publication's own MATERIAL goes —
+                         independent of the Announcement/Discovery substrate
+                         select immediately below. -->
+                    <label
+                        v-if="canDistributePublication"
+                        class="editor-post-publish-storage-label"
+                    >
+                        Material storage
+                        <select v-model="selectedMaterialStorage" class="editor-post-publish-storage-select" :disabled="distributionExecuting">
+                            <option value="ar">Arweave</option>
+                            <option value="ipfs">IPFS (Local Kubo)</option>
+                            <option value="remote-pinning">IPFS (Remote Pinning)</option>
+                        </select>
+                    </label>
+
+                    <!-- 0.9.670 — the Remote Pinning endpoint/credential
+                         draft for "Distribute now." Renders only when that
+                         storage is selected. Nothing here is saved anywhere
+                         — discarded on reload. -->
+                    <div v-if="canDistributePublication && selectedMaterialStorage === 'remote-pinning'" class="editor-post-publish-remote-pinning-draft">
+                        <label class="form-field">
+                            <span class="form-label">Endpoint</span>
+                            <input type="text" class="form-input" v-model="remotePinningDraft.endpoint" placeholder="https://api.pinata.cloud/pinning/pinFileToIPFS" />
+                        </label>
+                        <label class="form-field">
+                            <span class="form-label">Credential (optional)</span>
+                            <input type="password" class="form-input" v-model="remotePinningDraft.credential" placeholder="Bearer token" />
+                        </label>
+                        <label class="form-field">
+                            <span class="form-label">Request field (optional)</span>
+                            <input type="text" class="form-input" v-model="remotePinningDraft.requestField" placeholder="file" />
+                        </label>
+                        <label class="form-field">
+                            <span class="form-label">Response field (optional)</span>
+                            <input type="text" class="form-input" v-model="remotePinningDraft.responseField" placeholder="cid (Pinata: IpfsHash)" />
+                        </label>
+                        <p class="form-hint form-hint--neutral">Nothing here is saved anywhere — entered fresh each time you click Distribute now.</p>
+                    </div>
+
                     <label
                         v-if="canDistributePublication"
                         class="editor-post-publish-provider-label"
@@ -1469,6 +1509,28 @@ export default {
         const defaultAnnouncementDiscoveryProvider = inject('defaultAnnouncementDiscoveryProvider', 'nostr');
         const selectedDiscoveryProvider = ref(defaultAnnouncementDiscoveryProvider);
 
+        // 0.9.670 — Publication Material Storage Selection. The identical
+        // "where the MATERIAL goes is independent of where the ANNOUNCEMENT
+        // goes" choice ui/components/OwnPublicationPanel.js's own
+        // publicationMaterialStorage offers, one caller over — page-local
+        // UI state only, never persisted, never reset on a fresh publish.
+        // Opens on this replica's own saved Content preference
+        // (ui/main.js's own defaultContentDistributionProvider) when it
+        // names 'ar' or 'ipfs', falling back to 'ar' otherwise — the exact
+        // historical, silent default this capability already had.
+        const defaultContentDistributionProvider = inject('defaultContentDistributionProvider', null);
+        const selectedMaterialStorage = ref(
+            defaultContentDistributionProvider === 'ar' || defaultContentDistributionProvider === 'ipfs'
+                ? defaultContentDistributionProvider
+                : 'ar'
+        );
+        // 0.9.670 — this view's own Remote Pinning (e.g. Pinata) endpoint/
+        // credential draft for "Distribute now" — mirrors
+        // OwnPublicationPanel.js's own publicationRemotePinningDraft
+        // exactly, one caller over. Never persisted anywhere; discarded on
+        // reload.
+        const remotePinningDraft = ref({ endpoint: '', credential: '', requestField: '', responseField: '' });
+
         // Whether ANY distribution capability exists at all — read only to
         // decide whether to render the action/select in the first place.
         // Never itself a provider choice; see distributeEditorPublication()
@@ -1496,7 +1558,16 @@ export default {
         // value (`'nostr'`, or omitted — no pre-0.9.502 caller of this
         // function exists) still calls the multi-relay Nostr command,
         // unchanged.
-        function distributeEditorPublication(publication, discoveryProvider) {
+        function distributeEditorPublication(publication, discoveryProvider, materialStorage, remotePinningConfiguration) {
+            const remotePinningProviderOptions = materialStorage === 'remote-pinning' && remotePinningConfiguration
+                ? {
+                    endpoint: remotePinningConfiguration.endpoint,
+                    credential: remotePinningConfiguration.credential || null,
+                    ...(remotePinningConfiguration.requestField ? { fileFieldName: remotePinningConfiguration.requestField } : {}),
+                    ...(remotePinningConfiguration.responseField ? { cidField: remotePinningConfiguration.responseField } : {})
+                }
+                : undefined;
+
             if (discoveryProvider === 'arweave') {
                 if (!publicationDistributionCommand) {
                     return Promise.reject(new Error('Publication distribution is not available.'));
@@ -1504,7 +1575,9 @@ export default {
                 return publicationDistributionCommand({
                     publication,
                     serializedMaterial: JSON.stringify(publication.toJSON()),
-                    discoveryProvider
+                    discoveryProvider,
+                    materialStorage,
+                    remotePinningProviderOptions
                 });
             }
             if (!multiRelayNostrPublicationDistributionCommand) {
@@ -1512,7 +1585,9 @@ export default {
             }
             return multiRelayNostrPublicationDistributionCommand({
                 publication,
-                serializedMaterial: JSON.stringify(publication.toJSON())
+                serializedMaterial: JSON.stringify(publication.toJSON()),
+                materialStorage,
+                remotePinningProviderOptions
             });
         }
 
@@ -1626,7 +1701,12 @@ export default {
             distributionRequestId += 1;
             const requestId = distributionRequestId;
             Promise.resolve()
-                .then(() => distributeEditorPublication(publication, selectedDiscoveryProvider.value))
+                .then(() => distributeEditorPublication(
+                    publication,
+                    selectedDiscoveryProvider.value,
+                    selectedMaterialStorage.value,
+                    selectedMaterialStorage.value === 'remote-pinning' ? remotePinningDraft.value : undefined
+                ))
                 .then((result) => {
                     if (requestId === distributionRequestId) {
                         distributionResult.value = normalizeDistributionResultForDisplay(result);
@@ -2498,6 +2578,8 @@ export default {
             publicationDistributionCommand,
             canDistributePublication,
             selectedDiscoveryProvider,
+            selectedMaterialStorage,
+            remotePinningDraft,
             publishedPublication,
             distributionExecuting,
             distributionError,

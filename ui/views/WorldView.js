@@ -1403,7 +1403,36 @@ export default {
         // result") — both branches reach the Wanderer only through
         // `distributionLifecycleStore`'s own existing subscription,
         // unaffected by which shape produced the fresh fact.
-        function distributeWorldEncounterPublication(publication, discoveryProvider) {
+        // AMENDED BY 0.9.670 — Publication Material Storage Selection.
+        // `materialStorage` ('ar', the default, preserving every existing
+        // caller's behavior unchanged | 'ipfs' | 'remote-pinning') and
+        // `remotePinningConfiguration` join `discoveryProvider` as new,
+        // optional third/fourth parameters — the identical `{ endpoint,
+        // credential, requestField, responseField }` ephemeral shape
+        // `distributeWorldEncounterSnapshot()`'s own `remotePinningConfiguration`
+        // already uses, above, translated into `remotePinningProviderOptions`
+        // (`fileFieldName`/`cidField`) the identical way
+        // `IpfsRemotePublicationCoordinator#publish()` already translates it,
+        // one substrate over — never persisted, never read from anywhere
+        // else, entered fresh each click. Both are forwarded verbatim into
+        // whichever command this function calls below; a caller that omits
+        // them (every caller predating this milestone) reaches
+        // `application/PublicationMaterialUploaderComposition.js`'s own
+        // 'ar' default exactly as before — see that file's own header, and
+        // `application/PublicationDistributionRuntimeComposition.js`'s own
+        // "AMENDED BY 0.9.670," for why the material-storage choice and the
+        // announcement-substrate choice (`discoveryProvider`, unchanged)
+        // stay two entirely independent decisions.
+        function distributeWorldEncounterPublication(publication, discoveryProvider, materialStorage, remotePinningConfiguration) {
+            const remotePinningProviderOptions = materialStorage === 'remote-pinning' && remotePinningConfiguration
+                ? {
+                    endpoint: remotePinningConfiguration.endpoint,
+                    credential: remotePinningConfiguration.credential || null,
+                    ...(remotePinningConfiguration.requestField ? { fileFieldName: remotePinningConfiguration.requestField } : {}),
+                    ...(remotePinningConfiguration.responseField ? { cidField: remotePinningConfiguration.responseField } : {})
+                }
+                : undefined;
+
             if (discoveryProvider === 'arweave') {
                 if (!publicationDistributionCommand) {
                     return Promise.reject(new Error('Publication distribution is not available.'));
@@ -1411,7 +1440,9 @@ export default {
                 return publicationDistributionCommand({
                     publication,
                     serializedMaterial: JSON.stringify(publication.toJSON()),
-                    discoveryProvider
+                    discoveryProvider,
+                    materialStorage,
+                    remotePinningProviderOptions
                 });
             }
             if (!multiRelayNostrPublicationDistributionCommand) {
@@ -1419,7 +1450,9 @@ export default {
             }
             return multiRelayNostrPublicationDistributionCommand({
                 publication,
-                serializedMaterial: JSON.stringify(publication.toJSON())
+                serializedMaterial: JSON.stringify(publication.toJSON()),
+                materialStorage,
+                remotePinningProviderOptions
             });
         }
 

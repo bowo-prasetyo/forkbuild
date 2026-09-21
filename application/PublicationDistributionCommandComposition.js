@@ -97,10 +97,24 @@ import { executePublicationDistributionCommand, executeMultiRelayNostrPublicatio
 //   `arweaveAnnouncementPublisherOptions`/`lifecycleStore` always taken from
 //   THIS call's own arguments, never from `request` — `request`'s own
 //   `discoveryProvider` (0.9.430), when supplied, passes through unchanged.
-export function composePublicationDistributionCommand({ lifecycleStore, arweaveUploaderOptions, nostrPublisherOptions, arweaveAnnouncementPublisherOptions } = {}) {
+// AMENDED BY 0.9.670 — Publication Material Storage Selection.
+// `ipfsNodeOptions` (a device-level capability — this device's own
+// local Kubo API url, exactly like `arweaveUploaderOptions` names this
+// device's own signer) joins the pre-bound collaborator set. `materialStorage`
+// and `remotePinningProviderOptions` are deliberately NOT pre-bound here —
+// `materialStorage` is the one field this whole milestone exists to let a
+// CALLER choose per request, the identical restraint this file's own header
+// already holds for `discoveryProvider`; `remotePinningProviderOptions`
+// carries per-click, ephemeral, never-persisted credentials (mirroring
+// `ui/views/WorldView.js`'s own pre-existing Snapshot Remote Pinning path),
+// so it can only ever come from a caller's own `request`, never from this
+// composition root. Both therefore reach `executePublicationDistributionCommand()`
+// purely through `...request`'s own existing, unmodified spread.
+export function composePublicationDistributionCommand({ lifecycleStore, arweaveUploaderOptions, ipfsNodeOptions, nostrPublisherOptions, arweaveAnnouncementPublisherOptions } = {}) {
     return (request) => executePublicationDistributionCommand({
         ...request,
         arweaveUploaderOptions,
+        ipfsNodeOptions,
         nostrPublisherOptions,
         arweaveAnnouncementPublisherOptions,
         lifecycleStore
@@ -146,10 +160,17 @@ export function composePublicationDistributionCommand({ lifecycleStore, arweaveU
 //   `arweaveUploaderOptions`/`nostrRelayUrls`/`nostrPublisherOptions`/
 //   `lifecycleStore` always taken from THIS call's own arguments, never from
 //   `request`.
-export function composeMultiRelayNostrPublicationDistributionCommand({ lifecycleStore, arweaveUploaderOptions, nostrRelayUrls, nostrPublisherOptions } = {}) {
+// AMENDED BY 0.9.670 — Publication Material Storage Selection. `ipfsNodeOptions`
+// joins this composer's own pre-bound set the identical way it joins
+// `composePublicationDistributionCommand()`'s own, above; `materialStorage`/
+// `remotePinningProviderOptions` are, for the identical reasons documented
+// there, left to reach `executeMultiRelayNostrPublicationDistributionCommand()`
+// purely through `...request`.
+export function composeMultiRelayNostrPublicationDistributionCommand({ lifecycleStore, arweaveUploaderOptions, ipfsNodeOptions, nostrRelayUrls, nostrPublisherOptions } = {}) {
     return (request) => executeMultiRelayNostrPublicationDistributionCommand({
         ...request,
         arweaveUploaderOptions,
+        ipfsNodeOptions,
         nostrRelayUrls,
         nostrPublisherOptions,
         lifecycleStore

@@ -686,7 +686,10 @@ async function run() {
             n('I2. no unified "Publication status" object or new lifecycle state machine was introduced'));
         assert(!editorViewCode.includes('setTimeout(') || editorViewCode.match(/setTimeout\(/g).length <= (codeOnly(editorViewSource).match(/setTimeout\(/g) || []).length,
             n('I3. no new automatic/timed distribution or fallback behavior was added (setTimeout usage, if any, is pre-existing feedback-timer code, unrelated to distribution)'));
-        assert(editorViewCode.includes('function distributeEditorPublication(publication, discoveryProvider)'),
+        // AMENDED BY 0.9.670 — Publication Material Storage Selection. The
+        // signature grew two more optional parameters (materialStorage,
+        // remotePinningConfiguration) — updated to match.
+        assert(editorViewCode.includes('function distributeEditorPublication(publication, discoveryProvider, materialStorage, remotePinningConfiguration)'),
             n('I4. the three independent backend/substrate choices (content backend, discovery provider selection) remain exactly as they were — this milestone changed only how a resolved result is DISPLAYED, never how it is chosen or produced'));
 
         console.log('✓ Section I: PRODUCT_COMPLETE (A, B, D, E, G, H), DELIBERATE_ASYMMETRY (F, reconfirming 0.9.519 rather than re-litigating it), PRODUCT_GAP -> FIXED (C, this milestone\'s own flagship). No unified status object, lifecycle state machine, automatic distribution/anchoring/fallback/verification, or change to either provider\'s own existing semantics was introduced — exactly the brief\'s own exclusion list, checked against the real, current diff.');

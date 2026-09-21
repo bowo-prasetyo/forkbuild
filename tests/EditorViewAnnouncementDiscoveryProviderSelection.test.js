@@ -164,9 +164,24 @@ async function run() {
         assert(/<option value="arweave">Arweave<\/option>/.test(editorSource),
             n('A3. exactly one option offers Arweave'));
 
-        const optionMatches = editorSource.match(/<option value="[^"]*">/g) || [];
+        // AMENDED BY 0.9.670 — Publication Material Storage Selection. This
+        // assertion originally counted every `<option>` in the whole file as
+        // a proxy for "the Announcement/Discovery substrate select is the
+        // only picker this view has, offering exactly these two choices" —
+        // true only because, at 0.9.502, it genuinely was the only picker.
+        // 0.9.670 gave this view a second, independent picker (Material
+        // storage — WHERE a Publication's material goes, a decision
+        // entirely separate from discoveryProvider, mirroring
+        // OwnPublicationPanel.js's own identical addition), so a file-wide
+        // count of 2 no longer holds. The assertion now scopes to the
+        // `<select v-model="selectedDiscoveryProvider">` element alone,
+        // preserving the original intent exactly: THAT select still offers
+        // exactly Nostr and Arweave, no more, no fewer.
+        const discoveryProviderSelectMatch = editorSource.match(/<select\s+v-model="selectedDiscoveryProvider"[\s\S]*?<\/select>/);
+        assert(discoveryProviderSelectMatch !== null, n('A4a. the selectedDiscoveryProvider <select> element is isolable'));
+        const optionMatches = (discoveryProviderSelectMatch ? discoveryProviderSelectMatch[0] : '').match(/<option value="[^"]*">/g) || [];
         assert(optionMatches.length === 2,
-            n(`A4. exactly two <option> elements exist anywhere in this file (found ${optionMatches.length}) — the currently supported choices, no more, no fewer`));
+            n(`A4. exactly two <option> elements exist inside the selectedDiscoveryProvider <select> (found ${optionMatches.length}) — the currently supported choices, no more, no fewer`));
 
         // AMENDED BY 0.9.667 — Role Provider Preference As Dropdown
         // Default. selectedDiscoveryProvider no longer hardcodes 'nostr'
@@ -337,7 +352,17 @@ async function run() {
     // ===============================================================
     {
         const ownPanelSource = await source('ui/components/OwnPublicationPanel.js');
-        assert(/publicationDistributionCommand\(publication, this\.publicationDiscoveryProvider\)/.test(ownPanelSource),
+        // AMENDED BY 0.9.670 — Publication Material Storage Selection. This
+        // call site gained two more forwarded arguments
+        // (`publicationMaterialStorage`, and a conditional remote-pinning
+        // options object) and was reformatted across multiple lines to fit
+        // — the regex now tolerates whitespace/newlines and trailing
+        // arguments rather than requiring the call to end immediately after
+        // `this.publicationDiscoveryProvider`, but still confirms the exact
+        // same 0.9.668 fact this section exists to protect: `publication`
+        // and `this.publicationDiscoveryProvider` are still the first two
+        // arguments, in the same order.
+        assert(/publicationDistributionCommand\(\s*publication,\s*this\.publicationDiscoveryProvider/.test(ownPanelSource),
             n('F1. AMENDED BY 0.9.668 — OwnPublicationPanel.js\'s own distributeOwnPublication() now forwards its own explicit discoveryProvider choice too, unrelated to this milestone\'s own EditorView.js-only scope'));
         console.log('✓ Section F: OwnPublicationPanel.js\'s own, separate distribution action is untouched by THIS (0.9.502) milestone — its later 0.9.668 substrate-choice fix is verified elsewhere');
     }

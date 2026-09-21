@@ -334,7 +334,11 @@ async function run() {
         // "production" is not merely asserted but checked against the
         // live file.
         const viewSource = codeOnly(await source('ui/views/WorldView.js'));
-        assert(viewSource.includes('function distributeWorldEncounterPublication(publication, discoveryProvider)') && viewSource.includes('return publicationDistributionCommand({'),
+        // AMENDED BY 0.9.670 — Publication Material Storage Selection. The
+        // function signature grew two more parameters (materialStorage,
+        // remotePinningConfiguration) — updated to match; still confirms
+        // the same shape this section actually reproduces and relies on.
+        assert(viewSource.includes('function distributeWorldEncounterPublication(publication, discoveryProvider, materialStorage, remotePinningConfiguration)') && viewSource.includes('return publicationDistributionCommand({'),
             n('A10. ui/views/WorldView.js genuinely still defines distributeWorldEncounterPublication() with exactly the shape this section reproduces'));
         assert(viewSource.includes("serializedMaterial: JSON.stringify(publication.toJSON())") && viewSource.includes('discoveryProvider'),
             n('A11. ...forwarding serializedMaterial and discoveryProvider exactly as this section\'s own wrapper does'));

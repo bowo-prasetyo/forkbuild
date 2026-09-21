@@ -1,4 +1,4 @@
-import { ArweavePublicationMaterialUploader } from './ArweavePublicationMaterialUploader.js';
+import { composePublicationMaterialUploader } from './PublicationMaterialUploaderComposition.js';
 import { NostrPublicationDiscoveryPublisher } from './NostrPublicationDiscoveryPublisher.js';
 import { ArweaveAnnouncementPublisher } from './ArweaveAnnouncementPublisher.js';
 import { describePublicationDistribution } from './PublicationDistributionDescriptor.js';
@@ -286,8 +286,26 @@ import { describePublicationDistribution } from './PublicationDistributionDescri
 //   wiring it into a real composition root remains a separate, later,
 //   unscheduled step — the same restraint 0.9.36's and 0.9.43's own
 //   headers already hold for their own composed results.
+//
+// AMENDED BY 0.9.670 — Publication Material Storage Selection. `uploader`
+// construction is no longer a literal, unconditional `new
+// ArweavePublicationMaterialUploader(arweaveUploaderOptions)` — it is now
+// delegated to `application/PublicationMaterialUploaderComposition.js`'s own
+// `composePublicationMaterialUploader()`, with this file's new
+// `materialStorage` ('ar', the default, preserving every existing caller's
+// behavior unchanged | 'ipfs' | 'remote-pinning') forwarded straight
+// through, alongside the two new options bags each non-Arweave choice
+// reads (`ipfsNodeOptions`, `remotePinningProviderOptions`). This is
+// the identical "selection, never fan-out" shape `discoveryProvider` already
+// holds for `publisher`, held here for `uploader` for the first time —
+// material placement and announcement substrate were always two
+// independent decisions (see `PublicationDistributionDescriptor.js`'s own
+// header, "a Publication's material goes to a material substrate... nothing
+// here decides which substrate is which"), but only the announcement half
+// was ever actually selectable before this amendment.
 
-// Constructs one fresh `ArweavePublicationMaterialUploader` (0.9.45) and
+// Constructs one fresh material uploader (see this file's own header,
+// "AMENDED BY 0.9.670," for how `materialStorage` selects which) and
 // exactly one fresh discovery publisher — `NostrPublicationDiscoveryPublisher`
 // (0.9.46) when `discoveryProvider` is `'nostr'` (the default, preserving
 // every existing caller's behavior unchanged), or `ArweaveAnnouncementPublisher`
@@ -306,11 +324,19 @@ import { describePublicationDistribution } from './PublicationDistributionDescri
 // itself is the one new option," above.
 export function composePublicationDistributionRuntime({
     arweaveUploaderOptions = {},
+    materialStorage = 'ar',
+    ipfsNodeOptions = {},
+    remotePinningProviderOptions = {},
     discoveryProvider = 'nostr',
     nostrPublisherOptions = {},
     arweaveAnnouncementPublisherOptions = {}
 } = {}) {
-    const uploader = new ArweavePublicationMaterialUploader(arweaveUploaderOptions);
+    const uploader = composePublicationMaterialUploader({
+        materialStorage,
+        arweaveUploaderOptions,
+        ipfsNodeOptions,
+        remotePinningProviderOptions
+    });
 
     let publisher;
     if (discoveryProvider === 'nostr') {

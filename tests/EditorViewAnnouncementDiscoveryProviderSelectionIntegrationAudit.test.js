@@ -769,8 +769,13 @@ async function run() {
         // (modulo the function's own name) — this is an existing,
         // codebase-wide convention EditorView.js reused, never a shortcut
         // invented for this milestone alone.
-        const editorFnBody = extractRange(editorViewCode, 'function distributeEditorPublication(publication, discoveryProvider) {', '\n        }\n', 'EditorView distribute function');
-        const worldFnBody = extractRange(worldViewCode, 'function distributeWorldEncounterPublication(publication, discoveryProvider) {', '\n        }\n', 'WorldView distribute function');
+        // AMENDED BY 0.9.670 — Publication Material Storage Selection. Both
+        // functions' own signatures grew two more parameters
+        // (materialStorage, remotePinningConfiguration) — the markers below
+        // are updated to match; the byte-for-byte parity this section
+        // exists to protect is otherwise unchanged.
+        const editorFnBody = extractRange(editorViewCode, 'function distributeEditorPublication(publication, discoveryProvider, materialStorage, remotePinningConfiguration) {', '\n        }\n', 'EditorView distribute function');
+        const worldFnBody = extractRange(worldViewCode, 'function distributeWorldEncounterPublication(publication, discoveryProvider, materialStorage, remotePinningConfiguration) {', '\n        }\n', 'WorldView distribute function');
         const normalize = (body) => body
             .replace('distributeEditorPublication', 'DISTRIBUTE_FN')
             .replace('distributeWorldEncounterPublication', 'DISTRIBUTE_FN')

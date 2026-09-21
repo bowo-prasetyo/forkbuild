@@ -173,8 +173,14 @@ async function run() {
         // question: there is still no registry, only ui/main.js's own one
         // real composition call, now producing three provider-facing
         // options instead of two.
+        // AMENDED BY 0.9.670 — Publication Material Storage Selection.
+        // `ipfsNodeOptions` joined this same fixed, still-composed-
+        // exactly-once set — "how many are registered" remains not a
+        // meaningful question, for the identical reason 0.9.430's own
+        // amendment already gives, extended to a fourth provider-facing
+        // options bag.
         const distributionIsSingleFixedPair = /const publicationDistributionCommand = composePublicationDistributionCommand\(\{/.test(mainSource)
-            && /arweaveUploaderOptions,\s*\n\s*nostrPublisherOptions,\s*\n\s*arweaveAnnouncementPublisherOptions\s*\n\}\);/.test(mainSource);
+            && /arweaveUploaderOptions,\s*\n\s*ipfsNodeOptions,\s*\n\s*nostrPublisherOptions,\s*\n\s*arweaveAnnouncementPublisherOptions\s*\n\}\);/.test(mainSource);
         assert(distributionIsSingleFixedPair, n('A10. ANNOUNCEMENT_AND_DISCOVERY\'s one real write action is composed exactly once, from exactly one Arweave-uploader/Nostr/Arweave-announcement options set — "how many are registered" is not even a meaningful question for this role\'s own real action, because there is no registry to count entries in'));
 
         console.log('\n=== SECTION A: ROLE / PROVIDER / MECHANISM CENSUS ===');
@@ -236,7 +242,12 @@ async function run() {
         // command is STILL injected, which remains true, never that it is
         // the only one.
         assert(/inject\('multiRelayNostrPublicationDistributionCommand', null\)/.test(editorSource), n('B9. AMENDED BY 0.9.450 — ANNOUNCEMENT_AND_DISCOVERY: EditorView.js injects the SAME app-wide distribution command (now multiRelayNostrPublicationDistributionCommand) — since 0.9.502, alongside its own new per-role substrate choice, see above'));
-        assert(/publicationDistributionCommand\(publication, this\.publicationDiscoveryProvider\)/.test(ownPanelSource), n('B10. AMENDED BY 0.9.668 — Bug fix. OwnPublicationPanel.js\'s own, separate call site now forwards its own explicit Announcement/Discovery substrate choice too — no longer publication-only, closing the asymmetry this audit originally found'));
+        // AMENDED BY 0.9.670 — Publication Material Storage Selection. This
+        // call site gained more forwarded arguments and was reformatted
+        // across multiple lines — the regex now tolerates whitespace/
+        // newlines and trailing arguments, still confirming the same
+        // 0.9.668 fact this section exists to protect.
+        assert(/publicationDistributionCommand\(\s*publication,\s*this\.publicationDiscoveryProvider/.test(ownPanelSource), n('B10. AMENDED BY 0.9.668 — Bug fix. OwnPublicationPanel.js\'s own, separate call site now forwards its own explicit Announcement/Discovery substrate choice too — no longer publication-only, closing the asymmetry this audit originally found'));
 
         console.log('\n=== SECTION B: REACHABILITY CHAINS ===');
         console.log('✓ Section B: CONTENT and PROOF_AND_ANCHORING each trace a complete, real chain from a registered route through an injected coordinator to a per-item template loop reading a live registry. ANNOUNCEMENT_AND_DISCOVERY traces an equally real chain to an actual, working "Distribute" action — but that chain has no branch point anywhere for a substrate identifier to enter it.');
