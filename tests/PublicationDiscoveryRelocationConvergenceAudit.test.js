@@ -509,17 +509,24 @@ async function run() {
         // Snapshot Distribution and Content Comparison remain positioned
         // entirely outside the new popup, and their own gating is
         // untouched by this milestone.
-        assert(/<div v-if="selectedEncounter && selectedEncounter\.kind === 'PUBLICATION' && distributionLifecycleStore" class="world-encounter-distribution-panel">/.test(canvasSource),
-            'H6. Distribute Publication still gates exactly as before, unmoved');
-        assert(/<div v-if="selectedEncounter && selectedEncounter\.kind === 'PUBLICATION' && snapshotDistributionCommand" class="world-encounter-snapshot-distribution-panel">/.test(canvasSource),
-            'H7. Distribute Snapshot still gates exactly as before, unmoved');
+        //
+        // AMENDED BY 0.9.672 — World View Distribution Dialog. Distribute
+        // Publication and Distribute Snapshot no longer render as two
+        // separately-classed panels — a single, identically-gated
+        // "Distribute" trigger button (opening the SEPARATE
+        // WorldDistributionDialog.js popup, never this milestone's own
+        // Publication Discovery popup) replaces them both, a pure
+        // presentation relocation (see that dialog file's own header)
+        // that changes neither gate.
+        assert(/<button\s+v-if="selectedEncounter && selectedEncounter\.kind === 'PUBLICATION' && \(distributionCommand \|\| snapshotDistributionCommand\)"[\s\S]{0,200}world-encounter-distribution-trigger-action/.test(canvasSource),
+            'H6/H7. Distribute (Publication + Snapshot) still gates exactly as before, unmoved — now via one shared trigger');
         assert(/<div v-if="selectedPublicationComparisonCandidate" class="world-snapshot-comparison-panel">/.test(canvasSource),
             'H8. Content Comparison\'s Compare panel still gates exactly as before, unmoved');
         const overlayIndex = canvasSource.indexOf('v-if="publicationDiscoveryOpen"');
-        for (const marker of ['world-encounter-distribution-panel', 'world-encounter-snapshot-distribution-panel', 'world-snapshot-comparison-panel']) {
-            const idx = canvasSource.indexOf(marker);
-            assert(idx !== -1 && idx < overlayIndex, `H9 (${marker}). remains positioned entirely outside the Publication Discovery popup`);
-        }
+        const distributeTriggerIdx = canvasSource.indexOf('world-encounter-distribution-trigger-action');
+        assert(distributeTriggerIdx !== -1 && distributeTriggerIdx < overlayIndex, 'H9 (Distribute trigger). remains positioned entirely outside the Publication Discovery popup');
+        const compareIdx = canvasSource.indexOf('world-snapshot-comparison-panel');
+        assert(compareIdx !== -1 && compareIdx < overlayIndex, 'H9 (world-snapshot-comparison-panel). remains positioned entirely outside the Publication Discovery popup');
 
         console.log('✓ Section H: ordinary World Encounter selection, Snapshot Distribution, and Content Comparison remain unaffected whether Publication Discovery is open, closed, or mid-request — and running a discovery never disturbs ordinary selection state');
     }

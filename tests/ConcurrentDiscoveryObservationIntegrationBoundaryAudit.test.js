@@ -675,8 +675,13 @@ async function run() {
         await distributionCommand(publication, 'nostr');
         refresh(ctx, publication, lifecycleStore);
         assert(ctx.discoveryObservations.length === 1, n('H2. after one substrate, the computed reports exactly one observation'));
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
-        assert(/discoveryObservations\.length > 1/.test(canvasSource), n('H3. CONFIRMED FROM THE TEMPLATE: the v-for branch requires MORE than one observation — a single-substrate Publication renders the plain, unlabeled "Discovery" row exactly as it did before 0.9.433, never a "(nostr)"-labeled one'));
+        // AMENDED BY 0.9.672 — this template now lives in
+        // WorldDistributionDialog.js, one popup over — see that file's
+        // own header. discoveryObservations itself remains
+        // WorldEncounterCanvas.js's own computed, unmodified, passed down
+        // as a prop.
+        const dialogSource = await source('ui/components/WorldDistributionDialog.js');
+        assert(/discoveryObservations\.length > 1/.test(dialogSource), n('H3. CONFIRMED FROM THE TEMPLATE: the v-for branch requires MORE than one observation — a single-substrate Publication renders the plain, unlabeled "Discovery" row exactly as it did before 0.9.433, never a "(nostr)"-labeled one'));
         assert(ctx.distributionDiscoveryState === PublicationDistributionState.PRESENT, n('H4. and that single row correctly shows PRESENT — the single-observation case is fully backward-compatible in appearance, not merely in data'));
 
         // Two observations: the v-for branch activates, one row per
@@ -684,7 +689,7 @@ async function run() {
         await distributionCommand(publication, 'arweave');
         refresh(ctx, publication, lifecycleStore);
         assert(ctx.discoveryObservations.length === 2, n('H5. after a second substrate, two observations'));
-        assert(/v-for="observation in discoveryObservations"/.test(canvasSource) && /Discovery \(\{\{ observation\.discoveryProvider \}\}\)/.test(canvasSource),
+        assert(/v-for="observation in discoveryObservations"/.test(dialogSource) && /Discovery \(\{\{ observation\.discoveryProvider \}\}\)/.test(dialogSource),
             n('H6. CONFIRMED FROM THE TEMPLATE: the real Distribution panel genuinely contains a v-for producing one labeled row per substrate'));
         assert(ctx.discoveryObservations.every((o) => ['nostr', 'arweave'].includes(o.discoveryProvider)), n('H7. both rows this v-for would render are correctly attributed'));
 

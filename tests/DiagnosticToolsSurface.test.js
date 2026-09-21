@@ -81,9 +81,16 @@ const PIPELINE_ACTIONS = [
 // Ordinary, non-diagnostic actions this milestone's own brief explicitly
 // keeps on the primary screen — see OwnPublicationPanel.js's own 0.9.324
 // comment, "stay on the primary screen, deliberately."
+//
+// AMENDED BY 0.9.672 — World View Distribution Dialog. "Distribute
+// Snapshot"/"Distribute Publication" collapsed into one shared
+// "Distribute" trigger (own-publication-distribution-trigger-action),
+// opening the SEPARATE WorldDistributionDialog.js popup — never this
+// milestone's own Diagnostic Tools popup — a pure presentation
+// relocation, see that dialog file's own header.
 const PRIMARY_SCREEN_ACTIONS = [
     'own-publication-unpublish-action',
-    'own-publication-distribution-action',
+    'own-publication-distribution-trigger-action',
     'own-publication-export-action',
     'own-publication-discovery-action'
 ];

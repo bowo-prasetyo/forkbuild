@@ -213,8 +213,16 @@ async function run() {
         // (placements, export, snapshot discovery/candidate browsing,
         // attribution, materialization, world placement/claim/registration,
         // commentary) is unrelated distribution functionality.
-        assert(/'Distribute Snapshot'/.test(ownPanelSource), n('A1. OwnPublicationPanel.js: a real "Distribute Snapshot" action exists'));
-        assert(/'Distribute Publication'/.test(ownPanelSource), n('A2. ...and a real "Distribute Publication" action exists'));
+        // AMENDED BY 0.9.672 — World View Distribution Dialog. Both
+        // labels moved into WorldDistributionDialog.js, a pure
+        // presentation relocation opened by this panel's own "Distribute"
+        // trigger (see that file's own header) — the underlying actions
+        // (A3 onward, below) are unmodified, still callable from exactly
+        // this panel's own methods.
+        const worldDistributionDialogSource = await source('ui/components/WorldDistributionDialog.js');
+        assert(/'Distribute Snapshot'/.test(worldDistributionDialogSource), n('A1. WorldDistributionDialog.js: a real "Distribute Snapshot" action exists'));
+        assert(/'Distribute Publication'/.test(worldDistributionDialogSource), n('A2. ...and a real "Distribute Publication" action exists'));
+        assert(ownPanelSource.includes('own-publication-distribution-trigger-action'), n('A1b. OwnPublicationPanel.js still carries its own "Distribute" trigger, reaching both actions above'));
         // AMENDED BY 0.9.669 — Per-Click Snapshot Announcement/Discovery
         // Substrate Override. "Distribute Snapshot" now ALSO forwards this
         // panel's own explicit `snapshotDiscoveryProvider` choice, closing
@@ -247,9 +255,18 @@ async function run() {
         // used to say only WorldEncounterCanvas had for Publication; see
         // A4, above. AMENDED BY 0.9.669 — and both files now ALSO give
         // Snapshot its own separate substrate <select>, see A3/A7.
-        assert(/'Distribute Publication'/.test(canvasSource) && /'Distribute Snapshot'/.test(canvasSource), n('A6. WorldEncounterCanvas.js exposes the identical two action labels'));
-        assert(/<select[\s\S]{0,80}v-model="selectedDiscoveryProvider"/.test(canvasSource), n('A7. ...and a real Announcement/Discovery substrate <select> (Nostr/Arweave) for Publication — AMENDED BY 0.9.668: OwnPublicationPanel.js\'s own sibling action (A2/A4) now has the equivalent control too, see A4\'s own amendment above'));
-        assert(/<select[\s\S]{0,80}v-model="selectedSnapshotDiscoveryProvider"/.test(canvasSource), n('A7b. AMENDED BY 0.9.669 — a SEPARATE Announcement/Discovery substrate <select> exists for Snapshot too, closing the parity gap A3 (above) names — OwnPublicationPanel.js\'s own sibling action has the equivalent control, see A3\'s own amendment above'));
+        // AMENDED BY 0.9.672 — both labels, and both substrate <select>s,
+        // moved into the SHARED WorldDistributionDialog.js (see that
+        // file's own header) — WorldEncounterCanvas.js still owns
+        // selectedDiscoveryProvider/selectedSnapshotDiscoveryProvider
+        // themselves (page-local UI state, unmodified) and now threads
+        // them down via v-model on the dialog component instead of a
+        // plain <select> directly.
+        assert(/'Distribute Publication'/.test(worldDistributionDialogSource) && /'Distribute Snapshot'/.test(worldDistributionDialogSource), n('A6. WorldDistributionDialog.js exposes the identical two action labels'));
+        assert(/v-model:discovery-provider="selectedDiscoveryProvider"/.test(canvasSource), n('A7. ...and WorldEncounterCanvas.js still threads its own Announcement/Discovery substrate choice (Nostr/Arweave) for Publication into the dialog — AMENDED BY 0.9.668: OwnPublicationPanel.js\'s own sibling action (A2/A4) now has the equivalent control too, see A4\'s own amendment above'));
+        assert(/v-model:snapshot-discovery-provider="selectedSnapshotDiscoveryProvider"/.test(canvasSource), n('A7b. AMENDED BY 0.9.669 — a SEPARATE Announcement/Discovery substrate choice exists for Snapshot too, closing the parity gap A3 (above) names — OwnPublicationPanel.js\'s own sibling action has the equivalent control, see A3\'s own amendment above'));
+        assert(/<select[\s\S]{0,80}v-model="discoveryProviderModel"/.test(worldDistributionDialogSource) && /<select[\s\S]{0,80}v-model="snapshotDiscoveryProviderModel"/.test(worldDistributionDialogSource),
+            n('A7c. WorldDistributionDialog.js itself still renders the two real <select> elements those choices control'));
         assert(!/Anchor|Bitcoin/.test(canvasSource) || /Anchors<\/dt>/.test(canvasSource), n('A8. WorldEncounterCanvas.js has no Proof/Anchoring distribution action either (an incidental, unrelated "Anchors" label elsewhere in the file, if present, is not a distribution action)'));
 
         // DecentralizedPublicationsView.js — the other two roles, already

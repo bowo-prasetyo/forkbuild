@@ -241,7 +241,21 @@ async function runTests() {
     // ---------------------------------------------------------------
     {
         const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
-        const clickHandlers = new Set((panelSource.match(/@click="[a-zA-Z]+/g) || []).map((s) => s.replace('@click="', '')));
+        // AMENDED BY 0.9.672 — World View Distribution Dialog.
+        // distributeOwnSnapshot()/distributeOwnPublication()/
+        // distributeOwnPublicationAndSnapshot() are no longer wired via a
+        // literal `@click="..."` in THIS file's own template — that
+        // markup moved into WorldDistributionDialog.js (a pure
+        // presentation relocation, see that file's own header), which
+        // this component now mounts and wires via custom
+        // `@distribute-snapshot`/`@distribute-publication`/
+        // `@distribute-both` event bindings instead. Both binding styles
+        // count as "wired" for this section's own purpose (is the
+        // action still reachable from this component at all).
+        const clickHandlers = new Set(
+            (panelSource.match(/@(?:click|distribute-[a-zA-Z-]+)="[a-zA-Z]+/g) || [])
+                .map((s) => s.replace(/^@(?:click|distribute-[a-zA-Z-]+)="/, ''))
+        );
         assert(clickHandlers.size >= 10, `D1a. OwnPublicationPanel.js still wires at least 10 distinct actions (found ${clickHandlers.size})`);
         assert([...clickHandlers].some((h) => /^unpublish|^retract/i.test(h)), 'D1b. an unpublish/retract-shaped handler remains wired');
         assert(clickHandlers.has('discoverOwnSnapshot') && clickHandlers.has('discoverSnapshotCandidates') && clickHandlers.has('distributeOwnSnapshot') && clickHandlers.has('exportOwnSnapshot'),
@@ -261,7 +275,15 @@ async function runTests() {
         const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
         assert(/distributionCommand:\s*\{/.test(canvasSource), 'D2a. WorldEncounterCanvas.js still declares a distributionCommand prop');
         assert(/distributeSelectedPublication\(\)\s*\{/.test(canvasSource), 'D2b. ...and still defines distributeSelectedPublication()');
-        assert(/@click="distributeSelectedPublication"/.test(canvasSource), 'D2c. ...wired to a real @click handler — "Distribute Publication" stays reachable');
+        // AMENDED BY 0.9.672 — World View Distribution Dialog.
+        // distributeSelectedPublication() is no longer wired via a
+        // literal `@click="..."` in THIS file's own template — see
+        // ui/components/WorldDistributionDialog.js's own header — but it
+        // is still reachable from exactly one place, now via a custom
+        // `@distribute-publication` event this file both listens for
+        // (on its own mounted dialog) and forwards to the identical,
+        // unmodified method.
+        assert(/@distribute-publication="distributeSelectedPublication"/.test(canvasSource), 'D2c. ...wired to a real event handler — "Distribute Publication" stays reachable');
 
         const mainSource = await rawSource('ui/main.js');
         assert(/composePublicationDistributionCommand\(/.test(mainSource), 'D2d. ui/main.js still composes publicationDistributionCommand via composePublicationDistributionCommand()');

@@ -358,14 +358,30 @@ async function runTests() {
         const ownPanel = await rawSource('ui/components/OwnPublicationPanel.js');
         const canvas = await rawSource('ui/components/WorldEncounterCanvas.js');
 
-        // F2. In BOTH files, the distribution UI and the commentary UI
-        // are sections of the SAME component, not separate mount
-        // points — proven by their own template class names, not by
-        // proximity in source order.
-        assert(ownPanel.includes('own-publication-distribution-detail') && ownPanel.includes('own-publication-commentary'),
-            'F2a. OwnPublicationPanel.js\'s own template carries both an own-publication-distribution-* section and an own-publication-commentary section, in one component.');
-        assert(canvas.includes('world-encounter-snapshot-distribution-panel') && canvas.includes('world-encounter-commentary-panel'),
-            'F2b. WorldEncounterCanvas.js\'s own template carries both a world-encounter-snapshot-distribution-panel and a world-encounter-commentary-panel, in one component.');
+        // F2. In BOTH files, the distribution UI's own entry point and
+        // the commentary UI are sections of the SAME component, not
+        // separate mount points — proven by their own template class
+        // names, not by proximity in source order.
+        //
+        // AMENDED BY 0.9.672 — World View Distribution Dialog. The
+        // distribution UI's own interactive body (storage/substrate
+        // pickers, buttons, result displays) moved into a dedicated
+        // WorldDistributionDialog.js popup, a pure presentation
+        // relocation (see that file's own header) — but its TRIGGER
+        // button stays inline, in the SAME component instance as
+        // Commentary, exactly where the full section used to be. F2's
+        // own governing question — "does a Wanderer see distribution and
+        // commentary in the same component instance" — is unaffected: a
+        // Wanderer viewing Commentary here still sees a "Distribute"
+        // affordance for the identical Publication, one click away, not
+        // on some other, uncommented surface.
+        assert(ownPanel.includes('own-publication-distribution-trigger-action') && ownPanel.includes('own-publication-commentary'),
+            'F2a. OwnPublicationPanel.js\'s own template carries both a Distribute trigger and an own-publication-commentary section, in one component.');
+        assert(canvas.includes('world-encounter-distribution-trigger-action') && canvas.includes('world-encounter-commentary-panel'),
+            'F2b. WorldEncounterCanvas.js\'s own template carries both a Distribute trigger and a world-encounter-commentary-panel, in one component.');
+        const distributionDialog = await rawSource('ui/components/WorldDistributionDialog.js');
+        assert(!distributionDialog.includes('commentary') && !distributionDialog.includes('Commentary'),
+            'F2c. WorldDistributionDialog.js itself carries no commentary vocabulary of its own — it is a pure distribution-action popup, never a candidate surface for this milestone\'s own question.');
 
         // F3. Both sections are gated on the SAME publication in
         // scope: OwnPublicationPanel's distribution section reads
@@ -446,12 +462,16 @@ async function runTests() {
             'H1. PublicationCatalog.js\'s own v-for is keyed by the exact same pub.id PublicationCard already receives — not a different aggregate view.');
 
         // H2. The distribution/commentary co-location proven in
-        // Section F means a viewer who can already SEE the Distribution
-        // section for a publication is, by construction, looking at a
+        // Section F means a viewer who can already SEE the Distribute
+        // trigger for a publication is, by construction, looking at a
         // component instance that can already render Commentary too —
-        // there is no separate navigation step between them.
+        // there is no separate navigation step between them. AMENDED BY
+        // 0.9.672: the check reads own-publication-distribution-trigger-
+        // action (see Section F's own amendment) rather than the
+        // interactive body, which now lives one popup over, in
+        // WorldDistributionDialog.js.
         const ownPanel = await rawSource('ui/components/OwnPublicationPanel.js');
-        const distributionIdx = ownPanel.indexOf('own-publication-distribution-detail');
+        const distributionIdx = ownPanel.indexOf('own-publication-distribution-trigger-action');
         const commentaryIdx = ownPanel.indexOf('own-publication-commentary');
         assert(distributionIdx > -1 && commentaryIdx > -1,
             'H2. both sections exist in OwnPublicationPanel.js.');

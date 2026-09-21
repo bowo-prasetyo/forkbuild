@@ -506,6 +506,11 @@ async function run() {
     // ===============================================================
     {
         const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        // AMENDED BY 0.9.672 — World View Distribution Dialog. The
+        // substrate <select> H2 checks now lives in
+        // WorldDistributionDialog.js, one popup over — see that file's
+        // own header. Its own :disabled expression is unmodified.
+        const dialogSource = await source('ui/components/WorldDistributionDialog.js');
 
         // The button that triggers a distribution attempt is disabled only
         // while nothing is distributable, or while a call is already in
@@ -513,7 +518,7 @@ async function run() {
         // succeeded, and the select remains freely re-selectable at any
         // time it is not mid-call.
         assert(/:disabled="!distributablePublication \|\| distributionExecuting"/.test(canvasSource), n('H1. the Distribute action is gated only on "nothing to distribute" or "already in flight" — never on "already distributed once" — so a second, differently-configured attempt for the same publication is never blocked by a prior success'));
-        assert(/:disabled="distributionExecuting"[^>]*>\s*<option value="nostr">/.test(canvasSource.replace(/\n\s*/g, ' ')), n('H2. the substrate <select> is disabled only mid-call, never after a completed distribution — a Wanderer can immediately reselect the other substrate'));
+        assert(/:disabled="distributionExecuting"[^>]*>\s*<option value="nostr">/.test(dialogSource.replace(/\n\s*/g, ' ')), n('H2. the substrate <select> is disabled only mid-call, never after a completed distribution — a Wanderer can immediately reselect the other substrate'));
 
         // distributeSelectedPublication() itself never resets, clears, or
         // otherwise mutates selectedDiscoveryProvider or distributablePublication

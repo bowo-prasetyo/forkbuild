@@ -623,6 +623,18 @@ async function runTests() {
 
     // ---------------------------------------------------------------
     // Section G — Ordinary actions remain outside diagnostics.
+    //
+    // AMENDED BY 0.9.672 — World View Distribution Dialog. "Distribute
+    // Snapshot" itself moved out of this file entirely, into the
+    // SEPARATE, ALREADY-TESTED WorldDistributionDialog.js popup (never
+    // the Diagnostic Tools popup this section polices) — see that file's
+    // own header. This section's own governing invariant is unaffected:
+    // Diagnostic Tools still swallows none of the ordinary actions. What
+    // changed is which primary-screen affordance to check for "Distribute
+    // Snapshot" itself — its own trigger button (still on the primary
+    // screen, still outside the Diagnostic Tools popup, still gated
+    // identically) rather than the action's own button, which this file
+    // no longer renders at all.
     // ---------------------------------------------------------------
     {
         const overlayOpenIdx = rawPanel.indexOf('class="modal-overlay own-publication-diagnostic-overlay"');
@@ -630,7 +642,6 @@ async function runTests() {
 
         const ordinary = [
             { actionClass: 'own-publication-unpublish-action', label: 'Unpublish' },
-            { actionClass: 'own-publication-distribution-action', label: 'Distribute Snapshot' },
             { actionClass: 'own-publication-export-action', label: 'Export Snapshot' },
             { actionClass: 'own-publication-discovery-action', label: 'Check Snapshot Match' }
         ];
@@ -640,10 +651,25 @@ async function runTests() {
             assert(rawPanel.includes(`>${label}<`) || rawPanel.includes(`'${label}'`), `G2 (${label}). still carries its exact, unrenamed label`);
         }
 
+        // G1'/G2' — the "Distribute Snapshot" capability's own primary-
+        // screen affordance is now its trigger button (opens
+        // WorldDistributionDialog.js, a DIFFERENT popup from Diagnostic
+        // Tools), still outside the Diagnostic Tools overlay, still
+        // gated on the same commands.
+        const distributeTriggerIdx = rawPanel.indexOf('class="action-btn own-publication-distribution-trigger-action"');
+        assert(distributeTriggerIdx > -1 && distributeTriggerIdx < overlayOpenIdx,
+            'G1 (Distribute). still renders on the primary screen, outside the Diagnostic Tools popup');
+        assert(rawPanel.includes('>Distribute<'), 'G2 (Distribute). the trigger still carries its exact label');
+        assert(!rawPanel.includes('own-publication-distribution-action'),
+            'G1b. the OLD "Distribute Snapshot" button markup no longer exists inline in this file — it lives in WorldDistributionDialog.js now, never inside the Diagnostic Tools popup this section polices');
+        const dialogSource = await rawSource('ui/components/WorldDistributionDialog.js');
+        assert(dialogSource.includes('>Distribute Snapshot<') || dialogSource.includes("'Distribute Snapshot'"),
+            'G1c. "Distribute Snapshot" itself still exists, verbatim, in its own dedicated popup — never removed, never folded into Diagnostic Tools');
+
         const commentaryIdx = rawPanel.indexOf('own-publication-commentary');
         assert(commentaryIdx > overlayCloseIdx, 'G3. Commentary also remains outside the popup');
 
-        console.log('✓ Section G: Check Snapshot Match, Distribute Snapshot, Export Snapshot, Unpublish, and Commentary all remain ordinary primary-screen actions, unrenamed and outside the popup');
+        console.log('✓ Section G: Check Snapshot Match, Export Snapshot, Unpublish, Distribute (now WorldDistributionDialog.js\'s own trigger), and Commentary all remain ordinary primary-screen actions, unrenamed and outside the Diagnostic Tools popup');
     }
 
     // ---------------------------------------------------------------

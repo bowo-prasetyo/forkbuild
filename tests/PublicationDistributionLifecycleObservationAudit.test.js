@@ -477,8 +477,18 @@ async function run() {
     // dashboard or history screen.
     // ===============================================================
     {
+        // AMENDED BY 0.9.672 — World View Distribution Dialog. The
+        // Distribution panel this section traces moved out of
+        // WorldEncounterCanvas.js entirely, into WorldDistributionDialog.js
+        // (a pure presentation relocation — see that file's own header);
+        // `distributionMaterialState`/`distributionDiscoveryState`/
+        // `discoveryObservations` themselves are unmodified computeds,
+        // still owned by WorldEncounterCanvas.js and passed down as props
+        // (`distribution-material-state`/`distribution-discovery-state`/
+        // `discovery-observations`) for the dialog to render.
         const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
-        const distributionPanelStart = canvasSource.indexOf('world-encounter-distribution-panel');
+        const dialogSource = await source('ui/components/WorldDistributionDialog.js');
+        const distributionPanelStart = dialogSource.indexOf('world-distribution-dialog-lifecycle-detail');
         // AMENDED BY 0.9.433 — Concurrent Discovery Observation Preservation.
         // G1/G2/G4 originally confirmed "today" (as of 0.9.432) there was
         // exactly one Discovery row and no `v-for` in this panel at all —
@@ -488,14 +498,16 @@ async function run() {
         // slice) and G1/G4 are inverted to confirm the recommended change
         // now genuinely exists in production, never merely re-asserting
         // the pre-0.9.433 absence against post-0.9.433 source.
-        const distributionPanelTemplate = canvasSource.slice(distributionPanelStart, distributionPanelStart + 2000);
+        const distributionPanelTemplate = dialogSource.slice(distributionPanelStart, distributionPanelStart + 2000);
 
         assert(distributionPanelTemplate.includes('{{ distributionMaterialState }}'), n('G1a. the Material row is unchanged — still bound to the single computed `distributionMaterialState`, never touched by this milestone'));
         assert((distributionPanelTemplate.match(/<dt>Discovery/g) || []).length >= 2, n('G1. AMENDED BY 0.9.433 — the panel template now contains more than one literal "Discovery" row source: the fallback single row (unchanged text) plus the new per-provider `v-for` row, confirming the recommended change is genuinely present, not merely described'));
         assert(distributionPanelTemplate.includes('{{ distributionDiscoveryState }}'), n('G2. the pre-existing single-row fallback is still bound to the same computed `distributionDiscoveryState` (0.9.100, unmodified) — used whenever zero or one substrate observation exists, which Section D already proved is indistinguishable from today\'s behavior'));
 
-        assert(canvasSource.includes('<h4 class="world-encounter-distribution-title">Distribution</h4>'), n('G3. the existing "Distribution" heading is confirmed as the one place this change lives — never a new heading or a separate panel, matching the requesting brief\'s own "not a new dashboard" instruction'));
+        assert(dialogSource.includes('<h4 class="world-distribution-dialog-section-title">Distribution</h4>'), n('G3. the existing "Distribution" heading is confirmed as the one place this change lives — never a new heading or a separate panel, matching the requesting brief\'s own "not a new dashboard" instruction'));
         assert(/v-for="observation in discoveryObservations"/.test(distributionPanelTemplate), n('G4. AMENDED BY 0.9.433 — the Distribution panel now contains exactly the `v-for` this section recommended, scoped to the Discovery row alone, over the seam\'s own `discoveryObservations` computed — never a modification of any pre-existing loop, since none existed before this milestone'));
+        assert(canvasSource.includes('distributionMaterialState') && canvasSource.includes('discoveryObservations'),
+            n('G5. WorldEncounterCanvas.js still OWNS these computeds — the dialog only ever receives their current value as a prop, never recomputes them itself'));
 
         console.log('✓ Section G (AMENDED BY 0.9.433): the recommended `v-for` over per-provider observations now genuinely exists in production, replacing the single Discovery `<dt>/<dd>` pair with one pair per observed substrate when more than one exists, entirely inside the existing "Distribution" heading — never a new panel, dashboard, or history screen');
     }
