@@ -6,7 +6,7 @@ import { resolveSnapshotWorldPositionClaim } from '../../application/SnapshotWor
 import { SnapshotWorldPositionClaimOutcome } from '../../application/SnapshotWorldPositionClaimOutcome.js';
 import { createId } from '../../core/createId.js';
 import { sanitizeDistributionErrorMessage } from '../../application/DistributionErrorMessageSanitizer.js';
-import { resolvePreferredProviderDefault } from '../../application/PreferredProviderDefaultChoice.js';
+import { resolveSavedProviderDefault } from '../../application/SavedProviderDefaultChoice.js';
 
 // 0.9.140 — Own Publication Distribution Entry Point.
 //
@@ -1505,7 +1505,7 @@ export default {
         // ui/views/WorldView.js exactly like `snapshotDistributionStorageTypes`
         // immediately above already is. Read only to seed
         // `snapshotDistributionStorage`'s own initial choice, below — see
-        // application/PreferredProviderDefaultChoice.js's own header.
+        // application/SavedProviderDefaultChoice.js's own header.
         defaultContentDistributionProvider: {
             type: String,
             default: null
@@ -1945,11 +1945,11 @@ export default {
         // injected `defaultContentDistributionProvider` prop) now wins over
         // that "first eligible" fallback whenever it names one of the
         // backends `snapshotDistributionStorageTypes` currently lists — see
-        // application/PreferredProviderDefaultChoice.js's own header.
+        // application/SavedProviderDefaultChoice.js's own header.
         snapshotDistributionStorage: {
             get() {
                 return this.snapshotDistributionStorageChoice
-                    || resolvePreferredProviderDefault(this.defaultContentDistributionProvider, this.snapshotDistributionStorageTypes, null)
+                    || resolveSavedProviderDefault(this.defaultContentDistributionProvider, this.snapshotDistributionStorageTypes, null)
                     || this.snapshotDistributionStorageTypes[0]
                     || 'ar';
             },

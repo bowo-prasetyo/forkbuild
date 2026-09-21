@@ -159,7 +159,7 @@ export default {
         // resolves once at boot (from this replica's own saved
         // ANNOUNCEMENT_AND_DISCOVERY preference, falling back to 'nostr')
         // — read only to seed `selectedDiscoveryProvider` below at
-        // construction time. See application/PreferredProviderDefaultChoice.js's
+        // construction time. See application/SavedProviderDefaultChoice.js's
         // own header.
         defaultAnnouncementDiscoveryProvider: { default: null }
     },

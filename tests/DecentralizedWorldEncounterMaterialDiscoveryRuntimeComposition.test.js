@@ -362,8 +362,8 @@ async function runTests() {
         const viewCodeOnly = viewSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(viewCodeOnly.includes("inject('worldDiscoveryLeadRegistry', null)"),
             '30. WorldView.js injects worldDiscoveryLeadRegistry, defaulting to null — never throwing when absent');
-        assert(/<WorldEncounterCanvas[\s\S]{0,900}:worldDiscoveryLeadRegistry="worldDiscoveryLeadRegistry"/.test(viewCodeOnly),
-            '31. WorldView.js forwards worldDiscoveryLeadRegistry to WorldEncounterCanvas\'s own pre-existing (0.9.40) prop — no new inspection UI (window widened for 0.9.144\'s own added discoverSnapshotCommand prop binding)');
+        assert(/<WorldEncounterCanvas[\s\S]{0,1100}:worldDiscoveryLeadRegistry="worldDiscoveryLeadRegistry"/.test(viewCodeOnly),
+            '31. WorldView.js forwards worldDiscoveryLeadRegistry to WorldEncounterCanvas\'s own pre-existing (0.9.40) prop — no new inspection UI (window widened for 0.9.144\'s own added discoverSnapshotCommand prop binding, and again for 0.9.667\'s own added defaultDiscoveryDistributionProvider/defaultContentDistributionProvider prop bindings)');
         assert(!/inspectWorldEncounterMaterial|verifyWorldEncounterMaterial|verifyIdentity\(/.test(viewCodeOnly.replace(/discoverWorldEncounterPublicationCommand[\s\S]{0,40}/g, '')),
             '32. WorldView.js never calls the inspection/verification chain itself outside the one injected command it forwards');
 

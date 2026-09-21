@@ -122,7 +122,7 @@ import { CreateSnapshotPlacementCreationCoordinatorUseCase } from '../applicatio
 import { CreatePreferredSnapshotPlacementCreationCoordinatorUseCase } from '../application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js';
 import { CreatePreferredPublicationAnchorCreationCoordinatorUseCase } from '../application/CreatePreferredPublicationAnchorCreationCoordinatorUseCase.js';
 import { SetRoleProviderPreferenceUseCase } from '../application/SetRoleProviderPreferenceUseCase.js';
-import { resolvePreferredProviderDefault } from '../application/PreferredProviderDefaultChoice.js';
+import { resolveSavedProviderDefault } from '../application/SavedProviderDefaultChoice.js';
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { SetArweaveGatewayConfigurationUseCase } from '../application/SetArweaveGatewayConfigurationUseCase.js';
 import { PublicationCatalogDiscoveryProvider } from '../discovery/PublicationCatalogDiscoveryProvider.js';
@@ -3205,12 +3205,12 @@ app.provide('snapshotDistributionAvailableStorageTypes', snapshotDistributionAva
 // DecentralizedPublicationsView.js, ui/components/WorldEncounterCanvas.js,
 // ui/components/OwnPublicationPanel.js) open on — never used to override a
 // pick already made, and never itself a placement/distribution trigger. See
-// application/PreferredProviderDefaultChoice.js's own header. Falls back to
+// application/SavedProviderDefaultChoice.js's own header. Falls back to
 // `null` — "no preference to prefer" — exactly like `resolvedAnnouncementDiscoveryProvider`
 // below falls back to 'nostr'; each picker's own existing "first eligible
 // backend" fallback already handles a `null` here unchanged.
 const contentDistributionProviderPreference = roleProviderPreferenceStore.get(RoleProviderRole.CONTENT);
-const resolvedContentDistributionProvider = resolvePreferredProviderDefault(
+const resolvedContentDistributionProvider = resolveSavedProviderDefault(
     contentDistributionProviderPreference ? contentDistributionProviderPreference.providerKey : null,
     snapshotDistributionAvailableStorageTypes(),
     null

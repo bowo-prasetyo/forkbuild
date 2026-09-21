@@ -1,6 +1,6 @@
 import { reactive, ref, computed, onMounted, onBeforeUnmount, inject } from 'vue';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
-import { resolvePreferredProviderDefault } from '../../application/PreferredProviderDefaultChoice.js';
+import { resolveSavedProviderDefault } from '../../application/SavedProviderDefaultChoice.js';
 import { PublicationResolutionOutcome } from '../../application/PublicationResolutionOutcome.js';
 import { resolvePublicationView, describePublicationOutcome, describeRetrieval } from '../../application/PublicationResolutionView.js';
 // 0.9.337 — Wire Resolved Decentralized Publications into Repository
@@ -1193,7 +1193,7 @@ export default {
         // save into) — read here only to seed each entry's own picker below
         // at construction time; never re-read afterward, and never used to
         // override a choice a Wanderer has already made on this page. See
-        // application/PreferredProviderDefaultChoice.js's own header.
+        // application/SavedProviderDefaultChoice.js's own header.
         const defaultAnnouncementDiscoveryProvider = inject('defaultAnnouncementDiscoveryProvider', 'nostr');
         const defaultContentDistributionProvider = inject('defaultContentDistributionProvider', null);
         const snapshotDistributionStorageTypes = snapshotDistributionAvailableStorageTypesCommand
@@ -3378,7 +3378,7 @@ export default {
                 // OWN initial choice: changing the select afterward, or
                 // saving a different preference later, never reaches back
                 // into an already-constructed entry.
-                discoveryDistributionProvider: resolvePreferredProviderDefault(
+                discoveryDistributionProvider: resolveSavedProviderDefault(
                     defaultAnnouncementDiscoveryProvider, ['nostr', 'arweave'], 'nostr'
                 ),
                 discoveryDistributionAttempt: null,
@@ -3399,7 +3399,7 @@ export default {
                 // currently lists — see `discoveryDistributionProvider`
                 // immediately above for the identical restraint, one role
                 // over.
-                snapshotDistributionStorage: resolvePreferredProviderDefault(
+                snapshotDistributionStorage: resolveSavedProviderDefault(
                     defaultContentDistributionProvider, snapshotDistributionStorageTypes, snapshotDistributionStorageTypes[0] || 'ar'
                 ),
                 snapshotDistributionAttempt: null
