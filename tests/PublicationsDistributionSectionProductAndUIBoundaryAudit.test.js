@@ -222,15 +222,22 @@ async function run() {
         // plus a Remote-Pinning endpoint/credential draft (read only when
         // that third storage is actually selected).
         assert(/snapshotDistributionCommand\(publication, storage, remotePinningConfiguration\)/.test(codeOnly(ownPanelSource)), n('A3. "Distribute Snapshot" calls its command with the publication plus its own explicit storage choice — no substrate or role parameter of its own'));
-        assert(/publicationDistributionCommand\(publication\)/.test(codeOnly(ownPanelSource)), n('A4. "Distribute Publication" likewise takes only the publication — confirmed below (Section B) this means it can never itself select a discovery substrate, unlike WorldEncounterCanvas\'s own sibling action'));
+        // AMENDED BY 0.9.668 — Bug fix. "Distribute Publication" no longer
+        // takes only the publication: it now also forwards this panel's
+        // own explicit `publicationDiscoveryProvider` choice, closing the
+        // exact gap A7 (below) used to name — before this fix, this
+        // button always distributed via Nostr regardless of the saved
+        // ANNOUNCEMENT_AND_DISCOVERY preference.
+        assert(/publicationDistributionCommand\(publication, this\.publicationDiscoveryProvider\)/.test(codeOnly(ownPanelSource)), n('A4. AMENDED BY 0.9.668 — "Distribute Publication" now also forwards its own explicit discovery substrate choice, the SAME shape WorldEncounterCanvas\'s own sibling action already used'));
         assert(!/Anchor|Bitcoin/.test(codeOnly(ownPanelSource)), n('A5. OwnPublicationPanel.js\'s own real code (comments stripped) contains no Proof/Anchoring action of any kind — its own header mentions "Bitcoin anchoring" only in prose, as a deliberate exclusion, never in any actual button, prop, or method'));
 
         // WorldEncounterCanvas.js — the identical two combined actions,
         // structurally distinct component, same underlying commands (see
-        // Section B), PLUS the one thing OwnPublicationPanel lacks: a
-        // discovery-substrate <select> (0.9.430).
+        // Section B). AMENDED BY 0.9.668 — OwnPublicationPanel gained the
+        // identical discovery-substrate <select> (0.9.430) this section
+        // used to say only WorldEncounterCanvas had; see A4, above.
         assert(/'Distribute Publication'/.test(canvasSource) && /'Distribute Snapshot'/.test(canvasSource), n('A6. WorldEncounterCanvas.js exposes the identical two action labels'));
-        assert(/<select[\s\S]{0,80}v-model="selectedDiscoveryProvider"/.test(canvasSource), n('A7. ...but ALSO a real Announcement/Discovery substrate <select> (Nostr/Arweave) this milestone\'s own OwnPublicationPanel-side action (A2-A4) does not have'));
+        assert(/<select[\s\S]{0,80}v-model="selectedDiscoveryProvider"/.test(canvasSource), n('A7. ...and a real Announcement/Discovery substrate <select> (Nostr/Arweave) — AMENDED BY 0.9.668: OwnPublicationPanel.js\'s own sibling action (A2/A4) now has the equivalent control too, see A4\'s own amendment above'));
         assert(!/Anchor|Bitcoin/.test(canvasSource) || /Anchors<\/dt>/.test(canvasSource), n('A8. WorldEncounterCanvas.js has no Proof/Anchoring distribution action either (an incidental, unrelated "Anchors" label elsewhere in the file, if present, is not a distribution action)'));
 
         // DecentralizedPublicationsView.js — the other two roles, already

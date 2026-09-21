@@ -323,13 +323,23 @@ async function run() {
 
     // ===============================================================
     // Section F — no regression: OwnPublicationPanel.js's own, separate
-    // call site is unmodified.
+    // call site is unmodified by THIS milestone (0.9.502, EditorView.js
+    // only).
+    //
+    // AMENDED BY 0.9.668 — Bug fix. OwnPublicationPanel.js's own call site
+    // is no longer publication-only as of that later milestone — it gained
+    // its own explicit Announcement/Discovery substrate choice, closing a
+    // real bug (that panel's "Distribute Publication" button always used
+    // Nostr regardless of the saved preference). This section's own scope
+    // is unchanged: it still verifies only that 0.9.502 itself touched
+    // EditorView.js alone, not that OwnPublicationPanel.js stays
+    // publication-only forever.
     // ===============================================================
     {
         const ownPanelSource = await source('ui/components/OwnPublicationPanel.js');
-        assert(/publicationDistributionCommand\(publication\)/.test(ownPanelSource),
-            n('F1. OwnPublicationPanel.js\'s own distributeOwnPublication() still passes a publication only — no discoveryProvider of any kind — unmodified by this milestone, which touched EditorView.js alone'));
-        console.log('✓ Section F: OwnPublicationPanel.js\'s own, separate distribution action is untouched — still Nostr-only, exactly as before this milestone');
+        assert(/publicationDistributionCommand\(publication, this\.publicationDiscoveryProvider\)/.test(ownPanelSource),
+            n('F1. AMENDED BY 0.9.668 — OwnPublicationPanel.js\'s own distributeOwnPublication() now forwards its own explicit discoveryProvider choice too, unrelated to this milestone\'s own EditorView.js-only scope'));
+        console.log('✓ Section F: OwnPublicationPanel.js\'s own, separate distribution action is untouched by THIS (0.9.502) milestone — its later 0.9.668 substrate-choice fix is verified elsewhere');
     }
 
     // ===============================================================

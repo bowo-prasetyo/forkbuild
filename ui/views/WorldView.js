@@ -4914,7 +4914,19 @@ export default {
                      selection of any kind — reaches the EXACT SAME command
                      boundary, never a second implementation. See
                      ui/components/OwnPublicationPanel.js's own header,
-                     "0.9.347 — Post-Publish Distribution Entry Point." -->
+                     "0.9.347 — Post-Publish Distribution Entry Point."
+
+                     Bug fix — defaultDiscoveryDistributionProvider is
+                     defaultAnnouncementDiscoveryProvider, above: the SAME
+                     resolved preference already handed to
+                     WorldEncounterCanvas below as its own
+                     defaultDiscoveryDistributionProvider prop. Before this
+                     fix, this panel never received it, so its own
+                     "Distribute Publication" button always called
+                     distributeWorldEncounterPublication(publication) with
+                     no discoveryProvider — which that function reads as
+                     "use Nostr" — regardless of what a Wanderer had saved
+                     via /settings/announcement-discovery-provider. -->
                 <OwnPublicationPanel
                     v-if="cameraPosition"
                     :publication="ownPublication"
@@ -4924,6 +4936,7 @@ export default {
                     :snapshotDistributionStorageTypes="snapshotDistributionStorageTypes"
                     :defaultContentDistributionProvider="defaultContentDistributionProvider"
                     :publicationDistributionCommand="distributeWorldEncounterPublication"
+                    :defaultDiscoveryDistributionProvider="defaultAnnouncementDiscoveryProvider"
                     :discoverSnapshotCommand="discoverOwnSnapshot"
                     :exportSnapshotCommand="exportOwnSnapshot"
                     :discoverSnapshotCandidatesCommand="discoverSnapshotCandidatesCommand"
