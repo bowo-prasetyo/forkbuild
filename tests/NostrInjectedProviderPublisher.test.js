@@ -16,6 +16,7 @@ import { WorldEncounterKind } from '../core/WorldEncounter.js';
 //   Section F: FLAGSHIP — the produced publish(), handed to the real, unmodified
 //              NostrPublicationDiscoveryPublisher, actually publishes an envelope
 //   Section G: architectural regression — no distribution-infrastructure knowledge, no external dependency
+//   Section H: an extension that never answers getPublicKey()/signEvent() times out
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -216,6 +217,46 @@ async function run() {
         assert(!/privateKey|mnemonic|\bseed\b|walletPassword/i.test(codeOnly), '26. never reads or derives a private key, mnemonic, seed, or wallet password');
 
         console.log('✓ Section G: architectural regression — a pure host-capability producer, no distribution knowledge, no dependency of any kind');
+    }
+
+    // ---------------------------------------------------------------
+    // Section H — an extension that never answers getPublicKey()/
+    // signEvent() times out, rather than leaving publish() awaiting
+    // forever (e.g. an approval popup the extension itself never
+    // delivers a response for).
+    // ---------------------------------------------------------------
+    {
+        const neverRespondingExtension = {
+            getPublicKey: () => new Promise(() => {}),
+            signEvent: async () => ({})
+        };
+        const publish = createNostrInjectedProviderPublisher({
+            injectedProvider: neverRespondingExtension,
+            webSocketImpl: fakeRelaySocket(),
+            signingTimeoutMs: 50
+        });
+
+        await publish('wss://relay.example', { kind: 1, tags: [], content: 'stuck getPublicKey' }).then(
+            () => assert(false, '27. an extension that never answers getPublicKey() should have timed out'),
+            (error) => assert(/getPublicKey\(\) did not respond/.test(error.message), '27. a stuck getPublicKey() times out with a clear, distinct message')
+        );
+
+        const stuckSignEventExtension = {
+            getPublicKey: async () => 'pk',
+            signEvent: () => new Promise(() => {})
+        };
+        const publishStuckSign = createNostrInjectedProviderPublisher({
+            injectedProvider: stuckSignEventExtension,
+            webSocketImpl: fakeRelaySocket(),
+            signingTimeoutMs: 50
+        });
+
+        await publishStuckSign('wss://relay.example', { kind: 1, tags: [], content: 'stuck signEvent' }).then(
+            () => assert(false, '28. an extension that never answers signEvent() should have timed out'),
+            (error) => assert(/signEvent\(\) did not respond/.test(error.message), '28. a stuck signEvent() times out with a clear, distinct message, separate from a relay timeout or an outright rejection')
+        );
+
+        console.log('✓ Section H: a stuck getPublicKey()/signEvent() times out instead of leaving publish() awaiting forever');
     }
 
     console.log('\nAll NostrInjectedProviderPublisher tests passed.');
