@@ -1201,7 +1201,9 @@ export class WorldNavigationSession {
             return;
         }
         const { template, appearance } = this._avatarProfileUseCase.getEffectiveAvatar();
-        this._session.setLocalAvatar(template, appearance, this._avatarPresenceSession.current);
+        this._session.setLocalAvatar(template, appearance, this._avatarPresenceSession.current, {
+            ridingVehicle: this._isRidingMovableVehicle()
+        });
         this._session.setLocalAvatarVisible(this._localAvatarVisible);
 
         this._avatarProfileSubscription = this._avatarProfileUseCase.onProfileChanged((profile) => {
@@ -1213,7 +1215,21 @@ export class WorldNavigationSession {
             this._publishLocalAvatarProfile(profile, Date.now());
         });
         this._avatarPresenceSubscription = this._avatarPresenceSession.onPresenceChanged((presence) => {
-            this._session.updateLocalAvatarPresence(presence);
+            // Bug fix — Bicycle Ground Elevation Double-Lift. While
+            // genuinely riding a movable ground vehicle, `presence.position`
+            // is not the ordinary flat on-foot fact — the frame loop below
+            // (`vehicleMovementActive`'s own branch) has already copied it
+            // verbatim from the vehicle's own domain position, which itself
+            // already carries REAL terrainHeightAt() elevation (see
+            // application/AvatarVehicleMovementController.js's own
+            // 0.9.116/0.9.119 header). Telling the render facade so lets it
+            // skip its own ground-elevation lift for this update instead of
+            // adding the real elevation a second time — see
+            // application/RenderWorldViewUseCase.js's own
+            // resolveAvatarRenderPosition()/withGroundElevation() headers
+            // for the full "why" and the matching fix on the vehicle mesh's
+            // own side (syncVehicles()).
+            this._session.updateLocalAvatarPresence(presence, { ridingVehicle: this._isRidingMovableVehicle() });
             this._followAvatarIfEnabled(presence);
             // 0.2.37 — ADVERTISE: publish only when
             // AvatarPresenceSession actually accepted a new update
@@ -2152,6 +2168,35 @@ export class WorldNavigationSession {
         return this._avatarVehicleInteractionController
             ? this._avatarVehicleInteractionController.mount()
             : null;
+    }
+
+    // Bug fix — Bicycle Ground Elevation Double-Lift. Whether the local
+    // avatar's OWN presence.position right now is the vehicle-follow
+    // fact — copied verbatim from a movable, mounted vehicle's own
+    // raw-terrain-elevation Y (see application/
+    // AvatarVehicleMovementController.js's own 0.9.116/0.9.119 header) —
+    // rather than the ordinary flat on-foot baseline. Deliberately
+    // mirrors the frame loop's own `vehicleMovementActive` gate, below
+    // (mounted AND the mounted type is one this codebase can actually
+    // move — merely being mounted on an AERIAL_VEHICLE/DRONE never
+    // touches the avatar's position, so it must never skip the lift
+    // either), so `_setupLocalAvatar()`'s render calls ask the identical
+    // question the movement tick already answered for this same frame,
+    // never a second, independently-derived copy of it. `null` at any
+    // step (no interaction controller, no mount, no runtime store, no
+    // movement controller — every one of them graceful-absence, matching
+    // every other vehicle getter in this file) reads as "not riding."
+    _isRidingMovableVehicle() {
+        if (!this._avatarVehicleInteractionController || !this._vehicleRuntimeInstances || !this._avatarVehicleMovementController) {
+            return false;
+        }
+        const mount = this._avatarVehicleInteractionController.mount();
+        if (!mount) {
+            return false;
+        }
+        const mountedVehicleInstance = this._vehicleRuntimeInstances.get(mount.vehicleId);
+        return mountedVehicleInstance !== null
+            && this._avatarVehicleMovementController.canMove(mountedVehicleInstance.type);
     }
 
     // 0.9.98 — Vehicle Mount/Dismount World View Integration. The local

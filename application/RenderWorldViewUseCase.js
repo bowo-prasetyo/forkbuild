@@ -210,6 +210,31 @@ export class RenderWorldViewUseCase {
             };
         }
 
+        // Bug fix — Bicycle Ground Elevation Double-Lift. `withGroundElevation()`
+        // above is only ever correct against a FLAT domain position (Y=0,
+        // plus at most a transient jump/brick offset — see that function's
+        // own header) — exactly what AvatarPresence.position already is
+        // while on foot. It stops being correct the moment the avatar is
+        // riding a movable ground vehicle: application/
+        // AvatarVehicleMovementController.js snaps a moving vehicle's own
+        // domain Y straight to the REAL raw terrainHeightAt() sample (see
+        // that file's own 0.9.116/0.9.119 header — "the vehicle's own Y
+        // follows raw terrain height"), and application/
+        // WorldNavigationSession.js then copies that same position onto the
+        // mounted avatar's OWN presence verbatim ("the vehicle moves, the
+        // avatar follows"). Calling withGroundElevation() on THAT position
+        // would add the real terrain height a SECOND time — the avatar (and
+        // the vehicle itself, see syncVehicles() below) would render at
+        // roughly 2x the real elevation: sunk into flat/low ground, and
+        // floating well above hills and treetops the higher the terrain
+        // gets. `ridingVehicle` (a plain boolean — this facade has no
+        // opinion on WHY) skips the lift entirely in exactly that one case,
+        // rendering the already-elevated position verbatim — never a second
+        // formula, just the one lift, applied once.
+        function resolveAvatarRenderPosition(position, ridingVehicle) {
+            return ridingVehicle ? position : withGroundElevation(position);
+        }
+
         return {
             pick: (screenX, screenY) => pickingService.pickRich(screenX, screenY),
             pickGround: (screenX, screenY) => {
@@ -293,11 +318,11 @@ export class RenderWorldViewUseCase {
             // machinery — an avatar and a published World are rendered
             // through entirely separate code paths that happen to
             // share one scene.
-            setLocalAvatar: (template, appearance, presence) => {
+            setLocalAvatar: (template, appearance, presence, { ridingVehicle = false } = {}) => {
                 const visual = ensureLocalAvatarVisual();
                 localAvatarId = presence.avatarId;
                 visual.setAppearance(template, appearance);
-                visual.setPose(withGroundElevation(presence.position), presence.rotation);
+                visual.setPose(resolveAvatarRenderPosition(presence.position, ridingVehicle), presence.rotation);
                 visual.setAnimation(presence.animation);
                 if (localAvatarVisible) {
                     renderer.add(visual.root);
@@ -309,11 +334,11 @@ export class RenderWorldViewUseCase {
                 }
                 localAvatarVisual.setAppearance(template, appearance);
             },
-            updateLocalAvatarPresence: (presence) => {
+            updateLocalAvatarPresence: (presence, { ridingVehicle = false } = {}) => {
                 if (!localAvatarVisual) {
                     return;
                 }
-                localAvatarVisual.setPose(withGroundElevation(presence.position), presence.rotation);
+                localAvatarVisual.setPose(resolveAvatarRenderPosition(presence.position, ridingVehicle), presence.rotation);
                 localAvatarVisual.setAnimation(presence.animation);
             },
             // 0.2.44 — see renderer/AvatarVisual.js's own header: a
@@ -513,33 +538,33 @@ export class RenderWorldViewUseCase {
             // because unlike a remote participant's own presence, this
             // facade has no per-vehicle identity to be told about
             // individually; a caller always knows the whole current set.
-            // 0.9.607 — Vehicle Ground Elevation Parity. `instance.position`
-            // is a flat domain fact — core/VehicleInstance.js never knows
-            // about terrain — exactly like AvatarPresence.position (see
-            // withGroundElevation()'s own header above). setLocalAvatar/
-            // updateLocalAvatarPresence already lift the RENDERED avatar
-            // onto the real terrain height at (x, z); a mounted rider's
-            // own domain position is kept identical to their vehicle's
-            // (application/WorldNavigationSession.js's own movement tick
-            // sets `position: moved.vehicleInstance.position` verbatim), so
-            // without the SAME lift here the vehicle's mesh stays pinned
-            // to the flat domain Y while the avatar riding it floats up to
-            // the real ground height the moment terrain departs from
-            // Y=0 — invisible near a flat spawn area, obvious once a ride
-            // reaches rolling terrain. Reuses withGroundElevation()
-            // VERBATIM (never a second formula) so the two visuals can
-            // never drift apart, and goes through instance.withPosition()
-            // (never a direct field write) so this stays a RENDER-ONLY
-            // lift — the real, flat `instance.position` this facade was
-            // handed is never mutated, and nothing written back to
-            // application/VehicleRuntimeInstances.js's own runtime store.
+            // 0.9.607 originally lifted `instance.position` through
+            // withGroundElevation() here too, on the theory that
+            // `instance.position` is a flat domain fact exactly like
+            // AvatarPresence.position. That theory was wrong: a
+            // VehicleInstance's position has carried REAL, raw
+            // terrainHeightAt() elevation since the very first bridge from
+            // a VehiclePresence (core/VehicleInstance.js#vehicleInstanceFromPresence()
+            // copies core/VehiclePlacement.js's own already-elevated spawn
+            // position verbatim), and application/
+            // AvatarVehicleMovementController.js's own movement tick keeps
+            // re-snapping a moving vehicle's Y to that same raw sample every
+            // frame (see that file's own 0.9.116/0.9.119 header). Lifting it
+            // AGAIN here double-counted the real elevation — a parked or
+            // ridden vehicle rendered at roughly 2x its true height: sunk
+            // into low ground, floating well above hills and treetops the
+            // higher the terrain got (the identical bug this fix's own
+            // resolveAvatarRenderPosition() — see withGroundElevation()'s
+            // own header, above — fixes for the mounted rider). `instance`
+            // is passed straight through, unlifted and unmutated: its own
+            // `position` already IS the real world elevation this vehicle
+            // belongs at.
             syncVehicles: (vehicleInstances) => {
                 const nextIds = new Set();
                 for (const instance of vehicleInstances) {
                     nextIds.add(instance.id);
                     const alreadyTracked = vehicleFieldRenderer.trackedVehicleIds().includes(instance.id);
-                    const renderInstance = instance.withPosition(withGroundElevation(instance.position));
-                    const object = vehicleFieldRenderer.setVehicle(renderInstance);
+                    const object = vehicleFieldRenderer.setVehicle(instance);
                     if (object && !alreadyTracked) {
                         renderer.add(object);
                     }
