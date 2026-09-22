@@ -92,6 +92,18 @@ import { RoleProviderResolutionStatus } from './RoleAwareProviderResolver.js';
 // is no second, genuinely distinct "Publication content creation" path
 // in production to integrate separately. See this file's own tests,
 // Section H/I.
+//
+// `local` IS NEVER A PREFERENCE. Every Publication's bytes already live in
+// this replica's own content/LocalContentStore.js before any placement is
+// made, so "prefer Local" names no real choice — and content/
+// LocalContentStore.js#put() never even returns a locator a placement could
+// carry. `local` stays a registered placement backend (resolution, and the
+// explicit per-storage "Create Local Placement" button, still use it);
+// `preferableStorageTypes()` below simply never offers it, and a `local`
+// preference saved before that change is treated exactly like
+// NO_PREFERENCE by `create()`, never acted on.
+export const NON_PREFERABLE_CONTENT_STORAGE_TYPES = Object.freeze(['local']);
+
 export class PreferredSnapshotPlacementCreationCoordinator {
     // `snapshotPlacementCreationCoordinator` — a SnapshotPlacementCreationCoordinator
     // (0.8.25); consulted via `create(publicationId, storage)` and
@@ -120,6 +132,14 @@ export class PreferredSnapshotPlacementCreationCoordinator {
         return this._coordinator.availableStorageTypes();
     }
 
+    // `availableStorageTypes()`, minus every storage type that is never a
+    // meaningful CONTENT preference (NON_PREFERABLE_CONTENT_STORAGE_TYPES
+    // above) — what ui/views/ContentProviderSettingsView.js offers.
+    preferableStorageTypes() {
+        return this.availableStorageTypes()
+            .filter((storage) => !NON_PREFERABLE_CONTENT_STORAGE_TYPES.includes(storage));
+    }
+
     // Resolves to exactly what the wrapped coordinator's own `create()`
     // resolves to (`{ outcome, placement, reason }`) on every path except
     // PROVIDER_NOT_FOUND, where it resolves to `{ outcome:
@@ -145,11 +165,14 @@ export class PreferredSnapshotPlacementCreationCoordinator {
             };
         }
 
-        // RESOLVED — use the preferred provider's own storage key.
+        // RESOLVED — use the preferred provider's own storage key, unless it
+        // names a non-preferable storage (a legacy saved `local`), which is
+        // handled exactly like NO_PREFERENCE.
         // NO_PREFERENCE — nothing configured either; forward the SAME
         // absent `storage` so the wrapped coordinator's own pre-existing
         // refusal fires, unmodified.
         const resolvedStorage = decision.status === RoleProviderResolutionStatus.RESOLVED
+            && !NON_PREFERABLE_CONTENT_STORAGE_TYPES.includes(decision.providerKey)
             ? decision.providerKey
             : storage;
         return this._coordinator.create(publicationId, resolvedStorage);

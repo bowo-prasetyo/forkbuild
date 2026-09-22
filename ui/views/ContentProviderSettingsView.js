@@ -62,6 +62,16 @@ import { DEFAULT_IPFS_NODE_API_URL } from '../../core/IpfsNodeConfiguration.js';
 // clicking one of those buttons. See docs/Roadmap.md, "0.9.302 — Content
 // Provider Preference Settings Entry Point," "One subtle product decision."
 //
+// LOCAL IS NEVER OFFERED. The list starts from the coordinator's
+// `preferableStorageTypes()`, not `availableStorageTypes()`: every
+// Publication is already stored on this device before any placement, so
+// "Local" is never a meaningful preference — see application/
+// PreferredSnapshotPlacementCreationCoordinator.js's own "`local` IS NEVER
+// A PREFERENCE." A `local` preference saved before this change still sits
+// in the store; this page shows it as "nothing selected" (with a note
+// asking for a new choice), and "Use Preferred Provider" already treats it
+// as no preference at all.
+//
 // ONLY CONTENT. This view hardcodes `RoleProviderRole.CONTENT` — there is
 // no role selector, and no Discovery or Proof & Anchoring section — exactly
 // the "deliberately narrow" scope that milestone's own brief names.
@@ -106,14 +116,25 @@ export default {
         ));
 
         const availableProviderKeys = computed(() => {
-            const registered = preferredPlacementCreationCoordinator ? preferredPlacementCreationCoordinator.availableStorageTypes() : [];
+            const registered = preferredPlacementCreationCoordinator ? preferredPlacementCreationCoordinator.preferableStorageTypes() : [];
             return registered.includes('remote-pinning') ? registered : [...registered, 'remote-pinning'];
+        });
+
+        // A legacy saved `local` preference — registered, but not
+        // preferable — displayed as "nothing selected," never as a radio
+        // button that no longer exists. Derived from the coordinator's own
+        // two lists, never a hardcoded 'local' check here.
+        const hasUnofferedPreference = computed(() => {
+            if (!preference.value || !preferredPlacementCreationCoordinator) return false;
+            const key = preference.value.providerKey;
+            return preferredPlacementCreationCoordinator.availableStorageTypes().includes(key)
+                && !preferredPlacementCreationCoordinator.preferableStorageTypes().includes(key);
         });
 
         const settings = computed(() => describeRoleProviderPreferenceSettings({
             role: RoleProviderRole.CONTENT,
             availableProviderKeys: availableProviderKeys.value,
-            preference: preference.value
+            preference: hasUnofferedPreference.value ? null : preference.value
         }));
 
         // Re-reads the store fresh on every load — this is what makes a
@@ -124,7 +145,7 @@ export default {
         function load() {
             if (!preferenceStore) return;
             preference.value = preferenceStore.get(RoleProviderRole.CONTENT);
-            selectedProviderKey.value = preference.value ? preference.value.providerKey : null;
+            selectedProviderKey.value = preference.value && !hasUnofferedPreference.value ? preference.value.providerKey : null;
         }
 
         function save() {
@@ -187,7 +208,7 @@ export default {
         });
 
         return {
-            settings, selectedProviderKey, saveError, saveStatus, save,
+            settings, selectedProviderKey, hasUnofferedPreference, saveError, saveStatus, save,
             hasIpfsNodeOverride, effectiveIpfsNodeApiUrl, ipfsNodeApiUrlInput,
             ipfsNodeSaveError, ipfsNodeSaveStatus, ipfsNodeClearStatus,
             saveIpfsNodeConfiguration, useIpfsNodeDeploymentDefault
@@ -197,7 +218,10 @@ export default {
         <section class="content-provider-settings-view">
             <h1>Content Provider</h1>
             <p class="form-hint form-hint--neutral">
-                Choose which storage backend "Use Preferred Provider" places new Content onto in the Publication Center. This never changes what the explicit Local/IPFS placement buttons there do.
+                Choose which storage backend "Use Preferred Provider" places new Content onto in the Publication Center. Content is always kept on this device first, so only decentralized backends are listed here. This never changes what the explicit placement buttons there do.
+            </p>
+            <p v-if="hasUnofferedPreference" class="form-hint form-hint--neutral">
+                Your previously saved "Local" preference no longer applies — Content is already stored on this device. Choose a backend below and save.
             </p>
 
             <div v-if="settings.options.length" class="content-provider-settings-form">
