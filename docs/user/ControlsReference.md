@@ -98,6 +98,17 @@ vehicle to mount it.
 | `Q` (not mounted, carrying a vehicle) | Deploy the currently selected stored vehicle | Spawns and mounts it at your current position; defaults to the most recently stored one |
 | `[` / `]` (carrying 2+ vehicles) | Cycle the deploy selection to an older / newer stored vehicle | Only changes which one `Q` will deploy next — never mounts or removes anything by itself |
 
+## Animals (World View)
+
+See [Avatars & Presence](06-AvatarsAndPresence.md#animals). Requires Avatar
+Control Mode; a prompt appears automatically when a catchable animal is
+nearby or you're carrying one.
+
+| Input | Action | Notes |
+|---|---|---|
+| `F` (near a catchable animal) | Catch it | Adds it to your inventory and removes it from the world |
+| `F` (not near a catchable animal, carrying one) | Release the most recently caught animal | Spawns it at your current position, catchable again |
+
 ## Selection (click/marquee work in both views; only the Editor mutates)
 
 | Input | Action | Notes |

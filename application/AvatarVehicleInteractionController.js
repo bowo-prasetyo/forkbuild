@@ -24,7 +24,8 @@ import {
 import { VEHICLE_INTERACTION_RADIUS } from '../core/AvatarVehicleProximity.js';
 import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
 import { treeCollisionCandidatesForMovement } from '../core/AvatarTreeCollisionQuery.js';
-import { emptyAvatarInventory } from '../core/AvatarInventory.js';
+import { InventoryEntryKind } from '../core/AvatarInventory.js';
+import { AvatarInventoryStore } from './AvatarInventoryStore.js';
 import { deriveAvatarVehicleStoreIntent } from '../core/AvatarVehicleStoreIntent.js';
 import { deriveAvatarVehicleDeployIntent } from '../core/AvatarVehicleDeployIntent.js';
 import { deriveAvatarVehicleStoreTransition } from '../core/AvatarVehicleStoreTransition.js';
@@ -207,9 +208,18 @@ import { createId } from '../core/createId.js';
 // method's own 0.9.117 update — closing the exact gap
 // docs/Roadmap.md's own 0.9.116 entry named as "0.9.117's own job."
 export class AvatarVehicleInteractionController {
-    constructor(avatarPresenceSession, { seed = DEFAULT_WORLD_SEED, vehicleRuntimeInstances = null } = {}) {
+    constructor(avatarPresenceSession, { seed = DEFAULT_WORLD_SEED, vehicleRuntimeInstances = null, avatarInventoryStore = null } = {}) {
         this._avatarPresenceSession = avatarPresenceSession;
         this._seed = seed;
+        // 0.9.700 — Shared Avatar Inventory Store. `null` by default: a
+        // caller that builds this controller alone (an older test, a
+        // minimal setup with no animal-catching side) gets its own
+        // private store, exactly as 0.9.670 always gave it — see
+        // application/AvatarInventoryStore.js's own header for why a real
+        // World View session instead constructs ONE store and hands the
+        // SAME instance to this controller and
+        // application/AvatarAnimalInteractionController.js alike.
+        this._inventoryStore = avatarInventoryStore || new AvatarInventoryStore();
         // 0.9.117 — Vehicle-Aware Dismount. The one new collaborator this
         // milestone adds — see this file's own 0.9.117 header, "Vehicle
         // identity is the primary reference, once mounted." `null` by
@@ -230,7 +240,6 @@ export class AvatarVehicleInteractionController {
         // this file's own 0.9.670 header, below `tick()`.
         this._storeKeyHeld = false;
         this._storeKeyConsumed = false;
-        this._inventory = emptyAvatarInventory();
         // 0.9.671 — Avatar Inventory Cycle Selection. Which carried entry
         // deploy() acts on — `null` means "no explicit selection," which
         // core/AvatarInventory.js#resolve() already treats as "the most
@@ -252,11 +261,15 @@ export class AvatarVehicleInteractionController {
         return this._mount;
     }
 
-    // 0.9.670 — Avatar Inventory (store/deploy). The avatar's current
-    // AvatarInventory — a read-only debug/UI surface, the identical
-    // posture mount() above already establishes for its own state.
+    // 0.9.670 — Avatar Inventory (store/deploy). The avatar's current,
+    // SHARED AvatarInventory — a read-only debug/UI surface, the
+    // identical posture mount() above already establishes for its own
+    // state. 0.9.700 UPDATE — reads through `this._inventoryStore` now,
+    // so this returns the exact same inventory
+    // application/AvatarAnimalInteractionController.js sees and mutates,
+    // never a private copy.
     inventory() {
-        return this._inventory;
+        return this._inventoryStore.get();
     }
 
     // 0.9.85 — the VehicleType of the vehicle this controller is
@@ -403,38 +416,49 @@ export class AvatarVehicleInteractionController {
     // that wants to show "Deploy Bicycle (2/3)" rather than just a bare
     // type name once more than one vehicle can be carried at once.
     // `vehicleType` itself still reflects whatever entry would actually
-    // deploy right now — `this._inventory.resolve(this._selectedEntryId)`,
-    // the exact SAME method `_tickDeploy()` below feeds into
-    // `deriveAvatarVehicleDeployTransition()` — never a second,
-    // independently-computed "what's selected" answer.
+    // deploy right now — the exact SAME resolution `_tickDeploy()` below
+    // feeds into `deriveAvatarVehicleDeployTransition()` — never a
+    // second, independently-computed "what's selected" answer.
     //
-    // PRESENTATION ONLY — reuses mountedVehicleType() and
-    // this._inventory.resolve()/entries, never a second computation of
-    // either. Never called from tick(), the same "a UI observation seam
-    // must never influence the actual decision" discipline
+    // 0.9.700 UPDATE — reads through the SHARED `this._inventoryStore`
+    // now, and every carried-entry read below is scoped to
+    // `InventoryEntryKind.VEHICLE` — see core/AvatarInventory.js's own
+    // header, "A shared inventory, not two parallel ones." Without that
+    // scoping, a carried ANIMAL entry (application/AnimalRuntimeInstances.js's
+    // own kind) would silently count toward `carriedCount` and could
+    // even become the "selected" entry this method reports as
+    // `vehicleType` — a real bug this scoping exists specifically to
+    // prevent.
+    //
+    // PRESENTATION ONLY — reuses mountedVehicleType() and the shared
+    // inventory's own resolve()/entriesOf(), never a second computation
+    // of either. Never called from tick(), the same "a UI observation
+    // seam must never influence the actual decision" discipline
     // vehicleInteractionState() above already establishes.
     storeInteractionState() {
         if (!this._avatarPresenceSession) {
             return Object.freeze({ canStore: false, canDeploy: false, vehicleType: VehicleType.NONE, carriedCount: 0, selectedIndex: null });
         }
+        const inventory = this._inventoryStore.get();
         if (this._mount !== null) {
             return Object.freeze({
                 canStore: true,
                 canDeploy: false,
                 vehicleType: this.mountedVehicleType(),
-                carriedCount: this._inventory.size,
+                carriedCount: inventory.entriesOf(InventoryEntryKind.VEHICLE).length,
                 selectedIndex: null
             });
         }
-        const entry = this._inventory.resolve(this._selectedEntryId);
+        const entry = inventory.resolve(this._selectedEntryId, InventoryEntryKind.VEHICLE);
+        const carriedVehicles = inventory.entriesOf(InventoryEntryKind.VEHICLE);
         const selectedIndex = entry
-            ? this._inventory.entries.findIndex((carried) => carried.id === entry.id) + 1
+            ? carriedVehicles.findIndex((carried) => carried.id === entry.id) + 1
             : null;
         return Object.freeze({
             canStore: false,
             canDeploy: entry !== null,
             vehicleType: entry ? entry.type : VehicleType.NONE,
-            carriedCount: this._inventory.size,
+            carriedCount: carriedVehicles.length,
             selectedIndex
         });
     }
@@ -464,13 +488,13 @@ export class AvatarVehicleInteractionController {
         this._interactKeyConsumed = false;
         // 0.9.670 — losing keyboard focus must not leave 'q' permanently
         // held either, the identical reasoning as 'e' immediately above.
-        // `_mount`/`_inventory` both survive, exactly like `mount` itself
-        // already survives releaseAll().
+        // `_mount` and the shared inventory both survive, exactly like
+        // `mount` itself already survives releaseAll().
         this._storeKeyHeld = false;
         this._storeKeyConsumed = false;
         // 0.9.671 — the same reasoning, for the two cycle-selection keys.
-        // `_selectedEntryId`/`_inventory` both survive, exactly like
-        // `mount`/`_inventory` already do above.
+        // `_selectedEntryId` and the shared inventory both survive,
+        // exactly like `mount` already does above.
         this._cyclePreviousKeyHeld = false;
         this._cyclePreviousKeyConsumed = false;
         this._cycleNextKeyHeld = false;
@@ -643,7 +667,7 @@ export class AvatarVehicleInteractionController {
         const storeIntent = deriveAvatarVehicleStoreIntent({ storeRequested: requested });
         const transition = deriveAvatarVehicleStoreTransition({
             currentMount: this._mount,
-            currentInventory: this._inventory,
+            currentInventory: this._inventoryStore.get(),
             storeIntent,
             vehicleId: vehicle ? vehicle.id : null,
             vehicleType: vehicle ? vehicle.type : null
@@ -655,7 +679,7 @@ export class AvatarVehicleInteractionController {
             }
         }
         this._mount = transition.mount;
-        this._inventory = transition.inventory;
+        this._inventoryStore.set(transition.inventory);
     }
 
     // 0.9.670 — Avatar Inventory (store/deploy). Composes
@@ -692,11 +716,11 @@ export class AvatarVehicleInteractionController {
         const deployIntent = deriveAvatarVehicleDeployIntent({ deployRequested: requested });
         const transition = deriveAvatarVehicleDeployTransition({
             currentMount: this._mount,
-            currentInventory: this._inventory,
+            currentInventory: this._inventoryStore.get(),
             deployIntent,
             selectedEntryId: this._selectedEntryId
         });
-        this._inventory = transition.inventory;
+        this._inventoryStore.set(transition.inventory);
         if (transition.entry === null) {
             return;
         }
@@ -714,23 +738,25 @@ export class AvatarVehicleInteractionController {
     }
 
     // 0.9.671 — Avatar Inventory Cycle Selection. Moves
-    // `this._selectedEntryId` one step through `this._inventory`'s own
-    // order — `direction: 1` for one step newer (the '[' key's mirror,
-    // ']'), `direction: -1` for one step older ('[') — reusing
-    // core/AvatarInventory.js's own `next()`/`previous()`, never a
-    // second index-arithmetic implementation here. A harmless no-op on
-    // an empty inventory (both return `null`, and `null` is already
-    // this controller's own "no selection" spelling); cycling with
-    // exactly one entry carried always lands back on that same entry,
-    // which is correct, not a bug — there is nothing else to select.
-    // NEVER TOUCHES `_mount` OR `_inventory` ITSELF — cycling only ever
+    // `this._selectedEntryId` one step through the shared inventory's
+    // own VEHICLE-only order (see storeInteractionState()'s own 0.9.700
+    // header for why the scoping matters) — `direction: 1` for one step
+    // newer (the '[' key's mirror, ']'), `direction: -1` for one step
+    // older ('[') — reusing core/AvatarInventory.js's own `next()`/
+    // `previous()`, never a second index-arithmetic implementation here.
+    // A harmless no-op on an empty (VEHICLE) inventory (both return
+    // `null`, and `null` is already this controller's own "no
+    // selection" spelling); cycling with exactly one vehicle carried
+    // always lands back on that same entry, which is correct, not a
+    // bug — there is nothing else to select.
+    // NEVER TOUCHES `_mount` OR THE INVENTORY ITSELF — cycling only ever
     // changes WHICH entry a future deploy would act on, never performs
-    // one; that stays `_tickDeploy()`'s own job, reading this value back
-    // out via `this._inventory.resolve(this._selectedEntryId)`.
+    // one; that stays `_tickDeploy()`'s own job.
     _cycleSelection(direction) {
+        const inventory = this._inventoryStore.get();
         const entry = direction === 1
-            ? this._inventory.next(this._selectedEntryId)
-            : this._inventory.previous(this._selectedEntryId);
+            ? inventory.next(this._selectedEntryId, InventoryEntryKind.VEHICLE)
+            : inventory.previous(this._selectedEntryId, InventoryEntryKind.VEHICLE);
         this._selectedEntryId = entry ? entry.id : null;
     }
 
@@ -845,8 +871,20 @@ export class AvatarVehicleInteractionController {
     // loop still wants tracked the moment the avatar is merely near it
     // but not within mounting range. `nearby()` only ever reads; it never
     // discovers or evicts anything.
+    // 0.9.700 UPDATE — deterministic candidates are now filtered through
+    // `this._vehicleRuntimeInstances.isExcluded()` before anything else.
+    // See that method's own header for the exact bug this closes:
+    // without it, a just-STORED vehicle (0.9.670) — discard()'d, so
+    // invisible to rendering and to `get()` — was still returned by this
+    // raw deterministic query on the very next tick, since
+    // `vehiclePresenceInRegion()` has no memory of the discard ever
+    // happening. Standing in place and pressing 'e' again would then
+    // re-mount that SAME vehicle id, and a subsequent 'q' press would
+    // try to store it a second time — `withEntryAdded()`'s own
+    // duplicate-id guard would throw, since the first store's own entry
+    // was still sitting in inventory the whole time.
     _nearbyVehicles(avatarPosition) {
-        const deterministic = vehiclePresenceInRegion(
+        const rawDeterministic = vehiclePresenceInRegion(
             this._seed,
             avatarPosition.x - VEHICLE_INTERACTION_RADIUS,
             avatarPosition.z - VEHICLE_INTERACTION_RADIUS,
@@ -854,8 +892,9 @@ export class AvatarVehicleInteractionController {
             avatarPosition.z + VEHICLE_INTERACTION_RADIUS
         );
         if (!this._vehicleRuntimeInstances) {
-            return deterministic;
+            return rawDeterministic;
         }
+        const deterministic = rawDeterministic.filter((vehicle) => !this._vehicleRuntimeInstances.isExcluded(vehicle.id));
         const tracked = this._vehicleRuntimeInstances.nearby(avatarPosition, VEHICLE_INTERACTION_RADIUS);
         const trackedIds = new Set(tracked.map((vehicle) => vehicle.id));
         return [...tracked, ...deterministic.filter((vehicle) => !trackedIds.has(vehicle.id))];

@@ -184,7 +184,18 @@ async function runTests() {
         const controllerSourceUrl = new URL('../application/AvatarVehicleInteractionController.js', import.meta.url);
         const controllerSource = await readFile(controllerSourceUrl, 'utf8');
         const controllerCodeOnly = controllerSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-        assert(!controllerCodeOnly.includes('spawnPosition'),
+        // 0.9.670 — Avatar Inventory (store/deploy) legitimately
+        // CONSTRUCTS a VehicleInstance with a `spawnPosition:` field
+        // (required by that class's own constructor) when deploying a
+        // carried vehicle — a bare substring check would now flag that
+        // unrelated, later-added construction. The actual architectural
+        // claim this assertion protects is narrower: the DISMOUNT path
+        // never READS `.spawnPosition` back off a vehicle — a property
+        // ACCESS, which `/\.spawnPosition\b/` still catches exactly as
+        // strictly as the original bare-substring check did for every
+        // real violation, while no longer tripping on an object-literal
+        // key it was never written to guard against.
+        assert(!/\.spawnPosition\b/.test(controllerCodeOnly),
             '8. ARCHITECTURAL: application/AvatarVehicleInteractionController.js\'s own code never reads `.spawnPosition` — the dismount path has no way to even reach for it');
 
         const dismountPositionSourceUrl = new URL('../core/AvatarVehicleDismountPosition.js', import.meta.url);

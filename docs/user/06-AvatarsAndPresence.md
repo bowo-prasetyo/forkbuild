@@ -200,6 +200,20 @@ Bicycle (1/3)") so you can find an older one without deploying and
 re-storing your way past it. Cycling only changes what **Q** will bring
 out next; it never spawns or removes anything by itself.
 
+### Animals
+
+Some worlds have wildlife roaming — deer in forests, rabbits on open
+grassland. Walk close enough to one and a prompt appears telling you to
+press **F** to catch it. Catching adds it to your inventory (the same
+inventory a stored vehicle lives in) and removes it from the world.
+
+Walk anywhere else and press **F** again — with nothing catchable
+nearby, this releases the most recently caught animal right where
+you're standing, and it's immediately catchable again if you want it
+back. There's no limit today on how many animals you can carry, and
+catching one never disturbs a vehicle you're also carrying, or vice
+versa — they share the same backpack but never get mixed up.
+
 ### Spatial awareness and activity
 
 When other people are present, you'll see contextual indicators showing what

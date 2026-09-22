@@ -34,6 +34,7 @@
 import { terrainHeightAt } from './TerrainHeightField.js';
 import { ecologyZoneAt, ECOLOGY_ZONE } from './TerrainEcology.js';
 import { isRiverAt } from './Hydrology.js';
+import { animalIdFor } from './AnimalIdentity.js';
 
 export const WILDLIFE_FEATURE_TYPE = Object.freeze({
     ANIMAL: 'ANIMAL'
@@ -185,6 +186,15 @@ function animalForCell(seed, cellX, cellZ) {
     const species = speciesForZone(zone);
 
     return {
+        // 0.9.700 — Animal Catching. `id` is the one field this
+        // milestone adds to an otherwise-unchanged animal record — see
+        // core/AnimalIdentity.js's own header for why the pre-jitter
+        // cell, not the jittered (x, z), is what identity is derived
+        // from. Every existing consumer of wildlifeInRegion() (collision,
+        // rendering) already treats this as a plain, widen-only object
+        // and reads none of its unfamiliar fields, so adding one more is
+        // purely additive.
+        id: animalIdFor(seed, cellX, cellZ),
         type: WILDLIFE_FEATURE_TYPE.ANIMAL,
         x, z,
         y: terrainHeightAt(seed, x, z),
@@ -228,7 +238,12 @@ export function wildlifeInRegion(seed, minX, minZ, maxX, maxZ) {
 // whatsoever — every animal here is a static decoration at a fixed point,
 // the same "trees, placed deterministically" restraint 0.2.88 itself
 // shipped before any later milestone considered motion; collision with
-// trees, buildings, or avatars; ownership or interaction of any kind;
+// trees, buildings, or avatars; ownership or interaction of any kind —
+// 0.9.700's own `id` field names WHICH animal a cell would produce, for
+// a future catch mechanic to reference; it still decides nothing about
+// catching, carrying, or removing one, all of which stay entirely
+// outside this file (see core/AvatarAnimalCatchTransition.js and
+// application/AnimalRuntimeInstances.js instead);
 // species blending by climate the way core/NaturalFeatureField.js#TREE_SPECIES
 // blends CONIFER/BROADLEAF by moisture (a plausible follow-on once more
 // than two species exist, not required for this milestone); day/night or

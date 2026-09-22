@@ -236,7 +236,14 @@ async function runTests() {
         assert(/documentId === docId/.test(navigationSessionSource) || /_historyPreview\.documentId/.test(navigationSessionSource), 'C2b. restoreHistoryAt()\'s 0.9.208 cross-document scoping fix is still present');
         const disposeStart = navigationSessionSource.indexOf('    dispose() {');
         assert(disposeStart >= 0, 'C2c. WorldNavigationSession still declares dispose()');
-        const disposeBody = navigationSessionSource.slice(disposeStart, disposeStart + 6000);
+        // 0.9.700 — Animal Catching added a few hundred more characters
+        // to dispose()'s own body (an _avatarAnimalInteractionController
+        // reset, a _wildlifeExclusionSyncFrameSubscription teardown),
+        // pushing _historyPreview's own reset past the original fixed
+        // 6000-character window. Widened generously rather than tuned to
+        // today's exact byte count, so the next unrelated addition to
+        // this same method doesn't retrigger the identical brittleness.
+        const disposeBody = navigationSessionSource.slice(disposeStart, disposeStart + 12000);
         assert(/_historyPreview\s*=\s*null/.test(disposeBody), 'C2d. dispose() still resets _historyPreview (0.9.208\'s third fix)');
         assert(/_retiredHistories\s*=\s*null/.test(disposeBody), 'C2e. dispose() still resets _retiredHistories alongside it');
 
