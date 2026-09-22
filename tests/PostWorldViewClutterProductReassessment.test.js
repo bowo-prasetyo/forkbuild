@@ -406,8 +406,8 @@ async function run() {
         // never a standing main-screen element regardless of mount point.
         const vehicleSource = await rawSource('ui/components/VehicleInteractionPrompt.js');
         assert(/v-if="visible"/.test(vehicleSource), 'F1a. VehicleInteractionPrompt still self-gates on visible');
-        assert(/<VehicleInteractionPrompt\s+:state="vehicleInteractionState"\s*\/>/.test(worldViewSource),
-            'F1b. WorldView.js still mounts it once, unconditionally, letting the component own its own contextual visibility');
+        assert(/<VehicleInteractionPrompt\s+:state="vehicleInteractionState"[\s\S]{0,80}\/>/.test(worldViewSource),
+            'F1b. WorldView.js still mounts it once, unconditionally, letting the component own its own contextual visibility (0.9.670 adds a second :store-state prop on the same unconditional tag — never a v-if wrapper)');
         capabilityRows.push(['Vehicle interaction', 'Appropriate — self-gated contextual prompt, never a standing element']);
 
         // F2. Publication commentary — contextual on WorldEncounterCanvas
