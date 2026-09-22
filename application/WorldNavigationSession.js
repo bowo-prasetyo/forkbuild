@@ -35,7 +35,7 @@ import { AvatarWildlifeConstraint } from './AvatarWildlifeConstraint.js';
 import { AvatarVehicleInteractionController } from './AvatarVehicleInteractionController.js';
 import { VehicleRuntimeInstances } from './VehicleRuntimeInstances.js';
 import { AvatarAnimalInteractionController } from './AvatarAnimalInteractionController.js';
-import { AnimalRuntimeInstances } from './AnimalRuntimeInstances.js';
+import { AnimalRuntimeInstances, ANIMAL_RENDER_RADIUS } from './AnimalRuntimeInstances.js';
 import { AvatarInventoryStore } from './AvatarInventoryStore.js';
 import { AvatarVehicleMovementController } from './AvatarVehicleMovementController.js';
 import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
@@ -1176,6 +1176,7 @@ export class WorldNavigationSession {
         this._setupCameraFocusAnimation();
         this._setupVehicleRendering();
         this._setupWildlifeExclusionSync();
+        this._setupAnimalRendering();
         this._setupVehicleRuntimePersistence();
         this._setupAnimalRuntimePersistence();
     }
@@ -1260,6 +1261,38 @@ export class WorldNavigationSession {
         });
     }
 
+    // 0.9.701 — Released Animal Rendering. The direct structural twin of
+    // `_setupVehicleRendering()` above, for released animals instead of
+    // vehicles — same `onAnimationFrame` subscription shape, same
+    // avatar-then-camera position fallback, same graceful absence when
+    // the render facade doesn't support `syncAnimals`.
+    //
+    // `this._animalRuntimeInstances.sync(...)` IS STILL CALLED HERE, NOT
+    // SKIPPED — this frame loop needs the store's own discovery/eviction
+    // bookkeeping to keep running regardless of rendering (catch-target
+    // resolution depends on it — see
+    // application/AvatarAnimalInteractionController.js#_nearbyAnimals()),
+    // exactly the same dual-purpose `sync()` call
+    // `_setupVehicleRendering()` already makes for mounting. Only the
+    // RESULT actually handed to `syncAnimals()` is narrowed, via
+    // `releasedNearby()` — see that method's own header for why handing
+    // it `sync()`'s own full return value instead would double-render
+    // every deterministic, tile-baked animal this store also happens to
+    // have discovered.
+    _setupAnimalRendering() {
+        if (typeof this._session.onAnimationFrame !== 'function' || typeof this._session.syncAnimals !== 'function') {
+            return;
+        }
+        this._animalRenderFrameSubscription = this._session.onAnimationFrame(() => {
+            const position = this.getAvatarPosition() || this.getCameraPosition();
+            if (!position) {
+                return;
+            }
+            this._animalRuntimeInstances.sync(this.getWorldSeed(), position, ANIMAL_RENDER_RADIUS);
+            this._session.syncAnimals(this._animalRuntimeInstances.releasedNearby(position, ANIMAL_RENDER_RADIUS));
+        });
+    }
+  
     // 0.9.701 — World View Persistence. Absent entirely when no
     // vehicleRuntimeInstancePersistenceStore was wired (every pre-0.9.701
     // caller and test), OR when the render facade supports no
@@ -7529,6 +7562,12 @@ export class WorldNavigationSession {
         if (this._wildlifeExclusionSyncFrameSubscription) {
             this._wildlifeExclusionSyncFrameSubscription();
             this._wildlifeExclusionSyncFrameSubscription = null;
+        }
+        // 0.9.701 — Released Animal Rendering. Mirrors the same teardown
+        // shape exactly.
+        if (this._animalRenderFrameSubscription) {
+            this._animalRenderFrameSubscription();
+            this._animalRenderFrameSubscription = null;
         }
         // 0.9.701 — World View Persistence. Mirrors the two teardowns
         // immediately above exactly, plus one final, un-throttled save —

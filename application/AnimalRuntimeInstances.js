@@ -2,6 +2,14 @@ import { animalPresenceInRegion } from '../core/AnimalPlacement.js';
 import { AnimalPresence } from '../core/AnimalPresence.js';
 import { withinRadiusXZ } from '../core/AvatarVehicleProximity.js';
 
+// 0.9.701 — Released Animal Rendering. Deliberately the same value
+// application/NearbyVehicleInstances.js#VEHICLE_RENDER_RADIUS already
+// uses — see that file's own header for why a RENDER radius is
+// meaningfully larger than an interaction radius (ANIMAL_INTERACTION_RADIUS,
+// 1.5): an animal should be visible well before it's close enough to
+// catch.
+export const ANIMAL_RENDER_RADIUS = 50;
+
 // 0.9.700 — Animal Runtime Instances.
 //
 // The animal counterpart of application/VehicleRuntimeInstances.js —
@@ -47,6 +55,11 @@ export class AnimalRuntimeInstances {
         // _setupWildlifeExclusionSync() — see drainRecentlyCaught()'s
         // own header for why a queue, not a single "last caught" value.
         this._recentlyCaught = [];
+        // 0.9.701 — Released Animal Rendering. Ids added via add(), and
+        // ONLY via add() — never populated by sync()'s own deterministic
+        // discovery. See releasedNearby()'s own header for exactly why
+        // this distinction has to exist at all.
+        this._released = new Set();
     }
 
     // Reconciles this store against `animalPresenceInRegion(seed,
@@ -124,6 +137,24 @@ export class AnimalRuntimeInstances {
             .filter((instance) => withinRadiusXZ(instance.position, centerPosition, radius));
     }
 
+    // 0.9.701 — Released Animal Rendering. The RENDER-facing counterpart
+    // of nearby() above, scoped to RELEASED animals only — see this
+    // file's own header, "Released," and renderer/AnimalFieldRenderer.js's
+    // own header for why that scoping is load-bearing, not cosmetic.
+    // core/WildlifeField.js's own decorative animals already render
+    // through their own tile system (renderer/WildlifeTileMesh.js),
+    // completely independently of this store; a caller
+    // (application/WorldNavigationSession.js's own
+    // _setupAnimalRendering()) that instead passed nearby()'s own full
+    // result — including animals this store merely DISCOVERED via
+    // sync(), never released — to a per-frame renderer would draw those
+    // same animals TWICE: once from their tile, once individually here.
+    // A READ, never a sync() — the identical "no discovery, no
+    // eviction, no mutation" restraint nearby() itself already keeps.
+    releasedNearby(centerPosition, radius) {
+        return this.nearby(centerPosition, radius).filter((instance) => this._released.has(instance.id));
+    }
+
     // Directly registers an AnimalPresence this store did not discover
     // via sync() — the one seam a RELEASED animal needs (see this file's
     // own header, "Released"). Mirrors
@@ -133,6 +164,9 @@ export class AnimalRuntimeInstances {
             throw new Error('AnimalRuntimeInstances#add requires an AnimalPresence instance');
         }
         this._instances.set(instance.id, instance);
+        // 0.9.701 — marks this id as a RELEASED animal, for
+        // releasedNearby()'s own sake — see that method's own header.
+        this._released.add(instance.id);
     }
 
     // The catch half of catch/release: removes a tracked animal (if any)
@@ -151,6 +185,10 @@ export class AnimalRuntimeInstances {
     discard(id, position) {
         this._instances.delete(id);
         this._excluded.add(id);
+        // 0.9.701 — a caught animal is no longer "released" either
+        // (whether it WAS released and is now being re-caught, or was
+        // never released at all) — see releasedNearby()'s own header.
+        this._released.delete(id);
         this._recentlyCaught.push({ id, position });
     }
 
@@ -190,6 +228,7 @@ export class AnimalRuntimeInstances {
         this._instances.clear();
         this._excluded.clear();
         this._recentlyCaught = [];
+        this._released.clear();
     }
 }
 

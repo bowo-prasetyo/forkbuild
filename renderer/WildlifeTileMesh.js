@@ -44,7 +44,18 @@ const HEAD_SEGMENTS_HEIGHT = 5; // low-poly on purpose
 // already uses. Built once at module load and reused, unchanged, across
 // every tile's InstancedMesh — geometry has no per-tile data, only
 // per-instance transforms do.
-const SPECIES_PRESET = {
+//
+// 0.9.701 — EXPORTED so renderer/AnimalRenderer.js (a released,
+// individually-tracked animal's own visual — see that file's own
+// header) can build the SAME body/head shape a decorative, tile-baked
+// animal already uses, from the SAME single source of truth, rather
+// than a second, drifting copy of these per-species numbers. Still
+// built exactly once, here, at module load — renderer/AnimalRenderer.js
+// reuses `bodyGeometry`/`headGeometry` directly (shared, never disposed
+// by an individual animal's own removal — see that file's own header
+// for why) and only ever clones `bodyMaterial`/`headMaterial` for its
+// own per-instance ownership.
+export const SPECIES_PRESET = {
     // A larger, elongated body — deep FOREST cover.
     [ANIMAL_SPECIES.DEER]: buildPreset({
         bodyRadiusX: 0.34, bodyRadiusY: 0.42, bodyRadiusZ: 0.72,
