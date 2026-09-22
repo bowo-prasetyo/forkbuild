@@ -167,9 +167,9 @@ async function runTests() {
         const controller = new AvatarVehicleInteractionController(avatarPresenceSession, { seed: SEED });
 
         const state = controller.vehicleInteractionState();
-        assert(state.mounted === false, '1. standing next to a real, in-range bicycle: not mounted');
-        assert(state.targetVehicleId === CLEAR_VEHICLE_ID, '2. the real bicycle is resolved as the target — the exact vehicle in range');
-        assert(state.vehicleType === VehicleType.BICYCLE, '3. the target vehicle\'s own type is reflected');
+        assert(state.mounted === false, '1. standing next to a real, in-range vehicle: not mounted');
+        assert(state.targetVehicleId === CLEAR_VEHICLE_ID, '2. the real vehicle is resolved as the target — the exact vehicle in range');
+        assert(state.vehicleType === clearVehicle.type, '3. the target vehicle\'s own type is reflected');
         assert(Object.isFrozen(state), '4. vehicleInteractionState() returns a frozen object');
     }
 
@@ -199,11 +199,11 @@ async function runTests() {
 
         pressInteractionKeyOnce(controller);
         assert(controller.mount() !== null && controller.mount().vehicleId === CLEAR_VEHICLE_ID,
-            '8. setup: actually mounted the real bicycle');
+            '8. setup: actually mounted the real vehicle');
 
         const state = controller.vehicleInteractionState();
         assert(state.mounted === true, '9. once mounted, the observed state reflects mounted: true');
-        assert(state.vehicleType === VehicleType.BICYCLE, '10. the MOUNTED vehicle\'s own type is reflected');
+        assert(state.vehicleType === clearVehicle.type, '10. the MOUNTED vehicle\'s own type is reflected');
         assert(state.targetVehicleId === null,
             '11. while mounted, targetVehicleId is null — vehicle switching is out of scope, there is no separate "target" concept while mounted');
     }
@@ -239,7 +239,7 @@ async function runTests() {
         pressInteractionKeyOnce(controller);
         const mount = controller.mount();
         assert(mount !== null && mount.vehicleId === BLOCKED_VEHICLE_ID,
-            '15. setup: mounted the real bicycle whose dismount destination is blocked by a real tree');
+            '15. setup: mounted the real vehicle whose dismount destination is blocked by a real tree');
 
         // Attempt to dismount — this MUST fail (the destination is not
         // clear), and the observed state must say so honestly.
@@ -249,7 +249,7 @@ async function runTests() {
         const state = controller.vehicleInteractionState();
         assert(state.mounted === true,
             '17. a blocked dismount never falsely displays mounted: false — the affordance tracks the REAL outcome, not the attempt');
-        assert(state.vehicleType === VehicleType.BICYCLE,
+        assert(state.vehicleType === blockedVehicle.type,
             '18. the still-mounted vehicle\'s own type is still correctly reflected after the blocked attempt');
 
         // Retrying gets the identical honest answer, repeatedly — never
@@ -317,14 +317,14 @@ async function runTests() {
 
         const beforeMount = session.avatarVehicleInteractionState();
         assert(beforeMount.mounted === false && beforeMount.targetVehicleId === 'vehicle:1179337264:-8,-1',
-            '26. FLAGSHIP: session.avatarVehicleInteractionState() reflects a real, in-range bicycle before mounting');
+            '26. FLAGSHIP: session.avatarVehicleInteractionState() reflects a real, in-range vehicle before mounting');
 
         session.avatarKeyDown('e');
         session._avatarVehicleInteractionController.tick();
         session.avatarKeyUp('e');
 
         const afterMount = session.avatarVehicleInteractionState();
-        assert(afterMount.mounted === true && afterMount.vehicleType === VehicleType.BICYCLE,
+        assert(afterMount.mounted === true && afterMount.vehicleType === realVehicle.type,
             '27. FLAGSHIP: session.avatarVehicleInteractionState() reflects the real mount, through the entire runtime');
 
         session.avatarKeyDown('e');

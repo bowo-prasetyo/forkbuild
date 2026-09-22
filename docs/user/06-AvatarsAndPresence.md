@@ -146,8 +146,9 @@ that your avatar keeps walking on its own.
 
 ### Vehicles
 
-Some worlds place a bicycle your avatar can ride instead of walking. Walk
-close enough to one and a prompt appears telling you which key mounts it:
+Some worlds place a bicycle or motorcycle your avatar can ride instead of
+walking. Walk close enough to one and a prompt appears telling you which
+key mounts it:
 
 | Key | Action |
 |---|---|
@@ -164,8 +165,9 @@ turn your avatar's own body, exactly as they do on foot, and are
 independent of steering. Dismounting puts your avatar back on foot at a
 clear spot beside the vehicle. A vehicle's top speed, acceleration,
 braking, and turning all depend on what kind of vehicle it is, and its
-collision footprint is sized to match — today that's the bicycle, the only
-vehicle worlds actually place and render.
+collision footprint is sized to match — today that's the bicycle and the
+motorcycle, the two vehicles worlds actually place and render. A
+motorcycle is faster than a bicycle, and rarer to find.
 
 ### Spatial awareness and activity
 

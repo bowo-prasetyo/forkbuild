@@ -97419,3 +97419,51 @@ not, by itself, extend to anything that needs to remember state between frames.
 TYPE beyond TREE" and animal life as directions deliberately excluded from `0.2.88`'s scope, not permanently
 foreclosed; this milestone is the sibling module that answer invites, built the same way `Hydrology` (`0.2.89`)
 was built as Ecology's sibling rather than its dependent.
+
+## 0.9.668 — Motorcycle Activation
+
+**Type:** implementation. **Production changes:** `core/VehiclePlacement.js` (a new decorrelated hash roll,
+`vehicleTypeForCell()`, decides MOTORCYCLE vs. BICYCLE for each already-qualifying lattice cell —
+`VEHICLE_TYPE_MOTORCYCLE_SHARE = 0.25`, so a motorcycle is the rarer of the two, matching the faster-and-scarcer
+shape `WALK < BICYCLE < MOTORCYCLE < CAR` already implies), `renderer/VehicleRenderer.js` (`buildMotorcycle()` —
+bigger wheels, a solid body volume standing in for a fuel tank/engine block, and a distinct color, the same
+"procedural placeholder, low-poly primitives" posture `buildBicycle()` already established), `core/
+AvatarVehicleDismountPosition.js` (`DISMOUNTABLE_VEHICLE_TYPES` now includes MOTORCYCLE alongside BICYCLE,
+sharing the exact same fixed `+X` offset — neither vehicle type has a heading this file can resolve a
+dismount side from yet), and `application/AvatarVehicleMovementController.js` (`MOVABLE_VEHICLE_TYPES` now
+includes MOTORCYCLE). Updates the vehicle test suite throughout to reflect BICYCLE and MOTORCYCLE both being
+real, placeable, mountable, and drivable, while CAR/DRONE remain exactly as unreachable as before. Updates
+`docs/user/06-AvatarsAndPresence.md`'s own "Vehicles" section.
+
+**The capability layer was already there; this milestone connects the remaining three seams.** `core/
+AvatarVehicleMovementCapability.js` has defined MOTORCYCLE's own speed (9, faster than BICYCLE's 6), collision
+radius (0.55), acceleration, braking, and steering rate since 0.9.85–0.9.128 — real, tested numbers with no
+consumer that could ever reach them, because nothing ever PLACED a motorcycle
+(`core/VehiclePlacement.js` minted BICYCLE only), nothing could RENDER one
+(`renderer/VehicleRenderer.js#build()` returned `null` for it), and even a directly-injected one could never
+actually MOVE (`application/AvatarVehicleMovementController.js`'s own `MOVABLE_VEHICLE_TYPES` gate — see that
+file's own 0.9.116 header, "ONLY A VEHICLE TYPE THIS CODEBASE CAN ACTUALLY SHOW MOVES" — held BICYCLE alone,
+deliberately, until the other two gaps closed). This milestone closes all three gaps at once, so a player can
+now genuinely find, mount, steer, brake, and dismount a motorcycle exactly as they already could a bicycle,
+through the identical generic mount/dismount/movement/steering/collision pipeline — no motorcycle-specific
+branch anywhere outside placement's own type roll and the renderer's own mesh.
+
+**Motorcycles are rarer than bicycles, on purpose.** `vehicleTypeForCell()` is its own decorrelated hash roll
+(own seed offset `VEHICLE_TYPE_SEED_OFFSET`), evaluated only once a lattice cell has already passed the
+existing ground/density gates — a cell's EXISTENCE and its TYPE are independent questions, the same "one hash
+per independent question" discipline every other field in `core/VehiclePlacement.js` already follows. A
+75/25 bicycle/motorcycle split was chosen so the faster, more capable vehicle reads as a genuine find, not a
+coin flip against the vehicle players already know.
+
+**Deliberately not yet, named rather than hidden:** CAR/DRONE placement, rendering, or movement — both remain
+exactly as far from reachable as before this milestone; road/path placement realism for any ground vehicle
+(`core/VehiclePlacement.js`'s own pre-existing "Deliberately not yet" note); a real (non-procedural) motorcycle
+asset; vehicle-switching UI; any change to BICYCLE's own speed, collision radius, acceleration, braking, or
+steering — this milestone only widens WHICH vehicle types reach the existing pipeline, never what that pipeline
+does for any one of them.
+
+**Classification: `EXTENSION`.** `docs/Roadmap.md`'s own 0.9.116 and 0.9.599 audits already named this exact
+gap — "MOTORCYCLE and CAR both resolve `supported: true`... but no placement path ever creates one" — as
+reachable-but-limited, fully-modeled capability data sitting behind a placement gap, not an unfinished
+capability; this milestone is the deliberate decision to close that gap for MOTORCYCLE specifically, leaving
+CAR/DRONE exactly where 0.9.599 found them.

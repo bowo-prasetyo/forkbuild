@@ -13,7 +13,8 @@ import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
 //
 //   Section A: determinism
 //   Section B: region behavior — inside/outside/boundary/adjacent regions
-//   Section C: every generated presence is VehicleType.BICYCLE
+//   Section C: every generated presence is BICYCLE or MOTORCYCLE
+//              (0.9.668), and MOTORCYCLE is the rarer of the two
 //   Section D: every returned item is a valid, immutable VehiclePresence
 //   Section E: rendering/avatar/controller independence (source sweep)
 //   Section F: no movement/mounting semantics (source sweep + object shape)
@@ -144,14 +145,23 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section C — every generated presence is VehicleType.BICYCLE
+    // Section C — every generated presence is BICYCLE or MOTORCYCLE
+    // (0.9.668), never CAR/DRONE, and MOTORCYCLE is the rarer of the two
     // -------------------------------------------------------------
     {
         const presences = vehiclePresenceInRegion(DEFAULT_WORLD_SEED, -2000, -2000, 2000, 2000);
         assert(presences.length > 0, '15. Setup: a wide scan finds bicycles to check');
+        let bicycleCount = 0;
+        let motorcycleCount = 0;
         for (const p of presences) {
-            assert(p.type === VehicleType.BICYCLE, `16. Every generated presence is VehicleType.BICYCLE (got ${p.type}) — no motorcycle/car/drone placement in this milestone`);
+            assert(p.type === VehicleType.BICYCLE || p.type === VehicleType.MOTORCYCLE,
+                `16. Every generated presence is VehicleType.BICYCLE or VehicleType.MOTORCYCLE (got ${p.type}) — no car/drone placement in this milestone`);
+            if (p.type === VehicleType.BICYCLE) bicycleCount++;
+            if (p.type === VehicleType.MOTORCYCLE) motorcycleCount++;
         }
+        assert(bicycleCount > 0, '16b. Setup: a wide scan finds at least one bicycle');
+        assert(motorcycleCount > 0, '16c. Setup: a wide scan finds at least one motorcycle');
+        assert(motorcycleCount < bicycleCount, '16d. Motorcycles are rarer than bicycles over a wide scan — the faster ground vehicle is the scarcer one');
     }
 
     // -------------------------------------------------------------

@@ -215,11 +215,12 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section H — unsupported vehicle types: 0.9.80's own null must
-    // never be silently treated as a real candidate.
+    // Section H — unsupported vehicle types (CAR/DRONE — BICYCLE and
+    // MOTORCYCLE both resolve a real destination as of 0.9.668): 0.9.80's
+    // own null must never be silently treated as a real candidate.
     // -------------------------------------------------------------
     {
-        for (const type of [VehicleType.MOTORCYCLE, VehicleType.CAR, VehicleType.DRONE]) {
+        for (const type of [VehicleType.CAR, VehicleType.DRONE]) {
             const vehicle = new VehiclePresence({ id: 'vehicle:1:0,0', type, position: new Position(1, 1, 1) });
             const resolved = resolveAvatarVehicleDismountPosition(vehicle);
             assert(resolved === null, `19. setup: a ${type} vehicle still resolves to null under 0.9.80`);

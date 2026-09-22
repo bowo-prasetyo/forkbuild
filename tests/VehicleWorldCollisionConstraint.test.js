@@ -363,11 +363,12 @@ async function runTests() {
 
     {
         // Unsupported vehicle types (defense in depth, unaffected by
-        // this milestone): even with both constraints wired, a
-        // MOTORCYCLE/CAR/DRONE is still never moved at all — canMove()'s
-        // own gate runs before either constraint is ever consulted.
+        // this milestone): even with both constraints wired, a CAR/DRONE
+        // is still never moved at all — canMove()'s own gate runs before
+        // either constraint is ever consulted. MOTORCYCLE joined BICYCLE
+        // as movable at 0.9.668, so it is no longer in this set.
         const blockingConstraint = { apply() { throw new Error('must never be called for an unsupported vehicle type'); } };
-        for (const type of [VehicleType.MOTORCYCLE, VehicleType.CAR, VehicleType.DRONE]) {
+        for (const type of [VehicleType.CAR, VehicleType.DRONE]) {
             const spawn = { x: 3, y: 0, z: 3 };
             const instance = new VehicleInstance({ id: `vehicle:c5-${type}`, type, spawnPosition: spawn, position: spawn });
             const store = fakeVehicleStore(instance);

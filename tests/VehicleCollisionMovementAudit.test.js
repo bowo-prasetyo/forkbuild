@@ -446,13 +446,14 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section D — unsupported vehicle types stay ungated by anything
+    // Section D — unsupported vehicle types (CAR/DRONE — MOTORCYCLE
+    // joined BICYCLE as movable at 0.9.668) stay ungated by anything
     // this line has added, even with REAL constraints wired and a
     // completely obstacle-free path.
     // -------------------------------------------------------------
     {
         const clearMovementConstraint = new AvatarMovementConstraint({ loadedDocuments: new Map(), getWorldPosition: () => ({ x: 0, y: 0, z: 0 }), brickRegistry: new CreateBrickRegistryUseCase().execute() });
-        for (const type of [VehicleType.MOTORCYCLE, VehicleType.CAR, VehicleType.DRONE]) {
+        for (const type of [VehicleType.CAR, VehicleType.DRONE]) {
             assert(isMovableVehicleType(type) === false, `22.${type} isMovableVehicleType() still refuses this type`);
             const spawn = { x: 92000, y: 0, z: 92000 };
             const instance = new VehicleInstance({ id: `vehicle:audit-d-${type}`, type, spawnPosition: spawn, position: spawn });
