@@ -25,6 +25,7 @@ import { CreateWorldRegionCommand } from './commands/CreateWorldRegionCommand.js
 import { UpdateWorldRegionCommand } from './commands/UpdateWorldRegionCommand.js';
 import { RemoveWorldRegionCommand } from './commands/RemoveWorldRegionCommand.js';
 import { CreateWorldAnimalDecorationCommand } from './commands/CreateWorldAnimalDecorationCommand.js';
+import { RemoveWorldAnimalDecorationCommand } from './commands/RemoveWorldAnimalDecorationCommand.js';
 
 // Builds the CommandRegistry and registers every built-in command type.
 // Later, community tools or plugin commands get one extra line here —
@@ -75,10 +76,15 @@ export class CreateCommandRegistryUseCase {
         registry.register('remove-world-region', RemoveWorldRegionCommand);
         // 0.9.702 — World Animal Decorations: a released animal baked
         // into durable, publishable World content. Same inherited
-        // undo/redo/persistence/replay contract as every command above;
-        // decorative-only in v1, so no update/remove command exists yet
-        // (see core/AnimalDecoration.js's own header).
+        // undo/redo/persistence/replay contract as every command above.
         registry.register('create-world-animal-decoration', CreateWorldAnimalDecorationCommand);
+        // 0.9.703 — World Animal Decorations: Removal. Undoes a bake-in
+        // — see application/WorldNavigationSession.js#
+        // undecorateNearestAnimalDecorationHere()'s own header for why
+        // this exists (a decoration is permanent World content until a
+        // player deliberately reverses it, never catchable again
+        // otherwise).
+        registry.register('remove-world-animal-decoration', RemoveWorldAnimalDecorationCommand);
         return registry;
     }
 }

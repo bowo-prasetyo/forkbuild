@@ -1,5 +1,7 @@
 import { RenderWorldViewUseCase } from './RenderWorldViewUseCase.js';
 import { Position } from '../core/Position.js';
+import { createId } from '../core/createId.js';
+import { AnimalPresence } from '../core/AnimalPresence.js';
 import { SpatialBounds } from '../core/SpatialBounds.js';
 import { SpatialSelectionState } from './spatial-state/SpatialSelectionState.js';
 import { SpatialHoverState } from './spatial-state/SpatialHoverState.js';
@@ -18,6 +20,7 @@ import { CreateWorldRegionCommand } from './commands/CreateWorldRegionCommand.js
 import { UpdateWorldRegionCommand } from './commands/UpdateWorldRegionCommand.js';
 import { RemoveWorldRegionCommand } from './commands/RemoveWorldRegionCommand.js';
 import { CreateWorldAnimalDecorationCommand } from './commands/CreateWorldAnimalDecorationCommand.js';
+import { RemoveWorldAnimalDecorationCommand } from './commands/RemoveWorldAnimalDecorationCommand.js';
 import { RegionKind } from '../core/RegionKind.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
 import { Document } from '../core/Document.js';
@@ -172,7 +175,8 @@ const RUNTIME_PLACEMENT_PERSISTENCE_INTERVAL_MS = 1000;
 // controllers.
 const VEHICLE_BRAKE_KEY = 'control';
 // 0.9.702 — the ONE physical key that bakes the nearest released
-// animal into durable World content — see
+// animal into durable World content, or (0.9.703) undoes that same
+// bake-in for the nearest existing decoration — see
 // `_processWorldAnimalDecorationInput()`'s own header, below, for why
 // 'G' is the key this milestone picks: W/A/S/D, Shift, Space, Alt, 'E',
 // 'F', Control, and the arrow keys are all already claimed (see
@@ -2540,31 +2544,45 @@ export class WorldNavigationSession {
             : null;
     }
 
-    // 0.9.702 — World Animal Decorations. The "[G] Decorate <Species>"
-    // AFFORDANCE — a caller (ordinarily a future World View prompt,
-    // mirroring ui/components/AnimalInteractionPrompt.js's own catch/
-    // release affordance) needs to know whether a nearby RELEASED
-    // animal exists to bake into durable World content, WITHOUT
-    // recomputing proximity itself. Deliberately its OWN method, never
-    // folded into avatarAnimalInteractionState() above: that one is a
-    // plain pass-through to AvatarAnimalInteractionController's own
-    // catch/release concern, which knows nothing about Documents,
-    // Worlds, or authorization — "is there something durable-World-
-    // content-worthy standing right here" is this class's own concern,
-    // the identical layering canEditDocument()/getDocumentPosition()
-    // already keep separate from the controller. Returns `null` when no
-    // local avatar exists, the same graceful-absence posture every
-    // sibling *InteractionState() method here already takes.
+    // 0.9.702 — World Animal Decorations. The "[G] Decorate <Species>" /
+    // (0.9.703) "[G] Undecorate <Species>" AFFORDANCE — a caller
+    // (ordinarily a future World View prompt, mirroring
+    // ui/components/AnimalInteractionPrompt.js's own catch/release
+    // affordance) needs to know what a 'G' press would do right now,
+    // WITHOUT recomputing proximity itself or duplicating
+    // toggleNearestAnimalDecorationHere()'s own priority rule.
+    // Deliberately its OWN method, never folded into
+    // avatarAnimalInteractionState() above: that one is a plain
+    // pass-through to AvatarAnimalInteractionController's own catch/
+    // release concern, which knows nothing about Documents, Worlds, or
+    // authorization — "what would a decorate/undecorate key do right
+    // here" is this class's own concern, the identical layering
+    // canEditDocument()/getDocumentPosition() already keep separate
+    // from the controller. Returns `null` when no local avatar exists,
+    // the same graceful-absence posture every sibling
+    // *InteractionState() method here already takes.
     animalDecorationInteractionState() {
         const avatarPos = this.getAvatarPosition();
         if (!avatarPos) {
             return null;
         }
-        const target = this._animalRuntimeInstances.nearestReleased(avatarPos, ANIMAL_INTERACTION_RADIUS);
+        const releaseTarget = this._animalRuntimeInstances.nearestReleased(avatarPos, ANIMAL_INTERACTION_RADIUS);
+        if (releaseTarget) {
+            return Object.freeze({
+                canDecorate: true,
+                canUndecorate: false,
+                species: releaseTarget.species,
+                targetAnimalId: releaseTarget.id,
+                targetDecorationId: null
+            });
+        }
+        const decorationTarget = this._nearestAnimalDecorationNear(avatarPos, ANIMAL_INTERACTION_RADIUS);
         return Object.freeze({
-            canDecorate: target !== null,
-            species: target ? target.species : null,
-            targetAnimalId: target ? target.id : null
+            canDecorate: false,
+            canUndecorate: decorationTarget !== null,
+            species: decorationTarget ? decorationTarget.decoration.species : null,
+            targetAnimalId: null,
+            targetDecorationId: decorationTarget ? decorationTarget.decoration.id : null
         });
     }
 
@@ -3001,31 +3019,40 @@ export class WorldNavigationSession {
 
     // 0.9.702 — World Animal Decorations Input Binding. The ONE seam
     // that decides which physical key finally calls
-    // decorateNearestReleasedAnimalHere() in real play — the direct
+    // toggleNearestAnimalDecorationHere() in real play — the direct
     // counterpart to 0.9.96's own `_processVehicleBrakingInput()` above,
     // for WORLD_ANIMAL_DECORATION_KEY ('G') instead of Control.
     //
+    // 0.9.703 — dispatches to toggleNearestAnimalDecorationHere(), NOT
+    // decorateNearestReleasedAnimalHere() directly, once "undo a
+    // bake-in" existed as a real, separate action — the identical
+    // single-key, context-disambiguated shape
+    // application/AvatarAnimalInteractionController.js's own 'F'
+    // (catch vs. release) already establishes, see that dispatcher's
+    // own header for the exact priority rule.
+    //
     // RISING EDGE ONLY, NEVER EVERY REPEAT — unlike braking (a
     // continuous HELD fact, correctly re-derived on every keydown a
-    // browser's own key-repeat fires), decorating is a discrete,
-    // one-shot action: `_decorateKeyHeld` exists purely so a held 'G'
-    // fires decorateNearestReleasedAnimalHere() exactly once, on the
-    // genuine new press, the identical "tell a real new press from an
-    // uninteresting repeat" concern `_vehicleSteerLeftHeld`/
+    // browser's own key-repeat fires), decorating/undecorating is a
+    // discrete, one-shot action: `_decorateKeyHeld` exists purely so a
+    // held 'G' fires toggleNearestAnimalDecorationHere() exactly once,
+    // on the genuine new press, the identical "tell a real new press
+    // from an uninteresting repeat" concern `_vehicleSteerLeftHeld`/
     // `_vehicleSteerRightHeld` already solve for steering (see those
     // fields' own constructor comment).
     //
-    // NEVER LETS AN ERROR ESCAPE. decorateNearestReleasedAnimalHere()
-    // throws for a handful of real setup problems (no live avatar, no
-    // editable document, not authorized, not signed in) — the same
-    // contract createLandmarkHere() already keeps, because a UI caller
-    // is expected to guard() around it (see ui/views/WorldView.js's own
-    // onSaveLandmarkForm). This method IS that guard for the raw
-    // keyboard path: catching and discarding is correct here specifically
-    // because "nothing usable happened" is exactly what a stray 'G'
-    // press with, say, no signed-in identity yet should look like from
-    // the keyboard — the key is still reported consumed either way, so
-    // nothing else in this file mistakes 'G' for an unrelated command.
+    // NEVER LETS AN ERROR ESCAPE. Both decorateNearestReleasedAnimalHere()
+    // and undecorateNearestAnimalDecorationHere() throw for a handful of
+    // real setup problems (no live avatar, no editable document, not
+    // authorized, not signed in) — the same contract createLandmarkHere()
+    // already keeps, because a UI caller is expected to guard() around
+    // it (see ui/views/WorldView.js's own onSaveLandmarkForm). This
+    // method IS that guard for the raw keyboard path: catching and
+    // discarding is correct here specifically because "nothing usable
+    // happened" is exactly what a stray 'G' press with, say, no
+    // signed-in identity yet should look like from the keyboard — the
+    // key is still reported consumed either way, so nothing else in
+    // this file mistakes 'G' for an unrelated command.
     _processWorldAnimalDecorationInput(key, type) {
         if (String(key || '').toLowerCase() !== WORLD_ANIMAL_DECORATION_KEY) {
             return false;
@@ -3037,7 +3064,7 @@ export class WorldNavigationSession {
         if (!this._decorateKeyHeld) {
             this._decorateKeyHeld = true;
             try {
-                this.decorateNearestReleasedAnimalHere();
+                this.toggleNearestAnimalDecorationHere();
             } catch {
                 // See this method's own header, "Never lets an error escape."
             }
@@ -7304,6 +7331,116 @@ export class WorldNavigationSession {
 	    this._commandHistories.get(worldId).execute(cmd);
 	    this._animalRuntimeInstances.discard(target.id, target.position);
 	    return cmd.executedDecorationId;
+	}
+
+	// 0.9.703 — World Animal Decorations: Removal. THE 'G' KEY'S ACTUAL
+	// DISPATCHER — see WORLD_ANIMAL_DECORATION_KEY's own header and
+	// _processWorldAnimalDecorationInput()'s own header for the full
+	// rationale. Mirrors application/AvatarAnimalInteractionController.js's
+	// own 'F' priority rule exactly:
+	//
+	//   a released animal is in range   -> G decorates it
+	//   otherwise, a decoration is in range -> G undecorates it
+	//   otherwise                       -> G does nothing
+	//
+	// Decorating wins the tie when BOTH are simultaneously true, the
+	// identical "there's something right here" priority 'F' already
+	// gives catching over releasing — baking a NEW animal in is the more
+	// common, more deliberate action; undoing an old one only matters
+	// when there is nothing fresher to decorate.
+	toggleNearestAnimalDecorationHere() {
+	    const avatarPos = this.getAvatarPosition();
+	    if (!avatarPos) {
+		    throw new Error('WorldNavigationSession: cannot toggle a World animal decoration without a live avatar position');
+	    }
+	    if (this._animalRuntimeInstances.nearestReleased(avatarPos, ANIMAL_INTERACTION_RADIUS)) {
+		    return this.decorateNearestReleasedAnimalHere();
+	    }
+	    return this.undecorateNearestAnimalDecorationHere();
+	}
+
+	// The single nearest AnimalDecoration within `radius` of `avatarPos`,
+	// searched across EVERY currently loaded document — the identical
+	// "a decoration shown here may belong to any loaded document, not
+	// only the active one" scope _resolveLandmarkOwner() already keeps
+	// for landmarks, because undecorating (unlike decorating, which only
+	// ever writes into the ACTIVE document) can reasonably target a
+	// decoration standing in any World this session has streamed in.
+	// Returns `{ decoration, doc, globalPosition }` or `null` — never
+	// just the decoration alone, since the caller needs `doc` to resolve
+	// which document to edit and `globalPosition` to hand the animal
+	// back to application/AnimalRuntimeInstances.js at the right spot. A
+	// READ, exactly like AnimalRuntimeInstances#nearestReleased() this
+	// mirrors — no discovery, no eviction, no mutation.
+	_nearestAnimalDecorationNear(avatarPos, radius) {
+	    let best = null;
+	    let bestDistance = Infinity;
+	    for (const doc of this.getLoadedDocuments()) {
+		    const layoutPosition = this.getDocumentPosition(doc.world.id);
+		    for (const decoration of doc.world.getAnimalDecorations()) {
+			    const globalPosition = {
+				    x: decoration.position.x + layoutPosition.x,
+				    y: decoration.position.y + layoutPosition.y,
+				    z: decoration.position.z + layoutPosition.z
+			    };
+			    const dx = globalPosition.x - avatarPos.x;
+			    const dz = globalPosition.z - avatarPos.z;
+			    const distance = dx * dx + dz * dz;
+			    if (distance > radius * radius) {
+				    continue;
+			    }
+			    if (best === null || distance < bestDistance || (distance === bestDistance && decoration.id < best.decoration.id)) {
+				    best = { decoration, doc, globalPosition };
+				    bestDistance = distance;
+			    }
+		    }
+	    }
+	    return best;
+	}
+
+	// The undo half of decorateNearestReleasedAnimalHere(): removes the
+	// nearest AnimalDecoration from whichever loaded World it actually
+	// belongs to, and hands it BACK to application/AnimalRuntimeInstances.js
+	// as a live, session-local, catchable AnimalPresence again — the
+	// direct answer to "I decorated this and changed my mind." A FRESH
+	// id, never the decoration's own: an AnimalDecoration's id is a
+	// durable-World-content identity (minted by
+	// CreateWorldAnimalDecorationCommand, stable across every future
+	// load of this World), while a released AnimalPresence's id is
+	// always freshly minted at release time (see
+	// application/AvatarAnimalInteractionController.js#_tickRelease()'s
+	// own header for why) — reusing the decoration's own id here would
+	// blur those two, unrelated identity spaces together.
+	//
+	// Same fork-on-write guard, same canEditDocument authorization gate
+	// as every other World-mutating method in this file. RETURNS null,
+	// NEVER THROWS, WHEN NOTHING NEARBY QUALIFIES — the identical
+	// "an opportunistic keybind press with nothing to act on is not a
+	// caller mistake" posture decorateNearestReleasedAnimalHere()'s own
+	// header already establishes.
+	undecorateNearestAnimalDecorationHere() {
+	    const avatarPos = this.getAvatarPosition();
+	    if (!avatarPos) {
+		    throw new Error('WorldNavigationSession: cannot undecorate a World without a live avatar position');
+	    }
+	    const found = this._nearestAnimalDecorationNear(avatarPos, ANIMAL_INTERACTION_RADIUS);
+	    if (!found) {
+		    return null;
+	    }
+	    const { decoration, doc, globalPosition } = found;
+	    const worldId = this._ensureEditableDocumentId(doc.world.id);
+	    if (!this.canEditDocument(worldId)) {
+		    throw new Error('WorldNavigationSession: not authorized to remove a decoration from this World');
+	    }
+	    this._commandHistories.get(worldId).execute(
+		    new RemoveWorldAnimalDecorationCommand({ worldId, decorationId: decoration.id })
+	    );
+	    this._animalRuntimeInstances.add(new AnimalPresence({
+		    id: createId(),
+		    species: decoration.species,
+		    position: new Position(globalPosition.x, globalPosition.y, globalPosition.z)
+	    }));
+	    return decoration.id;
 	}
 
 	// -----------------------------------------------------------------
