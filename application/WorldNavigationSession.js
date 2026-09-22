@@ -37,6 +37,7 @@ import { VehicleRuntimeInstances } from './VehicleRuntimeInstances.js';
 import { AvatarAnimalInteractionController } from './AvatarAnimalInteractionController.js';
 import { AnimalRuntimeInstances, ANIMAL_RENDER_RADIUS } from './AnimalRuntimeInstances.js';
 import { AvatarInventoryStore } from './AvatarInventoryStore.js';
+import { AvatarInventoryTransferPeerExchange } from './AvatarInventoryTransferPeerExchange.js';
 import { AvatarVehicleMovementController } from './AvatarVehicleMovementController.js';
 import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
 import { isValidVehicleSteeringIntent, createVehicleSteeringIntent, VehicleSteeringIntent } from '../core/VehicleSteeringIntent.js';
@@ -525,7 +526,24 @@ export class WorldNavigationSession {
 	    // the real wiring.
 	    avatarInventoryPersistenceStore = null,
 	    vehicleRuntimeInstancePersistenceStore = null,
-	    animalRuntimeInstancePersistenceStore = null
+	    animalRuntimeInstancePersistenceStore = null,
+	    // 0.9.702 — Avatar Inventory Transfer. The SAME app-wide
+	    // peer/PeerMessageBus.js and application/ConnectedPeerRegistry.js
+	    // pair every other real-peer-transport collaborator in
+	    // application/CreateWorldViewUseCase.js already shares (see e.g.
+	    // presenceBroadcastProvider there) — never a second transport.
+	    // Both OPTIONAL, the identical "enforce/offer only when actually
+	    // wired" posture the three 0.9.701 persistence stores just above
+	    // already follow: a session built without them (every pre-0.9.702
+	    // caller, and every existing test) simply has no
+	    // avatarInventoryTransferPeerExchange() to return — sending a
+	    // carried entry to another avatar is unavailable, never silently
+	    // broken. Consumed immediately below, right after
+	    // `_avatarInventoryStore` is built — see that field's own 0.9.700
+	    // comment for why this is the ONE place a collaborator bound to it
+	    // can be constructed.
+	    peerMessageBus = null,
+	    connectedPeerRegistry = null
 	}) {
 	    this._registry = registry;
 	    this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
@@ -1085,6 +1103,19 @@ export class WorldNavigationSession {
         // save-on-set — this file has no inventory persistence logic of
         // its own to add.
         this._avatarInventoryStore = new AvatarInventoryStore(avatarInventoryPersistenceStore);
+        // 0.9.702 — Avatar Inventory Transfer. Bound to the SAME
+        // `_avatarInventoryStore` immediately above — never a second,
+        // competing owner of the local avatar's carried entries (see
+        // application/AvatarInventoryStore.js's own header). Only built
+        // when a real peer stack is actually wired (see this
+        // constructor's own parameter comment on `peerMessageBus`/
+        // `connectedPeerRegistry`); a session built without one gets
+        // `null`, exactly like `_worldMembershipUseCase` and every other
+        // optional peer-stack collaborator this constructor already
+        // accepts.
+        this._avatarInventoryTransferPeerExchange = (peerMessageBus && connectedPeerRegistry)
+            ? new AvatarInventoryTransferPeerExchange(this._avatarInventoryStore, peerMessageBus, connectedPeerRegistry)
+            : null;
         // 0.9.700 — Animal Catching. See _setupWildlifeExclusionSync()
         // below, the identical "own subscription, own field" shape
         // `_vehicleRenderFrameSubscription` above already establishes.
@@ -2488,6 +2519,34 @@ export class WorldNavigationSession {
         return this._avatarAnimalInteractionController
             ? this._avatarAnimalInteractionController.catchInteractionState()
             : null;
+    }
+
+    // 0.9.702 — Avatar Inventory Transfer. A plain accessor for the
+    // collaborator this constructor may have built (see this class's own
+    // constructor comment on `peerMessageBus`/`connectedPeerRegistry`) —
+    // never a second construction. Returns `null` when this session has
+    // no real peer stack wired, the identical graceful-absence posture
+    // every other optional peer-based collaborator here already takes. A
+    // caller (ordinarily a future inventory panel) reads the local
+    // avatar's OWN carried entries from `avatarInventoryStore()` (below)
+    // and calls sendOffer()/acceptOffer()/declineOffer() on what this
+    // method returns directly — WorldNavigationSession has no policy of
+    // its own about when to send or accept an entry.
+    avatarInventoryTransferPeerExchange() {
+        return this._avatarInventoryTransferPeerExchange;
+    }
+
+    // 0.9.702 — Avatar Inventory Transfer. The local avatar's own
+    // application/AvatarInventoryStore.js — the SAME instance
+    // avatarStoreInteractionState()/avatarAnimalInteractionState() (both
+    // above) already read indirectly through their own controllers, now
+    // also exposed directly so a caller can list every carried entry (a
+    // "what am I carrying" UI — see core/AvatarInventory.js's own header,
+    // "a future 'show everything I'm carrying' screen") rather than only
+    // the single most-recent-per-kind affordance those two methods
+    // already surface.
+    avatarInventoryStore() {
+        return this._avatarInventoryStore;
     }
 
     // 0.9.127 — Vehicle Steering Integration Audit. The ONE way
@@ -7615,6 +7674,20 @@ export class WorldNavigationSession {
         }
         this._localInteractionSequence = 0;
         this._remoteAvatarGestureExpiry.clear();
+        // 0.9.702 — Avatar Inventory Transfer. Mirrors every other
+        // peer-bound collaborator's own teardown immediately above —
+        // never leaves a subscription on the app-wide peerMessageBus/
+        // connectedPeerRegistry outliving this session. Any offer still
+        // escrowed out of `_avatarInventoryStore` at this point simply
+        // stays escrowed — see application/
+        // AvatarInventoryTransferPeerExchange.js's own header on why an
+        // outstanding offer only ever resolves via ACCEPT, DECLINE, or
+        // the recipient disconnecting, never merely because this session
+        // itself ended.
+        if (this._avatarInventoryTransferPeerExchange) {
+            this._avatarInventoryTransferPeerExchange.dispose();
+            this._avatarInventoryTransferPeerExchange = null;
+        }
         if (this._remoteAvatarRegistry) {
             this._remoteAvatarRegistry.dispose();
             this._remoteAvatarRegistry = null;
