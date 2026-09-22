@@ -12,6 +12,7 @@ import { AvatarVisual } from '../renderer/AvatarVisual.js';
 import { RemoteSpatialPresenceRenderer } from '../renderer/RemoteSpatialPresenceRenderer.js';
 import { VehicleFieldRenderer } from '../renderer/VehicleFieldRenderer.js';
 import { AnimalFieldRenderer } from '../renderer/AnimalFieldRenderer.js';
+import { AnimalPresence } from '../core/AnimalPresence.js';
 import { WorldSpatialPresentationMode } from '../core/WorldSpatialAnchor.js';
 import { surfaceCategoryAt, SURFACE_CATEGORY } from '../core/TerrainSurface.js';
 import { LAKE_SURFACE_HEIGHT } from '../core/Hydrology.js';
@@ -593,12 +594,34 @@ export class RenderWorldViewUseCase {
             // own output) — this facade has no way to enforce that and
             // trusts its caller, the identical "glue only" posture
             // syncVehicles() itself already keeps toward its own input.
+            //
+            // withGroundElevation() HERE TOO, NOT SKIPPED. A released
+            // animal's own `position` is minted from the avatar's own
+            // AvatarPresence#position (application/AvatarAnimalInteractionController.js#_tickRelease())
+            // — the SAME flat domain coordinate (Y=0, plus at most a
+            // transient jump offset) resolveAvatarRenderPosition()'s own
+            // header already documents for the avatar itself, never a
+            // real terrain-elevated Y the way a deterministically-placed
+            // core/WildlifeField.js animal's own Y already is (baked in
+            // at placement time via terrainHeightAt()). Rendering it
+            // verbatim, unlifted, put a released rabbit 1-2 meters below
+            // the visible ground the moment the local terrain sat above
+            // Y=0 — exactly the bug setRemoteAvatar()/
+            // updateRemoteAvatarPresence() above already lift for the
+            // identical reason. A vehicle instance is NOT the same case
+            // (see syncVehicles()'s own comment, above) and stays
+            // unlifted on purpose.
             syncAnimals: (animalPresences) => {
                 const nextIds = new Set();
                 for (const instance of animalPresences) {
                     nextIds.add(instance.id);
                     const alreadyTracked = animalFieldRenderer.trackedAnimalIds().includes(instance.id);
-                    const object = animalFieldRenderer.setAnimal(instance);
+                    const elevated = new AnimalPresence({
+                        id: instance.id,
+                        species: instance.species,
+                        position: withGroundElevation(instance.position)
+                    });
+                    const object = animalFieldRenderer.setAnimal(elevated);
                     if (object && !alreadyTracked) {
                         renderer.add(object);
                     }
