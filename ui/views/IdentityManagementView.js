@@ -388,7 +388,7 @@ export default {
                     <div v-if="unlockingId === identity.identityId" class="identity-unlock-form">
                         <p class="identity-unlock-label">🔒 Enter the passphrase for <strong>{{ identity.label }}</strong></p>
                         <input v-model="unlockPassphrase" type="password" placeholder="Passphrase" class="modal-input"
-                               autofocus @keydown.enter="confirmUnlock" @keydown.escape="cancelUnlock" />
+                               autocomplete="off" autofocus @keydown.enter="confirmUnlock" @keydown.escape="cancelUnlock" />
                         <p v-if="unlockError" class="identity-unlock-error">{{ unlockError }}</p>
                         <div class="modal-actions">
                             <button class="modal-btn modal-btn--secondary" @click="cancelUnlock">Cancel</button>
@@ -403,7 +403,7 @@ export default {
                         <template v-if="!exportedPackage.json">
                             <input v-model="exportPassphrase" type="password"
                                    :placeholder="identity.isProtected ? 'Current passphrase' : 'Choose a passphrase to protect the export'"
-                                   class="modal-input" autofocus @keydown.enter="confirmExport" @keydown.escape="cancelExport" />
+                                   class="modal-input" autocomplete="off" autofocus @keydown.enter="confirmExport" @keydown.escape="cancelExport" />
                             <p v-if="exportError" class="identity-unlock-error">{{ exportError }}</p>
                             <div class="modal-actions">
                                 <button class="modal-btn modal-btn--secondary" @click="cancelExport">Cancel</button>
@@ -425,8 +425,8 @@ export default {
 
                     <div v-else-if="changingPassphraseId === identity.identityId" class="identity-unlock-form">
                         <p class="identity-unlock-label">Changing the passphrase never changes the identity itself — its identityId, public key, and every signature it has ever produced stay exactly as valid as before.</p>
-                        <input v-model="changeOldPassphrase" type="password" placeholder="Current passphrase" class="modal-input" autofocus />
-                        <input v-model="changeNewPassphrase" type="password" placeholder="New passphrase" class="modal-input" @keydown.enter="confirmChangePassphrase" @keydown.escape="cancelChangePassphrase" />
+                        <input v-model="changeOldPassphrase" type="password" placeholder="Current passphrase" class="modal-input" autocomplete="off" autofocus />
+                        <input v-model="changeNewPassphrase" type="password" placeholder="New passphrase" class="modal-input" autocomplete="off" @keydown.enter="confirmChangePassphrase" @keydown.escape="cancelChangePassphrase" />
                         <p v-if="changePassphraseError" class="identity-unlock-error">{{ changePassphraseError }}</p>
                         <div class="modal-actions">
                             <button class="modal-btn modal-btn--secondary" @click="cancelChangePassphrase">Cancel</button>
@@ -438,8 +438,8 @@ export default {
                         <p class="identity-unlock-label">
                             Declaring a successor signs a statement that another identity replaces this one. It does NOT revoke this identity — do that separately, below, when the rotation should actually take effect.
                         </p>
-                        <input v-model="successorIdentityInput" type="text" placeholder="Successor identity (did:key:z…)" class="modal-input" autofocus />
-                        <input v-if="identity.isProtected && !isUnlocked(identity)" v-model="successorPassphrase" type="password" placeholder="Passphrase" class="modal-input" @keydown.enter="confirmDeclareSuccessor" @keydown.escape="cancelDeclareSuccessor" />
+                        <input v-model="successorIdentityInput" type="text" placeholder="Successor identity (did:key:z…)" class="modal-input" autocomplete="off" autofocus />
+                        <input v-if="identity.isProtected && !isUnlocked(identity)" v-model="successorPassphrase" type="password" placeholder="Passphrase" class="modal-input" autocomplete="off" @keydown.enter="confirmDeclareSuccessor" @keydown.escape="cancelDeclareSuccessor" />
                         <p v-if="successorError" class="identity-unlock-error">{{ successorError }}</p>
                         <div class="modal-actions">
                             <button class="modal-btn modal-btn--secondary" @click="cancelDeclareSuccessor">Cancel</button>
@@ -453,9 +453,9 @@ export default {
                             device or any device that already holds its key. This does not affect anything already
                             established with it — only new activity going forward.
                         </p>
-                        <input v-model="revokeReason" type="text" placeholder="Reason (optional, shown only to you)" class="modal-input" autofocus />
-                        <input v-model="revokeSuccessor" type="text" placeholder="Successor identity (optional, did:key:z…)" class="modal-input" />
-                        <input v-if="identity.isProtected && !isUnlocked(identity)" v-model="revokePassphrase" type="password" placeholder="Passphrase" class="modal-input" @keydown.enter="confirmRevoke" @keydown.escape="cancelRevoke" />
+                        <input v-model="revokeReason" type="text" placeholder="Reason (optional, shown only to you)" class="modal-input" autocomplete="off" autofocus />
+                        <input v-model="revokeSuccessor" type="text" placeholder="Successor identity (optional, did:key:z…)" class="modal-input" autocomplete="off" />
+                        <input v-if="identity.isProtected && !isUnlocked(identity)" v-model="revokePassphrase" type="password" placeholder="Passphrase" class="modal-input" autocomplete="off" @keydown.enter="confirmRevoke" @keydown.escape="cancelRevoke" />
                         <p v-if="revokeError" class="identity-unlock-error">{{ revokeError }}</p>
                         <div class="modal-actions">
                             <button class="modal-btn modal-btn--secondary" @click="cancelRevoke">Cancel</button>
@@ -479,8 +479,8 @@ export default {
 
             <div class="identity-mgmt-form">
                 <h2>Create New Identity</h2>
-                <input v-model="newLabel" type="text" placeholder="Display name" class="modal-input" @keydown.enter="createIdentity" />
-                <input v-model="newPassphrase" type="password" placeholder="Protect with a passphrase (optional)" class="modal-input" @keydown.enter="createIdentity" />
+                <input v-model="newLabel" type="text" placeholder="Display name" class="modal-input" autocomplete="off" @keydown.enter="createIdentity" />
+                <input v-model="newPassphrase" type="password" placeholder="Protect with a passphrase (optional)" class="modal-input" autocomplete="off" @keydown.enter="createIdentity" />
                 <button class="action-btn action-btn--primary" @click="createIdentity">Create Identity</button>
             </div>
 
@@ -505,8 +505,8 @@ export default {
                         </p>
                     </div>
 
-                    <input v-model="importLabel" type="text" placeholder="Display name (only used for a new identity)" class="modal-input" />
-                    <input v-model="importPassphrase" type="password" placeholder="Passphrase this file was exported with" class="modal-input" @keydown.enter="confirmImport" />
+                    <input v-model="importLabel" type="text" placeholder="Display name (only used for a new identity)" class="modal-input" autocomplete="off" />
+                    <input v-model="importPassphrase" type="password" placeholder="Passphrase this file was exported with" class="modal-input" autocomplete="off" @keydown.enter="confirmImport" />
 
                     <p v-if="importError" class="identity-unlock-error">{{ importError }}</p>
 
