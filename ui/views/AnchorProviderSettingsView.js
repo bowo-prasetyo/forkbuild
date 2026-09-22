@@ -1,6 +1,7 @@
 import { ref, computed, inject, onMounted } from 'vue';
 import { RoleProviderRole } from '../../core/RoleProviderRole.js';
 import { describeRoleProviderPreferenceSettings } from '../../application/RoleProviderPreferenceSettingsView.js';
+import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 
 // Proof & Anchoring Provider Preference Settings Entry Point.
 //
@@ -61,11 +62,11 @@ export default {
             preferredAnchorCreationCoordinator ? preferredAnchorCreationCoordinator.availableAnchorTypes() : []
         );
 
-        const settings = computed(() => describeRoleProviderPreferenceSettings({
+        const settings = computed(() => sortOptionsByLabel(describeRoleProviderPreferenceSettings({
             role: RoleProviderRole.PROOF_AND_ANCHORING,
             availableProviderKeys: availableProviderKeys.value,
             preference: preference.value
-        }).options.map((option) => ({ ...option, label: ANCHOR_PROVIDER_OPTION_LABELS[option.providerKey] || option.label })));
+        }).options.map((option) => ({ ...option, label: ANCHOR_PROVIDER_OPTION_LABELS[option.providerKey] || option.label }))));
 
         // Re-reads the store fresh on every load — the identical restraint
         // ContentProviderSettingsView.js's own `load()` already holds, so a

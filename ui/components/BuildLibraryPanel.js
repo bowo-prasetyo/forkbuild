@@ -3,6 +3,7 @@ import BuildLibraryPreview from './BuildLibraryPreview.js';
 import StructureLibraryCard from './StructureLibraryCard.js';
 import { sortStructures, STRUCTURE_SORT_OPTIONS } from '../../core/sortStructures.js';
 import { toCssHex, fromCssHex } from '../../core/ColorHex.js';
+import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 
 // Exported (not just module-local) so tests/BuildLibraryUX.test.js can
 // exercise the actual matching rule directly — the same "logic lives
@@ -344,8 +345,12 @@ export default {
         const sourceFilteredPersonal = computed(() =>
             sourceFilter.value === 'built-in' ? [] : searchedPersonalStructureGroups.value);
 
-        const categoryOptions = computed(() =>
-            buildCategoryOptions(sourceFilteredBuiltIn.value, sourceFilteredPersonal.value));
+        // The category filter lists categories alphabetically, after "All" —
+        // display order only; the groups below keep their registry order.
+        const categoryOptions = computed(() => {
+            const { total, options } = buildCategoryOptions(sourceFilteredBuiltIn.value, sourceFilteredPersonal.value);
+            return { total, options: sortOptionsByLabel(options, (option) => option.category) };
+        });
 
         // 0.6.4 — narrows to the selected category (if any), then sorts
         // WITHIN each remaining group — sorting never merges categories

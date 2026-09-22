@@ -115,7 +115,8 @@ async function run() {
             'B. the picker\'s own option source is injected from the app-wide composition, never re-derived locally');
         check(/<select v-model="entry\.snapshotDistributionStorage" class="form-select"/.test(viewSource),
             'B. a real, bound <select> exists for the Content backend choice');
-        check(/<option v-for="storage in snapshotDistributionStorageTypes" :key="storage" :value="storage">/.test(viewSource),
+        check(/<option v-for="storage in snapshotDistributionStorageOptions" :key="storage" :value="storage">/.test(viewSource)
+            && /snapshotDistributionStorageOptions = sortOptionsByLabel\(snapshotDistributionStorageTypes, humanizeStorageType\)/.test(viewSource),
             'B. its options are rendered from the eligible-and-registered list, never a fixed pair of <option> tags');
         check(/v-if="snapshotDistributionStorageTypes\.length > 0"/.test(viewSource),
             'B. the picker degrades gracefully (hidden, not broken) when nothing is currently eligible, rather than offering a choice that cannot work');
@@ -328,7 +329,7 @@ async function run() {
             'I. CLOSED — humanizeStorageType() prefers the real name and only ever falls back to humanizeContentKind() for an unrecognized code, never the reverse');
 
         const closedStorageCallSites = [
-            [/<option v-for="storage in snapshotDistributionStorageTypes" :key="storage" :value="storage">\{\{ humanizeStorageType\(storage\) \}\}<\/option>/, "the Distribution Content picker's own <option> text"],
+            [/<option v-for="storage in snapshotDistributionStorageOptions" :key="storage" :value="storage">\{\{ humanizeStorageType\(storage\) \}\}<\/option>/, "the Distribution Content picker's own <option> text"],
             [/<span class="evidence-anchor-type">\{\{ humanizeStorageType\(storage\) \}\}<\/span>/, "the Placement role's own per-backend card header"],
             [/describePlacementCreationButtonLabel\(humanizeStorageType\(storage\), \{ creating:/, "the \"Create <X> Placement\" button's own label"],
             [/<span class="evidence-anchor-type">\{\{ humanizeStorageType\(placementView\.storage\) \}\}<\/span>/, "an already-created placement's own list-item header"]

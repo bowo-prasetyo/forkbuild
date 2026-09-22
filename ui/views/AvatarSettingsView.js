@@ -3,6 +3,7 @@ import { CreateAvatarProfileUseCase } from '../../application/CreateAvatarProfil
 import { CreatePresenceVisibilityUseCase } from '../../application/CreatePresenceVisibilityUseCase.js';
 import { CreateAvatarProfileVisibilityUseCase } from '../../application/CreateAvatarProfileVisibilityUseCase.js';
 import { PresenceVisibility } from '../../core/PresenceVisibility.js';
+import { sortOptionsByLabel, sortLabels } from '../../utils/sortOptionsByLabel.js';
 
 // 0.2.34 — the first VISIBLE avatar feature: an editor over the
 // persistent AvatarProfile core/application built in 0.2.33/0.2.34.
@@ -81,6 +82,13 @@ export default {
             templates.value.find((t) => t.templateId === selectedTemplateId.value) || null
         );
 
+        // A component's choices, alphabetically (numeric-aware, so
+        // "hair-10" follows "hair-09") — display order only; the template
+        // itself and its defaults are untouched.
+        function componentOptions(name) {
+            return sortLabels(selectedTemplate.value.getComponent(name).options);
+        }
+
         function applyAppearance(source) {
             for (const key of Object.keys(appearance)) {
                 delete appearance[key];
@@ -95,7 +103,7 @@ export default {
             }
             const wired = new CreateAvatarProfileUseCase().execute(identityUseCase.provider);
             avatarProfileUseCase.value = wired.avatarProfileUseCase;
-            templates.value = wired.templateRegistry.getAll();
+            templates.value = sortOptionsByLabel(wired.templateRegistry.getAll(), (t) => t.displayLabel);
 
             const { profile, template, appearance: effectiveAppearance } = avatarProfileUseCase.value.getEffectiveAvatar();
             selectedTemplateId.value = template ? template.templateId : null;
@@ -214,6 +222,7 @@ export default {
             saveStatus,
             selectedTemplateId,
             selectedTemplate,
+            componentOptions,
             appearance,
             displayName,
             onTemplateChange,
@@ -272,7 +281,7 @@ export default {
                             <span class="form-label">{{ name }}</span>
                             <span class="avatar-component-controls">
                                 <select v-model="appearance[name]" class="form-select">
-                                    <option v-for="opt in selectedTemplate.getComponent(name).options" :key="opt" :value="opt">{{ opt }}</option>
+                                    <option v-for="opt in componentOptions(name)" :key="opt" :value="opt">{{ opt }}</option>
                                 </select>
                                 <input
                                     v-if="selectedTemplate.getComponent(name).hasColor"
@@ -288,7 +297,7 @@ export default {
                     <div class="form-field" v-if="selectedTemplate.hasComponent('accessories')">
                         <span class="form-label">Accessories</span>
                         <div class="avatar-accessory-list">
-                            <label v-for="opt in selectedTemplate.getComponent('accessories').options" :key="opt" class="avatar-accessory-option">
+                            <label v-for="opt in componentOptions('accessories')" :key="opt" class="avatar-accessory-option">
                                 <input
                                     type="checkbox"
                                     :checked="isAccessorySelected('accessories', opt)"

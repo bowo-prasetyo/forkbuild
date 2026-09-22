@@ -385,7 +385,9 @@ async function run() {
     {
         const uiSource = await codeOnlySource('ui/views/DecentralizedPublicationsView.js');
 
-        check(uiSource.includes('v-for="storage in snapshotDistributionStorageTypes"'), 'C. the Content picker is populated by v-for over the eligibility read — never a hardcoded pair of <option>s');
+        check(uiSource.includes('v-for="storage in snapshotDistributionStorageOptions"')
+            && uiSource.includes('snapshotDistributionStorageOptions = sortOptionsByLabel(snapshotDistributionStorageTypes, humanizeStorageType)'),
+            'C. the Content picker is populated by v-for over the eligibility read (sorted for display) — never a hardcoded pair of <option>s');
         check(uiSource.includes('v-if="snapshotDistributionStorageTypes.length > 0"'), 'C. the picker hides entirely when nothing is currently eligible, rather than rendering an unusable control');
 
         // Scoped to THIS picker's own <select> block only — the Publication

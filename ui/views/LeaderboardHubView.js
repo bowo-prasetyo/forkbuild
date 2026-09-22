@@ -4,6 +4,7 @@ import { reconstructDistinctPublisherIdentifiers } from '../../application/Publi
 import { reconstructPublisherAchievementProfile } from '../../application/PublisherAchievementProfileView.js';
 import { reconstructPublisherAchievementBadges } from '../../application/PublisherAchievementBadgeView.js';
 import { reconstructPublisherAchievementStatistics } from '../../application/PublisherAchievementStatisticsView.js';
+import { sortLabels } from '../../utils/sortOptionsByLabel.js';
 
 // Leaderboard Hub — a single contextual entry point from /publications
 // (ui/views/DecentralizedPublicationsView.js's own "Publication Archive"
@@ -84,7 +85,7 @@ export default {
             return identityId ? identityId.slice(-14) : 'an unknown identity';
         },
         distinctPublisherIdentifiersView() {
-            return reconstructDistinctPublisherIdentifiers(this.archive());
+            return sortLabels(reconstructDistinctPublisherIdentifiers(this.archive()));
         },
         togglePublisherAchievementProfile() {
             this.publisherAchievementProfileExpanded = !this.publisherAchievementProfileExpanded;

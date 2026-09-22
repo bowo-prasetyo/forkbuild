@@ -433,8 +433,8 @@ export default {
                             class="form-select publication-card-commentary-provider-select"
                             :disabled="commentarySubmitting"
                         >
-                            <option value="nostr">Nostr</option>
                             <option value="arweave">Arweave</option>
+                            <option value="nostr">Nostr</option>
                         </select>
                     </label>
                     <button

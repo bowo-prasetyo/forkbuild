@@ -159,8 +159,8 @@ export default {
                     <label class="form-field editor-distribution-dialog-provider-label">
                         <span class="form-label">Announcement / Discovery substrate</span>
                         <select v-model="snapshotDiscoveryProviderModel" class="form-select editor-distribution-dialog-provider-select" :disabled="snapshotDistributionExecuting">
-                            <option value="nostr">Nostr</option>
                             <option value="arweave">Arweave</option>
+                            <option value="nostr">Nostr</option>
                         </select>
                     </label>
 
@@ -217,8 +217,8 @@ export default {
                     <label class="form-field editor-distribution-dialog-provider-label">
                         <span class="form-label">Announcement / Discovery substrate</span>
                         <select v-model="discoveryProviderModel" class="form-select editor-distribution-dialog-provider-select" :disabled="distributionExecuting">
-                            <option value="nostr">Nostr</option>
                             <option value="arweave">Arweave</option>
+                            <option value="nostr">Nostr</option>
                         </select>
                     </label>
 

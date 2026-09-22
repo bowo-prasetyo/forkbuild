@@ -1,3 +1,5 @@
+import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
+
 // 0.9.672 — World View Distribution Dialog.
 //
 // UX-level cleanup only. ui/components/WorldEncounterCanvas.js's own
@@ -120,6 +122,18 @@ export default {
         snapshotDiscoveryProviderModel: {
             get() { return this.snapshotDiscoveryProvider; },
             set(value) { this.$emit('update:snapshotDiscoveryProvider', value); }
+        },
+        // Display order only — `snapshotDistributionStorageTypes` itself
+        // stays in registry order, since callers fall back to its first
+        // entry as a default. See utils/sortOptionsByLabel.js.
+        snapshotStorageOptions() {
+            return sortOptionsByLabel([
+                ...this.snapshotDistributionStorageTypes.map((storage) => ({
+                    value: storage,
+                    label: storage === 'ipfs' ? 'IPFS (Local Kubo)' : 'Arweave'
+                })),
+                { value: 'remote-pinning', label: 'IPFS (Remote Pinning)' }
+            ]);
         }
     },
     methods: {
@@ -201,8 +215,8 @@ export default {
                     <label class="form-field world-distribution-dialog-provider-label">
                         <span class="form-label">Announcement / Discovery substrate</span>
                         <select v-model="discoveryProviderModel" class="form-select world-distribution-dialog-provider-select" :disabled="distributionExecuting">
-                            <option value="nostr">Nostr</option>
                             <option value="arweave">Arweave</option>
+                            <option value="nostr">Nostr</option>
                         </select>
                     </label>
 
@@ -232,8 +246,7 @@ export default {
                     <label class="form-field world-distribution-dialog-storage-label">
                         <span class="form-label">Storage</span>
                         <select v-model="snapshotStorageModel" class="form-select world-distribution-dialog-storage-select" :disabled="snapshotDistributionExecuting">
-                            <option v-for="storage in snapshotDistributionStorageTypes" :key="storage" :value="storage">{{ storage === 'ipfs' ? 'IPFS (Local Kubo)' : 'Arweave' }}</option>
-                            <option value="remote-pinning">IPFS (Remote Pinning)</option>
+                            <option v-for="option in snapshotStorageOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
                         </select>
                     </label>
 
@@ -260,8 +273,8 @@ export default {
                     <label class="form-field world-distribution-dialog-provider-label">
                         <span class="form-label">Announcement / Discovery substrate</span>
                         <select v-model="snapshotDiscoveryProviderModel" class="form-select world-distribution-dialog-provider-select" :disabled="snapshotDistributionExecuting">
-                            <option value="nostr">Nostr</option>
                             <option value="arweave">Arweave</option>
+                            <option value="nostr">Nostr</option>
                         </select>
                     </label>
 
