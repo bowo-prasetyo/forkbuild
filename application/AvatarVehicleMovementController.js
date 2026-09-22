@@ -114,6 +114,20 @@ import { resolveVehicleMovementDirectionFromSteering } from '../core/VehicleStee
 // happen to the avatar?"/Section H, and 0.9.668's own entry for the
 // motorcycle-specific reasoning.
 //
+// 0.9.669 UPDATE — CAR JOINS BICYCLE AND MOTORCYCLE HERE. Through
+// 0.9.668, renderer/VehicleRenderer.js had no visual for CAR and
+// core/VehiclePlacement.js never placed one, so CAR stayed excluded for
+// the identical reason MOTORCYCLE was excluded through 0.9.667. 0.9.669
+// closed both remaining gaps at once (VehiclePlacement.js's own "Car
+// Activation" header; VehicleRenderer.js's own buildCar()), so a car is
+// now a real, visible, mountable, and — via this one line — movable
+// vehicle exactly like a bicycle or a motorcycle, and (per
+// core/AvatarVehicleMovementCapability.js's own 0.9.87 header) the
+// fastest of the three. DRONE remains the only exclusion: it still has
+// no placement path and no visual, so adding it here would still be
+// exactly the "hypothetical future vehicle silently starts moving"
+// mistake this gate exists to prevent.
+//
 // 0.9.127 — Vehicle Steering Integration Audit. 0.9.125/0.9.126 built a
 // closed steering-intent vocabulary (core/VehicleSteeringIntent.js) and a
 // pure directional transformation over it (core/VehicleSteeringSimulation.js)
@@ -129,7 +143,7 @@ import { resolveVehicleMovementDirectionFromSteering } from '../core/VehicleStee
 // and this file's own closing 0.9.127 comment for why heading resolution
 // itself needed no change at all to already be correct once steering
 // entered the real pipeline.
-const MOVABLE_VEHICLE_TYPES = new Set([VehicleType.BICYCLE, VehicleType.MOTORCYCLE]);
+const MOVABLE_VEHICLE_TYPES = new Set([VehicleType.BICYCLE, VehicleType.MOTORCYCLE, VehicleType.CAR]);
 
 export function isMovableVehicleType(type) {
     return MOVABLE_VEHICLE_TYPES.has(type);

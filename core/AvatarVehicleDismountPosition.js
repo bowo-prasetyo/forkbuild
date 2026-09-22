@@ -67,49 +67,56 @@ import { VehicleType } from './VehicleType.js';
 // KEPT TO THE VEHICLE TYPES THIS CODEBASE CAN ACTUALLY PLACE, ON PURPOSE.
 // Through 0.9.667, core/VehiclePlacement.js only ever produced
 // `VehicleType.BICYCLE`; 0.9.668 gave it `VehicleType.MOTORCYCLE` too
-// (see that file's own "Motorcycle Placement" header). core/VehiclePresence.js
-// still deliberately carries no dimensions, heading, wheelbase, or seat
-// position (see that file's own header), and a motorcycle has exactly
-// the same "no generic vehicle geometry to resolve a destination FROM
-// yet" problem a bicycle already had — so it gets the SAME rule, not a
-// distinct one. `DISMOUNTABLE_VEHICLE_TYPES` (below) is that rule's
-// domain: BICYCLE and MOTORCYCLE both resolve a real Position; CAR/DRONE —
-// still never placeable — return `null`, "no dismount destination is
-// known for this vehicle." That `null` is not an error: it is this
-// file's honest answer for a vehicle type it has no rule for yet, exactly
-// the same shape `VehiclePresence` itself already uses ("no vehicle here"
-// is the absence of a value, never a placeholder). A future CAR/DRONE
-// dismount rule is this file's (or a sibling's) job to ADD, not to guess
-// at now.
+// (see that file's own "Motorcycle Placement" header), and 0.9.669 gave
+// it `VehicleType.CAR` as well (see that file's own "Car Activation"
+// header). core/VehiclePresence.js still deliberately carries no
+// dimensions, heading, wheelbase, or seat position (see that file's own
+// header), and a motorcycle or a car has exactly the same "no generic
+// vehicle geometry to resolve a destination FROM yet" problem a bicycle
+// already had — so each gets the SAME rule, not a distinct one.
+// `DISMOUNTABLE_VEHICLE_TYPES` (below) is that rule's domain: BICYCLE,
+// MOTORCYCLE, and CAR all resolve a real Position; DRONE — still never
+// placeable — returns `null`, "no dismount destination is known for this
+// vehicle." That `null` is not an error: it is this file's honest answer
+// for a vehicle type it has no rule for yet, exactly the same shape
+// `VehiclePresence` itself already uses ("no vehicle here" is the absence
+// of a value, never a placeholder). A future DRONE dismount rule is this
+// file's (or a sibling's) job to ADD, not to guess at now.
 //
-// A FIXED WORLD-SPACE OFFSET, BECAUSE NEITHER GROUND VEHICLE HAS A
+// A FIXED WORLD-SPACE OFFSET, BECAUSE NO GROUND VEHICLE HAS A
 // DISMOUNT-RELEVANT HEADING HERE YET. A dismount position is inherently
 // relative to the vehicle, which eventually means a heading — but this
-// file never reads `VehicleInstance.heading` for either BICYCLE or
-// MOTORCYCLE, and manufacturing a dismount-side rule from it solely so
-// this file can have one would be reaching past what this milestone (or
-// 0.9.668's motorcycle extension of it) actually asked for. So the
-// dismount side is a fixed, arbitrary, always-the-same-direction offset
-// in world space (+X) — not relative to the avatar's own facing, not
-// relative to any vehicle heading — and BICYCLE and MOTORCYCLE share the
-// exact same offset, the same way they share every other part of this
-// rule. `BICYCLE_DISMOUNT_OFFSET_X` (below) is the one constant this
-// rule is built around, kept under its original name (the first vehicle
-// type it was defined for) exactly as core/VehiclePlacement.js's own
-// `BICYCLE_LATTICE_SPACING` stayed named after bicycles once it started
-// governing motorcycle placement too: large enough that the
-// avatar's own collision circle (AVATAR_COLLISION_RADIUS === 0.35,
-// core/AvatarCollision.js) cannot land back centered on the vehicle's
-// own point even if a future collision check is added, and comfortably
-// inside VEHICLE_INTERACTION_RADIUS (1.5, core/AvatarVehicleProximity.js)
-// so a just-dismounted avatar stays within interaction range of the
-// vehicle it just left — able to immediately remount if that turns out
-// to be the desired behavior, a policy question this file leaves to
-// whatever future remounting milestone actually decides it. When
-// vehicles eventually acquire a real orientation, THAT is the seam that
-// should replace this fixed offset with a heading-relative one — this
-// file's own job stays "here is a candidate position," not "here is how
-// a vehicle points."
+// file never reads `VehicleInstance.heading` for BICYCLE, MOTORCYCLE, or
+// CAR, and manufacturing a dismount-side rule from it solely so this file
+// can have one would be reaching past what this milestone (or 0.9.668's
+// motorcycle extension of it, or 0.9.669's car extension) actually asked
+// for. So the dismount side is a fixed, arbitrary, always-the-same-
+// direction offset in world space (+X) — not relative to the avatar's
+// own facing, not relative to any vehicle heading — and BICYCLE,
+// MOTORCYCLE, and CAR all share the exact same offset, the same way they
+// share every other part of this rule. `BICYCLE_DISMOUNT_OFFSET_X`
+// (below) is the one constant this rule is built around, kept under its
+// original name (the first vehicle type it was defined for) exactly as
+// core/VehiclePlacement.js's own `BICYCLE_LATTICE_SPACING` stayed named
+// after bicycles once it started governing motorcycle and car placement
+// too: large enough that the avatar's own collision circle
+// (AVATAR_COLLISION_RADIUS === 0.35, core/AvatarCollision.js) cannot land
+// back centered on the vehicle's own point even if a future collision
+// check is added, and comfortably inside VEHICLE_INTERACTION_RADIUS (1.5,
+// core/AvatarVehicleProximity.js) so a just-dismounted avatar stays
+// within interaction range of the vehicle it just left — able to
+// immediately remount if that turns out to be the desired behavior, a
+// policy question this file leaves to whatever future remounting
+// milestone actually decides it. A car's own, wider body makes a
+// heading-relative dismount side a MORE plausible future need than it
+// was for a bicycle or a motorcycle — but that is exactly the same
+// "reaching past what this milestone asked for" this header already
+// refuses; the fixed offset is deliberately reused as-is, unchanged in
+// magnitude, rather than tuned per vehicle type ahead of an actual
+// reported problem. When vehicles eventually acquire a real orientation,
+// THAT is the seam that should replace this fixed offset with a
+// heading-relative one — this file's own job stays "here is a candidate
+// position," not "here is how a vehicle points."
 //
 // Y IS NEVER COPIED FROM THE VEHICLE. `VehiclePresence.position.y`
 // (core/VehiclePlacement.js) is a raw `terrainHeightAt()` sample — real
@@ -193,14 +200,15 @@ import { VehicleType } from './VehicleType.js';
 
 // See this file's own header, "A fixed world-space offset," for the
 // full reasoning behind both the direction (+X, arbitrary but fixed
-// forever) and the magnitude. Shared by BICYCLE and MOTORCYCLE alike —
-// see "Kept to the vehicle types this codebase can actually place."
+// forever) and the magnitude. Shared by BICYCLE, MOTORCYCLE, and CAR
+// alike — see "Kept to the vehicle types this codebase can actually
+// place."
 export const BICYCLE_DISMOUNT_OFFSET_X = 1;
 
 // The vehicle types this file has a dismount rule for — see this file's
 // own header, "Kept to the vehicle types this codebase can actually
-// place." CAR/DRONE are deliberately absent.
-const DISMOUNTABLE_VEHICLE_TYPES = new Set([VehicleType.BICYCLE, VehicleType.MOTORCYCLE]);
+// place." DRONE is deliberately absent.
+const DISMOUNTABLE_VEHICLE_TYPES = new Set([VehicleType.BICYCLE, VehicleType.MOTORCYCLE, VehicleType.CAR]);
 
 function isFiniteCoordinate(value) {
     return typeof value === 'number' && Number.isFinite(value);
@@ -223,10 +231,10 @@ export function resolveAvatarVehicleDismountPosition(vehicle) {
         throw new Error('resolveAvatarVehicleDismountPosition requires a vehicle with a finite numeric x and z position');
     }
 
-    // BICYCLE/MOTORCYCLE only, on purpose — see this file's own header,
-    // "Kept to the vehicle types this codebase can actually place."
-    // `null` here is a genuine, honest answer ("no dismount destination
-    // is known for this vehicle type"), never an error.
+    // BICYCLE/MOTORCYCLE/CAR only, on purpose — see this file's own
+    // header, "Kept to the vehicle types this codebase can actually
+    // place." `null` here is a genuine, honest answer ("no dismount
+    // destination is known for this vehicle type"), never an error.
     if (!DISMOUNTABLE_VEHICLE_TYPES.has(vehicle.type)) {
         return null;
     }

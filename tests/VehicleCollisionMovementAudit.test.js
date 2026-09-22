@@ -47,9 +47,9 @@ import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUs
 //              SAME real brick still lets an unmounted avatar stop at
 //              its own, smaller radius
 //   Section D: unsupported vehicle types stay ungated by anything this
-//              line has added — MOTORCYCLE/CAR/DRONE never reach a real,
-//              wired movementConstraint/treeConstraint pair, even along
-//              a completely obstacle-free path
+//              line has added — DRONE never reaches a real, wired
+//              movementConstraint/treeConstraint pair, even along a
+//              completely obstacle-free path
 //   Section E: FLAGSHIP — one continuous session: mount, ride into a
 //              real obstacle, the avatar equals the vehicle's own
 //              already-constrained position on EVERY frame (never a
@@ -446,14 +446,14 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section D — unsupported vehicle types (CAR/DRONE — MOTORCYCLE
-    // joined BICYCLE as movable at 0.9.668) stay ungated by anything
-    // this line has added, even with REAL constraints wired and a
-    // completely obstacle-free path.
+    // Section D — unsupported vehicle types (DRONE — MOTORCYCLE joined
+    // BICYCLE as movable at 0.9.668, and CAR joined them at 0.9.669) stay
+    // ungated by anything this line has added, even with REAL
+    // constraints wired and a completely obstacle-free path.
     // -------------------------------------------------------------
     {
         const clearMovementConstraint = new AvatarMovementConstraint({ loadedDocuments: new Map(), getWorldPosition: () => ({ x: 0, y: 0, z: 0 }), brickRegistry: new CreateBrickRegistryUseCase().execute() });
-        for (const type of [VehicleType.CAR, VehicleType.DRONE]) {
+        for (const type of [VehicleType.DRONE]) {
             assert(isMovableVehicleType(type) === false, `22.${type} isMovableVehicleType() still refuses this type`);
             const spawn = { x: 92000, y: 0, z: 92000 };
             const instance = new VehicleInstance({ id: `vehicle:audit-d-${type}`, type, spawnPosition: spawn, position: spawn });

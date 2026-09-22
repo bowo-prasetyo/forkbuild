@@ -10,8 +10,8 @@ import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 
 // 0.9.116 — Mounted Vehicle Movement, application/AvatarVehicleMovementController.js.
 //
-//   Section A: canMove()/isMovableVehicleType() — BICYCLE and MOTORCYCLE
-//              (0.9.668), CAR/DRONE still not
+//   Section A: canMove()/isMovableVehicleType() — BICYCLE, MOTORCYCLE
+//              (0.9.668), and CAR (0.9.669); DRONE still not
 //   Section B: tick() on an untracked vehicle id — null, no throw
 //   Section C: forward intent -> forward displacement, spawnPosition
 //              untouched (0.9.114's own invariant, reused)
@@ -23,7 +23,7 @@ import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 //   Section F: reset() actually clears transient bookkeeping — a ride
 //              resumed after reset() starts exactly like a brand-new
 //              controller would
-//   Section G: unsupported vehicle types (CAR/DRONE) are never moved,
+//   Section G: unsupported vehicle types (DRONE) are never moved,
 //              even when directly tracked and ticked — defense in depth,
 //              independent of any caller-side canMove() check
 //   Section G2 (0.9.123): heading tracks realized movement direction —
@@ -85,12 +85,12 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const controller = new AvatarVehicleMovementController(fakeVehicleStore());
-        for (const type of [VehicleType.BICYCLE, VehicleType.MOTORCYCLE]) {
+        for (const type of [VehicleType.BICYCLE, VehicleType.MOTORCYCLE, VehicleType.CAR]) {
             assert(controller.canMove(type) === true, `1.${type} ${type} can move`);
             assert(isMovableVehicleType(type) === true, `2.${type} isMovableVehicleType(${type}) === true`);
         }
-        for (const type of [VehicleType.CAR, VehicleType.DRONE, VehicleType.NONE]) {
-            assert(controller.canMove(type) === false, `3.${type} ${type} cannot move — only the currently implemented visual vocabulary (BICYCLE, MOTORCYCLE) can`);
+        for (const type of [VehicleType.DRONE, VehicleType.NONE]) {
+            assert(controller.canMove(type) === false, `3.${type} ${type} cannot move — only the currently implemented visual vocabulary (BICYCLE, MOTORCYCLE, CAR) can`);
             assert(isMovableVehicleType(type) === false, `4.${type} isMovableVehicleType(${type}) === false`);
         }
     }
@@ -121,6 +121,34 @@ async function runTests() {
         assert(lastResult !== null, '4b. a mounted, tracked MOTORCYCLE produces a real tick() result');
         assert(lastResult.vehicleInstance.position.z > spawn.z, '4c. forward intent moved the MOTORCYCLE forward, exactly like a BICYCLE');
         assert(lastResult.vehicleInstance.type === VehicleType.MOTORCYCLE, '4d. the moved instance is still a MOTORCYCLE, never silently re-typed');
+    }
+
+    // -------------------------------------------------------------
+    // Section A3 (0.9.669) — a mounted CAR genuinely moves, ticked
+    // through this exact controller, exactly like a BICYCLE/MOTORCYCLE
+    // already does — not merely "canMove() reports true."
+    // -------------------------------------------------------------
+    {
+        const spawn = { x: 100, y: 3, z: 200 };
+        const carCapability = resolveAvatarVehicleMovementCapability(VehicleType.CAR);
+        const instance = new VehicleInstance({ id: 'vehicle:a3', type: VehicleType.CAR, spawnPosition: spawn, position: spawn });
+        const store = fakeVehicleStore([instance]);
+        const controller = new AvatarVehicleMovementController(store);
+
+        let lastResult = null;
+        for (let i = 0; i < 40; i++) {
+            lastResult = controller.tick({
+                seed: DEFAULT_WORLD_SEED,
+                vehicleId: 'vehicle:a3',
+                capability: carCapability,
+                movementIntent: FORWARD_INTENT,
+                currentRotationY: 0,
+                deltaSeconds: 0.05
+            });
+        }
+        assert(lastResult !== null, '4e. a mounted, tracked CAR produces a real tick() result');
+        assert(lastResult.vehicleInstance.position.z > spawn.z, '4f. forward intent moved the CAR forward, exactly like a BICYCLE/MOTORCYCLE');
+        assert(lastResult.vehicleInstance.type === VehicleType.CAR, '4g. the moved instance is still a CAR, never silently re-typed');
     }
 
     // -------------------------------------------------------------
@@ -280,7 +308,7 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const spawn = { x: 5, y: 0, z: 5 };
-        for (const type of [VehicleType.CAR, VehicleType.DRONE]) {
+        for (const type of [VehicleType.DRONE]) {
             const instance = new VehicleInstance({ id: `vehicle:g-${type}`, type, spawnPosition: spawn, position: spawn });
             const store = fakeVehicleStore([instance]);
             const controller = new AvatarVehicleMovementController(store);
