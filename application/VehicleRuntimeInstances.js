@@ -159,6 +159,25 @@ export class VehicleRuntimeInstances {
         return this._instances.get(id) || null;
     }
 
+    // 0.9.700 — the bug fix this milestone's own animal-catching
+    // integration test found: `discard()`'s own exclusion (see this
+    // file's own header, "REMOVAL IS KEYED...") was only ever consulted
+    // BY sync() — nothing stopped a caller who builds its own candidate
+    // list some OTHER way (application/AvatarVehicleInteractionController.js's
+    // own `_nearbyVehicles()`, which merges `nearby()`'s tracked reads
+    // with a RAW `vehiclePresenceInRegion()` query, never calling
+    // sync() itself) from still finding a just-stored vehicle as a
+    // "fresh" deterministic candidate the very next tick, since a raw
+    // deterministic query has no memory of discard() ever happening.
+    // Re-mounting it would then re-add the SAME id to inventory on the
+    // next store, crashing `withEntryAdded()`'s own duplicate-id guard.
+    // `isExcluded()` gives every such candidate-building call site a way
+    // to filter a discarded id out for itself, without needing to run a
+    // full sync().
+    isExcluded(id) {
+        return this._excluded.has(id);
+    }
+
     // 0.9.118 — Vehicle Runtime Authority Audit. Every ALREADY-TRACKED
     // VehicleInstance within `radius` of `centerPosition`, measured
     // against each entry's own CURRENT `position` — never a spawn-

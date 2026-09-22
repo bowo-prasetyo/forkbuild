@@ -416,7 +416,12 @@ async function runTests() {
         session.setAvatarControlMode(true);
         assert(session.isAvatarControlModeActive() === true, '52. setAvatarControlMode(true) turns it on');
         assert(session.avatarKeyDown('w') === true, '53. W is consumed once control mode is on');
-        assert(session.avatarKeyDown('q') === false, '54. an unrelated key is never consumed, even while control mode is on');
+        // 'z' (not 'q'): 0.9.670 — Avatar Inventory (store/deploy) —
+        // claimed 'q' for vehicle store/deploy, so it is no longer an
+        // "unrelated" key at the session level (see
+        // application/AvatarVehicleInteractionController.js#_setKey) —
+        // 'z' remains unclaimed by every controller this session wires.
+        assert(session.avatarKeyDown('z') === false, '54. an unrelated key is never consumed, even while control mode is on');
 
         // Turning control mode off releases the held key immediately —
         // proven by ticking afterward and seeing no movement at all.

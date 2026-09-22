@@ -10,6 +10,7 @@ import { buildNaturalFeatureTileMesh } from './NaturalFeatureTileMesh.js';
 import { buildWaterTileMesh } from './WaterTileMesh.js';
 import { buildWildlifeTileMesh } from './WildlifeTileMesh.js';
 import { terrainHeightAt as computeTerrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
 
 const SKY_COLOR = 0x87ceeb;
 
@@ -114,9 +115,15 @@ export class Renderer {
         // for why animals are recomputed per tile, never persisted, the
         // identical "sampled, never stored" discipline vegetation already
         // established.
+        // 0.9.700 — Animal Catching. `_caughtAnimalIds` is the live Set
+        // buildWildlifeTileMesh() reads through this closure on every
+        // (re)build of every wildlife tile, forever after — see
+        // markAnimalCaught() below for the only place anything is ever
+        // added to it.
+        this._caughtAnimalIds = new Set();
         this._wildlifeStreaming = new TerrainStreamingController(
             this._sceneManager,
-            (tx, tz) => buildWildlifeTileMesh(tx, tz, DEFAULT_WORLD_SEED)
+            (tx, tz) => buildWildlifeTileMesh(tx, tz, DEFAULT_WORLD_SEED, TERRAIN_TILE_SIZE, this._caughtAnimalIds)
         );
         this._wildlifeStreaming.update(
             this._cameraController.camera.position.x,
@@ -164,6 +171,24 @@ export class Renderer {
 
     resetCameraView() {
         this._cameraController.resetView();
+    }
+
+    // 0.9.700 — Animal Catching. Marks `animalId` permanently excluded
+    // from every FUTURE wildlife tile this renderer ever builds (via
+    // `this._caughtAnimalIds`, read by the wildlife streaming
+    // controller's own tileFactory closure above), then immediately
+    // rebuilds whichever ALREADY-LOADED tile `position` falls in — see
+    // TerrainStreamingController#invalidateTile()'s own header for why
+    // this is a single, targeted rebuild, never a full restream. A
+    // caller (application/WorldNavigationSession.js, once per catch
+    // event) hands this the exact position the animal stood at; this
+    // method has no opinion on WHERE an animal came from or WHY it was
+    // caught, only on making it stop rendering.
+    markAnimalCaught(animalId, position) {
+        this._caughtAnimalIds.add(animalId);
+        const tx = Math.floor(position.x / TERRAIN_TILE_SIZE);
+        const tz = Math.floor(position.z / TERRAIN_TILE_SIZE);
+        this._wildlifeStreaming.invalidateTile(tx, tz);
     }
 
     // 0.2.76 — deterministic ground elevation at world (x, z). A thin

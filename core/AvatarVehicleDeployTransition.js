@@ -1,6 +1,6 @@
 import { isValidAvatarVehicleMount } from './AvatarVehicleMount.js';
 import { AvatarVehicleDeployIntent, isValidAvatarVehicleDeployIntent } from './AvatarVehicleDeployIntent.js';
-import { AvatarInventory, withEntryRemoved } from './AvatarInventory.js';
+import { AvatarInventory, InventoryEntryKind, withEntryRemoved } from './AvatarInventory.js';
 
 // 0.9.670 — Avatar Vehicle Deploy Transition.
 //
@@ -89,7 +89,15 @@ export function deriveAvatarVehicleDeployTransition({
     if (deployIntent !== AvatarVehicleDeployIntent.DEPLOY) {
         return unchanged;
     }
-    const entry = currentInventory.resolve(selectedEntryId);
+    // 0.9.700 UPDATE — scoped to InventoryEntryKind.VEHICLE. Once
+    // core/AvatarInventory.js can also carry ANIMAL entries (0.9.700 —
+    // Animal Catching), an unscoped resolve() could silently deploy the
+    // avatar's own most-recently-CAUGHT animal instead of a vehicle —
+    // see that file's own header, "A shared inventory, not two parallel
+    // ones." Passing the kind here means this file's own default
+    // behavior (mostRecent() among vehicles only) is unchanged from
+    // 0.9.670, before ANIMAL ever existed.
+    const entry = currentInventory.resolve(selectedEntryId, InventoryEntryKind.VEHICLE);
     if (entry === null) {
         return unchanged;
     }

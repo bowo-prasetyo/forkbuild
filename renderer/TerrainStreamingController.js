@@ -77,6 +77,30 @@ export class TerrainStreamingController {
         }
     }
 
+    // 0.9.700 — Animal Catching. Forces a single already-loaded tile to
+    // be rebuilt right now — a no-op for a tile that isn't currently
+    // loaded (nothing to invalidate; the NEXT time it streams in, it
+    // will already reflect whatever changed, via the tileFactory itself,
+    // with no help from this method). Every other tile is left
+    // completely untouched — this is deliberately NOT a full rebuild,
+    // the same restraint update()'s own "never a full rebuild" comment
+    // already establishes for the ordinary streaming path. Exists for
+    // exactly one caller today: renderer/Renderer.js#markAnimalCaught(),
+    // once a caught animal needs to disappear from its own tile
+    // immediately rather than waiting for the avatar to wander away and
+    // back.
+    invalidateTile(tx, tz) {
+        const key = tileKey(tx, tz);
+        const entry = this._loadedTiles.get(key);
+        if (!entry) {
+            return;
+        }
+        this._sink.remove(entry.object);
+        const object = this._tileFactory(tx, tz);
+        this._sink.add(object);
+        this._loadedTiles.set(key, { tx, tz, object });
+    }
+
     dispose() {
         for (const entry of this._loadedTiles.values()) {
             this._sink.remove(entry.object);

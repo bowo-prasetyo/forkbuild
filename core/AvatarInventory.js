@@ -1,4 +1,5 @@
 import { VehicleType, isValidVehicleType } from './VehicleType.js';
+import { ANIMAL_SPECIES } from './WildlifeField.js';
 
 // 0.9.670 — Avatar Inventory.
 //
@@ -9,24 +10,46 @@ import { VehicleType, isValidVehicleType } from './VehicleType.js';
 // an avatar is holding, independent of the world.
 //
 // NAMED `AvatarInventory`, NOT `AvatarVehicleInventory`, ON PURPOSE.
-// Vehicles are the first, and for now the only, thing this inventory
-// ever holds — but the shape below (`kind` + `type` + `id`) is generic
-// rather than vehicle-specific, so a future entry for a caught animal
-// (a sheep, a rabbit) needs no change to this file's own contract, only
-// a new `InventoryEntryKind` value once an actual catch/store consumer
-// exists for it — the same "don't invent a vocabulary before a real seam
-// needs it" discipline core/VehicleType.js's own header already models:
-// `InventoryEntryKind.ANIMAL` is deliberately NOT defined here yet,
-// exactly like that file only ever adds one more vehicle type at a time,
-// each time an actual placement/rendering/movement path is ready for it.
+// Vehicles were the first thing this inventory ever held — the shape
+// below (`kind` + `type` + `id`) was deliberately generic rather than
+// vehicle-specific so a caught animal could slot in later with no
+// change to this file's own contract, only a new `InventoryEntryKind`
+// value once an actual catch consumer existed for it. 0.9.700 — Animal
+// Catching — is that consumer: `InventoryEntryKind.ANIMAL` now exists
+// alongside VEHICLE, its `type` drawn from
+// core/WildlifeField.js#ANIMAL_SPECIES (DEER/RABBIT) rather than a new,
+// duplicate species vocabulary — the same "reuse the vocabulary that
+// already exists" discipline this codebase applies everywhere else.
 //
 //   AvatarInventoryEntry { id, kind, type } — one carried thing.
 //     id   — a stable identity string for the specific thing being
-//            carried (for a stored vehicle, its 0.9.74 vehicle id).
+//            carried (a vehicle's 0.9.74 id, or an animal's
+//            core/AnimalIdentity.js id).
 //     kind — which closed InventoryEntryKind vocabulary `type` belongs
-//            to. Only InventoryEntryKind.VEHICLE exists today.
-//     type — the specific type within that kind (for VEHICLE, a
-//            core/VehicleType.js value).
+//            to: VEHICLE or ANIMAL.
+//     type — the specific type within that kind (a core/VehicleType.js
+//            value for VEHICLE, an ANIMAL_SPECIES value for ANIMAL).
+//
+// A SHARED INVENTORY, NOT TWO PARALLEL ONES — AND WHY THAT MEANS EVERY
+// SELECTION QUERY BELOW TAKES AN OPTIONAL `kind` FILTER. One avatar
+// carries one backpack, vehicles and animals together — never a second
+// `AvatarInventory` instance per kind, which would just be this same
+// problem with extra steps. But `mostRecent()`/`resolve()`/`next()`/
+// `previous()` (below) all exist to answer "what would deploy/release
+// right now" for ONE PARTICULAR consumer (0.9.670's own vehicle
+// deploy, this milestone's own animal release) — and once a SECOND kind
+// can be added to the SAME list, an unscoped "most recent" would
+// silently point at whichever kind was stored last, regardless of which
+// one the caller actually meant. So every read that answers "what's
+// selected" (never the whole-inventory reads — `entries`/`size`/`has`/
+// `get`, which stay kind-agnostic on purpose, for a future "show
+// everything I'm carrying" screen) takes an optional `kind`: omitted
+// (`null`), it behaves exactly as 0.9.670 always did, scoped over every
+// entry; passed, it is scoped to that one kind only, so
+// core/AvatarVehicleDeployTransition.js and its own cycle-selection keys
+// can never resolve, cycle to, or accidentally deploy an ANIMAL entry,
+// and the mirror-image core/AvatarAnimalReleaseTransition.js can never
+// touch a VEHICLE one.
 //
 //   AvatarInventory — an ordered, immutable list of entries, unique by
 //   id. Ordering matters only for `mostRecent()` (below) — a LIFO "what
@@ -60,15 +83,20 @@ function isNonEmptyString(value) {
     return typeof value === 'string' && value.length > 0;
 }
 
-// The one closed vocabulary this file defines for `kind` — see this
-// file's own header, "Named AvatarInventory, not AvatarVehicleInventory,
-// on purpose," for why only VEHICLE exists today.
+// The closed vocabulary this file defines for `kind` — see this file's
+// own header, "Named AvatarInventory, not AvatarVehicleInventory, on
+// purpose."
 export const InventoryEntryKind = Object.freeze({
-    VEHICLE: 'vehicle'
+    VEHICLE: 'vehicle',
+    ANIMAL: 'animal'
 });
 
 export function isValidInventoryEntryKind(value) {
     return Object.values(InventoryEntryKind).includes(value);
+}
+
+function isValidAnimalSpecies(value) {
+    return Object.values(ANIMAL_SPECIES).includes(value);
 }
 
 export class AvatarInventoryEntry {
@@ -82,6 +110,11 @@ export class AvatarInventoryEntry {
         if (kind === InventoryEntryKind.VEHICLE) {
             if (!isValidVehicleType(type) || type === VehicleType.NONE) {
                 throw new Error(`AvatarInventoryEntry of kind VEHICLE requires a real VehicleType, got ${JSON.stringify(type)}`);
+            }
+        }
+        if (kind === InventoryEntryKind.ANIMAL) {
+            if (!isValidAnimalSpecies(type)) {
+                throw new Error(`AvatarInventoryEntry of kind ANIMAL requires a real ANIMAL_SPECIES, got ${JSON.stringify(type)}`);
             }
         }
         this._id = id;
@@ -131,73 +164,99 @@ export class AvatarInventory {
         return this._entries.some((entry) => entry.id === id);
     }
 
-    // The entry that would be deployed right now — the most recently
-    // added one still present, or `null` when nothing is carried. See
-    // this file's own header, "Ordering matters only for mostRecent()."
-    mostRecent() {
-        return this._entries.length > 0 ? this._entries[this._entries.length - 1] : null;
-    }
-
     // 0.9.671 — Avatar Inventory Cycle Selection. The specific entry
     // matching `id`, or `null` when nothing carried has that id.
+    // Deliberately kind-agnostic, like `entries`/`size`/`has` — `id`
+    // alone already uniquely names an entry, so there is nothing for a
+    // `kind` filter to narrow here.
     get(id) {
         return this._entries.find((entry) => entry.id === id) || null;
     }
 
-    // 0.9.671 — the entry a deploy acts on RIGHT NOW given a selection:
-    // the entry matching `id` if it is still carried, or mostRecent() as
-    // the default whenever `id` is `null` OR no longer present (e.g. a
-    // stale selection left over from an entry that has since been
-    // deployed by other means). core/AvatarVehicleDeployTransition.js's
-    // own deploy resolution and
-    // application/AvatarVehicleInteractionController.js's own
-    // storeInteractionState() both read this SAME method — never two
-    // separately-written copies of the same fallback rule.
-    resolve(id) {
+    // 0.9.700 — Animal Catching. The entries of one kind only, in
+    // carried order — the pool every selection method below scopes
+    // itself to when a caller passes a `kind`. Exposed directly too, for
+    // a caller (ordinarily a future "what am I carrying" UI, or a
+    // carried-count readout) that wants the filtered list itself rather
+    // than a single selected entry.
+    entriesOf(kind) {
+        return this._entries.filter((entry) => entry.kind === kind);
+    }
+
+    // See this file's own header, "A shared inventory, not two parallel
+    // ones," for why every method below takes an optional `kind`.
+    _pool(kind) {
+        return kind === null ? this._entries : this.entriesOf(kind);
+    }
+
+    // The entry that would be deployed/released right now — the most
+    // recently added one still present WITHIN `kind` (or across every
+    // kind when `kind` is omitted), or `null` when nothing qualifying is
+    // carried.
+    mostRecent(kind = null) {
+        const pool = this._pool(kind);
+        return pool.length > 0 ? pool[pool.length - 1] : null;
+    }
+
+    // 0.9.671 — the entry a deploy/release acts on RIGHT NOW given a
+    // selection: the entry matching `id` if it is still carried AND
+    // (when `kind` is given) actually of that kind, or mostRecent(kind)
+    // as the default whenever `id` is `null`, no longer present, or
+    // belongs to the WRONG kind (e.g. a vehicle's own stale selection id
+    // handed in while resolving for ANIMAL). core/AvatarVehicleDeployTransition.js
+    // and core/AvatarAnimalReleaseTransition.js each read this SAME
+    // method, scoped to their own kind — never two separately-written
+    // copies of the same fallback rule.
+    resolve(id, kind = null) {
         if (id !== null) {
             const found = this.get(id);
-            if (found) {
+            if (found && (kind === null || found.kind === kind)) {
                 return found;
             }
         }
-        return this.mostRecent();
+        return this.mostRecent(kind);
     }
 
-    // The zero-based array position `resolve(id)` would answer to, used
-    // internally by next()/previous() as the shared starting point for
-    // "one step from wherever the current (possibly absent/default)
-    // selection is." Private to this file — a caller never needs a raw
-    // index, only the entry next()/previous() return.
-    _selectionIndex(id) {
+    // The zero-based position within `pool` that resolve()'s own
+    // fallback rule would answer to, used internally by next()/
+    // previous() as the shared starting point for "one step from
+    // wherever the current (possibly absent/default) selection is."
+    // Private to this file — a caller never needs a raw index, only the
+    // entry next()/previous() return.
+    _selectionIndex(pool, id) {
         if (id !== null) {
-            const index = this._entries.findIndex((entry) => entry.id === id);
+            const index = pool.findIndex((entry) => entry.id === id);
             if (index !== -1) {
                 return index;
             }
         }
-        return this._entries.length - 1;
+        return pool.length - 1;
     }
 
     // 0.9.671 — Avatar Inventory Cycle Selection. The entry one step
-    // NEWER than `id` in carried order, wrapping from the most recent
-    // back around to the oldest — or `null` when nothing is carried.
-    // `id: null` (no explicit selection) starts from the same implicit
-    // "most recent" position resolve(null) already treats as default.
-    next(id) {
-        if (this._entries.length === 0) {
+    // NEWER than `id` within `kind`'s own carried order, wrapping from
+    // the most recent back around to the oldest — or `null` when
+    // nothing qualifying is carried. `id: null` (no explicit selection)
+    // starts from the same implicit "most recent" position resolve()
+    // already treats as default; an `id` belonging to a DIFFERENT kind
+    // than requested is treated exactly like a stale/absent one.
+    next(id, kind = null) {
+        const pool = this._pool(kind);
+        if (pool.length === 0) {
             return null;
         }
-        return this._entries[(this._selectionIndex(id) + 1) % this._entries.length];
+        return pool[(this._selectionIndex(pool, id) + 1) % pool.length];
     }
 
     // The mirror image of next(): one step OLDER, wrapping from the
-    // oldest back around to the most recent.
-    previous(id) {
-        if (this._entries.length === 0) {
+    // oldest back around to the most recent, within the same `kind`.
+    previous(id, kind = null) {
+        const pool = this._pool(kind);
+        if (pool.length === 0) {
             return null;
         }
-        const index = this._selectionIndex(id);
-        return this._entries[(index - 1 + this._entries.length) % this._entries.length];
+        const index = this._selectionIndex(pool, id);
+        return pool[(index - 1 + pool.length) % pool.length];
     }
 
     toJSON() {
@@ -249,9 +308,10 @@ export function withEntryRemoved(inventory, id) {
     return new AvatarInventory(inventory.entries.filter((entry) => entry.id !== id));
 }
 
-// Deliberately not yet: InventoryEntryKind.ANIMAL or any animal-specific
-// validation (see this file's own header); a capacity limit; entry
-// reordering beyond append-only + remove-by-id; persistence; networking;
-// UI formatting of any kind (a future inventory panel's own job, reading
-// `entries`/`mostRecent()` exactly like ui/components/VehicleInteractionPrompt.js
-// already reads AvatarVehicleInteractionController#vehicleInteractionState()).
+// Deliberately not yet: a THIRD InventoryEntryKind (no consumer has
+// asked for one); a capacity limit; entry reordering beyond
+// append-only + remove-by-id; persistence; networking; UI formatting of
+// any kind (a future inventory panel's own job, reading
+// `entries`/`entriesOf()`/`mostRecent()` exactly like
+// ui/components/VehicleInteractionPrompt.js already reads
+// AvatarVehicleInteractionController#vehicleInteractionState()).

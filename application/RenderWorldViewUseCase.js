@@ -580,6 +580,14 @@ export class RenderWorldViewUseCase {
                     vehicleFieldRenderer.removeVehicle(id);
                 }
             },
+            // 0.9.700 — Animal Catching. A thin pass-through to
+            // renderer.markAnimalCaught() — see that method's own header
+            // for what it actually does. This facade adds no policy of
+            // its own, the identical "glue only" posture every other
+            // entry here already keeps.
+            markAnimalCaught: (animalId, position) => {
+                renderer.markAnimalCaught(animalId, position);
+            },
             // A pure client rendering preference, exactly like
             // setLocalAvatarVisible — never touches presence sync or
             // the known-remote-avatar set, only which already-built

@@ -98,6 +98,11 @@ function buildPreset({ bodyRadiusX, bodyRadiusY, bodyRadiusZ, headRadius, headHe
     };
 }
 
+// Shared, frozen, never mutated — a caller with nothing caught yet
+// passes no argument at all, and this file never allocates a fresh
+// empty Set per tile just to have something to call .has() on.
+const EMPTY_EXCLUSION_SET = new Set();
+
 const _position = new THREE.Vector3();
 const _quaternion = new THREE.Quaternion();
 const _euler = new THREE.Euler();
@@ -147,11 +152,19 @@ function buildSpeciesMeshes(preset, animals) {
 // A tile groups its animals by species and builds one body/head
 // InstancedMesh PAIR PER SPECIES present — still exactly two draw calls
 // per species, never one draw call per animal.
-export function buildWildlifeTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE) {
+// 0.9.700 — Animal Catching. `excludedAnimalIds` (optional, defaults to
+// an empty set) is the ONE new parameter this milestone adds — a caught
+// animal's own core/AnimalIdentity.js id, so this tile simply never
+// builds geometry for it, the same "renderer glue reads whatever the
+// application layer already decided" split
+// application/VehicleRuntimeInstances.js's own render sync already
+// establishes for vehicles. This file still computes no catch/exclusion
+// policy of its own — it only ever filters a set it is handed.
+export function buildWildlifeTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, excludedAnimalIds = EMPTY_EXCLUSION_SET) {
     const minX = tx * tileSize;
     const minZ = tz * tileSize;
     const animals = wildlifeInRegion(seed, minX, minZ, minX + tileSize, minZ + tileSize)
-        .filter((animal) => animal.type === WILDLIFE_FEATURE_TYPE.ANIMAL);
+        .filter((animal) => animal.type === WILDLIFE_FEATURE_TYPE.ANIMAL && !excludedAnimalIds.has(animal.id));
 
     const group = new THREE.Group();
     if (animals.length === 0) return group;

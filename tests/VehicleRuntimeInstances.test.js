@@ -204,6 +204,31 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
+    // Section G2 — 0.9.700: discard()/isExcluded(). Added alongside
+    // application/AvatarAnimalInteractionController.js's own integration
+    // test, which found the real bug isExcluded() exists to let a
+    // candidate-building call site fix for itself: a discarded id must
+    // never resurface as a "fresh" deterministic candidate anywhere,
+    // not only inside sync() — see isExcluded()'s own header.
+    // -------------------------------------------------------------
+    {
+        const store = new VehicleRuntimeInstances();
+        const spawnCenter = { x: realVehicle.position.x, z: realVehicle.position.z };
+        assert(store.isExcluded(REAL_VEHICLE_ID) === false, '20b. nothing is excluded on a brand-new store');
+        store.sync(DEFAULT_WORLD_SEED, spawnCenter);
+        assert(store.get(REAL_VEHICLE_ID) !== null, '20c. sanity: tracked after sync()');
+        store.discard(REAL_VEHICLE_ID);
+        assert(store.get(REAL_VEHICLE_ID) === null, '20d. discard() removes it from the tracked map immediately');
+        assert(store.isExcluded(REAL_VEHICLE_ID) === true, '20e. isExcluded() now reports it, for a caller that never calls sync() at all');
+        assert(!store.sync(DEFAULT_WORLD_SEED, spawnCenter).some((v) => v.id === REAL_VEHICLE_ID),
+            '20f. and sync() itself still honors the exclusion too — the two never disagree');
+        store.discard('never-tracked-id');
+        assert(store.isExcluded('never-tracked-id') === true, '20g. discard() of an id this store never tracked still marks it excluded — safe to call, no throw');
+        store.clear();
+        assert(store.isExcluded(REAL_VEHICLE_ID) === false, '20h. clear() resets the exclusion set too, not just the tracked map');
+    }
+
+    // -------------------------------------------------------------
     // Section H — architectural regression.
     // -------------------------------------------------------------
     {

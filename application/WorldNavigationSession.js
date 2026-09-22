@@ -34,6 +34,9 @@ import { AvatarWaterConstraint } from './AvatarWaterConstraint.js';
 import { AvatarWildlifeConstraint } from './AvatarWildlifeConstraint.js';
 import { AvatarVehicleInteractionController } from './AvatarVehicleInteractionController.js';
 import { VehicleRuntimeInstances } from './VehicleRuntimeInstances.js';
+import { AvatarAnimalInteractionController } from './AvatarAnimalInteractionController.js';
+import { AnimalRuntimeInstances } from './AnimalRuntimeInstances.js';
+import { AvatarInventoryStore } from './AvatarInventoryStore.js';
 import { AvatarVehicleMovementController } from './AvatarVehicleMovementController.js';
 import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
 import { isValidVehicleSteeringIntent, createVehicleSteeringIntent, VehicleSteeringIntent } from '../core/VehicleSteeringIntent.js';
@@ -594,6 +597,11 @@ export class WorldNavigationSession {
 	    // session is the only place that reads from one and writes to the
 	    // other, exactly like every other composition in this class.
 	    this._avatarVehicleInteractionController = null;
+	    // 0.9.700 — Animal Catching. Built alongside
+	    // `_avatarVehicleInteractionController` above, in _setupLocalAvatar()
+	    // — a catch/release affordance is meaningless without an avatar to
+	    // do the catching.
+	    this._avatarAnimalInteractionController = null;
 	    // 0.9.116 — Mounted Vehicle Movement. The direct structural twin
 	    // of `_avatarMovementController` above, one layer removed: built
 	    // alongside it in _setupLocalAvatar() (a mounted vehicle's
@@ -990,6 +998,24 @@ export class WorldNavigationSession {
         // _avatarVehicleMovementController above once an avatar exists
         // to mount something.
         this._vehicleRuntimeInstances = new VehicleRuntimeInstances();
+        // 0.9.700 — Animal Catching. The animal-side twin of
+        // `_vehicleRuntimeInstances` above — see
+        // application/AnimalRuntimeInstances.js's own header. Also
+        // built unconditionally, for the identical reason.
+        this._animalRuntimeInstances = new AnimalRuntimeInstances();
+        // 0.9.700 — the ONE AvatarInventory owner both
+        // `_avatarVehicleInteractionController` and
+        // `_avatarAnimalInteractionController` (built below, once a
+        // local avatar exists) are handed — see
+        // application/AvatarInventoryStore.js's own header for why
+        // ownership moved out of either controller. Built here,
+        // unconditionally, so it exists even for the brief window before
+        // either controller does.
+        this._avatarInventoryStore = new AvatarInventoryStore();
+        // 0.9.700 — Animal Catching. See _setupWildlifeExclusionSync()
+        // below, the identical "own subscription, own field" shape
+        // `_vehicleRenderFrameSubscription` above already establishes.
+        this._wildlifeExclusionSyncFrameSubscription = null;
     }
 
     // 0.2.97 — the ONE place a CommandHistory ever enters
@@ -1063,6 +1089,7 @@ export class WorldNavigationSession {
         this._setupLocalAvatar();
         this._setupCameraFocusAnimation();
         this._setupVehicleRendering();
+        this._setupWildlifeExclusionSync();
     }
 
     // 0.9.115 — Vehicle Rendering. Deliberately independent of
@@ -1115,6 +1142,33 @@ export class WorldNavigationSession {
                 return;
             }
             this._session.syncVehicles(this._vehicleRuntimeInstances.sync(this.getWorldSeed(), position));
+        });
+    }
+
+    // 0.9.700 — Animal Catching. Drains
+    // `_animalRuntimeInstances.drainRecentlyCaught()` once per render
+    // frame and forwards each `{ id, position }` pair to the render
+    // facade's own `markAnimalCaught()` — a thin bridge from "the
+    // avatar-animal controller just caught something" (an EVENT, fired
+    // wherever tick() happens to run) to "the renderer should stop
+    // drawing it" (this file's own frame loop), the same
+    // event-queue-drained-by-the-render-frame shape every other
+    // rendering seam in this file already uses rather than calling into
+    // the renderer directly from inside a controller's own tick(). Most
+    // frames drain nothing at all — the queue is normally empty — so
+    // this is a cheap no-op the overwhelming majority of the time.
+    // Absent entirely when the render facade doesn't support
+    // markAnimalCaught (a minimal test double), the identical
+    // graceful-absence posture `_setupVehicleRendering()` already takes
+    // for its own missing syncVehicles().
+    _setupWildlifeExclusionSync() {
+        if (typeof this._session.onAnimationFrame !== 'function' || typeof this._session.markAnimalCaught !== 'function') {
+            return;
+        }
+        this._wildlifeExclusionSyncFrameSubscription = this._session.onAnimationFrame(() => {
+            for (const { id, position } of this._animalRuntimeInstances.drainRecentlyCaught()) {
+                this._session.markAnimalCaught(id, position);
+            }
         });
     }
 
@@ -1336,7 +1390,26 @@ export class WorldNavigationSession {
         // this vehicle right now."
         this._avatarVehicleInteractionController = new AvatarVehicleInteractionController(
             this._avatarPresenceSession,
-            { vehicleRuntimeInstances: this._vehicleRuntimeInstances }
+            {
+                vehicleRuntimeInstances: this._vehicleRuntimeInstances,
+                // 0.9.700 — the SAME AvatarInventoryStore
+                // `_avatarAnimalInteractionController` (below) is handed —
+                // see that field's own header for why ownership moved
+                // out of either controller.
+                avatarInventoryStore: this._avatarInventoryStore
+            }
+        );
+        // 0.9.700 — Animal Catching. Built alongside the vehicle
+        // controller above, sharing this session's own
+        // `_animalRuntimeInstances` and `_avatarInventoryStore` — the
+        // identical "one store, several readers/writers" shape this
+        // constructor already establishes for vehicles.
+        this._avatarAnimalInteractionController = new AvatarAnimalInteractionController(
+            this._avatarPresenceSession,
+            {
+                animalRuntimeInstances: this._animalRuntimeInstances,
+                avatarInventoryStore: this._avatarInventoryStore
+            }
         );
         // 0.9.116 — Mounted Vehicle Movement. Built alongside the mount/
         // dismount controller above, sharing this session's own
@@ -1376,6 +1449,16 @@ export class WorldNavigationSession {
                 // one-frame mismatch ("mount = bicycle, movement
                 // capability = WALK") would otherwise be observable.
                 this._avatarVehicleInteractionController.tick();
+                // 0.9.700 — Animal Catching. Ticked alongside the
+                // mount/dismount controller above, on the identical
+                // "held-key poll, once per frame" shape — see
+                // application/AvatarAnimalInteractionController.js#tick()'s
+                // own header. No movement-capability composition
+                // follows this one (unlike the vehicle controller,
+                // catching an animal never changes how the avatar
+                // moves), so it needs no special ordering relative to
+                // AvatarMovementController below.
+                this._avatarAnimalInteractionController.tick();
                 // 0.9.85 — resolved AFTER mount/dismount above and
                 // BEFORE movement below: the local avatar's current
                 // AvatarVehicleMount, looked up down to a VehicleType by
@@ -2227,6 +2310,18 @@ export class WorldNavigationSession {
             : null;
     }
 
+    // 0.9.700 — Animal Catching. The local avatar's current catch/
+    // release AFFORDANCE — a plain pass-through to
+    // application/AvatarAnimalInteractionController.js#catchInteractionState(),
+    // the identical posture avatarStoreInteractionState() immediately
+    // above already takes for its own sibling controller. Returns
+    // `null` when no local avatar exists at all.
+    avatarAnimalInteractionState() {
+        return this._avatarAnimalInteractionController
+            ? this._avatarAnimalInteractionController.catchInteractionState()
+            : null;
+    }
+
     // 0.9.127 — Vehicle Steering Integration Audit. The ONE way
     // `_vehicleSteeringIntent` (see that field's own constructor comment)
     // is ever set — a plain, programmatic setter, deliberately never a
@@ -2306,6 +2401,10 @@ export class WorldNavigationSession {
         if (!this._avatarControlModeActive && this._avatarVehicleInteractionController) {
             this._avatarVehicleInteractionController.releaseAll();
         }
+        // 0.9.700 — the same reasoning, for the catch/release key ('F').
+        if (!this._avatarControlModeActive && this._avatarAnimalInteractionController) {
+            this._avatarAnimalInteractionController.releaseAll();
+        }
         // 0.9.96 — the direct structural twin of the two releases above,
         // for the brake key. UNLIKE `_continuousMovementIntent`/
         // `_continuousMovementMode` (deliberately left untouched here —
@@ -2353,6 +2452,11 @@ export class WorldNavigationSession {
         if (this._avatarVehicleInteractionController) {
             this._avatarVehicleInteractionController.releaseAll();
         }
+        // 0.9.700 — same "release keys without touching the mode" seam,
+        // extended to the catch/release key.
+        if (this._avatarAnimalInteractionController) {
+            this._avatarAnimalInteractionController.releaseAll();
+        }
         // 0.9.96 — same "release keys without touching the mode" seam,
         // extended to the brake key — see setAvatarControlMode()'s own
         // 0.9.96 comment for why braking needs an explicit forced reset
@@ -2394,6 +2498,13 @@ export class WorldNavigationSession {
         const vehicleInteractionConsumed = this._avatarVehicleInteractionController
             ? this._avatarVehicleInteractionController.keyDown(key)
             : false;
+        // 0.9.700 — same "tried independently" posture as the vehicle
+        // interaction key above: 'F' is not a movement or vehicle key,
+        // so neither controller above ever recognizes it — see
+        // application/AvatarAnimalInteractionController.js#keyDown.
+        const animalInteractionConsumed = this._avatarAnimalInteractionController
+            ? this._avatarAnimalInteractionController.keyDown(key)
+            : false;
         // 0.9.96 — same "tried independently" posture as the interaction
         // key above: Control is not a movement key either, so neither
         // controller above ever recognizes it — see
@@ -2404,7 +2515,7 @@ export class WorldNavigationSession {
         // either, so neither controller above ever recognizes them — see
         // `_processVehicleSteeringInput()`'s own header, below.
         const vehicleSteeringConsumed = this._processVehicleSteeringInput(key, 'keydown');
-        return movementConsumed || vehicleInteractionConsumed || vehicleBrakingConsumed || vehicleSteeringConsumed;
+        return movementConsumed || vehicleInteractionConsumed || animalInteractionConsumed || vehicleBrakingConsumed || vehicleSteeringConsumed;
     }
 
     avatarKeyUp(key) {
@@ -2433,6 +2544,12 @@ export class WorldNavigationSession {
         const vehicleInteractionConsumed = this._avatarVehicleInteractionController
             ? this._avatarVehicleInteractionController.keyUp(key)
             : false;
+        // 0.9.700 — same "always forwarded" posture as movement's/
+        // vehicle interaction's own keyUp above, for the identical
+        // reason.
+        const animalInteractionConsumed = this._avatarAnimalInteractionController
+            ? this._avatarAnimalInteractionController.keyUp(key)
+            : false;
         // 0.9.96 — same "always forwarded" posture as movement's/
         // interaction's own keyUp above, for the identical reason: a
         // Control release that arrives after control mode was already
@@ -2445,7 +2562,7 @@ export class WorldNavigationSession {
         // already switched off must still clear the steering hold bit
         // rather than leaving it stale.
         const vehicleSteeringConsumed = this._processVehicleSteeringInput(key, 'keyup');
-        return movementConsumed || vehicleInteractionConsumed || vehicleBrakingConsumed || vehicleSteeringConsumed;
+        return movementConsumed || vehicleInteractionConsumed || animalInteractionConsumed || vehicleBrakingConsumed || vehicleSteeringConsumed;
     }
 
     // 0.9.66 — Continuous Movement Controller Integration. The ONE
@@ -7242,6 +7359,7 @@ export class WorldNavigationSession {
         }
         this._avatarMovementController = null;
         this._avatarVehicleInteractionController = null;
+        this._avatarAnimalInteractionController = null;
         this._avatarVehicleMovementController = null;
         this._vehicleSteeringIntent = null;
         this._avatarControlModeActive = false;
@@ -7270,6 +7388,12 @@ export class WorldNavigationSession {
         if (this._vehicleRenderFrameSubscription) {
             this._vehicleRenderFrameSubscription();
             this._vehicleRenderFrameSubscription = null;
+        }
+        // 0.9.700 — Animal Catching. Mirrors the vehicle render
+        // subscription's own teardown immediately above exactly.
+        if (this._wildlifeExclusionSyncFrameSubscription) {
+            this._wildlifeExclusionSyncFrameSubscription();
+            this._wildlifeExclusionSyncFrameSubscription = null;
         }
         // 0.9.116 — Mounted Vehicle Movement. A fresh start() after this
         // dispose() should behave like a genuinely fresh session for

@@ -11,6 +11,7 @@ import {
     withEntryRemoved
 } from '../core/AvatarInventory.js';
 import { VehicleType } from '../core/VehicleType.js';
+import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
 
 // 0.9.670 — Avatar Inventory, core/AvatarInventory.js.
 //
@@ -23,6 +24,9 @@ import { VehicleType } from '../core/VehicleType.js';
 //              LIFO order
 //   Section F: 0.9.671 — get()/resolve()/next()/previous() cycle
 //              selection primitives
+//   Section G: 0.9.700 — ANIMAL entries + entriesOf()/kind-scoped
+//              mostRecent()/resolve()/next()/previous() — a shared
+//              inventory that never lets one kind bleed into another
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -34,10 +38,12 @@ function runTests() {
     // -------------------------------------------------------------
     {
         assert(InventoryEntryKind.VEHICLE === 'vehicle', '1. InventoryEntryKind.VEHICLE is "vehicle"');
+        assert(InventoryEntryKind.ANIMAL === 'animal', '1b. InventoryEntryKind.ANIMAL is "animal" (0.9.700)');
         assert(Object.isFrozen(InventoryEntryKind), '2. InventoryEntryKind is frozen');
-        assert(Object.keys(InventoryEntryKind).length === 1, '3. InventoryEntryKind has exactly one value today — no ANIMAL yet');
+        assert(Object.keys(InventoryEntryKind).length === 2, '3. InventoryEntryKind has exactly two values — VEHICLE and ANIMAL');
         assert(isValidInventoryEntryKind(InventoryEntryKind.VEHICLE), '4. VEHICLE is valid');
-        assert(!isValidInventoryEntryKind('animal'), '5. an unrelated string is not valid');
+        assert(isValidInventoryEntryKind(InventoryEntryKind.ANIMAL), '4b. ANIMAL is valid');
+        assert(!isValidInventoryEntryKind('reptile'), '5. an unrelated string is not valid');
         assert(!isValidInventoryEntryKind(undefined), '6. undefined is not valid');
     }
 
@@ -73,6 +79,14 @@ function runTests() {
         let threw = false;
         try { createAvatarInventoryEntry({ id: 'x', kind: InventoryEntryKind.VEHICLE, type: 'garbage' }); } catch (e) { threw = true; }
         assert(threw, '15. a VEHICLE entry with an invalid type throws');
+    }
+    {
+        const entry = createAvatarInventoryEntry({ id: 'animal:1:0,0', kind: InventoryEntryKind.ANIMAL, type: ANIMAL_SPECIES.RABBIT });
+        assert(entry.kind === InventoryEntryKind.ANIMAL && entry.type === ANIMAL_SPECIES.RABBIT,
+            '15b. an ANIMAL entry carries a real ANIMAL_SPECIES as its type');
+        let threw = false;
+        try { createAvatarInventoryEntry({ id: 'x', kind: InventoryEntryKind.ANIMAL, type: VehicleType.BICYCLE }); } catch (e) { threw = true; }
+        assert(threw, '15c. an ANIMAL entry with a VehicleType (not an ANIMAL_SPECIES) throws — the two vocabularies are never interchangeable');
     }
     {
         const entry = createAvatarInventoryEntry({ id: 'vehicle:1:0,0', kind: InventoryEntryKind.VEHICLE, type: VehicleType.CAR });
@@ -234,6 +248,55 @@ function runTests() {
         entry = inventory.next(id); id = entry.id;  // a -> b
         entry = inventory.next(id); id = entry.id;  // b -> c
         assert(id === 'c', '62. FLAGSHIP: three next() calls from the default likewise return exactly to c');
+    }
+
+    // -------------------------------------------------------------
+    // Section G — 0.9.700: a shared inventory, kind-scoped queries
+    // -------------------------------------------------------------
+    {
+        const bike = createAvatarInventoryEntry({ id: 'bike', kind: InventoryEntryKind.VEHICLE, type: VehicleType.BICYCLE });
+        const rabbit = createAvatarInventoryEntry({ id: 'rabbit', kind: InventoryEntryKind.ANIMAL, type: ANIMAL_SPECIES.RABBIT });
+        const car = createAvatarInventoryEntry({ id: 'car', kind: InventoryEntryKind.VEHICLE, type: VehicleType.CAR });
+        const deer = createAvatarInventoryEntry({ id: 'deer', kind: InventoryEntryKind.ANIMAL, type: ANIMAL_SPECIES.DEER });
+        // Stored in mixed order: bike, rabbit, car, deer.
+        let inventory = withEntryAdded(withEntryAdded(withEntryAdded(withEntryAdded(
+            emptyAvatarInventory(), bike), rabbit), car), deer);
+
+        assert(inventory.size === 4, '63. all four entries are carried, regardless of kind');
+        assert(inventory.entriesOf(InventoryEntryKind.VEHICLE).length === 2, '64. entriesOf(VEHICLE) finds only the two vehicles');
+        assert(inventory.entriesOf(InventoryEntryKind.ANIMAL).length === 2, '65. entriesOf(ANIMAL) finds only the two animals');
+        assert(inventory.entriesOf(InventoryEntryKind.VEHICLE).every((e) => e.kind === InventoryEntryKind.VEHICLE),
+            '66. entriesOf(VEHICLE) never includes an ANIMAL entry');
+
+        // The most recently added entry overall is `deer` (an animal) —
+        // an unscoped mostRecent()/resolve() would return it, exactly
+        // the bug this milestone's own header warns about.
+        assert(inventory.mostRecent() === deer, '67. unscoped mostRecent() still reflects true LIFO order across kinds');
+        assert(inventory.mostRecent(InventoryEntryKind.VEHICLE) === car, '68. mostRecent(VEHICLE) skips the animal entries and returns the most recent VEHICLE (car), never deer');
+        assert(inventory.mostRecent(InventoryEntryKind.ANIMAL) === deer, '69. mostRecent(ANIMAL) returns the most recent ANIMAL');
+
+        assert(inventory.resolve(null, InventoryEntryKind.VEHICLE) === car, '70. resolve(null, VEHICLE) defaults to the most recent VEHICLE');
+        assert(inventory.resolve('deer', InventoryEntryKind.VEHICLE) === car,
+            '71. resolve() of a real id belonging to the WRONG kind is treated as stale — falls back to mostRecent(VEHICLE), never returns the animal');
+        assert(inventory.resolve('bike', InventoryEntryKind.VEHICLE) === bike, '72. resolve() of a real id of the RIGHT kind returns it');
+
+        // Cycling VEHICLE-only must never land on an ANIMAL entry.
+        assert(inventory.next('car', InventoryEntryKind.VEHICLE) === bike, '73. next(car, VEHICLE) wraps to bike, skipping over the animal entries entirely');
+        assert(inventory.previous('bike', InventoryEntryKind.VEHICLE) === car, '74. previous(bike, VEHICLE) wraps to car, likewise skipping animals');
+        // And the mirror image: cycling ANIMAL-only must never land on a
+        // VEHICLE entry.
+        assert(inventory.next('deer', InventoryEntryKind.ANIMAL) === rabbit, '75. next(deer, ANIMAL) wraps to rabbit, skipping over the vehicle entries entirely');
+        assert(inventory.previous('rabbit', InventoryEntryKind.ANIMAL) === deer, '76. previous(rabbit, ANIMAL) wraps to deer, likewise skipping vehicles');
+
+        // FLAGSHIP: removing every VEHICLE entry never disturbs ANIMAL
+        // queries, and vice versa.
+        inventory = withEntryRemoved(withEntryRemoved(inventory, 'bike'), 'car');
+        assert(inventory.size === 2, '77. FLAGSHIP: only the two animals remain');
+        assert(inventory.entriesOf(InventoryEntryKind.VEHICLE).length === 0, '78. FLAGSHIP: no vehicles remain');
+        assert(inventory.mostRecent(InventoryEntryKind.VEHICLE) === null, '79. FLAGSHIP: mostRecent(VEHICLE) is honestly null, never falling back to an animal');
+        assert(inventory.resolve(null, InventoryEntryKind.VEHICLE) === null, '80. FLAGSHIP: resolve(null, VEHICLE) is likewise null');
+        assert(inventory.next(null, InventoryEntryKind.VEHICLE) === null, '81. FLAGSHIP: next(null, VEHICLE) is likewise null — cycling an empty kind-pool never wraps into a different kind');
+        assert(inventory.mostRecent(InventoryEntryKind.ANIMAL) === deer, '82. FLAGSHIP: ANIMAL queries are completely unaffected by removing every VEHICLE');
     }
 
     console.log('✅ All Avatar Inventory tests passed.');

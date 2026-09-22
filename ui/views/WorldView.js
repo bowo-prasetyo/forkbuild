@@ -39,6 +39,7 @@ import WorldFocusPanel from '../components/WorldFocusPanel.js';
 import WorldEncounterCanvas from '../components/WorldEncounterCanvas.js';
 import OwnPublicationPanel from '../components/OwnPublicationPanel.js';
 import VehicleInteractionPrompt from '../components/VehicleInteractionPrompt.js';
+import AnimalInteractionPrompt from '../components/AnimalInteractionPrompt.js';
 import HistoryTimelinePanel from '../components/HistoryTimelinePanel.js';
 import NotificationHistoryPanel from '../components/NotificationHistoryPanel.js';
 import { CameraPerspective } from '../../core/CameraPerspective.js';
@@ -86,7 +87,7 @@ export default {
         WorldMembersPanel, WorldPresenceIndicator, WorldCollaboratorIndicator,
         WorldWelcomePanel, WorldMapPanel, PlaceNamingPanel,
         GeographicPlaceDirectoryPanel, GeographicPlacePanel, CollapsibleSection,
-        WorldFocusPanel, WorldEncounterCanvas, OwnPublicationPanel, VehicleInteractionPrompt,
+        WorldFocusPanel, WorldEncounterCanvas, OwnPublicationPanel, VehicleInteractionPrompt, AnimalInteractionPrompt,
         HistoryTimelinePanel, NotificationHistoryPanel
     },
     setup() {
@@ -969,6 +970,11 @@ export default {
         // the identical cadence below, since store/deploy needs to feel
         // exactly as responsive as mount/dismount.
         const storeInteractionState = ref(null);
+        // 0.9.700 — Animal Catching. Mirrors storeInteractionState's own
+        // ref immediately above — see
+        // session.avatarAnimalInteractionState()'s own header — polled
+        // on the identical cadence below.
+        const animalInteractionState = ref(null);
         // 0.3.2 — Camera Perspective. Mirrors session.getCameraPerspective()
         // exactly the same way avatarControlMode/followAvatar mirror
         // their own session getters above: this view never decides the
@@ -4525,6 +4531,13 @@ export default {
                     && typeof session.avatarStoreInteractionState === 'function')
                     ? session.avatarStoreInteractionState()
                     : null;
+                // 0.9.700 — Animal Catching. Same gating, same cadence,
+                // same interval as the two above — a third independent
+                // affordance, never a reason for a third interval.
+                animalInteractionState.value = (hasLocalAvatar.value && avatarControlMode.value
+                    && typeof session.avatarAnimalInteractionState === 'function')
+                    ? session.avatarAnimalInteractionState()
+                    : null;
             }, 150);
         });
 
@@ -4603,6 +4616,7 @@ export default {
             followAvatar,
             vehicleInteractionState,
             storeInteractionState,
+            animalInteractionState,
             cameraPerspective,
             CameraPerspective,
             setCameraPerspective,
@@ -5771,6 +5785,7 @@ export default {
                  own header for why it never decides mount/dismount
                  eligibility itself. -->
             <VehicleInteractionPrompt :state="vehicleInteractionState" :store-state="storeInteractionState" />
+            <AnimalInteractionPrompt :state="animalInteractionState" />
             <MetadataEditorDialog
                 v-if="showMetadataEditor"
                 :info="metadataEditTarget"

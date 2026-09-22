@@ -26,6 +26,10 @@ import { VehicleType } from '../core/VehicleType.js';
 //   Section F: 0.9.671 — Cycle Selection. Carry two real, distinct
 //              vehicles, cycle to the OLDER one, and deploy THAT one —
 //              never the most recent — through the real '[' / ']' keys
+//   Section G: 0.9.700 REGRESSION — store a vehicle, then immediately
+//              press E again WITHOUT MOVING: the deterministic query
+//              must never re-offer the just-stored vehicle as a mount
+//              target, or a second store would crash on a duplicate id
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -233,6 +237,34 @@ function runTests() {
         assert(state.canDeploy === true && state.carriedCount === 1 && state.selectedIndex === 1,
             '34. FLAGSHIP: after a deploy, selection resets to the default (most recent of whatever remains) rather than pointing at a now-deployed entry');
         assert(state.vehicleType === secondVehicle.type, '35. FLAGSHIP: and that remaining entry is genuinely the second vehicle, confirming nothing was silently lost or swapped');
+    }
+
+    // -------------------------------------------------------------
+    // Section G — 0.9.700 REGRESSION: a just-stored vehicle must never
+    // be re-offered as a mount target by the deterministic query
+    // -------------------------------------------------------------
+    {
+        const startPosition = new Position(clearVehicle.position.x - 0.5, 0, clearVehicle.position.z);
+        const session = buildAvatarPresenceSession(startPosition);
+        const runtimeInstances = new VehicleRuntimeInstances();
+        const c = new AvatarVehicleInteractionController(session, { seed: SEED, vehicleRuntimeInstances: runtimeInstances });
+
+        c.keyDown('e'); c.tick(); c.keyUp('e');
+        assert(c.mount() !== null, '36. mounted the real bicycle');
+        c.keyDown('q'); c.tick(); c.keyUp('q');
+        assert(c.mount() === null && c.inventory().size === 1, '37. stored it — mount clears, one entry carried');
+
+        // Standing in EXACTLY the same spot — a naive re-derivation of
+        // mount candidates would still find the just-stored bicycle
+        // (vehiclePresenceInRegion() has no memory of the store), and
+        // pressing E would re-mount the very vehicle already sitting in
+        // inventory.
+        const state = c.vehicleInteractionState();
+        assert(state.targetVehicleId === null, '38. the just-stored vehicle is never offered as a mount target while standing right where it was stored');
+
+        c.keyDown('e'); c.tick(); c.keyUp('e');
+        assert(c.mount() === null, '39. pressing E again in place does nothing — there is genuinely nothing left here to mount');
+        assert(c.inventory().size === 1, '40. FLAGSHIP: inventory is untouched — a second store attempt was never even possible, so withEntryAdded()\'s own duplicate-id guard is never reached');
     }
 
     console.log('✅ All Avatar Inventory Store/Deploy Integration tests passed.');
