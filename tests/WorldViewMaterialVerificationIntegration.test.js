@@ -279,8 +279,8 @@ async function runTests() {
             '18. WorldView.js forwards worldEncounterMaterialVerifier to WorldEncounterCanvas as its own existing prop');
         assert(viewCodeOnly.includes(':registry="worldDiscoverySourceRegistry"'),
             '19. the pre-existing (0.9.17) registry binding is unchanged');
-        assert(viewCodeOnly.includes('<VehicleInteractionPrompt :state="vehicleInteractionState" />'),
-            '20. the pre-existing (0.9.98) VehicleInteractionPrompt wiring is unaffected by this milestone');
+        assert(viewCodeOnly.includes(':state="vehicleInteractionState"') && viewCodeOnly.includes('<VehicleInteractionPrompt'),
+            '20. the pre-existing (0.9.98) VehicleInteractionPrompt mount/dismount wiring is unaffected by this milestone (0.9.670 extends the same tag with a second :store-state binding — see VehicleInteractionPrompt.js\'s own header — never removes this one)');
 
         // WorldView.js never reconstructs the inspection/verification
         // pipeline itself — it only forwards already-composed collaborators.

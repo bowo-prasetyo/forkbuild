@@ -963,6 +963,12 @@ export default {
         // enough to feel responsive, far tighter than refreshSpatialUI's
         // own 3-second cadence.
         const vehicleInteractionState = ref(null);
+        // 0.9.670 — Avatar Inventory (store/deploy). Mirrors
+        // vehicleInteractionState's own ref immediately above — see
+        // session.avatarStoreInteractionState()'s own header — polled on
+        // the identical cadence below, since store/deploy needs to feel
+        // exactly as responsive as mount/dismount.
+        const storeInteractionState = ref(null);
         // 0.3.2 — Camera Perspective. Mirrors session.getCameraPerspective()
         // exactly the same way avatarControlMode/followAvatar mirror
         // their own session getters above: this view never decides the
@@ -4511,6 +4517,14 @@ export default {
                     && typeof session.avatarVehicleInteractionState === 'function')
                     ? session.avatarVehicleInteractionState()
                     : null;
+                // 0.9.670 — Avatar Inventory (store/deploy). Same gating,
+                // same cadence, same interval as vehicleInteractionState
+                // immediately above — a second independent affordance,
+                // never a reason for a second interval.
+                storeInteractionState.value = (hasLocalAvatar.value && avatarControlMode.value
+                    && typeof session.avatarStoreInteractionState === 'function')
+                    ? session.avatarStoreInteractionState()
+                    : null;
             }, 150);
         });
 
@@ -4588,6 +4602,7 @@ export default {
             avatarControlMode,
             followAvatar,
             vehicleInteractionState,
+            storeInteractionState,
             cameraPerspective,
             CameraPerspective,
             setCameraPerspective,
@@ -5755,7 +5770,7 @@ export default {
                  Purely presentational — see VehicleInteractionPrompt.js's
                  own header for why it never decides mount/dismount
                  eligibility itself. -->
-            <VehicleInteractionPrompt :state="vehicleInteractionState" />
+            <VehicleInteractionPrompt :state="vehicleInteractionState" :store-state="storeInteractionState" />
             <MetadataEditorDialog
                 v-if="showMetadataEditor"
                 :info="metadataEditTarget"

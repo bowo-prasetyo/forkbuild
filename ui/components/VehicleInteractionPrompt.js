@@ -44,6 +44,17 @@ export default {
         state: {
             type: Object,
             default: null
+        },
+        // 0.9.670 — Avatar Inventory (store/deploy). { canStore,
+        // canDeploy, vehicleType } from
+        // WorldNavigationSession#avatarStoreInteractionState(), the
+        // identical "already-authoritative snapshot, formatted only"
+        // contract `state` above already has. Optional/null exactly like
+        // `state` — a host that has not wired store/deploy yet simply
+        // never shows this second line.
+        storeState: {
+            type: Object,
+            default: null
         }
     },
     computed: {
@@ -59,11 +70,24 @@ export default {
             }
             const typeLabel = VEHICLE_TYPE_LABEL[this.state.vehicleType] || 'Vehicle';
             return `[E] Mount ${typeLabel}`;
+        },
+        storeVisible() {
+            return Boolean(this.storeState) && (this.storeState.canStore || this.storeState.canDeploy);
+        },
+        storeLabel() {
+            if (!this.storeState) {
+                return '';
+            }
+            if (this.storeState.canStore) {
+                return '[Q] Store';
+            }
+            const typeLabel = VEHICLE_TYPE_LABEL[this.storeState.vehicleType] || 'Vehicle';
+            return `[Q] Deploy ${typeLabel}`;
         }
     },
     template: `
         <div
-            v-if="visible"
+            v-if="visible || storeVisible"
             aria-live="polite"
             :style="{
                 position: 'absolute',
@@ -72,16 +96,40 @@ export default {
                 transform: 'translateX(-50%)',
                 zIndex: 34,
                 pointerEvents: 'none',
-                background: 'rgba(18, 18, 18, 0.92)',
-                border: '1px solid #3a3a3a',
-                borderLeft: '3px solid #4caf7d',
-                borderRadius: '4px',
-                padding: '6px 14px',
-                fontFamily: 'monospace',
-                fontSize: '12px',
-                color: '#e0e0e0',
-                whiteSpace: 'nowrap'
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '4px'
             }"
-        >{{ label }}</div>
+        >
+            <div
+                v-if="visible"
+                :style="{
+                    background: 'rgba(18, 18, 18, 0.92)',
+                    border: '1px solid #3a3a3a',
+                    borderLeft: '3px solid #4caf7d',
+                    borderRadius: '4px',
+                    padding: '6px 14px',
+                    fontFamily: 'monospace',
+                    fontSize: '12px',
+                    color: '#e0e0e0',
+                    whiteSpace: 'nowrap'
+                }"
+            >{{ label }}</div>
+            <div
+                v-if="storeVisible"
+                :style="{
+                    background: 'rgba(18, 18, 18, 0.92)',
+                    border: '1px solid #3a3a3a',
+                    borderLeft: '3px solid #4c8caf',
+                    borderRadius: '4px',
+                    padding: '6px 14px',
+                    fontFamily: 'monospace',
+                    fontSize: '12px',
+                    color: '#e0e0e0',
+                    whiteSpace: 'nowrap'
+                }"
+            >{{ storeLabel }}</div>
+        </div>
     `
 };

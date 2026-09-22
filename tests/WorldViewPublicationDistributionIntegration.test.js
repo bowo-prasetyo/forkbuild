@@ -385,7 +385,7 @@ async function runTests() {
         assert(viewCodeOnly.includes(':registry="worldDiscoverySourceRegistry"'), '33. the pre-existing (0.9.17) registry binding is unchanged');
         assert(viewCodeOnly.includes('materialSources="worldEncounterMaterialSources"'), '34. the pre-existing (0.9.99) materialSources binding is unchanged');
         assert(viewCodeOnly.includes('materialVerifier="worldEncounterMaterialVerifier"'), '35. the pre-existing (0.9.99) materialVerifier binding is unchanged');
-        assert(viewCodeOnly.includes('<VehicleInteractionPrompt :state="vehicleInteractionState" />'), '36. the pre-existing (0.9.98) VehicleInteractionPrompt wiring is unaffected by this milestone');
+        assert(viewCodeOnly.includes(':state="vehicleInteractionState"') && viewCodeOnly.includes('<VehicleInteractionPrompt'), '36. the pre-existing (0.9.98) VehicleInteractionPrompt mount/dismount wiring is unaffected by this milestone (0.9.670 extends the same tag with a second :store-state binding — never removes this one)');
 
         // WorldView.js never reaches into the lifecycle chain itself — it
         // only forwards the one already-composed store.
