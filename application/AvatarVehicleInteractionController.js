@@ -7,6 +7,7 @@ import {
 import {
     resolveAvatarVehicleInteractionTarget
 } from '../core/AvatarVehicleInteractionTarget.js';
+import { createAvatarVehicleMount } from '../core/AvatarVehicleMount.js';
 import { deriveAvatarVehicleMount } from '../core/AvatarVehicleMountTransition.js';
 import {
     deriveAvatarVehicleDismountIntent
@@ -23,6 +24,13 @@ import {
 import { VEHICLE_INTERACTION_RADIUS } from '../core/AvatarVehicleProximity.js';
 import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
 import { treeCollisionCandidatesForMovement } from '../core/AvatarTreeCollisionQuery.js';
+import { emptyAvatarInventory } from '../core/AvatarInventory.js';
+import { deriveAvatarVehicleStoreIntent } from '../core/AvatarVehicleStoreIntent.js';
+import { deriveAvatarVehicleDeployIntent } from '../core/AvatarVehicleDeployIntent.js';
+import { deriveAvatarVehicleStoreTransition } from '../core/AvatarVehicleStoreTransition.js';
+import { deriveAvatarVehicleDeployTransition } from '../core/AvatarVehicleDeployTransition.js';
+import { VehicleInstance } from '../core/VehicleInstance.js';
+import { createId } from '../core/createId.js';
 
 // 0.9.83 — Avatar-Vehicle Mount/Dismount Runtime Integration.
 // Extended by 0.9.117 — Vehicle-Aware Dismount.
@@ -216,6 +224,13 @@ export class AvatarVehicleInteractionController {
         // "Why held state alone is not enough."
         this._interactKeyConsumed = false;
         this._mount = null;
+        // 0.9.670 — Avatar Inventory (store/deploy). A second, independent
+        // key ('q') sharing the exact "held-key poll + one-shot consume"
+        // shape 'e' already established above for mount/dismount — see
+        // this file's own 0.9.670 header, below `tick()`.
+        this._storeKeyHeld = false;
+        this._storeKeyConsumed = false;
+        this._inventory = emptyAvatarInventory();
     }
 
     // The avatar's current AvatarVehicleMount, or `null` when not
@@ -224,6 +239,13 @@ export class AvatarVehicleInteractionController {
     // verticalState() already establish for their own transient state.
     mount() {
         return this._mount;
+    }
+
+    // 0.9.670 — Avatar Inventory (store/deploy). The avatar's current
+    // AvatarInventory — a read-only debug/UI surface, the identical
+    // posture mount() above already establishes for its own state.
+    inventory() {
+        return this._inventory;
     }
 
     // 0.9.85 — the VehicleType of the vehicle this controller is
@@ -344,6 +366,46 @@ export class AvatarVehicleInteractionController {
         });
     }
 
+    // 0.9.670 — Avatar Inventory (store/deploy). The store/deploy
+    // affordance counterpart of vehicleInteractionState() above — a
+    // caller (ordinarily World View's own prompt) needs to know whether
+    // to show a "[Q] Store" or "[Q] Deploy <Type>" hint, without
+    // recomputing mount or inventory state itself:
+    //
+    //   mounted
+    //       -> { canStore: true, canDeploy: false,
+    //            vehicleType: <mounted vehicle's type> }
+    //   not mounted, carrying at least one entry
+    //       -> { canStore: false, canDeploy: true,
+    //            vehicleType: <the entry that would deploy next> }
+    //   not mounted, carrying nothing
+    //       -> { canStore: false, canDeploy: false,
+    //            vehicleType: VehicleType.NONE }
+    //
+    // PRESENTATION ONLY — reuses mountedVehicleType() and
+    // this._inventory.mostRecent(), never a second computation of
+    // either. Never called from tick(), the same "a UI observation seam
+    // must never influence the actual decision" discipline
+    // vehicleInteractionState() above already establishes.
+    storeInteractionState() {
+        if (!this._avatarPresenceSession) {
+            return Object.freeze({ canStore: false, canDeploy: false, vehicleType: VehicleType.NONE });
+        }
+        if (this._mount !== null) {
+            return Object.freeze({
+                canStore: true,
+                canDeploy: false,
+                vehicleType: this.mountedVehicleType()
+            });
+        }
+        const entry = this._inventory.mostRecent();
+        return Object.freeze({
+            canStore: false,
+            canDeploy: entry !== null,
+            vehicleType: entry ? entry.type : VehicleType.NONE
+        });
+    }
+
     // Returns true when `key` is the one this controller understands,
     // so a caller knows whether to preventDefault/swallow the event —
     // the same contract application/AvatarMovementController.js#keyDown/
@@ -367,6 +429,12 @@ export class AvatarVehicleInteractionController {
     releaseAll() {
         this._interactKeyHeld = false;
         this._interactKeyConsumed = false;
+        // 0.9.670 — losing keyboard focus must not leave 'q' permanently
+        // held either, the identical reasoning as 'e' immediately above.
+        // `_mount`/`_inventory` both survive, exactly like `mount` itself
+        // already survives releaseAll().
+        this._storeKeyHeld = false;
+        this._storeKeyConsumed = false;
     }
 
     // Re-evaluates the mount/dismount rule from whatever is currently
@@ -385,6 +453,18 @@ export class AvatarVehicleInteractionController {
             this._tickMount(requested);
         } else {
             this._tickDismount(requested);
+        }
+        // 0.9.670 — Avatar Inventory (store/deploy). Independent of the
+        // 'e' block above: a player presses one key or the other, never
+        // both at once for the same physical press, but nothing here
+        // relies on that — the two blocks simply never touch the same
+        // key's own held/consumed flags. See this file's own 0.9.670
+        // header, below.
+        const storeRequested = this._storeKeyHeld && !this._storeKeyConsumed;
+        if (this._mount === null) {
+            this._tickDeploy(storeRequested);
+        } else {
+            this._tickStore(storeRequested);
         }
     }
 
@@ -494,6 +574,85 @@ export class AvatarVehicleInteractionController {
                 animation: current.animation
             });
         }
+    }
+
+    // 0.9.670 — Avatar Inventory (store/deploy). Composes
+    // core/AvatarVehicleStoreIntent.js + core/AvatarVehicleStoreTransition.js
+    // exactly the way `_tickMount()` composes its own three primitives —
+    // no store policy of its own beyond resolving WHICH vehicle is
+    // currently mounted (`_currentMountedVehicle()`, already shared with
+    // `_tickDismount()` above) and, once the pure transition says the
+    // store actually happened, removing that vehicle from the world via
+    // `VehicleRuntimeInstances#discard()` — the one real-world EFFECT
+    // core/AvatarVehicleStoreTransition.js is deliberately not allowed to
+    // perform itself (it only ever returns a next mount/inventory pair).
+    _tickStore(requested) {
+        const avatarPosition = this._avatarPresenceSession.current.position;
+        const vehicle = this._currentMountedVehicle(avatarPosition);
+        const storeIntent = deriveAvatarVehicleStoreIntent({ storeRequested: requested });
+        const transition = deriveAvatarVehicleStoreTransition({
+            currentMount: this._mount,
+            currentInventory: this._inventory,
+            storeIntent,
+            vehicleId: vehicle ? vehicle.id : null,
+            vehicleType: vehicle ? vehicle.type : null
+        });
+        if (transition.mount !== this._mount) {
+            this._storeKeyConsumed = true;
+            if (this._vehicleRuntimeInstances && vehicle) {
+                this._vehicleRuntimeInstances.discard(vehicle.id);
+            }
+        }
+        this._mount = transition.mount;
+        this._inventory = transition.inventory;
+    }
+
+    // 0.9.670 — Avatar Inventory (store/deploy). Composes
+    // core/AvatarVehicleDeployIntent.js + core/AvatarVehicleDeployTransition.js,
+    // then performs the one EFFECT that pure transition deliberately
+    // leaves to its caller (see that file's own header, "Returns an
+    // entry, never a mount"): minting a fresh id
+    // (core/createId.js — a deployed vehicle has no deterministic
+    // placement slot to derive an id FROM, exactly like a hand-placed
+    // World/Building/Brick already needs one of these rather than a
+    // formula), constructing a real VehicleInstance at the avatar's own
+    // current position, registering it into the runtime store, and only
+    // THEN mounting it via `createAvatarVehicleMount()` — the identical
+    // primitive `deriveAvatarVehicleMount()` itself already builds on.
+    //
+    // GUARDED ENTIRELY ON `_vehicleRuntimeInstances` BEING WIRED. A
+    // deployed vehicle has nowhere else to exist — unlike the mount/
+    // dismount path's own graceful spatial-requery fallback
+    // (`_findMountedVehicle()`), there is no deterministic query that
+    // could ever "find" a vehicle that was never placed. A caller with
+    // no runtime store (an older test, a minimal setup) gets a harmless
+    // no-op: the key press is never consumed, and inventory stays
+    // exactly as it was — never a thrown error, never a silently lost
+    // entry.
+    _tickDeploy(requested) {
+        if (!this._vehicleRuntimeInstances) {
+            return;
+        }
+        const deployIntent = deriveAvatarVehicleDeployIntent({ deployRequested: requested });
+        const transition = deriveAvatarVehicleDeployTransition({
+            currentMount: this._mount,
+            currentInventory: this._inventory,
+            deployIntent
+        });
+        this._inventory = transition.inventory;
+        if (transition.entry === null) {
+            return;
+        }
+        this._storeKeyConsumed = true;
+        const avatarPosition = this._avatarPresenceSession.current.position;
+        const instance = new VehicleInstance({
+            id: createId(),
+            type: transition.entry.type,
+            spawnPosition: avatarPosition,
+            position: avatarPosition
+        });
+        this._vehicleRuntimeInstances.add(instance);
+        this._mount = createAvatarVehicleMount(instance.id);
     }
 
     // The one vehicle this controller is currently mounted on, re-found
@@ -633,6 +792,17 @@ export class AvatarVehicleInteractionController {
                 this._interactKeyHeld = isDown;
                 if (!isDown) {
                     this._interactKeyConsumed = false;
+                }
+                return true;
+            // 0.9.670 — Avatar Inventory (store/deploy). Its own key,
+            // deliberately never 'e' — mounting/dismounting and storing/
+            // deploying are two independent actions a player can reach
+            // for on the same tick (e.g. mounted, about to dismount AND
+            // store in the same motion is still two separate presses).
+            case 'q':
+                this._storeKeyHeld = isDown;
+                if (!isDown) {
+                    this._storeKeyConsumed = false;
                 }
                 return true;
             default: return false;

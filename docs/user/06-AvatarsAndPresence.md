@@ -178,6 +178,16 @@ trees, but a tall building still blocks it exactly as it would a car, so
 flying doesn't mean ignoring the world's own geometry. You can't
 dismount a drone in mid-air — bring it back to the ground first.
 
+#### Carrying a vehicle
+
+Found a vehicle far from where you need it later? While mounted, press
+**Q** to store it in your inventory — it disappears from the world and
+you're dismounted in the same motion. Walk anywhere else, press **Q**
+again while unmounted, and the most recently stored vehicle spawns right
+where you're standing, already mounted. There's no limit today on how
+many vehicles you can carry at once, and a stored vehicle never
+reappears back where you found it.
+
 ### Spatial awareness and activity
 
 When other people are present, you'll see contextual indicators showing what

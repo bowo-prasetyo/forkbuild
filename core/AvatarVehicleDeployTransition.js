@@ -1,0 +1,93 @@
+import { isValidAvatarVehicleMount } from './AvatarVehicleMount.js';
+import { AvatarVehicleDeployIntent, isValidAvatarVehicleDeployIntent } from './AvatarVehicleDeployIntent.js';
+import { AvatarInventory, withEntryRemoved } from './AvatarInventory.js';
+
+// 0.9.670 — Avatar Vehicle Deploy Transition.
+//
+// The mirror image of core/AvatarVehicleStoreTransition.js: given the
+// avatar's current mount state, a deploy request, and its current
+// inventory, decides WHETHER a carried vehicle should come out, and
+// WHICH one — without ever minting an id or constructing a real
+// VehicleInstance itself.
+//
+//   deriveAvatarVehicleDeployTransition({
+//       currentMount, currentInventory, deployIntent
+//   }) -> { entry, inventory }
+//
+// PURE, the same discipline every other transition in this line already
+// follows. The same three inputs always produce the same result.
+//
+// THE ONE RULE THIS FILE ADDS:
+//
+//   currentMount == null
+//   AND deployIntent == DEPLOY
+//   AND currentInventory has at least one entry
+//       -> entry: the most recently stored entry, inventory: that entry
+//          removed
+//
+// Every other combination leaves both fields exactly as they were:
+// already mounted (nowhere to put a second vehicle — mirrors
+// core/AvatarVehicleMountTransition.js's own "already mounted is a
+// no-op"), no DEPLOY intent, or nothing carried, all fall through to
+// `{ entry: null, inventory: currentInventory }`.
+//
+// RETURNS AN ENTRY, NEVER A MOUNT. Unlike
+// core/AvatarVehicleMountTransition.js, this file cannot hand back a
+// real `AvatarVehicleMount` — a deployed vehicle has no pre-existing
+// 0.9.74 vehicle id to mount onto; one has to be minted for whatever
+// brand-new VehicleInstance is about to be created. That is an
+// application-layer job (ordinarily
+// application/AvatarVehicleInteractionController.js, using
+// core/createId.js exactly like a hand-placed World/Building/Brick
+// already does — see that file's own header on why a formula-derived id
+// would be wrong here), never this file's. This function only ever
+// answers "should a deploy happen, and which carried entry does it come
+// from," identical in spirit to how
+// core/AvatarVehicleDeployIntent.js's own header already draws the line
+// at intent, not effect.
+//
+// POPS THE MOST RECENT ENTRY, VIA AvatarInventory#mostRecent(). This
+// file never picks an entry by type or any other criterion — see
+// core/AvatarInventory.js's own header for why ordering exists only for
+// this exact LIFO read.
+export function deriveAvatarVehicleDeployTransition({
+    currentMount = null,
+    currentInventory,
+    deployIntent
+} = {}) {
+    if (!isValidAvatarVehicleMount(currentMount)) {
+        throw new Error(`deriveAvatarVehicleDeployTransition requires currentMount to be null or a valid AvatarVehicleMount, got ${JSON.stringify(currentMount)}`);
+    }
+    if (!(currentInventory instanceof AvatarInventory)) {
+        throw new Error('deriveAvatarVehicleDeployTransition requires currentInventory to be an AvatarInventory instance');
+    }
+    if (!isValidAvatarVehicleDeployIntent(deployIntent)) {
+        throw new Error(`deriveAvatarVehicleDeployTransition requires a valid deployIntent, got ${JSON.stringify(deployIntent)}`);
+    }
+
+    const unchanged = { entry: null, inventory: currentInventory };
+
+    if (currentMount !== null) {
+        return unchanged;
+    }
+    if (deployIntent !== AvatarVehicleDeployIntent.DEPLOY) {
+        return unchanged;
+    }
+    const entry = currentInventory.mostRecent();
+    if (entry === null) {
+        return unchanged;
+    }
+
+    return { entry, inventory: withEntryRemoved(currentInventory, entry.id) };
+}
+
+// Deliberately not yet: id minting or VehicleInstance construction (an
+// application-layer job — see this file's own header); registering a
+// deployed vehicle into any runtime store
+// (application/VehicleRuntimeInstances.js's own `add()` is the caller's
+// job); constructing the resulting AvatarVehicleMount itself (the caller
+// already has core/AvatarVehicleMount.js's own `createAvatarVehicleMount()`
+// for that, once it has a real id); store (its own mirror-image file,
+// core/AvatarVehicleStoreTransition.js); entry selection by type; avatar
+// position or heading; keyboard input; rendering; persistence;
+// networking; randomness; the clock.

@@ -1,5 +1,6 @@
 import { nearbyVehicleInstances, VEHICLE_RENDER_RADIUS } from './NearbyVehicleInstances.js';
 import { withinRadiusXZ } from '../core/AvatarVehicleProximity.js';
+import { VehicleInstance } from '../core/VehicleInstance.js';
 
 // 0.9.116 — Mounted Vehicle Movement. The runtime vehicle-instance
 // ownership boundary this milestone's own brief asked for.
@@ -111,6 +112,10 @@ import { withinRadiusXZ } from '../core/AvatarVehicleProximity.js';
 export class VehicleRuntimeInstances {
     constructor() {
         this._instances = new Map(); // vehicle id -> current runtime VehicleInstance
+        // 0.9.670 — Avatar Inventory (store/deploy). Vehicle ids this store
+        // has been told to permanently forget — see discard()'s own
+        // header below.
+        this._excluded = new Set();
     }
 
     // Reconciles this store against `nearbyVehicleInstances(seed,
@@ -123,6 +128,15 @@ export class VehicleRuntimeInstances {
     sync(seed, centerPosition, radius = VEHICLE_RENDER_RADIUS) {
         const candidates = nearbyVehicleInstances(seed, centerPosition, radius);
         for (const candidate of candidates) {
+            // 0.9.670 — a discarded id (see discard()'s own header) is
+            // never rediscovered: vehiclePresenceInRegion()'s own pure
+            // (seed, x, z) formula has no memory of a vehicle having
+            // been picked up, and would otherwise "reintroduce" a fresh
+            // candidate at the exact spawn slot a stored vehicle left
+            // behind, the moment the avatar walks back near it.
+            if (this._excluded.has(candidate.id)) {
+                continue;
+            }
             if (!this._instances.has(candidate.id)) {
                 this._instances.set(candidate.id, candidate);
             }
@@ -203,8 +217,38 @@ export class VehicleRuntimeInstances {
         return next;
     }
 
+    // 0.9.670 — Avatar Inventory (store/deploy). Directly registers a
+    // VehicleInstance this store did not discover via sync() — the one
+    // seam a DEPLOYED vehicle needs: a vehicle minted from inventory
+    // (application/AvatarVehicleInteractionController.js's own
+    // `_tickDeploy()`) has no deterministic placement slot to be
+    // rediscovered from, so it must be added here directly rather than
+    // waiting for a future sync() to notice it — sync() only ever
+    // reconciles against `nearbyVehicleInstances()`'s own deterministic
+    // candidates, and a deployed vehicle is definitionally not one of
+    // those.
+    add(instance) {
+        if (!(instance instanceof VehicleInstance)) {
+            throw new Error('VehicleRuntimeInstances#add requires a VehicleInstance instance');
+        }
+        this._instances.set(instance.id, instance);
+    }
+
+    // 0.9.670 — Avatar Inventory (store/deploy). The store half of
+    // store/deploy: removes a tracked vehicle (if any) and marks its id
+    // permanently excluded from future sync() rediscovery, for the life
+    // of this store — see sync()'s own 0.9.670 update above for why that
+    // exclusion is necessary, not merely tidy. Safe to call for an id
+    // this store never tracked (no-op on the map, the exclusion still
+    // recorded) — a caller does not need to check get(id) first.
+    discard(id) {
+        this._instances.delete(id);
+        this._excluded.add(id);
+    }
+
     clear() {
         this._instances.clear();
+        this._excluded.clear();
     }
 }
 

@@ -94,6 +94,8 @@ vehicle to mount it.
 | `A` / `D` | Steer | Turn rate depends on the vehicle |
 | `←` / `→` (press) | Turn the vehicle's own attempted travel direction left/right | A single 45° turn per press — holding the key does not keep turning |
 | `Ctrl` (held) | Brake | |
+| `Q` (while mounted) | Store the vehicle you're on in your inventory | Removes it from the world; dismounts you at the same time |
+| `Q` (not mounted, carrying a vehicle) | Deploy the most recently stored vehicle | Spawns and mounts it at your current position |
 
 ## Selection (click/marquee work in both views; only the Editor mutates)
 

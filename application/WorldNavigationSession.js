@@ -2214,6 +2214,19 @@ export class WorldNavigationSession {
             : null;
     }
 
+    // 0.9.670 — Avatar Inventory (store/deploy). The local avatar's
+    // current store/deploy AFFORDANCE — a plain pass-through to
+    // application/AvatarVehicleInteractionController.js#storeInteractionState(),
+    // never a second computation, the identical posture
+    // avatarVehicleInteractionState() above already takes for its own
+    // controller method. Returns `null` when no local avatar exists at
+    // all, the same graceful-absence posture as its sibling.
+    avatarStoreInteractionState() {
+        return this._avatarVehicleInteractionController
+            ? this._avatarVehicleInteractionController.storeInteractionState()
+            : null;
+    }
+
     // 0.9.127 — Vehicle Steering Integration Audit. The ONE way
     // `_vehicleSteeringIntent` (see that field's own constructor comment)
     // is ever set — a plain, programmatic setter, deliberately never a
