@@ -803,7 +803,15 @@ export class CreateWorldViewUseCase {
                     // 0.9.701 — World View Persistence — see above.
                     avatarInventoryPersistenceStore,
                     vehicleRuntimeInstancePersistenceStore,
-                    animalRuntimeInstancePersistenceStore
+                    animalRuntimeInstancePersistenceStore,
+                    // 0.9.702 — Avatar Inventory Transfer. The SAME
+                    // app-wide peerMessageBus/connectedPeerRegistry pair
+                    // every other real-peer-transport collaborator in
+                    // this method already shares — see
+                    // WorldNavigationSession's own constructor comment on
+                    // these two parameters.
+                    peerMessageBus,
+                    connectedPeerRegistry
                 });
                 sessionRef = session;
                 return session;
