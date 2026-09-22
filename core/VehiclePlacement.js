@@ -145,7 +145,22 @@ const JITTER_Z_SEED_OFFSET = 0x42434a5a; // 'BCJZ'
 // 0.9.669 header, renderer/VehicleRenderer.js's own 0.9.669 header, and
 // core/AvatarVehicleDismountPosition.js's own 0.9.669 header for the
 // remaining three seams this milestone closes at once.
+// Drone Placement. Extends the SAME type roll with a fourth outcome,
+// still never a second hash: WHICH vehicle now has four possible
+// answers instead of three. A drone is rarer than a car — the fastest,
+// most capable of the four vehicles this codebase can now place,
+// matching the WALK < BICYCLE < MOTORCYCLE < CAR < DRONE ordering (see
+// core/AvatarVehicleMovementCapability.js's own header) — so only a
+// minority of the whole roll (VEHICLE_TYPE_DRONE_SHARE, evaluated
+// FIRST against the exact same `roll`) becomes a drone; everything else
+// falls through to the existing car/motorcycle/bicycle split,
+// completely unchanged in its own relative proportions. A drone placed
+// this way always sits at ground level, exactly like every other
+// vehicle here (see this file's own presenceForCell(), below) — see
+// core/AvatarDroneVerticalState.js's own header for why: it hovers only
+// once mounted and moving, never while idle.
 const VEHICLE_TYPE_SEED_OFFSET = 0x4d435459; // 'MCTY'
+const VEHICLE_TYPE_DRONE_SHARE = 0.02;
 const VEHICLE_TYPE_CAR_SHARE = 0.08;
 const VEHICLE_TYPE_MOTORCYCLE_SHARE = 0.25;
 
@@ -213,8 +228,9 @@ export function bicycleDensityAt(seed, x, z) {
 // type roll in isolation.
 export function vehicleTypeForCell(seed, cellX, cellZ) {
     const roll = hash2D(seed + VEHICLE_TYPE_SEED_OFFSET, cellX, cellZ);
-    if (roll < VEHICLE_TYPE_CAR_SHARE) return VehicleType.CAR;
-    if (roll < VEHICLE_TYPE_CAR_SHARE + VEHICLE_TYPE_MOTORCYCLE_SHARE) return VehicleType.MOTORCYCLE;
+    if (roll < VEHICLE_TYPE_DRONE_SHARE) return VehicleType.DRONE;
+    if (roll < VEHICLE_TYPE_DRONE_SHARE + VEHICLE_TYPE_CAR_SHARE) return VehicleType.CAR;
+    if (roll < VEHICLE_TYPE_DRONE_SHARE + VEHICLE_TYPE_CAR_SHARE + VEHICLE_TYPE_MOTORCYCLE_SHARE) return VehicleType.MOTORCYCLE;
     return VehicleType.BICYCLE;
 }
 
@@ -272,11 +288,12 @@ export function vehiclePresenceInRegion(seed, minX, minZ, maxX, maxZ) {
     return presences;
 }
 
-// Deliberately not yet: any vehicle type other than BICYCLE/MOTORCYCLE/CAR
-// (0.9.668 — see this file's own header, "Motorcycle Placement" — added
-// a type roll on top of this file's existing existence gates, not a
-// third gate of its own; 0.9.669 — "Car Activation" — widened that same
-// roll to a third outcome; DRONE still never spawns); roads, paths,
+// Deliberately not yet: any vehicle type beyond BICYCLE/MOTORCYCLE/CAR/
+// DRONE (0.9.668 — see this file's own header, "Motorcycle Placement" —
+// added a type roll on top of this file's existing existence gates, not
+// a third gate of its own; 0.9.669 — "Car Activation" — widened that
+// same roll to a third outcome; "Drone Placement" above widened it
+// again to a fourth); roads, paths,
 // parking areas, garages, or any
 // other structured "where a vehicle plausibly stands" concept beyond dry,
 // non-river ground (see this file's own header); vehicle rendering;

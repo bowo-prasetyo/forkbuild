@@ -90,6 +90,22 @@ async function runTests() {
         assert(result.z === 7, '5h. z matches the vehicle exactly, unshifted');
         assert(result.y === 0, '5i. y is the flat avatar-domain ground level, not the vehicle\'s own y');
     }
+    {
+        // A DRONE resolves identically to a BICYCLE/MOTORCYCLE/CAR at the
+        // same position, sharing the exact same offset (see
+        // core/AvatarVehicleDismountPosition.js's own header) — a
+        // ground-level candidate position, the same as any other vehicle
+        // this file has a rule for. Whether it is actually safe to
+        // dismount a currently-airborne drone there is a mount-state
+        // question this file has no opinion on — see that file's own
+        // header.
+        const vehicle = new VehiclePresence({ id: 'vehicle:1:0,0', type: VehicleType.DRONE, position: new Position(5, 1.2, 7) });
+        const result = resolveAvatarVehicleDismountPosition(vehicle);
+        assert(result instanceof Position, '5j. a valid drone produces a Position instance');
+        assert(result.x === 5 + BICYCLE_DISMOUNT_OFFSET_X, '5k. a drone\'s x is offset by exactly the SAME constant every other vehicle uses');
+        assert(result.z === 7, '5l. z matches the vehicle exactly, unshifted');
+        assert(result.y === 0, '5m. y is the flat avatar-domain ground level, not the vehicle\'s own y');
+    }
 
     // -------------------------------------------------------------
     // Section C — X/Z semantics
@@ -139,15 +155,16 @@ async function runTests() {
         );
     }
     {
-        // A vehicle type this file has no dismount rule for is a
-        // legitimate "no destination known" answer, not malformed input.
-        // BICYCLE, MOTORCYCLE, and CAR all resolve a real Position
-        // (Section B, above) — only DRONE remains in this null-resolving
-        // set.
-        for (const type of [VehicleType.DRONE]) {
+        // Every currently placeable VehicleType (BICYCLE, MOTORCYCLE,
+        // CAR, DRONE) resolves a real Position now (Section B, above) —
+        // there is currently no vehicle type left for this file to
+        // return `null` for, though the `null` contract itself (see
+        // this file's own header) remains for a future, not-yet-placed
+        // vehicle type.
+        for (const type of [VehicleType.BICYCLE, VehicleType.MOTORCYCLE, VehicleType.CAR, VehicleType.DRONE]) {
             const vehicle = new VehiclePresence({ id: 'vehicle:1:0,0', type, position: new Position(1, 1, 1) });
             const result = resolveAvatarVehicleDismountPosition(vehicle);
-            assert(result === null, `16. a ${type} vehicle resolves to null rather than throwing or guessing at a geometry it has none for`);
+            assert(result instanceof Position, `16. a ${type} vehicle resolves to a real Position`);
         }
     }
 
@@ -276,15 +293,12 @@ async function runTests() {
         assert(fromInstance.equals(fromPresence), '31. a never-moved VehicleInstance resolves to exactly the same position a VehiclePresence at the same coordinates always has');
     }
     {
-        // DRONE VehicleInstance types still honestly resolve to null —
-        // the same "no rule for this type yet" answer a VehiclePresence
-        // of the same type already gives (Section E).
+        // A DRONE VehicleInstance resolves a real Position, exactly like
+        // a DRONE VehiclePresence already does (Section E).
         const { VehicleInstance } = await import('../core/VehicleInstance.js');
-        for (const type of [VehicleType.DRONE]) {
-            const instance = new VehicleInstance({ id: 'vehicle:1:0,0', type, spawnPosition: new Position(1, 1, 1) });
-            assert(resolveAvatarVehicleDismountPosition(instance) === null,
-                `32. a ${type} VehicleInstance resolves to null, exactly like a ${type} VehiclePresence already does`);
-        }
+        const instance = new VehicleInstance({ id: 'vehicle:1:0,0', type: VehicleType.DRONE, spawnPosition: new Position(1, 1, 1) });
+        assert(resolveAvatarVehicleDismountPosition(instance) instanceof Position,
+            '32. a DRONE VehicleInstance resolves to a real Position, exactly like a DRONE VehiclePresence already does');
     }
     {
         // A plain object shaped like a VehicleInstance is still

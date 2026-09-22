@@ -606,17 +606,13 @@ async function runTests() {
             '61. setHeading() never resets a position a prior setPosition() call already applied');
     }
     {
-        // Unsupported vehicle types remain unsupported — 0.9.124 changed
-        // nothing about which types this renderer can show; 0.9.668 later
-        // added a MOTORCYCLE builder, and 0.9.669 added a CAR builder
-        // (renderer/VehicleRenderer.js), so only DRONE remains in this
-        // unsupported set now.
-        for (const type of [VehicleType.DRONE]) {
-            const visual = new VehicleVisual(new VehicleRenderer(), type);
-            assert(visual.isSupported === false, `62.${type} still reports isSupported === false`);
-            visual.setHeading(90); // must never throw even with no built geometry
-            assert(visual.root instanceof THREE.Group, `63.${type} root is still a valid, if empty, Object3D after setHeading()`);
-        }
+        // DRONE now has a builder too (renderer/VehicleRenderer.js), so
+        // it reports isSupported === true and setHeading() rotates its
+        // built geometry exactly like every other vehicle type.
+        const visual = new VehicleVisual(new VehicleRenderer(), VehicleType.DRONE);
+        assert(visual.isSupported === true, '62. DRONE reports isSupported === true');
+        visual.setHeading(90);
+        assert(visual.root instanceof THREE.Group, '63. DRONE root is a valid Object3D after setHeading()');
     }
     {
         // The renderer never computes a heading of its own — a pure
