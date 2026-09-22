@@ -93,18 +93,26 @@ import { resolveVehicleMovementDirectionFromSteering } from '../core/VehicleStee
 // (WALK/GROUND_VEHICLE both `true`; only AERIAL_VEHICLE/DRONE is
 // `false`) — MOTORCYCLE and CAR both resolve `supported: true` under
 // that vocabulary, purely because they share BICYCLE's own
-// GROUND_VEHICLE kind. But renderer/VehicleRenderer.js has no visual
-// for either of them (only VehicleType.BICYCLE has a builder — see
-// that file's own 0.9.115 header), and core/VehiclePlacement.js never
-// places one in the first place (BICYCLE is the sole vehicle type this
-// codebase can ever procedurally spawn — see that file's own 0.9.72
-// header). `canMove()` below gates on THAT fact — the currently
-// implemented visual vocabulary — never on the capability layer's own,
-// broader `supported` flag. Mounting a hypothetical future MOTORCYCLE/
-// CAR/DRONE must never silently start moving it merely because the
-// generic runtime now knows how to hold a VehicleInstance; see
-// docs/Roadmap.md, 0.9.116, "What should happen to the avatar?"/
-// Section H.
+// GROUND_VEHICLE kind. `canMove()` below gates on a narrower fact
+// instead — the currently implemented visual + placement vocabulary —
+// never on the capability layer's own, broader `supported` flag.
+//
+// 0.9.668 UPDATE — MOTORCYCLE JOINS BICYCLE HERE. Through 0.9.667,
+// renderer/VehicleRenderer.js had no visual for MOTORCYCLE and
+// core/VehiclePlacement.js never placed one, so `MOVABLE_VEHICLE_TYPES`
+// held BICYCLE alone — moving an unplaceable, invisible vehicle would
+// have been unreachable dead code. 0.9.668 closed both of those gaps at
+// once (VehiclePlacement.js's own "Motorcycle Placement" header;
+// VehicleRenderer.js's own buildMotorcycle()), so a motorcycle is now a
+// real, visible, mountable vehicle exactly like a bicycle — and this is
+// the one line that lets it actually move once mounted, rather than
+// sitting mounted-but-frozen the way any of CAR/DRONE still would if
+// mounted today. CAR and DRONE remain excluded: neither has a placement
+// path nor a visual yet, so adding either here would be exactly the
+// "hypothetical future vehicle silently starts moving" mistake this
+// gate exists to prevent — see docs/Roadmap.md, 0.9.116, "What should
+// happen to the avatar?"/Section H, and 0.9.668's own entry for the
+// motorcycle-specific reasoning.
 //
 // 0.9.127 — Vehicle Steering Integration Audit. 0.9.125/0.9.126 built a
 // closed steering-intent vocabulary (core/VehicleSteeringIntent.js) and a
@@ -121,7 +129,7 @@ import { resolveVehicleMovementDirectionFromSteering } from '../core/VehicleStee
 // and this file's own closing 0.9.127 comment for why heading resolution
 // itself needed no change at all to already be correct once steering
 // entered the real pipeline.
-const MOVABLE_VEHICLE_TYPES = new Set([VehicleType.BICYCLE]);
+const MOVABLE_VEHICLE_TYPES = new Set([VehicleType.BICYCLE, VehicleType.MOTORCYCLE]);
 
 export function isMovableVehicleType(type) {
     return MOVABLE_VEHICLE_TYPES.has(type);

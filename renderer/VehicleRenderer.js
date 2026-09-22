@@ -24,12 +24,19 @@ import { VehicleType } from '../core/VehicleType.js';
 // here — see this milestone's own roadmap entry for why that decision
 // stays downstream.
 //
-// ONLY VehicleType.BICYCLE HAS A BUILDER. build() returns `null` for
-// every other VehicleType (MOTORCYCLE, CAR, DRONE) — this renderer has no
-// meaningful representation for any of them yet, and deliberately does
-// NOT fall back to the bicycle shape for an unrecognized/unsupported
-// type: silently turning a DRONE into a bicycle would be a worse lie
-// than rendering nothing at all. A caller (renderer/VehicleFieldRenderer.js)
+// 0.9.668 — MOTORCYCLE NOW HAS A BUILDER TOO. core/VehiclePlacement.js's
+// own 0.9.668 update means a motorcycle can now actually exist in the
+// World, so a `null` visual for it stopped being honest the moment it
+// became reachable. buildMotorcycle() is the same "procedural placeholder,
+// low-poly primitives" posture as buildBicycle() — bigger wheels, a
+// single solid body volume standing in for a fuel tank/engine block
+// rather than open frame tubes, and a distinct color — legible as "a
+// motorcycle, not a bicycle" at a glance, never a loaded mesh/texture.
+// build() STILL returns `null` for CAR and DRONE — this renderer has no
+// meaningful representation for either yet, and deliberately does NOT
+// fall back to the bicycle/motorcycle shape for an unrecognized/
+// unsupported type: silently turning a DRONE into a bicycle would be a
+// worse lie than rendering nothing at all. A caller (renderer/VehicleFieldRenderer.js)
 // treats `null` as "nothing to show for this vehicle yet," exactly the
 // same graceful-degradation posture renderer/AvatarRenderer.js's own
 // `buildUnknownAccessory()` takes for an accessory id it doesn't
@@ -115,12 +122,72 @@ function buildBicycle() {
     return group;
 }
 
+// Motorcycle geometry — see this file's own 0.9.668 header. Bigger
+// wheels than a bicycle's, and a solid body volume rather than open
+// frame tubes, so the two read as visually distinct vehicles at a glance.
+const MOTORCYCLE_WHEEL_RADIUS = 0.38;
+const MOTORCYCLE_WHEEL_TUBE_RADIUS = 0.07;
+const MOTORCYCLE_WHEEL_OFFSET_X = 0.55;
+const MOTORCYCLE_WHEEL_Y = MOTORCYCLE_WHEEL_RADIUS;
+
+const MOTORCYCLE_BODY_COLOR = new THREE.Color(0.12, 0.16, 0.42); // muted blue — distinct from the bicycle's red frame
+const MOTORCYCLE_SEAT_COLOR = new THREE.Color(0.08, 0.08, 0.08);
+
+function buildMotorcycleWheel() {
+    const wheel = new THREE.Mesh(
+        new THREE.TorusGeometry(MOTORCYCLE_WHEEL_RADIUS, MOTORCYCLE_WHEEL_TUBE_RADIUS, WHEEL_RADIAL_SEGMENTS, WHEEL_TUBULAR_SEGMENTS),
+        new THREE.MeshStandardMaterial({ color: WHEEL_COLOR })
+    );
+    wheel.rotation.y = Math.PI / 2;
+    return wheel;
+}
+
+function buildMotorcycle() {
+    const group = new THREE.Group();
+    const bodyMaterial = new THREE.MeshStandardMaterial({ color: MOTORCYCLE_BODY_COLOR });
+
+    const rearWheel = buildMotorcycleWheel();
+    rearWheel.position.set(-MOTORCYCLE_WHEEL_OFFSET_X, MOTORCYCLE_WHEEL_Y, 0);
+    group.add(rearWheel);
+
+    const frontWheel = buildMotorcycleWheel();
+    frontWheel.position.set(MOTORCYCLE_WHEEL_OFFSET_X, MOTORCYCLE_WHEEL_Y, 0);
+    group.add(frontWheel);
+
+    // Body: one wide, low box spanning between the wheels, standing in
+    // for a fuel tank + engine block.
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.24, 0.3), bodyMaterial);
+    body.position.set(-0.05, MOTORCYCLE_WHEEL_Y + 0.3, 0);
+    group.add(body);
+
+    const seat = new THREE.Mesh(
+        new THREE.BoxGeometry(0.36, 0.1, 0.26),
+        new THREE.MeshStandardMaterial({ color: MOTORCYCLE_SEAT_COLOR })
+    );
+    seat.position.set(-0.32, MOTORCYCLE_WHEEL_Y + 0.46, 0);
+    group.add(seat);
+
+    // Front fork: connects the handlebar/body down to the front wheel
+    // hub, so the front wheel doesn't read as floating and disconnected.
+    const fork = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.4, 0.05), bodyMaterial);
+    fork.position.set(MOTORCYCLE_WHEEL_OFFSET_X - 0.05, MOTORCYCLE_WHEEL_Y + 0.2, 0);
+    fork.rotation.z = 0.2;
+    group.add(fork);
+
+    const handlebar = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.5), bodyMaterial);
+    handlebar.position.set(MOTORCYCLE_WHEEL_OFFSET_X - 0.1, MOTORCYCLE_WHEEL_Y + 0.58, 0);
+    group.add(handlebar);
+
+    return group;
+}
+
 // A closed lookup, mirroring renderer/AvatarRenderer.js's own
 // ACCESSORY_BUILDERS shape: one builder per KNOWN, supported vehicle
 // type. core/VehicleType.js's own vocabulary is larger than this map —
 // that gap is deliberate, see this file's own header above.
 const VEHICLE_BUILDERS = {
-    [VehicleType.BICYCLE]: buildBicycle
+    [VehicleType.BICYCLE]: buildBicycle,
+    [VehicleType.MOTORCYCLE]: buildMotorcycle
 };
 
 export class VehicleRenderer {

@@ -9,7 +9,7 @@ import { Position } from '../core/Position.js';
 // 0.9.80 — Vehicle Dismount Position Resolution, core/AvatarVehicleDismountPosition.js.
 //
 //   Section A: deterministic destination — same input, same output
-//   Section B: bicycle-specific resolution — the exact candidate a bicycle produces
+//   Section B: bicycle/motorcycle resolution — the exact candidate each produces
 //   Section C: X/Z semantics — horizontal displacement is correct
 //   Section D: Y handling — never copies the vehicle's own terrain-sampled Y
 //   Section E: null/invalid inputs — malformed input throws, an unknown
@@ -58,7 +58,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section B — bicycle-specific resolution
+    // Section B — bicycle/motorcycle resolution
     // -------------------------------------------------------------
     {
         const vehicle = bicycleAt(5, 1.2, 7);
@@ -67,6 +67,17 @@ async function runTests() {
         assert(result.x === 5 + BICYCLE_DISMOUNT_OFFSET_X, '3. x is offset from the vehicle by exactly BICYCLE_DISMOUNT_OFFSET_X');
         assert(result.z === 7, '4. z matches the vehicle exactly, unshifted');
         assert(result.y === 0, '5. y is the flat avatar-domain ground level, not the vehicle\'s own y');
+    }
+    {
+        // 0.9.668 — a MOTORCYCLE resolves identically to a BICYCLE at the
+        // same position, sharing the exact same offset (see
+        // core/AvatarVehicleDismountPosition.js's own 0.9.668 header).
+        const vehicle = new VehiclePresence({ id: 'vehicle:1:0,0', type: VehicleType.MOTORCYCLE, position: new Position(5, 1.2, 7) });
+        const result = resolveAvatarVehicleDismountPosition(vehicle);
+        assert(result instanceof Position, '5b. a valid motorcycle produces a Position instance');
+        assert(result.x === 5 + BICYCLE_DISMOUNT_OFFSET_X, '5c. a motorcycle\'s x is offset by exactly the SAME constant a bicycle uses');
+        assert(result.z === 7, '5d. z matches the vehicle exactly, unshifted');
+        assert(result.y === 0, '5e. y is the flat avatar-domain ground level, not the vehicle\'s own y');
     }
 
     // -------------------------------------------------------------
@@ -119,7 +130,9 @@ async function runTests() {
     {
         // A vehicle type this file has no dismount rule for is a
         // legitimate "no destination known" answer, not malformed input.
-        for (const type of [VehicleType.MOTORCYCLE, VehicleType.CAR, VehicleType.DRONE]) {
+        // BICYCLE and MOTORCYCLE both resolve a real Position (Section B,
+        // above) — only CAR/DRONE remain in this null-resolving set.
+        for (const type of [VehicleType.CAR, VehicleType.DRONE]) {
             const vehicle = new VehiclePresence({ id: 'vehicle:1:0,0', type, position: new Position(1, 1, 1) });
             const result = resolveAvatarVehicleDismountPosition(vehicle);
             assert(result === null, `16. a ${type} vehicle resolves to null rather than throwing or guessing at a geometry it has none for`);
@@ -251,11 +264,11 @@ async function runTests() {
         assert(fromInstance.equals(fromPresence), '31. a never-moved VehicleInstance resolves to exactly the same position a VehiclePresence at the same coordinates always has');
     }
     {
-        // Non-bicycle VehicleInstance types still honestly resolve to
+        // CAR/DRONE VehicleInstance types still honestly resolve to
         // null — the same "no rule for this type yet" answer a
         // VehiclePresence of the same type already gives (Section E).
         const { VehicleInstance } = await import('../core/VehicleInstance.js');
-        for (const type of [VehicleType.MOTORCYCLE, VehicleType.CAR, VehicleType.DRONE]) {
+        for (const type of [VehicleType.CAR, VehicleType.DRONE]) {
             const instance = new VehicleInstance({ id: 'vehicle:1:0,0', type, spawnPosition: new Position(1, 1, 1) });
             assert(resolveAvatarVehicleDismountPosition(instance) === null,
                 `32. a ${type} VehicleInstance resolves to null, exactly like a ${type} VehiclePresence already does`);

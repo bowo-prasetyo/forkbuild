@@ -606,9 +606,11 @@ async function runTests() {
             '61. setHeading() never resets a position a prior setPosition() call already applied');
     }
     {
-        // Unsupported vehicle types remain unsupported — 0.9.124 changes
-        // nothing about which types this renderer can show.
-        for (const type of [VehicleType.MOTORCYCLE, VehicleType.CAR, VehicleType.DRONE]) {
+        // Unsupported vehicle types remain unsupported — 0.9.124 changed
+        // nothing about which types this renderer can show; 0.9.668 later
+        // added a MOTORCYCLE builder (renderer/VehicleRenderer.js), so
+        // only CAR/DRONE remain in this unsupported set now.
+        for (const type of [VehicleType.CAR, VehicleType.DRONE]) {
             const visual = new VehicleVisual(new VehicleRenderer(), type);
             assert(visual.isSupported === false, `62.${type} still reports isSupported === false`);
             visual.setHeading(90); // must never throw even with no built geometry
@@ -846,11 +848,15 @@ async function runTests() {
         }
     }
     {
-        // isMovableVehicleType() is still gated on BICYCLE alone — this
-        // audit introduces no new movable vehicle type.
-        assert(isMovableVehicleType(VehicleType.BICYCLE) === true, '83. sanity: BICYCLE is still movable');
-        for (const type of [VehicleType.MOTORCYCLE, VehicleType.CAR, VehicleType.DRONE]) {
-            assert(isMovableVehicleType(type) === false, `84.${type} is still never movable — 0.9.124 adds no new capability of any kind`);
+        // isMovableVehicleType() was gated on BICYCLE alone at 0.9.124 —
+        // that milestone introduced no new movable vehicle type. 0.9.668
+        // later added MOTORCYCLE (application/AvatarVehicleMovementController.js);
+        // CAR/DRONE still never move.
+        for (const type of [VehicleType.BICYCLE, VehicleType.MOTORCYCLE]) {
+            assert(isMovableVehicleType(type) === true, `83.${type} sanity: ${type} is movable`);
+        }
+        for (const type of [VehicleType.CAR, VehicleType.DRONE]) {
+            assert(isMovableVehicleType(type) === false, `84.${type} is still never movable`);
         }
     }
 

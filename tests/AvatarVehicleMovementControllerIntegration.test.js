@@ -38,7 +38,8 @@ import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUs
 //   Section G: braking — through the real Control-key binding, reduces
 //              distance covered exactly like the underlying capability
 //              already governs for on-foot movement
-//   Section H: unsupported vehicle types (MOTORCYCLE) are never moved
+//   Section H: unsupported vehicle types (CAR) are never moved; Section
+//              H2: MOTORCYCLE, by contrast, is (0.9.668)
 //              by this session's own wiring, even while genuinely
 //              mounted on one
 //
@@ -368,27 +369,33 @@ async function runTests() {
 
     // -------------------------------------------------------------
     // Section H — unsupported vehicle types are never moved by this
-    // session's own wiring, even while genuinely mounted on one.
+    // session's own wiring, even while genuinely mounted on one. Through
+    // 0.9.667 this used MOTORCYCLE as its example; 0.9.668 gave
+    // MOTORCYCLE a real placement + rendering + movement path (see
+    // core/VehiclePlacement.js/renderer/VehicleRenderer.js/
+    // application/AvatarVehicleMovementController.js's own 0.9.668
+    // headers), so this section now uses CAR — still genuinely
+    // unsupported end to end — to keep proving the same invariant.
     // -------------------------------------------------------------
     {
-        const motorcyclePosition = { x: realVehicle.position.x + 900, y: realVehicle.position.y, z: realVehicle.position.z + 900 };
-        const motorcycleId = 'vehicle:test-motorcycle';
+        const carPosition = { x: realVehicle.position.x + 900, y: realVehicle.position.y, z: realVehicle.position.z + 900 };
+        const carId = 'vehicle:test-car';
         const { avatarProfileUseCase, avatarPresenceSession } = buildAvatarStack(
-            registry, 'move-h1', new Position(motorcyclePosition.x, 0, motorcyclePosition.z)
+            registry, 'move-h1', new Position(carPosition.x, 0, carPosition.z)
         );
         const session = buildSession(registry, avatarProfileUseCase, avatarPresenceSession);
         session.setAvatarControlMode(true);
 
         // This codebase's own deterministic placement never produces a
-        // MOTORCYCLE (core/VehiclePlacement.js places BICYCLE only) — so
-        // reaching this state requires directly injecting one into the
-        // runtime store and the mount relationship, exactly the
+        // CAR (core/VehiclePlacement.js places BICYCLE/MOTORCYCLE only) —
+        // so reaching this state requires directly injecting one into
+        // the runtime store and the mount relationship, exactly the
         // scenario Section H of this milestone's own brief describes:
-        // "don't accidentally make MOTORCYCLE ... movable merely because
+        // "don't accidentally make CAR ... movable merely because
         // the generic runtime now supports VehicleInstance."
-        const motorcycle = new VehicleInstance({
-            id: motorcycleId, type: VehicleType.MOTORCYCLE,
-            spawnPosition: motorcyclePosition, position: motorcyclePosition
+        const car = new VehicleInstance({
+            id: carId, type: VehicleType.CAR,
+            spawnPosition: carPosition, position: carPosition
         });
         // Seed the store the same way sync() would (there is no public
         // "inject" method — this store only ever adds what
@@ -397,6 +404,40 @@ async function runTests() {
         // to prove the GATING happens one layer up, in
         // AvatarVehicleMovementController#canMove(), never in the store
         // itself).
+        session._vehicleRuntimeInstances._instances.set(carId, car);
+        session._avatarVehicleInteractionController._mount = createAvatarVehicleMount(carId);
+
+        session.avatarKeyDown('w');
+        for (let i = 0; i < 10; i++) fireFrame(session, 0.05);
+        session.avatarKeyUp('w');
+
+        const after = session._vehicleRuntimeInstances.get(carId);
+        assert(after.position.x === carPosition.x && after.position.z === carPosition.z,
+            '21. UNSUPPORTED VEHICLE TYPE: a mounted CAR\'s own position is never touched by this session\'s frame loop, even while genuinely "mounted" on it and holding W');
+    }
+
+    // -------------------------------------------------------------
+    // Section H2 (0.9.668) — MOTORCYCLE, by contrast, now IS moved by
+    // this session's own wiring, end to end, exactly like BICYCLE.
+    // -------------------------------------------------------------
+    {
+        const motorcyclePosition = { x: realVehicle.position.x + 950, y: realVehicle.position.y, z: realVehicle.position.z + 950 };
+        const motorcycleId = 'vehicle:test-motorcycle';
+        const { avatarProfileUseCase, avatarPresenceSession } = buildAvatarStack(
+            registry, 'move-h2', new Position(motorcyclePosition.x, 0, motorcyclePosition.z)
+        );
+        const session = buildSession(registry, avatarProfileUseCase, avatarPresenceSession);
+        session.setAvatarControlMode(true);
+
+        // core/VehiclePlacement.js's own 0.9.668 update means a real
+        // motorcycle CAN exist deterministically, but directly injecting
+        // one here (same technique as Section H) keeps this test
+        // independent of any particular seed/region actually producing
+        // one nearby.
+        const motorcycle = new VehicleInstance({
+            id: motorcycleId, type: VehicleType.MOTORCYCLE,
+            spawnPosition: motorcyclePosition, position: motorcyclePosition
+        });
         session._vehicleRuntimeInstances._instances.set(motorcycleId, motorcycle);
         session._avatarVehicleInteractionController._mount = createAvatarVehicleMount(motorcycleId);
 
@@ -405,8 +446,8 @@ async function runTests() {
         session.avatarKeyUp('w');
 
         const after = session._vehicleRuntimeInstances.get(motorcycleId);
-        assert(after.position.x === motorcyclePosition.x && after.position.z === motorcyclePosition.z,
-            '21. UNSUPPORTED VEHICLE TYPE: a mounted MOTORCYCLE\'s own position is never touched by this session\'s frame loop, even while genuinely "mounted" on it and holding W');
+        assert(!(after.position.x === motorcyclePosition.x && after.position.z === motorcyclePosition.z),
+            '21b. a mounted MOTORCYCLE\'s own position IS moved by this session\'s frame loop while holding W, as of 0.9.668');
     }
 
     console.log('✅ All Avatar-Vehicle Movement Controller (World View) Integration tests passed.');

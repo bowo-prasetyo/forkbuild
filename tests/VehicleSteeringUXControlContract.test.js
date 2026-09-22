@@ -84,9 +84,12 @@ import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUs
 //      stays exactly where it was.
 //   8. A/D remains AVATAR rotation, not vehicle steering — the two never
 //      touch the same state.
-//   9. Steering is currently BICYCLE behavior, not a generic all-vehicle
-//      one — `VehicleType` already names MOTORCYCLE, CAR, and DRONE, but
-//      only BICYCLE has a runtime movement/rendering path at all.
+//   9. Steering applies to any MOVABLE ground vehicle, never to a
+//      specific one by name — through 0.9.667 that meant BICYCLE alone
+//      had a runtime movement/rendering path; 0.9.668 gave MOTORCYCLE
+//      one too (core/VehiclePlacement.js/renderer/VehicleRenderer.js),
+//      and it steers identically, through the exact same generic gate.
+//      CAR and DRONE still have no runtime movement/rendering path.
 //
 // This is a documentation-and-test milestone, matching this milestone's
 // own brief: no production file changes. See docs/Roadmap.md, 0.9.130, for
@@ -336,31 +339,48 @@ async function runTests() {
         session.avatarKeyUp('w');
     }
 
-    // 9 — steering is bicycle behavior, not generic all-vehicle behavior:
-    // BICYCLE is the only VehicleType this codebase can actually move.
+    // 9 — steering applies to any movable ground vehicle, never to a
+    // specific one by name: BICYCLE and MOTORCYCLE are both movable
+    // (0.9.668); CAR/DRONE are not.
     {
         assert(isMovableVehicleType(VehicleType.BICYCLE) === true, '9a. BICYCLE is movable');
-        assert(isMovableVehicleType(VehicleType.MOTORCYCLE) === false, '9b. MOTORCYCLE — named in VehicleType, but no runtime movement path yet');
-        assert(isMovableVehicleType(VehicleType.CAR) === false, '9c. CAR — same');
+        assert(isMovableVehicleType(VehicleType.MOTORCYCLE) === true, '9b. MOTORCYCLE is movable too, as of 0.9.668');
+        assert(isMovableVehicleType(VehicleType.CAR) === false, '9c. CAR — still no runtime movement path');
         assert(isMovableVehicleType(VehicleType.DRONE) === false, '9d. DRONE — same');
 
-        // Defense in depth, matching application/AvatarVehicleMovementController.js's
-        // own tick(): even a caller that skips canMove() first, and even
-        // for a vehicle id that IS genuinely tracked (never merely
-        // "unknown id"), can never move a non-bicycle vehicle through
-        // steering — the type gate itself is what blocks it.
-        const motorcycleInstance = new VehicleInstance({
+        // Steering genuinely drives a MOTORCYCLE through this exact same
+        // pipeline, matching application/AvatarVehicleMovementController.js's
+        // own generic `canMove()` gate — never a vehicle-specific
+        // steering implementation.
+        let motorcycleInstance = new VehicleInstance({
             id: 'contract-9-motorcycle', type: VehicleType.MOTORCYCLE,
             spawnPosition: { x: 0, y: 0, z: 0 }, position: { x: 0, y: 0, z: 0 }, heading: 0
         });
-        const controller = new AvatarVehicleMovementController({ get: (id) => id === motorcycleInstance.id ? motorcycleInstance : null });
+        const controller = new AvatarVehicleMovementController({
+            get: (id) => id === motorcycleInstance.id ? motorcycleInstance : null,
+            setPosition: (id, position) => { motorcycleInstance = motorcycleInstance.withPosition(position); return motorcycleInstance; },
+            setHeading: (id, heading) => { motorcycleInstance = motorcycleInstance.withHeading(heading); return motorcycleInstance; }
+        });
         const capability = resolveAvatarVehicleMovementCapability(VehicleType.MOTORCYCLE);
         const result = controller.tick({
             seed: DEFAULT_WORLD_SEED, vehicleId: motorcycleInstance.id, capability,
             movementIntent: { direction: 1, turnAxis: 0, running: false, brakingRequested: false },
             currentRotationY: 0, deltaSeconds: 0.05, steeringIntent: VehicleSteeringIntent.left()
         });
-        assert(result === null, '9e. a genuinely TRACKED motorcycle still never simulates — the type gate itself blocks it, steering intent supplied or not');
+        assert(result !== null, '9e. a genuinely TRACKED, movable motorcycle simulates a real tick, steering intent included');
+
+        // A CAR, by contrast, is still gated out entirely.
+        const carInstance = new VehicleInstance({
+            id: 'contract-9-car', type: VehicleType.CAR,
+            spawnPosition: { x: 0, y: 0, z: 0 }, position: { x: 0, y: 0, z: 0 }, heading: 0
+        });
+        const carController = new AvatarVehicleMovementController({ get: (id) => id === carInstance.id ? carInstance : null });
+        const carResult = carController.tick({
+            seed: DEFAULT_WORLD_SEED, vehicleId: carInstance.id, capability: resolveAvatarVehicleMovementCapability(VehicleType.CAR),
+            movementIntent: { direction: 1, turnAxis: 0, running: false, brakingRequested: false },
+            currentRotationY: 0, deltaSeconds: 0.05, steeringIntent: VehicleSteeringIntent.left()
+        });
+        assert(carResult === null, '9f. a genuinely TRACKED car still never simulates — the type gate itself blocks it, steering intent supplied or not');
     }
 
     // ===============================================================

@@ -116,6 +116,24 @@ const DENSITY_SEED_OFFSET = 0x42434449;  // 'BCDI'
 const JITTER_X_SEED_OFFSET = 0x42434a58; // 'BCJX'
 const JITTER_Z_SEED_OFFSET = 0x42434a5a; // 'BCJZ'
 
+// 0.9.668 — Motorcycle Placement. Extends this file's own qualifying-cell
+// pipeline (ground gate, then density gate) with exactly one more
+// decision, evaluated only once a cell has already qualified to host
+// *some* vehicle: WHICH vehicle. A motorcycle is rarer than a bicycle —
+// it is the faster, more capable of the two ground vehicles this
+// codebase can currently place, matching the WALK < BICYCLE < MOTORCYCLE
+// ordering core/AvatarVehicleMovementCapability.js's own header already
+// establishes — so only a minority (VEHICLE_TYPE_MOTORCYCLE_SHARE) of
+// qualifying cells become a motorcycle; the rest remain a bicycle, the
+// same default this file has always produced. This is its own
+// decorrelated hash roll (own seed offset, own lattice-cell inputs),
+// never reusing DENSITY_SEED_OFFSET/JITTER_*_SEED_OFFSET — a cell's
+// existence decision and its type decision are independent questions,
+// exactly the "one hash per independent question" discipline every
+// other field in this file already follows.
+const VEHICLE_TYPE_SEED_OFFSET = 0x4d435459; // 'MCTY'
+const VEHICLE_TYPE_MOTORCYCLE_SHARE = 0.25;
+
 function smoothstep(t) {
     return t * t * (3 - 2 * t);
 }
@@ -171,6 +189,18 @@ export function bicycleDensityAt(seed, x, z) {
     return valueNoise2D(seed + DENSITY_SEED_OFFSET, x * DENSITY_FREQUENCY, z * DENSITY_FREQUENCY);
 }
 
+// Which VehicleType a qualifying cell hosts — see this file's own 0.9.668
+// header, "Motorcycle Placement." A pure function of exactly (seed,
+// cellX, cellZ), the same lattice-cell inputs presenceForCell() already
+// uses to decide jitter, so a cell's type never depends on the ground/
+// density gates having run first. Exported for the same reason
+// bicycleDensityAt() is: so a test or tool can evaluate a single cell's
+// type roll in isolation.
+export function vehicleTypeForCell(seed, cellX, cellZ) {
+    const roll = hash2D(seed + VEHICLE_TYPE_SEED_OFFSET, cellX, cellZ);
+    return roll < VEHICLE_TYPE_MOTORCYCLE_SHARE ? VehicleType.MOTORCYCLE : VehicleType.BICYCLE;
+}
+
 // Every VehiclePresence this file can ever produce for one lattice cell,
 // or null if the cell hosts nothing — factored out of
 // vehiclePresenceInRegion() so both it and tests/tools can evaluate a
@@ -192,7 +222,7 @@ function presenceForCell(seed, cellX, cellZ) {
     const y = terrainHeightAt(seed, x, z);
     return new VehiclePresence({
         id: vehicleIdFor(seed, cellX, cellZ),
-        type: VehicleType.BICYCLE,
+        type: vehicleTypeForCell(seed, cellX, cellZ),
         position: new Position(x, y, z)
     });
 }
@@ -225,9 +255,11 @@ export function vehiclePresenceInRegion(seed, minX, minZ, maxX, maxZ) {
     return presences;
 }
 
-// Deliberately not yet: any vehicle type other than BICYCLE (this
-// milestone's own brief names bicycle as the sole first vehicle — see
-// docs/Roadmap.md, 0.9.72); roads, paths, parking areas, garages, or any
+// Deliberately not yet: any vehicle type other than BICYCLE/MOTORCYCLE
+// (0.9.668 — see this file's own header, "Motorcycle Placement" — added
+// a type roll on top of this file's existing existence gates, not a
+// third gate of its own; CAR/DRONE still never spawn); roads, paths,
+// parking areas, garages, or any
 // other structured "where a vehicle plausibly stands" concept beyond dry,
 // non-river ground (see this file's own header); vehicle rendering;
 // avatar-proximity or interaction detection; mounting/dismounting;
