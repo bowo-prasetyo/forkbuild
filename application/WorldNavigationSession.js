@@ -17,6 +17,7 @@ import { RemoveWorldLandmarkCommand } from './commands/RemoveWorldLandmarkComman
 import { CreateWorldRegionCommand } from './commands/CreateWorldRegionCommand.js';
 import { UpdateWorldRegionCommand } from './commands/UpdateWorldRegionCommand.js';
 import { RemoveWorldRegionCommand } from './commands/RemoveWorldRegionCommand.js';
+import { CreateWorldAnimalDecorationCommand } from './commands/CreateWorldAnimalDecorationCommand.js';
 import { RegionKind } from '../core/RegionKind.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
 import { Document } from '../core/Document.js';
@@ -36,6 +37,7 @@ import { AvatarVehicleInteractionController } from './AvatarVehicleInteractionCo
 import { VehicleRuntimeInstances } from './VehicleRuntimeInstances.js';
 import { AvatarAnimalInteractionController } from './AvatarAnimalInteractionController.js';
 import { AnimalRuntimeInstances, ANIMAL_RENDER_RADIUS } from './AnimalRuntimeInstances.js';
+import { ANIMAL_INTERACTION_RADIUS } from '../core/AvatarAnimalCatchTarget.js';
 import { AvatarInventoryStore } from './AvatarInventoryStore.js';
 import { AvatarInventoryTransferPeerExchange } from './AvatarInventoryTransferPeerExchange.js';
 import { AvatarVehicleMovementController } from './AvatarVehicleMovementController.js';
@@ -169,6 +171,16 @@ const RUNTIME_PLACEMENT_PERSISTENCE_INTERVAL_MS = 1000;
 // WASD, with no existing meaning anywhere in this file or its sibling
 // controllers.
 const VEHICLE_BRAKE_KEY = 'control';
+// 0.9.702 — the ONE physical key that bakes the nearest released
+// animal into durable World content — see
+// `_processWorldAnimalDecorationInput()`'s own header, below, for why
+// 'G' is the key this milestone picks: W/A/S/D, Shift, Space, Alt, 'E',
+// 'F', Control, and the arrow keys are all already claimed (see
+// VEHICLE_BRAKE_KEY's own comment, immediately above, and
+// application/AvatarAnimalInteractionController.js's own header for
+// 'F'), and 'G' — the next letter along the same QWERTY home-row reach
+// — carries no meaning anywhere in World View.
+const WORLD_ANIMAL_DECORATION_KEY = 'g';
 // 0.9.128 — the two physical keys that produce a real steering request —
 // see `_processVehicleSteeringInput()`'s own header, below, for why arrow
 // keys are the pair this milestone picks: W/A/S/D, Shift, Space, Alt, 'E',
@@ -720,6 +732,13 @@ export class WorldNavigationSession {
 	    // copy of that request.
 	    this._vehicleSteerLeftHeld = false;
 	    this._vehicleSteerRightHeld = false;
+	    // 0.9.702 — World Animal Decorations. The direct structural twin
+	    // of `_vehicleSteerLeftHeld` above, one layer over for
+	    // `_processWorldAnimalDecorationInput()`'s own rising-edge check —
+	    // decorateNearestReleasedAnimalHere() is a discrete, one-shot
+	    // action, never something a HELD 'G' should keep re-triggering on
+	    // every repeat keydown a browser's own key-repeat fires.
+	    this._decorateKeyHeld = false;
 	    this._followAvatarEnabled = false;
 	    this._lastAvatarFollowPosition = null;
 	    // 0.3.2 — Camera Perspective. `null` means "off" — the free/orbit
@@ -2521,6 +2540,34 @@ export class WorldNavigationSession {
             : null;
     }
 
+    // 0.9.702 — World Animal Decorations. The "[G] Decorate <Species>"
+    // AFFORDANCE — a caller (ordinarily a future World View prompt,
+    // mirroring ui/components/AnimalInteractionPrompt.js's own catch/
+    // release affordance) needs to know whether a nearby RELEASED
+    // animal exists to bake into durable World content, WITHOUT
+    // recomputing proximity itself. Deliberately its OWN method, never
+    // folded into avatarAnimalInteractionState() above: that one is a
+    // plain pass-through to AvatarAnimalInteractionController's own
+    // catch/release concern, which knows nothing about Documents,
+    // Worlds, or authorization — "is there something durable-World-
+    // content-worthy standing right here" is this class's own concern,
+    // the identical layering canEditDocument()/getDocumentPosition()
+    // already keep separate from the controller. Returns `null` when no
+    // local avatar exists, the same graceful-absence posture every
+    // sibling *InteractionState() method here already takes.
+    animalDecorationInteractionState() {
+        const avatarPos = this.getAvatarPosition();
+        if (!avatarPos) {
+            return null;
+        }
+        const target = this._animalRuntimeInstances.nearestReleased(avatarPos, ANIMAL_INTERACTION_RADIUS);
+        return Object.freeze({
+            canDecorate: target !== null,
+            species: target ? target.species : null,
+            targetAnimalId: target ? target.id : null
+        });
+    }
+
     // 0.9.702 — Avatar Inventory Transfer. A plain accessor for the
     // collaborator this constructor may have built (see this class's own
     // constructor comment on `peerMessageBus`/`connectedPeerRegistry`) —
@@ -2616,6 +2663,9 @@ export class WorldNavigationSession {
         // fire.
         this._vehicleSteerLeftHeld = false;
         this._vehicleSteerRightHeld = false;
+        // 0.9.702 — same "never leave physical input state stuck"
+        // reasoning as the steer-key resets above, for 'G'.
+        this._decorateKeyHeld = false;
         if (!this._avatarControlModeActive && this._avatarMovementController) {
             this._avatarMovementController.releaseAll();
         }
@@ -2671,6 +2721,9 @@ export class WorldNavigationSession {
         // here too.
         this._vehicleSteerLeftHeld = false;
         this._vehicleSteerRightHeld = false;
+        // 0.9.702 — same "release keys without touching the mode" seam,
+        // extended to the decorate key.
+        this._decorateKeyHeld = false;
         if (this._avatarMovementController) {
             this._avatarMovementController.releaseAll();
         }
@@ -2742,7 +2795,12 @@ export class WorldNavigationSession {
         // either, so neither controller above ever recognizes them — see
         // `_processVehicleSteeringInput()`'s own header, below.
         const vehicleSteeringConsumed = this._processVehicleSteeringInput(key, 'keydown');
-        return movementConsumed || vehicleInteractionConsumed || animalInteractionConsumed || vehicleBrakingConsumed || vehicleSteeringConsumed;
+        // 0.9.702 — same "tried independently" posture as every key
+        // above: 'G' is not a movement, vehicle, braking, or steering
+        // key, so nothing above ever recognizes it — see
+        // `_processWorldAnimalDecorationInput()`'s own header, above.
+        const worldAnimalDecorationConsumed = this._processWorldAnimalDecorationInput(key, 'keydown');
+        return movementConsumed || vehicleInteractionConsumed || animalInteractionConsumed || vehicleBrakingConsumed || vehicleSteeringConsumed || worldAnimalDecorationConsumed;
     }
 
     avatarKeyUp(key) {
@@ -2789,7 +2847,13 @@ export class WorldNavigationSession {
         // already switched off must still clear the steering hold bit
         // rather than leaving it stale.
         const vehicleSteeringConsumed = this._processVehicleSteeringInput(key, 'keyup');
-        return movementConsumed || vehicleInteractionConsumed || animalInteractionConsumed || vehicleBrakingConsumed || vehicleSteeringConsumed;
+        // 0.9.702 — same "always forwarded" posture as every keyUp
+        // above: clears `_decorateKeyHeld` even if control mode was
+        // switched off between this key's down and up, for the
+        // identical reason `_processVehicleBrakingInput()`'s own keyup
+        // handling already gives.
+        const worldAnimalDecorationConsumed = this._processWorldAnimalDecorationInput(key, 'keyup');
+        return movementConsumed || vehicleInteractionConsumed || animalInteractionConsumed || vehicleBrakingConsumed || vehicleSteeringConsumed || worldAnimalDecorationConsumed;
     }
 
     // 0.9.66 — Continuous Movement Controller Integration. The ONE
@@ -2931,6 +2995,52 @@ export class WorldNavigationSession {
             this._avatarMovementController.setVehicleBrakingIntent(
                 deriveAvatarVehicleBrakingIntent({ brakeRequested })
             );
+        }
+        return true;
+    }
+
+    // 0.9.702 — World Animal Decorations Input Binding. The ONE seam
+    // that decides which physical key finally calls
+    // decorateNearestReleasedAnimalHere() in real play — the direct
+    // counterpart to 0.9.96's own `_processVehicleBrakingInput()` above,
+    // for WORLD_ANIMAL_DECORATION_KEY ('G') instead of Control.
+    //
+    // RISING EDGE ONLY, NEVER EVERY REPEAT — unlike braking (a
+    // continuous HELD fact, correctly re-derived on every keydown a
+    // browser's own key-repeat fires), decorating is a discrete,
+    // one-shot action: `_decorateKeyHeld` exists purely so a held 'G'
+    // fires decorateNearestReleasedAnimalHere() exactly once, on the
+    // genuine new press, the identical "tell a real new press from an
+    // uninteresting repeat" concern `_vehicleSteerLeftHeld`/
+    // `_vehicleSteerRightHeld` already solve for steering (see those
+    // fields' own constructor comment).
+    //
+    // NEVER LETS AN ERROR ESCAPE. decorateNearestReleasedAnimalHere()
+    // throws for a handful of real setup problems (no live avatar, no
+    // editable document, not authorized, not signed in) — the same
+    // contract createLandmarkHere() already keeps, because a UI caller
+    // is expected to guard() around it (see ui/views/WorldView.js's own
+    // onSaveLandmarkForm). This method IS that guard for the raw
+    // keyboard path: catching and discarding is correct here specifically
+    // because "nothing usable happened" is exactly what a stray 'G'
+    // press with, say, no signed-in identity yet should look like from
+    // the keyboard — the key is still reported consumed either way, so
+    // nothing else in this file mistakes 'G' for an unrelated command.
+    _processWorldAnimalDecorationInput(key, type) {
+        if (String(key || '').toLowerCase() !== WORLD_ANIMAL_DECORATION_KEY) {
+            return false;
+        }
+        if (type === 'keyup') {
+            this._decorateKeyHeld = false;
+            return true;
+        }
+        if (!this._decorateKeyHeld) {
+            this._decorateKeyHeld = true;
+            try {
+                this.decorateNearestReleasedAnimalHere();
+            } catch {
+                // See this method's own header, "Never lets an error escape."
+            }
         }
         return true;
     }
@@ -7114,6 +7224,89 @@ export class WorldNavigationSession {
 	}
 
 	// -----------------------------------------------------------------
+	// World Animal Decorations (0.9.702) — bakes the nearest RELEASED
+	// animal (application/AnimalRuntimeInstances.js's own ephemeral,
+	// session-local AnimalPresence — never a deterministic, tile-baked
+	// one) into the ACTIVE document's World as durable, publishable
+	// content. The direct structural twin of createLandmarkHere() above
+	// — same fork-on-write guard (_ensureEditableDocumentId), same
+	// canEditDocument authorization gate, same local-position-via-
+	// layout-offset-subtraction — but sourcing species/position from a
+	// nearby released animal instead of a form's title/description, and
+	// with no separate update/remove counterpart (see
+	// core/AnimalDecoration.js's own header: decorative only, v1).
+	//
+	// UNLIKE createLandmarkHere(), Y IS NOT DISCARDED OR RE-DERIVABLE —
+	// see core/AnimalDecoration.js's own header for why an animal
+	// decoration's position is composed exactly like a Brick's/
+	// StructurePlacement's own local position, never like a Landmark's.
+	// avatarPos.y already reflects any real height the avatar (and
+	// therefore a released animal standing at the same spot) gained
+	// from standing on a placed structure's own bricks — a genuine
+	// domain-level fact application/AvatarMovementConstraint.js already
+	// produces — so subtracting only this document's own layout offset
+	// (never re-deriving from terrain, the way withGroundElevation()
+	// does for a LIVE avatar's own render position — see
+	// application/RenderWorldViewUseCase.js's own header) is what makes
+	// "released on top of a pyramid" survive the round trip through
+	// storage/publish/reload.
+	//
+	// RETURNS null, NEVER THROWS, WHEN NOTHING NEARBY QUALIFIES — a
+	// keybind can be pressed opportunistically with nothing released
+	// nearby at all; that is an ordinary, expected outcome, never a
+	// caller mistake the way calling this with no live avatar at all is
+	// (createLandmarkHere()'s own header explains that latter case; the
+	// same posture applies here).
+	//
+	// TRANSFERS OWNERSHIP FROM RUNTIME TO DOCUMENT. Once the decoration
+	// command commits, the source AnimalPresence is discard()'d from
+	// application/AnimalRuntimeInstances.js — the SAME "remove and
+	// permanently exclude" effect a catch already performs (see that
+	// method's own header) — so a decorated animal stops being
+	// individually rendered/tracked THIS session and can never be
+	// re-caught or re-decorated a second time under its old runtime id.
+	// It is not a live, catchable creature for anyone who loads the
+	// published World later either — see core/AnimalDecoration.js's own
+	// header, "Decorative only, v1."
+	decorateNearestReleasedAnimalHere() {
+	    const avatarPos = this.getAvatarPosition();
+	    if (!avatarPos) {
+	        throw new Error('WorldNavigationSession: cannot decorate a World without a live avatar position');
+	    }
+	    const target = this._animalRuntimeInstances.nearestReleased(avatarPos, ANIMAL_INTERACTION_RADIUS);
+	    if (!target) {
+	        return null;
+	    }
+	    this._activeDocumentId = this._ensureEditableDocumentId(this._activeDocumentId);
+	    const doc = this.getDocument(this._activeDocumentId);
+	    if (!doc) {
+	        throw new Error('WorldNavigationSession: no active World to add a decoration to');
+	    }
+	    const worldId = doc.world.id;
+	    if (!this.canEditDocument(worldId)) {
+	        throw new Error('WorldNavigationSession: not authorized to decorate this World');
+	    }
+	    const authorIdentityId = resolveSigningIdentityId(this._identityProvider);
+	    if (!authorIdentityId) {
+	        throw new Error('WorldNavigationSession: sign in to decorate a World');
+	    }
+	    const layoutPosition = this.getDocumentPosition(worldId);
+	    const cmd = new CreateWorldAnimalDecorationCommand({
+	        worldId,
+	        authorIdentityId,
+	        species: target.species,
+	        position: new Position(
+	            target.position.x - layoutPosition.x,
+	            target.position.y - layoutPosition.y,
+	            target.position.z - layoutPosition.z
+	        )
+	    });
+	    this._commandHistories.get(worldId).execute(cmd);
+	    this._animalRuntimeInstances.discard(target.id, target.position);
+	    return cmd.executedDecorationId;
+	}
+
+	// -----------------------------------------------------------------
 	// World Regions (0.5.0) — explicit, persistent World content: a
 	// named AREA (center + radius) rather than a landmark's single
 	// point. Mirrors the World Landmarks section immediately above in
@@ -7594,6 +7787,7 @@ export class WorldNavigationSession {
         this._shiftDown = false;
         this._vehicleSteerLeftHeld = false;
         this._vehicleSteerRightHeld = false;
+        this._decorateKeyHeld = false;
         this._followAvatarEnabled = false;
         this._lastAvatarFollowPosition = null;
         this._cameraPerspective = null;

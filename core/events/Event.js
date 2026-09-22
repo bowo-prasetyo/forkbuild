@@ -34,5 +34,13 @@ export const DomainEvent = Object.freeze({
     // POINT. Lifecycle is a domain concern exactly like the two above.
     WORLD_REGION_ADDED: 'WorldRegionAdded',
     WORLD_REGION_REMOVED: 'WorldRegionRemoved',
-    WORLD_REGION_UPDATED: 'WorldRegionUpdated'
+    WORLD_REGION_UPDATED: 'WorldRegionUpdated',
+    // 0.9.702 — World Animal Decorations: a released animal baked into
+    // durable, publishable World content. Lifecycle is a domain concern
+    // exactly like WorldLandmark above — no UPDATED counterpart, since a
+    // decoration is decorative-only in v1 (no editable fields once
+    // placed; removing and re-decorating covers every real case a v1
+    // consumer has).
+    ANIMAL_DECORATION_ADDED: 'AnimalDecorationAdded',
+    ANIMAL_DECORATION_REMOVED: 'AnimalDecorationRemoved'
 });

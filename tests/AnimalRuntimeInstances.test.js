@@ -13,6 +13,8 @@ import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
 //   Section D: nearby() is a read, never a discovery/eviction
 //   Section E: drainRecentlyCaught() — the render-sync queue
 //   Section F: clear() resets everything
+//   Section G: nearestReleased() — the single nearest RELEASED animal,
+//              scoped away from sync()-discovered ones (0.9.702)
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -123,6 +125,59 @@ function runTests() {
         assert(store.drainRecentlyCaught().length === 0, '18. clear() also empties the recently-caught queue');
         const rediscovered = store.sync(SEED, fixture.position, 30);
         assert(rediscovered.some((a) => a.id === fixture.id), '19. clear() also resets the exclusion set — a previously-caught animal is discoverable again after clear()');
+    }
+
+    // -------------------------------------------------------------
+    // Section G
+    // -------------------------------------------------------------
+    {
+        const store = new AnimalRuntimeInstances();
+        const center = new Position(0, 0, 0);
+        assert(store.nearestReleased(center, 5) === null, '20. an empty store has no nearest released animal');
+    }
+    {
+        const store = new AnimalRuntimeInstances();
+        const center = new Position(0, 0, 0);
+        const near = new AnimalPresence({ id: 'near', species: ANIMAL_SPECIES.RABBIT, position: new Position(1, 0, 0) });
+        const far = new AnimalPresence({ id: 'far', species: ANIMAL_SPECIES.RABBIT, position: new Position(4, 0, 0) });
+        store.add(far);
+        store.add(near);
+        assert(store.nearestReleased(center, 5).id === 'near', '21. nearestReleased() returns the closest candidate, regardless of add() order');
+    }
+    {
+        const store = new AnimalRuntimeInstances();
+        const center = new Position(0, 0, 0);
+        store.add(new AnimalPresence({ id: 'outside', species: ANIMAL_SPECIES.RABBIT, position: new Position(100, 0, 0) }));
+        assert(store.nearestReleased(center, 5) === null, '22. a released animal outside the radius is never returned');
+    }
+    {
+        // A deterministic, sync()-discovered animal is never a candidate —
+        // only ids registered via add() are.
+        const store = new AnimalRuntimeInstances();
+        store.sync(SEED, fixture.position, 30);
+        assert(store.nearestReleased(fixture.position, 30) === null,
+            '23. nearestReleased() never returns a sync()-discovered (deterministic, tile-baked) animal, even standing right next to it');
+    }
+    {
+        // Tie-break: equal distance, ascending id wins — the same policy
+        // core/AvatarAnimalCatchTarget.js#resolveAvatarAnimalCatchTarget()
+        // already establishes for catching.
+        const store = new AnimalRuntimeInstances();
+        const center = new Position(0, 0, 0);
+        store.add(new AnimalPresence({ id: 'zzz', species: ANIMAL_SPECIES.RABBIT, position: new Position(1, 0, 0) }));
+        store.add(new AnimalPresence({ id: 'aaa', species: ANIMAL_SPECIES.RABBIT, position: new Position(-1, 0, 0) }));
+        assert(store.nearestReleased(center, 5).id === 'aaa', '24. an exact-distance tie breaks on ascending lexical id order');
+    }
+    {
+        // discard()ing the nearest one (e.g. once decorated/baked into a
+        // World) makes it stop being a candidate.
+        const store = new AnimalRuntimeInstances();
+        const center = new Position(0, 0, 0);
+        const target = new AnimalPresence({ id: 'to-decorate', species: ANIMAL_SPECIES.DEER, position: new Position(1, 0, 0) });
+        store.add(target);
+        assert(store.nearestReleased(center, 5).id === 'to-decorate', '25. sanity: registered and findable before discard()');
+        store.discard('to-decorate', target.position);
+        assert(store.nearestReleased(center, 5) === null, '26. no longer a candidate after discard() — the same "stop tracking" effect a catch already has');
     }
 
     console.log('✅ All Animal Runtime Instances tests passed.');

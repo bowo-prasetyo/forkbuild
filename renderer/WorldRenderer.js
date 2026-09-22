@@ -1,6 +1,8 @@
 import { BuildingRenderer } from './BuildingRenderer.js';
 import { MeshRegistry } from './MeshRegistry.js';
 import { PlacementMeshRegistry } from './PlacementMeshRegistry.js';
+import { AnimalRenderer } from './AnimalRenderer.js';
+import { AnimalVisual } from './AnimalVisual.js';
 import { DomainEvent } from '../core/events/Event.js';
 
 // WorldRenderer has no render(world) sweep. It subscribes to the domain
@@ -58,16 +60,42 @@ export class WorldRenderer {
         buildingRenderer = new BuildingRenderer(registry),
         meshRegistry = new MeshRegistry(),
         structureResolver = null,
-        transformMath = null
+        transformMath = null,
+        animalRenderer = new AnimalRenderer()
     ) {
         this._renderer = renderer;
         this._buildingRenderer = buildingRenderer;
         this._meshRegistry = meshRegistry;
         this._structureResolver = structureResolver;
         this._transformMath = transformMath;
+        // 0.9.702 — World Animal Decorations. Reuses the SAME
+        // renderer/AnimalRenderer.js a released, individually-tracked
+        // animal already renders through (application/
+        // RenderWorldViewUseCase.js's own syncAnimals()) — a decoration
+        // must look exactly like the released animal it was baked from,
+        // never a second shape/material definition.
+        this._animalRenderer = animalRenderer;
+        // decorationId -> AnimalVisual, one per decoration, for the
+        // identical "look it up by id to remove/re-render it" job
+        // `_meshRegistry`/`_placementMeshRegistry` already do for
+        // bricks/placements — simpler than either, since a decoration
+        // is a single static visual, never a per-mesh collection.
+        this._animalDecorationVisuals = new Map();
         this._subscriptions = [];
         this._documentOffsets = new Map();
         this._buildingToDocument = new Map();
+        // 0.9.702 — decorationId -> worldId. UNLIKE `_buildingToDocument`/
+        // `_placementToDocument` below (populated only by addWorld()'s
+        // own initial load, per those fields' own header), this can
+        // ALSO be populated straight from a LIVE `ANIMAL_DECORATION_ADDED`
+        // event's own payload — an AnimalDecoration already carries its
+        // own `worldId` (core/AnimalDecoration.js), unlike a Brick or a
+        // StructurePlacement, so `_onAnimalDecorationAdded()` below never
+        // needs a pre-existing lookup entry to resolve which document's
+        // layout offset applies, the way `_onStructurePlacementAdded()`'s
+        // own "falls through to {0,0,0} outside World View" comment
+        // has to.
+        this._decorationToDocument = new Map();
         // 0.2.91 — was a bare Map(placementId -> meshes[]); now a small
         // dedicated registry (renderer/PlacementMeshRegistry.js) that
         // ALSO indexes mesh uuid -> placementId, so PickingService can
@@ -106,7 +134,13 @@ export class WorldRenderer {
             // together): remove and re-render, the same "small World,
             // simplest correct thing" trade-off _onBuildingAdded/Removed
             // already make for a whole building.
-            eventBus.subscribe(DomainEvent.STRUCTURE_PLACEMENT_UPDATED, ({ placement }) => this._onStructurePlacementUpdated(placement))
+            eventBus.subscribe(DomainEvent.STRUCTURE_PLACEMENT_UPDATED, ({ placement }) => this._onStructurePlacementUpdated(placement)),
+            // 0.9.702 — World Animal Decorations. No UPDATED counterpart
+            // — decorative only, v1 (core/AnimalDecoration.js's own
+            // header): a decoration is only ever added or removed, never
+            // edited in place.
+            eventBus.subscribe(DomainEvent.ANIMAL_DECORATION_ADDED, ({ decoration }) => this._onAnimalDecorationAdded(decoration)),
+            eventBus.subscribe(DomainEvent.ANIMAL_DECORATION_REMOVED, ({ decoration }) => this._onAnimalDecorationRemoved(decoration))
         );
     }
 
@@ -141,6 +175,10 @@ export class WorldRenderer {
             this._placementToDocument.set(placement.id, documentId);
             this._renderStructurePlacement(placement, offset);
         }
+        for (const decoration of world.getAnimalDecorations()) {
+            this._decorationToDocument.set(decoration.id, documentId);
+            this._renderAnimalDecoration(decoration, offset);
+        }
     }
 
     // Remove every mesh belonging to a specific world. Called during
@@ -157,6 +195,10 @@ export class WorldRenderer {
         for (const placement of world.getStructurePlacements()) {
             this._placementToDocument.delete(placement.id);
             this._removeStructurePlacementMeshes(placement.id);
+        }
+        for (const decoration of world.getAnimalDecorations()) {
+            this._decorationToDocument.delete(decoration.id);
+            this._removeAnimalDecorationVisual(decoration.id);
         }
     }
 
@@ -295,6 +337,66 @@ export class WorldRenderer {
             return point;
         }
         return this._transformMath.rotatePointAroundPivotY(point, { x: 0, y: 0, z: 0 }, degrees);
+    }
+
+    // 0.9.702 — World Animal Decorations. An AnimalDecoration already
+    // carries its own worldId (core/AnimalDecoration.js) — unlike
+    // _onStructurePlacementAdded() above, this needs no pre-populated
+    // lookup table to know which document's layout offset applies, so a
+    // LIVE add (application/WorldNavigationSession.js#
+    // decorateNearestReleasedAnimalHere(), executed against an
+    // ALREADY-loaded document) renders correctly the moment the command
+    // commits, not only for a decoration present at addWorld()'s own
+    // initial load.
+    _onAnimalDecorationAdded(decoration) {
+        this._decorationToDocument.set(decoration.id, decoration.worldId);
+        const offset = this._documentOffsets.get(decoration.worldId) || { x: 0, y: 0, z: 0 };
+        this._renderAnimalDecoration(decoration, offset);
+    }
+
+    _onAnimalDecorationRemoved(decoration) {
+        this._removeAnimalDecorationVisual(decoration.id);
+        this._decorationToDocument.delete(decoration.id);
+    }
+
+    // Builds and adds ONE static AnimalVisual, composed with the
+    // containing document's own offset/terrain groundY exactly the way
+    // _renderStructurePlacement() composes a placement's own bricks —
+    // `decoration.position` is LOCAL to this World, lifted as a rigid
+    // whole, never re-sampled per decoration (see
+    // core/AnimalDecoration.js's own header for why Y is authoritative
+    // here, unlike a WorldLandmark's). A species this renderer has no
+    // visual for (AnimalVisual#isSupported false) is silently skipped —
+    // the identical graceful-degradation posture
+    // renderer/AnimalFieldRenderer.js#setAnimal() already takes for a
+    // live released animal.
+    _renderAnimalDecoration(decoration, offset) {
+        // Bug-fix guard, the same one _addBrickMesh()/_renderStructurePlacement()
+        // already take: never let a stale visual already registered
+        // under this id be silently overwritten/orphaned.
+        this._removeAnimalDecorationVisual(decoration.id);
+        const groundY = this._terrainOffsetY(offset.x, offset.z);
+        const visual = new AnimalVisual(this._animalRenderer, decoration.species);
+        if (!visual.isSupported) {
+            return;
+        }
+        visual.setPosition({
+            x: decoration.position.x + offset.x,
+            y: decoration.position.y + offset.y + groundY,
+            z: decoration.position.z + offset.z
+        });
+        this._renderer.add(visual.root);
+        this._animalDecorationVisuals.set(decoration.id, visual);
+    }
+
+    _removeAnimalDecorationVisual(decorationId) {
+        const visual = this._animalDecorationVisuals.get(decorationId);
+        if (!visual) {
+            return;
+        }
+        this._renderer.remove(visual.root);
+        visual.dispose();
+        this._animalDecorationVisuals.delete(decorationId);
     }
 
     _removeStructurePlacementMeshes(placementId) {
