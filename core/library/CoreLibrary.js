@@ -25,7 +25,8 @@ export const CoreLibrary = {
             description: 'A basic 1x1x1 cube — the simplest building block.',
             width: 1,
             height: 1,
-            depth: 1
+            depth: 1,
+            color: 0x4caf7d
         }),
         new BrickDefinition({
             id: 'core:slope_45',
@@ -35,7 +36,8 @@ export const CoreLibrary = {
             description: 'A 45-degree sloped block, useful for roofs and ramps.',
             width: 1,
             height: 1,
-            depth: 1
+            depth: 1,
+            color: 0xd08a3e
         }),
         new BrickDefinition({
             id: 'core:plate_2x4',
@@ -45,7 +47,8 @@ export const CoreLibrary = {
             description: 'A thin 2x4 plate for floors and flat surfaces.',
             width: 2,
             height: 0.25,
-            depth: 4
+            depth: 4,
+            color: 0x5a8fd0
         }),
         new BrickDefinition({
             id: 'core:window_small',
@@ -55,7 +58,8 @@ export const CoreLibrary = {
             description: 'A small window opening.',
             width: 1,
             height: 1,
-            depth: 0.25
+            depth: 0.25,
+            color: 0x9ad0e6
         }),
 
         // ---------------------------------------------------------------
@@ -69,7 +73,8 @@ export const CoreLibrary = {
             description: 'A larger structural block for heavier framing than the basic cube.',
             width: 2,
             height: 2,
-            depth: 2
+            depth: 2,
+            color: 0x7d7d7d
         }),
         new BrickDefinition({
             id: 'core:wall_1x3',
@@ -79,7 +84,8 @@ export const CoreLibrary = {
             description: 'A tall, thin wall segment for enclosing structures.',
             width: 1,
             height: 3,
-            depth: 0.25
+            depth: 0.25,
+            color: 0xc9b896
         }),
         new BrickDefinition({
             id: 'core:slab_4x4',
@@ -89,7 +95,8 @@ export const CoreLibrary = {
             description: 'A wide flat slab for floors and platforms, larger than a plate.',
             width: 4,
             height: 0.25,
-            depth: 4
+            depth: 4,
+            color: 0x9a9a9a
         }),
         new BrickDefinition({
             id: 'core:roof_hip',
@@ -99,7 +106,8 @@ export const CoreLibrary = {
             description: 'A four-sided pyramid roof cap.',
             width: 2,
             height: 1.5,
-            depth: 2
+            depth: 2,
+            color: 0xa63a3a
         }),
         new BrickDefinition({
             id: 'core:stair',
@@ -109,7 +117,8 @@ export const CoreLibrary = {
             description: 'A stepped block for changes in elevation.',
             width: 1,
             height: 1,
-            depth: 1
+            depth: 1,
+            color: 0xb0a48f
         }),
         new BrickDefinition({
             id: 'core:column',
@@ -119,7 +128,8 @@ export const CoreLibrary = {
             description: 'A slender vertical column for supporting structures.',
             width: 0.5,
             height: 3,
-            depth: 0.5
+            depth: 0.5,
+            color: 0xd8d2c0
         }),
         new BrickDefinition({
             id: 'core:beam',
@@ -129,7 +139,8 @@ export const CoreLibrary = {
             description: 'A horizontal beam for spanning gaps and supporting floors and roofs.',
             width: 4,
             height: 0.5,
-            depth: 0.5
+            depth: 0.5,
+            color: 0x8b5a2b
         }),
         new BrickDefinition({
             id: 'core:arch',
@@ -139,7 +150,8 @@ export const CoreLibrary = {
             description: 'An archway block with an open passage through its center.',
             width: 2,
             height: 2,
-            depth: 0.5
+            depth: 0.5,
+            color: 0xa89f8a
         }),
         new BrickDefinition({
             id: 'core:window_large',
@@ -149,7 +161,8 @@ export const CoreLibrary = {
             description: 'A larger window opening than the small window.',
             width: 2,
             height: 1.5,
-            depth: 0.25
+            depth: 0.25,
+            color: 0x8cc8e0
         }),
         new BrickDefinition({
             id: 'core:door',
@@ -159,7 +172,8 @@ export const CoreLibrary = {
             description: 'A door panel for building entrances.',
             width: 1,
             height: 2,
-            depth: 0.1
+            depth: 0.1,
+            color: 0x6b4226
         }),
         new BrickDefinition({
             id: 'core:trim',
@@ -169,7 +183,8 @@ export const CoreLibrary = {
             description: 'A small decorative trim piece for edges and molding.',
             width: 1,
             height: 0.25,
-            depth: 0.25
+            depth: 0.25,
+            color: 0xe8e2d0
         })
     ]
 };

@@ -12,12 +12,17 @@ import { Position } from '../../core/Position.js';
 // not merely target-resolved. The renderer (renderer/PreviewRenderer.js)
 // reads it to tint the ghost, never to decide whether to draw it at all.
 export class PreviewState {
-    constructor({ visible = false, definitionId = null, position = new Position(), rotation = 0, valid = true } = {}) {
+    // color: Choose Your Brick Color — the color PlacementTool's pending
+    // PlaceBrickCommand will carry (ActiveBrickState's own color, or null
+    // for the definition's default); renderer/PreviewRenderer.js tints
+    // the ghost with it so what you see is what you get.
+    constructor({ visible = false, definitionId = null, position = new Position(), rotation = 0, valid = true, color = null } = {}) {
         this._visible = visible;
         this._definitionId = definitionId;
         this._position = position;
         this._rotation = rotation;
         this._valid = valid;
+        this._color = color;
     }
 
     get visible() {
@@ -38,6 +43,10 @@ export class PreviewState {
 
     get valid() {
         return this._valid;
+    }
+
+    get color() {
+        return this._color;
     }
 
     static hidden() {

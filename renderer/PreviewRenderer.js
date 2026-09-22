@@ -35,6 +35,7 @@ export class PreviewRenderer {
         this._brickFactory = brickFactory;
         this._mesh = null;
         this._currentDefinitionId = null;
+        this._currentColor = null;
         this._subscription = null;
     }
 
@@ -59,10 +60,11 @@ export class PreviewRenderer {
             return;
         }
 
-        if (!this._mesh || this._currentDefinitionId !== preview.definitionId) {
+        if (!this._mesh || this._currentDefinitionId !== preview.definitionId || this._currentColor !== preview.color) {
             this._removeMesh();
-            this._mesh = this._createGhostMesh(preview.definitionId);
+            this._mesh = this._createGhostMesh(preview.definitionId, preview.color);
             this._currentDefinitionId = preview.definitionId;
+            this._currentColor = preview.color;
             this._renderer.add(this._mesh);
         }
 
@@ -90,8 +92,8 @@ export class PreviewRenderer {
         }
     }
 
-    _createGhostMesh(definitionId) {
-        const mesh = this._brickFactory.createMesh(definitionId);
+    _createGhostMesh(definitionId, color) {
+        const mesh = this._brickFactory.createMesh(definitionId, color === null || color === undefined ? undefined : color);
         mesh.material = mesh.material.clone();
         mesh.material.transparent = true;
         mesh.material.opacity = PREVIEW_OPACITY;

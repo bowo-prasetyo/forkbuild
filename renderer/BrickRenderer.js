@@ -16,7 +16,11 @@ export class BrickRenderer {
             throw new Error(`Unknown brick definition: ${brick.definitionId}`);
         }
 
-        const mesh = this._brickFactory.createMesh(brick.definitionId);
+        // Choose Your Brick Color: an instance override (Brick#color, set
+        // by SetBrickColorCommand) wins; otherwise fall back to this
+        // type's own default (BrickDefinition#color).
+        const color = brick.color !== null && brick.color !== undefined ? brick.color : definition.color;
+        const mesh = this._brickFactory.createMesh(brick.definitionId, color);
         mesh.position.set(brick.position.x, brick.position.y, brick.position.z);
         mesh.rotation.y = brick.rotation * (Math.PI / 180);
         mesh.name = brick.id;

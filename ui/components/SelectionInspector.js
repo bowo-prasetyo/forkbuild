@@ -1,4 +1,5 @@
 import CollapsibleSection from './CollapsibleSection.js';
+import { fromCssHex } from '../../core/ColorHex.js';
 
 // 0.6.2 — Editor UX Consolidation.
 //
@@ -55,7 +56,12 @@ export default {
         // value — { count, bounds } — or null (empty selection, or a
         // StructurePlacement selection, which this component never
         // renders for; EditorView gates that case out already).
-        summary: { type: Object, default: null }
+        summary: { type: Object, default: null },
+        // Choose Your Brick Color — EditorView's own recolorSelection(),
+        // bound directly (no action-registry entry) the same way
+        // ui/components/RepeatPanel.js's `repeat` prop calls its session
+        // method: a live color-picker widget, not a no-argument command.
+        recolor: { type: Function, default: null }
     },
     data() {
         return {
@@ -83,6 +89,11 @@ export default {
     methods: {
         round1(value) {
             return Math.round((Number(value) || 0) * 10) / 10;
+        },
+        onColorInput(event) {
+            if (typeof this.recolor === 'function') {
+                this.recolor(fromCssHex(event.target.value));
+            }
         },
         run(id) {
             this.registry.execute(id, this.context);
@@ -133,6 +144,10 @@ export default {
                     :title="isDisabled('selection.focus') ? reasonFor('selection.focus') : 'Frame the camera on the selection'"
                     @click="run('selection.focus')"
                 >Focus Selection</button>
+                <label v-if="recolor" class="structure-instance-btn selection-inspector-color" title="Recolor the selected bricks">
+                    Color
+                    <input type="color" class="selection-inspector-color-input" @input="onColorInput" />
+                </label>
             </div>
             <CollapsibleSection
                 title="Advanced"

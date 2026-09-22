@@ -224,6 +224,7 @@ export default {
                         :get-context="getActionContext"
                         :selection-count="selectionCount"
                         :summary="selectionSummary"
+                        :recolor="recolorSelection"
                     />
                     <BuildLibraryPanel
                         :palette-use-case="paletteUseCase"
@@ -1331,6 +1332,18 @@ export default {
         function deleteSelectedPlacement() {
             if (editorSession.deleteSelection()) {
                 feedback.show('Deleted structure instance');
+            }
+        }
+
+        // Choose Your Brick Color — SelectionInspector's color swatch
+        // calls this directly (the same "the panel calls the session
+        // directly" shape RepeatPanel/transform.repeat already
+        // established, see EditorActionRegistry.js's own header) rather
+        // than going through the action registry, since picking a color
+        // is a live widget interaction, not a no-argument command.
+        function recolorSelection(color) {
+            if (editorSession.recolorSelection(color)) {
+                feedback.show('Recolored selection');
             }
         }
 
@@ -2675,6 +2688,7 @@ export default {
             selectionSummary,
             shortcutsOpen,
             rotateSelectedPlacement,
+            recolorSelection,
             duplicateSelectedPlacement,
             deleteSelectedPlacement,
             editSelectedPlacementSource,
