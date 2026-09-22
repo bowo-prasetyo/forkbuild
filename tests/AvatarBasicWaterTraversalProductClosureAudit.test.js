@@ -363,15 +363,44 @@ async function run() {
         // already sees the corrected value, by construction, not the
         // divergent one.
         const withGroundElevationCallSites = (codeOnly(renderWorldViewSource).match(/withGroundElevation\(/g) || []).length;
-        // AMENDED — a later milestone (0.9.607, Vehicle Ground Elevation
-        // Parity) added a FIFTH call site, syncVehicles(), so a mounted
-        // rider's own vehicle mesh is lifted by the exact same formula as
-        // the avatar riding it; this audit's own "every avatar visual is
-        // built from the CORRECTED position" reasoning is unaffected —
-        // vehicles are a new PRODUCER of the same corrected value, never
-        // a new way to observe the pre-existing avatar divergence.
-        assert(withGroundElevationCallSites === 6, // 1 definition + 4 avatar call sites + 1 vehicle call site (setLocalAvatar, updateLocalAvatarPresence, setRemoteAvatar, updateRemoteAvatarPresence, syncVehicles)
-            `13. application/RenderWorldViewUseCase.js applies withGroundElevation() at exactly its four avatar-pose call sites (setLocalAvatar/updateLocalAvatarPresence/setRemoteAvatar/updateRemoteAvatarPresence) plus its one vehicle call site (syncVehicles) — every avatar visual (and therefore every avatar raycast target) is built from the CORRECTED position, never the raw one, so pickAvatar() cannot observe the divergence`);
+        // AMENDED TWICE.
+        //
+        // First, 0.9.607 (Vehicle Ground Elevation Parity) added a FIFTH
+        // call site, syncVehicles(), on the theory that a VehicleInstance's
+        // position is a flat domain fact exactly like AvatarPresence's own
+        // — wrong, as the second amendment below found.
+        //
+        // Second, a bug fix (Bicycle Ground Elevation Double-Lift) found
+        // that theory false: a VehicleInstance's position has carried REAL,
+        // raw terrainHeightAt() elevation since its very first bridge from
+        // a VehiclePresence, and a moving vehicle's own movement tick keeps
+        // re-snapping it to that same raw sample every frame (see
+        // application/AvatarVehicleMovementController.js's own
+        // 0.9.116/0.9.119 header) — so 0.9.607's own lift in syncVehicles()
+        // was adding the real elevation a SECOND time, and the identical
+        // mistake reached the avatar too: a mounted rider's presence is
+        // copied verbatim from that same already-elevated vehicle position
+        // (WorldNavigationSession's own "the vehicle moves, the avatar
+        // follows"), so setLocalAvatar()/updateLocalAvatarPresence() lifting
+        // it a second time doubled the rider's rendered height as well —
+        // sunk into low ground, floating above hills/treetops the higher
+        // the terrain got. The fix removes syncVehicles()'s own call
+        // entirely (a VehicleInstance's position needs no lift — it already
+        // IS the real elevation) and routes the two LOCAL avatar-pose call
+        // sites through a new resolveAvatarRenderPosition(position,
+        // ridingVehicle) wrapper that skips the lift for exactly that one
+        // case, applying it unconditionally otherwise. setRemoteAvatar()/
+        // updateRemoteAvatarPresence() are untouched — remote riding is not
+        // wired (AvatarPresenceAdvertisement carries no vehicle/mount fact)
+        // — so this audit's own "every avatar visual is built from the
+        // CORRECTED position" conclusion still holds, on either path: an
+        // on-foot avatar's rendered position is still withGroundElevation()
+        // applied to its raw presence, and a mounted avatar's rendered
+        // position is still exactly the real, correctly-elevated value —
+        // it simply no longer runs a real value through the formula a
+        // second time.
+        assert(withGroundElevationCallSites === 4, // 1 definition + 1 inside resolveAvatarRenderPosition() (covering setLocalAvatar/updateLocalAvatarPresence) + 2 remote-avatar call sites (setRemoteAvatar, updateRemoteAvatarPresence) — syncVehicles() no longer calls it at all
+            `13. application/RenderWorldViewUseCase.js applies withGroundElevation() unconditionally only at its two remote-avatar call sites (setRemoteAvatar/updateRemoteAvatarPresence) and, via resolveAvatarRenderPosition(), at its two local-avatar call sites (setLocalAvatar/updateLocalAvatarPresence) whenever the avatar is not riding a vehicle — never at its vehicle call site (syncVehicles) at all, since a VehicleInstance's own position already IS real elevation — so every avatar visual (and therefore every avatar raycast target) is still built from the CORRECTED position, never a doubled or a raw one, so pickAvatar() cannot observe the divergence`);
 
         // Consumer 5 — core/CameraPerspective.js#computeCameraFraming(),
         // invoked from application/WorldNavigationSession.js. THIS is the
