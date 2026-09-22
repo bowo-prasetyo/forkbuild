@@ -40,6 +40,16 @@ follow the terrain's own elevation and moisture, not a random placement.
 It's scenery: nothing about it is editable, and it looks identical no matter
 who's looking at it or when.
 
+Forest ground carries its own mix of tree species from that same seed —
+conifers where the moisture is higher, broadleaf trees where it's drier, and
+scrub trees fringing the grassland — and deer (in forest) and rabbits (on
+grassland) appear as further seed-driven scenery alongside them. Like the
+rest of the terrain, none of it wanders or reacts to you: every tree and
+animal is placed once, deterministically, and simply stays there. Wildlife
+does still block your path on foot exactly like a tree does — see
+[Walking your avatar](06-AvatarsAndPresence.md#walking-your-avatar) — but
+nothing about it is editable or ever moves on its own.
+
 ## Orientation and Locations
 
 Next to your camera coordinates, a small **compass** shows which way you're

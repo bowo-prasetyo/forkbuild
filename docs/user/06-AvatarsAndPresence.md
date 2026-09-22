@@ -92,11 +92,15 @@ can also walk your avatar directly with **Avatar Control Mode**:
 | **Alt + W / S** | Hands-free continuous walk forward/backward — keeps moving after you let go of the keys |
 | **Alt + Shift + W / S** | Same, but running instead of walking |
 
-Walking respects collision against nearby loaded buildings and trees — you
-can't walk through structures streamed in around you, or through the trees
-generated as part of the terrain. Your avatar can walk across placed
-structures, climb vertical surfaces, and navigate uneven terrain. The camera
-follows your avatar naturally as you move.
+Walking respects collision against nearby loaded buildings, trees, and
+wildlife — you can't walk through structures streamed in around you, through
+the trees generated as part of the terrain, or through a deer or rabbit
+grazing nearby (see [World View](03-WorldView.md#opening-world-view)).
+Wildlife only ever blocks your path like a tree does — it doesn't move,
+react, or take damage, and a vehicle drives straight through it; only
+walking on foot is stopped. Your avatar can walk across placed structures,
+climb vertical surfaces, and navigate uneven terrain. The camera follows
+your avatar naturally as you move.
 
 **Follow Avatar** keeps the camera locked to your avatar as it moves, instead
 of orbiting freely. You can also follow other players' avatars to see where
