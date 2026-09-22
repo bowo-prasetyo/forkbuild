@@ -87,9 +87,10 @@ import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUs
 //   9. Steering applies to any MOVABLE ground vehicle, never to a
 //      specific one by name — through 0.9.667 that meant BICYCLE alone
 //      had a runtime movement/rendering path; 0.9.668 gave MOTORCYCLE
-//      one too (core/VehiclePlacement.js/renderer/VehicleRenderer.js),
-//      and it steers identically, through the exact same generic gate.
-//      CAR and DRONE still have no runtime movement/rendering path.
+//      one too, and 0.9.669 gave CAR one as well
+//      (core/VehiclePlacement.js/renderer/VehicleRenderer.js), and each
+//      steers identically, through the exact same generic gate. DRONE
+//      still has no runtime movement/rendering path.
 //
 // This is a documentation-and-test milestone, matching this milestone's
 // own brief: no production file changes. See docs/Roadmap.md, 0.9.130, for
@@ -340,13 +341,13 @@ async function runTests() {
     }
 
     // 9 — steering applies to any movable ground vehicle, never to a
-    // specific one by name: BICYCLE and MOTORCYCLE are both movable
-    // (0.9.668); CAR/DRONE are not.
+    // specific one by name: BICYCLE, MOTORCYCLE (0.9.668), and CAR
+    // (0.9.669) are all movable; DRONE is not.
     {
         assert(isMovableVehicleType(VehicleType.BICYCLE) === true, '9a. BICYCLE is movable');
         assert(isMovableVehicleType(VehicleType.MOTORCYCLE) === true, '9b. MOTORCYCLE is movable too, as of 0.9.668');
-        assert(isMovableVehicleType(VehicleType.CAR) === false, '9c. CAR — still no runtime movement path');
-        assert(isMovableVehicleType(VehicleType.DRONE) === false, '9d. DRONE — same');
+        assert(isMovableVehicleType(VehicleType.CAR) === true, '9c. CAR is movable too, as of 0.9.669');
+        assert(isMovableVehicleType(VehicleType.DRONE) === false, '9d. DRONE — still no runtime movement path');
 
         // Steering genuinely drives a MOTORCYCLE through this exact same
         // pipeline, matching application/AvatarVehicleMovementController.js's
@@ -369,18 +370,36 @@ async function runTests() {
         });
         assert(result !== null, '9e. a genuinely TRACKED, movable motorcycle simulates a real tick, steering intent included');
 
-        // A CAR, by contrast, is still gated out entirely.
-        const carInstance = new VehicleInstance({
+        // A CAR, as of 0.9.669, steers through the exact same generic
+        // pipeline — never a car-specific steering implementation.
+        let carInstance = new VehicleInstance({
             id: 'contract-9-car', type: VehicleType.CAR,
             spawnPosition: { x: 0, y: 0, z: 0 }, position: { x: 0, y: 0, z: 0 }, heading: 0
         });
-        const carController = new AvatarVehicleMovementController({ get: (id) => id === carInstance.id ? carInstance : null });
+        const carController = new AvatarVehicleMovementController({
+            get: (id) => id === carInstance.id ? carInstance : null,
+            setPosition: (id, position) => { carInstance = carInstance.withPosition(position); return carInstance; },
+            setHeading: (id, heading) => { carInstance = carInstance.withHeading(heading); return carInstance; }
+        });
         const carResult = carController.tick({
             seed: DEFAULT_WORLD_SEED, vehicleId: carInstance.id, capability: resolveAvatarVehicleMovementCapability(VehicleType.CAR),
             movementIntent: { direction: 1, turnAxis: 0, running: false, brakingRequested: false },
             currentRotationY: 0, deltaSeconds: 0.05, steeringIntent: VehicleSteeringIntent.left()
         });
-        assert(carResult === null, '9f. a genuinely TRACKED car still never simulates — the type gate itself blocks it, steering intent supplied or not');
+        assert(carResult !== null, '9f. a genuinely TRACKED, movable car simulates a real tick too, steering intent included, as of 0.9.669');
+
+        // DRONE, by contrast, is still gated out entirely.
+        const droneInstance = new VehicleInstance({
+            id: 'contract-9-drone', type: VehicleType.DRONE,
+            spawnPosition: { x: 0, y: 0, z: 0 }, position: { x: 0, y: 0, z: 0 }, heading: 0
+        });
+        const droneController = new AvatarVehicleMovementController({ get: (id) => id === droneInstance.id ? droneInstance : null });
+        const droneResult = droneController.tick({
+            seed: DEFAULT_WORLD_SEED, vehicleId: droneInstance.id, capability: resolveAvatarVehicleMovementCapability(VehicleType.DRONE),
+            movementIntent: { direction: 1, turnAxis: 0, running: false, brakingRequested: false },
+            currentRotationY: 0, deltaSeconds: 0.05, steeringIntent: VehicleSteeringIntent.left()
+        });
+        assert(droneResult === null, '9g. a genuinely TRACKED drone still never simulates — the type gate itself blocks it, steering intent supplied or not');
     }
 
     // ===============================================================

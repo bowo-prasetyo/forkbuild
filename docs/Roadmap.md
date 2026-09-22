@@ -97467,3 +97467,68 @@ gap — "MOTORCYCLE and CAR both resolve `supported: true`... but no placement p
 reachable-but-limited, fully-modeled capability data sitting behind a placement gap, not an unfinished
 capability; this milestone is the deliberate decision to close that gap for MOTORCYCLE specifically, leaving
 CAR/DRONE exactly where 0.9.599 found them.
+
+## 0.9.669 — Car Activation
+
+**Type:** implementation. **Production changes:** `core/VehiclePlacement.js` (`vehicleTypeForCell()`'s own
+0.9.668 hash roll now has a THIRD outcome, never a second hash — `VEHICLE_TYPE_CAR_SHARE = 0.08`, evaluated
+first against the same `roll`, so a car is the rarest of the three, matching the faster-and-scarcer shape
+`WALK < BICYCLE < MOTORCYCLE < CAR` already implies; the existing motorcycle/bicycle split is otherwise
+untouched in its own relative proportions), `renderer/VehicleRenderer.js` (`buildCar()` — four wheels on a
+front/rear axle rather than two, since a car is not a single-track vehicle, plus a wide body box and a
+smaller cabin box on top, and a distinct color, the same "procedural placeholder, low-poly primitives"
+posture `buildBicycle()`/`buildMotorcycle()` already established), `core/AvatarVehicleDismountPosition.js`
+(`DISMOUNTABLE_VEHICLE_TYPES` now includes CAR alongside BICYCLE/MOTORCYCLE, sharing the exact same fixed
+`+X` offset — no ground vehicle has a heading this file can resolve a dismount side from yet), and
+`application/AvatarVehicleMovementController.js` (`MOVABLE_VEHICLE_TYPES` now includes CAR). Updates the
+vehicle test suite throughout to reflect BICYCLE, MOTORCYCLE, and CAR all being real, placeable, mountable,
+and drivable, while DRONE remains exactly as unreachable as before. Updates
+`docs/user/06-AvatarsAndPresence.md`'s own "Vehicles" section.
+
+**The capability layer was already there; this milestone connects the remaining three seams, exactly as
+0.9.668 did for MOTORCYCLE.** `core/AvatarVehicleMovementCapability.js` has defined CAR's own speed (12,
+faster than MOTORCYCLE's 9 and BICYCLE's 6), collision radius (0.80), acceleration, braking, and steering
+rate since 0.9.85–0.9.128 — real, tested numbers with no consumer that could ever reach them, because
+nothing ever PLACED a car (`core/VehiclePlacement.js` minted BICYCLE/MOTORCYCLE only), nothing could RENDER
+one (`renderer/VehicleRenderer.js#build()` returned `null` for it), and even a directly-injected one could
+never actually MOVE (`application/AvatarVehicleMovementController.js`'s own `MOVABLE_VEHICLE_TYPES` gate —
+see that file's own 0.9.116/0.9.668 headers — held BICYCLE and MOTORCYCLE alone, deliberately, until the
+other two gaps closed). This milestone closes all three gaps at once, so a player can now genuinely find,
+mount, steer, brake, and dismount a car exactly as they already could a bicycle or a motorcycle, through the
+identical generic mount/dismount/movement/steering/collision pipeline — no car-specific branch anywhere
+outside placement's own type roll and the renderer's own mesh.
+
+**Cars are rarer than motorcycles, on purpose.** `vehicleTypeForCell()` remains its own single decorrelated
+hash roll (`VEHICLE_TYPE_SEED_OFFSET`, unchanged) — a cell's EXISTENCE and its TYPE stay independent
+questions, but WHICH type is still exactly one question, now with three answers instead of two. `roll` is
+checked against `VEHICLE_TYPE_CAR_SHARE` first, then against `VEHICLE_TYPE_CAR_SHARE +
+VEHICLE_TYPE_MOTORCYCLE_SHARE`, so an 8% car / 25% motorcycle / 67% bicycle split was chosen — the fastest,
+most capable ground vehicle reads as a genuine rare find, rarer than the motorcycle that was already rarer
+than the bicycle.
+
+**A car's own four-wheel footprint is a real geometric difference from a bicycle/motorcycle's two, handled
+the same "procedural placeholder" way.** `buildCar()` is the one production file that could not simply reuse
+`buildMotorcycle()`'s own two-wheel-on-one-axis shape: a car needs a wheel at each of four corners, so
+`renderer/VehicleRenderer.js` adds a small `buildCarWheel()`/offset loop rather than the two explicit
+`rearWheel`/`frontWheel` calls `buildBicycle()`/`buildMotorcycle()` use — still the same torus-wheel-plus-box
+primitives, never a loaded mesh/texture. Collision, dismount, and movement all stay exactly as
+circular/offset/generic as they already were for BICYCLE/MOTORCYCLE — this milestone does not give CAR an
+oriented or rectangular footprint merely because its visual model is wider; see "Deliberately not yet",
+below.
+
+**Deliberately not yet, named rather than hidden:** DRONE placement, rendering, or movement — it remains
+exactly as far from reachable as before this milestone; road/path placement realism for any ground vehicle
+(`core/VehiclePlacement.js`'s own pre-existing "Deliberately not yet" note); a real (non-procedural) car
+asset; vehicle-switching UI; an oriented or rectangular collision footprint for CAR despite its wider visual
+body (the existing circular `collisionRadius` model is reused as-is — see
+`core/AvatarVehicleMovementCapability.js`'s own 0.9.88 header); a car-specific, wider dismount-side offset
+(`BICYCLE_DISMOUNT_OFFSET_X` is reused unchanged, exactly as it already was for MOTORCYCLE); any change to
+BICYCLE's or MOTORCYCLE's own speed, collision radius, acceleration, braking, or steering — this milestone
+only widens WHICH vehicle types reach the existing pipeline, never what that pipeline does for any one of
+them.
+
+**Classification: `EXTENSION`.** The identical shape as 0.9.668's own classification: fully-modeled capability
+data (`core/AvatarVehicleMovementCapability.js`'s own CAR entry, real since 0.9.85–0.9.128) sitting behind a
+placement/rendering/movement gap, not an unfinished capability. 0.9.668 closed that gap for MOTORCYCLE
+specifically and left CAR/DRONE exactly where 0.9.599 found them; this milestone is the deliberate decision
+to close the same gap for CAR, leaving DRONE exactly where 0.9.668 found it.

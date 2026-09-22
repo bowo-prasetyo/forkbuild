@@ -608,9 +608,10 @@ async function runTests() {
     {
         // Unsupported vehicle types remain unsupported — 0.9.124 changed
         // nothing about which types this renderer can show; 0.9.668 later
-        // added a MOTORCYCLE builder (renderer/VehicleRenderer.js), so
-        // only CAR/DRONE remain in this unsupported set now.
-        for (const type of [VehicleType.CAR, VehicleType.DRONE]) {
+        // added a MOTORCYCLE builder, and 0.9.669 added a CAR builder
+        // (renderer/VehicleRenderer.js), so only DRONE remains in this
+        // unsupported set now.
+        for (const type of [VehicleType.DRONE]) {
             const visual = new VehicleVisual(new VehicleRenderer(), type);
             assert(visual.isSupported === false, `62.${type} still reports isSupported === false`);
             visual.setHeading(90); // must never throw even with no built geometry
@@ -850,12 +851,13 @@ async function runTests() {
     {
         // isMovableVehicleType() was gated on BICYCLE alone at 0.9.124 —
         // that milestone introduced no new movable vehicle type. 0.9.668
-        // later added MOTORCYCLE (application/AvatarVehicleMovementController.js);
-        // CAR/DRONE still never move.
-        for (const type of [VehicleType.BICYCLE, VehicleType.MOTORCYCLE]) {
+        // later added MOTORCYCLE, and 0.9.669 added CAR
+        // (application/AvatarVehicleMovementController.js); DRONE still
+        // never moves.
+        for (const type of [VehicleType.BICYCLE, VehicleType.MOTORCYCLE, VehicleType.CAR]) {
             assert(isMovableVehicleType(type) === true, `83.${type} sanity: ${type} is movable`);
         }
-        for (const type of [VehicleType.CAR, VehicleType.DRONE]) {
+        for (const type of [VehicleType.DRONE]) {
             assert(isMovableVehicleType(type) === false, `84.${type} is still never movable`);
         }
     }

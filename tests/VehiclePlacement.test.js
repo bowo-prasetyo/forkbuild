@@ -13,8 +13,9 @@ import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
 //
 //   Section A: determinism
 //   Section B: region behavior — inside/outside/boundary/adjacent regions
-//   Section C: every generated presence is BICYCLE or MOTORCYCLE
-//              (0.9.668), and MOTORCYCLE is the rarer of the two
+//   Section C: every generated presence is BICYCLE, MOTORCYCLE (0.9.668),
+//              or CAR (0.9.669), and each is rarer than the last —
+//              CAR < MOTORCYCLE < BICYCLE
 //   Section D: every returned item is a valid, immutable VehiclePresence
 //   Section E: rendering/avatar/controller independence (source sweep)
 //   Section F: no movement/mounting semantics (source sweep + object shape)
@@ -145,23 +146,28 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section C — every generated presence is BICYCLE or MOTORCYCLE
-    // (0.9.668), never CAR/DRONE, and MOTORCYCLE is the rarer of the two
+    // Section C — every generated presence is BICYCLE, MOTORCYCLE
+    // (0.9.668), or CAR (0.9.669), never DRONE, and each is rarer than
+    // the last
     // -------------------------------------------------------------
     {
         const presences = vehiclePresenceInRegion(DEFAULT_WORLD_SEED, -2000, -2000, 2000, 2000);
         assert(presences.length > 0, '15. Setup: a wide scan finds bicycles to check');
         let bicycleCount = 0;
         let motorcycleCount = 0;
+        let carCount = 0;
         for (const p of presences) {
-            assert(p.type === VehicleType.BICYCLE || p.type === VehicleType.MOTORCYCLE,
-                `16. Every generated presence is VehicleType.BICYCLE or VehicleType.MOTORCYCLE (got ${p.type}) — no car/drone placement in this milestone`);
+            assert(p.type === VehicleType.BICYCLE || p.type === VehicleType.MOTORCYCLE || p.type === VehicleType.CAR,
+                `16. Every generated presence is VehicleType.BICYCLE, VehicleType.MOTORCYCLE, or VehicleType.CAR (got ${p.type}) — no drone placement in this milestone`);
             if (p.type === VehicleType.BICYCLE) bicycleCount++;
             if (p.type === VehicleType.MOTORCYCLE) motorcycleCount++;
+            if (p.type === VehicleType.CAR) carCount++;
         }
         assert(bicycleCount > 0, '16b. Setup: a wide scan finds at least one bicycle');
         assert(motorcycleCount > 0, '16c. Setup: a wide scan finds at least one motorcycle');
+        assert(carCount > 0, '16e. Setup: a wide scan finds at least one car');
         assert(motorcycleCount < bicycleCount, '16d. Motorcycles are rarer than bicycles over a wide scan — the faster ground vehicle is the scarcer one');
+        assert(carCount < motorcycleCount, '16f. Cars are rarer than motorcycles over a wide scan — the fastest ground vehicle is the scarcest of the three');
     }
 
     // -------------------------------------------------------------

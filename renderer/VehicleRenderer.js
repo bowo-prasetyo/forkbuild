@@ -32,9 +32,20 @@ import { VehicleType } from '../core/VehicleType.js';
 // single solid body volume standing in for a fuel tank/engine block
 // rather than open frame tubes, and a distinct color — legible as "a
 // motorcycle, not a bicycle" at a glance, never a loaded mesh/texture.
-// build() STILL returns `null` for CAR and DRONE — this renderer has no
-// meaningful representation for either yet, and deliberately does NOT
-// fall back to the bicycle/motorcycle shape for an unrecognized/
+//
+// 0.9.669 — CAR NOW HAS A BUILDER TOO. core/VehiclePlacement.js's own
+// 0.9.669 update means a car can now actually exist in the World, closing
+// the same gap for CAR that 0.9.668 already closed for MOTORCYCLE.
+// buildCar() keeps the identical "procedural placeholder, low-poly
+// primitives" posture — the one genuine geometric difference from
+// buildBicycle()/buildMotorcycle() is FOUR wheels (front and rear axle)
+// instead of two, since a car is not a single-track vehicle, plus a wide
+// boxy body volume and a smaller cabin box on top, standing in for a
+// chassis and passenger compartment, and its own distinct color — legible
+// as "a car, not a bicycle or a motorcycle" at a glance, never a loaded
+// mesh/texture. build() STILL returns `null` for DRONE — this renderer
+// has no meaningful representation for it yet, and deliberately does NOT
+// fall back to the bicycle/motorcycle/car shape for an unrecognized/
 // unsupported type: silently turning a DRONE into a bicycle would be a
 // worse lie than rendering nothing at all. A caller (renderer/VehicleFieldRenderer.js)
 // treats `null` as "nothing to show for this vehicle yet," exactly the
@@ -181,13 +192,67 @@ function buildMotorcycle() {
     return group;
 }
 
+// Car geometry — see this file's own 0.9.669 header. Four wheels (front
+// and rear axle, left and right) rather than two, since a car is not a
+// single-track vehicle, plus a wide body box and a smaller cabin box on
+// top, so it reads as visually distinct from both the bicycle and the
+// motorcycle at a glance.
+const CAR_WHEEL_RADIUS = 0.34;
+const CAR_WHEEL_TUBE_RADIUS = 0.09;
+const CAR_WHEEL_OFFSET_X = 0.75; // front/rear axle distance from center
+const CAR_WHEEL_OFFSET_Z = 0.5; // left/right wheel distance from center
+const CAR_WHEEL_Y = CAR_WHEEL_RADIUS;
+
+const CAR_BODY_COLOR = new THREE.Color(0.14, 0.42, 0.16); // muted green — distinct from the bicycle's red and the motorcycle's blue
+const CAR_CABIN_COLOR = new THREE.Color(0.08, 0.08, 0.1);
+
+function buildCarWheel() {
+    const wheel = new THREE.Mesh(
+        new THREE.TorusGeometry(CAR_WHEEL_RADIUS, CAR_WHEEL_TUBE_RADIUS, WHEEL_RADIAL_SEGMENTS, WHEEL_TUBULAR_SEGMENTS),
+        new THREE.MeshStandardMaterial({ color: WHEEL_COLOR })
+    );
+    wheel.rotation.y = Math.PI / 2;
+    return wheel;
+}
+
+function buildCar() {
+    const group = new THREE.Group();
+    const bodyMaterial = new THREE.MeshStandardMaterial({ color: CAR_BODY_COLOR });
+
+    for (const signX of [-1, 1]) {
+        for (const signZ of [-1, 1]) {
+            const wheel = buildCarWheel();
+            wheel.position.set(signX * CAR_WHEEL_OFFSET_X, CAR_WHEEL_Y, signZ * CAR_WHEEL_OFFSET_Z);
+            group.add(wheel);
+        }
+    }
+
+    // Body: one wide, low box spanning all four wheels, standing in for
+    // the chassis.
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.42, 0.95), bodyMaterial);
+    body.position.set(0, CAR_WHEEL_Y + 0.36, 0);
+    group.add(body);
+
+    // Cabin: a smaller box sitting on top of the body, standing in for
+    // the passenger compartment/windows.
+    const cabin = new THREE.Mesh(
+        new THREE.BoxGeometry(0.95, 0.32, 0.85),
+        new THREE.MeshStandardMaterial({ color: CAR_CABIN_COLOR })
+    );
+    cabin.position.set(-0.1, CAR_WHEEL_Y + 0.72, 0);
+    group.add(cabin);
+
+    return group;
+}
+
 // A closed lookup, mirroring renderer/AvatarRenderer.js's own
 // ACCESSORY_BUILDERS shape: one builder per KNOWN, supported vehicle
 // type. core/VehicleType.js's own vocabulary is larger than this map —
 // that gap is deliberate, see this file's own header above.
 const VEHICLE_BUILDERS = {
     [VehicleType.BICYCLE]: buildBicycle,
-    [VehicleType.MOTORCYCLE]: buildMotorcycle
+    [VehicleType.MOTORCYCLE]: buildMotorcycle,
+    [VehicleType.CAR]: buildCar
 };
 
 export class VehicleRenderer {

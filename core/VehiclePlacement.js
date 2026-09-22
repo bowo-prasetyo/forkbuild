@@ -131,7 +131,22 @@ const JITTER_Z_SEED_OFFSET = 0x42434a5a; // 'BCJZ'
 // existence decision and its type decision are independent questions,
 // exactly the "one hash per independent question" discipline every
 // other field in this file already follows.
+//
+// 0.9.669 — Car Activation. Extends the SAME type roll with a third
+// outcome, never a second hash: WHICH vehicle is still one question, now
+// with three possible answers instead of two. A car is rarer still than
+// a motorcycle — the fastest, most capable of the three ground vehicles
+// this codebase can currently place, matching the
+// WALK < BICYCLE < MOTORCYCLE < CAR ordering — so only a minority of that
+// minority (VEHICLE_TYPE_CAR_SHARE, evaluated first against the exact
+// same `roll`) becomes a car; everything else falls through to the
+// existing motorcycle/bicycle split, completely unchanged in its own
+// relative proportions. See core/AvatarVehicleMovementController.js's own
+// 0.9.669 header, renderer/VehicleRenderer.js's own 0.9.669 header, and
+// core/AvatarVehicleDismountPosition.js's own 0.9.669 header for the
+// remaining three seams this milestone closes at once.
 const VEHICLE_TYPE_SEED_OFFSET = 0x4d435459; // 'MCTY'
+const VEHICLE_TYPE_CAR_SHARE = 0.08;
 const VEHICLE_TYPE_MOTORCYCLE_SHARE = 0.25;
 
 function smoothstep(t) {
@@ -198,7 +213,9 @@ export function bicycleDensityAt(seed, x, z) {
 // type roll in isolation.
 export function vehicleTypeForCell(seed, cellX, cellZ) {
     const roll = hash2D(seed + VEHICLE_TYPE_SEED_OFFSET, cellX, cellZ);
-    return roll < VEHICLE_TYPE_MOTORCYCLE_SHARE ? VehicleType.MOTORCYCLE : VehicleType.BICYCLE;
+    if (roll < VEHICLE_TYPE_CAR_SHARE) return VehicleType.CAR;
+    if (roll < VEHICLE_TYPE_CAR_SHARE + VEHICLE_TYPE_MOTORCYCLE_SHARE) return VehicleType.MOTORCYCLE;
+    return VehicleType.BICYCLE;
 }
 
 // Every VehiclePresence this file can ever produce for one lattice cell,
@@ -255,10 +272,11 @@ export function vehiclePresenceInRegion(seed, minX, minZ, maxX, maxZ) {
     return presences;
 }
 
-// Deliberately not yet: any vehicle type other than BICYCLE/MOTORCYCLE
+// Deliberately not yet: any vehicle type other than BICYCLE/MOTORCYCLE/CAR
 // (0.9.668 — see this file's own header, "Motorcycle Placement" — added
 // a type roll on top of this file's existing existence gates, not a
-// third gate of its own; CAR/DRONE still never spawn); roads, paths,
+// third gate of its own; 0.9.669 — "Car Activation" — widened that same
+// roll to a third outcome; DRONE still never spawns); roads, paths,
 // parking areas, garages, or any
 // other structured "where a vehicle plausibly stands" concept beyond dry,
 // non-river ground (see this file's own header); vehicle rendering;

@@ -65,8 +65,17 @@ async function runTests() {
         assert(motorcycle !== other, '3d. two build(MOTORCYCLE) calls return two independent Object3D graphs, matching BICYCLE\'s own contract');
     }
     {
+        // 0.9.669 — CAR now has a builder too.
         const renderer = new VehicleRenderer();
-        for (const type of [VehicleType.CAR, VehicleType.DRONE]) {
+        const car = renderer.build(VehicleType.CAR);
+        assert(car instanceof THREE.Group, '3e. build(CAR) returns a real THREE.Group');
+        assert(countMeshes(car) > 0, '3f. the car group contains real, visible mesh geometry');
+        const other = renderer.build(VehicleType.CAR);
+        assert(car !== other, '3g. two build(CAR) calls return two independent Object3D graphs, matching BICYCLE/MOTORCYCLE\'s own contract');
+    }
+    {
+        const renderer = new VehicleRenderer();
+        for (const type of [VehicleType.DRONE]) {
             assert(renderer.build(type) === null, `4. build(${type}) returns null — no visual exists for it yet`);
         }
     }
