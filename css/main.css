@@ -3862,9 +3862,12 @@ html, body {
     margin-top: 1.5rem;
 }
 
-/* Arweave Gateway / IPFS Gateway / Nostr Relays / STUN Servers / TURN
-   Server / Rendezvous Servers — the other Network Settings endpoint-server
-   pages, same card language as .content-provider-settings-view above. */
+/* Announcement / Discovery Provider / Proof / Anchoring Provider / Arweave
+   Gateway / IPFS Gateway / Nostr Relays / STUN Servers / TURN Server /
+   Rendezvous Servers — the other Network Settings pages, same card
+   language as .content-provider-settings-view above. */
+.announcement-discovery-provider-settings-view,
+.anchor-provider-settings-view,
 .arweave-gateway-settings-view,
 .ipfs-gateway-settings-view,
 .bitcoin-esplora-settings-view,
@@ -3878,6 +3881,8 @@ html, body {
     width: 100%;
 }
 
+.announcement-discovery-provider-settings-form,
+.anchor-provider-settings-form,
 .arweave-gateway-settings-form,
 .ipfs-gateway-settings-form,
 .bitcoin-esplora-settings-form,
@@ -3888,7 +3893,9 @@ html, body {
     margin-top: 1.5rem;
 }
 
-.content-provider-option {
+.content-provider-option,
+.announcement-discovery-provider-option,
+.anchor-provider-option {
     display: flex;
     align-items: center;
     gap: 0.5rem;
