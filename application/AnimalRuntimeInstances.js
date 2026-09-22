@@ -155,6 +155,35 @@ export class AnimalRuntimeInstances {
         return this.nearby(centerPosition, radius).filter((instance) => this._released.has(instance.id));
     }
 
+    // 0.9.702 — World Animal Decorations. The single nearest RELEASED
+    // animal within `radius` of `centerPosition`, or `null` when none
+    // qualifies — the "which one am I standing closest to" read
+    // application/WorldNavigationSession.js#decorateNearestReleasedAnimalHere()
+    // needs to resolve a single decoration target, the identical
+    // nearest-by-squared-XZ-distance-then-ascending-id policy
+    // core/AvatarAnimalCatchTarget.js#resolveAvatarAnimalCatchTarget()
+    // already establishes for catching (Y ignored for the same reason:
+    // an animal's Y is a terrain/perch sample, not a meaningful
+    // interaction boundary). Scoped to releasedNearby() above, never
+    // nearby()'s own full result — a deterministic, tile-baked animal
+    // is never a decoration candidate; it already has its own
+    // permanent, deterministic home. A READ, never a sync() — the
+    // identical restraint every other query in this file already keeps.
+    nearestReleased(centerPosition, radius) {
+        let best = null;
+        let bestDistance = Infinity;
+        for (const instance of this.releasedNearby(centerPosition, radius)) {
+            const dx = instance.position.x - centerPosition.x;
+            const dz = instance.position.z - centerPosition.z;
+            const distance = dx * dx + dz * dz;
+            if (best === null || distance < bestDistance || (distance === bestDistance && instance.id < best.id)) {
+                best = instance;
+                bestDistance = distance;
+            }
+        }
+        return best;
+    }
+
     // Directly registers an AnimalPresence this store did not discover
     // via sync() — the one seam a RELEASED animal needs (see this file's
     // own header, "Released"). Mirrors

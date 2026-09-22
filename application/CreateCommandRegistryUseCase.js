@@ -24,6 +24,7 @@ import { RemoveWorldLandmarkCommand } from './commands/RemoveWorldLandmarkComman
 import { CreateWorldRegionCommand } from './commands/CreateWorldRegionCommand.js';
 import { UpdateWorldRegionCommand } from './commands/UpdateWorldRegionCommand.js';
 import { RemoveWorldRegionCommand } from './commands/RemoveWorldRegionCommand.js';
+import { CreateWorldAnimalDecorationCommand } from './commands/CreateWorldAnimalDecorationCommand.js';
 
 // Builds the CommandRegistry and registers every built-in command type.
 // Later, community tools or plugin commands get one extra line here —
@@ -72,6 +73,12 @@ export class CreateCommandRegistryUseCase {
         registry.register('create-world-region', CreateWorldRegionCommand);
         registry.register('update-world-region', UpdateWorldRegionCommand);
         registry.register('remove-world-region', RemoveWorldRegionCommand);
+        // 0.9.702 — World Animal Decorations: a released animal baked
+        // into durable, publishable World content. Same inherited
+        // undo/redo/persistence/replay contract as every command above;
+        // decorative-only in v1, so no update/remove command exists yet
+        // (see core/AnimalDecoration.js's own header).
+        registry.register('create-world-animal-decoration', CreateWorldAnimalDecorationCommand);
         return registry;
     }
 }

@@ -3,6 +3,7 @@ import { Group } from './Group.js';
 import { StructurePlacement } from './StructurePlacement.js';
 import { WorldLandmark } from './WorldLandmark.js';
 import { WorldRegion } from './WorldRegion.js';
+import { AnimalDecoration } from './AnimalDecoration.js';
 import { DomainEvent } from './events/Event.js';
 import { createId } from './createId.js';
 
@@ -20,6 +21,7 @@ export class World {
         this._placements = new Map();
         this._landmarks = new Map();
         this._regions = new Map();
+        this._animalDecorations = new Map();
         this._metadata = metadata;
         this._eventBus = eventBus;
     }
@@ -334,6 +336,39 @@ export class World {
         this._publish(DomainEvent.WORLD_REGION_UPDATED, { region });
     }
 
+    // -----------------------------------------------------------------
+    // World Animal Decorations (0.9.702) — explicit, persistent World
+    // content. Unlike application/AnimalRuntimeInstances.js's own
+    // session-local, ephemeral released AnimalPresence, an
+    // AnimalDecoration IS stored World state — the same "IS the stored
+    // state" distinction the World Landmarks section above already
+    // draws against StructurePlacement. No update method: decorative
+    // only in v1 (see core/AnimalDecoration.js's own header) — remove
+    // and re-decorate covers every real case a v1 consumer has.
+    // -----------------------------------------------------------------
+
+    addAnimalDecoration(decoration) {
+        this._animalDecorations.set(decoration.id, decoration);
+        this._publish(DomainEvent.ANIMAL_DECORATION_ADDED, { decoration });
+    }
+
+    removeAnimalDecoration(id) {
+        const decoration = this._animalDecorations.get(id);
+        if (!decoration) {
+            return;
+        }
+        this._animalDecorations.delete(id);
+        this._publish(DomainEvent.ANIMAL_DECORATION_REMOVED, { decoration });
+    }
+
+    getAnimalDecoration(id) {
+        return this._animalDecorations.get(id) || null;
+    }
+
+    getAnimalDecorations() {
+        return Array.from(this._animalDecorations.values());
+    }
+
     toJSON() {
         return {
             id: this._id,
@@ -342,7 +377,8 @@ export class World {
             groups: this.getGroups().map((group) => group.toJSON()),
             placements: this.getStructurePlacements().map((placement) => placement.toJSON()),
             landmarks: this.getWorldLandmarks().map((landmark) => landmark.toJSON()),
-            regions: this.getWorldRegions().map((region) => region.toJSON())
+            regions: this.getWorldRegions().map((region) => region.toJSON()),
+            animalDecorations: this.getAnimalDecorations().map((decoration) => decoration.toJSON())
         };
     }
 
@@ -366,6 +402,10 @@ export class World {
         // Worlds serialized before 0.5.0 have no regions field.
         for (const regionJson of json.regions || []) {
             world.addWorldRegion(WorldRegion.fromJSON(regionJson));
+        }
+        // Worlds serialized before 0.9.702 have no animalDecorations field.
+        for (const decorationJson of json.animalDecorations || []) {
+            world.addAnimalDecoration(AnimalDecoration.fromJSON(decorationJson));
         }
         return world;
     }
