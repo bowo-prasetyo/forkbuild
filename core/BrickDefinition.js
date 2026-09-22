@@ -9,7 +9,8 @@ export class BrickDefinition {
         description = '',
         width = 1,
         height = 1,
-        depth = 1
+        depth = 1,
+        color = 0x4caf7d
     }) {
         this._id = id;
         this._name = name;
@@ -21,6 +22,11 @@ export class BrickDefinition {
         this._width = width;
         this._height = height;
         this._depth = depth;
+        // The default color rendered for a brick of this type when no
+        // per-instance override is set (Brick#color) and nothing more
+        // specific was chosen for it while it was placed (see
+        // ActiveBrickState's own color field) — see renderer/BrickRenderer.js.
+        this._color = color;
     }
 
     get id() { return this._id; }
@@ -33,4 +39,5 @@ export class BrickDefinition {
     get width() { return this._width; }
     get height() { return this._height; }
     get depth() { return this._depth; }
+    get color() { return this._color; }
 }

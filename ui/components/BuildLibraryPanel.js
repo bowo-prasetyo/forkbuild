@@ -2,6 +2,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import BuildLibraryPreview from './BuildLibraryPreview.js';
 import StructureLibraryCard from './StructureLibraryCard.js';
 import { sortStructures, STRUCTURE_SORT_OPTIONS } from '../../core/sortStructures.js';
+import { toCssHex, fromCssHex } from '../../core/ColorHex.js';
 
 // Exported (not just module-local) so tests/BuildLibraryUX.test.js can
 // exercise the actual matching rule directly — the same "logic lives
@@ -260,7 +261,34 @@ export default {
 
         const brickGroups = ref(props.paletteUseCase.getGroupedDefinitions());
         const selectedDefinitionId = ref(props.paletteUseCase.getSelectedDefinitionId());
+        // Choose Your Brick Color — the color chosen for the NEXT
+        // placements of the active brick type (null = "use its own
+        // default"). Mirrors selectedDefinitionId's own "ref synced from
+        // PaletteUseCase, refreshed on ACTIVE_BRICK_CHANGED" shape.
+        const activeColor = ref(props.paletteUseCase.getActiveColor());
         let unsubscribe = null;
+
+        const selectedDefinition = computed(() => {
+            for (const group of brickGroups.value) {
+                const found = group.definitions.find((definition) => definition.id === selectedDefinitionId.value);
+                if (found) {
+                    return found;
+                }
+            }
+            return null;
+        });
+
+        const activeColorCss = computed(() => toCssHex(
+            activeColor.value !== null
+                ? activeColor.value
+                : (selectedDefinition.value ? selectedDefinition.value.color : 0x4caf7d)
+        ));
+
+        function onColorChange(event) {
+            const color = fromCssHex(event.target.value);
+            props.paletteUseCase.setActiveColor(color);
+            activeColor.value = color;
+        }
 
         const filteredBrickGroups = computed(() => {
             const normalized = normalize(query.value);
@@ -466,6 +494,10 @@ export default {
         onMounted(() => {
             unsubscribe = props.paletteUseCase.onActiveBrickChanged((definitionId) => {
                 selectedDefinitionId.value = definitionId;
+                // A different brick type was selected — its own default
+                // color applies until the user picks one again, exactly
+                // like ActiveBrickState's own reset (see its header).
+                activeColor.value = null;
             });
             // 0.4.5 — any click that reaches window (i.e. wasn't stopped
             // by the menu's own wrapper — see the template) closes an
@@ -485,6 +517,8 @@ export default {
             activeTab,
             query,
             selectedDefinitionId,
+            activeColorCss,
+            onColorChange,
             openMenuId,
             sourceFilter,
             categoryFilter,
@@ -543,6 +577,10 @@ export default {
             />
 
             <div v-if="activeTab === 'bricks'" class="brick-palette">
+                <label v-if="selectedDefinitionId" class="brick-palette-color" title="Choose the color for the next bricks you place">
+                    Color
+                    <input type="color" class="brick-palette-color-input" :value="activeColorCss" @input="onColorChange" />
+                </label>
                 <p v-if="filteredBrickGroups.length === 0" class="build-library-empty">No matching bricks.</p>
                 <div v-for="group in filteredBrickGroups" :key="group.category" class="palette-group">
                     <h4 class="palette-category">{{ group.category }}</h4>

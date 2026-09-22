@@ -6,11 +6,17 @@ import { createId } from './createId.js';
 // definitionId. This keeps World serializable as plain data and keeps the
 // renderer free to change how a "core:cube" looks without touching World.
 export class Brick {
-    constructor({ id = createId(), definitionId, position = new Position(), rotation = 0 }) {
+    // color: optional 0xRRGGBB override — null means "use this brick's
+    // BrickDefinition color" (see renderer/BrickRenderer.js). Choose Your
+    // Brick Color: set at placement time (PlaceBrickCommand) or later via
+    // the undoable SetBrickColorCommand; never required, so an existing
+    // World with no colors set renders exactly as it always has.
+    constructor({ id = createId(), definitionId, position = new Position(), rotation = 0, color = null }) {
         this._id = id;
         this._definitionId = definitionId;
         this._position = position;
         this._rotation = rotation;
+        this._color = color;
     }
 
     get id() {
@@ -37,12 +43,21 @@ export class Brick {
         this._rotation = rotation;
     }
 
+    get color() {
+        return this._color;
+    }
+
+    set color(color) {
+        this._color = color;
+    }
+
     clone() {
         return new Brick({
             id: this._id,
             definitionId: this._definitionId,
             position: this._position.clone(),
-            rotation: this._rotation
+            rotation: this._rotation,
+            color: this._color
         });
     }
 
@@ -51,7 +66,8 @@ export class Brick {
             id: this._id,
             definitionId: this._definitionId,
             position: this._position.toJSON(),
-            rotation: this._rotation
+            rotation: this._rotation,
+            color: this._color
         };
     }
 
@@ -60,7 +76,8 @@ export class Brick {
             id: json.id,
             definitionId: json.definitionId,
             position: Position.fromJSON(json.position),
-            rotation: json.rotation
+            rotation: json.rotation,
+            color: json.color !== undefined ? json.color : null
         });
     }
 }

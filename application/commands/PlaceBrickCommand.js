@@ -33,13 +33,17 @@ import { Command } from './Command.js';
 // job, called by whoever constructs this command (PlacementTool), not by
 // the command itself.
 export class PlaceBrickCommand extends Command {
-    constructor({ worldId, buildingId, definitionId, position, rotation = 0, id, timestamp } = {}) {
+    constructor({ worldId, buildingId, definitionId, position, rotation = 0, color = null, id, timestamp } = {}) {
         super({ id, timestamp });
         this._worldId = worldId;
         this._buildingId = buildingId;
         this._definitionId = definitionId;
         this._position = position;
         this._rotation = rotation;
+        // Choose Your Brick Color: the color the palette had active when
+        // this placement was made, or null to use the definition's own
+        // default — see application/editor-state/ActiveBrickState.js.
+        this._color = color;
         this._executedBrickId = null;
     }
 
@@ -48,6 +52,7 @@ export class PlaceBrickCommand extends Command {
     get definitionId() { return this._definitionId; }
     get position() { return this._position; }
     get rotation() { return this._rotation; }
+    get color() { return this._color; }
     get type() { return 'place-brick'; }
 
     // context: { world } — the live World this command applies to.
@@ -58,7 +63,8 @@ export class PlaceBrickCommand extends Command {
             id: this._executedBrickId || undefined,
             definitionId: this._definitionId,
             position: this._position,
-            rotation: this._rotation
+            rotation: this._rotation,
+            color: this._color
         });
         context.world.addBrickToBuilding(this._buildingId, brick);
         this._executedBrickId = brick.id;
@@ -91,6 +97,7 @@ export class PlaceBrickCommand extends Command {
             definitionId: this._definitionId,
             position: this._position.toJSON(),
             rotation: this._rotation,
+            color: this._color,
             executedBrickId: this._executedBrickId
         };
     }
@@ -102,6 +109,7 @@ export class PlaceBrickCommand extends Command {
             definitionId: json.definitionId,
             position: Position.fromJSON(json.position),
             rotation: json.rotation,
+            color: json.color !== undefined ? json.color : null,
             id: json.id,
             timestamp: new Date(json.timestamp)
         });

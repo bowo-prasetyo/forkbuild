@@ -70,6 +70,16 @@ export class EditorContext {
         this._publish(EditorEvent.ACTIVE_BRICK_CHANGED, { definitionId });
     }
 
+    // Choose Your Brick Color — sets the color the NEXT placements of the
+    // currently active brick type will use, without touching definitionId
+    // or re-publishing ACTIVE_BRICK_CHANGED (nothing about "which brick"
+    // changed, only "what color"). PREVIEW_CHANGED is what actually
+    // drives the ghost's re-render — see PlacementTool, which reads
+    // activeBrick.color on every pointer move.
+    setActiveBrickColor(color) {
+        this._activeBrick = new ActiveBrickState(this._activeBrick.definitionId, color);
+    }
+
     get cameraState() {
         return this._cameraState;
     }

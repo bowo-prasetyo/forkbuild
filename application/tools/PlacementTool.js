@@ -128,7 +128,14 @@ export class PlacementTool extends Tool {
             buildingId,
             definitionId: preview.definitionId,
             position: preview.position,
-            rotation: preview.rotation
+            rotation: preview.rotation,
+            // The raw override (null unless the palette chose a color) —
+            // never preview.color, which is always resolved to a
+            // concrete shade for the ghost. Leaving this null when
+            // nothing was chosen keeps the placed Brick following its
+            // BrickDefinition's own default, exactly like an existing
+            // World's bricks that predate this milestone.
+            color: this.context.editorContext.activeBrick.color
         });
         this.context.commandHistory.execute(command);
         this.context.previewUseCase.hide();
@@ -158,6 +165,16 @@ export class PlacementTool extends Tool {
         const valid = buildings.length === 0
             ? true
             : this._placementValidator.canPlace(world, buildings[0].id, position);
-        this.context.previewUseCase.show(definitionId, position, this._rotation, valid);
+        // Choose Your Brick Color: resolve to a concrete color HERE
+        // (never leave it null) — an override chosen in the palette
+        // wins, otherwise this type's own BrickDefinition default.
+        // PreviewRenderer has no registry of its own to fall back to,
+        // and ThreeBrickFactory's own default parameter is one fixed
+        // shade shared by every brick type, not per-type.
+        const definition = this.context.registry.get(definitionId);
+        const color = this.context.editorContext.activeBrick.color !== null
+            ? this.context.editorContext.activeBrick.color
+            : (definition ? definition.color : null);
+        this.context.previewUseCase.show(definitionId, position, this._rotation, valid, color);
     }
 }

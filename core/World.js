@@ -83,7 +83,7 @@ export class World {
     }
 
     // Mutates an existing brick and publishes BRICK_UPDATED so the
-    // renderer can react incrementally. changes: { position, rotation }.
+    // renderer can react incrementally. changes: { position, rotation, color }.
     updateBrick(buildingId, brickId, changes) {
         const building = this.getBuilding(buildingId);
         if (!building) {
@@ -98,6 +98,9 @@ export class World {
         }
         if (changes.rotation !== undefined) {
             brick.rotation = changes.rotation;
+        }
+        if (changes.color !== undefined) {
+            brick.color = changes.color;
         }
         this._publish(DomainEvent.BRICK_UPDATED, { buildingId, brick });
     }

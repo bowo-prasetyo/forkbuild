@@ -38,6 +38,16 @@ export class PaletteUseCase {
         this._editorContext.setActiveBrick(definitionId);
     }
 
+    // Choose Your Brick Color — the color chosen for the currently active
+    // brick type, or null when nothing overrides the type's own default.
+    getActiveColor() {
+        return this._editorContext.activeBrick.color;
+    }
+
+    setActiveColor(color) {
+        this._editorContext.setActiveBrickColor(color);
+    }
+
     // Returns an unsubscribe function.
     onActiveBrickChanged(callback) {
         const subscription = this._editorContext.eventBus.subscribe(

@@ -3,6 +3,7 @@ import { Document } from '../core/Document.js';
 import { EditorEvent } from '../core/events/EditorEvent.js';
 import { SelectionState } from './editor-state/SelectionState.js';
 import { DeleteBrickCommand } from './commands/DeleteBrickCommand.js';
+import { SetBrickColorCommand } from './commands/SetBrickColorCommand.js';
 import { CompositeCommand } from './commands/CompositeCommand.js';
 import { CreateEventBusUseCase } from './CreateEventBusUseCase.js';
 import { CreateDemoWorldUseCase } from './CreateDemoWorldUseCase.js';
@@ -608,6 +609,38 @@ export class EditorSession {
                 new CompositeCommand({ description: `Delete ${commands.length} Bricks` }));
         this._commandHistory.execute(command);
         this._editorContext.clearSelection();
+        return true;
+    }
+
+    // Choose Your Brick Color — mirrors deleteSelection()'s own shape:
+    // one SetBrickColorCommand per selected brick, wrapped in a
+    // CompositeCommand when more than one is selected, so recoloring a
+    // multi-brick selection is still a single undo step. A
+    // structure-placement selection has no single color of its own (it's
+    // composed of many bricks, each with its own definition/instance
+    // color) so this is a brick-selection-only operation, same carve-out
+    // structure.createFromSelection already makes.
+    recolorSelection(color) {
+        const selection = this._editorContext.selection;
+        const document = this._documentManager.document;
+        if (selection.isEmpty || !document || !this._commandHistory) {
+            return false;
+        }
+        if (selection.isStructurePlacementSelection) {
+            return false;
+        }
+        const worldId = document.world.id;
+        const commands = selection.items.map((item) => new SetBrickColorCommand({
+            worldId,
+            buildingId: item.buildingId,
+            brickId: item.brickId,
+            color
+        }));
+        const command = commands.length === 1
+            ? commands[0]
+            : commands.reduce((composite, child) => composite.add(child),
+                new CompositeCommand({ description: `Recolor ${commands.length} Bricks` }));
+        this._commandHistory.execute(command);
         return true;
     }
 
