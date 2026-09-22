@@ -159,6 +159,20 @@ export class VehicleRuntimeInstances {
         return this._instances.get(id) || null;
     }
 
+    // 0.9.701 — World View Persistence. Read-only snapshot accessors —
+    // every currently-tracked VehicleInstance, and every excluded id —
+    // for storage/VehicleRuntimeInstancePersistenceStore.js, their only
+    // consumer. Neither one narrows by distance the way nearby() does;
+    // neither one is used for discovery, reconciliation, or mutation of
+    // any kind here.
+    get instances() {
+        return Array.from(this._instances.values());
+    }
+
+    get excludedIds() {
+        return Array.from(this._excluded);
+    }
+
     // 0.9.700 — the bug fix this milestone's own animal-catching
     // integration test found: `discard()`'s own exclusion (see this
     // file's own header, "REMOVAL IS KEYED...") was only ever consulted
