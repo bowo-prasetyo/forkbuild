@@ -113,6 +113,18 @@ export class AnimalRuntimeInstances {
         return this._excluded.has(id);
     }
 
+    // 0.9.701 — World View Persistence. The direct structural twin of
+    // application/VehicleRuntimeInstances.js#instances/#excludedIds — see
+    // that file's own 0.9.701 header. Read-only, for
+    // storage/AnimalRuntimeInstancePersistenceStore.js alone.
+    get instances() {
+        return Array.from(this._instances.values());
+    }
+
+    get excludedIds() {
+        return Array.from(this._excluded);
+    }
+
     // Every ALREADY-TRACKED AnimalPresence within `radius` of
     // `centerPosition` — a READ, never a sync(): no discovery, no
     // eviction, no mutation of any kind. Mirrors
@@ -178,6 +190,20 @@ export class AnimalRuntimeInstances {
         // never released at all) — see releasedNearby()'s own header.
         this._released.delete(id);
         this._recentlyCaught.push({ id, position });
+    }
+
+    // 0.9.701 — World View Persistence. The exclusion half of discard()
+    // ALONE, with no drainRecentlyCaught() notification queued — see
+    // that method's own header for what the queue is actually for
+    // (telling the renderer to stop drawing an animal it just showed).
+    // The one caller: application/WorldNavigationSession.js seeding a
+    // freshly-constructed store from a previous session's own persisted
+    // excludedIds (storage/AnimalRuntimeInstancePersistenceStore.js) —
+    // there is no animal to un-render, because nothing with this id was
+    // ever discovered or drawn THIS session in the first place.
+    excludeId(id) {
+        this._instances.delete(id);
+        this._excluded.add(id);
     }
 
     // 0.9.700 — returns every { id, position } pair queued by discard()
