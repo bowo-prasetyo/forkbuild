@@ -64,6 +64,7 @@ export class WorldRenderer {
         animalRenderer = new AnimalRenderer()
     ) {
         this._renderer = renderer;
+        this._registry = registry;
         this._buildingRenderer = buildingRenderer;
         this._meshRegistry = meshRegistry;
         this._structureResolver = structureResolver;
@@ -249,6 +250,28 @@ export class WorldRenderer {
             brick.position.z + offset.z
         );
         mesh.rotation.y = brick.rotation * (Math.PI / 180);
+        this._applyBrickColor(mesh, brick);
+    }
+
+    // Choose Your Brick Color — SetBrickColorCommand mutates a brick
+    // in place and publishes the SAME BRICK_UPDATED event MoveBrickCommand/
+    // RotateBrickCommand already use, so an already-rendered mesh (built
+    // once, at BRICK_ADDED, with whatever color applied then) needs its
+    // material updated in place here too — mirrors renderer/BrickRenderer.js's
+    // own "instance override wins, else the definition's own default"
+    // resolution exactly, so a live recolor and a fresh render of the
+    // same brick always agree.
+    _applyBrickColor(mesh, brick) {
+        if (!mesh.material || !mesh.material.color) {
+            return;
+        }
+        const definition = this._registry ? this._registry.get(brick.definitionId) : null;
+        const color = brick.color !== null && brick.color !== undefined
+            ? brick.color
+            : (definition ? definition.color : null);
+        if (color !== null && color !== undefined) {
+            mesh.material.color.setHex(color);
+        }
     }
 
     // 0.2.90 — mirrors _onBuildingAdded's own offset lookup exactly:
