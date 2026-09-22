@@ -24,12 +24,25 @@ import { emptyAvatarInventory, isValidAvatarInventory } from '../core/AvatarInve
 // controller calls `set(transition.inventory)` with whatever a pure
 // transition already computed; this class never computes one itself.
 //
-// SESSION-LOCAL, LIKE EVERYTHING ELSE IN THIS LINE. Not persisted, not
-// networked — the identical posture application/VehicleRuntimeInstances.js's
-// own header already establishes for its own runtime state.
+// SESSION-LOCAL BY DEFAULT, LIKE EVERYTHING ELSE IN THIS LINE — not
+// networked, and not persisted unless a caller opts in.
+//
+// 0.9.701 — World View Persistence. `persistenceStore` (optional,
+// storage/AvatarInventoryPersistenceStore.js) is the one addition: the
+// same "enforce/offer only when actually wired" posture
+// application/WorldNavigationSession.js's own constructor already uses
+// throughout. A caller that doesn't supply one (every pre-0.9.701 caller,
+// and every existing test) gets exactly the behavior this class always
+// had — an empty inventory at construction, never written anywhere.
+// Wired, construction rehydrates from whatever was last saved, and every
+// set() immediately persists the new value — inventory changes (store/
+// deploy/catch/release) are discrete, infrequent user actions, so there
+// is no debounce here, unlike the runtime-position writes
+// application/WorldNavigationSession.js throttles for a ridden vehicle.
 export class AvatarInventoryStore {
-    constructor() {
-        this._inventory = emptyAvatarInventory();
+    constructor(persistenceStore = null) {
+        this._persistenceStore = persistenceStore;
+        this._inventory = persistenceStore ? persistenceStore.load() : emptyAvatarInventory();
     }
 
     get() {
@@ -41,5 +54,8 @@ export class AvatarInventoryStore {
             throw new Error('AvatarInventoryStore#set requires an AvatarInventory instance');
         }
         this._inventory = nextInventory;
+        if (this._persistenceStore) {
+            this._persistenceStore.save(nextInventory);
+        }
     }
 }

@@ -45,6 +45,9 @@ import { AddPublicationCommentaryUseCase } from './AddPublicationCommentaryUseCa
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 import { GetRecipientNotificationEventsUseCase } from './GetRecipientNotificationEventsUseCase.js';
 import { PublicationCommentaryNotificationProducer } from './PublicationCommentaryNotificationProducer.js';
+import { AvatarInventoryPersistenceStore } from '../storage/AvatarInventoryPersistenceStore.js';
+import { VehicleRuntimeInstancePersistenceStore } from '../storage/VehicleRuntimeInstancePersistenceStore.js';
+import { AnimalRuntimeInstancePersistenceStore } from '../storage/AnimalRuntimeInstancePersistenceStore.js';
 
 // Builds the world exploration backend and returns a session factory, so
 // ui/ never imports storage/, publisher/, or discovery/ directly.
@@ -282,6 +285,16 @@ export class CreateWorldViewUseCase {
         const getRecipientNotificationEventsUseCase = identityProvider
             ? new GetRecipientNotificationEventsUseCase(notificationEventStore, identityProvider)
             : null;
+
+        // 0.9.701 — World View Persistence. The SAME storageProvider
+        // every other local-only store this method already builds
+        // reuses — no second storage key, no second local-storage
+        // mechanism. See application/WorldNavigationSession.js's own
+        // constructor comment on the three parameters these are handed
+        // as, below, and each store's own header for what it persists.
+        const avatarInventoryPersistenceStore = new AvatarInventoryPersistenceStore(storageProvider);
+        const vehicleRuntimeInstancePersistenceStore = new VehicleRuntimeInstancePersistenceStore(storageProvider);
+        const animalRuntimeInstancePersistenceStore = new AnimalRuntimeInstancePersistenceStore(storageProvider);
 
         // 0.9.285 — Wire Publication Commentary Notification Producer.
         // PublicationCommentaryNotificationProducer (0.9.275) has existed
@@ -786,7 +799,11 @@ export class CreateWorldViewUseCase {
                     placeNamingClaimUseCase,
                     localNamePreferenceStore,
                     // 0.5.3: Decentralized Place Name Exchange — see above.
-                    placeNamingClaimExchange
+                    placeNamingClaimExchange,
+                    // 0.9.701 — World View Persistence — see above.
+                    avatarInventoryPersistenceStore,
+                    vehicleRuntimeInstancePersistenceStore,
+                    animalRuntimeInstancePersistenceStore
                 });
                 sessionRef = session;
                 return session;

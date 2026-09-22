@@ -145,6 +145,17 @@ const PRESENCE_HEARTBEAT_INTERVAL_MS = 2000;
 // camera position; see exploreHere/whatsHere below.
 const DEFAULT_EXPLORE_RADIUS = 25;
 const NEARBY_RADIUS = 5;
+// 0.9.701 — World View Persistence. Throttles how often
+// _setupVehicleRuntimePersistence()/_setupAnimalRuntimePersistence()
+// (below) actually write a snapshot to storage — the SAME "now minus
+// last-saved-at, in wall-clock ms" throttle PRESENCE_HEARTBEAT_INTERVAL_MS
+// already establishes for a per-frame concern, applied here for the
+// identical reason: a ridden vehicle calls setPosition() every single
+// frame, and writing that to storage every frame would be pure waste —
+// a snapshot at most once per second is indistinguishable to a reload a
+// few seconds later, while staying cheap enough to run unconditionally
+// whenever a persistence store is actually wired.
+const RUNTIME_PLACEMENT_PERSISTENCE_INTERVAL_MS = 1000;
 // 0.9.96 — the ONE physical key that produces a vehicle braking
 // request — see `_processVehicleBrakingInput()`'s own header, below,
 // for why Control is the key this milestone picks: every other "hold
@@ -491,7 +502,30 @@ export class WorldNavigationSession {
 	    // application/PlaceNamingClaimExchange.js's own header on why
 	    // this is a genuinely separate concern from publishing/retracting
 	    // one's own claim.
-	    placeNamingClaimExchange = null
+	    placeNamingClaimExchange = null,
+	    // 0.9.701 — World View Persistence. Three OPTIONAL collaborators,
+	    // the same "enforce/offer only when actually wired" posture every
+	    // other optional collaborator in this constructor already
+	    // follows: a session built without them (every pre-0.9.701
+	    // caller, and every existing test) behaves exactly as before —
+	    // avatar inventory, placed/ridden vehicles, and placed/released
+	    // animals all stay purely session-local, reset on the very next
+	    // construction, exactly as application/AvatarInventoryStore.js,
+	    // application/VehicleRuntimeInstances.js, and
+	    // application/AnimalRuntimeInstances.js each already document for
+	    // themselves. Wired, this constructor rehydrates
+	    // `_avatarInventoryStore`/`_vehicleRuntimeInstances`/
+	    // `_animalRuntimeInstances` from whatever was last saved (below),
+	    // and _setupVehicleRuntimePersistence()/
+	    // _setupAnimalRuntimePersistence() (see both, below) keep saving
+	    // as the World changes. See storage/AvatarInventoryPersistenceStore.js,
+	    // storage/VehicleRuntimeInstancePersistenceStore.js, and
+	    // storage/AnimalRuntimeInstancePersistenceStore.js for what each
+	    // actually persists, and application/CreateWorldViewUseCase.js for
+	    // the real wiring.
+	    avatarInventoryPersistenceStore = null,
+	    vehicleRuntimeInstancePersistenceStore = null,
+	    animalRuntimeInstancePersistenceStore = null
 	}) {
 	    this._registry = registry;
 	    this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
@@ -998,11 +1032,43 @@ export class WorldNavigationSession {
         // _avatarVehicleMovementController above once an avatar exists
         // to mount something.
         this._vehicleRuntimeInstances = new VehicleRuntimeInstances();
+        // 0.9.701 — World View Persistence. Optional — see this
+        // constructor's own parameter comment, above. Kept as its own
+        // field (rather than consulted only here) so
+        // _setupVehicleRuntimePersistence() (below) can keep saving to
+        // it as the World changes. Seeding uses ONLY
+        // VehicleRuntimeInstances's own public add()/discard() — the
+        // exact same seam a deployed/stored vehicle already goes
+        // through — never a direct write to its private fields.
+        this._vehicleRuntimeInstancePersistenceStore = vehicleRuntimeInstancePersistenceStore;
+        if (this._vehicleRuntimeInstancePersistenceStore) {
+            const { instances, excludedIds } = this._vehicleRuntimeInstancePersistenceStore.load();
+            for (const instance of instances) {
+                this._vehicleRuntimeInstances.add(instance);
+            }
+            for (const id of excludedIds) {
+                this._vehicleRuntimeInstances.discard(id);
+            }
+        }
         // 0.9.700 — Animal Catching. The animal-side twin of
         // `_vehicleRuntimeInstances` above — see
         // application/AnimalRuntimeInstances.js's own header. Also
         // built unconditionally, for the identical reason.
         this._animalRuntimeInstances = new AnimalRuntimeInstances();
+        // 0.9.701 — World View Persistence. The direct structural twin
+        // of `_vehicleRuntimeInstancePersistenceStore` above, for
+        // `_animalRuntimeInstances` — see that field's own 0.9.701
+        // comment.
+        this._animalRuntimeInstancePersistenceStore = animalRuntimeInstancePersistenceStore;
+        if (this._animalRuntimeInstancePersistenceStore) {
+            const { instances, excludedIds } = this._animalRuntimeInstancePersistenceStore.load();
+            for (const instance of instances) {
+                this._animalRuntimeInstances.add(instance);
+            }
+            for (const id of excludedIds) {
+                this._animalRuntimeInstances.excludeId(id);
+            }
+        }
         // 0.9.700 — the ONE AvatarInventory owner both
         // `_avatarVehicleInteractionController` and
         // `_avatarAnimalInteractionController` (built below, once a
@@ -1011,11 +1077,31 @@ export class WorldNavigationSession {
         // ownership moved out of either controller. Built here,
         // unconditionally, so it exists even for the brief window before
         // either controller does.
-        this._avatarInventoryStore = new AvatarInventoryStore();
+        //
+        // 0.9.701 — World View Persistence. `avatarInventoryPersistenceStore`
+        // (optional — see this constructor's own parameter comment,
+        // above) is handed straight to AvatarInventoryStore's own
+        // constructor, which does its own rehydrate-on-construct/
+        // save-on-set — this file has no inventory persistence logic of
+        // its own to add.
+        this._avatarInventoryStore = new AvatarInventoryStore(avatarInventoryPersistenceStore);
         // 0.9.700 — Animal Catching. See _setupWildlifeExclusionSync()
         // below, the identical "own subscription, own field" shape
         // `_vehicleRenderFrameSubscription` above already establishes.
         this._wildlifeExclusionSyncFrameSubscription = null;
+        // 0.9.701 — World View Persistence. Own subscription, own field,
+        // the identical shape every other optional per-frame concern in
+        // this file already uses — see _setupVehicleRuntimePersistence()/
+        // _setupAnimalRuntimePersistence(), below.
+        this._vehicleRuntimePersistenceFrameSubscription = null;
+        this._animalRuntimePersistenceFrameSubscription = null;
+        // 0.9.701 — World View Persistence. `0` so the very first frame
+        // after construction is always eligible to save — harmless even
+        // though it usually just re-writes what load() (above) already
+        // read back, the identical "no special-cased first tick" restraint
+        // PRESENCE_HEARTBEAT_INTERVAL_MS's own throttle already takes.
+        this._lastVehicleRuntimeSaveAt = 0;
+        this._lastAnimalRuntimeSaveAt = 0;
     }
 
     // 0.2.97 — the ONE place a CommandHistory ever enters
@@ -1090,6 +1176,8 @@ export class WorldNavigationSession {
         this._setupCameraFocusAnimation();
         this._setupVehicleRendering();
         this._setupWildlifeExclusionSync();
+        this._setupVehicleRuntimePersistence();
+        this._setupAnimalRuntimePersistence();
     }
 
     // 0.9.115 — Vehicle Rendering. Deliberately independent of
@@ -1169,6 +1257,53 @@ export class WorldNavigationSession {
             for (const { id, position } of this._animalRuntimeInstances.drainRecentlyCaught()) {
                 this._session.markAnimalCaught(id, position);
             }
+        });
+    }
+
+    // 0.9.701 — World View Persistence. Absent entirely when no
+    // vehicleRuntimeInstancePersistenceStore was wired (every pre-0.9.701
+    // caller and test), OR when the render facade supports no
+    // onAnimationFrame — the same graceful-absence posture
+    // _setupVehicleRendering() above already takes, deliberately
+    // independent of it: this runs whether or not the facade also
+    // supports syncVehicles, since saving does not depend on rendering.
+    // Throttled to RUNTIME_PLACEMENT_PERSISTENCE_INTERVAL_MS — see that
+    // constant's own header for why a ridden vehicle's own every-frame
+    // setPosition() must never translate into an every-frame write.
+    _setupVehicleRuntimePersistence() {
+        if (!this._vehicleRuntimeInstancePersistenceStore || typeof this._session.onAnimationFrame !== 'function') {
+            return;
+        }
+        this._vehicleRuntimePersistenceFrameSubscription = this._session.onAnimationFrame(() => {
+            const now = Date.now();
+            if (now - this._lastVehicleRuntimeSaveAt < RUNTIME_PLACEMENT_PERSISTENCE_INTERVAL_MS) {
+                return;
+            }
+            this._lastVehicleRuntimeSaveAt = now;
+            this._vehicleRuntimeInstancePersistenceStore.save(
+                this._vehicleRuntimeInstances.instances,
+                this._vehicleRuntimeInstances.excludedIds
+            );
+        });
+    }
+
+    // 0.9.701 — World View Persistence. The direct structural twin of
+    // _setupVehicleRuntimePersistence() above, for
+    // `_animalRuntimeInstances` — see that method's own header.
+    _setupAnimalRuntimePersistence() {
+        if (!this._animalRuntimeInstancePersistenceStore || typeof this._session.onAnimationFrame !== 'function') {
+            return;
+        }
+        this._animalRuntimePersistenceFrameSubscription = this._session.onAnimationFrame(() => {
+            const now = Date.now();
+            if (now - this._lastAnimalRuntimeSaveAt < RUNTIME_PLACEMENT_PERSISTENCE_INTERVAL_MS) {
+                return;
+            }
+            this._lastAnimalRuntimeSaveAt = now;
+            this._animalRuntimeInstancePersistenceStore.save(
+                this._animalRuntimeInstances.instances,
+                this._animalRuntimeInstances.excludedIds
+            );
         });
     }
 
@@ -7394,6 +7529,31 @@ export class WorldNavigationSession {
         if (this._wildlifeExclusionSyncFrameSubscription) {
             this._wildlifeExclusionSyncFrameSubscription();
             this._wildlifeExclusionSyncFrameSubscription = null;
+        }
+        // 0.9.701 — World View Persistence. Mirrors the two teardowns
+        // immediately above exactly, plus one final, un-throttled save —
+        // leaving World View (never mind a reload) should not lose
+        // whatever moved/was caught/was stored in the last
+        // RUNTIME_PLACEMENT_PERSISTENCE_INTERVAL_MS before this call.
+        if (this._vehicleRuntimePersistenceFrameSubscription) {
+            this._vehicleRuntimePersistenceFrameSubscription();
+            this._vehicleRuntimePersistenceFrameSubscription = null;
+        }
+        if (this._vehicleRuntimeInstancePersistenceStore) {
+            this._vehicleRuntimeInstancePersistenceStore.save(
+                this._vehicleRuntimeInstances.instances,
+                this._vehicleRuntimeInstances.excludedIds
+            );
+        }
+        if (this._animalRuntimePersistenceFrameSubscription) {
+            this._animalRuntimePersistenceFrameSubscription();
+            this._animalRuntimePersistenceFrameSubscription = null;
+        }
+        if (this._animalRuntimeInstancePersistenceStore) {
+            this._animalRuntimeInstancePersistenceStore.save(
+                this._animalRuntimeInstances.instances,
+                this._animalRuntimeInstances.excludedIds
+            );
         }
         // 0.9.116 — Mounted Vehicle Movement. A fresh start() after this
         // dispose() should behave like a genuinely fresh session for
