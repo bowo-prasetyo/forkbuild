@@ -21,6 +21,8 @@ import { VehicleType } from '../core/VehicleType.js';
 //              unchanged-reference discipline
 //   Section E: FLAGSHIP — store two vehicles, deploy them back out in
 //              LIFO order
+//   Section F: 0.9.671 — get()/resolve()/next()/previous() cycle
+//              selection primitives
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -163,6 +165,75 @@ function runTests() {
 
         inventory = withEntryRemoved(inventory, bike.id);
         assert(inventory.mostRecent() === null && inventory.size === 0, '41. FLAGSHIP step 4: deploying the bike empties the inventory');
+    }
+
+    // -------------------------------------------------------------
+    // Section F — 0.9.671: get()/resolve()/next()/previous()
+    // -------------------------------------------------------------
+    {
+        const inventory = emptyAvatarInventory();
+        assert(inventory.get('anything') === null, '42. get() on an empty inventory is null');
+        assert(inventory.resolve(null) === null, '43. resolve(null) on an empty inventory is null');
+        assert(inventory.resolve('stale-id') === null, '44. resolve() of any id on an empty inventory is null');
+        assert(inventory.next(null) === null && inventory.previous(null) === null,
+            '45. next()/previous() on an empty inventory are both null, never a throw');
+    }
+    {
+        const a = createAvatarInventoryEntry({ id: 'a', kind: InventoryEntryKind.VEHICLE, type: VehicleType.BICYCLE });
+        const b = createAvatarInventoryEntry({ id: 'b', kind: InventoryEntryKind.VEHICLE, type: VehicleType.MOTORCYCLE });
+        const c = createAvatarInventoryEntry({ id: 'c', kind: InventoryEntryKind.VEHICLE, type: VehicleType.CAR });
+        const inventory = new AvatarInventory([a, b, c]); // oldest -> newest: a, b, c
+
+        assert(inventory.get('b') === b, '46. get() finds an entry by id');
+        assert(inventory.get('missing') === null, '47. get() of an unknown id is null');
+
+        assert(inventory.resolve(null) === c, '48. resolve(null) defaults to mostRecent()');
+        assert(inventory.resolve('b') === b, '49. resolve() of a real, carried id returns that exact entry');
+        assert(inventory.resolve('gone') === c, '50. resolve() of an id no longer carried falls back to mostRecent(), never null or a throw');
+
+        // next()/previous() walk the array in order, wrapping around —
+        // starting position for `null` is the same implicit "most
+        // recent" resolve(null) already uses.
+        assert(inventory.next(null) === a, '51. next(null) wraps from the implicit most-recent (c) around to the oldest (a)');
+        assert(inventory.previous(null) === b, '52. previous(null) steps one older than the implicit most-recent (c), landing on b');
+
+        assert(inventory.next('a') === b, '53. next(a) steps to b');
+        assert(inventory.next('c') === a, '54. next(c) wraps around to a');
+        assert(inventory.previous('a') === c, '55. previous(a) wraps around to c');
+        assert(inventory.previous('c') === b, '56. previous(c) steps to b');
+
+        assert(inventory.next('missing') === inventory.next(null), '57. next() of a stale/unknown id starts from the same implicit most-recent position as next(null)');
+        assert(inventory.previous('missing') === inventory.previous(null), '58. previous() of a stale/unknown id likewise matches previous(null)');
+    }
+    {
+        // Cycling with exactly one entry always lands back on that same
+        // entry — there is nothing else to select.
+        const only = createAvatarInventoryEntry({ id: 'solo', kind: InventoryEntryKind.VEHICLE, type: VehicleType.DRONE });
+        const inventory = new AvatarInventory([only]);
+        assert(inventory.next('solo') === only && inventory.previous('solo') === only,
+            '59. cycling a single-entry inventory in either direction returns that same entry');
+        assert(inventory.next(null) === only && inventory.previous(null) === only,
+            '60. and the same holds starting from no explicit selection');
+    }
+    {
+        // FLAGSHIP: a full cycle backward through three entries returns
+        // to the start; a full cycle forward does too.
+        const a = createAvatarInventoryEntry({ id: 'a', kind: InventoryEntryKind.VEHICLE, type: VehicleType.BICYCLE });
+        const b = createAvatarInventoryEntry({ id: 'b', kind: InventoryEntryKind.VEHICLE, type: VehicleType.MOTORCYCLE });
+        const c = createAvatarInventoryEntry({ id: 'c', kind: InventoryEntryKind.VEHICLE, type: VehicleType.CAR });
+        const inventory = new AvatarInventory([a, b, c]);
+
+        let id = null;
+        let entry = inventory.previous(id); id = entry.id; // c -> b
+        entry = inventory.previous(id); id = entry.id;      // b -> a
+        entry = inventory.previous(id); id = entry.id;      // a -> c (wrap)
+        assert(id === 'c', '61. FLAGSHIP: three previous() calls from the default return exactly to the most-recent entry (c)');
+
+        id = null;
+        entry = inventory.next(id); id = entry.id; // c -> a (wrap)
+        entry = inventory.next(id); id = entry.id;  // a -> b
+        entry = inventory.next(id); id = entry.id;  // b -> c
+        assert(id === 'c', '62. FLAGSHIP: three next() calls from the default likewise return exactly to c');
     }
 
     console.log('✅ All Avatar Inventory tests passed.');

@@ -46,14 +46,27 @@ import { AvatarInventory, withEntryRemoved } from './AvatarInventory.js';
 // core/AvatarVehicleDeployIntent.js's own header already draws the line
 // at intent, not effect.
 //
-// POPS THE MOST RECENT ENTRY, VIA AvatarInventory#mostRecent(). This
-// file never picks an entry by type or any other criterion — see
-// core/AvatarInventory.js's own header for why ordering exists only for
-// this exact LIFO read.
+// POPS mostRecent() BY DEFAULT, OR A CALLER-CHOSEN ENTRY VIA
+// `selectedEntryId` — 0.9.671 — Avatar Inventory Cycle Selection. Both
+// paths go through the exact SAME `AvatarInventory#resolve()` this file
+// never duplicates: `selectedEntryId: null` (the default — no cycle
+// selection has ever been made) resolves to mostRecent(), the original
+// LIFO behavior, byte-for-byte unchanged; a real id resolves to that
+// specific entry when still carried, or falls back to mostRecent() when
+// it is not (a stale selection — see AvatarInventory#resolve()'s own
+// header). This file still never picks an entry by type or any other
+// criterion of its own — selection itself is entirely
+// application/AvatarVehicleInteractionController.js's own job (its
+// cycle-selection keys), never a rule this pure transition invents.
+function isNonEmptyString(value) {
+    return typeof value === 'string' && value.length > 0;
+}
+
 export function deriveAvatarVehicleDeployTransition({
     currentMount = null,
     currentInventory,
-    deployIntent
+    deployIntent,
+    selectedEntryId = null
 } = {}) {
     if (!isValidAvatarVehicleMount(currentMount)) {
         throw new Error(`deriveAvatarVehicleDeployTransition requires currentMount to be null or a valid AvatarVehicleMount, got ${JSON.stringify(currentMount)}`);
@@ -64,6 +77,9 @@ export function deriveAvatarVehicleDeployTransition({
     if (!isValidAvatarVehicleDeployIntent(deployIntent)) {
         throw new Error(`deriveAvatarVehicleDeployTransition requires a valid deployIntent, got ${JSON.stringify(deployIntent)}`);
     }
+    if (selectedEntryId !== null && !isNonEmptyString(selectedEntryId)) {
+        throw new Error(`deriveAvatarVehicleDeployTransition requires selectedEntryId to be null or a non-empty string, got ${JSON.stringify(selectedEntryId)}`);
+    }
 
     const unchanged = { entry: null, inventory: currentInventory };
 
@@ -73,7 +89,7 @@ export function deriveAvatarVehicleDeployTransition({
     if (deployIntent !== AvatarVehicleDeployIntent.DEPLOY) {
         return unchanged;
     }
-    const entry = currentInventory.mostRecent();
+    const entry = currentInventory.resolve(selectedEntryId);
     if (entry === null) {
         return unchanged;
     }

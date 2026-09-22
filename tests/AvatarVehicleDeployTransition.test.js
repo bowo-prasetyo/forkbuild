@@ -10,6 +10,9 @@ import { VehicleType } from '../core/VehicleType.js';
 //   Section B: every "nothing happens" branch returns the exact unchanged pair
 //   Section C: defensive/malformed input
 //   Section D: FLAGSHIP — carry two, deploy twice, LIFO order preserved
+//   Section E: 0.9.671 — selectedEntryId deploys a specific carried
+//              entry, with the same resolve()-driven fallback for a
+//              stale/absent selection
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -114,6 +117,60 @@ function runTests() {
 
         result = deriveAvatarVehicleDeployTransition({ currentMount: null, currentInventory: inventory, deployIntent: DEPLOY });
         assert(result.entry === null && result.inventory === inventory, '15. FLAGSHIP step 3: a third deploy with nothing left is a harmless no-op');
+    }
+
+    // -------------------------------------------------------------
+    // Section E — 0.9.671: selectedEntryId
+    // -------------------------------------------------------------
+    {
+        const bike = createAvatarInventoryEntry({ id: 'bike', kind: InventoryEntryKind.VEHICLE, type: VehicleType.BICYCLE });
+        const car = createAvatarInventoryEntry({ id: 'car', kind: InventoryEntryKind.VEHICLE, type: VehicleType.CAR });
+        const inventory = withEntryAdded(withEntryAdded(emptyAvatarInventory(), bike), car); // car is mostRecent()
+
+        const result = deriveAvatarVehicleDeployTransition({
+            currentMount: null,
+            currentInventory: inventory,
+            deployIntent: DEPLOY,
+            selectedEntryId: 'bike'
+        });
+        assert(result.entry === bike, '16. a real selectedEntryId deploys THAT entry, not mostRecent()');
+        assert(result.inventory.has('car') && !result.inventory.has('bike'), '17. only the selected entry is removed');
+    }
+    {
+        const bike = createAvatarInventoryEntry({ id: 'bike', kind: InventoryEntryKind.VEHICLE, type: VehicleType.BICYCLE });
+        const car = createAvatarInventoryEntry({ id: 'car', kind: InventoryEntryKind.VEHICLE, type: VehicleType.CAR });
+        const inventory = withEntryAdded(withEntryAdded(emptyAvatarInventory(), bike), car);
+
+        const result = deriveAvatarVehicleDeployTransition({
+            currentMount: null,
+            currentInventory: inventory,
+            deployIntent: DEPLOY,
+            selectedEntryId: 'no-longer-carried'
+        });
+        assert(result.entry === car, '18. a stale selectedEntryId (already deployed by other means) falls back to mostRecent(), never a throw or a no-op');
+    }
+    {
+        const bike = createAvatarInventoryEntry({ id: 'bike', kind: InventoryEntryKind.VEHICLE, type: VehicleType.BICYCLE });
+        const inventory = withEntryAdded(emptyAvatarInventory(), bike);
+        const result = deriveAvatarVehicleDeployTransition({
+            currentMount: null,
+            currentInventory: inventory,
+            deployIntent: DEPLOY
+            // selectedEntryId omitted entirely
+        });
+        assert(result.entry === bike, '19. omitting selectedEntryId defaults to null, and behaves exactly as 0.9.670 always did (mostRecent())');
+    }
+    {
+        let threw = false;
+        try {
+            deriveAvatarVehicleDeployTransition({
+                currentMount: null,
+                currentInventory: emptyAvatarInventory(),
+                deployIntent: NONE,
+                selectedEntryId: ''
+            });
+        } catch (e) { threw = true; }
+        assert(threw, '20. an empty-string selectedEntryId throws — must be null or a real, non-empty id');
     }
 
     console.log('✅ All Avatar Vehicle Deploy Transition tests passed.');
