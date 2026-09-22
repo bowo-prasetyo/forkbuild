@@ -146,9 +146,9 @@ that your avatar keeps walking on its own.
 
 ### Vehicles
 
-Some worlds place a bicycle, motorcycle, or car your avatar can ride
-instead of walking. Walk close enough to one and a prompt appears telling
-you which key mounts it:
+Some worlds place a bicycle, motorcycle, car, or drone your avatar can
+ride instead of walking. Walk close enough to one and a prompt appears
+telling you which key mounts it:
 
 | Key | Action |
 |---|---|
@@ -166,9 +166,17 @@ independent of steering. Dismounting puts your avatar back on foot at a
 clear spot beside the vehicle. A vehicle's top speed, acceleration,
 braking, and turning all depend on what kind of vehicle it is, and its
 collision footprint is sized to match — today that's the bicycle, the
-motorcycle, and the car, the three vehicles worlds actually place and
-render. A motorcycle is faster than a bicycle and rarer to find, and a
-car is faster still than a motorcycle, and rarer still.
+motorcycle, the car, and the drone, the four vehicles worlds actually
+place and render. A motorcycle is faster than a bicycle and rarer to
+find, a car is faster still than a motorcycle and rarer still, and a
+drone is the fastest and rarest of all.
+
+A drone sits on the ground, idle, exactly like the other three, until
+you mount it and start moving — holding **W** or **S** lifts it off the
+ground; letting go brings it back down. Once airborne it flies above
+trees, but a tall building still blocks it exactly as it would a car, so
+flying doesn't mean ignoring the world's own geometry. You can't
+dismount a drone in mid-air — bring it back to the ground first.
 
 ### Spatial awareness and activity
 

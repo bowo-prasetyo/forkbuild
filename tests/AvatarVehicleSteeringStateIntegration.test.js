@@ -39,7 +39,8 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //              heading — never resets it, unlike transient speed
 //   Section J: steering is independent of movementSpeed/running — a
 //              faster or running vehicle does not steer faster
-//   Section K: AERIAL_VEHICLE/DRONE remains fully blocked
+//   Section K: AERIAL_VEHICLE/DRONE now steers gradually too, at its
+//              own rate (Aerial Movement Pipeline milestone)
 //   Section L: architectural regression — the integration seam lives
 //              exactly where core/AvatarMovementSimulation.js's and
 //              application/AvatarMovementController.js's own 0.9.94
@@ -477,18 +478,36 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section K — AERIAL_VEHICLE/DRONE remains fully blocked
+    // Section K — AERIAL_VEHICLE/DRONE now steers gradually too, at its
+    // own rate (Aerial Movement Pipeline milestone — see
+    // core/AvatarVehicleMovementCapability.js's own "AERIAL_VEHICLE Is
+    // Now A Real, Supported Capability" header)
     // -------------------------------------------------------------
     {
+        const drone = resolveAvatarVehicleMovementCapability(VehicleType.DRONE);
         const { avatarPresenceSession } = buildAvatarStack(registry, 'steer-k1');
+        const controller = new AvatarMovementController(avatarPresenceSession);
+        controller.setMovementCapability(drone);
+
+        const ticks = 10;
+        const observed = tickHeadingsDegrees(controller, avatarPresenceSession, 'd', ticks, DT);
+        const perTick = degreesPerHeldTick(drone.steering.steeringRate, DT);
+        for (let i = 0; i < ticks; i++) {
+            const expected = normalizeExpectedDegrees(perTick * (i + 1));
+            assert(Math.abs(observed[i] - expected) < 1e-6,
+                `24.${i} DRONE: tick ${i}'s observed heading matches its own steeringRate (3.0 rad/s), independent of any other vehicle's`);
+        }
+    }
+    {
+        const { avatarPresenceSession } = buildAvatarStack(registry, 'steer-k2');
         const controller = new AvatarMovementController(avatarPresenceSession);
         controller.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.DRONE));
         const before = avatarPresenceSession.current.rotation.y;
         controller.keyDown('d');
         for (let i = 0; i < 50; i++) controller.tick(DT);
         controller.keyUp('d');
-        assert(avatarPresenceSession.current.rotation.y === before,
-            '24. AERIAL_VEHICLE/DRONE remains fully blocked by tick()\'s own supported:false guard — no steering state, rate-limited or otherwise, is ever consulted for it');
+        assert(avatarPresenceSession.current.rotation.y !== before,
+            '24a. DRONE: over many held-turn ticks, heading genuinely changes — steering is real, not merely stored inertly on the capability object');
     }
 
     // -------------------------------------------------------------

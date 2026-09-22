@@ -48,8 +48,9 @@ import { Position } from '../core/Position.js';
 //   Section E: running interacts with vehicle speed exactly as it
 //              already does with WALK's own speed — the SAME
 //              multiplier, never a second "vehicle running" concept
-//   Section F: AERIAL_VEHICLE/DRONE remains fully blocked — no speed
-//              value, vehicle or otherwise, ever leaks through
+//   Section F: AERIAL_VEHICLE/DRONE now moves too (Aerial Movement
+//              Pipeline milestone) — running doubles its own target
+//              speed exactly like any other vehicle
 //   Section G: determinism — repeated resolution/ticking never drifts
 //              the resolved movementSpeed
 //   Section H: architectural regression — zero vehicle-specific
@@ -512,22 +513,40 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section F — AERIAL_VEHICLE/DRONE remains fully blocked
+    // Section F — AERIAL_VEHICLE/DRONE now moves, and running doubles
+    // its own target speed exactly like it does for any other vehicle
+    // (Aerial Movement Pipeline milestone — see
+    // core/AvatarVehicleMovementCapability.js's own "AERIAL_VEHICLE Is
+    // Now A Real, Supported Capability" header)
     // -------------------------------------------------------------
     {
-        const { avatarPresenceSession } = buildAvatarStack(registry, 'speed-f1');
-        const controller = new AvatarMovementController(avatarPresenceSession);
-        controller.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.DRONE));
-        controller.keyDown('w');
-        controller.keyDown('shift');
-        const beforePosition = avatarPresenceSession.current.position;
-        const before = { x: beforePosition.x, y: beforePosition.y, z: beforePosition.z };
-        for (let i = 0; i < 20; i++) controller.tick(0.05);
-        const after = avatarPresenceSession.current.position;
-        assert(before.x === after.x && before.y === after.y && before.z === after.z,
-            '20. AERIAL_VEHICLE/DRONE still blocks movement entirely — no ground-vehicle speed, and no running-doubled ground-vehicle speed, ever leaks through to a supposedly-unsupported capability');
-        controller.keyUp('w');
-        controller.keyUp('shift');
+        function warmedUpDistance(controller, session, warmupTicks, measureTicks, dt) {
+            controller.keyDown('w');
+            for (let i = 0; i < warmupTicks; i++) controller.tick(dt);
+            const startZ = session.current.position.z;
+            for (let i = 0; i < measureTicks; i++) controller.tick(dt);
+            const distance = session.current.position.z - startZ;
+            controller.keyUp('w');
+            return distance;
+        }
+
+        const { avatarPresenceSession: droneWalking } = buildAvatarStack(registry, 'speed-f1-walking');
+        const { avatarPresenceSession: droneRunning } = buildAvatarStack(registry, 'speed-f1-running');
+        const droneWalkingController = new AvatarMovementController(droneWalking);
+        const droneRunningController = new AvatarMovementController(droneRunning);
+        droneWalkingController.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.DRONE));
+        droneRunningController.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.DRONE));
+        droneRunningController.keyDown('shift');
+
+        // DRONE's own running target (32, double its own 16) ramps up at
+        // its own acceleration (5) in 6.4s — comfortably inside this 7s
+        // warmup window.
+        const WARMUP_TICKS = 140;
+        const MEASURE_TICKS = 40;
+        const droneWalkingDistance = warmedUpDistance(droneWalkingController, droneWalking, WARMUP_TICKS, MEASURE_TICKS, 0.05);
+        const droneRunningDistance = warmedUpDistance(droneRunningController, droneRunning, WARMUP_TICKS, MEASURE_TICKS, 0.05);
+        assert(Math.abs(droneRunningDistance / droneWalkingDistance - 2) < 1e-9,
+            '20. DRONE: running doubles the cruise distance, exactly RUN_SPEED_MULTIPLIER (2), once both have reached their own cruise speed');
     }
 
     // -------------------------------------------------------------

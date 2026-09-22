@@ -847,14 +847,12 @@ async function runTests() {
     {
         // isMovableVehicleType() was gated on BICYCLE alone at 0.9.124 —
         // that milestone introduced no new movable vehicle type. 0.9.668
-        // later added MOTORCYCLE, and 0.9.669 added CAR
-        // (application/AvatarVehicleMovementController.js); DRONE still
-        // never moves.
-        for (const type of [VehicleType.BICYCLE, VehicleType.MOTORCYCLE, VehicleType.CAR]) {
+        // later added MOTORCYCLE, 0.9.669 added CAR, and the Aerial
+        // Movement Pipeline milestone added DRONE
+        // (application/AvatarVehicleMovementController.js) — all four
+        // are movable now.
+        for (const type of [VehicleType.BICYCLE, VehicleType.MOTORCYCLE, VehicleType.CAR, VehicleType.DRONE]) {
             assert(isMovableVehicleType(type) === true, `83.${type} sanity: ${type} is movable`);
-        }
-        for (const type of [VehicleType.DRONE]) {
-            assert(isMovableVehicleType(type) === false, `84.${type} is still never movable`);
         }
     }
 

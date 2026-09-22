@@ -88,9 +88,9 @@ import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUs
 //      specific one by name — through 0.9.667 that meant BICYCLE alone
 //      had a runtime movement/rendering path; 0.9.668 gave MOTORCYCLE
 //      one too, and 0.9.669 gave CAR one as well
-//      (core/VehiclePlacement.js/renderer/VehicleRenderer.js), and each
-//      steers identically, through the exact same generic gate. DRONE
-//      still has no runtime movement/rendering path.
+//      (core/VehiclePlacement.js/renderer/VehicleRenderer.js), and the
+//      Aerial Movement Pipeline milestone gave DRONE one too — each
+//      steers identically, through the exact same generic gate.
 //
 // This is a documentation-and-test milestone, matching this milestone's
 // own brief: no production file changes. See docs/Roadmap.md, 0.9.130, for
@@ -340,14 +340,14 @@ async function runTests() {
         session.avatarKeyUp('w');
     }
 
-    // 9 — steering applies to any movable ground vehicle, never to a
-    // specific one by name: BICYCLE, MOTORCYCLE (0.9.668), and CAR
-    // (0.9.669) are all movable; DRONE is not.
+    // 9 — steering applies to any movable vehicle, never to a specific
+    // one by name: BICYCLE, MOTORCYCLE (0.9.668), CAR (0.9.669), and now
+    // DRONE (Aerial Movement Pipeline) are all movable.
     {
         assert(isMovableVehicleType(VehicleType.BICYCLE) === true, '9a. BICYCLE is movable');
         assert(isMovableVehicleType(VehicleType.MOTORCYCLE) === true, '9b. MOTORCYCLE is movable too, as of 0.9.668');
         assert(isMovableVehicleType(VehicleType.CAR) === true, '9c. CAR is movable too, as of 0.9.669');
-        assert(isMovableVehicleType(VehicleType.DRONE) === false, '9d. DRONE — still no runtime movement path');
+        assert(isMovableVehicleType(VehicleType.DRONE) === true, '9d. DRONE is movable too, as of the Aerial Movement Pipeline milestone');
 
         // Steering genuinely drives a MOTORCYCLE through this exact same
         // pipeline, matching application/AvatarVehicleMovementController.js's
@@ -388,18 +388,24 @@ async function runTests() {
         });
         assert(carResult !== null, '9f. a genuinely TRACKED, movable car simulates a real tick too, steering intent included, as of 0.9.669');
 
-        // DRONE, by contrast, is still gated out entirely.
-        const droneInstance = new VehicleInstance({
+        // A DRONE, as of the Aerial Movement Pipeline milestone, steers
+        // through the exact same generic pipeline too — never a
+        // drone-specific steering implementation.
+        let droneInstance = new VehicleInstance({
             id: 'contract-9-drone', type: VehicleType.DRONE,
             spawnPosition: { x: 0, y: 0, z: 0 }, position: { x: 0, y: 0, z: 0 }, heading: 0
         });
-        const droneController = new AvatarVehicleMovementController({ get: (id) => id === droneInstance.id ? droneInstance : null });
+        const droneController = new AvatarVehicleMovementController({
+            get: (id) => id === droneInstance.id ? droneInstance : null,
+            setPosition: (id, position) => { droneInstance = droneInstance.withPosition(position); return droneInstance; },
+            setHeading: (id, heading) => { droneInstance = droneInstance.withHeading(heading); return droneInstance; }
+        });
         const droneResult = droneController.tick({
             seed: DEFAULT_WORLD_SEED, vehicleId: droneInstance.id, capability: resolveAvatarVehicleMovementCapability(VehicleType.DRONE),
             movementIntent: { direction: 1, turnAxis: 0, running: false, brakingRequested: false },
             currentRotationY: 0, deltaSeconds: 0.05, steeringIntent: VehicleSteeringIntent.left()
         });
-        assert(droneResult === null, '9g. a genuinely TRACKED drone still never simulates — the type gate itself blocks it, steering intent supplied or not');
+        assert(droneResult !== null, '9g. a genuinely TRACKED, movable drone simulates a real tick too, steering intent included');
     }
 
     // ===============================================================

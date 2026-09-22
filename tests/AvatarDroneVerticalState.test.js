@@ -2,7 +2,8 @@ import {
     AvatarDroneVerticalStateKind,
     isValidAvatarDroneVerticalStateKind,
     DRONE_HOVER_ALTITUDE,
-    deriveAvatarDroneVerticalState
+    deriveAvatarDroneVerticalState,
+    stepDroneAltitude
 } from '../core/AvatarDroneVerticalState.js';
 
 function assert(condition, message) {
@@ -40,7 +41,22 @@ async function runTests() {
         assert(deriveAvatarDroneVerticalState(args) === deriveAvatarDroneVerticalState(args), '17. same input -> same output, called twice');
     }
 
-    // Section D — export surface
+    // Section E — stepDroneAltitude()
+    {
+        assert(stepDroneAltitude() === 0, '19. no arguments defaults to altitude 0, not ascending -> stays 0 (already clamped at the floor)');
+        assert(stepDroneAltitude({ altitude: 0, ascending: true, deltaSeconds: 0 }) === 0, '20. a zero deltaSeconds never advances altitude');
+        assert(stepDroneAltitude({ altitude: 0, ascending: true, deltaSeconds: 1 }) > 0, '21. ascending with a positive deltaSeconds increases altitude');
+        assert(stepDroneAltitude({ altitude: DRONE_HOVER_ALTITUDE, ascending: true, deltaSeconds: 10 }) === DRONE_HOVER_ALTITUDE,
+            '22. altitude is clamped at DRONE_HOVER_ALTITUDE — a huge deltaSeconds never overshoots');
+        assert(stepDroneAltitude({ altitude: DRONE_HOVER_ALTITUDE, ascending: false, deltaSeconds: 1 }) < DRONE_HOVER_ALTITUDE,
+            '23. not ascending with a positive deltaSeconds decreases altitude');
+        assert(stepDroneAltitude({ altitude: 0, ascending: false, deltaSeconds: 10 }) === 0, '24. altitude is clamped at 0 — a huge deltaSeconds never goes negative');
+        assert(stepDroneAltitude({ altitude: 1, ascending: true, deltaSeconds: 100 }) === stepDroneAltitude({ altitude: 1, ascending: true, deltaSeconds: 0.25 }),
+            '25. a deltaSeconds beyond the internal clamp behaves identically to the clamp boundary itself — no runaway single-tick jump');
+        assert(stepDroneAltitude({ altitude: NaN, ascending: true, deltaSeconds: 1 }) > 0, '26. a non-finite altitude degrades to 0 before stepping, never throwing or propagating NaN');
+    }
+
+    // Section F — export surface
     {
         const exportsModule = await import('../core/AvatarDroneVerticalState.js');
         const exportedNames = Object.keys(exportsModule).sort();
@@ -48,8 +64,9 @@ async function runTests() {
             'AvatarDroneVerticalStateKind',
             'DRONE_HOVER_ALTITUDE',
             'deriveAvatarDroneVerticalState',
-            'isValidAvatarDroneVerticalStateKind'
-        ]), '18. this module exports exactly the kind vocabulary, its validator, the hover altitude constant, and the derive function — nothing else');
+            'isValidAvatarDroneVerticalStateKind',
+            'stepDroneAltitude'
+        ]), '27. this module exports exactly the kind vocabulary, its validator, the hover altitude constant, and the two pure functions — nothing else');
     }
 
     console.log('✅ All Avatar Drone Vertical State tests passed.');

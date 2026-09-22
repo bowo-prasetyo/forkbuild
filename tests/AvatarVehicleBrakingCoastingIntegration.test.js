@@ -29,8 +29,10 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // completely untouched, since nothing yet sets `brakingRequested` true
 // anywhere in that real pipeline.
 //
-//   Section A: WALK/DRONE — both remain byte-for-byte unaffected by
-//              braking, at the controller level
+//   Section A: WALK remains byte-for-byte unaffected by braking; DRONE
+//              now brakes/coasts through this exact same pipeline too
+//              (Aerial Movement Pipeline milestone), at the controller
+//              level
 //   Section B: coasting — releasing a movement request (brakingRequested
 //              left at its default, false) decays at the ACCELERATION
 //              rate, byte-identical to 0.9.91's own behavior
@@ -138,7 +140,11 @@ async function runTests() {
     const walk = resolveAvatarVehicleMovementCapability(VehicleType.NONE);
 
     // -------------------------------------------------------------
-    // Section A — WALK/DRONE, at the controller level, unaffected
+    // Section A — WALK unaffected; DRONE now brakes through this exact
+    // same pipeline (Aerial Movement Pipeline milestone superseded
+    // DRONE's own former "always blocked" behavior — see
+    // core/AvatarVehicleMovementCapability.js's own "AERIAL_VEHICLE Is
+    // Now A Real, Supported Capability" header)
     // -------------------------------------------------------------
     {
         const { avatarPresenceSession } = buildAvatarStack(registry, 'brake-a1-walk');
@@ -154,17 +160,17 @@ async function runTests() {
         assert(avatarPresenceSession.current.position.z === zAfterFirstTick,
             '2. WALK: releasing W still stops movement outright on the very next tick — no residual coasting, exactly as before this milestone');
 
+        const drone = resolveAvatarVehicleMovementCapability(VehicleType.DRONE);
         const { avatarPresenceSession: droneSession } = buildAvatarStack(registry, 'brake-a2-drone');
         const droneController = new AvatarMovementController(droneSession);
-        droneController.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.DRONE));
-        const beforePosition = droneSession.current.position;
-        const before = { x: beforePosition.x, y: beforePosition.y, z: beforePosition.z };
+        droneController.setMovementCapability(drone);
         droneController.keyDown('w');
-        for (let i = 0; i < 20; i++) droneController.tick(DT);
-        const after = droneSession.current.position;
-        assert(before.x === after.x && before.y === after.y && before.z === after.z,
-            '3. DRONE: remains fully blocked by tick()\'s own supported:false guard — no braking state, resolved or otherwise, is ever consulted for it');
-        droneController.keyUp('w');
+        for (let i = 0; i < 100; i++) droneController.tick(DT); // comfortably past 16/5 = 3.2s ramp-to-cruise
+        droneController.keyUp('w'); // releasing W (never explicitly braking) coasts toward 0 at DRONE's own RATE_LIMITED acceleration rate, per this file's own 0.9.92 "COASTING" behavior
+        const zBeforeCoast = droneSession.current.position.z;
+        droneController.tick(DT);
+        assert(droneSession.current.position.z > zBeforeCoast,
+            '3. DRONE: releasing W still advances at least a little further this tick — coasting toward 0 at its own RATE_LIMITED rate, never an instant stop');
     }
 
     // -------------------------------------------------------------
@@ -356,9 +362,9 @@ async function runTests() {
             '21. acceleration values are exactly what 0.9.90 established, untouched by this milestone');
         assert(walk.collisionRadius === 0.35 && bicycle.collisionRadius === 0.45 && motorcycle.collisionRadius === 0.55 && car.collisionRadius === 0.80,
             '22. collisionRadius values are exactly what 0.9.88 established, untouched by this milestone');
-        assert(walk.movementDirections.forward === true && walk.movementDirections.backward === true && drone.movementDirections.forward === false && drone.movementDirections.backward === false,
-            '23. movementDirections values are exactly what 0.9.89 established, untouched by this milestone');
-        assert(drone.supported === false, '24. DRONE remains unsupported, untouched by this milestone');
+        assert(walk.movementDirections.forward === true && walk.movementDirections.backward === true && drone.movementDirections.forward === true && drone.movementDirections.backward === true,
+            '23. movementDirections values are exactly what 0.9.89 established for WALK, untouched by this milestone — DRONE\'s own value changed under the later Aerial Movement Pipeline milestone, not this one');
+        assert(drone.supported === true, '24. DRONE is supported now (Aerial Movement Pipeline milestone), untouched by THIS milestone\'s own braking/coasting work');
     }
 
     // -------------------------------------------------------------

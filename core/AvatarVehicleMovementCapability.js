@@ -556,49 +556,46 @@ export class AvatarVehicleMovementCapability {
     // 0.9.86 — the BASE horizontal movement speed (world units/second)
     // this capability implies, before the existing running modifier is
     // ever applied — see this file's own 0.9.86 header. Always a finite
-    // number >= 0, never undefined/NaN: AERIAL_VEHICLE's own `0` is
-    // inert (see that header) rather than a conditionally-missing field.
+    // number >= 0, never undefined/NaN. AERIAL_VEHICLE's own value was
+    // inert (`0`) through 0.9.84 — see this file's own "AERIAL_VEHICLE
+    // Is Now A Real, Supported Capability" header for why that stopped
+    // being true.
     get movementSpeed() { return this._movementSpeed; }
     // 0.9.88 — the horizontal collision radius (world units) this
     // capability's moving body occupies — see this file's own 0.9.88
-    // header. Always a finite number >= 0, never undefined/NaN:
-    // AERIAL_VEHICLE's own `0` is inert for the identical reason
-    // `movementSpeed`'s own `0` already is.
+    // header. Always a finite number >= 0, never undefined/NaN — see
+    // the `movementSpeed` getter's own comment, immediately above, for
+    // AERIAL_VEHICLE's own now-real value.
     get collisionRadius() { return this._collisionRadius; }
     // 0.9.89 — which of forward/backward this capability currently
     // permits the avatar's existing movement input to produce — see
     // this file's own 0.9.89 header and
     // core/AvatarMovementDirectionCapability.js. Always a fully-formed
-    // `AvatarMovementDirectionCapability` instance, never undefined/null:
-    // AERIAL_VEHICLE's own `forward: false, backward: false` is inert
-    // for the identical reason `movementSpeed`'s/`collisionRadius`'s own
-    // `0` already is.
+    // `AvatarMovementDirectionCapability` instance, never undefined/null
+    // — see the `movementSpeed` getter's own comment, above, for
+    // AERIAL_VEHICLE's own now-real value.
     get movementDirections() { return this._movementDirections; }
     // 0.9.90 — the rate (or lack thereof) at which this capability's
     // movement approaches `movementSpeed` — see this file's own 0.9.90
     // header and core/AvatarMovementAccelerationCapability.js. Always a
     // fully-formed `AvatarMovementAccelerationCapability` instance,
-    // never undefined/null: AERIAL_VEHICLE's own `INSTANT`/`0` is inert
-    // for the identical reason `movementSpeed`'s/`collisionRadius`'s/
-    // `movementDirections`'s own inert values already are.
+    // never undefined/null — see the `movementSpeed` getter's own
+    // comment, above, for AERIAL_VEHICLE's own now-real value.
     get acceleration() { return this._acceleration; }
     // 0.9.92 — the rate (or lack thereof) at which this capability's
     // movement approaches a LOWER target speed WHEN BRAKING IS
     // EXPLICITLY REQUESTED — see this file's own 0.9.92 header and
     // core/AvatarMovementBrakingCapability.js. Always a fully-formed
-    // `AvatarMovementBrakingCapability` instance, never undefined/null:
-    // AERIAL_VEHICLE's own `INSTANT`/`0` is inert for the identical
-    // reason `movementSpeed`'s/`collisionRadius`'s/`movementDirections`'s/
-    // `acceleration`'s own inert values already are.
+    // `AvatarMovementBrakingCapability` instance, never undefined/null
+    // — see the `movementSpeed` getter's own comment, above, for
+    // AERIAL_VEHICLE's own now-real value.
     get braking() { return this._braking; }
     // 0.9.93 — the rate (or lack thereof) at which this capability's
     // heading approaches a requested heading — see this file's own
     // 0.9.93 header and core/AvatarMovementSteeringCapability.js. Always
     // a fully-formed `AvatarMovementSteeringCapability` instance, never
-    // undefined/null: AERIAL_VEHICLE's own `INSTANT`/`0` is inert for the
-    // identical reason `movementSpeed`'s/`collisionRadius`'s/
-    // `movementDirections`'s/`acceleration`'s/`braking`'s own inert
-    // values already are.
+    // undefined/null — see the `movementSpeed` getter's own comment,
+    // above, for AERIAL_VEHICLE's own now-real value.
     get steering() { return this._steering; }
 
     toJSON() {
@@ -672,6 +669,14 @@ const WALK_MOVEMENT_SPEED = 3; // world units / second
 const BICYCLE_MOVEMENT_SPEED = 6; // world units / second
 const MOTORCYCLE_MOVEMENT_SPEED = 9; // world units / second
 const CAR_MOVEMENT_SPEED = 12; // world units / second
+// Milestone: Aerial Movement Pipeline. `AERIAL_VEHICLE` stops being
+// permanently `supported: false` — see this file's own new header
+// section, "AERIAL_VEHICLE Is Now A Real, Supported Capability," below
+// the 0.9.86 section. DRONE_MOVEMENT_SPEED extends the exact same
+// WALK < BICYCLE < MOTORCYCLE < CAR ordering one step further —
+// DRONE is faster than CAR, matching the World View's own "drones ...
+// faster than cars" brief.
+const DRONE_MOVEMENT_SPEED = 16; // world units / second
 
 // 0.9.88 — WALK's own collision radius. MUST always equal
 // core/AvatarCollision.js's own AVATAR_COLLISION_RADIUS — see this
@@ -690,6 +695,7 @@ const WALK_COLLISION_RADIUS = 0.35; // world units
 const BICYCLE_COLLISION_RADIUS = 0.45; // world units
 const MOTORCYCLE_COLLISION_RADIUS = 0.55; // world units
 const CAR_COLLISION_RADIUS = 0.80; // world units
+const DRONE_COLLISION_RADIUS = 0.5; // world units
 
 // 0.9.89 — the two `AvatarMovementDirectionCapability` values every
 // resolved capability currently draws from. `PERMITS_BOTH_DIRECTIONS` is
@@ -727,6 +733,7 @@ const INSTANT_ACCELERATION = new AvatarMovementAccelerationCapability(AvatarMove
 const BICYCLE_ACCELERATION = new AvatarMovementAccelerationCapability(AvatarMovementAccelerationKind.RATE_LIMITED, 3);
 const MOTORCYCLE_ACCELERATION = new AvatarMovementAccelerationCapability(AvatarMovementAccelerationKind.RATE_LIMITED, 5);
 const CAR_ACCELERATION = new AvatarMovementAccelerationCapability(AvatarMovementAccelerationKind.RATE_LIMITED, 4);
+const DRONE_ACCELERATION = new AvatarMovementAccelerationCapability(AvatarMovementAccelerationKind.RATE_LIMITED, 5);
 
 // 0.9.92 — WALK's own braking: `INSTANT`, rate `0` — the avatar's
 // on-foot movement has never had any notion of "braking" (releasing
@@ -751,6 +758,7 @@ const INSTANT_BRAKING = new AvatarMovementBrakingCapability(AvatarMovementBrakin
 const BICYCLE_BRAKING = new AvatarMovementBrakingCapability(AvatarMovementBrakingKind.RATE_LIMITED, 6);
 const MOTORCYCLE_BRAKING = new AvatarMovementBrakingCapability(AvatarMovementBrakingKind.RATE_LIMITED, 9);
 const CAR_BRAKING = new AvatarMovementBrakingCapability(AvatarMovementBrakingKind.RATE_LIMITED, 8);
+const DRONE_BRAKING = new AvatarMovementBrakingCapability(AvatarMovementBrakingKind.RATE_LIMITED, 7);
 
 // 0.9.93 — WALK's own steering: `INSTANT`, rate `0` — the avatar's
 // existing on-foot turning has always been the existing key-driven
@@ -770,6 +778,35 @@ const INSTANT_STEERING = new AvatarMovementSteeringCapability(AvatarMovementStee
 const BICYCLE_STEERING = new AvatarMovementSteeringCapability(AvatarMovementSteeringKind.RATE_LIMITED, 3.5);
 const MOTORCYCLE_STEERING = new AvatarMovementSteeringCapability(AvatarMovementSteeringKind.RATE_LIMITED, 4.5);
 const CAR_STEERING = new AvatarMovementSteeringCapability(AvatarMovementSteeringKind.RATE_LIMITED, 2.5);
+const DRONE_STEERING = new AvatarMovementSteeringCapability(AvatarMovementSteeringKind.RATE_LIMITED, 3.0);
+
+// AERIAL_VEHICLE IS NOW A REAL, SUPPORTED CAPABILITY — Aerial Movement
+// Pipeline milestone. This file's own 0.9.84 header explained
+// `supported: false` as naming "no aerial movement/altitude pipeline
+// exists in this codebase in any form" — that has stopped being true.
+// core/AvatarDroneVerticalState.js gives a mounted drone a real, pure
+// GROUNDED/RISING/HOVERING/DESCENDING altitude state and a
+// DRONE_HOVER_ALTITUDE constant; application/AvatarVehicleMovementController.js's
+// own tick() now steps that altitude every frame (via
+// stepDroneAltitude()) and layers it on top of this exact same
+// GROUND_VEHICLE-style horizontal capability (movementSpeed,
+// collisionRadius, movementDirections, acceleration, braking,
+// steering) — an aerial vehicle still needs all of those for its
+// horizontal flight, exactly as a ground vehicle does; only the
+// vertical dimension is genuinely new, and it lives entirely outside
+// this file (see core/AvatarDroneVerticalState.js's own header,
+// "NO TICK, NO RATE, NOT WIRED IN" — since amended by the same
+// milestone that wires it). DRONE below therefore takes the SAME
+// shape of value BICYCLE/MOTORCYCLE/CAR already do — `supported: true`,
+// a real `DRONE_MOVEMENT_SPEED` (see this file's own header, above,
+// "faster than CAR" — deliberately the fastest of all four vehicles,
+// matching the World View's own drone brief), a real collision
+// radius, both directions permitted, and real (if simple, not
+// game-balance-tuned) acceleration/braking/steering — never the
+// INSTANT_ACCELERATION/INSTANT_BRAKING/INSTANT_STEERING shared
+// instances WALK still uses, since a drone genuinely ramps speed and
+// turns over time exactly like a ground vehicle, not instantaneously
+// like on-foot movement.
 
 // One frozen instance per VehicleType, built once at module load — never
 // reconstructed per call — so `resolveAvatarVehicleMovementCapability()`
@@ -780,7 +817,7 @@ const CAPABILITY_BY_VEHICLE_TYPE = Object.freeze({
     [VehicleType.BICYCLE]: new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.GROUND_VEHICLE, VehicleType.BICYCLE, true, BICYCLE_MOVEMENT_SPEED, BICYCLE_COLLISION_RADIUS, PERMITS_BOTH_DIRECTIONS, BICYCLE_ACCELERATION, BICYCLE_BRAKING, BICYCLE_STEERING),
     [VehicleType.MOTORCYCLE]: new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.GROUND_VEHICLE, VehicleType.MOTORCYCLE, true, MOTORCYCLE_MOVEMENT_SPEED, MOTORCYCLE_COLLISION_RADIUS, PERMITS_BOTH_DIRECTIONS, MOTORCYCLE_ACCELERATION, MOTORCYCLE_BRAKING, MOTORCYCLE_STEERING),
     [VehicleType.CAR]: new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.GROUND_VEHICLE, VehicleType.CAR, true, CAR_MOVEMENT_SPEED, CAR_COLLISION_RADIUS, PERMITS_BOTH_DIRECTIONS, CAR_ACCELERATION, CAR_BRAKING, CAR_STEERING),
-    [VehicleType.DRONE]: new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.AERIAL_VEHICLE, VehicleType.DRONE, false, 0, 0, NO_DIRECTIONS_PERMITTED, INSTANT_ACCELERATION, INSTANT_BRAKING, INSTANT_STEERING)
+    [VehicleType.DRONE]: new AvatarVehicleMovementCapability(AvatarMovementCapabilityKind.AERIAL_VEHICLE, VehicleType.DRONE, true, DRONE_MOVEMENT_SPEED, DRONE_COLLISION_RADIUS, PERMITS_BOTH_DIRECTIONS, DRONE_ACCELERATION, DRONE_BRAKING, DRONE_STEERING)
 });
 
 // The one resolution entry point. See this file's own header for exactly

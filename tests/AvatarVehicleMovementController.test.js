@@ -6,12 +6,13 @@ import {
 import { VehicleInstance } from '../core/VehicleInstance.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/TerrainHeightField.js';
 
 // 0.9.116 — Mounted Vehicle Movement, application/AvatarVehicleMovementController.js.
 //
 //   Section A: canMove()/isMovableVehicleType() — BICYCLE, MOTORCYCLE
-//              (0.9.668), and CAR (0.9.669); DRONE still not
+//              (0.9.668), CAR (0.9.669), and DRONE (Aerial Movement
+//              Pipeline) are all movable
 //   Section B: tick() on an untracked vehicle id — null, no throw
 //   Section C: forward intent -> forward displacement, spawnPosition
 //              untouched (0.9.114's own invariant, reused)
@@ -23,9 +24,10 @@ import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 //   Section F: reset() actually clears transient bookkeeping — a ride
 //              resumed after reset() starts exactly like a brand-new
 //              controller would
-//   Section G: unsupported vehicle types (DRONE) are never moved,
-//              even when directly tracked and ticked — defense in depth,
-//              independent of any caller-side canMove() check
+//   Section G: (removed) DRONE's own former "never moved" behavior is
+//              superseded by the Aerial Movement Pipeline milestone —
+//              see Section A4, above, and this section's own current
+//              note
 //   Section G2 (0.9.123): heading tracks realized movement direction —
 //              forward, reverse, blocked (unchanged), and idle
 //              (unchanged) — never core/AvatarMovementSimulation.js's own
@@ -85,12 +87,12 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const controller = new AvatarVehicleMovementController(fakeVehicleStore());
-        for (const type of [VehicleType.BICYCLE, VehicleType.MOTORCYCLE, VehicleType.CAR]) {
+        for (const type of [VehicleType.BICYCLE, VehicleType.MOTORCYCLE, VehicleType.CAR, VehicleType.DRONE]) {
             assert(controller.canMove(type) === true, `1.${type} ${type} can move`);
             assert(isMovableVehicleType(type) === true, `2.${type} isMovableVehicleType(${type}) === true`);
         }
-        for (const type of [VehicleType.DRONE, VehicleType.NONE]) {
-            assert(controller.canMove(type) === false, `3.${type} ${type} cannot move — only the currently implemented visual vocabulary (BICYCLE, MOTORCYCLE, CAR) can`);
+        for (const type of [VehicleType.NONE]) {
+            assert(controller.canMove(type) === false, `3.${type} ${type} cannot move — an unmounted avatar has no vehicle to move at all`);
             assert(isMovableVehicleType(type) === false, `4.${type} isMovableVehicleType(${type}) === false`);
         }
     }
@@ -149,6 +151,38 @@ async function runTests() {
         assert(lastResult !== null, '4e. a mounted, tracked CAR produces a real tick() result');
         assert(lastResult.vehicleInstance.position.z > spawn.z, '4f. forward intent moved the CAR forward, exactly like a BICYCLE/MOTORCYCLE');
         assert(lastResult.vehicleInstance.type === VehicleType.CAR, '4g. the moved instance is still a CAR, never silently re-typed');
+    }
+
+    // -------------------------------------------------------------
+    // Section A4 (Aerial Movement Pipeline) — a mounted DRONE genuinely
+    // moves, ticked through this exact controller, exactly like a
+    // BICYCLE/MOTORCYCLE/CAR already does — not merely "canMove()
+    // reports true."
+    // -------------------------------------------------------------
+    {
+        const spawn = { x: 100, y: 3, z: 200 };
+        const droneCapability = resolveAvatarVehicleMovementCapability(VehicleType.DRONE);
+        const instance = new VehicleInstance({ id: 'vehicle:a4', type: VehicleType.DRONE, spawnPosition: spawn, position: spawn });
+        const store = fakeVehicleStore([instance]);
+        const controller = new AvatarVehicleMovementController(store);
+
+        let lastResult = null;
+        for (let i = 0; i < 40; i++) {
+            lastResult = controller.tick({
+                seed: DEFAULT_WORLD_SEED,
+                vehicleId: 'vehicle:a4',
+                capability: droneCapability,
+                movementIntent: FORWARD_INTENT,
+                currentRotationY: 0,
+                deltaSeconds: 0.05
+            });
+        }
+        assert(lastResult !== null, '4h. a mounted, tracked DRONE produces a real tick() result');
+        assert(lastResult.vehicleInstance.position.z > spawn.z, '4i. forward intent moved the DRONE forward, exactly like a BICYCLE/MOTORCYCLE/CAR');
+        assert(lastResult.vehicleInstance.type === VehicleType.DRONE, '4j. the moved instance is still a DRONE, never silently re-typed');
+        const finalPos = lastResult.vehicleInstance.position;
+        const groundHeightAtFinalPos = terrainHeightAt(DEFAULT_WORLD_SEED, finalPos.x, finalPos.z);
+        assert(finalPos.y > groundHeightAtFinalPos + 1, '4k. a DRONE ridden forward for long enough is genuinely airborne — its own Y sits well above raw terrain height, hovering when moving, per core/AvatarDroneVerticalState.js');
     }
 
     // -------------------------------------------------------------
@@ -302,30 +336,16 @@ async function runTests() {
             '19. after reset(), ticking the SAME vehicle id again advances by EXACTLY the same delta as a brand-new controller\'s own first tick — no stale currentMovementSpeed/verticalVelocity carried over from the previous ride');
     }
 
-    // -------------------------------------------------------------
-    // Section G — unsupported vehicle types are never moved, even when
-    // directly tracked and ticked (defense in depth).
-    // -------------------------------------------------------------
-    {
-        const spawn = { x: 5, y: 0, z: 5 };
-        for (const type of [VehicleType.DRONE]) {
-            const instance = new VehicleInstance({ id: `vehicle:g-${type}`, type, spawnPosition: spawn, position: spawn });
-            const store = fakeVehicleStore([instance]);
-            const controller = new AvatarVehicleMovementController(store);
-            const capability = resolveAvatarVehicleMovementCapability(type);
-            const result = controller.tick({
-                seed: DEFAULT_WORLD_SEED,
-                vehicleId: instance.id,
-                capability,
-                movementIntent: FORWARD_INTENT,
-                currentRotationY: 0,
-                deltaSeconds: 0.5
-            });
-            assert(result === null, `20.${type} tick() on a mounted ${type} returns null — this milestone never accidentally makes ${type} movable merely because the generic runtime now supports VehicleInstance`);
-            assert(store.get(instance.id).position.x === spawn.x && store.get(instance.id).position.z === spawn.z,
-                `21.${type} ...and the store's own tracked ${type} position is completely untouched`);
-        }
-    }
+    // Note: through the Aerial Movement Pipeline milestone, every
+    // currently-defined VehicleType (BICYCLE, MOTORCYCLE, CAR, and now
+    // DRONE) is movable — there is currently no unsupported vehicle type
+    // left to exercise the defense-in-depth "never moved even when
+    // directly tracked and ticked" scenario this section once tested
+    // with DRONE (Section A4, above, now covers DRONE's own real
+    // movement instead). The gate itself
+    // (application/AvatarVehicleMovementController.js's own
+    // `isMovableVehicleType()` check inside tick()) remains in place for
+    // a future, not-yet-movable vehicle type.
 
     // -------------------------------------------------------------
     // Section G2 (0.9.123) — heading tracks realized movement direction.

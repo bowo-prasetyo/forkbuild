@@ -315,26 +315,22 @@ async function runTests() {
         assert(capability !== null && capability !== undefined, '14. DRONE resolves to a defined capability descriptor, never null/undefined');
         assert(capability.movementKind === AvatarMovementCapabilityKind.AERIAL_VEHICLE, '15. DRONE resolves to its own AERIAL_VEHICLE capability kind');
         assert(capability.vehicleType === VehicleType.DRONE, '16. the resolved capability carries VehicleType.DRONE');
-        assert(capability.supported === false, '17. AERIAL_VEHICLE is explicitly reported as not yet supported, rather than silently borrowing GROUND_VEHICLE');
-        assert(capability.movementSpeed === 0, '17a. DRONE\'s own movementSpeed is 0 — inert, since `supported: false` already blocks movement before any speed is ever consulted (see application/AvatarMovementController.js\'s own 0.9.85 tick() guard)');
-        assert(capability.collisionRadius === 0, '17b. DRONE\'s own collisionRadius is 0 — inert, for the identical reason movementSpeed\'s own 0 already is (0.9.88)');
-        assert(capability.movementDirections.forward === false && capability.movementDirections.backward === false,
-            '17c. DRONE\'s own movementDirections is forward: false, backward: false — inert, for the identical reason movementSpeed\'s/collisionRadius\'s own 0 already is (0.9.89)');
-        assert(capability.acceleration.kind === AvatarMovementAccelerationKind.INSTANT && capability.acceleration.acceleration === 0,
-            '17d. DRONE\'s own acceleration is INSTANT/0 — inert, for the identical reason movementSpeed\'s/collisionRadius\'s/movementDirections\'s own inert values already are (0.9.90)');
-        const walkCapabilityForAcceleration = resolveAvatarVehicleMovementCapability(VehicleType.NONE);
-        assert(capability.acceleration === walkCapabilityForAcceleration.acceleration,
-            '17e. DRONE\'s own acceleration is the exact same (===) shared instance WALK\'s own is — reused, not duplicated, because both genuinely mean "no rate applies" (0.9.90)');
-        assert(capability.braking.kind === AvatarMovementBrakingKind.INSTANT && capability.braking.braking === 0,
-            '17f. DRONE\'s own braking is INSTANT/0 — inert, for the identical reason movementSpeed\'s/collisionRadius\'s/movementDirections\'s/acceleration\'s own inert values already are (0.9.92)');
-        assert(capability.braking === walkCapabilityForAcceleration.braking,
-            '17g. DRONE\'s own braking is the exact same (===) shared instance WALK\'s own is — reused, not duplicated, for the identical reason its own acceleration already is (0.9.92)');
-        assert(capability.steering.kind === AvatarMovementSteeringKind.INSTANT && capability.steering.steeringRate === 0,
-            '17h. DRONE\'s own steering is INSTANT/0 — inert, for the identical reason movementSpeed\'s/collisionRadius\'s/movementDirections\'s/acceleration\'s/braking\'s own inert values already are (0.9.93)');
-        assert(capability.steering === walkCapabilityForAcceleration.steering,
-            '17i. DRONE\'s own steering is the exact same (===) shared instance WALK\'s own is — reused, not duplicated, for the identical reason its own acceleration/braking already are (0.9.93)');
-
+        // Aerial Movement Pipeline milestone — AERIAL_VEHICLE is now a
+        // real, supported capability (see this file's own header,
+        // "AERIAL_VEHICLE Is Now A Real, Supported Capability").
+        assert(capability.supported === true, '17. AERIAL_VEHICLE is now supported — core/AvatarDroneVerticalState.js gives it a real altitude pipeline');
         const carCapability = resolveAvatarVehicleMovementCapability(VehicleType.CAR);
+        assert(capability.movementSpeed > carCapability.movementSpeed, '17a. DRONE\'s own movementSpeed is strictly greater than CAR\'s — the fastest of all four vehicles, matching the World View\'s own drone brief');
+        assert(capability.collisionRadius > 0, '17b. DRONE\'s own collisionRadius is a real, positive value now that it is supported');
+        assert(capability.movementDirections.forward === true && capability.movementDirections.backward === true,
+            '17c. DRONE\'s own movementDirections now permits both directions, exactly like every other supported capability');
+        assert(capability.acceleration.kind === AvatarMovementAccelerationKind.RATE_LIMITED && capability.acceleration.acceleration > 0,
+            '17d. DRONE\'s own acceleration is a real, positive RATE_LIMITED value, not the WALK-shared INSTANT/0 it used before this milestone');
+        assert(capability.braking.kind === AvatarMovementBrakingKind.RATE_LIMITED && capability.braking.braking > 0,
+            '17f. DRONE\'s own braking is a real, positive RATE_LIMITED value, not the WALK-shared INSTANT/0 it used before this milestone');
+        assert(capability.steering.kind === AvatarMovementSteeringKind.RATE_LIMITED && capability.steering.steeringRate > 0,
+            '17h. DRONE\'s own steering is a real, positive RATE_LIMITED value, not the WALK-shared INSTANT/0 it used before this milestone');
+
         assert(capability.movementKind !== carCapability.movementKind, '18. drone is never folded into the same movement kind as a ground vehicle merely because both are vehicles');
     }
 
