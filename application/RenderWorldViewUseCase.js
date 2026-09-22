@@ -11,6 +11,7 @@ import { AvatarRenderer } from '../renderer/AvatarRenderer.js';
 import { AvatarVisual } from '../renderer/AvatarVisual.js';
 import { RemoteSpatialPresenceRenderer } from '../renderer/RemoteSpatialPresenceRenderer.js';
 import { VehicleFieldRenderer } from '../renderer/VehicleFieldRenderer.js';
+import { AnimalFieldRenderer } from '../renderer/AnimalFieldRenderer.js';
 import { WorldSpatialPresentationMode } from '../core/WorldSpatialAnchor.js';
 import { surfaceCategoryAt, SURFACE_CATEGORY } from '../core/TerrainSurface.js';
 import { LAKE_SURFACE_HEIGHT } from '../core/Hydrology.js';
@@ -92,6 +93,10 @@ export class RenderWorldViewUseCase {
         // never a document/placement fact (see core/VehicleInstance.js's
         // own header), so this has nothing to look up a mesh for.
         const vehicleFieldRenderer = new VehicleFieldRenderer();
+        // 0.9.701 — Released Animal Rendering. The animal-side twin of
+        // vehicleFieldRenderer immediately above, for the identical
+        // reason — see renderer/AnimalFieldRenderer.js's own header.
+        const animalFieldRenderer = new AnimalFieldRenderer();
         const transformGizmoRenderer = new TransformGizmoRenderer(renderer);
         const transformGizmoController = new TransformGizmoController({
             camera: renderer.camera,
@@ -580,6 +585,35 @@ export class RenderWorldViewUseCase {
                     vehicleFieldRenderer.removeVehicle(id);
                 }
             },
+            // 0.9.701 — Released Animal Rendering. The direct structural
+            // twin of syncVehicles() immediately above, for
+            // animalFieldRenderer instead of vehicleFieldRenderer.
+            // `animalPresences` is expected to already be scoped to
+            // RELEASED animals only (application/AnimalRuntimeInstances.js#releasedNearby()'s
+            // own output) — this facade has no way to enforce that and
+            // trusts its caller, the identical "glue only" posture
+            // syncVehicles() itself already keeps toward its own input.
+            syncAnimals: (animalPresences) => {
+                const nextIds = new Set();
+                for (const instance of animalPresences) {
+                    nextIds.add(instance.id);
+                    const alreadyTracked = animalFieldRenderer.trackedAnimalIds().includes(instance.id);
+                    const object = animalFieldRenderer.setAnimal(instance);
+                    if (object && !alreadyTracked) {
+                        renderer.add(object);
+                    }
+                }
+                for (const id of animalFieldRenderer.trackedAnimalIds()) {
+                    if (nextIds.has(id)) {
+                        continue;
+                    }
+                    const object = animalFieldRenderer.getObject(id);
+                    if (object) {
+                        renderer.remove(object);
+                    }
+                    animalFieldRenderer.removeAnimal(id);
+                }
+            },
             // 0.9.700 — Animal Catching. A thin pass-through to
             // renderer.markAnimalCaught() — see that method's own header
             // for what it actually does. This facade adds no policy of
@@ -629,6 +663,13 @@ export class RenderWorldViewUseCase {
                     }
                 }
                 vehicleFieldRenderer.dispose();
+                for (const id of animalFieldRenderer.trackedAnimalIds()) {
+                    const object = animalFieldRenderer.getObject(id);
+                    if (object) {
+                        renderer.remove(object);
+                    }
+                }
+                animalFieldRenderer.dispose();
                 renderer.dispose();
             }
         };
