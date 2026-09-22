@@ -147,27 +147,31 @@ async function runTests() {
 
     // -------------------------------------------------------------
     // Section C — every generated presence is BICYCLE, MOTORCYCLE
-    // (0.9.668), or CAR (0.9.669), never DRONE, and each is rarer than
-    // the last
+    // (0.9.668), CAR (0.9.669), or DRONE (Drone Placement), and each is
+    // rarer than the last
     // -------------------------------------------------------------
     {
-        const presences = vehiclePresenceInRegion(DEFAULT_WORLD_SEED, -2000, -2000, 2000, 2000);
+        const presences = vehiclePresenceInRegion(DEFAULT_WORLD_SEED, -4000, -4000, 4000, 4000);
         assert(presences.length > 0, '15. Setup: a wide scan finds bicycles to check');
         let bicycleCount = 0;
         let motorcycleCount = 0;
         let carCount = 0;
+        let droneCount = 0;
         for (const p of presences) {
-            assert(p.type === VehicleType.BICYCLE || p.type === VehicleType.MOTORCYCLE || p.type === VehicleType.CAR,
-                `16. Every generated presence is VehicleType.BICYCLE, VehicleType.MOTORCYCLE, or VehicleType.CAR (got ${p.type}) — no drone placement in this milestone`);
+            assert(p.type === VehicleType.BICYCLE || p.type === VehicleType.MOTORCYCLE || p.type === VehicleType.CAR || p.type === VehicleType.DRONE,
+                `16. Every generated presence is VehicleType.BICYCLE, VehicleType.MOTORCYCLE, VehicleType.CAR, or VehicleType.DRONE (got ${p.type})`);
             if (p.type === VehicleType.BICYCLE) bicycleCount++;
             if (p.type === VehicleType.MOTORCYCLE) motorcycleCount++;
             if (p.type === VehicleType.CAR) carCount++;
+            if (p.type === VehicleType.DRONE) droneCount++;
         }
         assert(bicycleCount > 0, '16b. Setup: a wide scan finds at least one bicycle');
         assert(motorcycleCount > 0, '16c. Setup: a wide scan finds at least one motorcycle');
         assert(carCount > 0, '16e. Setup: a wide scan finds at least one car');
+        assert(droneCount > 0, '16g. Setup: a wide scan finds at least one drone');
         assert(motorcycleCount < bicycleCount, '16d. Motorcycles are rarer than bicycles over a wide scan — the faster ground vehicle is the scarcer one');
-        assert(carCount < motorcycleCount, '16f. Cars are rarer than motorcycles over a wide scan — the fastest ground vehicle is the scarcest of the three');
+        assert(carCount < motorcycleCount, '16f. Cars are rarer than motorcycles over a wide scan — the fastest ground vehicle is the scarcest of the three ground vehicles');
+        assert(droneCount < carCount, '16h. Drones are rarer than cars over a wide scan — the fastest vehicle overall is the scarcest of all four');
     }
 
     // -------------------------------------------------------------

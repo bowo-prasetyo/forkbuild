@@ -536,8 +536,20 @@ async function runTests() {
             '../core/AvatarVehicleInteractionTarget.js'
         ]) {
             const codeOnly = await sourceOf(path);
-            assert(!/persist|Persist|network|Network|multiplayer|Multiplayer|MOTORCYCLE|CAR\b|DRONE/.test(codeOnly),
-                `39. ${path} introduces no persistence, networking, or a new movable vehicle type — this milestone is strictly an audit plus its one wiring fix`);
+            assert(!/persist|Persist|network|Network|multiplayer|Multiplayer/.test(codeOnly),
+                `39. ${path} introduces no persistence, networking, or multiplayer concept — this milestone is strictly an audit plus its one wiring fix`);
+        }
+        // MOTORCYCLE/CAR/DRONE stayed absent from all three through this
+        // milestone's own diff — application/AvatarVehicleInteractionController.js
+        // legitimately references DRONE now (its own dismount-while-
+        // airborne gate, Aerial Movement Pipeline milestone), a later,
+        // unrelated change this older audit never anticipated. The other
+        // two files remain untouched by that milestone, so the original
+        // guard still holds for them.
+        for (const path of ['../application/VehicleRuntimeInstances.js', '../core/AvatarVehicleInteractionTarget.js']) {
+            const codeOnly = await sourceOf(path);
+            assert(!/MOTORCYCLE|CAR\b|DRONE/.test(codeOnly),
+                `39a. ${path} still introduces no new movable vehicle type — unaffected by any later vehicle-type milestone`);
         }
     }
 

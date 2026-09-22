@@ -43,17 +43,23 @@ import { VehicleType } from '../core/VehicleType.js';
 // boxy body volume and a smaller cabin box on top, standing in for a
 // chassis and passenger compartment, and its own distinct color — legible
 // as "a car, not a bicycle or a motorcycle" at a glance, never a loaded
-// mesh/texture. build() STILL returns `null` for DRONE — this renderer
-// has no meaningful representation for it yet, and deliberately does NOT
-// fall back to the bicycle/motorcycle/car shape for an unrecognized/
-// unsupported type: silently turning a DRONE into a bicycle would be a
-// worse lie than rendering nothing at all. A caller (renderer/VehicleFieldRenderer.js)
-// treats `null` as "nothing to show for this vehicle yet," exactly the
-// same graceful-degradation posture renderer/AvatarRenderer.js's own
-// `buildUnknownAccessory()` takes for an accessory id it doesn't
-// recognize — except here there is no generic fallback marker at all,
-// because the milestone brief is explicit: "Don't silently turn DRONE
-// into a bicycle."
+// mesh/texture. build() previously returned `null` for DRONE — see this
+// file's own git history for why — until the spawn/mount plan
+// (core/VehiclePlacement.js's own DRONE share) needed a real visual for
+// it to become reachable at all, closing the same gap 0.9.668/0.9.669
+// already closed for MOTORCYCLE/CAR. buildDrone() keeps the identical
+// "procedural placeholder, low-poly primitives" posture: a small body
+// box on short legs (so it reads as sitting on the ground while
+// GROUNDED — see core/AvatarDroneVerticalState.js), two crossed arms,
+// and four flat cylinder rotors, its own distinct color — legible as "a
+// drone, not a bicycle/motorcycle/car" at a glance, never a loaded
+// mesh/texture. Any VehicleType this renderer still has no builder for
+// (none, currently — every VehicleType.NONE-excluded value now has one)
+// still falls through to `null` rather than a fallback shape; a caller
+// (renderer/VehicleFieldRenderer.js) treats `null` as "nothing to show
+// for this vehicle yet," exactly the same graceful-degradation posture
+// renderer/AvatarRenderer.js's own `buildUnknownAccessory()` takes for
+// an accessory id it doesn't recognize.
 //
 // NO POSITION, NO ANIMATION, NO STATE OF ANY KIND. Every mesh this class
 // builds is centered on its own local origin, at the group's own local
@@ -245,14 +251,75 @@ function buildCar() {
     return group;
 }
 
+// Drone geometry — see this file's own header above. A body box on four
+// short legs (ground contact while GROUNDED), two crossed arms forming a
+// "+" layout, and a flat cylinder rotor at each of the four arm ends.
+const DRONE_BODY_SIZE = { x: 0.5, y: 0.22, z: 0.5 };
+const DRONE_LEG_HEIGHT = 0.18; // how far the body sits above the ground plane
+const DRONE_ARM_LENGTH = 0.9; // tip-to-tip, along one crossed arm
+const DRONE_ARM_THICKNESS = 0.06;
+const DRONE_ROTOR_RADIUS = 0.22;
+const DRONE_ROTOR_HEIGHT = 0.03;
+
+const DRONE_BODY_COLOR = new THREE.Color(0.2, 0.22, 0.26); // dark slate — distinct from the bicycle's red, the motorcycle's blue, and the car's green
+const DRONE_ARM_COLOR = new THREE.Color(0.12, 0.12, 0.14);
+const DRONE_ROTOR_COLOR = new THREE.Color(0.05, 0.05, 0.05);
+
+function buildDrone() {
+    const group = new THREE.Group();
+    const bodyY = DRONE_LEG_HEIGHT + DRONE_BODY_SIZE.y / 2;
+
+    const body = new THREE.Mesh(
+        new THREE.BoxGeometry(DRONE_BODY_SIZE.x, DRONE_BODY_SIZE.y, DRONE_BODY_SIZE.z),
+        new THREE.MeshStandardMaterial({ color: DRONE_BODY_COLOR })
+    );
+    body.position.set(0, bodyY, 0);
+    group.add(body);
+
+    const armMaterial = new THREE.MeshStandardMaterial({ color: DRONE_ARM_COLOR });
+    const armAlongX = new THREE.Mesh(new THREE.BoxGeometry(DRONE_ARM_LENGTH, DRONE_ARM_THICKNESS, DRONE_ARM_THICKNESS), armMaterial);
+    armAlongX.position.set(0, bodyY, 0);
+    group.add(armAlongX);
+    const armAlongZ = new THREE.Mesh(new THREE.BoxGeometry(DRONE_ARM_THICKNESS, DRONE_ARM_THICKNESS, DRONE_ARM_LENGTH), armMaterial);
+    armAlongZ.position.set(0, bodyY, 0);
+    group.add(armAlongZ);
+
+    const rotorMaterial = new THREE.MeshStandardMaterial({ color: DRONE_ROTOR_COLOR });
+    const rotorY = bodyY + DRONE_ARM_THICKNESS / 2 + DRONE_ROTOR_HEIGHT / 2;
+    const rotorOffsets = [
+        [DRONE_ARM_LENGTH / 2, 0], [-DRONE_ARM_LENGTH / 2, 0],
+        [0, DRONE_ARM_LENGTH / 2], [0, -DRONE_ARM_LENGTH / 2]
+    ];
+    for (const [x, z] of rotorOffsets) {
+        const rotor = new THREE.Mesh(
+            new THREE.CylinderGeometry(DRONE_ROTOR_RADIUS, DRONE_ROTOR_RADIUS, DRONE_ROTOR_HEIGHT, 10),
+            rotorMaterial
+        );
+        rotor.position.set(x, rotorY, z);
+        group.add(rotor);
+    }
+
+    const legMaterial = new THREE.MeshStandardMaterial({ color: DRONE_ARM_COLOR });
+    for (const signX of [-1, 1]) {
+        for (const signZ of [-1, 1]) {
+            const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, DRONE_LEG_HEIGHT, 6), legMaterial);
+            leg.position.set(signX * DRONE_BODY_SIZE.x * 0.35, DRONE_LEG_HEIGHT / 2, signZ * DRONE_BODY_SIZE.z * 0.35);
+            group.add(leg);
+        }
+    }
+
+    return group;
+}
+
 // A closed lookup, mirroring renderer/AvatarRenderer.js's own
 // ACCESSORY_BUILDERS shape: one builder per KNOWN, supported vehicle
-// type. core/VehicleType.js's own vocabulary is larger than this map —
-// that gap is deliberate, see this file's own header above.
+// type. core/VehicleType.js's own NONE is the only value with no
+// builder here — an unmounted avatar has no vehicle to render at all.
 const VEHICLE_BUILDERS = {
     [VehicleType.BICYCLE]: buildBicycle,
     [VehicleType.MOTORCYCLE]: buildMotorcycle,
-    [VehicleType.CAR]: buildCar
+    [VehicleType.CAR]: buildCar,
+    [VehicleType.DRONE]: buildDrone
 };
 
 export class VehicleRenderer {

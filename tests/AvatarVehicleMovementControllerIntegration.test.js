@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/TerrainHeightField.js';
 import { Position } from '../core/Position.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { VehicleInstance } from '../core/VehicleInstance.js';
@@ -38,9 +38,11 @@ import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUs
 //   Section G: braking — through the real Control-key binding, reduces
 //              distance covered exactly like the underlying capability
 //              already governs for on-foot movement
-//   Section H: unsupported vehicle types (DRONE) are never moved;
-//              Section H2: MOTORCYCLE, by contrast, is (0.9.668); Section
-//              H3: CAR, by contrast, is too (0.9.669) — all moved
+//   Section H: (removed) DRONE's own former "never moved" behavior is
+//              superseded by the Aerial Movement Pipeline milestone —
+//              see Section H4, below; Section H2: MOTORCYCLE moves
+//              (0.9.668); Section H3: CAR moves too (0.9.669); Section
+//              H4: DRONE moves too, and gains altitude — all moved
 //              by this session's own wiring, even while genuinely
 //              mounted on one
 //
@@ -368,55 +370,13 @@ async function runTests() {
             '20. BRAKING: holding the real Control-key binding covers strictly less ground than plain coasting over the same window — the existing braking capability (core/AvatarVehicleBrakingIntent.js + core/AvatarVehicleMovementCapability.js), connected here, never a new vehicle-specific implementation');
     }
 
-    // -------------------------------------------------------------
-    // Section H — unsupported vehicle types are never moved by this
-    // session's own wiring, even while genuinely mounted on one. Through
-    // 0.9.667 this used MOTORCYCLE as its example; 0.9.668 gave
-    // MOTORCYCLE a real placement + rendering + movement path, and 0.9.669
-    // did the same for CAR (see core/VehiclePlacement.js/
-    // renderer/VehicleRenderer.js/application/AvatarVehicleMovementController.js's
-    // own 0.9.668/0.9.669 headers), so this section now uses DRONE — still
-    // genuinely unsupported end to end — to keep proving the same
-    // invariant.
-    // -------------------------------------------------------------
-    {
-        const dronePosition = { x: realVehicle.position.x + 900, y: realVehicle.position.y, z: realVehicle.position.z + 900 };
-        const droneId = 'vehicle:test-drone';
-        const { avatarProfileUseCase, avatarPresenceSession } = buildAvatarStack(
-            registry, 'move-h1', new Position(dronePosition.x, 0, dronePosition.z)
-        );
-        const session = buildSession(registry, avatarProfileUseCase, avatarPresenceSession);
-        session.setAvatarControlMode(true);
-
-        // This codebase's own deterministic placement never produces a
-        // DRONE (core/VehiclePlacement.js places BICYCLE/MOTORCYCLE/CAR
-        // only) — so reaching this state requires directly injecting one
-        // into the runtime store and the mount relationship, exactly the
-        // scenario Section H of this milestone's own brief describes:
-        // "don't accidentally make DRONE ... movable merely because
-        // the generic runtime now supports VehicleInstance."
-        const drone = new VehicleInstance({
-            id: droneId, type: VehicleType.DRONE,
-            spawnPosition: dronePosition, position: dronePosition
-        });
-        // Seed the store the same way sync() would (there is no public
-        // "inject" method — this store only ever adds what
-        // nearbyVehicleInstances() itself discovers — so this test
-        // reaches into the store's own internals deliberately, exactly
-        // to prove the GATING happens one layer up, in
-        // AvatarVehicleMovementController#canMove(), never in the store
-        // itself).
-        session._vehicleRuntimeInstances._instances.set(droneId, drone);
-        session._avatarVehicleInteractionController._mount = createAvatarVehicleMount(droneId);
-
-        session.avatarKeyDown('w');
-        for (let i = 0; i < 10; i++) fireFrame(session, 0.05);
-        session.avatarKeyUp('w');
-
-        const after = session._vehicleRuntimeInstances.get(droneId);
-        assert(after.position.x === dronePosition.x && after.position.z === dronePosition.z,
-            '21. UNSUPPORTED VEHICLE TYPE: a mounted DRONE\'s own position is never touched by this session\'s frame loop, even while genuinely "mounted" on it and holding W');
-    }
+    // Note: through the Aerial Movement Pipeline milestone, every
+    // currently-defined VehicleType (BICYCLE, MOTORCYCLE, CAR, and now
+    // DRONE) is movable — there is currently no unsupported vehicle type
+    // left to exercise the "never moved even while genuinely mounted"
+    // scenario this section once tested with DRONE (Section H4, below,
+    // now covers DRONE's own real movement instead, exactly like H2/H3
+    // already do for MOTORCYCLE/CAR).
 
     // -------------------------------------------------------------
     // Section H2 (0.9.668) — MOTORCYCLE, by contrast, now IS moved by
@@ -483,6 +443,43 @@ async function runTests() {
         const after = session._vehicleRuntimeInstances.get(carId);
         assert(!(after.position.x === carPosition.x && after.position.z === carPosition.z),
             '21c. a mounted CAR\'s own position IS moved by this session\'s frame loop while holding W, as of 0.9.669');
+    }
+
+    // -------------------------------------------------------------
+    // Section H4 (Aerial Movement Pipeline) — DRONE, by contrast, now IS
+    // moved by this session's own wiring, end to end, exactly like
+    // BICYCLE/MOTORCYCLE/CAR — and gains altitude while doing so.
+    // -------------------------------------------------------------
+    {
+        const dronePosition = { x: realVehicle.position.x + 1050, y: realVehicle.position.y, z: realVehicle.position.z + 1050 };
+        const droneId = 'vehicle:test-drone';
+        const { avatarProfileUseCase, avatarPresenceSession } = buildAvatarStack(
+            registry, 'move-h4', new Position(dronePosition.x, 0, dronePosition.z)
+        );
+        const session = buildSession(registry, avatarProfileUseCase, avatarPresenceSession);
+        session.setAvatarControlMode(true);
+
+        // core/VehiclePlacement.js now places DRONE too, but directly
+        // injecting one here (same technique as H2/H3) keeps this test
+        // independent of any particular seed/region actually producing
+        // one nearby.
+        const drone = new VehicleInstance({
+            id: droneId, type: VehicleType.DRONE,
+            spawnPosition: dronePosition, position: dronePosition
+        });
+        session._vehicleRuntimeInstances._instances.set(droneId, drone);
+        session._avatarVehicleInteractionController._mount = createAvatarVehicleMount(droneId);
+
+        session.avatarKeyDown('w');
+        for (let i = 0; i < 40; i++) fireFrame(session, 0.05);
+        session.avatarKeyUp('w');
+
+        const after = session._vehicleRuntimeInstances.get(droneId);
+        assert(!(after.position.x === dronePosition.x && after.position.z === dronePosition.z),
+            '21d. a mounted DRONE\'s own position IS moved by this session\'s frame loop while holding W');
+        const groundHeightAtFinalPos = terrainHeightAt(DEFAULT_WORLD_SEED, after.position.x, after.position.z);
+        assert(after.position.y > groundHeightAtFinalPos + 1,
+            '21e. ...and gains altitude while doing so — its own Y sits well above raw terrain height, hovering when moving, per core/AvatarDroneVerticalState.js');
     }
 
     console.log('✅ All Avatar-Vehicle Movement Controller (World View) Integration tests passed.');

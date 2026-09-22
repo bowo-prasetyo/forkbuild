@@ -34,7 +34,7 @@ import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUs
 //   Section 6:  releasing Control clears brakingRequested
 //   Section 7:  steering does not corrupt movement speed
 //   Section 8:  capability switching updates capability-derived state
-//   Section 9:  unsupported drone remains blocked
+//   Section 9:  DRONE now moves too (Aerial Movement Pipeline milestone)
 //   Section 10: returned state cannot mutate controller state
 //   Section 11: repeated observation is deterministic
 //   Section 12: existing movement behavior is unchanged
@@ -328,8 +328,11 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section 9 — unsupported drone remains blocked, and the
-    // observation seam reflects that rather than fabricating movement
+    // Section 9 — DRONE now moves too (Aerial Movement Pipeline
+    // milestone — see core/AvatarVehicleMovementCapability.js's own
+    // "AERIAL_VEHICLE Is Now A Real, Supported Capability" header), and
+    // the observation seam reflects real movement rather than a
+    // permanently-blocked capability
     // -------------------------------------------------------------
     {
         const drone = resolveAvatarVehicleMovementCapability(VehicleType.DRONE);
@@ -337,21 +340,29 @@ async function runTests() {
         const controller = new AvatarMovementController(avatarPresenceSession);
         controller.setMovementCapability(drone);
         controller.keyDown('w');
-        controller.setVehicleBrakingIntent(BRAKE);
 
+        let lastResult = null;
         for (let i = 0; i < 20; i++) {
-            const result = controller.tick(DT);
-            assert(result === null, `27.${i} DRONE: tick() keeps returning null — movement stays fully blocked`);
+            lastResult = controller.tick(DT);
             const state = controller.movementState();
             assert(state.movementCapability === AvatarMovementCapabilityKind.AERIAL_VEHICLE,
-                `28.${i} DRONE: movementState() keeps observing AERIAL_VEHICLE`);
-            assert(state.movementSpeed === 0,
-                `29.${i} DRONE: movementState().movementSpeed stays exactly 0 — it never advances while tick() is blocked`);
-            assert(state.direction === 0,
-                `30.${i} DRONE: movementState().direction observes 0 even with W held — AERIAL_VEHICLE's own movementDirections permits neither forward nor backward`);
-            assert(state.brakingRequested === true,
-                `31.${i} DRONE: brakingRequested is still observable as true — a pending braking intent is a fact about INPUT, independent of whether the current capability is supported`);
+                `27.${i} DRONE: movementState() keeps observing AERIAL_VEHICLE`);
+            assert(state.direction === 1,
+                `28.${i} DRONE: movementState().direction observes 1 while W is held — AERIAL_VEHICLE's own movementDirections now permits forward`);
         }
+        assert(lastResult !== null, '29. DRONE: tick() no longer returns null');
+        assert(controller.movementState().movementSpeed > 0, '30. DRONE: movementState().movementSpeed genuinely advances above 0');
+        controller.keyUp('w');
+
+        // Braking is still observable as an input fact, independent of
+        // the capability's own supported/unsupported status — the same
+        // "brakingRequested reflects input, not capability" claim this
+        // section always made, now proven on a genuinely moving DRONE
+        // rather than a permanently-blocked one.
+        controller.setVehicleBrakingIntent(BRAKE);
+        controller.tick(DT);
+        assert(controller.movementState().brakingRequested === true,
+            '31. DRONE: brakingRequested is observable as true once set, exactly like for any other vehicle');
     }
 
     // -------------------------------------------------------------

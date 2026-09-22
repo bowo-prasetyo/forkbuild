@@ -364,7 +364,20 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section F — drone, unsupported
+    // Section F — drone. Aerial Movement Pipeline milestone: AERIAL_VEHICLE
+    // is no longer permanently unsupported (see
+    // core/AvatarVehicleMovementCapability.js's own "AERIAL_VEHICLE Is Now
+    // A Real, Supported Capability" header) — a resolved DRONE capability
+    // fed directly to this controller now moves the avatar exactly like
+    // MOTORCYCLE/CAR already do in Sections C/D, above. The real
+    // "vehicle moves, avatar follows" split that keeps a MOUNTED drone's
+    // horizontal movement from double-driving both this controller and
+    // application/AvatarVehicleMovementController.js lives one layer up,
+    // in application/WorldNavigationSession.js's own `vehicleMovementActive`
+    // gate (never calling this controller's own tick() at all while a
+    // real, movable vehicle is mounted) — exactly the same real-world
+    // guard MOTORCYCLE/CAR already rely on, proven in
+    // tests/AvatarVehicleRuntimeIntegration.test.js, not here.
     // -------------------------------------------------------------
     {
         const { avatarPresenceSession } = buildAvatarStack(registry, 'cap-f1');
@@ -372,43 +385,18 @@ async function runTests() {
         controller.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.DRONE));
         assert(controller.movementCapability() === AvatarMovementCapabilityKind.AERIAL_VEHICLE,
             '23. a resolved DRONE capability is reflected by movementCapability() as AERIAL_VEHICLE');
-
-        const currentPosition = avatarPresenceSession.current.position;
-        const before = { x: currentPosition.x, y: currentPosition.y, z: currentPosition.z };
-        controller.keyDown('w');
-        const result = controller.tick(0.5);
-        assert(result === null, '24. tick() while an unsupported capability is active returns null — a genuine no-op, exactly like an idle avatar with no keys held');
-        const after = avatarPresenceSession.current.position;
-        assert(before.x === after.x && before.y === after.y && before.z === after.z,
-            '25. movement is fully blocked while AERIAL_VEHICLE/DRONE is active — holding W does not move the avatar even one unit');
-        controller.keyUp('w');
-
-        // Critically: still AERIAL_VEHICLE, never silently GROUND_VEHICLE
-        // or WALK, across further ticks too.
-        for (let i = 0; i < 5; i++) controller.tick(0.5);
-        assert(controller.movementCapability() === AvatarMovementCapabilityKind.AERIAL_VEHICLE,
-            '26. the capability itself never silently reverts to GROUND_VEHICLE or WALK just because movement is blocked — blocking is a MOVEMENT outcome, not a capability change');
-        assert(
-            avatarPresenceSession.current.position.x === before.x
-            && avatarPresenceSession.current.position.z === before.z,
-            '27. ...and the avatar genuinely never moved across any of those ticks either'
-        );
-    }
-    {
-        // Switching FROM an unsupported capability back to something
-        // supported immediately un-blocks movement — the guard is
-        // re-evaluated fresh every tick, never latched.
-        const { avatarPresenceSession } = buildAvatarStack(registry, 'cap-f2');
-        const controller = new AvatarMovementController(avatarPresenceSession);
-        controller.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.DRONE));
         controller.keyDown('w');
         controller.tick(0.5);
-        assert(avatarPresenceSession.current.position.z === 0, '28. blocked while unsupported...');
-        controller.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.NONE));
-        controller.tick(0.5);
-        assert(avatarPresenceSession.current.position.z > 0, '29. ...and moves normally again the very next tick once the capability changes back to something supported');
+        assert(avatarPresenceSession.current.position.z > 0, '24. ordinary W movement now works under a DRONE-derived capability, exactly like MOTORCYCLE/CAR in Sections C/D');
         controller.keyUp('w');
     }
+    // Note: through the Aerial Movement Pipeline milestone, every
+    // currently-defined VehicleType (including DRONE) resolves
+    // `supported: true` — there is currently no vehicle type left that
+    // exercises AvatarMovementController's own "unsupported capability
+    // blocks movement" guard (see that class's own 0.9.85 header for the
+    // guard itself, which remains in place for a future, not-yet-real
+    // capability kind).
 
     // -------------------------------------------------------------
     // Section G — existing movement regression

@@ -47,8 +47,9 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //   Section G: switching BICYCLE -> MOTORCYCLE -> CAR -> WALK, on the
 //              SAME controller instance, changes movement speed
 //              immediately on every capability replacement
-//   Section H: AERIAL_VEHICLE/DRONE remains fully blocked — no ground
-//              speed of any kind is ever assigned to it
+//   Section H: AERIAL_VEHICLE/DRONE now resolves a real, positive
+//              movementSpeed too (Aerial Movement Pipeline milestone) —
+//              strictly the fastest of all four vehicles
 //
 // Central architectural claim under test throughout: movement
 // CAPABILITY, never vehicle IDENTITY, drives movement behavior.
@@ -314,22 +315,36 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section H — drone
+    // Section H — drone. Aerial Movement Pipeline milestone: AERIAL_VEHICLE
+    // is no longer permanently blocked (see
+    // core/AvatarVehicleMovementCapability.js's own "AERIAL_VEHICLE Is Now
+    // A Real, Supported Capability" header) — a resolved DRONE capability
+    // now drives real horizontal ground-speed movement through this exact
+    // same simulateAvatarMovement() pipeline, exactly like BICYCLE/
+    // MOTORCYCLE/CAR above, and is strictly the fastest of the four,
+    // matching this feature's own "faster than cars" brief.
     // -------------------------------------------------------------
     {
-        const { avatarPresenceSession } = buildAvatarStack(registry, 'pvgs-h1');
-        const controller = new AvatarMovementController(avatarPresenceSession);
-        controller.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.DRONE));
-        const beforePosition = avatarPresenceSession.current.position;
-        const before = { x: beforePosition.x, y: beforePosition.y, z: beforePosition.z };
-        controller.keyDown('w');
-        controller.keyDown('shift');
-        for (let i = 0; i < 20; i++) controller.tick(0.05);
-        const after = avatarPresenceSession.current.position;
-        assert(before.x === after.x && before.y === after.y && before.z === after.z,
-            '19. AERIAL_VEHICLE/DRONE remains fully blocked — no ground speed of any kind (bicycle, motorcycle, or car) is ever assigned merely to make the capability complete');
-        controller.keyUp('w');
-        controller.keyUp('shift');
+        const { avatarPresenceSession: droneSession } = buildAvatarStack(registry, 'pvgs-h1');
+        const droneController = new AvatarMovementController(droneSession);
+        droneController.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.DRONE));
+
+        const { avatarPresenceSession: bicycleSession2 } = buildAvatarStack(registry, 'pvgs-h2');
+        const bicycleController2 = new AvatarMovementController(bicycleSession2);
+        bicycleController2.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.BICYCLE));
+
+        // DRONE's own acceleration (5 world units/s^2, per
+        // core/AvatarVehicleMovementCapability.js) reaches its own 16
+        // movementSpeed in 3.2s — comfortably inside this same 4s warmup
+        // window every other vehicle in this file already uses.
+        const WARMUP_TICKS = 80;
+        const MEASURE_TICKS = 40;
+        const droneDistance = warmedUpDistance(droneController, droneSession, WARMUP_TICKS, MEASURE_TICKS, 0.05);
+        const bicycleDistance2 = warmedUpDistance(bicycleController2, bicycleSession2, WARMUP_TICKS, MEASURE_TICKS, 0.05);
+
+        assert(droneDistance > bicycleDistance2, '19. for identical W-held input over identical elapsed time, driven through the real simulateAvatarMovement() pipeline, DRONE travels farther than BICYCLE');
+        assert(Math.abs(droneDistance / bicycleDistance2 - 16 / 6) < 1e-9,
+            '19a. drone-to-bicycle distance ratio exactly matches their resolved 16:6 movementSpeed ratio');
     }
 
     console.log('✅ All Per-Vehicle Ground Movement Speed Resolution tests passed.');

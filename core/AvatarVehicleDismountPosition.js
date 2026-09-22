@@ -75,13 +75,16 @@ import { VehicleType } from './VehicleType.js';
 // vehicle geometry to resolve a destination FROM yet" problem a bicycle
 // already had — so each gets the SAME rule, not a distinct one.
 // `DISMOUNTABLE_VEHICLE_TYPES` (below) is that rule's domain: BICYCLE,
-// MOTORCYCLE, and CAR all resolve a real Position; DRONE — still never
-// placeable — returns `null`, "no dismount destination is known for this
-// vehicle." That `null` is not an error: it is this file's honest answer
-// for a vehicle type it has no rule for yet, exactly the same shape
-// `VehiclePresence` itself already uses ("no vehicle here" is the absence
-// of a value, never a placeholder). A future DRONE dismount rule is this
-// file's (or a sibling's) job to ADD, not to guess at now.
+// MOTORCYCLE, CAR, and now DRONE (core/VehiclePlacement.js's own "Drone
+// Placement" header) all resolve a real Position. This file has no
+// altitude/vertical-state awareness of any kind (see
+// core/AvatarDroneVerticalState.js) — it only ever computes WHERE a
+// ground-level candidate position would be, never WHETHER it is
+// currently safe to actually dismount an airborne drone there; that
+// mount-state-aware decision belongs to whatever future caller performs
+// the real dismount transition, exactly the same "candidate position
+// vs. is a dismount actually happening" split this file's own header
+// already draws for BICYCLE/MOTORCYCLE/CAR.
 //
 // A FIXED WORLD-SPACE OFFSET, BECAUSE NO GROUND VEHICLE HAS A
 // DISMOUNT-RELEVANT HEADING HERE YET. A dismount position is inherently
@@ -200,15 +203,15 @@ import { VehicleType } from './VehicleType.js';
 
 // See this file's own header, "A fixed world-space offset," for the
 // full reasoning behind both the direction (+X, arbitrary but fixed
-// forever) and the magnitude. Shared by BICYCLE, MOTORCYCLE, and CAR
-// alike — see "Kept to the vehicle types this codebase can actually
-// place."
+// forever) and the magnitude. Shared by BICYCLE, MOTORCYCLE, CAR, and
+// DRONE alike — see "Kept to the vehicle types this codebase can
+// actually place."
 export const BICYCLE_DISMOUNT_OFFSET_X = 1;
 
 // The vehicle types this file has a dismount rule for — see this file's
 // own header, "Kept to the vehicle types this codebase can actually
-// place." DRONE is deliberately absent.
-const DISMOUNTABLE_VEHICLE_TYPES = new Set([VehicleType.BICYCLE, VehicleType.MOTORCYCLE, VehicleType.CAR]);
+// place."
+const DISMOUNTABLE_VEHICLE_TYPES = new Set([VehicleType.BICYCLE, VehicleType.MOTORCYCLE, VehicleType.CAR, VehicleType.DRONE]);
 
 function isFiniteCoordinate(value) {
     return typeof value === 'number' && Number.isFinite(value);
@@ -231,7 +234,7 @@ export function resolveAvatarVehicleDismountPosition(vehicle) {
         throw new Error('resolveAvatarVehicleDismountPosition requires a vehicle with a finite numeric x and z position');
     }
 
-    // BICYCLE/MOTORCYCLE/CAR only, on purpose — see this file's own
+    // BICYCLE/MOTORCYCLE/CAR/DRONE only, on purpose — see this file's own
     // header, "Kept to the vehicle types this codebase can actually
     // place." `null` here is a genuine, honest answer ("no dismount
     // destination is known for this vehicle type"), never an error.

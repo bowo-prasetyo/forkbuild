@@ -361,27 +361,15 @@ async function runTests() {
             '19. spawnPosition is untouched by 50 ticks of collision-blocked movement');
     }
 
-    {
-        // Unsupported vehicle types (defense in depth, unaffected by
-        // this milestone): even with both constraints wired, a DRONE is
-        // still never moved at all — canMove()'s own gate runs before
-        // either constraint is ever consulted. MOTORCYCLE joined BICYCLE
-        // as movable at 0.9.668, and CAR joined them at 0.9.669, so
-        // neither is in this set any more.
-        const blockingConstraint = { apply() { throw new Error('must never be called for an unsupported vehicle type'); } };
-        for (const type of [VehicleType.DRONE]) {
-            const spawn = { x: 3, y: 0, z: 3 };
-            const instance = new VehicleInstance({ id: `vehicle:c5-${type}`, type, spawnPosition: spawn, position: spawn });
-            const store = fakeVehicleStore(instance);
-            const controller = new AvatarVehicleMovementController(store, blockingConstraint, blockingConstraint);
-            const capability = resolveAvatarVehicleMovementCapability(type);
-            const result = controller.tick({
-                seed: DEFAULT_WORLD_SEED, vehicleId: instance.id, capability, movementIntent: FORWARD_INTENT,
-                currentRotationY: 0, deltaSeconds: 0.5
-            });
-            assert(result === null, `20.${type} an unsupported vehicle type still returns null — neither constraint is ever reached, let alone called`);
-        }
-    }
+    // Note: through the Aerial Movement Pipeline milestone, every
+    // currently-defined VehicleType (BICYCLE, MOTORCYCLE, CAR, and now
+    // DRONE) is movable — there is currently no unsupported vehicle
+    // type left to exercise the "canMove()'s own gate runs before
+    // either constraint is ever consulted" scenario this block once
+    // tested with DRONE. The defense-in-depth gate itself
+    // (application/AvatarVehicleMovementController.js's own
+    // `isMovableVehicleType()` check inside tick()) remains in place for
+    // a future, not-yet-movable vehicle type.
 
     // -------------------------------------------------------------
     // Section D — application/WorldNavigationSession.js: end to end,

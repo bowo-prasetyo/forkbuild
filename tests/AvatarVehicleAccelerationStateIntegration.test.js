@@ -44,8 +44,9 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //   Section I: capability switching — mounting/dismounting/switching
 //              resets transient speed to zero; no capability's own
 //              momentum ever leaks into another's
-//   Section J: AERIAL_VEHICLE/DRONE remains fully blocked — no
-//              acceleration state of any kind ever moves it
+//   Section J: AERIAL_VEHICLE/DRONE now ramps through this exact same
+//              acceleration pipeline too (Aerial Movement Pipeline
+//              milestone), reaching its own resolved cruise speed
 //   Section K: architectural regression — the integration seam lives
 //              exactly where core/AvatarMovementSimulation.js's and
 //              application/AvatarMovementController.js's own 0.9.91
@@ -574,38 +575,46 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section J — AERIAL_VEHICLE/DRONE remains fully blocked
+    // Section J — AERIAL_VEHICLE/DRONE. Aerial Movement Pipeline
+    // milestone: AERIAL_VEHICLE is no longer permanently blocked (see
+    // core/AvatarVehicleMovementCapability.js's own "AERIAL_VEHICLE Is
+    // Now A Real, Supported Capability" header) — DRONE now ramps
+    // through this exact same acceleration pipeline, exactly like
+    // BICYCLE/MOTORCYCLE/CAR, and mounting it resets transient speed
+    // exactly as any other capability change already does (Section I,
+    // above).
     // -------------------------------------------------------------
     {
+        const drone = resolveAvatarVehicleMovementCapability(VehicleType.DRONE);
         const { avatarPresenceSession } = buildAvatarStack(registry, 'accel-j1');
         const controller = new AvatarMovementController(avatarPresenceSession);
-        controller.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.DRONE));
-        const beforePosition = avatarPresenceSession.current.position;
-        const before = { x: beforePosition.x, y: beforePosition.y, z: beforePosition.z };
+        controller.setMovementCapability(drone);
         controller.keyDown('w');
-        controller.keyDown('shift');
-        for (let i = 0; i < 100; i++) controller.tick(DT);
-        const after = avatarPresenceSession.current.position;
-        assert(before.x === after.x && before.y === after.y && before.z === after.z,
-            '37. AERIAL_VEHICLE/DRONE remains fully blocked by tick()\'s own supported:false guard — no acceleration state, ramped or otherwise, is ever consulted for it');
+        for (let i = 0; i < 100; i++) controller.tick(DT); // comfortably past 16/5 = 3.2s ramp-to-cruise
+        const finalTickZ0 = avatarPresenceSession.current.position.z;
+        controller.tick(DT);
+        const finalSpeed = (avatarPresenceSession.current.position.z - finalTickZ0) / DT;
         controller.keyUp('w');
-        controller.keyUp('shift');
+        assert(Math.abs(finalSpeed - drone.movementSpeed) < 1e-9,
+            '37. DRONE genuinely ramps and reaches its own resolved cruise movementSpeed, exactly like BICYCLE/MOTORCYCLE/CAR');
 
-        // Mounting a DRONE (from a WALK-cruising avatar) is still a
-        // capability CHANGE — the transient state resets exactly as any
-        // other mount would, even though nothing ever reads it while
-        // unsupported.
+        // Mounting a DRONE (from a WALK-cruising avatar) resets
+        // transient speed to a fresh ramp from 0 — no walking momentum
+        // leaks through, the same "33." guarantee Section I already
+        // proves for BICYCLE.
         const { avatarPresenceSession: walkThenDroneSession } = buildAvatarStack(registry, 'accel-j2');
         const walkThenDroneController = new AvatarMovementController(walkThenDroneSession);
         walkThenDroneController.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.NONE));
         walkThenDroneController.keyDown('w');
-        walkThenDroneController.tick(DT);
-        walkThenDroneController.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.DRONE));
+        walkThenDroneController.tick(DT); // WALK: instantly at WALK_SPEED (3)
+        walkThenDroneController.setMovementCapability(drone);
         const zBeforeDrone = walkThenDroneSession.current.position.z;
-        for (let i = 0; i < 20; i++) walkThenDroneController.tick(DT);
-        assert(walkThenDroneSession.current.position.z === zBeforeDrone,
-            '38. mounting DRONE from a WALK-cruising avatar still blocks movement outright — no walking momentum of any kind leaks through the supported:false guard');
+        walkThenDroneController.tick(DT);
+        const firstDroneTickSpeed = (walkThenDroneSession.current.position.z - zBeforeDrone) / DT;
         walkThenDroneController.keyUp('w');
+        const expectedFreshRampSpeed = Math.min(drone.acceleration.acceleration * DT, drone.movementSpeed);
+        assert(Math.abs(firstDroneTickSpeed - expectedFreshRampSpeed) < 1e-9,
+            '38. mounting DRONE while already walking at WALK_SPEED starts the drone\'s own ramp from 0, NOT from WALK\'s own leftover speed');
     }
 
     // -------------------------------------------------------------

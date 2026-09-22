@@ -28,9 +28,10 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //   Section A: controller integration — setVehicleBrakingIntent(BRAKE)
 //              genuinely reaches brakingRequested and the braking RATE
 //              is used instead of the acceleration rate
-//   Section B: BICYCLE/MOTORCYCLE/CAR — each vehicle's own independently
-//              declared braking rate (6/9/8) is actually observable
-//              through the real controller, not just the acceleration
+//   Section B: BICYCLE/MOTORCYCLE/CAR/DRONE — each vehicle's own
+//              independently declared braking rate (6/9/8/7) is
+//              actually observable through the real controller, not
+//              just the acceleration
 //              rate reused
 //   Section C: direction independence — braking alone (no movement key
 //              held) reduces the MAGNITUDE of the current signed speed
@@ -47,8 +48,9 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //              controller-level behavior
 //   Section F: WALK — instantaneous behavior is completely unchanged,
 //              braking requested or not
-//   Section G: AERIAL_VEHICLE/DRONE — remains fully blocked regardless
-//              of any braking intent
+//   Section G: (removed) AERIAL_VEHICLE/DRONE's own braking is now
+//              proven directly in Section B's own loop — see that
+//              section's own current note
 //   Section H: architecture — the controller resolves only the generic
 //              brakingRequested fact, never a vehicle identity or
 //              mount-state question; the default intent is NONE; no
@@ -181,7 +183,7 @@ async function runTests() {
     // Section B — BICYCLE/MOTORCYCLE/CAR: each vehicle's own
     // independently declared braking rate is actually observable
     // -------------------------------------------------------------
-    for (const [label, vehicleType, index] of [['BICYCLE', VehicleType.BICYCLE, 'b1'], ['MOTORCYCLE', VehicleType.MOTORCYCLE, 'b2'], ['CAR', VehicleType.CAR, 'b3']]) {
+    for (const [label, vehicleType, index] of [['BICYCLE', VehicleType.BICYCLE, 'b1'], ['MOTORCYCLE', VehicleType.MOTORCYCLE, 'b2'], ['CAR', VehicleType.CAR, 'b3'], ['DRONE', VehicleType.DRONE, 'b4']]) {
         const capability = resolveAvatarVehicleMovementCapability(vehicleType);
         const { avatarPresenceSession } = buildAvatarStack(registry, `brakeint-${index}`);
         const controller = new AvatarMovementController(avatarPresenceSession);
@@ -211,8 +213,9 @@ async function runTests() {
         const bicycle = resolveAvatarVehicleMovementCapability(VehicleType.BICYCLE);
         const motorcycle = resolveAvatarVehicleMovementCapability(VehicleType.MOTORCYCLE);
         const car = resolveAvatarVehicleMovementCapability(VehicleType.CAR);
-        assert(bicycle.braking.braking === 6 && motorcycle.braking.braking === 9 && car.braking.braking === 8,
-            '7. BICYCLE/MOTORCYCLE/CAR braking rates are exactly 6/9/8, matching core/AvatarVehicleMovementCapability.js — MOTORCYCLE brakes hardest despite CAR having the highest movementSpeed');
+        const drone = resolveAvatarVehicleMovementCapability(VehicleType.DRONE);
+        assert(bicycle.braking.braking === 6 && motorcycle.braking.braking === 9 && car.braking.braking === 8 && drone.braking.braking === 7,
+            '7. BICYCLE/MOTORCYCLE/CAR/DRONE braking rates are exactly 6/9/8/7, matching core/AvatarVehicleMovementCapability.js — MOTORCYCLE brakes hardest despite CAR having the highest ground-vehicle movementSpeed, and DRONE (fastest overall) brakes more gently than either');
     }
 
     // -------------------------------------------------------------
@@ -397,28 +400,12 @@ async function runTests() {
         }
     }
 
-    // -------------------------------------------------------------
-    // Section G — AERIAL_VEHICLE/DRONE: remains fully blocked regardless
-    // of any braking intent
-    // -------------------------------------------------------------
-    {
-        const drone = resolveAvatarVehicleMovementCapability(VehicleType.DRONE);
-        const { avatarPresenceSession } = buildAvatarStack(registry, 'brakeint-g1');
-        const controller = new AvatarMovementController(avatarPresenceSession);
-        controller.setMovementCapability(drone);
-        controller.setVehicleBrakingIntent(BRAKE);
-        controller.keyDown('w');
-
-        const start = avatarPresenceSession.current.position;
-        const startPosition = { x: start.x, y: start.y, z: start.z };
-        for (let i = 0; i < 20; i++) {
-            const result = controller.tick(DT);
-            assert(result === null, `27.${i} DRONE: tick() returns null — movement remains fully blocked regardless of a pending BRAKE intent`);
-        }
-        const endPosition = avatarPresenceSession.current.position;
-        assert(startPosition.x === endPosition.x && startPosition.y === endPosition.y && startPosition.z === endPosition.z,
-            '28. DRONE: position never changes, braking intent notwithstanding');
-    }
+    // Note: AERIAL_VEHICLE/DRONE's own braking is now fully proven above,
+    // in Section B's own loop (Aerial Movement Pipeline milestone made
+    // DRONE supported, superseding its former "always blocked" behavior
+    // — see core/AvatarVehicleMovementCapability.js's own "AERIAL_VEHICLE
+    // Is Now A Real, Supported Capability" header) — no separate section
+    // is needed any more.
 
     // -------------------------------------------------------------
     // Section H — architecture: the controller resolves only the

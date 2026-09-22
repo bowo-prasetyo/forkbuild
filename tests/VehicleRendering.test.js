@@ -74,10 +74,13 @@ async function runTests() {
         assert(car !== other, '3g. two build(CAR) calls return two independent Object3D graphs, matching BICYCLE/MOTORCYCLE\'s own contract');
     }
     {
+        // DRONE now has a builder too.
         const renderer = new VehicleRenderer();
-        for (const type of [VehicleType.DRONE]) {
-            assert(renderer.build(type) === null, `4. build(${type}) returns null — no visual exists for it yet`);
-        }
+        const drone = renderer.build(VehicleType.DRONE);
+        assert(drone instanceof THREE.Group, '4. build(DRONE) returns a real THREE.Group');
+        assert(countMeshes(drone) > 0, '4a. the drone group contains real, visible mesh geometry');
+        const other = renderer.build(VehicleType.DRONE);
+        assert(drone !== other, '4b. two build(DRONE) calls return two independent Object3D graphs, matching BICYCLE/MOTORCYCLE/CAR\'s own contract');
     }
 
     // -------------------------------------------------------------
@@ -90,9 +93,10 @@ async function runTests() {
         assert(countMeshes(visual.root) > 0, '7. root already contains the built bicycle geometry');
     }
     {
+        // DRONE is now a supported type too.
         const visual = new VehicleVisual(new VehicleRenderer(), VehicleType.DRONE);
-        assert(visual.isSupported === false, '8. an unsupported type reports isSupported === false');
-        assert(countMeshes(visual.root) === 0, '9. root has no geometry for an unsupported type — never a fallback shape');
+        assert(visual.isSupported === true, '8. DRONE now reports isSupported === true');
+        assert(countMeshes(visual.root) > 0, '9. root already contains the built drone geometry');
     }
     {
         const visual = new VehicleVisual(new VehicleRenderer(), VehicleType.BICYCLE);
@@ -230,16 +234,17 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section H — an unsupported VehicleType is never silently
-    // rendered as a bicycle
+    // Section H — DRONE now has a visual too, so it renders and tracks
+    // exactly like BICYCLE/MOTORCYCLE/CAR — no VehicleType is left
+    // unsupported any more.
     // -------------------------------------------------------------
     {
         const field = new VehicleFieldRenderer();
         const drone = new VehicleInstance({ id: 'vehicle:drone:0,0', type: VehicleType.DRONE, spawnPosition: { x: 0, y: 0, z: 0 } });
         const object = field.setVehicle(drone);
-        assert(object === null, '27. setVehicle() returns null for a vehicle type with no visual yet');
-        assert(field.getObject('vehicle:drone:0,0') === null, '28. an unsupported vehicle is never tracked');
-        assert(field.trackedVehicleIds().length === 0, '29. trackedVehicleIds() stays empty — nothing was silently substituted');
+        assert(object !== null, '27. setVehicle() returns a real Object3D for DRONE now that it has a visual');
+        assert(field.getObject('vehicle:drone:0,0') === object, '28. the drone is tracked by its own id');
+        assert(field.trackedVehicleIds().length === 1, '29. trackedVehicleIds() reflects the newly tracked drone');
     }
     {
         const field = new VehicleFieldRenderer();

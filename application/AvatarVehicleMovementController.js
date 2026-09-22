@@ -4,6 +4,7 @@ import { simulateAvatarMovement } from '../core/AvatarMovementSimulation.js';
 import { terrainHeightAt } from '../core/TerrainHeightField.js';
 import { resolveVehicleHeadingFromMovement } from '../core/VehicleMovementHeading.js';
 import { resolveVehicleMovementDirectionFromSteering } from '../core/VehicleSteeringSimulation.js';
+import { AvatarDroneVerticalStateKind, deriveAvatarDroneVerticalState, stepDroneAltitude } from '../core/AvatarDroneVerticalState.js';
 
 // 0.9.116 — Mounted Vehicle Movement.
 //
@@ -123,10 +124,20 @@ import { resolveVehicleMovementDirectionFromSteering } from '../core/VehicleStee
 // now a real, visible, mountable, and — via this one line — movable
 // vehicle exactly like a bicycle or a motorcycle, and (per
 // core/AvatarVehicleMovementCapability.js's own 0.9.87 header) the
-// fastest of the three. DRONE remains the only exclusion: it still has
-// no placement path and no visual, so adding it here would still be
-// exactly the "hypothetical future vehicle silently starts moving"
-// mistake this gate exists to prevent.
+// fastest of the three ground vehicles.
+//
+// AERIAL MOVEMENT PIPELINE UPDATE — DRONE JOINS THE OTHER THREE HERE.
+// core/VehiclePlacement.js now places DRONE, renderer/VehicleRenderer.js
+// now has a buildDrone() visual, and — the gap that kept DRONE excluded
+// even after both of those — core/AvatarDroneVerticalState.js now gives
+// it a real vertical-state pipeline (GROUNDED/RISING/HOVERING/DESCENDING,
+// stepped every tick below). `tick()`'s own DRONE-specific block, below,
+// layers that altitude on top of this exact same horizontal
+// simulation/constraint pipeline every other movable vehicle already
+// goes through — a drone is a real, visible, mountable, movable vehicle
+// now too, and (per core/AvatarVehicleMovementCapability.js's own
+// "AERIAL_VEHICLE Is Now A Real, Supported Capability" header) the
+// fastest of all four.
 //
 // 0.9.127 — Vehicle Steering Integration Audit. 0.9.125/0.9.126 built a
 // closed steering-intent vocabulary (core/VehicleSteeringIntent.js) and a
@@ -143,7 +154,7 @@ import { resolveVehicleMovementDirectionFromSteering } from '../core/VehicleStee
 // and this file's own closing 0.9.127 comment for why heading resolution
 // itself needed no change at all to already be correct once steering
 // entered the real pipeline.
-const MOVABLE_VEHICLE_TYPES = new Set([VehicleType.BICYCLE, VehicleType.MOTORCYCLE, VehicleType.CAR]);
+const MOVABLE_VEHICLE_TYPES = new Set([VehicleType.BICYCLE, VehicleType.MOTORCYCLE, VehicleType.CAR, VehicleType.DRONE]);
 
 export function isMovableVehicleType(type) {
     return MOVABLE_VEHICLE_TYPES.has(type);
@@ -203,6 +214,29 @@ export class AvatarVehicleMovementController {
         this._verticalVelocity = 0;
         this._grounded = true;
         this._currentMovementSpeed = 0;
+        // Aerial Movement Pipeline — the direct structural twin of
+        // `_verticalVelocity`/`_grounded` above, but for a mounted
+        // DRONE's own altitude (core/AvatarDroneVerticalState.js) rather
+        // than the shared on-foot/ground-vehicle jump physics those two
+        // fields track. Always `0` for every other vehicle type — see
+        // `tick()`'s own DRONE-specific block, below, for the only place
+        // this is ever read or written.
+        this._droneAltitude = 0;
+        // The MOST RECENT tick()'s own resolved
+        // AvatarDroneVerticalStateKind for a mounted DRONE, or `null` for
+        // every other vehicle type (never computed for them at all — see
+        // `tick()`'s own DRONE-specific block). Transient and
+        // internal-only, the direct structural twin of `_collided`/
+        // `_collidedWithTree` above — consulted by `tick()` itself to
+        // decide whether tree collision should be bypassed this tick
+        // (a genuinely HOVERING drone — see that method's own block,
+        // below), never persisted, never part of VehicleInstance.
+        // application/AvatarVehicleInteractionController.js's own
+        // dismount-while-airborne gate deliberately does NOT read this
+        // field — it derives "airborne" independently, from the
+        // vehicle's own already-committed position vs. raw terrain
+        // height, so it needs no reference to this class at all.
+        this._droneVerticalStateKind = null;
     }
 
     // See this file's own header, "Only a vehicle type this codebase
@@ -266,9 +300,9 @@ export class AvatarVehicleMovementController {
         }
         // Defense in depth, not merely a caller-side convention: even a
         // caller that forgot to check `canMove()` first can never move a
-        // MOTORCYCLE/CAR/DRONE through this method — see this file's own
-        // header, "Only a vehicle type this codebase can actually show
-        // moves."
+        // vehicle type outside MOVABLE_VEHICLE_TYPES through this method
+        // — see this file's own header, "Only a vehicle type this
+        // codebase can actually show moves."
         if (!isMovableVehicleType(vehicleInstance.type)) {
             return null;
         }
@@ -286,6 +320,7 @@ export class AvatarVehicleMovementController {
             this._verticalVelocity = 0;
             this._grounded = true;
             this._currentMovementSpeed = 0;
+            this._droneAltitude = 0;
         }
 
         const currentPosition = vehicleInstance.position;
@@ -377,12 +412,37 @@ export class AvatarVehicleMovementController {
             };
         }
 
+        // Aerial Movement Pipeline — DRONE ONLY. Every other vehicle
+        // type leaves `candidatePosition.y` exactly as
+        // `simulateAvatarMovement()` already resolved it (raw terrain
+        // height — see this class's own 0.9.116 header, immediately
+        // below). A mounted drone additionally steps its own altitude
+        // (core/AvatarDroneVerticalState.js#stepDroneAltitude()) toward
+        // DRONE_HOVER_ALTITUDE whenever this tick's own movement intent
+        // requests forward/backward travel — "hovers when moving, sits
+        // on the ground when idle," the product brief this milestone
+        // implements — and layers it ON TOP OF the terrain-height Y the
+        // horizontal simulation already produced, rather than replacing
+        // that horizontal simulation with a second one. `this._droneAltitude`
+        // is this controller's own transient per-ride bookkeeping, the
+        // direct structural twin of `_verticalVelocity`/`_grounded`
+        // above, reset on every genuinely new ride (see above) and by
+        // `reset()` (below).
+        this._droneVerticalStateKind = null;
+        if (vehicleInstance.type === VehicleType.DRONE) {
+            const ascending = movementIntent.direction !== 0;
+            this._droneAltitude = stepDroneAltitude({ altitude: this._droneAltitude, ascending, deltaSeconds });
+            this._droneVerticalStateKind = deriveAvatarDroneVerticalState({ altitude: this._droneAltitude, ascending });
+            candidatePosition = { ...candidatePosition, y: groundHeight + this._droneAltitude };
+        }
+
         // 0.9.119 — Vehicle–World Collision Constraint. The pure
         // kinematics result above — 0.9.127's own steering redirection
-        // included, when active — is only ever a PROPOSED position —
-        // exactly the same "simulation proposes, a constraint disposes"
-        // split application/AvatarMovementController.js's own tick()
-        // already applies for the on-foot avatar (see that class's own
+        // and the DRONE-only altitude block above, when active — is only
+        // ever a PROPOSED position — exactly the same "simulation
+        // proposes, a constraint disposes" split
+        // application/AvatarMovementController.js's own tick() already
+        // applies for the on-foot avatar (see that class's own
         // 0.2.42/0.9.63 headers). Building/brick collision is applied
         // FIRST, tree collision LAST — the identical ordering that
         // pipeline already establishes — and BOTH are handed
@@ -391,8 +451,19 @@ export class AvatarVehicleMovementController {
         // own, larger footprint (see core/AvatarVehicleMovementCapability.js's
         // own 0.9.88 header). Y is untouched by either constraint — both
         // are purely horizontal (X/Z) — so `candidatePosition.y` (already
-        // the vehicle's own raw-terrain-height Y, per this class's own
-        // 0.9.116 header) survives the pipeline unchanged.
+        // the vehicle's own raw-terrain-height Y for every non-DRONE
+        // vehicle — see this class's own 0.9.116 header — or terrain
+        // height PLUS the drone's own current altitude, per the block
+        // above) survives the pipeline unchanged. For a DRONE this also
+        // means building/brick collision becomes genuinely height-aware
+        // for free: core/AvatarCollision.js#resolveHorizontalMovement()
+        // already tests a moving body as a vertical column from its own
+        // `position.y` upward (AVATAR_COLLISION_HEIGHT) against each
+        // obstacle's real brick AABB — feeding it the drone's true
+        // in-flight Y, rather than always the ground, is the only change
+        // needed for a tall building to correctly block a low-flying
+        // drone while a building shorter than its current altitude does
+        // not — no new collision code anywhere.
         let finalPosition = candidatePosition;
         this._collided = false;
         if (this._movementConstraint) {
@@ -403,7 +474,17 @@ export class AvatarVehicleMovementController {
             this._collided = constrained.collided;
         }
         this._collidedWithTree = false;
-        if (this._treeConstraint) {
+        // A drone genuinely HOVERING (at or above DRONE_HOVER_ALTITUDE —
+        // see core/AvatarDroneVerticalState.js) bypasses tree collision
+        // entirely — "hovering above trees," this feature's own product
+        // brief — since core/TreeCollisionGeometry.js's own trees are a
+        // horizontal-only collision circle with no height data to test a
+        // real altitude against (see that file's own header). Below
+        // hover altitude (GROUNDED/RISING/DESCENDING) a drone is treated
+        // exactly like any other vehicle here — still low enough that
+        // bypassing trees would be visibly wrong during takeoff/landing.
+        const droneHovering = this._droneVerticalStateKind === AvatarDroneVerticalStateKind.HOVERING;
+        if (this._treeConstraint && !droneHovering) {
             const treeResult = this._treeConstraint.apply(currentPosition, finalPosition, {
                 avatarRadius: capability.collisionRadius
             });
@@ -483,6 +564,8 @@ export class AvatarVehicleMovementController {
         this._currentMovementSpeed = 0;
         this._collided = false;
         this._collidedWithTree = false;
+        this._droneAltitude = 0;
+        this._droneVerticalStateKind = null;
     }
 }
 

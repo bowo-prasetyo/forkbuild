@@ -215,22 +215,16 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section H — unsupported vehicle types (DRONE — BICYCLE and
-    // MOTORCYCLE both resolve a real destination as of 0.9.668, and CAR
-    // does too as of 0.9.669): 0.9.80's own null must never be silently
-    // treated as a real candidate.
+    // Section H — every currently placeable vehicle type (BICYCLE,
+    // MOTORCYCLE, CAR, DRONE) now resolves a real destination under
+    // core/AvatarVehicleDismountPosition.js — there is currently no
+    // unsupported type left to produce a null candidate from, though
+    // 0.9.80's own null contract (see that file's own header) still
+    // holds for a future, not-yet-placed vehicle type. A `null`
+    // position handed to this file directly (never manufactured by a
+    // real resolver call here) still throws rather than being treated
+    // as a clear result — see the next block.
     // -------------------------------------------------------------
-    {
-        for (const type of [VehicleType.DRONE]) {
-            const vehicle = new VehiclePresence({ id: 'vehicle:1:0,0', type, position: new Position(1, 1, 1) });
-            const resolved = resolveAvatarVehicleDismountPosition(vehicle);
-            assert(resolved === null, `19. setup: a ${type} vehicle still resolves to null under 0.9.80`);
-            assertThrows(
-                () => isAvatarVehicleDismountPositionClear({ position: resolved, treeCollisions: [] }),
-                `20. handing this file a ${type} vehicle's own null candidate throws rather than inventing a destination to judge`
-            );
-        }
-    }
     {
         assertThrows(() => isAvatarVehicleDismountPositionClear({ position: null, treeCollisions: [] }), '21. a null position is rejected outright');
         assertThrows(() => isAvatarVehicleDismountPositionClear({ position: undefined, treeCollisions: [] }), '22. an undefined position is rejected');

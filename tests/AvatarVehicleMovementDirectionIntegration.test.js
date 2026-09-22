@@ -39,9 +39,9 @@ import { Position } from '../core/Position.js';
 //   Section B: BICYCLE — forward accepted, backward accepted
 //   Section C: MOTORCYCLE — forward accepted, backward accepted
 //   Section D: CAR — forward accepted, backward accepted
-//   Section E: DRONE — remains fully blocked; movement never leaks
-//              through even though its own movementDirections values
-//              are both false
+//   Section E: DRONE — now permits both directions too (Aerial
+//              Movement Pipeline milestone) — forward accepted,
+//              backward accepted
 //   Section F: vehicle switching — WALK -> BICYCLE -> MOTORCYCLE ->
 //              CAR -> WALK produces deterministic forward/backward
 //              behavior at every step
@@ -328,26 +328,27 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section E — drone remains fully blocked
+    // Section E — drone. Aerial Movement Pipeline milestone: AERIAL_VEHICLE
+    // is no longer permanently blocked, and its own movementDirections
+    // now permits both directions too, exactly like every other
+    // supported capability (see core/AvatarVehicleMovementCapability.js's
+    // own "AERIAL_VEHICLE Is Now A Real, Supported Capability" header).
     // -------------------------------------------------------------
     {
-        const { avatarPresenceSession } = buildAvatarStack(registry, 'dir-e1');
-        const controller = new AvatarMovementController(avatarPresenceSession);
-        controller.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.DRONE));
         const capability = resolveAvatarVehicleMovementCapability(VehicleType.DRONE);
-        assert(capability.movementDirections.forward === false && capability.movementDirections.backward === false,
-            '18. DRONE\'s own movementDirections is forward: false, backward: false');
+        assert(capability.movementDirections.forward === true && capability.movementDirections.backward === true,
+            '18. DRONE\'s own movementDirections now permits both directions');
 
-        const beforePos = avatarPresenceSession.current.position;
-        const before = { x: beforePos.x, y: beforePos.y, z: beforePos.z };
-        controller.keyDown('w');
-        controller.keyDown('s');
-        for (let i = 0; i < 10; i++) controller.tick(0.05);
-        const after = avatarPresenceSession.current.position;
-        assert(before.x === after.x && before.y === after.y && before.z === after.z,
-            '19. AERIAL_VEHICLE/DRONE remains fully blocked by the tick() guard — its own inert movementDirections is never even reached, let alone consulted');
-        controller.keyUp('w');
-        controller.keyUp('s');
+        const { avatarPresenceSession: forwardSession } = buildAvatarStack(registry, 'dir-e1-forward');
+        const { avatarPresenceSession: backwardSession } = buildAvatarStack(registry, 'dir-e1-backward');
+        const forwardController = new AvatarMovementController(forwardSession);
+        const backwardController = new AvatarMovementController(backwardSession);
+        forwardController.setMovementCapability(capability);
+        backwardController.setMovementCapability(capability);
+        const forwardDistance = drive(forwardController, forwardSession, 'w', 20, 0.05);
+        assert(forwardDistance > 0, '19. DRONE — forward is accepted');
+        const backwardDistance = drive(backwardController, backwardSession, 's', 20, 0.05);
+        assert(backwardDistance < 0, '19a. DRONE — backward is accepted');
     }
 
     // -------------------------------------------------------------

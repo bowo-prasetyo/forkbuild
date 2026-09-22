@@ -606,17 +606,13 @@ async function runTests() {
             '61. setHeading() never resets a position a prior setPosition() call already applied');
     }
     {
-        // Unsupported vehicle types remain unsupported — 0.9.124 changed
-        // nothing about which types this renderer can show; 0.9.668 later
-        // added a MOTORCYCLE builder, and 0.9.669 added a CAR builder
-        // (renderer/VehicleRenderer.js), so only DRONE remains in this
-        // unsupported set now.
-        for (const type of [VehicleType.DRONE]) {
-            const visual = new VehicleVisual(new VehicleRenderer(), type);
-            assert(visual.isSupported === false, `62.${type} still reports isSupported === false`);
-            visual.setHeading(90); // must never throw even with no built geometry
-            assert(visual.root instanceof THREE.Group, `63.${type} root is still a valid, if empty, Object3D after setHeading()`);
-        }
+        // DRONE now has a builder too (renderer/VehicleRenderer.js), so
+        // it reports isSupported === true and setHeading() rotates its
+        // built geometry exactly like every other vehicle type.
+        const visual = new VehicleVisual(new VehicleRenderer(), VehicleType.DRONE);
+        assert(visual.isSupported === true, '62. DRONE reports isSupported === true');
+        visual.setHeading(90);
+        assert(visual.root instanceof THREE.Group, '63. DRONE root is a valid Object3D after setHeading()');
     }
     {
         // The renderer never computes a heading of its own — a pure
@@ -851,14 +847,12 @@ async function runTests() {
     {
         // isMovableVehicleType() was gated on BICYCLE alone at 0.9.124 —
         // that milestone introduced no new movable vehicle type. 0.9.668
-        // later added MOTORCYCLE, and 0.9.669 added CAR
-        // (application/AvatarVehicleMovementController.js); DRONE still
-        // never moves.
-        for (const type of [VehicleType.BICYCLE, VehicleType.MOTORCYCLE, VehicleType.CAR]) {
+        // later added MOTORCYCLE, 0.9.669 added CAR, and the Aerial
+        // Movement Pipeline milestone added DRONE
+        // (application/AvatarVehicleMovementController.js) — all four
+        // are movable now.
+        for (const type of [VehicleType.BICYCLE, VehicleType.MOTORCYCLE, VehicleType.CAR, VehicleType.DRONE]) {
             assert(isMovableVehicleType(type) === true, `83.${type} sanity: ${type} is movable`);
-        }
-        for (const type of [VehicleType.DRONE]) {
-            assert(isMovableVehicleType(type) === false, `84.${type} is still never movable`);
         }
     }
 

@@ -57,8 +57,9 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //              immediately, every tick, with no drift
 //   Section H: speed unchanged — 0.9.87's own 3/6/9/12 movementSpeed
 //              values are untouched by this milestone
-//   Section I: drone — AERIAL_VEHICLE/DRONE remains fully blocked before
-//              its own (inert) collisionRadius is ever consulted
+//   Section I: drone — AERIAL_VEHICLE/DRONE now collides with a real
+//              tree at its own real collisionRadius, through the
+//              on-foot pipeline (Aerial Movement Pipeline milestone)
 //   Section J: architectural regression — no second collision system,
 //              no rectangular/oriented footprint, no vehicle-specific
 //              controller, anywhere in the files this milestone touches
@@ -372,29 +373,34 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section I — drone
+    // Section I — drone. Aerial Movement Pipeline milestone: AERIAL_VEHICLE
+    // is no longer permanently blocked (see
+    // core/AvatarVehicleMovementCapability.js's own "AERIAL_VEHICLE Is Now
+    // A Real, Supported Capability" header), and this section's own
+    // AvatarMovementController — the ON-FOOT pipeline, never
+    // application/AvatarVehicleMovementController.js's own dedicated
+    // altitude/hover-aware tick() — has no altitude concept of any kind.
+    // A DRONE capability driven through THIS pipeline therefore collides
+    // with a real tree exactly like any other vehicle here, at its own
+    // combined radius — the "hover above trees" bypass
+    // (core/AvatarDroneVerticalState.js) only ever applies to a genuinely
+    // mounted, moving, HOVERING drone through the dedicated vehicle
+    // controller, never this one.
     // -------------------------------------------------------------
     {
         const drone = resolveAvatarVehicleMovementCapability(VehicleType.DRONE);
         assert(drone.movementKind === AvatarMovementCapabilityKind.AERIAL_VEHICLE, '31. DRONE still resolves to its own AERIAL_VEHICLE movement kind');
-        assert(drone.supported === false, '32. DRONE is still explicitly unsupported');
-        assert(drone.collisionRadius === 0, '33. DRONE\'s own collisionRadius is 0 — inert, for the identical reason movementSpeed\'s own 0 already is');
+        assert(drone.supported === true, '32. DRONE is supported now (Aerial Movement Pipeline milestone)');
+        assert(drone.collisionRadius > 0, '33. DRONE\'s own collisionRadius is a real, positive value now that it is supported');
 
-        const registry = buildRegistry();
-        const { avatarPresenceSession } = buildAvatarStack(registry, 'footprint-i1', { position: { x: realTree.center.x, y: 0, z: realTree.center.z - 5 }, rotation: { y: 0 } });
-        const treeConstraint = new AvatarTreeConstraint();
-        const controller = new AvatarMovementController(avatarPresenceSession, null, null, null, treeConstraint);
-        controller.setMovementCapability(drone);
-        const beforePos = avatarPresenceSession.current.position;
-        const before = { x: beforePos.x, y: beforePos.y, z: beforePos.z };
-        controller.keyDown('w');
-        for (let i = 0; i < 50; i++) controller.tick(0.05);
-        controller.keyUp('w');
-        const after = avatarPresenceSession.current.position;
-        assert(before.x === after.x && before.y === after.y && before.z === after.z,
-            '34. AERIAL_VEHICLE/DRONE remains fully blocked by AvatarMovementController\'s own tick() guard — it never even reaches the tree constraint, ground collision footprint included');
-        assert(controller.isCollidedWithTree() === false,
-            '35. a fully-blocked DRONE never reports a tree collision either — the tree constraint is never consulted at all for an unsupported capability');
+        const droneRadius = drone.collisionRadius;
+        const start = { x: realTree.center.x, y: 0, z: realTree.center.z - (realTree.radius + droneRadius + 5) };
+        const { position, everCollided } = walkToward(VehicleType.DRONE, start, 0.05, 400);
+        assert(everCollided === true, '34. a DRONE capability driven through the on-foot pipeline still collides with a real tree, exactly like any other vehicle here');
+        const distToCenter = Math.hypot(position.x - realTree.center.x, position.z - realTree.center.z);
+        const combined = droneRadius + realTree.radius;
+        assert(distToCenter >= combined - 1e-6 && distToCenter < combined + 1e-2,
+            '35. the drone stops at its OWN combined radius (droneRadius + tree.radius) from the tree\'s own center — no special-casing anywhere in this pipeline');
     }
 
     // -------------------------------------------------------------

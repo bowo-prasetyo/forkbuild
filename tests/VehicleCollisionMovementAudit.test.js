@@ -46,10 +46,10 @@ import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUs
 //              keeps following terrain untouched throughout, and the
 //              SAME real brick still lets an unmounted avatar stop at
 //              its own, smaller radius
-//   Section D: unsupported vehicle types stay ungated by anything this
-//              line has added — DRONE never reaches a real, wired
-//              movementConstraint/treeConstraint pair, even along a
-//              completely obstacle-free path
+//   Section D: (historical) unsupported vehicle types stayed ungated by
+//              anything this line added — since superseded by the
+//              Aerial Movement Pipeline milestone, which made DRONE
+//              movable too; see this section's own current note
 //   Section E: FLAGSHIP — one continuous session: mount, ride into a
 //              real obstacle, the avatar equals the vehicle's own
 //              already-constrained position on EVERY frame (never a
@@ -445,29 +445,14 @@ async function runTests() {
         assert(walkerGap < BICYCLE_RADIUS, '21. ...and is strictly smaller, matching WALK < BICYCLE\'s own established ordering');
     }
 
-    // -------------------------------------------------------------
-    // Section D — unsupported vehicle types (DRONE — MOTORCYCLE joined
-    // BICYCLE as movable at 0.9.668, and CAR joined them at 0.9.669) stay
-    // ungated by anything this line has added, even with REAL
-    // constraints wired and a completely obstacle-free path.
-    // -------------------------------------------------------------
-    {
-        const clearMovementConstraint = new AvatarMovementConstraint({ loadedDocuments: new Map(), getWorldPosition: () => ({ x: 0, y: 0, z: 0 }), brickRegistry: new CreateBrickRegistryUseCase().execute() });
-        for (const type of [VehicleType.DRONE]) {
-            assert(isMovableVehicleType(type) === false, `22.${type} isMovableVehicleType() still refuses this type`);
-            const spawn = { x: 92000, y: 0, z: 92000 };
-            const instance = new VehicleInstance({ id: `vehicle:audit-d-${type}`, type, spawnPosition: spawn, position: spawn });
-            const store = fakeVehicleStore(instance);
-            const controller = new AvatarVehicleMovementController(store, clearMovementConstraint, null);
-            const capability = resolveAvatarVehicleMovementCapability(type);
-            const result = controller.tick({
-                seed: DEFAULT_WORLD_SEED, vehicleId: instance.id, capability, movementIntent: FORWARD_INTENT,
-                currentRotationY: 0, deltaSeconds: 0.5
-            });
-            assert(result === null,
-                `23.${type} still never moves, even with a real, wired, genuinely obstacle-free movementConstraint — the type gate alone decides this, never collision outcome`);
-        }
-    }
+    // Note: through the Aerial Movement Pipeline milestone, every
+    // currently-defined VehicleType (BICYCLE, MOTORCYCLE, CAR, and now
+    // DRONE) is movable — there is currently no unsupported vehicle
+    // type left to exercise the "type gate blocks movement regardless
+    // of collision outcome" scenario this section once tested with
+    // DRONE. The gate itself (MOVABLE_VEHICLE_TYPES,
+    // application/AvatarVehicleMovementController.js) remains in place
+    // for a future, not-yet-movable vehicle type.
 
     // -------------------------------------------------------------
     // Section E — FLAGSHIP: one continuous session. Mount, ride into a

@@ -1,4 +1,4 @@
-import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/TerrainHeightField.js';
 import { VehicleType } from '../core/VehicleType.js';
 import {
     AvatarVehicleInteractionIntent,
@@ -437,10 +437,30 @@ export class AvatarVehicleInteractionController {
     // once mounted."
     _tickDismount(requested) {
         const currentPosition = this._avatarPresenceSession.current.position;
-        const dismountIntent = deriveAvatarVehicleDismountIntent({
-            dismountRequested: requested
-        });
         const vehicle = this._currentMountedVehicle(currentPosition);
+
+        // Aerial Movement Pipeline — a DRONE currently off the ground
+        // (application/AvatarVehicleMovementController.js's own tick()
+        // commits its real in-flight Y, terrain height plus altitude,
+        // via VehicleRuntimeInstances#setPosition() — see that class's
+        // own header) cannot be dismounted mid-flight: forcing
+        // `requested` to false here, rather than teaching
+        // core/AvatarVehicleDismountTransition.js any vehicle awareness,
+        // keeps that file's own explicit "no vehicle awareness of any
+        // kind" restriction intact (see its own header) — this is a
+        // policy decision this application-layer controller is allowed
+        // to make, not a new core-level rule. Derived purely from the
+        // vehicle's own already-committed position vs. raw terrain
+        // height, never from application/AvatarVehicleMovementController.js's
+        // own private per-ride bookkeeping — this controller has no
+        // reference to that class at all, and does not need one.
+        const airborne = vehicle !== null
+            && vehicle.type === VehicleType.DRONE
+            && vehicle.position.y > terrainHeightAt(this._seed, vehicle.position.x, vehicle.position.z) + 0.5;
+
+        const dismountIntent = deriveAvatarVehicleDismountIntent({
+            dismountRequested: airborne ? false : requested
+        });
         const dismountPosition = vehicle
             ? resolveAvatarVehicleDismountPosition(vehicle)
             : null;
