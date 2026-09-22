@@ -23,6 +23,9 @@ import { VehicleType } from '../core/VehicleType.js';
 //              position, registered in the runtime store, and mounted
 //   Section D: Deploy with nothing carried is a harmless no-op
 //   Section E: Held-key safety mirrors the existing 'e' discipline
+//   Section F: 0.9.671 — Cycle Selection. Carry two real, distinct
+//              vehicles, cycle to the OLDER one, and deploy THAT one —
+//              never the most recent — through the real '[' / ']' keys
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -39,6 +42,10 @@ function buildAvatarPresenceSession(startPosition) {
 // already relies on.
 const SEED = 29;
 const CLEAR_VEHICLE_ID = 'vehicle:29:-6,-1';
+// A second real, distinct deterministic vehicle under the same seed —
+// only used as a second thing to carry (Section F), never dismounted,
+// so its own dismount-destination clearance is irrelevant here.
+const SECOND_VEHICLE_ID = 'vehicle:29:-4,-8';
 
 function findVehicle(id) {
     const vehicles = vehiclePresenceInRegion(SEED, -300, -300, 300, 300);
@@ -156,6 +163,76 @@ function runTests() {
         c.keyDown('q');
         c.tick();
         assert(c.mount() !== null && c.inventory().size === 0, '19. releasing and re-pressing Q now deploys it — a genuine second press');
+    }
+
+    // -------------------------------------------------------------
+    // Section F — 0.9.671: Cycle Selection
+    // -------------------------------------------------------------
+    {
+        const secondVehicle = findVehicle(SECOND_VEHICLE_ID);
+        const session = buildAvatarPresenceSession(new Position(clearVehicle.position.x - 0.5, 0, clearVehicle.position.z));
+        const runtimeInstances = new VehicleRuntimeInstances();
+        const c = new AvatarVehicleInteractionController(session, { seed: SEED, vehicleRuntimeInstances: runtimeInstances });
+
+        // Mount and store the first real vehicle (a bicycle).
+        c.keyDown('e'); c.tick(); c.keyUp('e');
+        assert(c.mount() !== null, '20. mounted the first real vehicle');
+        c.keyDown('q'); c.tick(); c.keyUp('q');
+        assert(c.inventory().size === 1, '21. stored the first vehicle');
+
+        // Walk to the second real vehicle, mount and store it too.
+        const current = session.current;
+        session.update({ position: new Position(secondVehicle.position.x - 0.5, 0, secondVehicle.position.z), rotation: current.rotation, animation: current.animation });
+        c.keyDown('e'); c.tick(); c.keyUp('e');
+        assert(c.mount() !== null && c.mount().vehicleId === SECOND_VEHICLE_ID, '22. mounted the second real vehicle');
+        c.keyDown('q'); c.tick(); c.keyUp('q');
+        assert(c.inventory().size === 2, '23. now carrying two distinct real vehicles');
+
+        // With no explicit selection, deploy would use the most recently
+        // stored one (the second vehicle).
+        let state = c.storeInteractionState();
+        assert(state.canDeploy === true && state.carriedCount === 2 && state.selectedIndex === 2,
+            '24. before cycling, the default selection is the most recent entry (position 2 of 2)');
+        assert(state.vehicleType === secondVehicle.type, '25. and its reported type matches the second (most recently stored) vehicle');
+
+        // Cycle one step OLDER, to the first vehicle.
+        c.keyDown('['); c.tick(); c.keyUp('[');
+        state = c.storeInteractionState();
+        assert(state.selectedIndex === 1, '26. cycling previous once moves the selection to position 1 of 2 (the older entry)');
+        assert(state.vehicleType === clearVehicle.type, '27. and its reported type now matches the FIRST vehicle stored, not the second');
+
+        // Held-key safety: a single physical press of '[' must move the
+        // selection exactly once, even across several ticks while the
+        // key stays down — exactly the same discipline already proven
+        // for Q in Section E above.
+        c.keyDown('['); c.tick();
+        let afterFirstTick = c.storeInteractionState().selectedIndex;
+        assert(afterFirstTick === 2, '28. a fresh \'[\' press (fresh keyDown) does move the selection — here wrapping from position 1 back to position 2');
+        c.tick(); // a second tick with '[' still held (key-repeat)
+        assert(c.storeInteractionState().selectedIndex === 2, '29. a second tick with \'[\' STILL held (key-repeat) does not cycle again — one press, one step');
+        c.keyUp('[');
+        c.keyDown('['); c.tick(); c.keyUp('[');
+        assert(c.storeInteractionState().selectedIndex === 1, '29b. releasing and re-pressing \'[\' cycles again — a genuine second press, back to position 1 (the older entry)');
+
+        // Deploy now: it must bring out the OLDER (currently selected)
+        // vehicle, never the most recent one, proving selection actually
+        // steers deploy() rather than being purely cosmetic.
+        c.keyDown('q'); c.tick(); c.keyUp('q');
+        const deployedMount = c.mount();
+        assert(deployedMount !== null, '30. deploying with a cycled selection still mounts a vehicle');
+        const deployedInstance = runtimeInstances.get(deployedMount.vehicleId);
+        assert(deployedInstance.type === clearVehicle.type, '31. the DEPLOYED vehicle matches the cycled-to (older, first-stored) one, not the most recent');
+        assert(c.inventory().size === 1, '32. exactly one entry remains carried — the second vehicle, never deployed');
+
+        // Selection resets to the default after a deploy — dismount and
+        // check that the sole remaining entry (the second vehicle) is
+        // now what would deploy next, with no leftover stale selection.
+        c.keyDown('e'); c.tick(); c.keyUp('e');
+        assert(c.mount() === null, '33. dismounted back to unmounted for this check');
+        state = c.storeInteractionState();
+        assert(state.canDeploy === true && state.carriedCount === 1 && state.selectedIndex === 1,
+            '34. FLAGSHIP: after a deploy, selection resets to the default (most recent of whatever remains) rather than pointing at a now-deployed entry');
+        assert(state.vehicleType === secondVehicle.type, '35. FLAGSHIP: and that remaining entry is genuinely the second vehicle, confirming nothing was silently lost or swapped');
     }
 
     console.log('✅ All Avatar Inventory Store/Deploy Integration tests passed.');

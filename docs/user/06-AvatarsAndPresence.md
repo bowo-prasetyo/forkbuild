@@ -187,10 +187,18 @@ dismount a drone in mid-air — bring it back to the ground first.
 Found a vehicle far from where you need it later? While mounted, press
 **Q** to store it in your inventory — it disappears from the world and
 you're dismounted in the same motion. Walk anywhere else, press **Q**
-again while unmounted, and the most recently stored vehicle spawns right
+again while unmounted, and the selected stored vehicle spawns right
 where you're standing, already mounted. There's no limit today on how
 many vehicles you can carry at once, and a stored vehicle never
 reappears back where you found it.
+
+By default, **Q** deploys whichever vehicle you stored most recently.
+If you're carrying more than one, press **[** or **]** to cycle the
+selection backward or forward through everything you're carrying — the
+prompt shows which one is selected and its position (e.g. "Deploy
+Bicycle (1/3)") so you can find an older one without deploying and
+re-storing your way past it. Cycling only changes what **Q** will bring
+out next; it never spawns or removes anything by itself.
 
 ### Spatial awareness and activity
 

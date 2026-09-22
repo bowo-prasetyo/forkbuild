@@ -82,7 +82,20 @@ export default {
                 return '[Q] Store';
             }
             const typeLabel = VEHICLE_TYPE_LABEL[this.storeState.vehicleType] || 'Vehicle';
+            // 0.9.671 — Avatar Inventory Cycle Selection. Only worth
+            // naming a position ("2/3") once there is more than one
+            // carried entry to be a position AMONG — a single carried
+            // vehicle stays exactly as plain as 0.9.670 ever showed it.
+            if (this.storeState.carriedCount > 1) {
+                return `[Q] Deploy ${typeLabel} (${this.storeState.selectedIndex}/${this.storeState.carriedCount})`;
+            }
             return `[Q] Deploy ${typeLabel}`;
+        },
+        // 0.9.671 — Avatar Inventory Cycle Selection. The third, optional
+        // hint line — only while there is something to cycle THROUGH
+        // (2+ carried) and somewhere for a deploy to land (not mounted).
+        cycleVisible() {
+            return Boolean(this.storeState) && this.storeState.canDeploy && this.storeState.carriedCount > 1;
         }
     },
     template: `
@@ -130,6 +143,20 @@ export default {
                     whiteSpace: 'nowrap'
                 }"
             >{{ storeLabel }}</div>
+            <div
+                v-if="cycleVisible"
+                :style="{
+                    background: 'rgba(18, 18, 18, 0.8)',
+                    border: '1px solid #3a3a3a',
+                    borderLeft: '3px solid #7a7a7a',
+                    borderRadius: '4px',
+                    padding: '4px 12px',
+                    fontFamily: 'monospace',
+                    fontSize: '11px',
+                    color: '#a8a8a8',
+                    whiteSpace: 'nowrap'
+                }"
+            >[ [ / ] ] Cycle</div>
         </div>
     `
 };

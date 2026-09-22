@@ -138,6 +138,68 @@ export class AvatarInventory {
         return this._entries.length > 0 ? this._entries[this._entries.length - 1] : null;
     }
 
+    // 0.9.671 — Avatar Inventory Cycle Selection. The specific entry
+    // matching `id`, or `null` when nothing carried has that id.
+    get(id) {
+        return this._entries.find((entry) => entry.id === id) || null;
+    }
+
+    // 0.9.671 — the entry a deploy acts on RIGHT NOW given a selection:
+    // the entry matching `id` if it is still carried, or mostRecent() as
+    // the default whenever `id` is `null` OR no longer present (e.g. a
+    // stale selection left over from an entry that has since been
+    // deployed by other means). core/AvatarVehicleDeployTransition.js's
+    // own deploy resolution and
+    // application/AvatarVehicleInteractionController.js's own
+    // storeInteractionState() both read this SAME method — never two
+    // separately-written copies of the same fallback rule.
+    resolve(id) {
+        if (id !== null) {
+            const found = this.get(id);
+            if (found) {
+                return found;
+            }
+        }
+        return this.mostRecent();
+    }
+
+    // The zero-based array position `resolve(id)` would answer to, used
+    // internally by next()/previous() as the shared starting point for
+    // "one step from wherever the current (possibly absent/default)
+    // selection is." Private to this file — a caller never needs a raw
+    // index, only the entry next()/previous() return.
+    _selectionIndex(id) {
+        if (id !== null) {
+            const index = this._entries.findIndex((entry) => entry.id === id);
+            if (index !== -1) {
+                return index;
+            }
+        }
+        return this._entries.length - 1;
+    }
+
+    // 0.9.671 — Avatar Inventory Cycle Selection. The entry one step
+    // NEWER than `id` in carried order, wrapping from the most recent
+    // back around to the oldest — or `null` when nothing is carried.
+    // `id: null` (no explicit selection) starts from the same implicit
+    // "most recent" position resolve(null) already treats as default.
+    next(id) {
+        if (this._entries.length === 0) {
+            return null;
+        }
+        return this._entries[(this._selectionIndex(id) + 1) % this._entries.length];
+    }
+
+    // The mirror image of next(): one step OLDER, wrapping from the
+    // oldest back around to the most recent.
+    previous(id) {
+        if (this._entries.length === 0) {
+            return null;
+        }
+        const index = this._selectionIndex(id);
+        return this._entries[(index - 1 + this._entries.length) % this._entries.length];
+    }
+
     toJSON() {
         return { entries: this._entries.map((entry) => entry.toJSON()) };
     }

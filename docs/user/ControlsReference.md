@@ -95,7 +95,8 @@ vehicle to mount it.
 | `←` / `→` (press) | Turn the vehicle's own attempted travel direction left/right | A single 45° turn per press — holding the key does not keep turning |
 | `Ctrl` (held) | Brake | |
 | `Q` (while mounted) | Store the vehicle you're on in your inventory | Removes it from the world; dismounts you at the same time |
-| `Q` (not mounted, carrying a vehicle) | Deploy the most recently stored vehicle | Spawns and mounts it at your current position |
+| `Q` (not mounted, carrying a vehicle) | Deploy the currently selected stored vehicle | Spawns and mounts it at your current position; defaults to the most recently stored one |
+| `[` / `]` (carrying 2+ vehicles) | Cycle the deploy selection to an older / newer stored vehicle | Only changes which one `Q` will deploy next — never mounts or removes anything by itself |
 
 ## Selection (click/marquee work in both views; only the Editor mutates)
 

@@ -231,6 +231,17 @@ export class AvatarVehicleInteractionController {
         this._storeKeyHeld = false;
         this._storeKeyConsumed = false;
         this._inventory = emptyAvatarInventory();
+        // 0.9.671 — Avatar Inventory Cycle Selection. Which carried entry
+        // deploy() acts on — `null` means "no explicit selection," which
+        // core/AvatarInventory.js#resolve() already treats as "the most
+        // recent one," the original 0.9.670 default. Two more keys
+        // ('[' / ']'), the same held-key/one-shot-consumed shape 'e' and
+        // 'q' already use above.
+        this._selectedEntryId = null;
+        this._cyclePreviousKeyHeld = false;
+        this._cyclePreviousKeyConsumed = false;
+        this._cycleNextKeyHeld = false;
+        this._cycleNextKeyConsumed = false;
     }
 
     // The avatar's current AvatarVehicleMount, or `null` when not
@@ -374,35 +385,57 @@ export class AvatarVehicleInteractionController {
     //
     //   mounted
     //       -> { canStore: true, canDeploy: false,
-    //            vehicleType: <mounted vehicle's type> }
+    //            vehicleType: <mounted vehicle's type>,
+    //            carriedCount: <however many are also carried>,
+    //            selectedIndex: null }
     //   not mounted, carrying at least one entry
     //       -> { canStore: false, canDeploy: true,
-    //            vehicleType: <the entry that would deploy next> }
+    //            vehicleType: <the entry that would deploy next>,
+    //            carriedCount: <total carried>,
+    //            selectedIndex: <1-based position of that entry> }
     //   not mounted, carrying nothing
     //       -> { canStore: false, canDeploy: false,
-    //            vehicleType: VehicleType.NONE }
+    //            vehicleType: VehicleType.NONE, carriedCount: 0,
+    //            selectedIndex: null }
+    //
+    // 0.9.671 UPDATE — carriedCount/selectedIndex are the two new fields
+    // Cycle Selection adds, for a UI (ui/components/VehicleInteractionPrompt.js)
+    // that wants to show "Deploy Bicycle (2/3)" rather than just a bare
+    // type name once more than one vehicle can be carried at once.
+    // `vehicleType` itself still reflects whatever entry would actually
+    // deploy right now — `this._inventory.resolve(this._selectedEntryId)`,
+    // the exact SAME method `_tickDeploy()` below feeds into
+    // `deriveAvatarVehicleDeployTransition()` — never a second,
+    // independently-computed "what's selected" answer.
     //
     // PRESENTATION ONLY — reuses mountedVehicleType() and
-    // this._inventory.mostRecent(), never a second computation of
+    // this._inventory.resolve()/entries, never a second computation of
     // either. Never called from tick(), the same "a UI observation seam
     // must never influence the actual decision" discipline
     // vehicleInteractionState() above already establishes.
     storeInteractionState() {
         if (!this._avatarPresenceSession) {
-            return Object.freeze({ canStore: false, canDeploy: false, vehicleType: VehicleType.NONE });
+            return Object.freeze({ canStore: false, canDeploy: false, vehicleType: VehicleType.NONE, carriedCount: 0, selectedIndex: null });
         }
         if (this._mount !== null) {
             return Object.freeze({
                 canStore: true,
                 canDeploy: false,
-                vehicleType: this.mountedVehicleType()
+                vehicleType: this.mountedVehicleType(),
+                carriedCount: this._inventory.size,
+                selectedIndex: null
             });
         }
-        const entry = this._inventory.mostRecent();
+        const entry = this._inventory.resolve(this._selectedEntryId);
+        const selectedIndex = entry
+            ? this._inventory.entries.findIndex((carried) => carried.id === entry.id) + 1
+            : null;
         return Object.freeze({
             canStore: false,
             canDeploy: entry !== null,
-            vehicleType: entry ? entry.type : VehicleType.NONE
+            vehicleType: entry ? entry.type : VehicleType.NONE,
+            carriedCount: this._inventory.size,
+            selectedIndex
         });
     }
 
@@ -435,6 +468,13 @@ export class AvatarVehicleInteractionController {
         // already survives releaseAll().
         this._storeKeyHeld = false;
         this._storeKeyConsumed = false;
+        // 0.9.671 — the same reasoning, for the two cycle-selection keys.
+        // `_selectedEntryId`/`_inventory` both survive, exactly like
+        // `mount`/`_inventory` already do above.
+        this._cyclePreviousKeyHeld = false;
+        this._cyclePreviousKeyConsumed = false;
+        this._cycleNextKeyHeld = false;
+        this._cycleNextKeyConsumed = false;
     }
 
     // Re-evaluates the mount/dismount rule from whatever is currently
@@ -465,6 +505,17 @@ export class AvatarVehicleInteractionController {
             this._tickDeploy(storeRequested);
         } else {
             this._tickStore(storeRequested);
+        }
+        // 0.9.671 — Avatar Inventory Cycle Selection. Independent of
+        // both blocks above, the same "different keys never interfere"
+        // reasoning already given for 'q' vs 'e'.
+        if (this._cyclePreviousKeyHeld && !this._cyclePreviousKeyConsumed) {
+            this._cycleSelection(-1);
+            this._cyclePreviousKeyConsumed = true;
+        }
+        if (this._cycleNextKeyHeld && !this._cycleNextKeyConsumed) {
+            this._cycleSelection(1);
+            this._cycleNextKeyConsumed = true;
         }
     }
 
@@ -629,6 +680,11 @@ export class AvatarVehicleInteractionController {
     // no-op: the key press is never consumed, and inventory stays
     // exactly as it was — never a thrown error, never a silently lost
     // entry.
+    // 0.9.671 UPDATE — reads `this._selectedEntryId` into the pure
+    // transition's own `selectedEntryId` parameter, and clears it once a
+    // deploy actually happens (the deployed entry no longer exists to be
+    // selected, so the next default is back to "most recent" — the same
+    // `AvatarInventory#resolve()` fallback used everywhere else).
     _tickDeploy(requested) {
         if (!this._vehicleRuntimeInstances) {
             return;
@@ -637,13 +693,15 @@ export class AvatarVehicleInteractionController {
         const transition = deriveAvatarVehicleDeployTransition({
             currentMount: this._mount,
             currentInventory: this._inventory,
-            deployIntent
+            deployIntent,
+            selectedEntryId: this._selectedEntryId
         });
         this._inventory = transition.inventory;
         if (transition.entry === null) {
             return;
         }
         this._storeKeyConsumed = true;
+        this._selectedEntryId = null;
         const avatarPosition = this._avatarPresenceSession.current.position;
         const instance = new VehicleInstance({
             id: createId(),
@@ -653,6 +711,27 @@ export class AvatarVehicleInteractionController {
         });
         this._vehicleRuntimeInstances.add(instance);
         this._mount = createAvatarVehicleMount(instance.id);
+    }
+
+    // 0.9.671 — Avatar Inventory Cycle Selection. Moves
+    // `this._selectedEntryId` one step through `this._inventory`'s own
+    // order — `direction: 1` for one step newer (the '[' key's mirror,
+    // ']'), `direction: -1` for one step older ('[') — reusing
+    // core/AvatarInventory.js's own `next()`/`previous()`, never a
+    // second index-arithmetic implementation here. A harmless no-op on
+    // an empty inventory (both return `null`, and `null` is already
+    // this controller's own "no selection" spelling); cycling with
+    // exactly one entry carried always lands back on that same entry,
+    // which is correct, not a bug — there is nothing else to select.
+    // NEVER TOUCHES `_mount` OR `_inventory` ITSELF — cycling only ever
+    // changes WHICH entry a future deploy would act on, never performs
+    // one; that stays `_tickDeploy()`'s own job, reading this value back
+    // out via `this._inventory.resolve(this._selectedEntryId)`.
+    _cycleSelection(direction) {
+        const entry = direction === 1
+            ? this._inventory.next(this._selectedEntryId)
+            : this._inventory.previous(this._selectedEntryId);
+        this._selectedEntryId = entry ? entry.id : null;
     }
 
     // The one vehicle this controller is currently mounted on, re-found
@@ -803,6 +882,23 @@ export class AvatarVehicleInteractionController {
                 this._storeKeyHeld = isDown;
                 if (!isDown) {
                     this._storeKeyConsumed = false;
+                }
+                return true;
+            // 0.9.671 — Avatar Inventory Cycle Selection. '[' steps to
+            // an older carried entry, ']' to a newer one — deliberately
+            // not the arrow keys (already vehicle steering while
+            // mounted) or the scroll wheel (already camera zoom — see
+            // docs/user/ControlsReference.md's own Camera table).
+            case '[':
+                this._cyclePreviousKeyHeld = isDown;
+                if (!isDown) {
+                    this._cyclePreviousKeyConsumed = false;
+                }
+                return true;
+            case ']':
+                this._cycleNextKeyHeld = isDown;
+                if (!isDown) {
+                    this._cycleNextKeyConsumed = false;
                 }
                 return true;
             default: return false;
