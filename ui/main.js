@@ -197,6 +197,7 @@ import {
     composeDecentralizedWorldEncounterMaterialDiscoveryRuntime
 } from '../application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
 import { composeDiscoverWorldEncounterPublicationCommand } from '../application/DiscoverWorldEncounterPublicationCommandComposition.js';
+import { composeWorldEncounterLeadAssociationsQuery } from '../application/WorldEncounterLeadAssociationsQueryComposition.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
@@ -2405,11 +2406,21 @@ app.provide('worldDiscoveryLeadRegistry', worldDiscoveryLeadRegistry);
 // itself already reads — its own `.list()` is called fresh on every
 // discovery call (never cached here), so association evidence always
 // reflects this replica's CURRENT local publications.
+const worldEncounterPublicationEvidenceProvider = new LocalDiscoveryProvider(new LocalStorageProvider());
 const discoverWorldEncounterPublicationCommand = composeDiscoverWorldEncounterPublicationCommand({
     runtime: decentralizedWorldEncounterMaterialDiscoveryRuntime,
-    discoveryProvider: new LocalDiscoveryProvider(new LocalStorageProvider())
+    discoveryProvider: worldEncounterPublicationEvidenceProvider
 });
 app.provide('discoverWorldEncounterPublicationCommand', discoverWorldEncounterPublicationCommand);
+// Lead-association evidence for WorldEncounterCanvas's "Location" /
+// "Choose Location" panel — the SAME runtime and publication source the
+// discovery command above resolves with, so the panel and discovery always
+// agree. See composeWorldEncounterLeadAssociationsQuery()'s own header.
+const worldEncounterLeadAssociationsQuery = composeWorldEncounterLeadAssociationsQuery({
+    runtime: decentralizedWorldEncounterMaterialDiscoveryRuntime,
+    discoveryProvider: worldEncounterPublicationEvidenceProvider
+});
+app.provide('worldEncounterLeadAssociationsQuery', worldEncounterLeadAssociationsQuery);
 
 // 0.9.357 — Wire Canonical Publication Discovery Tag into World View.
 // `PUBLICATION_DISCOVERY_TAG` is the SAME literal already supplied to

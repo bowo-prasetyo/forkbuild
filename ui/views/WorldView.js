@@ -744,6 +744,12 @@ export default {
         // verification algorithm of its own.
         const worldDiscoveryLeadRegistry = inject('worldDiscoveryLeadRegistry', null);
         const discoverWorldEncounterPublicationCommand = inject('discoverWorldEncounterPublicationCommand', null);
+        // Live lead-association evidence for WorldEncounterCanvas's
+        // "Location" / "Choose Location" panel — composed in ui/main.js
+        // from the same runtime and publications the discovery command
+        // above uses. `null` (no provider) keeps the panel hidden, exactly
+        // as before.
+        const worldEncounterLeadAssociationsQuery = inject('worldEncounterLeadAssociationsQuery', null);
         // 0.9.357 — the SAME canonical campaign tag ui/main.js already
         // supplies to Publication distribution's own Nostr publisher,
         // forwarded verbatim to WorldEncounterCanvas's own new
@@ -4668,6 +4674,7 @@ export default {
             publicationDistributionLifecycleStore,
             worldDiscoveryLeadRegistry,
             discoverWorldEncounterPublicationCommand,
+            worldEncounterLeadAssociationsQuery,
             publicationDiscoveryTag,
             nearbyLandmarkRows,
             nearbyPeopleRows,
@@ -5273,6 +5280,7 @@ export default {
                         :defaultContentDistributionProvider="defaultContentDistributionProvider"
                         :discoverSnapshotCommand="discoverOwnSnapshot"
                         :worldDiscoveryLeadRegistry="worldDiscoveryLeadRegistry"
+                        :leadAssociationsQuery="worldEncounterLeadAssociationsQuery"
                         :getPublicationCommentariesCommand="getPublicationCommentariesCommand"
                         :addPublicationCommentaryCommand="addPublicationCommentaryCommand"
                         :viewerIdentityId="myIdentityId"
