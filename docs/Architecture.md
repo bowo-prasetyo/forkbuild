@@ -230,6 +230,93 @@ World Encounters (ui/components/WorldEncounterCanvas.js, also mounted
 alone at `/live-world`) show decentralized publications met while
 walking; see "Publication presence across restarts".
 
+## Documents: save, autosave, publish and fork
+
+A Document moves through three kinds of storage, each with its own
+operation (docs/Principles.md, "Save is not Publish"):
+
+| Operation | Use case | Storage key | Nature |
+|-----------|----------|-------------|--------|
+| Save | SaveDocumentUseCase | `{documentId}`, plus a DocumentManifest revision | the editable copy; overwritten on every save |
+| Autosave | AutosaveDocumentUseCase, run by AutosaveScheduler | `recovery:{documentId}` (persistence/LocalRecoveryStore.js) | a recovery checkpoint only; never cleans the dirty flag or publishes |
+| Publish | PublishDocumentUseCase → PublisherProvider | `snapshot:{publicationId}`, and a Publication record in `forkbuild-publications` | an immutable snapshot |
+
+Every document that enters the domain goes through the same pipeline:
+parse → DocumentSchemaMigrator.migrate() (bring the envelope to
+DOCUMENT_SCHEMA_VERSION through registered, pure migrations) →
+DocumentValidator.validate() (pure structural check) →
+Document.fromJSON(). DocumentSerializer is canonical: serializing,
+deserializing and serializing again gives byte-identical JSON, and
+serializer/contentHash.js hashes that canonical string. Publishing runs
+serialize → migrate → validate → hash before it stores anything, and
+loading a snapshot checks the hash before deserializing
+(LoadPublishedWorldSessionUseCase), so a corrupt or tampered snapshot is
+refused. Recovery checkpoints go through the same pipeline;
+CheckRecoveryUseCase and DiscardRecoveryUseCase decide what to offer.
+CommandHistory is not persisted with the document: after a reload or a
+recovery, undo history starts empty.
+
+**Lifecycle status** (Draft, Saved, Published) is computed on demand by
+application/DocumentLifecycleStatus.js from facts that already exist
+(has it been saved, is a Publication known for it), never stored. A fork
+is not a status: it is an ordinary document whose metadata carries
+`parentDocumentId` (or `parentStructureId` for a Structure fork).
+UpdateDocumentMetadataUseCase edits title, description and license;
+LicenseLabels holds the labels every surface shows.
+
+**Publishing and unpublishing.** A Publication (publisher/Publication.js)
+is pure data describing a snapshot: ids, author, contentHash,
+schemaVersion, license, contentReference, publisher identity and
+signature. Publishing the same document again adds a new Publication
+for the same documentId. UnpublishDocumentUseCase removes the
+Publication and its snapshot and never touches the editable document.
+World View can publish too (WorldNavigationSession#publishDocument()),
+but refuses a document that is itself a published snapshot. Everything
+that leaves the device after publishing is a separate distribution step;
+see "Distribution: independent choices, one dialog".
+
+**Forking** never edits a Publication. ForkDocumentUseCase (behind the
+Editor's `/editor?fork=` route) and ForkPublishedWorldUseCase clone the
+source through DocumentCloneService: a new document id, fresh ids for
+every building and brick, the current user as author, and
+`parentDocumentId` pointing at the source. ForkDocumentUseCase checks the
+source's license first (core/License.js, `forkAllowed`) and refuses with
+ForkFailureReason.LICENSE_DENIED rather than relying on a hidden button;
+a permitted fork's license carries the original attribution. World View's
+fork-on-write asks the same license question. Forking never creates a
+WorldPlacement.
+
+In World View, a published snapshot that someone tries to change is
+forked lazily on the first real mutation (`_forkForEdit()`), never on
+navigation or selection, and the session switches its active document to
+the fork at once. Since 0.5.9 that only applies to World View's few
+remaining mutations (see "World View"); brick editing reaches a fork
+through "Edit a Copy" and the Editor.
+
+## Repository and Author views
+
+RepositoryView and AuthorView both mount ui/components/PublicationCatalog.js;
+AuthorView passes an author and adds the ForkTree lineage view. The
+catalog asks SearchPublicationsUseCase for one page at a time with a
+PublicationQuery (text, author, sort, page, pageSize,
+includeDescriptions) and gets back a PublicationPage (items, totals,
+hasNext/hasPrevious). The discovery provider it searches merges local
+publications with the application-wide decentralized discovery provider
+(application/CreateDiscoveryUseCase.js).
+
+- Sorting (core/PublicationSort.js) always falls back to an ordinal
+  publicationId tiebreak, so every replica orders the same way.
+- Searching descriptions is opt-in, because it loads each candidate's
+  document.
+- Grouping (core/PublicationGrouping.js) only regroups the current page.
+- Pagination is explicit (PublicationPagination.js); there is no
+  infinite scroll.
+- Previews are derived client state, never part of a Publication.
+  PublicationPreview asks application/PreviewService.js for a thumbnail
+  only while the card is visible; PreviewService queues, deduplicates,
+  caches and cancels renders done by renderer/DocumentThumbnailRenderer.js,
+  and a failed preview never fails the publication.
+
 ## Avatar movement constraint pipeline
 
 `application/AvatarMovementController.js` runs the simulated move through up to six optional constraints, in this
@@ -412,9 +499,7 @@ the middle column) and docs/Roadmap.md.
 
 | Area | docs/ArchitectureHistory.md | Also see |
 |------|-----------------------------|----------|
-| Documents: save, autosave, publish, fork, lifecycle | Durable Documents & Publishing Boundary (0.2.0) through Fork / Edit Published World (0.2.8); Publication Licensing & Fork Policy (0.2.13); 0.2.20–0.2.22 | docs/Publishing.md |
 | Placement and spatial discovery | World Placement & Spatial Discovery (0.2.5); 0.2.10–0.2.12; 0.2.15; 0.2.23–0.2.30 | docs/Principles.md, "Placement, world coordinates and overlap" |
-| Repository catalog and previews | 0.2.31–0.2.32 | |
 | Trust, signatures and replication | Decentralized Content Backend (0.2.14); 0.2.16–0.2.19 | |
 | Identity | 0.2.46–0.2.48, 0.2.67–0.2.68, 0.2.78, 0.2.82 | |
 | Peers, friends, chat and voice | 0.2.49–0.2.57, 0.2.69–0.2.75, 0.2.83 | docs/Protocol.md, "Wire Formats Not Yet Described Here" |
