@@ -717,6 +717,18 @@ import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutc
 // every lead resolution honestly reports `UNAVAILABLE`, exactly the
 // conservative starting point 0.9.28 itself already documents.
 //
+// `leadAssociationsQuery` IS THE SAME CALLER-OWNED EVIDENCE, READ LIVE.
+// A function prop returning the same `associations[]` shape. This
+// component still derives nothing itself — it only calls the caller's
+// function — but because `refreshDecentralizedLeadOutcome()` runs on a new
+// selection and on every lead registry change, a function (unlike a
+// snapshot array) always reflects the leads and Publications known right
+// now. When supplied it replaces `decentralizedLeadAssociations`. The
+// running app supplies one (ui/main.js composes it from the SAME runtime
+// and publication source `discoverWorldEncounterPublicationCommand`
+// uses, and ui/views/WorldView.js passes it through); a query that throws
+// degrades to no evidence, never a broken selection.
+//
 // `resolvedLead` MIRRORS `resolvedEncounterSelection` EXACTLY, ONE LAYER
 // OVER, FOR LEADS INSTEAD OF SOURCES. Automatic when
 // `decentralizedLeadOutcome.status` is already `'RESOLVED'`; the Wanderer's
@@ -2947,6 +2959,17 @@ export default {
             type: Array,
             default: () => []
         },
+        // Optional. `() => associations[]` — the caller's own evidence,
+        // like `decentralizedLeadAssociations`, but read fresh every time
+        // `refreshDecentralizedLeadOutcome()` runs (a new selection, or a
+        // lead registry change), so it can never go stale the way a
+        // snapshot array can. When supplied it takes precedence over
+        // `decentralizedLeadAssociations`. See this file's own header,
+        // "leadAssociationsQuery".
+        leadAssociationsQuery: {
+            type: Function,
+            default: null
+        },
         // 0.9.100 — optional. A `PublicationDistributionLifecycleMemoryStore`-
         // shaped object (duck-typed: `get(publicationId)`/`subscribe(publicationId,
         // listener)`), read for the CURRENT `selectedEncounter` only when its
@@ -4607,10 +4630,22 @@ export default {
             if (!this.selectedEncounter || !this.worldDiscoveryLeadRegistry) {
                 this.decentralizedLeadOutcome = null;
             } else {
+                // A failing query (e.g. unreadable local storage) means no
+                // evidence, never a broken selection — exactly the
+                // UNAVAILABLE outcome an empty array already produces.
+                let associations = this.decentralizedLeadAssociations;
+                if (this.leadAssociationsQuery) {
+                    try {
+                        associations = this.leadAssociationsQuery();
+                    } catch (error) {
+                        console.error('Lead association evidence could not be read:', error);
+                        associations = [];
+                    }
+                }
                 this.decentralizedLeadOutcome = describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry({
                     selectedEncounter: this.selectedEncounter,
                     registry: this.worldDiscoveryLeadRegistry,
-                    associations: this.decentralizedLeadAssociations
+                    associations
                 });
             }
         },

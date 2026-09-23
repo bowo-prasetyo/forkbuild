@@ -340,7 +340,11 @@ async function run() {
         const mainSourceForComposition = await readSource('ui/main.js');
         const compositionCallStart = mainSourceForComposition.indexOf('composeDiscoverWorldEncounterPublicationCommand({');
         const compositionCallBlock = mainSourceForComposition.slice(compositionCallStart, mainSourceForComposition.indexOf('});', compositionCallStart));
-        assert(compositionCallBlock.includes('discoveryProvider: new LocalDiscoveryProvider('),
+        // The provider is a named local-only instance, shared with
+        // worldEncounterLeadAssociationsQuery so the lead-selection panel
+        // reads exactly the evidence discovery resolves with.
+        assert(compositionCallBlock.includes('discoveryProvider: worldEncounterPublicationEvidenceProvider')
+            && mainSourceForComposition.includes('const worldEncounterPublicationEvidenceProvider = new LocalDiscoveryProvider(new LocalStorageProvider());'),
             '8b. ui/main.js composes discoverWorldEncounterPublicationCommand with a FRESH, local-only LocalDiscoveryProvider — never decentralizedPublicationDiscoveryProvider, the one Repository search actually reads.');
         assert(!compositionCallBlock.includes('decentralizedPublicationDiscoveryProvider'),
             '8c. confirmed by absence: this composition call never even references decentralizedPublicationDiscoveryProvider.');
@@ -425,7 +429,9 @@ async function run() {
         const mainSource = await readSource('ui/main.js');
         const compositionStart = mainSource.indexOf('composeDiscoverWorldEncounterPublicationCommand({');
         const compositionBlock = mainSource.slice(compositionStart, mainSource.indexOf('});', compositionStart));
-        assert(compositionBlock.includes('discoveryProvider: new LocalDiscoveryProvider(') && !compositionBlock.includes('decentralizedPublicationDiscoveryProvider'),
+        assert(compositionBlock.includes('discoveryProvider: worldEncounterPublicationEvidenceProvider')
+            && mainSource.includes('const worldEncounterPublicationEvidenceProvider = new LocalDiscoveryProvider(new LocalStorageProvider());')
+            && !compositionBlock.includes('decentralizedPublicationDiscoveryProvider'),
             '4. ui/main.js\'s one real composition of NostrDiscoveryQueryService for Publications feeds it a separate, local-only discoveryProvider, never decentralizedPublicationDiscoveryProvider — confirming (ii), discovery TRIGGERING into Repository\'s own composition root, is the genuinely missing seam, not (i) or (iii).');
     }
     console.log('✓ Section D: no production file assumes "Repository = network crawler." The missing seam, answered directly from live evidence rather than assumed: not discovery itself (Section C proved it works), not admission (0.9.339 already solved it) — it is discovery TRIGGERING for the Publication kind specifically, which nothing in production ever invokes.');
