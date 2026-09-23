@@ -1,19 +1,15 @@
-import { EventBus } from '../core/events/EventBus.js';
 import { PresenceVisibilityPolicy } from '../core/PresenceVisibilityPolicy.js';
 import { isValidPresenceVisibility } from '../core/PresenceVisibility.js';
 
-const POLICY_CHANGED_EVENT = 'PresenceVisibilityPolicyChanged';
 const STORAGE_KEY_PREFIX = 'presence-visibility:';
 
 // 0.2.40 — the persistence half of core/PresenceVisibilityPolicy.js,
 // one policy per identity, loaded/created/saved through an injected
 // StorageProvider — the EXACT same "stable per-owner configuration,
 // created once with a safe default, reused after" shape
-// application/AvatarProfileUseCase.js already established, and the
-// same subscription shape (EventBus / onPolicyChanged) as
-// IdentityUseCase.onUserChanged / AvatarProfileUseCase.onProfileChanged
-// so UI can react to a policy edit the same way it already reacts to
-// login or profile changes.
+// application/AvatarProfileUseCase.js already established. No change
+// event: every consumer (World View's broadcast providers) re-reads
+// getPolicy() fresh on each advertise, so nothing needs to subscribe.
 //
 // The default policy — PresenceVisibilityPolicy.default(), i.e. PUBLIC
 // with no authorized peers — reproduces EXACTLY 0.2.37/0.2.38's own
@@ -23,7 +19,6 @@ export class PresenceVisibilityUseCase {
     constructor(storageProvider, identityProvider) {
         this._storageProvider = storageProvider;
         this._identityProvider = identityProvider;
-        this._eventBus = new EventBus();
     }
 
     getPolicy() {
@@ -61,16 +56,7 @@ export class PresenceVisibilityUseCase {
         }
 
         this._storageProvider.save(STORAGE_KEY_PREFIX + owner, policy.toJSON());
-        this._eventBus.publish(POLICY_CHANGED_EVENT, { policy });
         return policy;
-    }
-
-    onPolicyChanged(callback) {
-        const subscription = this._eventBus.subscribe(
-            POLICY_CHANGED_EVENT,
-            ({ policy }) => callback(policy)
-        );
-        return () => subscription.unsubscribe();
     }
 
     _requireCurrentUsername() {

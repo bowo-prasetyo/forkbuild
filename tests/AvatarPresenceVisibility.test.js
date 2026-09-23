@@ -204,13 +204,9 @@ async function runTests() {
         const second = useCase.getPolicy();
         assert(second.visibility === first.visibility, '28. a second getPolicy() returns the SAME stored policy, not a re-rolled one');
 
-        let receivedEvent = null;
-        const unsubscribe = useCase.onPolicyChanged((policy) => { receivedEvent = policy; });
         const updated = useCase.updatePolicy({ visibility: PresenceVisibility.HIDDEN });
         assert(updated.visibility === PresenceVisibility.HIDDEN, '29. updatePolicy() returns the new policy');
         assert(useCase.getPolicy().visibility === PresenceVisibility.HIDDEN, '30. ...and persists it — a fresh getPolicy() sees it too');
-        assert(receivedEvent && receivedEvent.visibility === PresenceVisibility.HIDDEN, '31. onPolicyChanged() fires with the new policy');
-        unsubscribe();
 
         let threw = false;
         try { useCase.updatePolicy({ visibility: 'made-up' }); } catch { threw = true; }

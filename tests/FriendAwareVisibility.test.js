@@ -266,14 +266,10 @@ async function runTests() {
         assert(profileUseCase.getPolicy().visibility === PresenceVisibility.PUBLIC,
             '28. updating PRESENCE visibility never touches the separately-stored PROFILE policy');
 
-        let receivedEvent = null;
-        const unsubscribe = profileUseCase.onPolicyChanged((policy) => { receivedEvent = policy; });
         const updated = profileUseCase.updatePolicy({ visibility: PresenceVisibility.FRIENDS, authorizedPeerIdentities: ['did:key:erin'] });
         assert(updated.visibility === PresenceVisibility.FRIENDS, '29. updatePolicy() returns the new profile policy');
         assert(profileUseCase.getPolicy().authorizedPeerIdentities.includes('did:key:erin'), '30. ...and persists it — a fresh getPolicy() sees it too');
-        assert(receivedEvent && receivedEvent.visibility === PresenceVisibility.FRIENDS, '31. onPolicyChanged() fires with the new profile policy');
         assert(presenceUseCase.getPolicy().visibility === PresenceVisibility.HIDDEN, "32. ...and presence's own policy is still exactly what it was, unaffected by the profile update");
-        unsubscribe();
 
         let threw = false;
         try { profileUseCase.updatePolicy({ visibility: 'nonsense' }); } catch { threw = true; }
