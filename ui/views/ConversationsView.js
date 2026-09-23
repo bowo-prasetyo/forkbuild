@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, onBeforeUnmount, inject } from 'vue';
+import { ref, onMounted, onBeforeUnmount, inject } from 'vue';
 import { FriendshipState } from '../../core/FriendshipState.js';
 
 // 0.2.70 — Presence & Conversation Lifecycle.
@@ -13,20 +13,26 @@ import { FriendshipState } from '../../core/FriendshipState.js';
 // here answers a genuinely richer question than "what did we talk
 // about": is this identity known, are we friends, are they connected
 // RIGHT NOW, how many messages are unread, and how many are still
-// waiting in the outbox to be delivered.
+// waiting in the outbox to be delivered. (It reads
+// `peerPresenceUseCase.list()`, not `getConversations()` itself — the
+// former already covers every identity that method would return.)
 //
-// Deliberately reads `peerPresenceUseCase` only — never
+// Deliberately reads `peerPresenceUseCase` for every row fact — never
 // `connectedPeerRegistry`/`peerRelationshipUseCase`/
 // `friendRelationshipUseCase`/`chatOutbox`/`conversationStore` directly.
 // Every fact this view shows is already reconciled one layer down; this
-// component's only job is presentation and the "mark read on open"
-// gesture.
+// component's only job is presentation. The one exception is the chat
+// gate, answered by `chatUseCase.canChat()` (with `peerBlockUseCase`
+// only to explain a blocked row), so this list never disagrees with
+// ChatView about who can be chatted with. Marking a conversation read
+// happens in ui/views/ChatView.js, not here.
 export default {
     name: 'ConversationsView',
     setup() {
         const identityUseCase = inject('identityUseCase');
         const peerPresenceUseCase = inject('peerPresenceUseCase');
         const chatUseCase = inject('chatUseCase');
+        const peerBlockUseCase = inject('peerBlockUseCase');
 
         const isAuthenticated = ref(identityUseCase.isAuthenticated());
         const conversations = ref(isAuthenticated.value ? peerPresenceUseCase.list() : []);
@@ -51,25 +57,35 @@ export default {
             }
         }
 
+        // Only ever called for a non-null `lastActivityAt`, which
+        // PeerPresenceUseCase always reports as a Date.
         function formatWhen(date) {
-            return date instanceof Date ? date.toLocaleString() : 'No messages yet';
+            return date.toLocaleString();
         }
 
-        // Chat itself requires a mutual friendship — see
-        // application/ChatUseCase.js#canChat() — so this view never
-        // offers "Open Chat" for anyone this device isn't (yet) friends
-        // with, even if a conversation happens to exist from before an
-        // unfriend (history is never deleted — see
-        // application/ConversationStore.js's own header).
+        // Delegates to application/ChatUseCase.js#canChat() — a mutual
+        // friendship AND not blocked — so this view never offers
+        // "Open Chat" for anyone ChatView would refuse to send to: not
+        // for a non-friend (even if a conversation exists from before an
+        // unfriend; history is never deleted — see
+        // application/ConversationStore.js's own header), and not for a
+        // friend this device has blocked (blocking never ends the
+        // friendship — see application/PeerBlockUseCase.js).
         function canOpenChat(summary) {
-            return summary.friendshipState === FriendshipState.FRIEND;
+            return chatUseCase.canChat(summary.identityId);
         }
 
+        function isBlocked(summary) {
+            return peerBlockUseCase.isBlocked(summary.identityId);
+        }
+
+        // `conversations` above is already fresh at setup time, so
+        // mounting only subscribes — no second list() pass.
         let unsubscribePresence = null;
         let unsubscribeMessages = null;
+        let unsubscribeBlocks = null;
         let unsubscribeSession = null;
         onMounted(() => {
-            refresh();
             unsubscribePresence = peerPresenceUseCase.onChange((list) => refresh(list));
             // A new/updated message never fires PeerPresenceUseCase's own
             // onChange (see that class's own header) — subscribed here
@@ -78,6 +94,9 @@ export default {
             // "subscribe to more than one source, refresh on either"
             // pattern ui/views/PeerConnectionsView.js already uses.
             unsubscribeMessages = chatUseCase.onMessage(() => refresh());
+            // Blocking/unblocking changes canOpenChat() without touching
+            // any source PeerPresenceUseCase republishes on.
+            unsubscribeBlocks = peerBlockUseCase.onBlockedChanged(() => refresh());
             unsubscribeSession = identityUseCase.onSessionChanged(() => {
                 isAuthenticated.value = identityUseCase.isAuthenticated();
                 refresh();
@@ -86,12 +105,13 @@ export default {
         onBeforeUnmount(() => {
             if (unsubscribePresence) unsubscribePresence();
             if (unsubscribeMessages) unsubscribeMessages();
+            if (unsubscribeBlocks) unsubscribeBlocks();
             if (unsubscribeSession) unsubscribeSession();
         });
 
         return {
-            isAuthenticated, conversations, FriendshipState,
-            shortId, displayName, friendshipLabel, formatWhen, canOpenChat
+            isAuthenticated, conversations,
+            shortId, displayName, friendshipLabel, formatWhen, canOpenChat, isBlocked
         };
     },
     template: `
@@ -127,7 +147,7 @@ export default {
                                 {{ summary.conversation.pendingOutboxCount }} message{{ summary.conversation.pendingOutboxCount === 1 ? '' : 's' }} waiting to send
                             </span>
                             <span v-if="summary.conversation.messageCount === 0" class="form-hint form-hint--neutral">
-                                {{ summary.friendshipState === FriendshipState.FRIEND ? 'Conversation available — no messages yet' : 'No conversation yet' }}
+                                {{ canOpenChat(summary) ? 'Conversation available — no messages yet' : 'No conversation yet' }}
                             </span>
                         </p>
                         <p v-if="summary.conversation.lastActivityAt" class="form-hint form-hint--neutral">
@@ -138,6 +158,9 @@ export default {
                             <router-link v-if="canOpenChat(summary)" :to="'/chat/' + summary.identityId" class="action-btn action-btn--primary">
                                 Open Chat
                             </router-link>
+                            <span v-else-if="isBlocked(summary)" class="form-hint form-hint--neutral">
+                                ⛔ Blocked — unblock from <router-link to="/peers">Peers</router-link> to chat again.
+                            </span>
                             <span v-else class="form-hint form-hint--neutral">
                                 Chat requires a mutual friendship — see <router-link to="/peers">Peers</router-link>.
                             </span>

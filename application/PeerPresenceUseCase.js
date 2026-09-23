@@ -1,8 +1,7 @@
 import { EventBus } from '../core/events/EventBus.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
-import { FriendshipState } from '../core/FriendshipState.js';
 import { resolveDirectSocialIdentity } from './SocialIdentityResolver.js';
-import { findLiveConnectedPeers } from './ConnectedIdentityPeers.js';
+import { findLiveConnectedPeers, findLiveConnectedDevices } from './ConnectedIdentityPeers.js';
 
 const PRESENCE_CHANGED_EVENT = 'PeerPresenceChanged';
 
@@ -176,9 +175,11 @@ export class PeerPresenceUseCase {
         // `identityId`, never just the first one — see this class's own
         // header on why `isConnectedNow` is an aggregate, not a single
         // connection's own liveness.
-        const liveConnectedPeers = this._liveConnectedPeers(identityId);
+        // Each connection is resolved exactly once — the resolution
+        // that matched it is reused for its deviceIdentityId.
+        const liveConnectedDevices = findLiveConnectedDevices(this._registry, this._resolveSocialIdentity, identityId);
         const connectedDeviceIdentityIds = Array.from(new Set(
-            liveConnectedPeers.map((peer) => this._resolvePeerSocialIdentity(peer).deviceIdentityId)
+            liveConnectedDevices.map(({ resolved }) => resolved.deviceIdentityId)
         ));
         const entries = this._conversations.list(identityId);
         const lastReadSequence = this._readTracker.getLastReadSequence(identityId);
@@ -192,8 +193,8 @@ export class PeerPresenceUseCase {
             relationship,
             alias: relationship ? relationship.alias : null,
             friendshipState,
-            isConnectedNow: liveConnectedPeers.length > 0,
-            lifecycleState: liveConnectedPeers.length > 0 ? PeerLifecycleState.AUTHENTICATED : null,
+            isConnectedNow: liveConnectedDevices.length > 0,
+            lifecycleState: liveConnectedDevices.length > 0 ? PeerLifecycleState.AUTHENTICATED : null,
             // 0.2.85 — how many, and which, of identityId's authorized
             // devices this local device currently observes as reachable
             // — additive data the underlying model now carries so a
@@ -323,24 +324,7 @@ export class PeerPresenceUseCase {
         return findLiveConnectedPeers(this._registry, this._resolveSocialIdentity, identityId);
     }
 
-    // Resolves `connectedPeer`'s own SOCIAL identity via the injected
-    // `resolveSocialIdentity` collaborator — the exact same fallback
-    // shape `application/ChatUseCase.js#_resolvePeerSocialIdentity()`
-    // already established, mirrored here rather than imported so this
-    // class still never depends on ChatUseCase itself (see this file's
-    // own header on why presence takes no ChatUseCase dependency).
-    _resolvePeerSocialIdentity(connectedPeer) {
-        return this._resolveSocialIdentity(connectedPeer) || resolveDirectSocialIdentity(connectedPeer);
-    }
-
     _publishChange() {
         this._eventBus.publish(PRESENCE_CHANGED_EVENT, {});
     }
 }
-
-// Re-exported purely for a UI's convenience (the same "closed
-// vocabulary a template can reference directly" reason
-// ui/views/PeerConnectionsView.js already imports FriendshipState/
-// PeerLifecycleState itself) — this module never adds a value FriendshipState
-// doesn't already define.
-export { FriendshipState };
