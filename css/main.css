@@ -1634,6 +1634,12 @@ html, body {
     color: #b0e0ff;
 }
 
+/* 0.3.7 — matches .compass-indicator-marker--landmark, so a landmark's
+   HUD row and its compass dot read as one system. */
+.world-view-nav-marker.landmark .marker-direction {
+    color: #f687b3;
+}
+
 /* Original overlay style - keep for title/author info */
 /* The World View left panel — everything from the title down through
    Avatar/Search/Tools/Editing/Worlds-in-View lives inside this one
@@ -2238,7 +2244,7 @@ html, body {
 }
 
 /* 0.3.7 — World Landmarks & Personal Waypoints. Matches
-   .world-view-nav-marker.landmark's own color in ui/views/WorldView.js
+   .world-view-nav-marker.landmark .marker-direction's own color above
    so the dial and its legend read as one system, same as structure/
    collaborator above. */
 .compass-indicator-marker--landmark {

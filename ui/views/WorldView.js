@@ -355,10 +355,10 @@ export default {
         const namingPanelPublishToNostrRequestId = ref(0);
         const myIdentityId = computed(() => session.getMyIdentityId());
         // 0.5.1 — World Maps & Geographic Navigation. `mapContent` is
-        // session.getMapContent()'s own shape — refreshed on the SAME
-        // cadence as spatialContext/cameraPosition below (every
-        // refreshSpatialUI() tick, not just on open) so a collaborator's
-        // dot keeps moving while the map stays open, the same "always
+        // session.getMapContent()'s own shape — re-read on open, then on
+        // the SAME cadence as spatialContext/cameraPosition below (every
+        // refreshSpatialUI() tick while the map is open) so a
+        // collaborator's dot keeps moving while the map stays open, the same "always
         // current, never a second source of truth" posture spatialContext
         // itself already has. See ui/components/WorldMapPanel.js's own
         // header for why panning/zooming that view is deliberately NOT
@@ -2143,9 +2143,13 @@ export default {
             );
 
             // 0.5.1 — World Maps & Geographic Navigation. Re-read on the
-            // exact same cadence as spatialContext above — see
-            // `mapContent`'s own ref comment.
-            refreshMapContent();
+            // exact same cadence as spatialContext above while the map is
+            // open — see `mapContent`'s own ref comment. openMapPanel()
+            // re-reads it on open, so skipping it while closed never
+            // shows stale content.
+            if (showMapPanel.value) {
+                refreshMapContent();
+            }
 
             // 0.5.6 — Geographic Place Navigation & Arrival. Re-read on
             // the exact same cadence — see `nearbyGeographicPlaces`'s
@@ -4103,8 +4107,11 @@ export default {
                 session.hover(event.clientX, event.clientY);
                 refreshHoverUI();
             }
-            // Update compass heading during camera orbit (when dragging with no buttons pressed after initial drag)
-            if (isDragging && event.buttons === 0) {
+            // Keep the compass turning with the camera while an orbit drag
+            // is in progress (a button is held for the whole drag) —
+            // otherwise it only catches up on the next 3-second
+            // refreshSpatialUI() tick.
+            if (isDragging && event.buttons !== 0) {
                 compassHeading.value = session.getCompassHeading();
             }
         }
@@ -4116,6 +4123,9 @@ export default {
                     additive: event.shiftKey
                 });
                 refreshSpatialUI();
+            } else if (isDragging) {
+                // Settle on the final heading once the orbit ends.
+                compassHeading.value = session.getCompassHeading();
             }
             pointerStart = null;
             isDragging = false;
@@ -5886,49 +5896,3 @@ export default {
         </div>
     `
 };
-
-// 0.3.6 — World Discovery & Exploration. Styles for contextual location descriptions and markers.
-const style = document.createElement('style');
-style.textContent = `
-    .world-view-nav-context {
-        font-size: 0.75rem;
-        color: #a0aec0;
-        margin-top: 0.25rem;
-        padding-top: 0.25rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    
-    .world-view-nav-markers {
-        margin-top: 0.5rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-    }
-    
-    .world-view-nav-marker {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.7rem;
-        color: #f6e05e;
-    }
-    
-    .world-view-nav-marker.collaborator {
-        color: #81e6d9;
-    }
-
-    .world-view-nav-marker.landmark {
-        color: #f687b3;
-    }
-
-    .marker-direction {
-        font-weight: bold;
-        min-width: 1.5rem;
-        text-align: center;
-    }
-    
-    .marker-label {
-        opacity: 0.9;
-    }
-`;
-document.head.appendChild(style);
