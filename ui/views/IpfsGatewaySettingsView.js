@@ -43,9 +43,8 @@ export default {
         const clearStatus = ref('idle'); // 'idle' | 'cleared'
 
         const hasOverride = computed(() => configuration.value !== null);
-        const effectiveGatewayUrl = computed(() => (
-            configuration.value ? configuration.value.gatewayUrl : DEFAULT_IPFS_GATEWAY_URL
-        ));
+        // Shown only when no override is on file.
+        const deploymentDefaultGatewayUrl = DEFAULT_IPFS_GATEWAY_URL;
 
         function load() {
             if (!store) return;
@@ -92,7 +91,7 @@ export default {
         onMounted(load);
 
         return {
-            hasOverride, effectiveGatewayUrl, configuration, gatewayUrlInput,
+            hasOverride, deploymentDefaultGatewayUrl, configuration, gatewayUrlInput,
             saveError, saveStatus, clearStatus, save, useDeploymentDefault
         };
     },
@@ -114,7 +113,7 @@ export default {
                 Current override(s): {{ configuration.gatewayUrls.join(', ') }}
             </p>
             <p v-else class="form-hint form-hint--neutral">
-                No override configured. Currently using the deployment default: {{ effectiveGatewayUrl }}
+                No override configured. Currently using the deployment default: {{ deploymentDefaultGatewayUrl }}
             </p>
 
             <div class="ipfs-gateway-settings-form">

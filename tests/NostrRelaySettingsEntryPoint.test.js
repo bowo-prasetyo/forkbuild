@@ -184,7 +184,7 @@ async function run() {
         const store = new NostrRelayConfigurationStore(new InMemoryStorageProvider());
         assert(store.get() === null, '13. sanity — no override is on file');
         const effective = (store.get() || { relayUrl: DEFAULT_NOSTR_RELAY_URL }).relayUrl;
-        assert(effective === DEFAULT_NOSTR_RELAY_URL, '14. with no override, the effective relay resolves to the deployment default — exactly what the view\'s own effectiveRelayUrl computed property displays informationally');
+        assert(effective === DEFAULT_NOSTR_RELAY_URL, '14. with no override, the effective relay resolves to the deployment default — exactly what the view\'s own deploymentDefaultRelayUrl constant displays informationally');
     }
     console.log('✓ Section A: no-override state resolves to the deployment default, never a fabricated saved entry');
 
@@ -207,12 +207,12 @@ async function run() {
         const store = new NostrRelayConfigurationStore(new InMemoryStorageProvider());
         const setUseCase = new SetNostrRelayConfigurationUseCase({ nostrRelayConfigurationStore: store });
 
-        const savedWss = setUseCase.execute({ relayUrl: 'wss://my-relay.example' });
+        const savedWss = setUseCase.execute({ relayUrls: ['wss://my-relay.example'] });
         assert(savedWss instanceof NostrRelayConfiguration && savedWss.relayUrl === 'wss://my-relay.example',
             '16. execute() returns the persisted NostrRelayConfiguration for a wss: URL');
         assert(store.get().relayUrl === 'wss://my-relay.example', '17. saving a valid wss: relay through the settings entry point actually persists it');
 
-        const savedWs = setUseCase.execute({ relayUrl: 'ws://plain-relay.example' });
+        const savedWs = setUseCase.execute({ relayUrls: ['ws://plain-relay.example'] });
         assert(savedWs.relayUrl === 'ws://plain-relay.example', '18. a plain ws: URL is accepted too, mirroring isValidNostrRelayUrl()\'s own scheme family');
         assert(store.get().relayUrl === 'ws://plain-relay.example', '19. the ws: save persisted');
     }
@@ -225,9 +225,9 @@ async function run() {
         const store = new NostrRelayConfigurationStore(new InMemoryStorageProvider());
         const setUseCase = new SetNostrRelayConfigurationUseCase({ nostrRelayConfigurationStore: store });
 
-        expectThrows(() => setUseCase.execute({ relayUrl: 'not-a-url' }), '20. a malformed URL is refused');
-        expectThrows(() => setUseCase.execute({ relayUrl: 'https://relay.damus.io' }), '21. an http(s) URL is refused — the wrong scheme family for a Nostr relay');
-        expectThrows(() => setUseCase.execute({ relayUrl: '' }), '22. an empty string is refused');
+        expectThrows(() => setUseCase.execute({ relayUrls: ['not-a-url'] }), '20. a malformed URL is refused');
+        expectThrows(() => setUseCase.execute({ relayUrls: ['https://relay.damus.io'] }), '21. an http(s) URL is refused — the wrong scheme family for a Nostr relay');
+        expectThrows(() => setUseCase.execute({ relayUrls: [''] }), '22. an empty string is refused');
         expectThrows(() => setUseCase.execute({}), '23. a missing relayUrl is refused');
         assert(isValidNostrRelayUrl('not-a-url') === false, '24. sanity — the shared validation helper itself rejects the same malformed input');
     }
@@ -241,15 +241,15 @@ async function run() {
         const setUseCase = new SetNostrRelayConfigurationUseCase({ nostrRelayConfigurationStore: store });
 
         // Nothing on file yet — an invalid save leaves it that way.
-        expectThrows(() => setUseCase.execute({ relayUrl: 'not-a-url' }), '25. a malformed URL is refused with nothing on file');
+        expectThrows(() => setUseCase.execute({ relayUrls: ['not-a-url'] }), '25. a malformed URL is refused with nothing on file');
         assert(store.get() === null, '26. the rejected save left the store genuinely empty, never a partial or fallback write');
 
         // Something valid already on file — an invalid save leaves it
         // COMPLETELY untouched, never partially overwritten and never
         // cleared.
-        setUseCase.execute({ relayUrl: 'wss://original-relay.example' });
-        expectThrows(() => setUseCase.execute({ relayUrl: 'https://not-ws.example' }), '27. a non-ws(s) scheme is refused');
-        expectThrows(() => setUseCase.execute({ relayUrl: '' }), '28. an empty string is refused');
+        setUseCase.execute({ relayUrls: ['wss://original-relay.example'] });
+        expectThrows(() => setUseCase.execute({ relayUrls: ['https://not-ws.example'] }), '27. a non-ws(s) scheme is refused');
+        expectThrows(() => setUseCase.execute({ relayUrls: [''] }), '28. an empty string is refused');
         expectThrows(() => setUseCase.execute({}), '29. a missing relayUrl is refused');
         assert(store.get().relayUrl === 'wss://original-relay.example',
             '30. every rejected save left the PREVIOUSLY saved configuration completely untouched');
@@ -265,10 +265,10 @@ async function run() {
         const store = new NostrRelayConfigurationStore(backing);
         const setUseCase = new SetNostrRelayConfigurationUseCase({ nostrRelayConfigurationStore: store });
 
-        setUseCase.execute({ relayUrl: 'wss://relay-a.example' });
+        setUseCase.execute({ relayUrls: ['wss://relay-a.example'] });
         assert(store.get().relayUrl === 'wss://relay-a.example', '31. relay-A is on file');
 
-        setUseCase.execute({ relayUrl: 'wss://relay-b.example' });
+        setUseCase.execute({ relayUrls: ['wss://relay-b.example'] });
         assert(store.get().relayUrl === 'wss://relay-b.example', '32. relay-B replaces relay-A outright');
         assert(backing.list().filter((key) => key === 'nostr-relay-configuration').length === 1,
             '33. exactly one storage entry exists after replacement, never two');
@@ -284,11 +284,11 @@ async function run() {
         const store = new NostrRelayConfigurationStore(backing);
         const setUseCase = new SetNostrRelayConfigurationUseCase({ nostrRelayConfigurationStore: store });
 
-        setUseCase.execute({ relayUrl: 'wss://my-relay.example' });
+        setUseCase.execute({ relayUrls: ['wss://my-relay.example'] });
         assert(store.get() !== null, '34. a configuration is on file before clearing');
 
         // "Use Deployment Default" — the view calls store.clear() directly,
-        // never setUseCase.execute({ relayUrl: DEFAULT_NOSTR_RELAY_URL }).
+        // never setUseCase.execute({ relayUrls: [DEFAULT_NOSTR_RELAY_URL] }).
         store.clear();
         assert(store.get() === null, '35. clear() restores genuine absence — get() is a real null');
         assert(backing.load('nostr-relay-configuration') === null, '36. nothing at all remains on file — never a saved copy of the default URL');
@@ -307,7 +307,7 @@ async function run() {
 
         const storeBeforeRestart = new NostrRelayConfigurationStore(new SharedNamespaceStorageProvider(sharedNamespace));
         const setUseCaseBeforeRestart = new SetNostrRelayConfigurationUseCase({ nostrRelayConfigurationStore: storeBeforeRestart });
-        setUseCaseBeforeRestart.execute({ relayUrl: 'wss://my-relay.example' });
+        setUseCaseBeforeRestart.execute({ relayUrls: ['wss://my-relay.example'] });
 
         // restart boundary — genuinely new instances, sharing only the
         // underlying namespace.
@@ -318,7 +318,7 @@ async function run() {
 
         const setUseCaseAfterRestart = new SetNostrRelayConfigurationUseCase({ nostrRelayConfigurationStore: storeAfterRestart });
         assert(setUseCaseAfterRestart !== setUseCaseBeforeRestart, '40. sanity — this really is a newly constructed use case, not the same instance');
-        setUseCaseAfterRestart.execute({ relayUrl: 'wss://another-relay.example' });
+        setUseCaseAfterRestart.execute({ relayUrls: ['wss://another-relay.example'] });
         assert(storeBeforeRestart.get().relayUrl === 'wss://another-relay.example',
             '41. a write through the newly constructed use case is visible back through the ORIGINAL store instance too — the same underlying storage, never divergent in-memory state');
     }
@@ -333,7 +333,7 @@ async function run() {
     {
         const store = new NostrRelayConfigurationStore(new InMemoryStorageProvider());
         const setUseCase = new SetNostrRelayConfigurationUseCase({ nostrRelayConfigurationStore: store });
-        setUseCase.execute({ relayUrl: 'wss://my-settings-relay.example' });
+        setUseCase.execute({ relayUrls: ['wss://my-settings-relay.example'] });
 
         // "New application composition" — resolve the effective relay from
         // the store exactly as ui/main.js does, then build each real
@@ -405,7 +405,7 @@ async function run() {
     {
         const store = new NostrRelayConfigurationStore(new InMemoryStorageProvider());
         const setUseCase = new SetNostrRelayConfigurationUseCase({ nostrRelayConfigurationStore: store });
-        setUseCase.execute({ relayUrl: 'wss://my-read-only-relay.example' });
+        setUseCase.execute({ relayUrls: ['wss://my-read-only-relay.example'] });
 
         // Snapshot discovery PUBLISHING, composed exactly as ui/main.js
         // composes it: publishImpl + discoveryTag only, no relayUrl of any
@@ -444,7 +444,7 @@ async function run() {
 
         arweaveStore.save(new ArweaveGatewayConfiguration({ gatewayUrl: 'https://arweave-only.example' }));
         const setNostrUseCase = new SetNostrRelayConfigurationUseCase({ nostrRelayConfigurationStore: nostrStore });
-        setNostrUseCase.execute({ relayUrl: 'wss://nostr-only.example' });
+        setNostrUseCase.execute({ relayUrls: ['wss://nostr-only.example'] });
 
         assert(arweaveStore.get().gatewayUrl === 'https://arweave-only.example',
             '55. saving a Nostr relay through the new settings entry point leaves the co-resident Arweave gateway configuration completely untouched');
@@ -467,7 +467,7 @@ async function run() {
 
         // Display state.
         assert(/v-if="hasOverride"/.test(viewSource), '58. the template branches on whether an override is on file');
-        assert(/No override configured/.test(viewSource) && /effectiveRelayUrl/.test(viewSource),
+        assert(/No override configured/.test(viewSource) && /deploymentDefaultRelayUrl/.test(viewSource),
             '59. the no-override state displays the effective deployment default as informational text');
         assert(/Current override/.test(viewSource), '60. the override state displays the current, actually-saved relayUrl');
 
@@ -546,7 +546,7 @@ async function run() {
         // an existing instance to do that, and nothing here does.
         const store = new NostrRelayConfigurationStore(new InMemoryStorageProvider());
         const setUseCase = new SetNostrRelayConfigurationUseCase({ nostrRelayConfigurationStore: store });
-        setUseCase.execute({ relayUrl: 'wss://relay-before-second-save.example' });
+        setUseCase.execute({ relayUrls: ['wss://relay-before-second-save.example'] });
 
         const resolvedBeforeSecondSave = (store.get() || { relayUrl: DEFAULT_NOSTR_RELAY_URL }).relayUrl;
         const SocketClass = makeEmptyResultRelaySocketClass();
@@ -558,7 +558,7 @@ async function run() {
         assert(alreadyComposedService.relayUrl === 'wss://relay-before-second-save.example', '78. sanity — the already-composed instance holds the relay resolved at ITS OWN construction time');
 
         // A second Save happens AFTER that instance already exists.
-        setUseCase.execute({ relayUrl: 'wss://relay-after-second-save.example' });
+        setUseCase.execute({ relayUrls: ['wss://relay-after-second-save.example'] });
         assert(alreadyComposedService.relayUrl === 'wss://relay-before-second-save.example',
             '79. the already-composed instance\'s own relayUrl is completely unchanged by a later Save — no live re-composition reaches back into it');
 

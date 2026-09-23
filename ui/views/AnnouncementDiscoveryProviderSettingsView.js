@@ -43,15 +43,12 @@ export default {
         const preferenceStore = inject('roleProviderPreferenceStore', null);
         const setRoleProviderPreferenceUseCase = inject('setRoleProviderPreferenceUseCase', null);
 
-        const preference = ref(null);
         const selectedProviderKey = ref(null);
         const saveError = ref(null);
         const saveStatus = ref('idle'); // 'idle' | 'saved'
 
         const settings = computed(() => sortOptionsByLabel(describeRoleProviderPreferenceSettings({
-            role: RoleProviderRole.ANNOUNCEMENT_AND_DISCOVERY,
-            availableProviderKeys: AVAILABLE_PROVIDER_KEYS,
-            preference: preference.value
+            availableProviderKeys: AVAILABLE_PROVIDER_KEYS
         }).options));
 
         // Re-reads the store fresh on every load — the identical restraint
@@ -60,15 +57,15 @@ export default {
         // (or ui/main.js's own boot-time read) most recently persisted.
         function load() {
             if (!preferenceStore) return;
-            preference.value = preferenceStore.get(RoleProviderRole.ANNOUNCEMENT_AND_DISCOVERY);
-            selectedProviderKey.value = preference.value ? preference.value.providerKey : null;
+            const preference = preferenceStore.get(RoleProviderRole.ANNOUNCEMENT_AND_DISCOVERY);
+            selectedProviderKey.value = preference ? preference.providerKey : null;
         }
 
         function save() {
             if (!setRoleProviderPreferenceUseCase || !selectedProviderKey.value) return;
             saveError.value = null;
             try {
-                preference.value = setRoleProviderPreferenceUseCase.execute({
+                setRoleProviderPreferenceUseCase.execute({
                     role: RoleProviderRole.ANNOUNCEMENT_AND_DISCOVERY,
                     providerKey: selectedProviderKey.value
                 });

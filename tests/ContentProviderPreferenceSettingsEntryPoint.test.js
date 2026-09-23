@@ -4,7 +4,6 @@ import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceSt
 import { RoleAwareProviderResolver, RoleProviderResolutionStatus } from '../application/RoleAwareProviderResolver.js';
 import { ResolvePreferredRoleProviderUseCase } from '../application/ResolvePreferredRoleProviderUseCase.js';
 import { SetRoleProviderPreferenceUseCase } from '../application/SetRoleProviderPreferenceUseCase.js';
-import { describeRoleProviderPreferenceSettings } from '../application/RoleProviderPreferenceSettingsView.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
 import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
@@ -21,6 +20,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { readFile } from 'node:fs/promises';
+import { register } from 'node:module';
 
 // 0.9.302 — Content Provider Preference Settings Entry Point.
 //
@@ -35,8 +35,10 @@ import { readFile } from 'node:fs/promises';
 //   Section 0 — the settings entry point is actually reachable (nav link,
 //               route, composition-root wiring — never inferred from
 //               source alone; Section E below also proves it functionally).
-//   Section A — existing preference display: no preference, saved local,
-//               saved ipfs.
+//   Section A — existing preference display, through the REAL, mounted
+//               ContentProviderSettingsView (tests/support/
+//               MinimalVueCompositionApiShim.js): no preference, saved
+//               ipfs, saved ar, and a legacy saved local.
 //   Section B — save: selecting Local/IPFS actually persists CONTENT.
 //   Section C — replacement: Local -> IPFS and back replaces, never
 //               accumulates a second entry.
@@ -166,6 +168,23 @@ async function publishLocally(publicationResolver, publicationCatalog, identityP
 }
 
 async function run() {
+    register(new URL('./support/VueShimLoader.mjs', import.meta.url));
+    const { mountComponent } = await import('./support/MinimalVueCompositionApiShim.js');
+    const ContentProviderSettingsView = (await import('../ui/views/ContentProviderSettingsView.js')).default;
+
+    // Mounts the real settings view over `preferenceStore`, with a stand-in
+    // for the preferred-placement coordinator reporting the same shape
+    // ui/main.js's real one does: `local` registered but never preferable.
+    function mountSettingsView(preferenceStore) {
+        return mountComponent(ContentProviderSettingsView, {
+            roleProviderPreferenceStore: preferenceStore,
+            preferredSnapshotPlacementCreationCoordinator: {
+                availableStorageTypes: () => ['local', 'ipfs', 'ar'],
+                preferableStorageTypes: () => ['ipfs', 'ar']
+            }
+        });
+    }
+
     // ===============================================================
     // Section 0 — settings entry point reachability.
     // ===============================================================
@@ -209,41 +228,30 @@ async function run() {
         const store = new RoleProviderPreferenceStore(new InMemoryStorageProvider());
 
         // A1. Nothing saved yet -> no selected provider.
-        let settings = describeRoleProviderPreferenceSettings({
-            role: RoleProviderRole.CONTENT,
-            availableProviderKeys: ['local', 'ipfs'],
-            preference: store.get(RoleProviderRole.CONTENT)
-        });
-        assert(settings.selectedProviderKey === null, '11. no preference on file -> no provider is pre-selected');
-        assert(settings.options.every((o) => !o.selected), '12. no preference on file -> no option renders as selected');
+        let view = mountSettingsView(store);
+        assert(view.selectedProviderKey.value === null, '11. no preference on file -> no provider is pre-selected');
+        assert(view.settings.value.options.every((o) => Object.keys(o).sort().join() === 'label,providerKey'),
+            '12. each rendered option carries only its providerKey and label — selection lives in the view\'s own v-model, never on the option');
 
-        // A2. Saved local -> Local selected.
-        store.save(new RoleProviderPreference({ role: RoleProviderRole.CONTENT, providerKey: 'local' }));
-        settings = describeRoleProviderPreferenceSettings({
-            role: RoleProviderRole.CONTENT,
-            availableProviderKeys: ['local', 'ipfs'],
-            preference: store.get(RoleProviderRole.CONTENT)
-        });
-        assert(settings.selectedProviderKey === 'local', '13. a saved "local" preference is reflected as the selected provider');
-        assert(settings.options.find((o) => o.providerKey === 'local').selected === true,
-            '14. the Local option itself renders selected');
-        assert(settings.options.find((o) => o.providerKey === 'ipfs').selected === false,
-            '15. the IPFS option does not also render selected');
-
-        // A3. Saved ipfs -> IPFS selected.
+        // A2. Saved ipfs -> IPFS selected.
         store.save(new RoleProviderPreference({ role: RoleProviderRole.CONTENT, providerKey: 'ipfs' }));
-        settings = describeRoleProviderPreferenceSettings({
-            role: RoleProviderRole.CONTENT,
-            availableProviderKeys: ['local', 'ipfs'],
-            preference: store.get(RoleProviderRole.CONTENT)
-        });
-        assert(settings.selectedProviderKey === 'ipfs', '16. a saved "ipfs" preference is reflected as the selected provider');
-        assert(settings.options.find((o) => o.providerKey === 'ipfs').selected === true,
-            '17. the IPFS option itself renders selected');
-        assert(settings.options.find((o) => o.providerKey === 'local').selected === false,
-            '18. the Local option no longer renders selected');
+        view = mountSettingsView(store);
+        assert(view.selectedProviderKey.value === 'ipfs', '13. a saved "ipfs" preference is reflected as the selected provider');
+        assert(view.hasUnofferedPreference.value === false, '14. a saved, still-offered preference is never flagged as unoffered');
+
+        // A3. Saved ar -> Arweave selected.
+        store.save(new RoleProviderPreference({ role: RoleProviderRole.CONTENT, providerKey: 'ar' }));
+        view = mountSettingsView(store);
+        assert(view.selectedProviderKey.value === 'ar', '15. a saved "ar" preference is reflected as the selected provider');
+
+        // A4. A legacy saved local -> nothing selected, flagged for re-choice.
+        store.save(new RoleProviderPreference({ role: RoleProviderRole.CONTENT, providerKey: 'local' }));
+        view = mountSettingsView(store);
+        assert(view.selectedProviderKey.value === null, '16. a legacy saved "local" preference is shown as nothing selected');
+        assert(view.hasUnofferedPreference.value === true, '17. ... and flagged so the page asks for a new choice');
+        assert(!view.settings.value.options.some((o) => o.providerKey === 'local'), '18. Local is never offered as an option');
     }
-    console.log('✓ Section A: existing preference display (none/local/ipfs) is correct');
+    console.log('✓ Section A: existing preference display (none/ipfs/ar/legacy local) is correct');
 
     // ===============================================================
     // Section B — save.
@@ -307,12 +315,8 @@ async function run() {
         // ui/main.js would be) — never the same object reused.
         const storeAfterRestart = new RoleProviderPreferenceStore(underlyingStorage);
         assert(storeAfterRestart !== storeBeforeRestart, '27. this really is a newly constructed store, not the same instance');
-        const settingsAfterRestart = describeRoleProviderPreferenceSettings({
-            role: RoleProviderRole.CONTENT,
-            availableProviderKeys: ['local', 'ipfs'],
-            preference: storeAfterRestart.get(RoleProviderRole.CONTENT)
-        });
-        assert(settingsAfterRestart.selectedProviderKey === 'ipfs',
+        const viewAfterRestart = mountSettingsView(storeAfterRestart);
+        assert(viewAfterRestart.selectedProviderKey.value === 'ipfs',
             '28. a newly constructed store observes the preference an earlier instance persisted');
 
         const setUseCaseAfterRestart = new SetRoleProviderPreferenceUseCase({ preferenceStore: storeAfterRestart });

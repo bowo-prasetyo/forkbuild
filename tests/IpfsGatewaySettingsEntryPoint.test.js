@@ -117,7 +117,7 @@ async function run() {
         const store = new IpfsGatewayConfigurationStore(new InMemoryStorageProvider());
         const setUseCase = new SetIpfsGatewayConfigurationUseCase({ ipfsGatewayConfigurationStore: store });
 
-        const saved = setUseCase.execute({ gatewayUrl: 'https://gateway.pinata.cloud' });
+        const saved = setUseCase.execute({ gatewayUrls: ['https://gateway.pinata.cloud'] });
         assert(saved instanceof IpfsGatewayConfiguration && saved.gatewayUrl === 'https://gateway.pinata.cloud',
             '14. execute() returns the persisted IpfsGatewayConfiguration');
         assert(store.get().gatewayUrl === 'https://gateway.pinata.cloud',
@@ -133,12 +133,12 @@ async function run() {
         const store = new IpfsGatewayConfigurationStore(new InMemoryStorageProvider());
         const setUseCase = new SetIpfsGatewayConfigurationUseCase({ ipfsGatewayConfigurationStore: store });
 
-        expectThrows(() => setUseCase.execute({ gatewayUrl: 'not-a-url' }), '16. a malformed URL is refused');
+        expectThrows(() => setUseCase.execute({ gatewayUrls: ['not-a-url'] }), '16. a malformed URL is refused');
         assert(store.get() === null, '17. the rejected save left the store genuinely empty');
 
-        setUseCase.execute({ gatewayUrl: 'https://original-gateway.example' });
-        expectThrows(() => setUseCase.execute({ gatewayUrl: 'ftp://not-http.example' }), '18. a non-http(s) scheme is refused');
-        expectThrows(() => setUseCase.execute({ gatewayUrl: '' }), '19. an empty string is refused');
+        setUseCase.execute({ gatewayUrls: ['https://original-gateway.example'] });
+        expectThrows(() => setUseCase.execute({ gatewayUrls: ['ftp://not-http.example'] }), '18. a non-http(s) scheme is refused');
+        expectThrows(() => setUseCase.execute({ gatewayUrls: [''] }), '19. an empty string is refused');
         expectThrows(() => setUseCase.execute({}), '20. a missing gatewayUrl is refused');
         assert(store.get().gatewayUrl === 'https://original-gateway.example',
             '21. every rejected save left the PREVIOUSLY saved configuration completely untouched');
@@ -154,8 +154,8 @@ async function run() {
         const store = new IpfsGatewayConfigurationStore(backing);
         const setUseCase = new SetIpfsGatewayConfigurationUseCase({ ipfsGatewayConfigurationStore: store });
 
-        setUseCase.execute({ gatewayUrl: 'https://gateway-a.example' });
-        setUseCase.execute({ gatewayUrl: 'https://gateway-b.example' });
+        setUseCase.execute({ gatewayUrls: ['https://gateway-a.example'] });
+        setUseCase.execute({ gatewayUrls: ['https://gateway-b.example'] });
         assert(store.get().gatewayUrl === 'https://gateway-b.example', '22. gateway-B replaces gateway-A outright');
         assert(backing.list().filter((key) => key === 'ipfs-gateway-configuration').length === 1,
             '23. exactly one storage entry exists after replacement, never two');
@@ -171,7 +171,7 @@ async function run() {
         const store = new IpfsGatewayConfigurationStore(backing);
         const setUseCase = new SetIpfsGatewayConfigurationUseCase({ ipfsGatewayConfigurationStore: store });
 
-        setUseCase.execute({ gatewayUrl: 'https://gateway.pinata.cloud' });
+        setUseCase.execute({ gatewayUrls: ['https://gateway.pinata.cloud'] });
         store.clear();
         assert(store.get() === null, '24. clear() restores genuine absence — get() is a real null');
         assert(backing.load('ipfs-gateway-configuration') === null, '25. nothing at all remains on file — never a saved copy of the default URL');
@@ -190,7 +190,7 @@ async function run() {
         const store = new IpfsGatewayConfigurationStore(backing);
         const setUseCase = new SetIpfsGatewayConfigurationUseCase({ ipfsGatewayConfigurationStore: store });
 
-        const saved = setUseCase.execute({ gatewayUrl: DEFAULT_IPFS_GATEWAY_URL });
+        const saved = setUseCase.execute({ gatewayUrls: [DEFAULT_IPFS_GATEWAY_URL] });
         assert(saved.gatewayUrl === DEFAULT_IPFS_GATEWAY_URL, '27. saving the default URL by hand is accepted like any other valid URL');
         assert(backing.load('ipfs-gateway-configuration') !== null, '28. the underlying storage genuinely holds an entry, distinguishing this from Section D\'s cleared/absent state');
     }
@@ -203,7 +203,7 @@ async function run() {
     {
         const sharedNamespace = {};
         const storeBeforeRestart = new IpfsGatewayConfigurationStore(new SharedNamespaceStorageProvider(sharedNamespace));
-        new SetIpfsGatewayConfigurationUseCase({ ipfsGatewayConfigurationStore: storeBeforeRestart }).execute({ gatewayUrl: 'https://gateway.pinata.cloud' });
+        new SetIpfsGatewayConfigurationUseCase({ ipfsGatewayConfigurationStore: storeBeforeRestart }).execute({ gatewayUrls: ['https://gateway.pinata.cloud'] });
 
         const storeAfterRestart = new IpfsGatewayConfigurationStore(new SharedNamespaceStorageProvider(sharedNamespace));
         assert(storeAfterRestart !== storeBeforeRestart, '29. sanity — this really is a newly constructed store');
@@ -221,7 +221,7 @@ async function run() {
     // ===============================================================
     {
         const store = new IpfsGatewayConfigurationStore(new InMemoryStorageProvider());
-        new SetIpfsGatewayConfigurationUseCase({ ipfsGatewayConfigurationStore: store }).execute({ gatewayUrl: 'https://gateway.pinata.cloud' });
+        new SetIpfsGatewayConfigurationUseCase({ ipfsGatewayConfigurationStore: store }).execute({ gatewayUrls: ['https://gateway.pinata.cloud'] });
 
         // "New application composition" — resolve exactly as ui/main.js does.
         const resolvedGatewayUrl = (store.get() || { gatewayUrl: DEFAULT_IPFS_GATEWAY_URL }).gatewayUrl;
@@ -289,7 +289,7 @@ async function run() {
         const viewSource = await source('ui/views/IpfsGatewaySettingsView.js');
 
         assert(/v-if="hasOverride"/.test(viewSource), '39. the template branches on whether an override is on file');
-        assert(/No override configured/.test(viewSource) && /effectiveGatewayUrl/.test(viewSource),
+        assert(/No override configured/.test(viewSource) && /deploymentDefaultGatewayUrl/.test(viewSource),
             '40. the no-override state displays the effective deployment default as informational text');
         assert(/Current override/.test(viewSource), '41. the override state displays the current, actually-saved gatewayUrl');
 

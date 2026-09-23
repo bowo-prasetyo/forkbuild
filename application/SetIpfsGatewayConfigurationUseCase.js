@@ -3,13 +3,13 @@ import { IpfsGatewayConfigurationStore } from '../storage/IpfsGatewayConfigurati
 
 // 0.9.665 — IPFS Gateway Settings Write Use Case. Mirrors application/
 // SetArweaveGatewayConfigurationUseCase.js exactly: a settings view hands
-// this a plain { gatewayUrl }, never a constructed value object; this
+// this a plain { gatewayUrls }, never a constructed value object; this
 // class alone builds and validates the IpfsGatewayConfiguration and
 // persists it. An invalid URL throws before save() is ever called, so a
 // rejected input leaves whatever was previously on file untouched.
 //
-// 0.9.666 — also accepts `gatewayUrls` (an ordered array), exactly one of
-// the two, never both — forwarded verbatim to core/
+// 0.9.666 — `gatewayUrls` is an ordered array (a single gateway is simply a
+// one-element list), forwarded verbatim to core/
 // IpfsGatewayConfiguration.js's own constructor, which alone validates it.
 export class SetIpfsGatewayConfigurationUseCase {
     constructor({ ipfsGatewayConfigurationStore } = {}) {
@@ -19,8 +19,8 @@ export class SetIpfsGatewayConfigurationUseCase {
         this._store = ipfsGatewayConfigurationStore;
     }
 
-    execute({ gatewayUrl, gatewayUrls } = {}) {
-        const configuration = new IpfsGatewayConfiguration({ gatewayUrl, gatewayUrls });
+    execute({ gatewayUrls } = {}) {
+        const configuration = new IpfsGatewayConfiguration({ gatewayUrls });
         this._store.save(configuration);
         return configuration;
     }

@@ -40,7 +40,7 @@ import { DEFAULT_ARWEAVE_GATEWAY_URL } from '../../core/ArweaveGatewayConfigurat
 // content/ArweaveContentStore.js OR application/
 // ArweaveWorldEncounterMaterialResolver.js. `DEFAULT_ARWEAVE_GATEWAY_URL`
 // is the one thing imported from core/ArweaveGatewayConfiguration.js — a
-// plain constant, consulted only to LABEL the effective gateway when no
+// plain constant, consulted only to LABEL the deployment default when no
 // override is on file, never to construct anything. A change saved here
 // only reaches those adapters through the existing composition root
 // (ui/main.js resolves `arweaveGatewayConfigurationStore.get()` once at
@@ -51,7 +51,7 @@ import { DEFAULT_ARWEAVE_GATEWAY_URL } from '../../core/ArweaveGatewayConfigurat
 // OPENING THIS PAGE NEVER WRITES ANYTHING. `load()` only ever reads
 // `store.get()`; when it returns `null`, the input stays empty and the
 // deployment default is shown purely as informational text
-// (`effectiveGatewayUrl`) — merely visiting this page can never turn "no
+// (`deploymentDefaultGatewayUrl`) — merely visiting this page can never turn "no
 // override" into a persisted, explicit default. That is 0.9.364's own
 // "absence stays meaningful" rule, held here at the one place that could
 // otherwise quietly violate it.
@@ -98,13 +98,10 @@ export default {
         const clearStatus = ref('idle'); // 'idle' | 'cleared'
 
         const hasOverride = computed(() => configuration.value !== null);
-        // The gateway actually in effect right now when no override is on
-        // file — the deployment default, shown as informational text.
-        // Never a merge with anything, mirroring ui/main.js's own
-        // `resolvedArweaveGatewayUrl` resolution exactly.
-        const effectiveGatewayUrl = computed(() => (
-            configuration.value ? configuration.value.gatewayUrl : DEFAULT_ARWEAVE_GATEWAY_URL
-        ));
+        // Shown only when no override is on file, as informational text —
+        // so the gateway in effect is always exactly the deployment
+        // default, never a merge with anything.
+        const deploymentDefaultGatewayUrl = DEFAULT_ARWEAVE_GATEWAY_URL;
 
         // Re-reads the store fresh on every load — so a newly mounted
         // instance of this view always observes whatever a prior instance
@@ -158,7 +155,7 @@ export default {
         onMounted(load);
 
         return {
-            hasOverride, effectiveGatewayUrl, configuration, gatewayUrlInput,
+            hasOverride, deploymentDefaultGatewayUrl, configuration, gatewayUrlInput,
             saveError, saveStatus, clearStatus, save, useDeploymentDefault
         };
     },
@@ -173,7 +170,7 @@ export default {
                 Current override(s): {{ configuration.gatewayUrls.join(', ') }}
             </p>
             <p v-else class="form-hint form-hint--neutral">
-                No override configured. Currently using the deployment default: {{ effectiveGatewayUrl }}
+                No override configured. Currently using the deployment default: {{ deploymentDefaultGatewayUrl }}
             </p>
 
             <div class="arweave-gateway-settings-form">

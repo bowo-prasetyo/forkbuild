@@ -261,7 +261,7 @@ async function run() {
         const viewSource = await source('ui/views/BitcoinEsploraSettingsView.js');
 
         assert(/v-if="hasOverride"/.test(viewSource), '36. the template branches on whether an override is on file');
-        assert(/No override configured/.test(viewSource) && /effectiveApiUrl/.test(viewSource),
+        assert(/No override configured/.test(viewSource) && /deploymentDefaultApiUrl/.test(viewSource),
             '37. the no-override state displays the effective deployment default as informational text');
         assert(/Current override/.test(viewSource), '38. the override state displays the current, actually-saved apiUrl');
 

@@ -44,9 +44,8 @@ export default {
         const clearStatus = ref('idle'); // 'idle' | 'cleared'
 
         const hasOverride = computed(() => configuration.value !== null);
-        const effectiveApiUrl = computed(() => (
-            configuration.value ? configuration.value.apiUrl : DEFAULT_BITCOIN_ESPLORA_API_URL
-        ));
+        // Shown only when no override is on file.
+        const deploymentDefaultApiUrl = DEFAULT_BITCOIN_ESPLORA_API_URL;
 
         function load() {
             if (!store) return;
@@ -81,7 +80,7 @@ export default {
         onMounted(load);
 
         return {
-            hasOverride, effectiveApiUrl, configuration, apiUrlInput,
+            hasOverride, deploymentDefaultApiUrl, configuration, apiUrlInput,
             saveError, saveStatus, clearStatus, save, useDeploymentDefault
         };
     },
@@ -96,7 +95,7 @@ export default {
                 Current override: {{ configuration.apiUrl }}
             </p>
             <p v-else class="form-hint form-hint--neutral">
-                No override configured. Currently using the deployment default: {{ effectiveApiUrl }}
+                No override configured. Currently using the deployment default: {{ deploymentDefaultApiUrl }}
             </p>
 
             <div class="bitcoin-esplora-settings-form">

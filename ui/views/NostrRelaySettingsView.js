@@ -44,7 +44,7 @@ import { DEFAULT_NOSTR_RELAY_URL } from '../../core/NostrRelayConfiguration.js';
 // NostrPlaceNamingDiscoverySource.js, nostr/NostrRelayQueryClient.js, or any
 // of the three Nostr WRITE-path publishers. `DEFAULT_NOSTR_RELAY_URL` is the
 // one thing imported from core/NostrRelayConfiguration.js — a plain
-// constant, consulted only to LABEL the effective relay when no override is
+// constant, consulted only to LABEL the deployment default when no override is
 // on file, never to construct anything or open a connection. A change saved
 // here only reaches its consumers — every Nostr read and publish path (see
 // "UNIFIED" below) — through the existing composition root (ui/main.js resolves `nostrRelayConfigurationStore.get()`
@@ -76,7 +76,7 @@ import { DEFAULT_NOSTR_RELAY_URL } from '../../core/NostrRelayConfiguration.js';
 // OPENING THIS PAGE NEVER WRITES ANYTHING. `load()` only ever reads
 // `store.get()`; when it returns `null`, the input stays empty and the
 // deployment default is shown purely as informational text
-// (`effectiveRelayUrl`) — merely visiting this page can never turn "no
+// (`deploymentDefaultRelayUrl`) — merely visiting this page can never turn "no
 // override" into a persisted, explicit default. That is 0.9.369's own
 // "absence stays meaningful" rule, held here at the one place that could
 // otherwise quietly violate it.
@@ -124,13 +124,11 @@ export default {
         const clearStatus = ref('idle'); // 'idle' | 'cleared'
 
         const hasOverride = computed(() => configuration.value !== null);
-        // The relay actually in effect right now when no override is on
-        // file — the deployment default, shown as informational text.
-        // Never a merge with anything, mirroring ui/main.js's own
-        // `resolvedNostrRelayUrls` resolution exactly.
-        const effectiveRelayUrl = computed(() => (
-            configuration.value ? configuration.value.relayUrl : DEFAULT_NOSTR_RELAY_URL
-        ));
+        // Shown only when no override is on file, as informational text —
+        // so the relay in effect is always exactly the deployment default,
+        // never a merge with anything, mirroring ui/main.js's own
+        // `resolvedNostrRelayUrls` fallback.
+        const deploymentDefaultRelayUrl = DEFAULT_NOSTR_RELAY_URL;
 
         // Re-reads the store fresh on every load — so a newly mounted
         // instance of this view always observes whatever a prior instance
@@ -184,7 +182,7 @@ export default {
         onMounted(load);
 
         return {
-            hasOverride, effectiveRelayUrl, configuration, relayUrlInput,
+            hasOverride, deploymentDefaultRelayUrl, configuration, relayUrlInput,
             saveError, saveStatus, clearStatus, save, useDeploymentDefault
         };
     },
@@ -199,7 +197,7 @@ export default {
                 Current override(s): {{ configuration.relayUrls.join(', ') }}
             </p>
             <p v-else class="form-hint form-hint--neutral">
-                No override configured. Currently using the deployment default: {{ effectiveRelayUrl }}
+                No override configured. Currently using the deployment default: {{ deploymentDefaultRelayUrl }}
             </p>
 
             <div class="nostr-relay-settings-form">

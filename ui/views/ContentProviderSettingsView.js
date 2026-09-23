@@ -134,9 +134,7 @@ export default {
 
         const settings = computed(() => {
             const described = describeRoleProviderPreferenceSettings({
-                role: RoleProviderRole.CONTENT,
-                availableProviderKeys: availableProviderKeys.value,
-                preference: hasUnofferedPreference.value ? null : preference.value
+                availableProviderKeys: availableProviderKeys.value
             });
             return { ...described, options: sortOptionsByLabel(described.options) };
         });
