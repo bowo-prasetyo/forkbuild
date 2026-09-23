@@ -1,6 +1,7 @@
 import { ref, computed, inject, onMounted } from 'vue';
 import { RoleProviderRole } from '../../core/RoleProviderRole.js';
 import { describeRoleProviderPreferenceSettings } from '../../application/RoleProviderPreferenceSettingsView.js';
+import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 
 // Mirrors ui/views/ContentProviderSettingsView.js's own shape, one role
 // over — the same small, dedicated settings page, the same
@@ -44,11 +45,11 @@ export default {
         const saveError = ref(null);
         const saveStatus = ref('idle'); // 'idle' | 'saving' | 'saved'
 
-        const settings = computed(() => describeRoleProviderPreferenceSettings({
+        const settings = computed(() => sortOptionsByLabel(describeRoleProviderPreferenceSettings({
             role: RoleProviderRole.ANNOUNCEMENT_AND_DISCOVERY,
             availableProviderKeys: AVAILABLE_PROVIDER_KEYS,
             preference: preference.value
-        }).options.map((option) => ({ ...option, label: PROVIDER_OPTION_LABELS[option.providerKey] || option.label })));
+        }).options.map((option) => ({ ...option, label: PROVIDER_OPTION_LABELS[option.providerKey] || option.label }))));
 
         // Re-reads the store fresh on every load — the identical restraint
         // ContentProviderSettingsView.js's own `load()` already holds, so a

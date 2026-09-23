@@ -347,8 +347,8 @@ export default {
                                                 class="form-select publication-table-commentary-provider-select"
                                                 :disabled="rowCommentaryState(pub).submitting"
                                             >
-                                                <option value="nostr">Nostr</option>
                                                 <option value="arweave">Arweave</option>
+                                                <option value="nostr">Nostr</option>
                                             </select>
                                         </label>
                                         <button

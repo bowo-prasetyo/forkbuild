@@ -171,6 +171,7 @@ import { describeBaseTransactionBroadcast } from '../../application/BaseTransact
 import { BaseTransactionInclusionObservationState } from '../../application/BaseTransactionInclusionObservationState.js';
 import { describeBaseTransactionInclusionObservation, describeBaseTransactionInclusionObservationHistory } from '../../application/BaseTransactionInclusionObservationView.js';
 import { appendBaseTransactionInclusionObservationHistoryEntry } from '../../application/BaseTransactionInclusionObservationHistory.js';
+import { sortOptionsByLabel, sortLabels } from '../../utils/sortOptionsByLabel.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -1199,6 +1200,9 @@ export default {
         const snapshotDistributionStorageTypes = snapshotDistributionAvailableStorageTypesCommand
             ? snapshotDistributionAvailableStorageTypesCommand()
             : [];
+        // Display order only — the list above keeps registry order, since
+        // its first entry is the fallback default below.
+        const snapshotDistributionStorageOptions = sortOptionsByLabel(snapshotDistributionStorageTypes, humanizeStorageType);
         const publicationDistributionLifecycleStore = inject('publicationDistributionLifecycleStore', null);
         // 0.8.70 — IPFS Publication & Content Verification UI. Optional —
         // absent here (e.g. a test harness that never provides it), the
@@ -2452,7 +2456,7 @@ export default {
                 const identity = record.toBlockchainPublicationIdentity();
                 return { key: `${identity.blockchain}:${identity.chainReference}`, identity, label: `Base — ${shortId(identity.chainReference)} — content ${shortId(identity.contentHash)}` };
             });
-            return Object.freeze([...bitcoinOptions, ...baseOptions]);
+            return Object.freeze(sortOptionsByLabel([...bitcoinOptions, ...baseOptions]));
         }
 
         function findKnownPublicationIdentity(key) {
@@ -2671,7 +2675,7 @@ export default {
         // existing publisher below, never a second identity a caller could
         // construct from this string alone.
         function distinctPublisherIdentifiersView() {
-            return reconstructDistinctPublisherIdentifiers(publicationObservationArchive.value);
+            return sortLabels(reconstructDistinctPublisherIdentifiers(publicationObservationArchive.value));
         }
 
         // Stateless — application/CreatePublisherPublicationAssociationRecordUseCase.js
@@ -2731,6 +2735,14 @@ export default {
         // single `retrievalPeer`.
         const retrievalPeers = computed(() => peerSessionManager.listPeers()
             .filter((peer) => peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED));
+
+        // The "Choose an authenticated peer…" dropdowns list the same peers
+        // alphabetically — display order only; `retrievalPeers` itself keeps
+        // registry order for resolution. See utils/sortOptionsByLabel.js.
+        function retrievalPeerLabel(peer) {
+            return peer.alias || (peer.remoteIdentity ? shortId(peer.remoteIdentity.identityId) : 'Unknown peer');
+        }
+        const retrievalPeerOptions = computed(() => sortOptionsByLabel(retrievalPeers.value, retrievalPeerLabel));
 
         function findEntry(publicationId) {
             return entries.find((entry) => entry.publication.id === publicationId);
@@ -7287,7 +7299,7 @@ export default {
         });
 
         return {
-            entries, loading, retrievalPeers, availableAnchorTypes,
+            entries, loading, retrievalPeers, retrievalPeerOptions, retrievalPeerLabel, availableAnchorTypes,
             humanizeContentKind, humanizeStorageType, humanizeAnchorType, shortId, shortHash, formatWhen, badgeClass, statusLabel, availabilityText,
             canRetrieve, retrieve, recheck,
             describeKnownEvidenceCount, toggleEvidence, verifyAnchor, evidenceBadgeClass, lifecycleNote,
@@ -7303,7 +7315,7 @@ export default {
             togglePlacementInspect, placementInspectionExpanded, placementInspectionDetail, placementInspectionTypeSpecific,
             placementInspectionKnowledge,
             availableStorageTypes, createPlacement, placementCreationView, placementCreationBadgeClass, placementCreationButtonLabel,
-            snapshotDistributionStorageTypes,
+            snapshotDistributionStorageTypes, snapshotDistributionStorageOptions,
             preferredPlacementCreationCoordinator, createPreferredPlacement, preferredPlacementCreationView,
             preferredPlacementCreationBadgeClass, preferredPlacementCreationButtonLabel,
             ipfsRemotePublicationCoordinator, publicationContentStore,
@@ -9419,8 +9431,8 @@ export default {
                                         Substrate
                                         <select v-model="entry.discoveryDistributionProvider" class="form-select"
                                                 :disabled="entry.discoveryDistributionAttempt && entry.discoveryDistributionAttempt.distributing">
-                                            <option value="nostr">Nostr</option>
                                             <option value="arweave">Arweave</option>
+                                            <option value="nostr">Nostr</option>
                                         </select>
                                     </label>
                                     <div class="identity-mgmt-actions">
@@ -9503,7 +9515,7 @@ export default {
                                         Content
                                         <select v-model="entry.snapshotDistributionStorage" class="form-select"
                                                 :disabled="entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.distributing">
-                                            <option v-for="storage in snapshotDistributionStorageTypes" :key="storage" :value="storage">{{ humanizeStorageType(storage) }}</option>
+                                            <option v-for="storage in snapshotDistributionStorageOptions" :key="storage" :value="storage">{{ humanizeStorageType(storage) }}</option>
                                         </select>
                                     </label>
                                     <div class="identity-mgmt-actions">
@@ -9991,8 +10003,8 @@ export default {
                                     <span class="form-label">Peer</span>
                                     <select v-model="entry.peerMaterializationSelectedPeerId" class="form-input">
                                         <option value="" disabled>Choose an authenticated peer…</option>
-                                        <option v-for="peer in retrievalPeers" :key="peer.connectionId" :value="peer.connectionId">
-                                            {{ peer.alias || (peer.remoteIdentity ? shortId(peer.remoteIdentity.identityId) : 'Unknown peer') }}
+                                        <option v-for="peer in retrievalPeerOptions" :key="peer.connectionId" :value="peer.connectionId">
+                                            {{ retrievalPeerLabel(peer) }}
                                         </option>
                                     </select>
                                 </label>
@@ -10041,8 +10053,8 @@ export default {
                                     <span class="form-label">Peer</span>
                                     <select v-model="entry.peerPossessionSelectedPeerId" class="form-input">
                                         <option value="" disabled>Choose an authenticated peer…</option>
-                                        <option v-for="peer in retrievalPeers" :key="peer.connectionId" :value="peer.connectionId">
-                                            {{ peer.alias || (peer.remoteIdentity ? shortId(peer.remoteIdentity.identityId) : 'Unknown peer') }}
+                                        <option v-for="peer in retrievalPeerOptions" :key="peer.connectionId" :value="peer.connectionId">
+                                            {{ retrievalPeerLabel(peer) }}
                                         </option>
                                     </select>
                                 </label>

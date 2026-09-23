@@ -2,6 +2,7 @@ import { ref, computed, inject, onMounted } from 'vue';
 import { RoleProviderRole } from '../../core/RoleProviderRole.js';
 import { describeRoleProviderPreferenceSettings } from '../../application/RoleProviderPreferenceSettingsView.js';
 import { DEFAULT_IPFS_NODE_API_URL } from '../../core/IpfsNodeConfiguration.js';
+import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 
 // 0.9.302 — Content Provider Preference Settings Entry Point.
 //
@@ -131,11 +132,14 @@ export default {
                 && !preferredPlacementCreationCoordinator.preferableStorageTypes().includes(key);
         });
 
-        const settings = computed(() => describeRoleProviderPreferenceSettings({
-            role: RoleProviderRole.CONTENT,
-            availableProviderKeys: availableProviderKeys.value,
-            preference: hasUnofferedPreference.value ? null : preference.value
-        }));
+        const settings = computed(() => {
+            const described = describeRoleProviderPreferenceSettings({
+                role: RoleProviderRole.CONTENT,
+                availableProviderKeys: availableProviderKeys.value,
+                preference: hasUnofferedPreference.value ? null : preference.value
+            });
+            return { ...described, options: sortOptionsByLabel(described.options) };
+        });
 
         // Re-reads the store fresh on every load — this is what makes a
         // newly constructed instance of this view (a fresh page load, a
