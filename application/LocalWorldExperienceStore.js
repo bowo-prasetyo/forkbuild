@@ -10,6 +10,8 @@
 //   - Stores LocalWorldExperience records keyed by worldId
 //   - Provides "recently visited" listing sorted by lastVisitedAt
 //   - Does NOT store avatar position (that would be World state)
+//   - A damaged entry reads as "never visited" instead of throwing —
+//     see getExperience()
 //
 // See docs/Principles.md, "Personal Experience Is Not Shared World
 // State (0.3.10)."
@@ -26,17 +28,29 @@ export class LocalWorldExperienceStore {
         this._storage = storageProvider;
     }
 
-    // Get the experience record for a specific world, or null if none exists
+    // Get the experience record for a specific world, or null if none
+    // exists OR the stored one is unreadable. Never throws: a single
+    // damaged entry (malformed JSON, a record that fails
+    // LocalWorldExperience.fromJSON()'s validation, or one filed under
+    // another world's key) must not break "My Worlds" or entering a
+    // World. It is treated exactly like "never visited" and left in
+    // place — the next recordVisit() for this world overwrites it with
+    // a valid record, so no separate cleanup pass is needed.
     getExperience(worldId) {
         if (!worldId || typeof worldId !== 'string') {
             return null;
         }
         const key = STORAGE_KEY_PREFIX + worldId;
-        const data = this._storage.load(key);
-        if (!data) {
+        try {
+            const data = this._storage.load(key);
+            if (!data) {
+                return null;
+            }
+            const experience = LocalWorldExperience.fromJSON(data);
+            return experience.worldId === worldId ? experience : null;
+        } catch (err) {
             return null;
         }
-        return LocalWorldExperience.fromJSON(data);
     }
 
     // Save or update the experience record for a world

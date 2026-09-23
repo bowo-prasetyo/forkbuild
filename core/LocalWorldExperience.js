@@ -23,6 +23,21 @@
 // State (0.3.10)."
 import { isValidCameraPerspective } from './CameraPerspective.js';
 
+// A stored camera vector is only usable if all three components are
+// finite numbers — anything else (a string, a missing axis, a value that
+// round-tripped through localStorage as null) would feed NaN straight
+// into the camera on restore.
+function copyValidVector(vector) {
+    if (!vector || typeof vector !== 'object') {
+        return null;
+    }
+    const { x, y, z } = vector;
+    if (![x, y, z].every((component) => typeof component === 'number' && isFinite(component))) {
+        return null;
+    }
+    return { x, y, z };
+}
+
 export class LocalWorldExperience {
     constructor({
         worldId,
@@ -34,6 +49,12 @@ export class LocalWorldExperience {
     } = {}) {
         if (!worldId || typeof worldId !== 'string') {
             throw new Error('LocalWorldExperience requires a valid worldId');
+        }
+        // Unlike the optional camera fields below, lastVisitedAt is what
+        // the Recent Worlds list sorts and labels by — a record without
+        // a usable one is rejected outright rather than guessed at.
+        if (typeof lastVisitedAt !== 'number' || !isFinite(lastVisitedAt)) {
+            throw new Error('LocalWorldExperience requires a finite numeric lastVisitedAt');
         }
 
         this._worldId = worldId;
@@ -61,11 +82,11 @@ export class LocalWorldExperience {
     get lastVisitedAt() { return this._lastVisitedAt; }
 
     setCameraPosition(position) {
-        this._cameraPosition = position ? { x: position.x, y: position.y, z: position.z } : null;
+        this._cameraPosition = copyValidVector(position);
     }
 
     setCameraTarget(target) {
-        this._cameraTarget = target ? { x: target.x, y: target.y, z: target.z } : null;
+        this._cameraTarget = copyValidVector(target);
     }
 
     setCameraHeading(heading) {
@@ -100,7 +121,18 @@ export class LocalWorldExperience {
         };
     }
 
+    // Throws on a record that can't be a LocalWorldExperience at all
+    // (not an object, no valid worldId, no valid lastVisitedAt) — a
+    // missing lastVisitedAt is NOT defaulted to "now" here, which would
+    // silently float a damaged record to the top of Recent Worlds.
+    // Damaged optional fields degrade to null instead, via the setters.
     static fromJSON(json) {
+        if (!json || typeof json !== 'object' || Array.isArray(json)) {
+            throw new Error('LocalWorldExperience.fromJSON requires a plain object');
+        }
+        if (json.lastVisitedAt === undefined) {
+            throw new Error('LocalWorldExperience.fromJSON requires a lastVisitedAt');
+        }
         return new LocalWorldExperience({
             worldId: json.worldId,
             cameraPosition: json.cameraPosition,

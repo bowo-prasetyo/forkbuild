@@ -186,9 +186,30 @@ async function runTests() {
         assert(restored.cameraPerspective === CameraPerspective.THIRD_PERSON, '16. fromJSON restores cameraPerspective');
         assert(restored.lastVisitedAt === 1000, '17. fromJSON restores lastVisitedAt');
 
-        const corrupted = LocalWorldExperience.fromJSON({ worldId: WORLD_ID, cameraPerspective: 'not-a-real-mode' });
+        const corrupted = LocalWorldExperience.fromJSON({ worldId: WORLD_ID, lastVisitedAt: 1000, cameraPerspective: 'not-a-real-mode' });
         assert(corrupted.cameraPerspective === null,
             '18. fromJSON() defends against corrupted localStorage data — an unrecognized stored perspective comes back as null (free/orbit), never an invalid value the rest of the app has to guard against');
+
+        const badVectors = LocalWorldExperience.fromJSON({
+            worldId: WORLD_ID, lastVisitedAt: 1000,
+            cameraPosition: { x: 'a', y: 1, z: 2 }, cameraTarget: { x: 0, y: null, z: 0 }
+        });
+        assert(badVectors.cameraPosition === null && badVectors.cameraTarget === null,
+            '18a. fromJSON() drops a stored camera position/target with any non-finite component (null, never a NaN-producing vector)');
+
+        for (const [label, json] of [
+            ['null', null],
+            ['a string', 'world-experience'],
+            ['an array', [WORLD_ID]],
+            ['a record with no worldId', { lastVisitedAt: 1000 }],
+            ['a record with no lastVisitedAt', { worldId: WORLD_ID }],
+            ['a record with a non-numeric lastVisitedAt', { worldId: WORLD_ID, lastVisitedAt: 'yesterday' }],
+            ['a record with a null lastVisitedAt', { worldId: WORLD_ID, lastVisitedAt: null }]
+        ]) {
+            let threw = false;
+            try { LocalWorldExperience.fromJSON(json); } catch (e) { threw = e instanceof Error && !(e instanceof TypeError); }
+            assert(threw, `18b. fromJSON() rejects ${label} with its own validation error — never silently accepted, never a stray TypeError`);
+        }
     }
 
     // -------------------------------------------------------------
@@ -245,6 +266,43 @@ async function runTests() {
         store.removeExperience('world-c');
         assert(store.hasVisited('world-c') === false, '28. removeExperience deletes the record');
     }
+    {
+        // Damaged entries in real localStorage: a malformed JSON string
+        // (LocalStorageProvider#load() lets JSON.parse's SyntaxError
+        // through), or well-formed JSON that isn't a valid record. None
+        // of them may break reading — each reads as "never visited" and
+        // is skipped by the Recent Worlds listing.
+        class DamagedStorageProvider extends InMemoryStorageProvider {
+            load(name) {
+                if (name === 'world-experience:malformed') {
+                    throw new SyntaxError('Unexpected token in JSON');
+                }
+                return super.load(name);
+            }
+        }
+        const storage = new DamagedStorageProvider();
+        const store = new LocalWorldExperienceStore({ storageProvider: storage });
+        store.saveExperience(new LocalWorldExperience({ worldId: 'world-good', lastVisitedAt: 1000 }));
+        storage._data.set('world-experience:malformed', {});
+        storage._data.set('world-experience:not-an-object', 42);
+        storage._data.set('world-experience:no-timestamp', { worldId: 'no-timestamp' });
+        storage._data.set('world-experience:bad-timestamp', { worldId: 'bad-timestamp', lastVisitedAt: 'yesterday' });
+        storage._data.set('world-experience:wrong-key', { worldId: 'world-good', lastVisitedAt: 2000 });
+
+        for (const worldId of ['malformed', 'not-an-object', 'no-timestamp', 'bad-timestamp', 'wrong-key']) {
+            assert(store.getExperience(worldId) === null && store.hasVisited(worldId) === false,
+                `28a. a damaged "${worldId}" entry reads as never visited instead of throwing`);
+        }
+        let listed = null;
+        try { listed = store.getRecentlyVisited(20); } catch (e) { listed = null; }
+        assert(listed !== null && listed.length === 1 && listed[0].worldId === 'world-good',
+            '28b. getRecentlyVisited() skips every damaged entry and still lists the valid one — one bad record never empties or crashes My Worlds');
+
+        store.recordVisit('bad-timestamp', { position: { x: 1, y: 2, z: 3 }, target: { x: 0, y: 0, z: 0 } });
+        const recovered = store.getExperience('bad-timestamp');
+        assert(recovered !== null && recovered.cameraPosition.x === 1 && typeof recovered.lastVisitedAt === 'number',
+            '28c. the next recordVisit() for a damaged entry overwrites it with a valid record — no separate cleanup needed');
+    }
 
     // -------------------------------------------------------------
     // Section C — WorldNavigationSession wiring
@@ -262,6 +320,18 @@ async function runTests() {
         let threw = false;
         try { bare.saveWorldExperience(WORLD_ID); bare.restoreWorldExperience(WORLD_ID); } catch (e) { threw = true; }
         assert(!threw, '32. saveWorldExperience()/restoreWorldExperience() never throw with no store (or no camera controller) wired');
+    }
+    {
+        // Entering a World whose stored experience is damaged behaves
+        // exactly like a first visit — WorldView's _syncWorldExperience()
+        // reads worldReturnInfo from this same return value.
+        const replica = buildReplica(registry, 'damaged-entry-alice');
+        replica.experienceStorage._data.set(`world-experience:${WORLD_ID}`, { worldId: WORLD_ID, lastVisitedAt: null });
+        const session = buildSession(brickRegistry, replica);
+        let restored;
+        let threw = false;
+        try { restored = session.restoreWorldExperience(WORLD_ID); } catch (e) { threw = true; }
+        assert(!threw && restored === null, '32b. restoreWorldExperience() on a damaged stored entry returns null (a first visit), never throws');
     }
     {
         // Free/orbit camera: leaving at an arbitrary framing, then
