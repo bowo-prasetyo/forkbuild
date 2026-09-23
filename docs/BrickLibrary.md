@@ -3,7 +3,7 @@ A brick library is a plain object with an id and a list of BrickDefinitions:
     { id, definitions: [ new BrickDefinition({ id, name, category, tags, description, ... }) ] }
 
 BrickDefinitions (core/BrickDefinition.js) are pure metadata — id, name,
-category, thumbnail, defaultRotation, tags, description. No mesh, no
+category, thumbnail, defaultRotation, tags, description, color. No mesh, no
 Three.js.
 
 Libraries register with the BrickRegistry (core/BrickRegistry.js) at
@@ -17,7 +17,9 @@ getAll(), getByCategory(category), search(tags), groupByCategory().
 The Brick Palette (application/PaletteUseCase.js) is built entirely on
 getAll()/groupByCategory() today; getByCategory() and search() exist
 for when a caller needs grouping/filtering by a single category or tag
-set directly.
+set directly. (PaletteUseCase's own getDefinitions()/
+getDefinitionsByCategory() pass-throughs had no callers and were removed
+on 2026-09-23.)
 
 The renderer never imports a library directly. It asks the registry for a
 brick's definition, then asks renderer/ThreeBrickFactory.js to build the
@@ -63,3 +65,21 @@ brick already renders with, never a hand-drawn icon set). Nothing
 about BrickRegistry, BrickDefinition, or PaletteUseCase changed —
 clicking a brick still only ever calls
 PaletteUseCase#selectDefinition(), exactly as it always has.
+
+Brick colors (2026-09-22). A brick type's default color used to be
+hardcoded per definitionId in renderer/ThreeBrickFactory.js. It is now
+data on the definition: BrickDefinition#color (0xRRGGBB). A community
+library sets it in its definitions list, next to the dimensions. Each placed
+Brick may also carry an optional per-instance color override; null means
+"use the definition's color" (see docs/Protocol.md, "Brick Color").
+
+- The Build Library has a color swatch for the next bricks placed. The
+  choice lives in ActiveBrickState and is shown in the placement preview.
+- The Selection Inspector has a swatch that recolors the selected bricks
+  through the undoable SetBrickColorCommand.
+- Rendering resolves the color the same way everywhere: the instance
+  override, else the definition's color (BrickRenderer when building a
+  mesh, WorldRenderer#_onBrickUpdated on a recolor).
+- core/ColorHex.js converts between the stored integer and CSS "#rrggbb".
+
+Color never changes a brick's geometry, bounds or collision.

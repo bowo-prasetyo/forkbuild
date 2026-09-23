@@ -2000,3 +2000,112 @@ unscheduled — see docs/Roadmap.md). No change to `core/protocolVersion.js` —
 ADDITIVE, optional new advertisement shape a replica that has never
 heard of it simply never receives (no existing message shape changed,
 no existing field renamed or repurposed).
+
+## Brick Color (added 2026-09-22)
+
+`BrickDefinition` carries a `color` (0xRRGGBB), the default shade for every brick of that type. It used to be
+hardcoded in `renderer/ThreeBrickFactory.js`; now it is data.
+
+A `Brick` serializes an optional `color` next to `id`, `definitionId`, `position` and `rotation`:
+
+    { id, definitionId, position, rotation, color }   // color: 0xRRGGBB integer, or null
+
+`null` (or a missing field, in documents written before this change) means "use the definition's color." A World
+with no colors set renders exactly as before. `color` is the one addition to the Brick transform rule stated at
+the top of this file: it changes appearance, never geometry, placement or collision. Recoloring goes through
+`SetBrickColorCommand`, so it is undoable and replayed like any other edit. `PROTOCOL_VERSION` is unchanged: the
+field is additive and optional.
+
+## World Animal Decorations (0.9.702)
+
+A World serializes an `animalDecorations` array next to its buildings, landmarks and regions:
+
+    { id, worldId, authorIdentityId, species, position: { x, y, z } }   // species: 'DEER' | 'RABBIT'
+
+A decoration is authored World content, created by `CreateWorldAnimalDecorationCommand` and removed by
+`RemoveWorldAnimalDecorationCommand`, so it is published, forked and replayed with the World. Unlike a
+`WorldLandmark`, its `y` is authoritative and never re-derived from terrain, because it may rest on a structure.
+Worlds serialized before 0.9.702 have no field and read as `[]`.
+
+A decoration is not a live animal. It has its own id space, separate from the deterministic ids below, and other
+replicas can't catch it.
+
+## Deterministic Animal Identity (0.9.700)
+
+Wildlife from `core/WildlifeField.js` is a pure function of `(seed, x, z)` and is never stored. Each animal's id is
+derived from its lattice cell (`core/AnimalIdentity.js`):
+
+    animal:<seed>:<cellX>,<cellZ>
+
+Two replicas, or one replica returning to a tile, compute the same id for the same animal. Catching removes that id
+from the local field (`AnimalRuntimeInstances` excludes it). Releasing creates a runtime animal with a fresh id.
+Neither is sent to peers: caught and released animals, and placed vehicles, are local state persisted under
+`avatar-inventory`, `vehicle-runtime-instances` and `animal-runtime-instances`.
+
+## Avatar Inventory Transfer (0.9.702)
+
+An inventory entry serializes as:
+
+    { id, kind, type }   // kind: 'vehicle' | 'animal'
+                         // type: a VehicleType ('bicycle' | 'motorcycle' | 'car' | 'drone')
+                         //       or an ANIMAL_SPECIES ('DEER' | 'RABBIT')
+
+Transfers use the peer message-bus protocol `forkbuild:avatar-inventory-transfer`
+(`application/AvatarInventoryTransferPeerProtocol.js`), sent only to authenticated, connected peers:
+
+    { kind: 'OFFER',   offerId, entry }
+    { kind: 'ACCEPT',  offerId }
+    { kind: 'DECLINE', offerId }
+
+The sender removes the entry from its own inventory when it sends OFFER, and puts it back on DECLINE or if the
+recipient disconnects before answering. The recipient adds the entry when it accepts, and then sends ACCEPT. So the
+entry can't be used on the sender's side while an offer is open. There is one known gap: if the connection drops
+after the recipient accepts but before ACCEPT reaches the sender, the sender restores the entry and both sides hold
+it. Messages carry no signature of their own; they rely on the authenticated peer session, like the other
+`forkbuild:*` peer protocols.
+
+## Publication Commentary Distribution (0.9.618–0.9.631)
+
+`core/PublicationCommentary.js` stays unsigned. Distribution wraps it in a signed envelope
+(`core/PublicationCommentaryDistributionEnvelope.js`):
+
+    {
+      kind: 'forkbuild.publication-commentary-distribution',
+      schemaVersion: 1,
+      commentaryId, publicationId, authorIdentityId, content, createdAt,
+      signature                // core/Signature.js JSON
+    }
+
+The signature has type `publication-commentary-distribution` and covers `{ commentaryId, publicationId,
+authorIdentityId, content, createdAt }` (`id` = `commentaryId`, `revision` = `createdAt`).
+`LocalAuthorizationVerifier#verifyPublicationCommentaryDistributionEnvelope()` requires the signer to be
+`authorIdentityId`, and never accepts an unsigned envelope. A valid signature proves who wrote the comment, never
+that they own the Publication. Arrival is deduplicated by `commentaryId` in `PublicationCommentaryStore`, never by a
+transport's own id.
+
+One envelope, three carriers:
+
+| Carrier | Where | Shape |
+|---------|-------|-------|
+| WebRTC  | peer protocol `forkbuild:commentary-distribution` | `{ kind: 'ANNOUNCE', envelope }` — announce only, no request/response history sync |
+| Nostr   | a kind-1 event on every configured relay (fan-out) | `content` = envelope JSON; tag `['t', 'forkbuild-commentary']` |
+| Arweave | a tagged transaction | body = envelope JSON; tag `ForkBuild-Commentary-Discovery-Tag: forkbuild-commentary`, found through GraphQL tag search |
+
+Posting always persists locally first, announces over WebRTC second, and then publishes to one chosen asynchronous
+substrate (Nostr or Arweave; the saved Announcement/Discovery default, overridable per post). It never publishes to
+both. A network failure never undoes the local write. Readers query both substrates when a Commentary section opens
+or on "Check for new comments", filter by `publicationId`, and import every candidate through the same verifier.
+A Nostr relay OK means "accepted," not durably stored. On Arweave, "not yet mined," "never published" and "gateway
+unreachable" all surface as `ContentUnavailableError`, and are never reported as "absent."
+
+## Editor Document Export File (0.9.641–0.9.642)
+
+Editor → Export writes exactly `DocumentSerializer.serialize()`'s output, the same envelope Save stores:
+
+    { schemaVersion, world, metadata }
+
+It is not a Publication and is not signed. Import runs `DocumentSerializer.deserialize()` (migrate → validate →
+construct), then `DocumentCloneService`. The imported document always gets a fresh `documentId`, fresh brick and
+building ids, and remapped group membership, with `parentDocumentId` set to `null`. A file's own `world.id` is never
+reused as a storage key. Newer `schemaVersion`s are rejected. `protocolVersion` must still match exactly; there is
+no migration path for it yet.

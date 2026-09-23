@@ -19864,3 +19864,82 @@ READ
 ```
 
 See `docs/Roadmap.md`, 0.9.286, for the full milestone entry.
+
+## Water Depth Is Still A Rendering-Time Offset (0.9.615, 0.9.634)
+
+Shallow water follows the same rule as hills (see "Terrain Elevation Is A Rendering-Time Offset, Never A Presence
+Or Placement Fact (0.2.76)"). `AvatarPresence.position.y` never learns about lakes. The lakebed and the lake-surface
+clamp are applied only where the avatar is drawn (`RenderWorldViewUseCase#withGroundElevation()`). Water affects
+movement in only two ways, both stateless and recomputed every tick from `(x, z)`: a depth gate
+(`AvatarWaterConstraint`) and a speed factor. There is no swim state, no persisted water flag, and nothing for
+vehicles. The same holds for a vehicle rider: the vehicle's position already includes terrain height, so render
+code must not add it again.
+
+## An Imported Document Always Gets A Fresh Identity (0.9.642)
+
+A document file carries its source's `world.id`, but that id means nothing on the importing device. Worse,
+`documentId` is used directly as a storage key, so reusing it could overwrite an unrelated document or the manifest
+itself. Import therefore always goes through `DocumentCloneService`: new document, building and brick ids,
+remapped group membership, and `parentDocumentId: null`, because an import is not a fork of anything on this
+device. Export and Import are portability, not publication: no signature, no announcement, no network.
+
+## Local First, Network Second, For Every Distributed Write (0.9.620, 0.9.628, 0.9.631)
+
+A write that can leave the device (a Commentary, a Snapshot announcement after a successful pin) is committed
+locally before any network step, and a network failure never undoes it. The network is an extra delivery path, not
+the source of truth. A best-effort step that fails reports why (sanitized) next to the result that did succeed; it
+never turns the success into a failure.
+
+## Choose One Substrate; Fan Out Only Within It (2026-09-20)
+
+Across substrates, distribution selects: a Publication, Snapshot, Place Naming claim or Commentary is announced on
+Nostr or on Arweave, never both from one action. Within a substrate, the strategy follows what the endpoints are:
+
+- Nostr relays are independent stores that don't share events, so publishing and querying go to every configured
+  relay.
+- Arweave and IPFS gateways serve the same content-addressed bytes, so reads use ordered failover and writes use
+  one endpoint.
+
+One relay set serves every Nostr feature. A separate set for Publications was tried and removed, because the two
+sets never actually differed.
+
+## A Saved Preference Seeds A Choice; It Never Makes One (2026-09-21)
+
+A saved Content, Announcement/Discovery or Proof/Anchoring preference does two things:
+
+- It sets the first value of every matching picker, but only if that value is one of the options offered
+  (`resolveSavedProviderDefault()`).
+- It powers the explicit "Use Preferred Provider" button.
+
+It never overrides a value the user already picked, and never triggers a network action by itself. An unusable
+saved value (a legacy `local` Content preference, or a provider with no registered backend) reads as no
+preference, or as an explicit `PROVIDER_NOT_FOUND`, never as a silent substitute.
+
+## One Signer, One Request At A Time (2026-09-21)
+
+A combined action whose steps may ask the same wallet extension to sign (Publication and Snapshot distribution both
+announcing over NIP-07, for example) runs those steps one after the other, never concurrently. Wallet extensions
+don't reliably handle two approval prompts at once, and the page can't tell when one has hung. For the same
+reason, every call waiting on a human approval gets the wallet's own bounded timeout (120 seconds), and no shorter
+outer timeout may cut it off first.
+
+## An Animal Has Three Possible Homes, Never Two At Once (0.9.700–0.9.703)
+
+- **Deterministic.** Recomputed from `(seed, x, z)` (`core/WildlifeField.js`), with a derived id. It is never
+  stored, and a caught one is excluded locally rather than deleted.
+- **Runtime.** Caught into the inventory or released into the world (`AnimalRuntimeInstances`). It lives on this
+  device, persists across reloads, and is never sent to peers except through an explicit inventory transfer.
+- **Authored.** Baked into a World as an `AnimalDecoration` by an undoable command. It is document content,
+  published and forked with the World, and never catchable.
+
+Moving between homes always takes an animal out of the old one first: catching excludes the deterministic id,
+decorating discards the runtime animal, and undecorating removes the decoration before releasing a fresh runtime
+animal. The renderer draws each animal from exactly one home, so none is ever drawn twice.
+
+## A Transferred Entry Leaves Its Owner Before The Offer Does (0.9.702)
+
+An inventory transfer escrows first: the offered entry is removed from the sender's inventory before OFFER is sent,
+and is put back only on DECLINE or when the recipient's connection goes away. While an offer is open, the entry
+can't be deployed, released or offered twice. The protocol has no final acknowledgement from sender to recipient,
+so a disconnect in the narrow window after the recipient accepts leaves a copy on both sides. This is a known
+limitation, not a guarantee to rely on.

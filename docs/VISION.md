@@ -25,4 +25,8 @@ the Editor alone mutates and builds — see docs/Principles.md, "World
 View Observes and Navigates; Editor Mutates and Builds (0.5.9)." World
 Region/Landmark naming (annotating a place you're standing at) is the
 one exception, kept in World View because it was never brick-level
-construction in the first place.
+construction in the first place. World Animal Decorations (0.9.702),
+which bake an animal you released into the World you're standing in,
+follow the same reasoning. Vehicles, inventory and caught animals are the
+avatar's own runtime state, never document edits. See
+docs/CapabilityMatrix.md.

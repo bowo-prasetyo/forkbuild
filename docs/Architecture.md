@@ -197,7 +197,9 @@ routing, introduced where the fragmentation justified it and not before:
 marquee > selection — as a pure resolveEscapeTarget(state); (2)
 registry-driven shortcut matching with Ctrl/Cmd parity, lowercased
 keys, and key-repeat suppression; (3) text-input detection. Views
-orchestrate; the router answers.
+orchestrate; the router answers. (Item 1 was removed on 2026-09-23: it had
+drifted from EditorView's own Escape handling, which is now the only one. See "Removed in
+the 2026-09-23 cleanup passes" at the end of this file.)
 
 renderer/
 
@@ -9558,3 +9560,182 @@ height, never a brick's flat bounding-box maximum. Deliberately not in
 control, moving platforms, elevators, a physics engine, rigid bodies,
 and any of it joining `WorldOperationEnvelope` or the presence protocol.
 See docs/Roadmap.md for the full list.
+
+## Current Subsystems (as of 2026-09-23, through 0.9.703)
+
+The sections above follow the milestones in order and describe each subsystem as it was built. This section
+describes how the parts changed since 0.9.600 fit together now. `docs/Roadmap.md` has the reasoning behind each
+change.
+
+### Avatar movement constraint pipeline
+
+`application/AvatarMovementController.js` runs the simulated move through up to six optional constraints, in this
+order. Each is a separate class with a `{ position, blocked | collided }` result, and each can be left out:
+
+    simulateAvatarMovement()        speed x run multiplier x water speed factor
+      -> AvatarMovementConstraint   bricks of loaded Buildings and StructurePlacements
+      -> AvatarTerrainConstraint    slope
+      -> AvatarWaterConstraint      too-deep water blocks; depth slows (0.9.634)
+      -> AvatarStepConstraint       step-up / walkable surfaces; ignores bricks whose base is out of reach
+      -> AvatarTreeConstraint       slide around trunks
+      -> AvatarWildlifeConstraint   slide around deer/rabbits (2026-09-21)
+
+`WorldNavigationSession#_setupLocalAvatar()` builds all six. Placed `StructurePlacement`s collide because the
+brick constraints take the session's `structureResolver`. Documents farther than `MAX_DOCUMENT_SPAN_MARGIN` (200) are
+culled before any brick test.
+
+`AvatarPresence.position.y` is still a flat simulated plane (step height, jump and gravity only). Terrain height,
+lake floors and the lake-surface clamp are applied only when rendering, in
+`RenderWorldViewUseCase#resolveAvatarRenderPosition()`/`withGroundElevation()`. The exception is a rider on a
+movable vehicle: the vehicle's position already includes real terrain height, so neither the vehicle nor the rider
+is lifted a second time. Released animals get the same lift as remote avatars.
+
+### Vehicles, inventory and animals
+
+    core/VehiclePlacement.js      deterministic spawn: bicycle 65% / motorcycle 25% / car 8% / drone 2%
+    core/WildlifeField.js         deterministic deer (FOREST) / rabbit (GRASSLAND), id animal:<seed>:<x>,<z>
+            │                                   │
+    VehicleRuntimeInstances            AnimalRuntimeInstances
+      (placed, ridden, deployed;          (caught ids excluded; released
+       stored ids excluded)                animals tracked separately)
+            │                                   │
+    AvatarVehicleInteractionController   AvatarAnimalInteractionController
+      E mount/dismount, Q store/deploy,    F catch / release
+      [ ] cycle selection
+            └──────────── AvatarInventoryStore ─────────┘
+                           (one AvatarInventory of { id, kind, type } entries,
+                            every read and cycle scoped by kind)
+
+- **Movement.** `AvatarVehicleMovementController` moves every vehicle type in `MOVABLE_VEHICLE_TYPES` (all four).
+  Drone altitude comes from `core/AvatarDroneVerticalState.js`, and `AvatarVehicleInteractionController` refuses
+  to dismount a drone in mid-air.
+- **Persistence (0.9.701).** The inventory and both runtime stores persist through optional stores
+  (`storage/*PersistenceStore.js`). Runtime positions are written at most once a second.
+- **Rendering.** Deterministic animals are baked into wildlife tiles (`renderer/WildlifeTileMesh.js`). Catching one
+  rebuilds its tile without it (`TerrainStreamingController#invalidateTile()`). Released animals are drawn every
+  frame by `renderer/AnimalFieldRenderer.js`, which shares geometry with the tiles.
+- **Decorations (0.9.702/0.9.703).** `G` turns the nearest released animal into an `AnimalDecoration` in the World
+  document through a registered command, or turns the nearest decoration back into a released animal. This is the
+  one way a World View animal action becomes document content.
+- **Transfer (0.9.702).** `AvatarInventoryTransferPeerExchange` moves an entry between connected avatars
+  (`docs/Protocol.md`, "Avatar Inventory Transfer"). It is reachable from the session API only; there is no UI yet.
+
+### Terrain layers
+
+`renderer/Renderer.js` runs four `TerrainStreamingController`s: terrain, vegetation, water and wildlife. Each is a
+pure function of `(seed, x, z)`:
+
+- `TerrainHeightField`: how high
+- `TerrainSurface`: what it looks like
+- `TerrainEcology`: which zone
+- `Hydrology`: lakes and river color
+- `NaturalFeatureField`: trees, with CONIFER, BROADLEAF or SCRUB chosen by moisture
+- `WildlifeField`: animals
+
+None of it is stored, so a tile that streams out and back in is identical.
+
+### Publication presence across restarts
+
+At startup, before the app mounts, `ui/main.js` rebuilds the in-memory `DecentralizedPublicationDiscoveryProvider`
+from two durable records:
+
+- `ReconstructPublicationDiscoveryUseCase` replays `LocalPublicationCatalog`, which holds signed decentralized
+  envelopes (0.9.608).
+- `ReconstructWorldEncounterPublicationDiscoveryUseCase` replays `LocalWorldEncounterPublicationAdmissionLog`, which
+  holds Publications admitted from World Encounters (0.9.651).
+
+Both re-run full verification, skip ids already present, and never touch the network. World rendering uses
+`publicationActionDiscoveryProvider` (a `CompositeDiscoveryProvider`) for layout. `WorldNavigationSession#_loadWorld()`
+falls back to `LoadPublishedWorldSessionUseCase` (content-hash material) when `storage[documentId]` is empty (0.9.605).
+
+### Distribution: independent choices, one dialog
+
+Distributing a Publication or a Snapshot involves separate choices, each with its own seam:
+
+| Choice | Values | Seam |
+|--------|--------|------|
+| Where the bytes go | Arweave, IPFS (Local Kubo), IPFS (Remote Pinning) | `PublicationMaterialUploaderComposition` (Publication material); `SnapshotPlacementStoreRegistry` + `ipfsRemotePublicationCoordinator` (Snapshot) |
+| Where it is announced | Nostr (fan-out to every configured relay) or Arweave (tagged transaction) | `*RuntimeComposition` `discoveryProvider` for Publication, Snapshot, Place Naming and Commentary; `resolveSnapshotDiscoveryPublisher()` |
+| Proof / anchoring | Bitcoin, Arweave (Base only through its own button) | `PreferredPublicationAnchorCreationCoordinator` |
+
+The saved preferences live in `RoleProviderPreferenceStore` (`CONTENT`, `ANNOUNCEMENT_AND_DISCOVERY`,
+`PROOF_AND_ANCHORING`). They drive the "Use Preferred Provider" buttons, and they seed every picker's first value
+through `resolveSavedProviderDefault()`; they never override a choice already made. Distribution uses selection,
+never fan-out, across substrates. Fan-out happens only across relays within Nostr. Arweave and IPFS gateways use
+ordered failover instead, because any gateway can serve the same content-addressed bytes.
+
+In the UI, every distribution control sits in `ui/components/WorldDistributionDialog.js` (World Encounters and My
+Publication) or `ui/components/EditorDistributionDialog.js` (the Editor's post-publish overlay). One settings block
+(Storage, Remote Pinning draft, Announcement/Discovery) feeds both legs. The combined "Distribute" action runs
+Snapshot and Publication one after the other, because both may sign through the same wallet extension. Every
+injected-wallet adapter (Nostr NIP-07, Arweave, UniSat, EIP-1193) has a 120-second approval timeout.
+
+### Network endpoint configuration
+
+Every user-set endpoint follows one pattern. There is a `core/*Configuration.js` value object, a `storage/*Store.js`
+under one key, a `Set*ConfigurationUseCase`, and a settings view built on `ui/composables/useEndpointSettingsForm.js`
+(`useRoleProviderPreferenceForm.js` for the three preference pages). `ui/main.js` resolves each value once at
+startup and falls back to the deployment default.
+
+| Setting | Route | Store key | Shape |
+|---------|-------|-----------|-------|
+| Arweave Gateway | `/settings/arweave-gateway` | `arweave-gateway-configuration` | ordered `gatewayUrls`, read failover |
+| IPFS Gateway | `/settings/ipfs-gateway` | `ipfs-gateway-configuration` | ordered `gatewayUrls`, read failover (0.9.665/0.9.666) |
+| IPFS Node (Kubo API) | on `/settings/content-provider` | `ipfs-node-configuration` | `apiUrl` for the IPFS write path |
+| Bitcoin Endpoint (Esplora) | `/settings/bitcoin-esplora` | `bitcoin-esplora-configuration` | one base URL, used for broadcast, confirmation, funding and proof checks |
+| Nostr Relays | `/settings/nostr-relay` | `nostr-relay-configuration` | `relayUrls`, one set for every Nostr feature, fan-out |
+| STUN / TURN / Rendezvous | `/settings/stun`, `/settings/turn-server`, `/settings/rendezvous` | `ice-server-configuration`, `turn-server-configuration`, `rendezvous-configuration` | as before |
+| Content / Announcement / Proof preferences | `/settings/content-provider`, `/settings/announcement-discovery-provider`, `/settings/anchor-provider` | `role-provider-preference:by-role` | one provider key per role |
+
+Credentials are never stored. The remote-pinning credential is kept only in tab memory
+(`IpfsRemotePublishingCredentialMemory`).
+
+### Publication Commentary
+
+    addPublicationCommentaryCommand
+      1. PublicationCommentaryStore.add()            local, authoritative
+      2. PublicationCommentaryDistributionPeerExchange.announce()   WebRTC, best effort
+      3. Nostr (NostrMultiRelayPublicationCommentaryDistribution) OR Arweave — one, best effort
+
+    refreshPublicationCommentaryCommand (on open / "Check for new comments")
+      Discover...FromNostrUseCase + Discover...FromArweaveUseCase
+        -> PublicationCommentaryDistributionExchange.importCommentaryEnvelope()   one verifier, one store
+        -> PublicationCommentaryRemoteNotificationBridge                          notify the publisher only
+
+`ui/components/PublicationCommentarySection.js` is the Repository's single Commentary component (card and list).
+World View's Commentary panels still post only locally.
+
+### Editor additions
+
+- **Export/Import (0.9.641/0.9.642).** `ExportDocumentUseCase` and `ImportDocumentUseCase`, reached from the
+  Toolbar. Import always clones to a fresh identity through `DocumentCloneService`, which also remaps group
+  membership (0.9.644).
+- **Focus Selection (0.9.661).** The `selection.focus` action calls `getSelectionSummary()` then
+  `frameCameraOn()`.
+- **Structure face snapping (0.9.611).** `PickingService#pickPlacement()` returns a face normal, and
+  `PlacementPositionService#calculateStructureStack()` places a structure flush against another one's side.
+- **Brick colors.** `BrickDefinition#color` is the default and `Brick#color` an optional override, set with
+  `SetBrickColorCommand`. `ActiveBrickState` carries the color for the next placement; `BrickRenderer` and
+  `WorldRenderer#_onBrickUpdated` apply the result.
+- **Save failures (0.9.653).** Both Save entry points catch errors and show `SAVE_FAILURE_MESSAGE`. The sidebar
+  scrolls inside `.sidebar-scroll` (0.9.647).
+
+### Removed in the 2026-09-23 cleanup passes
+
+Several names in the milestone sections above no longer exist:
+
+- `InputRouter`'s `ESCAPE_PRIORITY`/`resolveEscapeTarget()`. `EditorView` implements the Escape chain directly.
+- `EditorSession#getSelectionCount()`, `snapSelectionToGrid()`, `transformSettings` and
+  `replayRecoveredOperation()`.
+- `EditorContext`'s camera state and `CAMERA_STATE_CHANGED`; `DocumentState.readOnly`.
+- `application/TransformSelectionUseCase.js` (replaced by `SpatialEditingService`) and
+  `ui/components/GroupsPanel.js`.
+- `EditorActionRegistry`'s `capabilities.canEdit` gate, `getByCategory()` and the `ui.promptCreateStructure()`
+  fallback.
+- The unused key-up/wheel dispatch chain.
+- `IdentityUseCase` `login()`, `logout()`, `protectIdentity()`, `vaultLock()`, `isRevoked()` and
+  `getRevocationRecord()`. The `LocalIdentityProvider` methods they wrapped remain.
+- `onPolicyChanged()` on the two visibility use cases.
+- The separate Nostr Publication Relay Set configuration.
+
+`WorldNavigationSession#getSelectionCount()` and `PublishedWorldSession#getSelectionCount()` still exist.
