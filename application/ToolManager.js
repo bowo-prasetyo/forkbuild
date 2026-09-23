@@ -60,18 +60,6 @@ export class ToolManager {
         }
     }
 
-    onKeyUp(keyEvent) {
-        if (this._activeTool) {
-            this._activeTool.onKeyUp(keyEvent);
-        }
-    }
-
-    onWheel(wheelEvent) {
-        if (this._activeTool) {
-            this._activeTool.onWheel(wheelEvent);
-        }
-    }
-
     _activateTool(toolId) {
         if (this._activeTool) {
             this._activeTool.deactivate();

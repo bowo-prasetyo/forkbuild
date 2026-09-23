@@ -38,11 +38,8 @@ import { ForkStructureToLibraryUseCase } from '../application/ForkStructureToLib
 //
 //   Section A: EditorActionRegistry — 'structure.createFromSelection'
 //              is now labeled "Create Blueprint", tier 'advanced', and
-//              prefers ui.openCreateBlueprintDialog() over the 0.4.2
-//              ui.promptCreateStructure() fallback when both exist —
-//              proving the dialog-first path AND the backward-
-//              compatible fallback tests/EditorUX.test.js already
-//              depends on both still hold.
+//              opens ui.openCreateBlueprintDialog(), degrading to
+//              feedback on a surface without that hook.
 //   Section B: application/ForkStructureToLibraryUseCase.js /
 //              EditorSession#forkStructureToPersonalLibrary() — a
 //              built-in Structure fork gets a fresh id and fresh brick
@@ -136,30 +133,16 @@ async function run() {
         const ctx = EditorActionContext.capture({ session, selectionCount: 1 });
 
         let dialogOpened = false;
-        let promptCalled = false;
-        const bothHooks = {
-            openCreateBlueprintDialog: () => { dialogOpened = true; },
-            promptCreateStructure: () => { promptCalled = true; return null; }
-        };
-        const registryWithDialog = new EditorActionRegistry(createStandardActions({ session, feedback: { show() {} }, ui: bothHooks }));
+        const registryWithDialog = new EditorActionRegistry(createStandardActions({ session, feedback: { show() {} }, ui: { openCreateBlueprintDialog: () => { dialogOpened = true; } } }));
         assert(registryWithDialog.execute('structure.createFromSelection', ctx) === true, '3. executes with the dialog hook wired');
         assert(dialogOpened === true, '4. ui.openCreateBlueprintDialog() is called');
-        assert(promptCalled === false, '5. ...and the window.prompt() fallback is never reached when the dialog hook exists');
 
-        // 0.4.2/0.4.3 backward compatibility — tests/EditorUX.test.js's
-        // own Section D depends on this exact fallback still working for
-        // a surface (or a headless harness) with no dialog.
         const feedbackLog = [];
-        let promptCalled2 = false;
-        const promptOnly = {
-            promptCreateStructure: () => { promptCalled2 = true; return { name: 'Cottage', category: 'test', description: '' }; }
-        };
-        const registryPromptOnly = new EditorActionRegistry(createStandardActions({ session, feedback: { show: (m) => feedbackLog.push(m) }, ui: promptOnly }));
-        assert(registryPromptOnly.execute('structure.createFromSelection', ctx) === true, '6. executes without a dialog hook too');
-        assert(promptCalled2 === true, '7. ...falling back to ui.promptCreateStructure(), unchanged');
-        assert(feedbackLog.at(-1) === 'Saved "X" to My Structures', '8. ...and the exact 0.4.3 feedback message is unchanged');
+        const registryWithoutDialog = new EditorActionRegistry(createStandardActions({ session, feedback: { show: (m) => feedbackLog.push(m) }, ui: {} }));
+        registryWithoutDialog.execute('structure.createFromSelection', ctx);
+        assert(feedbackLog.at(-1) === 'Create Blueprint is not available on this surface', '5. a surface without the dialog hook degrades to feedback, never throws');
 
-        console.log('✓ A. EditorActionRegistry: Create Blueprint is labeled/tiered per the design conversation, and prefers the dialog hook without breaking the 0.4.2/0.4.3 fallback');
+        console.log('✓ A. EditorActionRegistry: Create Blueprint is labeled/tiered per the design conversation, and opens the dialog hook');
     }
 
     // ---------------------------------------------------------------

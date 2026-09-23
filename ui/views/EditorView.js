@@ -545,11 +545,6 @@ export default {
 		    recentStructures.value = resolveRecentStructures();
 		}
 
-		// Reachable two ways: directly ("Remove"/"Rename" on a My
-		// Structures entry) and indirectly (actionUi.onPersonalLibraryChanged,
-		// called by EditorActionRegistry right after
-		// structure.createFromSelection saves a brand-new Structure —
-		// see application/EditorActionRegistry.js's own 0.4.3 comment).
 		function renamePersonalStructure(structure) {
 		    const name = prompt('Rename structure:', structure.name);
 		    if (name === null || !name.trim()) {
@@ -1050,8 +1045,8 @@ export default {
 		// showing, then re-summarizes so the panel immediately reflects
 		// "You" as author without needing to be closed and reopened —
 		// the same "the surface stays visually up to date the instant
-		// this fires" posture 0.4.3's own onPersonalLibraryChanged()
-		// already established for a saved Structure.
+		// this fires" posture onCreateBlueprint() takes for a saved
+		// Structure.
 		function claimAuthorship() {
 		    const structure = inspectedStructure.value;
 		    if (!structure) {
@@ -2131,14 +2126,6 @@ export default {
                 }
                 createBlueprintPreview.value = preview;
                 showCreateBlueprintDialog.value = true;
-            },
-            // 0.4.3 — Personal Blueprint Library. Called by
-            // EditorActionRegistry right after structure.createFromSelection
-            // successfully saves a newly extracted Structure into
-            // personalStructureLibraryStore, so "My Structures" reflects
-            // it immediately — see this file's own refreshPersonalStructureGroups().
-            onPersonalLibraryChanged() {
-                refreshPersonalStructureGroups();
             }
         };
         const actionRegistry = new EditorActionRegistry(
@@ -2451,9 +2438,8 @@ export default {
                     }
                     return;
                 }
-                // 3.5. An in-flight Shift+Drag marquee owns Escape next —
-                // application/InputRouter.js's own ESCAPE_PRIORITY:
-                // gesture > marquee > selection. Cancels the drag with no
+                // 3.5. An in-flight Shift+Drag marquee owns Escape next
+                // (gesture > marquee > selection). Cancels the drag with no
                 // selection change, rather than falling through to step
                 // 5's registry Escape (selection.clear), which would also
                 // wipe out whatever was already selected before the drag

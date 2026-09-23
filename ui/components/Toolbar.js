@@ -56,15 +56,11 @@ export default {
             type: Object,
             required: true
         },
-        // 0.2.21: optional so existing/ad-hoc usages of Toolbar
-        // without a feedback channel keep working (falls back to
-        // alert() below) — but EditorView always provides one now, so
         // Save/Publish report through the same transient-toast
-        // mechanism every other action already uses instead of a
-        // blocking browser dialog.
+        // mechanism every other Editor action uses.
         feedback: {
             type: Object,
-            default: null
+            required: true
         },
         // 0.6.1 — World ↔ Editor Continuity & Return Navigation. The
         // EditorEntryContext (core/EditorEntryContext.js) EditorView
@@ -116,11 +112,7 @@ export default {
         let unsubscribe = null;
 
         function report(message) {
-            if (props.feedback) {
-                props.feedback.show(message);
-            } else {
-                alert(message);
-            }
+            props.feedback.show(message);
         }
 
         function save() {

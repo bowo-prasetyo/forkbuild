@@ -21,7 +21,6 @@ export class EditorActionContext {
         gestureActive = false,
         paletteOpen = false,
         activeTool = null,
-        capabilities = null, // NEW: explicit capability boundary (0.2.4)
         // 0.2.91 — World Instance Editing & Placement Management: true
         // when the current selection is exactly one StructurePlacement
         // (SelectionState#isStructurePlacementSelection). Gates
@@ -40,7 +39,6 @@ export class EditorActionContext {
         this._gestureActive = gestureActive;
         this._paletteOpen = paletteOpen;
         this._activeTool = activeTool;
-        this._capabilities = capabilities;
         this._selectionIsStructurePlacement = selectionIsStructurePlacement;
     }
 
@@ -71,7 +69,6 @@ export class EditorActionContext {
     get placementMode() {
         return this._activeTool === 'place' || this._activeTool === 'place-structure' || this._activeTool === 'compose-structure';
     }
-    get capabilities() { return this._capabilities; }
     get selectionIsStructurePlacement() { return this._selectionIsStructurePlacement; }
 
     // session: EditorSession or WorldNavigationSession. selectionCount /
@@ -112,7 +109,6 @@ export class EditorActionContext {
             }
             return fallback;
         };
-        const capabilities = (session && session.capabilities) ? session.capabilities : null;
         return new EditorActionContext({
             selectionCount,
             paletteOpen,
@@ -125,7 +121,6 @@ export class EditorActionContext {
             undoLabel: historyCall('getUndoLabel', null),
             redoLabel: historyCall('getRedoLabel', null),
             gestureActive: call('isGestureActive', false),
-            capabilities, // NEW
             selectionIsStructurePlacement
         });
     }

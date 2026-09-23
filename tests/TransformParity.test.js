@@ -7,7 +7,6 @@ import { Group } from '../core/Group.js';
 import { CommandHistory } from '../application/CommandHistory.js';
 import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
 import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
-import { TransformSelectionUseCase } from '../application/TransformSelectionUseCase.js';
 import { SpatialEditingService } from '../application/SpatialEditingService.js';
 import { SpatialSelectionState } from '../application/spatial-state/SpatialSelectionState.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
@@ -78,66 +77,66 @@ function createWorldWithBricks(specs) {
 }
 
 // ---------------------------------------------------------------------
-// 2. Use case: single brick, pivot semantics, no-op suppression
+// 2. Service: single brick, pivot semantics, no-op suppression
 // ---------------------------------------------------------------------
+
+function createServiceFor(world, document, brickRegistry) {
+    const session = { getDocument: (id) => (id === 'doc' ? document : null) };
+    const histories = new Map([[world.id, new CommandHistory({ world })]]);
+    return { service: new SpatialEditingService(session, histories, brickRegistry), history: histories.get(world.id) };
+}
 
 {
     const brickRegistry = new CreateBrickRegistryUseCase().execute();
-    const useCase = new TransformSelectionUseCase(brickRegistry);
     const { world, building, ids: [a] } = createWorldWithBricks([
         { position: new Position(0, 0.5, 0) }
     ]);
     const document = new Document({ world });
-    const history = new CommandHistory({ world });
+    const { service, history } = createServiceFor(world, document, brickRegistry);
     const selection = SpatialSelectionState.brick({
         documentId: 'doc', buildingId: building.id, brickId: a
     });
 
-    const move = useCase.execute(history, document, selection, { translation: { x: 2, y: 0, z: 0 } });
-    assert(move !== null, 'translate executes');
-    assert(move.type === 'transform-selection', 'unified command type');
+    assert(service.moveSelection(selection, { x: 2, y: 0, z: 0 }) === true, 'translate executes');
+    assert(history.getExecutedCommands()[0].type === 'transform-selection', 'unified command type');
     assert(building.findBrick(a).position.x === 2, 'brick moved');
     assert(history.getExecutedCommands().length === 1, 'one history entry');
 
     // Single-brick rotation pivots on the brick's own center: position
-    // unchanged, rotation applied — identical to the pre-0.1.44 behavior.
-    const rotate = useCase.execute(history, document, selection, { rotation: 90 });
-    assert(rotate !== null, 'rotate executes');
+    // unchanged, rotation applied.
+    assert(service.rotateSelection(selection, 90) === true, 'rotate executes');
     assert(building.findBrick(a).position.x === 2, 'own-center rotation preserves position');
     assert(building.findBrick(a).rotation === 90, 'own-center rotation applies');
 
-    // No-op suppression: zero translation, no rotation.
-    const noop = useCase.execute(history, document, selection, { translation: { x: 0, y: 0, z: 0 } });
-    assert(noop === null, 'no-op transform executes nothing');
+    // No-op suppression: zero translation adds no history entry.
+    service.moveSelection(selection, { x: 0, y: 0, z: 0 });
     assert(history.getExecutedCommands().length === 2, 'no-op added no entry');
 
     history.undo();
     assert(building.findBrick(a).rotation === 0, 'undo restores rotation');
     history.undo();
     assert(building.findBrick(a).position.x === 0, 'undo restores position');
-    console.log('✓ use case: single brick, pivot semantics, no-op suppression');
+    console.log('✓ service: single brick, pivot semantics, no-op suppression');
 }
 
 // ---------------------------------------------------------------------
-// 3. Use case: multi-selection rotates about the group pivot
+// 3. Service: multi-selection rotates about the group pivot
 // ---------------------------------------------------------------------
 
 {
     const brickRegistry = new CreateBrickRegistryUseCase().execute();
-    const useCase = new TransformSelectionUseCase(brickRegistry);
     const { world, building, ids: [a, b] } = createWorldWithBricks([
         { position: new Position(0, 0.5, 0) },
         { position: new Position(4, 0.5, 0) }
     ]);
     const document = new Document({ world });
-    const history = new CommandHistory({ world });
+    const { service, history } = createServiceFor(world, document, brickRegistry);
     const selection = SpatialSelectionState.bricks({
         documentId: 'doc',
         items: [a, b].map((brickId) => ({ type: 'brick', buildingId: building.id, brickId }))
     });
 
-    const command = useCase.execute(history, document, selection, { rotation: 90 });
-    assert(command !== null, 'multi rotate executes');
+    assert(service.rotateSelection(selection, 90) === true, 'multi rotate executes');
     // Pivot is the bounds center (2, 0.5, 0): both bricks orbit it.
     close(building.findBrick(a).position.x, 2, 'brick A orbits pivot x');
     close(building.findBrick(a).position.z, -2, 'brick A orbits pivot z');
@@ -148,7 +147,7 @@ function createWorldWithBricks(specs) {
     history.undo();
     close(building.findBrick(a).position.x, 0, 'undo restores A');
     close(building.findBrick(b).position.z, 0, 'undo restores B');
-    console.log('✓ use case: multi-selection pivot rotation');
+    console.log('✓ service: multi-selection pivot rotation');
 }
 
 // ---------------------------------------------------------------------
@@ -291,25 +290,28 @@ function createWorldWithBricks(specs) {
 {
     const registry = new CreateCommandRegistryUseCase().execute();
     const brickRegistry = new CreateBrickRegistryUseCase().execute();
-    const useCase = new TransformSelectionUseCase(brickRegistry);
     const { world, building, ids: [a] } = createWorldWithBricks([
         { id: 'brick-a', position: new Position(0, 0.5, 0) }
     ]);
     const document = new Document({ world });
-    const history = new CommandHistory({ world });
+    const { service, history } = createServiceFor(world, document, brickRegistry);
     const selection = SpatialSelectionState.brick({ documentId: 'doc', buildingId: building.id, brickId: a });
-    const command = useCase.execute(history, document, selection, { translation: { x: 5, y: 0, z: 0 }, rotation: 45 });
+    service.moveSelection(selection, { x: 5, y: 0, z: 0 });
+    service.rotateSelection(selection, 90);
+    const [moveCommand, rotateCommand] = history.getExecutedCommands();
 
-    const restored = registry.fromJSON(command.toJSON());
-    assert(restored.type === 'transform-selection', 'unified command deserializes');
+    const restoredMove = registry.fromJSON(moveCommand.toJSON());
+    const restoredRotate = registry.fromJSON(rotateCommand.toJSON());
+    assert(restoredMove.type === 'transform-selection' && restoredRotate.type === 'transform-selection', 'unified command deserializes');
     // Replay-style: a second world with the same brick identity.
     const secondWorld = new World({ id: document.world.id });
     const secondBuilding = new Building({ id: building.id, creator: 'tester' });
     secondBuilding.addBrick(new Brick({ id: 'brick-a', definitionId: 'core:cube', position: new Position(0, 0.5, 0), rotation: 0 }));
     secondWorld.addBuilding(secondBuilding);
-    restored.execute({ world: secondWorld });
+    restoredMove.execute({ world: secondWorld });
+    restoredRotate.execute({ world: secondWorld });
     assert(secondBuilding.findBrick('brick-a').position.x === 5, 'restored command reproduces the transform');
-    assert(secondBuilding.findBrick('brick-a').rotation === 45, 'restored command reproduces rotation');
+    assert(secondBuilding.findBrick('brick-a').rotation === 90, 'restored command reproduces rotation');
     console.log('✓ unified transform command serialization roundtrip');
 }
 

@@ -467,7 +467,7 @@ async function run() {
         // geometry code inside the action itself.
         assert(focusAction.enabled(emptyContext) === false && focusAction.enabled(withSelectionContext) === true,
             n('H3. selection.focus enables/disables on the identical ctx.hasSelection rule as selection.clear/duplicate/delete — the same, not a second, enablement convention'));
-        assert(actionRegistry.getByCategory('Selection').length === 5,
+        assert(actionRegistry.getAll().filter((action) => action.category === 'Selection').length === 5,
             n('H3. it joins the "Selection" category as a fifth action (selectAll/clear/duplicate/delete/focus) — CommandPalette/EditingSidebar/keyboard dispatch surface it with zero additional wiring, per this registry\'s own "one registry, every surface" contract'));
         {
             const { document: h3Doc, building: h3Building } = makeStandaloneDocument();

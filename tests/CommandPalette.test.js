@@ -1,13 +1,11 @@
 import { EditorActionRegistry, createStandardActions } from '../application/EditorActionRegistry.js';
 import { EditorActionContext } from '../application/EditorActionContext.js';
-import { InputRouter } from '../application/InputRouter.js';
 
 // 0.1.50 — Command palette tests. The component (ui/components/
 // CommandPalette.js) is a thin visual layer; everything testable
-// headlessly lives on EditorActionRegistry and InputRouter, and that is
-// what this suite exercises: search behavior, grouping, disabled-state
-// surfacing, execution gating, and the palette's place in the Escape
-// priority chain.
+// headlessly lives on EditorActionRegistry, and that is what this suite
+// exercises: search behavior, grouping, disabled-state surfacing, and
+// execution gating.
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -132,20 +130,6 @@ function contextFor(sessionState = {}) {
     registry.execute('selection.clear', context);
     assert(session.calls.length === 2, 'palette executions run in order');
     console.log('✓ sequential palette executions');
-}
-
-// ---------------------------------------------------------------------
-// 7. The palette's place in the Escape chain
-// ---------------------------------------------------------------------
-{
-    const resolve = InputRouter.resolveEscapeTarget;
-    assert(resolve({ paletteOpen: true, gestureActive: true }) === 'palette',
-        'open palette owns Escape over an active gesture');
-    assert(resolve({ textInputFocused: true, paletteOpen: true }) === 'input',
-        'a focused field inside the palette owns Escape over the palette');
-    assert(resolve({ paletteOpen: false, gestureActive: false }) === 'selection',
-        'closed palette falls through to selection');
-    console.log('✓ palette escape placement');
 }
 
 // ---------------------------------------------------------------------

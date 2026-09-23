@@ -9,8 +9,6 @@ import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
 import { LoadPublishedWorldSessionUseCase } from '../application/LoadPublishedWorldSessionUseCase.js';
 import { PublishedWorldSession } from '../application/PublishedWorldSession.js';
-import { EditorActionRegistry, createStandardActions } from '../application/EditorActionRegistry.js';
-import { EditorActionContext } from '../application/EditorActionContext.js';
 
 class InMemoryStorageProvider extends StorageProvider {
     constructor() { super(); this._data = new Map(); }
@@ -146,65 +144,6 @@ function createTestDocument() {
     assert(session.getSelectionCount() === 0, 'clear selection works');
     
     console.log('✓ FLAGSHIP: No mutation pathway exists on PublishedWorldSession');
-}
-
-// ---------------------------------------------------------------------
-// 4. Action Registry integration: editing actions disabled automatically
-// ---------------------------------------------------------------------
-{
-    const storage = new InMemoryStorageProvider();
-    const publisher = new LocalPublisherProvider(storage);
-    const publishUseCase = new PublishDocumentUseCase(publisher, stubIdentityProvider);
-    const loadUseCase = new LoadPublishedWorldSessionUseCase(publisher);
-    
-    const doc = createTestDocument();
-    const manager = { document: doc };
-    const publication = publishUseCase.execute(manager);
-    const session = loadUseCase.execute(publication);
-    
-    session.selectBrick(
-        doc.world.getBuildings()[0].getBricks()[0].id,
-        doc.world.getBuildings()[0].id
-    );
-    
-    const feedback = { show: () => {} };
-    const registry = new EditorActionRegistry(
-        createStandardActions({ session, feedback, ui: {} })
-    );
-    
-    const context = EditorActionContext.capture({
-        session,
-        selectionCount: session.getSelectionCount()
-    });
-    
-    // Selection actions should be enabled
-    assert(registry.get('selection.clear').enabled(context) === true, 'clear selection enabled');
-    
-    // Mutation actions must be disabled via the capability boundary
-    const disabledActions = [
-        'selection.delete',
-        'transform.nudgeRight',
-        'transform.rotateClockwise',
-        'transform.alignLeft',
-        'transform.distributeX',
-        'group.create',
-        'clipboard.copy',
-        'clipboard.paste',
-        'history.undo',
-        'history.redo'
-    ];
-    
-    for (const actionId of disabledActions) {
-        const action = registry.get(actionId);
-        assert(action !== null, `${actionId} exists in registry`);
-        assert(action.enabled(context) === false, `${actionId} is disabled by capability boundary`);
-    }
-    
-    // Attempting to execute a disabled action does nothing
-    const executed = registry.execute('selection.delete', context);
-    assert(executed === false, 'disabled action does not execute');
-    
-    console.log('✓ Action Registry integration: editing actions disabled automatically');
 }
 
 console.log('\nAll published world tests passed.');

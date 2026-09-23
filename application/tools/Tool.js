@@ -7,8 +7,8 @@
 // InputDispatcher — { pointerType, buttons, modifiers, screenPosition,
 // worldPosition, pickedBrick }. A tool never calls PickingService itself
 // (context no longer even exposes pick()/pickGround()); it just reads
-// pickedBrick/worldPosition off the event it's handed. Key/wheel events
-// are similarly normalized ({ key, modifiers } / { deltaY, modifiers }).
+// pickedBrick/worldPosition off the event it's handed. Key events are
+// similarly normalized ({ key, modifiers }).
 //
 // A tool receives its ToolContext once, at construction — the context
 // doesn't change while a tool is active. ToolManager owns calling
@@ -26,6 +26,4 @@ export class Tool {
     onPointerDown(pointerEvent) {}
     onPointerUp(pointerEvent) {}
     onKeyDown(keyEvent) {}
-    onKeyUp(keyEvent) {}
-    onWheel(wheelEvent) {}
 }

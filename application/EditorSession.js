@@ -65,13 +65,10 @@ import { SelectionBoundsService } from './SelectionBoundsService.js';
 // applyNumericTransform. All routed to the same gesture service.
 //
 // 0.1.50 — the Editor half of the consolidated editing surface:
-// selectAll()/clearSelection()/deleteSelection()/getSelectionCount()
-// join the session API so the EditorActionRegistry can drive selection
-// operations from the command palette, the sidebar, and keyboard
-// shortcuts without any Editor-only code paths. Group and clipboard
-// surface (0.1.42/0.1.43) belongs wherever this session is extended in
-// the deployed tree; the action layer degrades gracefully when those
-// methods are absent rather than assuming them.
+// selectAll()/clearSelection()/deleteSelection() join the session API
+// so the EditorActionRegistry can drive selection operations from the
+// command palette, the sidebar, and keyboard shortcuts without any
+// Editor-only code paths.
 //
 // 0.6.0 — the SAME diagonal offset application/WorldNavigationSession.js
 // #focusLocation() already uses (its own LOCATION_FOCUS_OFFSET) — one
@@ -386,10 +383,6 @@ export class EditorSession {
         return this._commandHistory;
     }
 
-    get transformSettings() {
-        return this._transformSettings;
-    }
-
     // 0.2.92 — checks BOTH gesture services: a placement drag now sets
     // this._placementGestureService's own gizmo state active, exactly
     // parallel to how a brick drag sets this._gestureService's. Neither
@@ -402,10 +395,6 @@ export class EditorSession {
     }
 
     // -------------------------------- 0.1.50 consolidated editing surface
-
-    getSelectionCount() {
-        return this._editorContext.selection.items.length;
-    }
 
     selectAll() {
         const document = this._documentManager.document;
@@ -601,17 +590,6 @@ export class EditorSession {
             return false;
         }
         return this._gestureService.applyNumericTransform(this._editorContext.selection, intent, options);
-    }
-
-    // 0.4.9 — "align this selection to the existing construction grid."
-    // See SpatialEditingService#snapSelectionToGrid()'s own header:
-    // exact move onto the nearest grid intersection, collision-gated
-    // through the same commit path every free-form move already uses.
-    snapSelectionToGrid(gridSize) {
-        if (this._editorContext.tool.activeTool === ToolId.PLACE) {
-            return false;
-        }
-        return this._gestureService.snapSelectionToGrid(this._editorContext.selection, gridSize);
     }
 
     // They close the method-surface gap so the action registry and
@@ -1724,8 +1702,7 @@ export class EditorSession {
     // ------------------------------------------------------- marquee UI
     // Read by ui/views/EditorView.js to draw the `.marquee-rect` overlay
     // (css/main.css) and to route Escape to cancelMarquee() ahead of
-    // selection.clear — see application/InputRouter.js's own
-    // ESCAPE_PRIORITY: gesture > marquee > selection.
+    // selection.clear (Escape priority: gesture > marquee > selection).
 
     isMarqueeActive() {
         return !!this._marqueeState;
