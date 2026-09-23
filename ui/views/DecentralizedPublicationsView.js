@@ -3,12 +3,6 @@ import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 import { resolveSavedProviderDefault } from '../../application/SavedProviderDefaultChoice.js';
 import { PublicationResolutionOutcome } from '../../application/PublicationResolutionOutcome.js';
 import { resolvePublicationView, describePublicationOutcome, describeRetrieval } from '../../application/PublicationResolutionView.js';
-// 0.9.337 — Wire Resolved Decentralized Publications into Repository
-// Discovery. `Publication` (never previously imported here) is needed for
-// exactly one check: `view.content instanceof Publication`, the same
-// instanceof test 0.9.336's own flagship exercised test-only, now made a
-// real production admission gate — see `admitToRepositoryDiscovery()`
-// below.
 import { Publication } from '../../publisher/Publication.js';
 import { AnchorVerificationOutcome } from '../../application/AnchorVerificationOutcome.js';
 import { publicationEvidenceView, describeKnownEvidenceCount } from '../../application/PublicationEvidenceView.js';
@@ -138,11 +132,9 @@ import { PublisherIdentityRecord } from '../../application/PublisherIdentityReco
 import { CreatePublisherPublicationAssociationRecordUseCase } from '../../application/CreatePublisherPublicationAssociationRecordUseCase.js';
 import { describePublisherPublicationAssociationRecordHistory } from '../../application/PublisherPublicationAssociationRecordHistoryView.js';
 import { reconstructPublisherAssociatedPublications, reconstructDistinctPublisherIdentifiers } from '../../application/PublisherAssociationView.js';
-// Publisher Achievement Profile/Badges/Statistics (0.8.109-0.8.111) moved to
-// ui/views/LeaderboardHubView.js — see that file's own header. This page
-// keeps only distinctPublisherIdentifiersView() above (still needed by the
-// "Publisher Associations" card immediately below), never the three
-// publisher-achievement projections built on top of it.
+// Publisher achievement profile/badges/statistics live on
+// ui/views/LeaderboardHubView.js; this page keeps only the
+// publisher-association lookups below.
 import {
     PublicationObservationArchiveImportOutcome,
     exportPublicationObservationArchive,
@@ -173,366 +165,40 @@ import { describeBaseTransactionInclusionObservation, describeBaseTransactionInc
 import { appendBaseTransactionInclusionObservationHistoryEntry } from '../../application/BaseTransactionInclusionObservationHistory.js';
 import { sortOptionsByLabel, sortLabels } from '../../utils/sortOptionsByLabel.js';
 
-// 0.7.5 — Decentralized Publication UX & Resolution.
-// 0.7.6 — Multi-Peer Publication Retrieval & Replication.
+// Publications page (/publications). Lists every DecentralizedPublication in
+// the local catalog (this replica's own, or one a peer announced) with its
+// content availability, external evidence (anchors), snapshot placements and
+// local snapshot possession, plus page-level wallet, archive and publisher
+// tools.
 //
-// The "Publication Center" this milestone's own design conversation
-// asked for: a single place a person can look at every application/
-// DecentralizedPublication.js this replica's application/
-// LocalPublicationCatalog.js has ever cataloged — its own, or one
-// announced by a peer (application/PublicationPeerExchange.js, 0.7.3) —
-// and see, per entry, whether its content can be seen RIGHT NOW.
+// Rules this page keeps (see docs/Principles.md; history in docs/Roadmap.md):
+// - Status is derived at display time, never stored on a catalog entry;
+//   "Re-check" always re-derives it from scratch.
+// - Opening the page or a disclosure never touches the network. Retrieval,
+//   verification, discovery, resolution, creation, materialization and
+//   synchronization each run only on an explicit click.
+// - Those actions stay separate: creating or discovering an anchor never
+//   verifies it, resolving a placement never materializes it, inspecting is a
+//   purely local read.
+// - Per-entry results (verifications, resolutions, attempts, histories) are
+//   ephemeral session state, never written back into a catalog; durable facts
+//   go only to the publication observation archive.
+// - Evidence is shown and compared, never ranked, merged into a score, or
+//   turned into a trust verdict.
+// - Retrieval asks every authenticated peer, in PeerSessionManager registry
+//   order, one at a time.
 //
-// Every status shown below is DERIVED, at display time, by application/
-// PublicationResolutionView.js#resolvePublicationView() — never stored
-// on the entry, never cached across a re-check. Mirrors the restraint
-// application/LocalPublicationCatalog.js's own header already states as
-// a hard rule ("no resolution status field on a catalog entry... status
-// is always derived, on demand") applied here to the one place that
-// restraint finally has a UI to honor. Re-opening this page, or
-// clicking "Re-check," always re-derives the answer from scratch; it is
-// never wrong in a way a reload wouldn't also fix, and never stale in a
-// way this page would hide.
-//
-// "Retrieve from Peers" replaces 0.7.5's own "Retrieve from Connected
-// Peer" — the "multi-source retrieval... fallback... racing" that
-// milestone's own docs/Roadmap.md entry named and sized as a future
-// milestone (0.7.6) has arrived. This page still answers "who do I
-// ask?" the identical deliberately narrow way — application/
-// PublicationPeerExchange.js has never tracked which peer announced
-// which publication (peer identity is informational only, by design;
-// see that class's own header), so there is no natural "ask whoever
-// told you about this" target to offer. What changed: instead of the
-// FIRST currently AUTHENTICATED peer, this page now hands application/
-// PublicationResolutionCoordinator.js#resolve() EVERY currently
-// AUTHENTICATED peer, in application/PeerSessionManager.js's own
-// registry order, as its `peers` candidate list — still a single,
-// explicit, named policy living here, in the UI layer, never inside the
-// coordinator itself (see that class's own header on why `peers` is
-// always a required, caller-supplied argument). Candidates are tried in
-// that order, never raced concurrently — see application/
-// PeerContentRetrievalCoordinator.js's own header.
-//
-// 0.8.3 — Publication Center: External Evidence UX. Each entry also
-// shows its own "External Evidence" section — every application/
-// PublicationAnchor.js this replica has cataloged for that
-// publication, discovered locally the moment the list itself loads
-// (application/PublicationEvidenceCoordinator.js#discover(), a
-// synchronous catalog read with no network access), never
-// independently verified until a person clicks "Verify Evidence" on
-// one specific anchor. Opening this page never calls application/
-// ExternalAnchorVerifier.js; only that explicit click does. A
-// verification result lives only in this component's own `entry.
-// verifications` — ephemeral session state, never written back into
-// application/LocalPublicationAnchorCatalog.js or the anchor itself —
-// so re-opening this page, or asking again, always re-derives the
-// answer fresh. See application/PublicationEvidenceView.js's own
-// header and docs/Principles.md, "Known Evidence Is Not Verified
-// Evidence, And Verified Evidence Is Not Authority (0.8.3)."
-//
-// 0.8.11 — Explicit External Anchoring UX. Each entry's "External
-// Evidence" section now also offers a "Create <type> Anchor" control per
-// application/PublicationAnchorCreationCoordinator.js#availableAnchorTypes()
-// — the first UI consumer of the orchestration 0.8.8-0.8.10 built with no
-// UI consumer at all (see each of those milestones' own "Deliberately
-// excluded" lists). Discovery, creation, and verification stay three
-// genuinely separate actions, over three separate collaborators, exactly
-// as 0.8.3 already established for the first two: opening this page,
-// listing known evidence, and toggling the evidence list open never
-// trigger a creation OR a verification; clicking "Create <type> Anchor"
-// triggers exactly one external recording attempt and NEVER an automatic
-// verification of what it just created (the resulting anchor lands in
-// the ordinary evidence list below, "Not yet verified," exactly like any
-// other cataloged anchor); clicking "Verify Evidence" remains its own
-// separate, unchanged 0.8.3 action. See application/
-// PublicationAnchorCreationView.js's own header and docs/Principles.md,
-// "External Anchoring Is An Explicit User Action (0.8.11)."
-//
-// 0.8.12 — External Anchor Lifecycle & Stale Evidence Semantics. Each
-// entry now also keeps `entry.verificationHistory` — every application/
-// PublicationAnchorVerificationObservation.js this replica has made for
-// one anchor THIS SESSION, appended to rather than overwritten. Clicking
-// "Verify Evidence"/"Verify Again" still shows the SAME badge/label it
-// always has (application/PublicationEvidenceView.js, unchanged); the
-// only new thing on screen is one optional extra sentence — application/
-// PublicationAnchorVerificationLifecycleView.js#
-// describeAnchorVerificationLifecycleNote() — that appears only when the
-// most recent check came back PROOF_UNAVAILABLE after an EARLIER check,
-// this session, reached VALID. It never says "invalid" or "revoked," and
-// it never appears for an anchor this replica has only ever checked
-// once. See docs/Principles.md, "A Verification Result Describes What
-// Can Be Established Now; It Does Not Rewrite The Historical Claim Being
-// Verified (0.8.12)."
-//
-// 0.8.13 — Multi-Evidence Comparison & Conflict UX. Each entry now also
-// derives a "Content binding" overview from application/
-// PublicationEvidenceConvergence.js#derivePublicationEvidenceConvergence()
-// (0.8.6, unchanged) shaped for the screen by application/
-// PublicationEvidenceConvergenceView.js (new): how many DISTINCT content
-// hashes are claimed by this entry's known anchors, how many anchors
-// claim each one, and whether those claims conflict. This answers "how
-// does this evidence relate to itself?" — a question the per-anchor
-// evidence list below already let a person answer by hand, one card at a
-// time, but never stated directly. Shown only inside the same "Show
-// Evidence" disclosure the per-anchor list already uses, and computed
-// fresh every time `loadEvidence()`/`verifyAnchor()` already run —
-// nothing new is stored, and nothing here ever ranks one content-hash
-// group over another. See docs/Principles.md, "Evidence Comparison Is
-// Not Adjudication (0.8.13)."
-//
-// 0.8.14 — External Evidence Inspection & Locator UX. Each anchor card
-// now also offers "Inspect Evidence," alongside the existing "Verify
-// Evidence"/"Verify Again" — two buttons that mean completely different
-// things. Clicking "Inspect Evidence" calls ONLY application/
-// PublicationAnchorDetailView.js#publicationAnchorDetailView() (a pure,
-// synchronous reshaping of the anchor this replica already has in
-// memory) and, separately, looks the anchor's own `anchorType` up in the
-// injected `externalAnchorEvidenceViewRegistry` for an OPTIONAL,
-// anchorType-specific presentation (application/
-// ExternalAnchorEvidenceViewRegistry.js) — never application/
-// ExternalAnchorVerifier.js, never the network, never the catalog.
-// `entry.inspections` is ephemeral per-anchor UI state, exactly like
-// `entry.verifications`/`entry.creationAttempts` above — never read from
-// or written to anything durable. See application/
-// PublicationAnchorDetailView.js's own header and docs/Principles.md,
-// "Inspection Is Observation; Verification Is An Explicit Operation
-// (0.8.14)."
-// 0.8.16 — Evidence Synchronization UX & Explicit Historical Discovery.
-// Each entry's "External Evidence" section now also offers an explicit
-// "Discover from Peers" action — the first UI consumer of application/
-// PublicationAnchorDiscoveryCoordinator.js's own 0.8.5 machinery, which
-// built with no UI consumer at all (see that milestone's own
-// docs/Roadmap.md entry: "Provided here for a future UI to call"), now
-// finally wired through the thin application-facing layer application/
-// PublicationEvidenceDiscoveryCoordinator.js adds above it. Opening this
-// page, listing known evidence, or expanding "Show Evidence" NEVER
-// triggers a discovery call — see this file's own onMounted()/
-// refreshList(), unchanged by this milestone. Only an explicit
-// "Discover from Peers" click does, exactly the same restraint 0.8.11
-// already holds for "Create <type> Anchor" and 0.8.3 already holds for
-// "Verify Evidence." `entry.discoveryAttempt` is ephemeral per-entry UI
-// state, exactly like `entry.creationAttempts`/`entry.verifications`
-// above — never read from or written to anything durable, and never
-// itself a verification: a discovered anchor lands in the ordinary
-// evidence list below exactly like any other cataloged anchor, "Not yet
-// verified," until a person separately clicks "Verify Evidence" on it.
-// See application/PublicationEvidenceDiscoveryCoordinator.js's own
-// header and docs/Principles.md, "Discovery Is Not Verification, And
-// 'No New Evidence' Is Not 'No Evidence' (0.8.16)."
-//
-// 0.8.20 — Snapshot Placement Inspection & Explicit Resolution UX. Each
-// entry now also shows a "Snapshot Placements" section, deliberately
-// separate from "External Evidence" above — a placement (core/
-// PublicationSnapshotPlacement.js, 0.8.18) and an anchor (core/
-// PublicationAnchor.js, 0.8.0) answer two different questions ("where
-// can I retrieve this, right now" vs. "did an external system record
-// this, at some point"), and this page keeps that distinction visible
-// rather than merging both into one shared "evidence" list. Every
-// placement this replica has cataloged for a publication is discovered
-// the moment the list itself loads (application/
-// SnapshotPlacementResolutionCoordinator.js#discover(), a synchronous
-// catalog read with no network access) — opening this page never calls
-// application/SnapshotPlacementResolver.js. "Inspect Placement" is a
-// second, separate, purely local action — application/
-// PublicationSnapshotPlacementDetailView.js#
-// publicationSnapshotPlacementDetailView() plus an OPTIONAL storage-
-// specific application/SnapshotPlacementViewRegistry.js adapter, exactly
-// mirroring "Inspect Evidence" (0.8.14) one axis over. Only an explicit
-// "Resolve Snapshot" click ever calls application/
-// SnapshotPlacementResolutionCoordinator.js#resolve() — a resolution
-// result lives only in this component's own `entry.resolutions`,
-// ephemeral session state, never written back into application/
-// LocalPublicationSnapshotPlacementCatalog.js or the placement itself.
-// See application/SnapshotPlacementView.js's own header and
-// docs/Principles.md, "Resolving A Placement Observes Present
-// Availability; It Does Not Rewrite The Placement Claim (0.8.20)."
-// 0.8.23 — Multi-Placement Convergence & Relationship UX. Each entry's
-// "Snapshot Placements" section now also derives a "Placement
-// relationships" overview from application/
-// PublicationSnapshotPlacementConvergence.js#
-// derivePublicationSnapshotPlacementConvergence() shaped for the screen
-// by application/PublicationSnapshotPlacementConvergenceView.js — the
-// identical idea 0.8.13 already applied to "External Evidence" above
-// ("Content binding"), applied here to placements: how many placements
-// are known, across how many storage backends and distinct locations,
-// and whether their claimed content hashes agree. Deliberately a
-// SEPARATE card from "Content binding" — an anchor answers "what
-// external evidence claims do I know?" while a placement answers "what
-// locations do I know that claim this snapshot is retrievable?," and
-// this page keeps that distinction visible exactly as it already keeps
-// "External Evidence" and "Snapshot Placements" themselves separate
-// sections (0.8.20). Recomputed fresh every time `loadPlacements()`
-// already runs — never once threaded through `entry.resolutions`: see
-// `loadPlacements()`'s own comment below and docs/Principles.md,
-// "Multi-Placement Convergence Is Independent Of Resolution Observation
-// (0.8.23)."
-// 0.8.24 — Snapshot Placement Provenance & Observation Boundary. "Inspect
-// Placement" now also shows a "Local Knowledge" section, mirroring the
-// identical section 0.8.17 already added to "Inspect Evidence" one axis
-// over — see `togglePlacementInspect()`'s own comment below. Reading it
-// is a purely local, synchronous `placementKnowledgeStore.get()` call,
-// computed alongside the existing `publicationSnapshotPlacementDetailView()`
-// call, under the identical "Inspection Is Observation" restraint 0.8.14/
-// 0.8.20 already established for that call.
-//
-// 0.8.26 — Snapshot Placement Lifecycle & Stale Availability Semantics.
-// Each entry now also keeps `entry.resolutionHistory` — every
-// application/SnapshotPlacementResolutionObservation.js this replica has
-// made for one placement THIS SESSION, appended to rather than
-// overwritten, the placement-side sibling of `entry.verificationHistory`
-// (0.8.12) one axis over. Clicking "Resolve Snapshot"/"Resolve Again"
-// still shows the SAME badge/label it always has (application/
-// SnapshotPlacementView.js, unchanged); the only new thing on screen is
-// one optional extra sentence — application/
-// SnapshotPlacementLifecycleView.js#describeSnapshotPlacementLifecycleNote()
-// — that appears only when the most recent resolution came back
-// UNAVAILABLE after an EARLIER resolution, this session, reached
-// RESOLVED. It never says "invalid" or "corrupted," it never appears for
-// a placement this replica has only ever resolved once, and it never
-// appears for a HASH_MISMATCH — a store answering with the wrong bytes
-// stays its own definite finding, never softened by an earlier success.
-// See docs/Principles.md, "A Resolution Result Describes Whether Bytes
-// Can Be Retrieved Now; It Does Not Rewrite The Placement Claim
-// (0.8.26)."
-//
-// 0.8.31 — Replica Knowledge Provenance & Synchronization Inspection. The
-// "Decentralization" card (0.8.27) now also offers a "Replica Knowledge"
-// disclosure — a claim-level INVENTORY, never a verdict, of exactly how
-// this replica came to know each anchor/placement it already lists above.
-// `entry.replicaKnowledgeDetail` is application/
-// PublicationReplicaKnowledgeDetailView.js's own result, recomputed
-// (never accumulated) by `recomputeReplicaKnowledgeDetail()` every time
-// `loadEvidence()`/`loadPlacements()`/`verifyAnchor()`/`resolvePlacement()`
-// already run — the identical "always current, never stale" restraint
-// `recomputeDecentralization()` already holds one card above. Opening
-// this disclosure never itself reads a store or calls a coordinator; only
-// those four existing actions do, exactly as before this milestone.
-// `entry.replicaKnowledgeExpanded` gates VISIBILITY only, mirroring
-// `evidenceExpanded`/`placementsExpanded` above — the underlying
-// computation is always fresh whether or not a person has ever opened it.
-// See application/PublicationReplicaKnowledgeDetailView.js's own header
-// and docs/Principles.md, "Replica Knowledge Explains What Is Known And
-// How It Was Acquired; It Does Not Judge What Should Be Trusted (0.8.31)."
-//
-// 0.8.33 — Local Snapshot Content Availability & Integrity UX. Each entry
-// now also offers a "Local Snapshot" section, deliberately separate from
-// "Decentralization" above: that card describes DISTRIBUTED claims this
-// replica knows about (evidence, placements); this one describes a fact
-// about THIS replica's own present content state, computed by application/
-// CheckLocalSnapshotContentAvailabilityUseCase.js reading ONLY the local
-// content/ContentStore.js — never a placement, never the network. Opening
-// this page, expanding any disclosure, or synchronizing with peers NEVER
-// triggers a check; only an explicit "Check Local Snapshot" click does,
-// the identical restraint 0.8.20/0.8.3 already hold for "Resolve
-// Snapshot"/"Verify Evidence". `entry.localSnapshotAvailability` is
-// ephemeral session state, exactly like `entry.resolutions` above — never
-// read from or written to anything durable, and never itself a
-// materialization action: a completed check reports what is already true
-// of this replica's own storage right now; it never imports, retrieves,
-// or writes a single byte. See application/
-// CheckLocalSnapshotContentAvailabilityUseCase.js's own header and
-// docs/Principles.md, "Local Content Availability Is An Observation, Not
-// A Verdict (0.8.33)."
-//
-// 0.8.38 — Snapshot Materialization History & Source Inspection. "Local
-// Snapshot" now also offers a "Materialization History" disclosure, one
-// axis past 0.8.36's own "Source: …" line: where that line names only
-// the SINGLE most recent action that actually stored bytes, `entry.
-// materializationHistory` is the full ORDERED sequence of every "Import
-// Snapshot"/"Materialize Snapshot"/"Get Snapshot from Peer" attempt this
-// entry has seen THIS SESSION that actually reached application/
-// StoreSnapshotContentUseCase.js — appended to by `recordMaterializationHistoryEntry()`
-// alongside each of the three existing recording call sites, never a
-// fourth action of its own. Includes a rejected HASH_MISMATCH attempt,
-// which `lastMaterializationAttempt` never records at all. Deliberately
-// never ranks, scores, or picks a "preferred" source out of the history
-// it narrates — see application/SnapshotMaterializationHistoryView.js's
-// own header and docs/Principles.md, "Materialization History Describes
-// Byte Acquisition, Not Source Trust (0.8.38)."
-//
-// 0.8.39 — Local Snapshot Possession & Replica Content Knowledge. "Local
-// Snapshot" now also shows one small, tiny composed line — "Publication:
-// known/not known locally · Snapshot: available/not available" — once a
-// local availability check has ever completed for this entry, THIS
-// session. `replicaContentKnowledgeView(entry)` composes `catalog.has()`
-// (a plain boolean; every entry already on screen came from `catalog.
-// list()`, exactly like `recomputeReplicaKnowledge()` above already
-// assumes) with `currentPossessionView(entry)` — a pure reshaping of
-// whatever `entry.localSnapshotAvailability` (0.8.33) currently holds,
-// touching no store of its own. Carries NO anchor/placement counts —
-// those remain exactly where the "Decentralization" card below already
-// shows them, on its own independently-gated card; this line and that
-// card are two separate, un-merged facts, shown side by side, never
-// combined into one score. See application/
-// PublicationSnapshotPossessionView.js's and application/
-// PublicationReplicaContentKnowledgeView.js's own headers, and
-// docs/Principles.md, "Current Snapshot Possession Is A Local
-// Observation, Not A Distributed Claim (0.8.39)."
-//
-// 0.8.35 — Explicit Placement-Backed Snapshot Materialization. Each
-// placement card in "Snapshot Placements" below now also offers
-// "Materialize Snapshot," alongside the existing "Inspect Placement"/
-// "Resolve Snapshot" (0.8.20) — a THIRD, genuinely separate action, never
-// triggered by opening this page, expanding "Show Placements," inspecting
-// a placement, or resolving one. Only this explicit click ever calls
-// application/SnapshotPlacementMaterializationCoordinator.js#materialize(),
-// which runs the SAME resolution "Resolve Snapshot" already runs
-// (application/SnapshotPlacementResolutionCoordinator.js, unchanged) and,
-// only once it succeeds, writes the retrieved bytes into this replica's
-// own content/ContentStore.js — the missing bridge between "where can this
-// be retrieved from" (0.8.20) and "does this replica actually possess the
-// bytes" (0.8.33), named directly in 0.8.34's own docs/Roadmap.md entry as
-// this milestone. `entry.materializations` is keyed by placementId,
-// ephemeral session state exactly like `entry.resolutions` above — never
-// read from or written to anything durable, and never itself resolves or
-// modifies the placement (application/
-// MaterializeSnapshotFromPlacementUseCase.js never touches it). Choosing
-// WHICH placement to materialize from is always the person's own explicit
-// click on ONE specific card — this page never ranks placements, never
-// tries a second one after the first fails, and offers no "best source."
-// See application/SnapshotPlacementMaterializationCoordinator.js's own
-// header and docs/Principles.md, "Placement Resolution Observes Present
-// Availability; Materialization Turns It Into Possession (0.8.35)."
-//
-// 0.8.43 — Unified Snapshot Acquisition Outcome & Possession UX. "Local
-// Snapshot" now opens with a "Snapshot Acquisition" summary, sitting ABOVE
-// every specialized disclosure it already offers (the current-possession
-// check, "Materialization History," "Peer Snapshot Possession Comparison")
-// — a composed view, never a replacement for any of them. `snapshotAcquisitionView(entry)`
-// is a pure reshaping of two facts this page already computes independently
-// — `currentPossessionView(entry)` (0.8.39) and `entry.materializationHistory`
-// (0.8.38) — through application/PublicationSnapshotAcquisitionView.js; it
-// touches no store, no coordinator, and no use case of its own, and never
-// triggers a check or a materialization attempt merely by being read.
-// Visible only once at least one of those two facts has ever been
-// observed THIS session, mirroring the existing "Publication: known/not
-// known locally" line's own `.checked` gate one level up. When current
-// possession is NOT_AVAILABLE or CONTENT_HASH_MISMATCH, the summary adds
-// one short, honest hint pointing at the sources already offered further
-// down this same card ("Import Snapshot," a placement's own "Materialize
-// Snapshot," a peer's own "Get Snapshot from Peer") — never a new,
-// fourth materialization mechanism, and never an automatic retry: see
-// application/PublicationSnapshotAcquisitionView.js's own header and
-// docs/Principles.md, "Current Snapshot Possession Is Independent Of How
-// The Snapshot Was Acquired (0.8.43)" and "Acquisition History Explains
-// Past Attempts; It Does Not Determine Present Possession (0.8.43)."
+// Badge colors reuse the .peer-badge palette: green = good (an "already
+// available" duplicate counts as good), amber = honestly inconclusive (nothing
+// could be established), red = a definite rejection (e.g. a hash mismatch). The
+// label text, never the color alone, tells outcomes apart.
 const LOCAL_SNAPSHOT_AVAILABILITY_BADGE_CLASSES = {
     [LocalSnapshotContentAvailabilityOutcome.AVAILABLE]: 'peer-badge--authenticated',
     [LocalSnapshotContentAvailabilityOutcome.NOT_AVAILABLE]: 'peer-badge--unchecked',
     [LocalSnapshotContentAvailabilityOutcome.CONTENT_HASH_MISMATCH]: 'peer-badge--failed'
 };
 
-// 0.8.34 — Explicit Snapshot Materialization UX. Reuses the identical
-// .peer-badge palette every sibling *CreationUiState above already draws
-// from — IMPORTED and ALREADY_AVAILABLE both read as "good" (green): a
-// duplicate import is never a failure, exactly as application/
-// SnapshotContentTransferOutcome.js's own ALREADY_STORED header already
-// states. REJECTED reads as a definite rejection (red), exactly like
-// ExternalAnchorCreationUiState.REJECTED — the package was read and its
-// own bytes demonstrably did not match its own claimed hash. UNAVAILABLE
-// reads as "honestly inconclusive" (amber) — nothing was ever attempted,
-// whether because the input was malformed or because application/
-// SnapshotContentMaterializationCoordinator.js#import() itself threw.
+// Snapshot package import outcomes.
 const MATERIALIZATION_BADGE_CLASSES = {
     [SnapshotContentMaterializationUiState.IMPORTING]: 'peer-badge--pending',
     [SnapshotContentMaterializationUiState.IMPORTED]: 'peer-badge--authenticated',
@@ -541,16 +207,7 @@ const MATERIALIZATION_BADGE_CLASSES = {
     [SnapshotContentMaterializationUiState.REJECTED]: 'peer-badge--failed'
 };
 
-// 0.8.35 — Explicit Placement-Backed Snapshot Materialization. The
-// placement-backed sibling of MATERIALIZATION_BADGE_CLASSES above, one
-// axis over: STORED and ALREADY_AVAILABLE both read as "good" (green) —
-// a duplicate materialization is never a failure. UNAVAILABLE reads as
-// "honestly inconclusive" (amber) — the identical outcome "Resolve
-// Snapshot" itself already shows amber for STORE_UNAVAILABLE/
-// CONTENT_UNAVAILABLE (see PLACEMENT_BADGE_CLASSES above). HASH_MISMATCH
-// and INVALID_PLACEMENT both read as definite rejections (red) — a
-// placement whose own bytes, or whose own signature, demonstrably did
-// not check out.
+// Placement-backed materialization outcomes.
 const PLACEMENT_MATERIALIZATION_BADGE_CLASSES = {
     [SnapshotPlacementMaterializationUiState.MATERIALIZING]: 'peer-badge--pending',
     [SnapshotPlacementMaterializationUiState.STORED]: 'peer-badge--authenticated',
@@ -560,13 +217,8 @@ const PLACEMENT_MATERIALIZATION_BADGE_CLASSES = {
     [SnapshotPlacementMaterializationUiState.INVALID_PLACEMENT]: 'peer-badge--failed'
 };
 
-// 0.8.37 — Explicit Peer Snapshot Content Transfer. The peer-backed
-// sibling of PLACEMENT_MATERIALIZATION_BADGE_CLASSES above, one axis over
-// — STORED and ALREADY_AVAILABLE both read as "good" (green); UNAVAILABLE
-// reads as "honestly inconclusive" (amber), since a peer not answering in
-// time is never distinguishable from a peer that simply does not hold the
-// bytes (see application/PeerSnapshotMaterializationOutcome.js's own
-// header); HASH_MISMATCH reads as a definite rejection (red).
+// Peer-backed materialization outcomes. UNAVAILABLE is amber: a peer that
+// doesn't answer can't be told apart from one that lacks the bytes.
 const PEER_MATERIALIZATION_BADGE_CLASSES = {
     [SnapshotPeerMaterializationUiState.REQUESTING]: 'peer-badge--pending',
     [SnapshotPeerMaterializationUiState.STORED]: 'peer-badge--authenticated',
@@ -575,11 +227,8 @@ const PEER_MATERIALIZATION_BADGE_CLASSES = {
     [SnapshotPeerMaterializationUiState.HASH_MISMATCH]: 'peer-badge--failed'
 };
 
-// 0.8.40 — Snapshot Possession Observation Exchange. AVAILABLE/NOT_AVAILABLE
-// are both simply ordinary, informative answers — neither is styled as
-// "success" or "failure" the way STORED/HASH_MISMATCH above are for an
-// actual materialization; only CHECKING (pending) and UNAVAILABLE (no
-// answer at all) get their own distinct treatment.
+// AVAILABLE and NOT_AVAILABLE are both ordinary answers, not success/failure;
+// only CHECKING and UNAVAILABLE (no answer) are styled.
 const PEER_POSSESSION_BADGE_CLASSES = {
     [SnapshotPeerPossessionUiState.CHECKING]: 'peer-badge--pending',
     [SnapshotPeerPossessionUiState.AVAILABLE]: 'peer-badge--authenticated',
@@ -603,7 +252,6 @@ const DISCOVERY_BADGE_CLASSES = {
     [PublicationEvidenceDiscoveryUiState.UNAVAILABLE]: 'peer-badge--pending'
 };
 
-// 0.8.30 — Explicit Replica Knowledge Synchronization.
 const SYNCHRONIZATION_BADGE_CLASSES = {
     [PublicationKnowledgeSynchronizationUiState.SYNCHRONIZING]: 'peer-badge--pending',
     [PublicationKnowledgeSynchronizationUiState.SYNCHRONIZED]: 'peer-badge--authenticated',
@@ -619,22 +267,9 @@ function humanizeContentKind(contentKind) {
         .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-// 0.9.510 — Snapshot Content Backend Selection Label Fix. A `storage`
-// value ('local'/'ipfs'/'ar', application/SnapshotPlacementStoreRegistry
-// .js's own keys) is NOT a content kind — humanizeContentKind() above
-// title-cases a raw string, which is correct for a real word like
-// 'structure' but wrong for an abbreviation: 'ar' -> 'Ar', 'ipfs' ->
-// 'Ipfs', neither recognizable to an ordinary user as "Arweave"/"IPFS".
-// tests/SnapshotContentBackendSelectionProductReassessment.test.js's own
-// 0.9.509 Section I found exactly this, at four call sites on this page
-// (the Content backend picker, the Placement role's own per-backend card
-// header, the "Create <X> Placement" button label, and an already-created
-// placement's own list-item header) — all four now call this instead.
-// A small, presentation-only lookup, mirroring the existing precedent in
-// application/RoleProviderPreferenceSettingsView.js's own
-// PROVIDER_OPTION_LABELS exactly: a known storage code renders its real
-// name; an unrecognized one still renders, title-cased, via
-// humanizeContentKind() — never hidden, never refused.
+// A storage code ('local'/'ipfs'/'ar') is not a word: title-casing gives
+// 'Ar'/'Ipfs'. Known codes get their real name; unknown ones fall back to
+// humanizeContentKind(), never hidden.
 const STORAGE_TYPE_LABELS = {
     local: 'Local',
     ipfs: 'IPFS',
@@ -645,21 +280,9 @@ function humanizeStorageType(storage) {
     return STORAGE_TYPE_LABELS[storage] || humanizeContentKind(storage);
 }
 
-// 0.9.514 — Proof/Anchoring Product Completion Reassessment. An
-// `anchorType` value (anchoring/BitcoinAnchorPublisher.js's own
-// 'bitcoin-op-return', anchoring/BaseAnchorPublisher.js's own 'base',
-// anchoring/ArweaveAnchorPublisher.js's own 'arweave') is not a content
-// kind either, for the identical reason 0.9.510's STORAGE_TYPE_LABELS
-// immediately above exists: humanizeContentKind() title-cases the raw
-// string, which is correct for a real word like 'structure' but turns
-// 'bitcoin-op-return' into "Bitcoin Op Return" — OP_RETURN is the
-// specific Bitcoin script opcode this anchor's commitment happens to be
-// embedded in, a raw protocol detail with no meaning to an ordinary
-// user, never a name for the destination network the way "Base" and
-// "Arweave" already are for their own anchorType values. A known
-// anchorType renders its real network name; an unrecognized one still
-// renders, title-cased, via humanizeContentKind() — never hidden, never
-// refused.
+// Same for anchorType: 'bitcoin-op-return' names a script opcode, not a
+// network. Known types get their network name; unknown ones fall back to
+// humanizeContentKind().
 const ANCHOR_TYPE_LABELS = {
     'bitcoin-op-return': 'Bitcoin',
     base: 'Base',
@@ -674,12 +297,8 @@ function shortId(identityId) {
     return identityId ? identityId.slice(-14) : 'an unknown identity';
 }
 
-// 0.8.13 — Multi-Evidence Comparison & Conflict UX. Display-only
-// truncation for a content-hash group's heading, mirroring shortId()'s
-// own restraint immediately above: the FULL contentHash is still shown
-// verbatim, monospace, elsewhere on each anchor's own evidence card
-// (unchanged since 0.8.3) — this shortened form exists only so several
-// groups can be told apart at a glance in the "Content binding" summary.
+// Display-only: the full hash is shown on each anchor card; this just tells
+// content-hash groups apart at a glance.
 function shortHash(contentHash) {
     if (!contentHash) return 'an unknown hash';
     return contentHash.length > 18 ? `${contentHash.slice(0, 10)}…${contentHash.slice(-6)}` : contentHash;
@@ -690,15 +309,8 @@ const OUTCOME_BADGE_CLASSES = {
     [PublicationResolutionOutcome.CONTENT_UNAVAILABLE]: 'peer-badge--pending'
 };
 
-// 0.8.3 — Publication Center: External Evidence UX. Reuses the three
-// colors .peer-badge already defines rather than inventing seven new
-// ones — VALID is the only outcome ever shown as "good" (green);
-// VALID_PROOF_UNVERIFIED and PROOF_UNAVAILABLE both read as "honestly
-// inconclusive" (amber), matching application/AnchorVerificationOutcome
-// .js's own header on why neither is ever treated as a rejection; every
-// other outcome reads as a definite rejection (red). The LABEL text —
-// never this color alone — is what keeps all seven outcomes distinct;
-// see application/PublicationEvidenceView.js#describeVerificationOutcome().
+// Only VALID is green. VALID_PROOF_UNVERIFIED and PROOF_UNAVAILABLE are amber
+// (inconclusive, never a rejection); every other outcome is red.
 const EVIDENCE_BADGE_CLASSES = {
     [AnchorVerificationOutcome.VALID]: 'peer-badge--authenticated',
     [AnchorVerificationOutcome.VALID_PROOF_UNVERIFIED]: 'peer-badge--pending',
@@ -709,61 +321,27 @@ const EVIDENCE_BADGE_CLASSES = {
     [AnchorVerificationOutcome.INVALID_PROOF]: 'peer-badge--failed'
 };
 
-// 0.8.11 — Explicit External Anchoring UX. Reuses the identical
-// .peer-badge palette EVIDENCE_BADGE_CLASSES above already draws from —
-// CREATED reads as "good" (green), exactly like VALID; REJECTED reads as
-// a definite rejection (red), exactly like INVALID_PROOF (the external
-// system was reached and said no); UNAVAILABLE reads as "honestly
-// inconclusive" (amber), exactly like PROOF_UNAVAILABLE (nothing
-// external was reached at all, whether because of the publisher or
-// because application/PublicationAnchorCreationCoordinator.js#create()
-// itself threw — see application/PublicationAnchorCreationView.js's own
-// header on why those two share a state). CREATING gets the same amber
-// as any other in-flight check.
 const CREATION_BADGE_CLASSES = {
     [ExternalAnchorCreationUiState.CREATING]: 'peer-badge--pending',
     [ExternalAnchorCreationUiState.CREATED]: 'peer-badge--authenticated',
     [ExternalAnchorCreationUiState.REJECTED]: 'peer-badge--failed',
     [ExternalAnchorCreationUiState.UNAVAILABLE]: 'peer-badge--pending',
-    // Preferred Proof & Anchoring Provider Creation Integration. The same
-    // "honestly inconclusive" amber every other UNAVAILABLE-shaped state in
-    // this view already uses, never the red .peer-badge--failed coloring —
-    // a configured-but-unresolvable preference is not a definite rejection.
-    // Mirrors PLACEMENT_CREATION_BADGE_CLASSES's own identical entry below,
-    // one role over.
+    // An unresolvable provider preference is inconclusive, not a rejection.
     [ExternalAnchorCreationUiState.PROVIDER_NOT_FOUND]: 'peer-badge--pending'
 };
 
-// 0.8.25 — Explicit Snapshot Placement Creation UX. The placement-side
-// counterpart of CREATION_BADGE_CLASSES above, one axis over — CREATED
-// reads as "good" (green), exactly like the anchor side; UNAVAILABLE
-// reads as "honestly inconclusive" (amber), exactly like PROOF_UNAVAILABLE
-// / anchor-side UNAVAILABLE. There is no REJECTED entry here — see
-// application/SnapshotPlacementCreationUiState.js's own header on why
-// that state does not exist on the placement side at all.
+// The placement side has no REJECTED state (see
+// application/SnapshotPlacementCreationUiState.js).
 const PLACEMENT_CREATION_BADGE_CLASSES = {
     [SnapshotPlacementCreationUiState.CREATING]: 'peer-badge--pending',
     [SnapshotPlacementCreationUiState.CREATED]: 'peer-badge--authenticated',
     [SnapshotPlacementCreationUiState.UNAVAILABLE]: 'peer-badge--pending',
-    // 0.9.301 — the same "honestly inconclusive" amber every other
-    // UNAVAILABLE-shaped state in this view already uses, never the red
-    // .peer-badge--failed coloring: a configured-but-unresolvable
-    // preference was never rejected by anything, it was never even
-    // resolved to a store to ask.
+    // An unresolvable provider preference is inconclusive, not a rejection.
     [SnapshotPlacementCreationUiState.PROVIDER_NOT_FOUND]: 'peer-badge--pending'
 };
 
-// 0.8.57 — Bitcoin Anchor Proof & Confirmation Inspection UI. Two
-// DELIBERATELY SEPARATE badge maps, one per independent observation
-// application/BitcoinAnchorProofReconciliationView.js's own `reconcile()`
-// reports — never merged into one "anchor health" map, the identical
-// restraint every badge map above already holds for its own single
-// dimension. NOT_CONFIRMED reads the identical amber
-// "honestly inconclusive" `peer-badge--pending` UNAVAILABLE already does
-// on this map — both are simply "not yet CONFIRMED," and this map does
-// not rank one above the other. HASH_MISMATCH is the one red entry on
-// either map: a definite, reported rejection, exactly like REJECTED
-// above.
+// Confirmation and content proof are independent observations, so they get
+// separate maps. Only HASH_MISMATCH is red.
 const BITCOIN_ANCHOR_CONFIRMATION_BADGE_CLASSES = {
     [BitcoinAnchorConfirmationState.CONFIRMED]: 'peer-badge--authenticated',
     [BitcoinAnchorConfirmationState.NOT_CONFIRMED]: 'peer-badge--pending',
@@ -775,19 +353,8 @@ const BITCOIN_ANCHOR_CONTENT_PROOF_BADGE_CLASSES = {
     [BitcoinAnchorContentProofState.UNAVAILABLE]: 'peer-badge--pending'
 };
 
-// 0.8.58 — Explicit Bitcoin Wallet Connection & Signing UX. A wallet
-// connection's own badge, deliberately unrelated to either badge map
-// above — Confirmation and Content proof describe a TRANSACTION already
-// on Bitcoin's own network; this describes whether a browser wallet
-// extension currently grants ForkBuild a signing CAPABILITY, a completely
-// independent fact. UNAVAILABLE reads as the one red entry here — unlike
-// the Confirmation map above, where UNAVAILABLE is deliberately amber
-// alongside NOT_CONFIRMED (Bitcoin gives no definite "never confirms"
-// verdict), a wallet extension being missing/locked/unreachable IS a
-// definite, actionable fact a person can resolve right now (install or
-// unlock it) — see anchoring/BitcoinInjectedProviderWalletAdapter.js's
-// own header on why that outcome is never confused with a mid-flight
-// state.
+// Wallet UNAVAILABLE is red (unlike confirmation's amber UNAVAILABLE): a
+// missing or locked wallet extension is something the person can fix right now.
 const BITCOIN_WALLET_CONNECTION_BADGE_CLASSES = {
     [BitcoinWalletConnectionState.CONNECTED]: 'peer-badge--authenticated',
     [BitcoinWalletConnectionState.CONNECTING]: 'peer-badge--pending',
@@ -795,28 +362,15 @@ const BITCOIN_WALLET_CONNECTION_BADGE_CLASSES = {
     [BitcoinWalletConnectionState.UNAVAILABLE]: 'peer-badge--failed'
 };
 
-// 0.8.60 — Explicit Bitcoin Anchor Funding & Address Preparation. A
-// funding observation's own badge, deliberately unrelated to the wallet
-// connection badge map immediately above: CONNECTED names a signing
-// CAPABILITY; OBSERVED here names only that a funding source answered for
-// the connected account's own address — two independent facts, the
-// identical separation BITCOIN_ANCHOR_CONFIRMATION_BADGE_CLASSES and
-// BITCOIN_ANCHOR_CONTENT_PROOF_BADGE_CLASSES already hold from each other.
-// UNSUPPORTED reads amber, not red — a real, valid address this codebase
-// simply cannot estimate a fee for is not the actionable, resolvable
-// failure UNAVAILABLE on the wallet-connection map above is.
+// UNSUPPORTED is amber: a valid address this code can't estimate a fee for is
+// not an actionable failure.
 const BITCOIN_ANCHOR_FUNDING_BADGE_CLASSES = {
     [BitcoinAnchorFundingObservationState.OBSERVED]: 'peer-badge--authenticated',
     [BitcoinAnchorFundingObservationState.UNSUPPORTED]: 'peer-badge--pending',
     [BitcoinAnchorFundingObservationState.UNAVAILABLE]: 'peer-badge--failed'
 };
 
-// 0.8.90 — Explicit Base Network & Account Observation. Mirrors
-// BITCOIN_WALLET_CONNECTION_BADGE_CLASSES above exactly, one chain over —
-// CONNECTED names an account identity, nothing about signing capability
-// (base/BaseWalletConnection.js exposes none), and UNAVAILABLE reads red
-// for the identical reason: a missing/locked/unreachable wallet extension
-// is a definite, actionable fact a person can resolve right now.
+// UNAVAILABLE is red for the same reason as the Bitcoin wallet map.
 const BASE_WALLET_CONNECTION_BADGE_CLASSES = {
     [BaseWalletConnectionState.CONNECTED]: 'peer-badge--authenticated',
     [BaseWalletConnectionState.CONNECTING]: 'peer-badge--pending',
@@ -824,27 +378,17 @@ const BASE_WALLET_CONNECTION_BADGE_CLASSES = {
     [BaseWalletConnectionState.UNAVAILABLE]: 'peer-badge--failed'
 };
 
-// 0.8.90 — Explicit Base Network & Account Observation. Mirrors
-// BITCOIN_ANCHOR_FUNDING_BADGE_CLASSES immediately above, one chain over.
-// CHAIN_MISMATCH reads amber, not red — a real, reachable EVM network this
-// codebase simply does not recognize as Base is not the actionable,
-// resolvable failure UNAVAILABLE is; see application/
-// BaseNetworkObservationState.js's own header.
+// CHAIN_MISMATCH is amber: a reachable EVM network that isn't Base is not an
+// actionable failure.
 const BASE_ACCOUNT_OBSERVATION_BADGE_CLASSES = {
     [BaseNetworkObservationState.OBSERVED]: 'peer-badge--authenticated',
     [BaseNetworkObservationState.CHAIN_MISMATCH]: 'peer-badge--pending',
     [BaseNetworkObservationState.UNAVAILABLE]: 'peer-badge--failed'
 };
 
-// 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI. Mirrors
-// BITCOIN_ANCHOR_FUNDING_BADGE_CLASSES immediately above, one step later in
-// the pipeline: CONSTRUCTING reads amber (an attempt is in flight, not yet
-// a fact), CONSTRUCTED reads the same "authenticated" green a real,
-// deterministic plan earns, and FAILED reads red — the identical
-// "actionable, resolvable failure" red the wallet-connection badge map
-// uses, never the softer amber UNSUPPORTED gets on the funding map (a
-// FAILED construction can be retried with different funding, not merely
-// waited out).
+// Wallet pipeline stages (construction, signing, finalization, broadcast):
+// in-flight states are amber, success is green, and failures are red because
+// the step can be retried.
 const BITCOIN_ANCHOR_REVIEWED_SIGNING_BADGE_CLASSES = {
     [BitcoinAnchorReviewedSigningState.SIGNING]: 'peer-badge--pending',
     [BitcoinAnchorReviewedSigningState.SIGNED]: 'peer-badge--authenticated',
@@ -853,17 +397,6 @@ const BITCOIN_ANCHOR_REVIEWED_SIGNING_BADGE_CLASSES = {
     [BitcoinAnchorReviewedSigningState.FAILED]: 'peer-badge--failed'
 };
 
-// 0.8.63 — Explicit Signed PSBT Verification & Transaction Finalization UI.
-// Mirrors BITCOIN_ANCHOR_REVIEWED_SIGNING_BADGE_CLASSES immediately above,
-// one step later in the same pipeline: FINALIZING reads amber (an attempt
-// is in flight, not yet a fact — necessarily brief, see application/
-// BitcoinAnchorSignedPsbtFinalizationState.js's own header), FINALIZED
-// reads the same "authenticated" green a real cryptographic verification
-// earns, and both INVALID_SIGNATURE and FAILED read the identical
-// "actionable, resolvable failure" red the signing badge map's own DECLINED
-// and FAILED already use — never the softer amber this page reserves for
-// "cannot presently tell," which this boundary never itself produces (see
-// that state's own header on why UNAVAILABLE stays honestly unreached).
 const BITCOIN_ANCHOR_SIGNED_PSBT_FINALIZATION_BADGE_CLASSES = {
     [BitcoinAnchorSignedPsbtFinalizationState.FINALIZING]: 'peer-badge--pending',
     [BitcoinAnchorSignedPsbtFinalizationState.FINALIZED]: 'peer-badge--authenticated',
@@ -872,16 +405,8 @@ const BITCOIN_ANCHOR_SIGNED_PSBT_FINALIZATION_BADGE_CLASSES = {
     [BitcoinAnchorSignedPsbtFinalizationState.FAILED]: 'peer-badge--failed'
 };
 
-// 0.8.64 — Explicit Bitcoin Anchor Broadcast UI. Mirrors
-// BITCOIN_ANCHOR_SIGNED_PSBT_FINALIZATION_BADGE_CLASSES immediately above,
-// one step later in the same pipeline: BROADCASTING reads amber (an
-// attempt is in flight, not yet a fact — genuinely asynchronous, a real
-// network round trip), BROADCASTED reads the same "authenticated" green
-// the finalization badge map's own FINALIZED already uses — never a claim
-// of confirmation, only that the network accepted this transaction — and
-// REJECTED/UNAVAILABLE/FAILED all read the identical "actionable,
-// resolvable failure" red every other failure badge on this page already
-// uses.
+// BROADCASTED only means the network accepted the transaction, not that it
+// confirmed.
 const BITCOIN_ANCHOR_BROADCAST_BADGE_CLASSES = {
     [BitcoinAnchorBroadcastState.BROADCASTING]: 'peer-badge--pending',
     [BitcoinAnchorBroadcastState.BROADCASTED]: 'peer-badge--authenticated',
@@ -896,14 +421,8 @@ const BITCOIN_ANCHOR_TRANSACTION_CONSTRUCTION_BADGE_CLASSES = {
     [BitcoinAnchorTransactionConstructionState.FAILED]: 'peer-badge--failed'
 };
 
-// 0.8.91 — Explicit Base Publication Transaction Construction. Mirrors
-// BITCOIN_ANCHOR_TRANSACTION_CONSTRUCTION_BADGE_CLASSES immediately above,
-// one chain over, with one addition: UNAVAILABLE reads the identical red
-// FAILED does — unlike BASE_ACCOUNT_OBSERVATION_BADGE_CLASSES's own
-// CHAIN_MISMATCH (a real, non-actionable fact about which network a
-// wallet happens to be on), an unreachable RPC endpoint while pricing a
-// plan is exactly the actionable, retry-now failure every other
-// UNAVAILABLE badge on this page already reads red for.
+// UNAVAILABLE is red here: an unreachable RPC endpoint while pricing a plan is
+// a retry-now failure.
 const BASE_PUBLICATION_TRANSACTION_PLAN_BADGE_CLASSES = {
     [BasePublicationTransactionPlanState.CONSTRUCTING]: 'peer-badge--pending',
     [BasePublicationTransactionPlanState.CONSTRUCTED]: 'peer-badge--authenticated',
@@ -911,13 +430,6 @@ const BASE_PUBLICATION_TRANSACTION_PLAN_BADGE_CLASSES = {
     [BasePublicationTransactionPlanState.FAILED]: 'peer-badge--failed'
 };
 
-// 0.8.93 — Explicit Base Reviewed Transaction Signing. Mirrors
-// BITCOIN_ANCHOR_REVIEWED_SIGNING_BADGE_CLASSES immediately above,
-// one chain over: SIGNING reads amber (an attempt in flight, not yet a
-// fact), SIGNED reads the same "authenticated" green every other
-// successful outcome on this page earns, and DECLINED/UNAVAILABLE/FAILED
-// all read the identical red every other actionable, resolvable failure
-// on this page already reads.
 const BASE_REVIEWED_SIGNING_BADGE_CLASSES = {
     [BaseReviewedSigningState.SIGNING]: 'peer-badge--pending',
     [BaseReviewedSigningState.SIGNED]: 'peer-badge--authenticated',
@@ -926,13 +438,6 @@ const BASE_REVIEWED_SIGNING_BADGE_CLASSES = {
     [BaseReviewedSigningState.FAILED]: 'peer-badge--failed'
 };
 
-// 0.8.94 — Explicit Base Signed Transaction Verification & Finalization.
-// Mirrors BASE_REVIEWED_SIGNING_BADGE_CLASSES immediately above exactly,
-// one stage later in the identical pipeline: FINALIZING reads pending,
-// FINALIZED reads the same "authenticated" green every other successful
-// cryptographic outcome on this page earns, and INVALID_SIGNATURE/
-// UNAVAILABLE/FAILED all read the identical red every other actionable,
-// resolvable failure on this page already reads.
 const BASE_SIGNED_TRANSACTION_FINALIZATION_BADGE_CLASSES = {
     [BaseSignedTransactionFinalizationState.FINALIZING]: 'peer-badge--pending',
     [BaseSignedTransactionFinalizationState.FINALIZED]: 'peer-badge--authenticated',
@@ -941,12 +446,6 @@ const BASE_SIGNED_TRANSACTION_FINALIZATION_BADGE_CLASSES = {
     [BaseSignedTransactionFinalizationState.FAILED]: 'peer-badge--failed'
 };
 
-// 0.8.95 — Explicit Base Transaction Broadcast. Mirrors
-// BITCOIN_ANCHOR_BROADCAST_BADGE_CLASSES exactly, one chain over:
-// BROADCASTING reads pending, BROADCASTED reads the same "authenticated"
-// green every other successful outcome on this page earns, and
-// REJECTED/UNAVAILABLE/FAILED all read the identical red every other
-// actionable, resolvable failure on this page already reads.
 const BASE_TRANSACTION_BROADCAST_BADGE_CLASSES = {
     [BaseTransactionBroadcastState.BROADCASTING]: 'peer-badge--pending',
     [BaseTransactionBroadcastState.BROADCASTED]: 'peer-badge--authenticated',
@@ -955,27 +454,15 @@ const BASE_TRANSACTION_BROADCAST_BADGE_CLASSES = {
     [BaseTransactionBroadcastState.FAILED]: 'peer-badge--failed'
 };
 
-// 0.8.96 — Explicit Base Transaction Inclusion & Confirmation Observation.
-// Mirrors BITCOIN_ANCHOR_CONFIRMATION_BADGE_CLASSES exactly, one chain
-// over: INCLUDED reads the same "authenticated" green every other
-// successful outcome on this page earns, and NOT_INCLUDED/UNAVAILABLE
-// both read the identical neutral "pending" every other REAL-but-not-yet-
-// final observation on this page already reads — never the red reserved
-// for an actionable, resolvable failure, because neither NOT_INCLUDED nor
-// UNAVAILABLE is one.
+// NOT_INCLUDED and UNAVAILABLE are amber: not final yet, but not failures.
 const BASE_TRANSACTION_INCLUSION_BADGE_CLASSES = {
     [BaseTransactionInclusionObservationState.INCLUDED]: 'peer-badge--authenticated',
     [BaseTransactionInclusionObservationState.NOT_INCLUDED]: 'peer-badge--pending',
     [BaseTransactionInclusionObservationState.UNAVAILABLE]: 'peer-badge--pending'
 };
 
-// 0.8.68 — Explicit Remote IPFS Publishing Configuration & UX. Mirrors
-// BITCOIN_ANCHOR_BROADCAST_BADGE_CLASSES immediately above exactly, one
-// external boundary over: PUBLISHING reads pending, PUBLISHED reads the
-// SAME "authenticated" green every other acceptance observation on this
-// page already uses (never a distinct "trusted"/"safe" color — PUBLISHED
-// names one fact, not a verdict), and REJECTED/UNAVAILABLE/FAILED all
-// read the identical "actionable, resolvable failure" red.
+// PUBLISHED names one fact (the service accepted the bytes), not a trust
+// verdict.
 const IPFS_REMOTE_PUBLICATION_BADGE_CLASSES = {
     [IpfsRemotePublicationState.PUBLISHING]: 'peer-badge--pending',
     [IpfsRemotePublicationState.PUBLISHED]: 'peer-badge--authenticated',
@@ -984,14 +471,6 @@ const IPFS_REMOTE_PUBLICATION_BADGE_CLASSES = {
     [IpfsRemotePublicationState.FAILED]: 'peer-badge--failed'
 };
 
-// 0.8.70 — IPFS Publication & Content Verification UI. Mirrors
-// IPFS_REMOTE_PUBLICATION_BADGE_CLASSES immediately above exactly, one
-// stage later in the same pipeline: VERIFYING reads pending, HASH_MATCH
-// reads the SAME "authenticated" green every other acceptance
-// observation on this page already uses, and HASH_MISMATCH/UNAVAILABLE/
-// FAILED all read the identical "actionable, resolvable failure" red —
-// HASH_MISMATCH is a real, definite fact, never softened to look less
-// alarming than an outright failure.
 const IPFS_PUBLICATION_CONTENT_VERIFICATION_BADGE_CLASSES = {
     [IpfsPublicationContentVerificationCoordinatorState.VERIFYING]: 'peer-badge--pending',
     [IpfsPublicationContentVerificationCoordinatorState.HASH_MATCH]: 'peer-badge--authenticated',
@@ -1003,14 +482,8 @@ const IPFS_PUBLICATION_CONTENT_VERIFICATION_BADGE_CLASSES = {
 export default {
     name: 'DecentralizedPublicationsView',
     setup() {
-        // Splits the "Wallet, Archive & Publisher Tools" disclosure's own
-        // ~20 stacked page-level cards into three named tabs (Blockchain
-        // Anchoring / Archive Tools / References & Achievements) so opening
-        // it no longer dumps every secondary feature into one undifferentiated
-        // scroll. Purely a presentation grouping over the same v-show'd
-        // sections — no card moves, no state it reads changes, and nothing
-        // here performs a network operation. Mirrors the same tab pattern
-        // ui/components/BuildLibraryPanel.js's own activeTab already uses.
+        // Groups the page-level tool cards into three tabs. Presentation only:
+        // panels use v-show, so no card state changes.
         const publicationsToolsTab = ref('anchoring');
         function setPublicationsToolsTab(tab) {
             publicationsToolsTab.value = tab;
@@ -1019,182 +492,52 @@ export default {
         const catalog = inject('publicationCatalog');
         const coordinator = inject('publicationResolutionCoordinator');
         const kindPlugins = inject('publicationDisplayKindPlugins');
-        // 0.9.337 — Wire Resolved Decentralized Publications into
-        // Repository Discovery. The ONE application-lifetime
-        // DecentralizedPublicationDiscoveryProvider instance ui/main.js
-        // constructs alongside `catalog`/`coordinator` above — never a
-        // second instance built here (see 0.9.336's own Section H
-        // lifetime finding: a provider built fresh per view, the way a
-        // sibling composition root builds Repository's own local
-        // discovery backend, would silently discard every previously
-        // admitted candidate on the next navigation).
-        // Optional — absent here (e.g. a test harness exercising this
-        // view with no discovery composition at all), admission simply
-        // never happens; every other resolution behavior on this page
-        // is completely unaffected, the identical degrade-gracefully
-        // posture every other optional coordinator on this page already
-        // holds.
+        // The single app-lifetime provider from ui/main.js: one built per view
+        // would drop every previously admitted candidate on navigation. Without
+        // it, admission is simply skipped.
         const discoveryProvider = inject('decentralizedPublicationDiscoveryProvider', null);
         const publicationPeerExchange = inject('publicationPeerExchange');
         const publicationPeerContentExchange = inject('publicationPeerContentExchange');
         const peerSessionManager = inject('peerSessionManager');
         const evidenceCoordinator = inject('publicationEvidenceCoordinator');
         const creationCoordinator = inject('publicationAnchorCreationCoordinator');
-        // Preferred Proof & Anchoring Provider Creation Integration.
-        // Optional — absent here (e.g. a test harness that never provides
-        // it), "Use Preferred Provider" simply never renders, the identical
-        // degrade-gracefully posture `creationCoordinator` immediately above
-        // already holds. A SEPARATE injected coordinator (application/
-        // PreferredPublicationAnchorCreationCoordinator.js, already composed
-        // and provided by ui/main.js) — never substituted for
-        // `creationCoordinator` above, which stays wired to every existing
-        // per-anchorType button completely unchanged. Mirrors
-        // `preferredPlacementCreationCoordinator` below, one role over.
+        // Optional services inject as null (e.g. in a test harness); the UI
+        // each one drives is then hidden. The preferred-provider coordinators
+        // resolve the stored RoleProviderPreference on every click and sit
+        // beside, never replace, the per-type creation coordinators.
         const preferredAnchorCreationCoordinator = inject('preferredPublicationAnchorCreationCoordinator', null);
-        // 0.8.16 — Evidence Synchronization UX & Explicit Historical
-        // Discovery. Optional — absent here (e.g. a test harness that
-        // never provides it), "Discover from Peers" simply never renders,
-        // the identical degrade-gracefully posture `creationCoordinator`
-        // above already holds for `availableAnchorTypes`.
         const evidenceDiscoveryCoordinator = inject('publicationEvidenceDiscoveryCoordinator', null);
-        // 0.8.30 — Explicit Replica Knowledge Synchronization. Optional —
-        // absent here (e.g. a test harness that never provides it),
-        // "Synchronize with Peers" simply never renders, the identical
-        // degrade-gracefully posture `evidenceDiscoveryCoordinator` above
-        // already holds.
         const knowledgeSynchronizationCoordinator = inject('publicationKnowledgeSynchronizationCoordinator', null);
-        // 0.8.14 — External Evidence Inspection & Locator UX. Optional —
-        // absent here (as in a test harness that never provides it),
-        // "Inspect Evidence" still shows application/
-        // PublicationAnchorDetailView.js's own generic shape; only the
-        // anchorType-specific section is skipped, exactly as
-        // `availableAnchorTypes` above degrades to an empty list with no
-        // `creationCoordinator`.
         const evidenceViewRegistry = inject('externalAnchorEvidenceViewRegistry', null);
-        // 0.8.17 — Evidence Provenance & Observation Boundary. Optional —
-        // absent here (as in a test harness that never provides it),
-        // "Inspect Evidence" simply shows no "Local Knowledge" section;
-        // every other field of application/PublicationAnchorDetailView.js's
-        // own shape is untouched. See `toggleInspect()`'s own comment
-        // below.
         const anchorKnowledgeStore = inject('anchorKnowledgeStore', null);
-        // 0.8.20 — Snapshot Placement Inspection & Explicit Resolution UX.
-        // Optional — absent here (e.g. a test harness that never
-        // provides it), "Snapshot Placements" simply never renders, the
-        // identical degrade-gracefully posture `evidenceCoordinator`
-        // above already holds.
         const placementResolutionCoordinator = inject('publicationSnapshotPlacementResolutionCoordinator', null);
-        // Optional — absent here, "Inspect Placement" still shows
-        // application/PublicationSnapshotPlacementDetailView.js's own
-        // generic shape; only the storage-specific section is skipped,
-        // exactly as `evidenceViewRegistry` above degrades for anchors.
         const placementViewRegistry = inject('snapshotPlacementViewRegistry', null);
-        // 0.8.24 — Snapshot Placement Provenance & Observation Boundary.
-        // Optional — absent here (as in a test harness that never
-        // provides it), "Inspect Placement" simply shows no "Local
-        // Knowledge" section, the identical degrade-gracefully posture
-        // `anchorKnowledgeStore` above already holds.
         const placementKnowledgeStore = inject('placementKnowledgeStore', null);
-        // 0.8.25 — Explicit Snapshot Placement Creation UX. Optional —
-        // absent here (e.g. a test harness that never provides it), "Create
-        // Placement" simply never renders, the identical degrade-gracefully
-        // posture `creationCoordinator` above already holds for
-        // `availableAnchorTypes`.
         const placementCreationCoordinator = inject('snapshotPlacementCreationCoordinator', null);
-        // 0.9.301 — Preferred Content Provider Placement Trigger. Optional
-        // — absent here (e.g. a test harness that never provides it), "Use
-        // Preferred Provider" simply never renders, the identical degrade-
-        // gracefully posture `placementCreationCoordinator` immediately
-        // above already holds. A SEPARATE injected coordinator (application/
-        // PreferredSnapshotPlacementCreationCoordinator.js, 0.9.299,
-        // already composed and provided by ui/main.js since 0.9.299) — this
-        // milestone is the first thing that ever injects it. It is never
-        // substituted for `placementCreationCoordinator` above, which stays
-        // wired to every existing per-storage button completely unchanged.
         const preferredPlacementCreationCoordinator = inject('preferredSnapshotPlacementCreationCoordinator', null);
-        // 0.8.68 — Explicit Remote IPFS Publishing Configuration & UX.
-        // Optional — absent here (e.g. a test harness that never provides
-        // either), the "IPFS Publishing" section simply never renders,
-        // the identical degrade-gracefully posture `placementCreationCoordinator`
-        // immediately above already holds. `ipfsRemotePublicationCoordinator`
-        // is the ONE place this page ever calls
-        // application/IpfsRemotePublicationCoordinator.js#publish().
-        //
-        // Bug fix — this page's own `publishToRemoteIpfs()`/
-        // `distributeEntrySnapshot()` used to read a Publication's local
-        // bytes through `publicationCatalogContentResolver`, resolving by
-        // id against application/LocalPublicationCatalog.js — a catalog
-        // that only ever holds peer-announced DecentralizedPublication
-        // envelopes, never a World `publisher/Publication.js` instance
-        // created by PublishDocumentUseCase/LocalPublisherProvider (see
-        // ui/views/WorldView.js's own identical fix and comment). Both
-        // functions now read bytes the correct way: given the `entry.publication`
-        // object already held, `publicationContentStore.get(entry.publication.contentReference)`
-        // — the SAME content-addressed store the publish path itself
-        // already wrote those bytes into.
+        // Local bytes for publishToRemoteIpfs()/distributeEntrySnapshot() come
+        // from publicationContentStore by the publication's contentReference,
+        // never from the catalog, which only holds peer-announced envelopes.
         const ipfsRemotePublicationCoordinator = inject('ipfsRemotePublicationCoordinator', null);
         const publicationContentStore = inject('publicationContentStore', null);
-        // 0.9.663 — Connect Remote IPFS to Nostr Snapshot Distribution. THE
-        // SAME `snapshotDiscoveryPublisher` instance ui/main.js already
-        // composes for the existing Kubo/Arweave "Distribute Snapshot"
-        // action (`snapshotDistributionCommand`, injected below) — never a
-        // second `NostrSnapshotDiscoveryPublisher`. Optional, the identical
-        // graceful-degradation posture every other collaborator on this
-        // page already holds: absent, `publishToRemoteIpfs()` below simply
-        // never announces, exactly as if Nostr publishing were unavailable
-        // for the existing Kubo/Arweave path too.
+        // The same snapshotDiscoveryPublisher "Distribute Snapshot" uses.
+        // Without it, remote-IPFS publishing simply does not announce.
         const snapshotDiscoveryPublisher = inject('snapshotDiscoveryPublisher', null);
-        // 0.9.436 — Publications Distribution Section Reorganization.
-        // Announcement/Discovery's own two real write actions
-        // ("Distribute Publication"/"Distribute Snapshot") reach THIS
-        // page for the first time here — the SAME app-wide commands
-        // ui/main.js already composes and provides
-        // (`publicationDistributionCommand`/`snapshotDistributionCommand`),
-        // and ui/views/WorldView.js already injects for
-        // OwnPublicationPanel.js/WorldEncounterCanvas.js (0.9.104/0.9.138/
-        // 0.9.430). See tests/
-        // PublicationsDistributionSectionProductAndUIBoundaryAudit.test.js's
-        // own Section C: this exact command already succeeds, unmodified,
-        // against a plain /publications-shaped entry. No new orchestrator,
-        // uploader, or publisher is constructed here — this file calls
-        // exactly what those two components already call. Optional,
-        // exactly like every other collaborator on this page: absent, the
-        // new Distribution > Announcement/Discovery section simply
-        // renders nothing for the corresponding action.
-        // `publicationDistributionLifecycleStore` is read-only here — the
-        // SAME store WorldEncounterCanvas already reads its own
-        // `discoveryObservations` computed through (0.9.433/0.9.434); this
-        // page never records into it directly, only through the command
-        // above, exactly as that component does.
+        // The same app-wide distribution commands WorldView injects for its
+        // panels; this page builds no orchestrator, uploader or publisher of
+        // its own. publicationDistributionLifecycleStore is read-only here and
+        // is only written through those commands.
         const publicationDistributionCommand = inject('publicationDistributionCommand', null);
-        // 0.9.450 — Nostr Multi-Relay Publication Distribution Wiring. The
-        // SAME app-wide `multiRelayNostrPublicationDistributionCommand`
-        // `ui/main.js` has provided since 0.9.447, injected here so
-        // `distributeEntryPublication()` below can reach it for the Nostr
-        // substrate choice — mirrors `ui/views/WorldView.js`'s own 0.9.450
-        // amendment exactly, one call site over. This page still
-        // constructs no orchestrator, uploader, or publisher of its own.
         const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);
         const snapshotDistributionCommand = inject('snapshotDistributionCommand', null);
-        // 0.9.506 — Make Snapshot Distribution Content Backend Selectable.
-        // The SAME app-wide `snapshotDistributionAvailableStorageTypes`
-        // ui/main.js now provides — a plain `() -> string[]` read of the
-        // eligible-and-currently-registered Content backends ('ipfs'/'ar'
-        // only; see application/SnapshotDistributionContentBackendSelection.js's
-        // own header for why 'local' is deliberately never included). Called
-        // once, exactly like `availableStorageTypes` (Placement's own
-        // registry read) immediately below already is — the result is a
-        // plain array, never recomputed reactively, since the underlying
-        // registry is populated once at composition-root startup.
+        // Eligible, registered Content backends for snapshot distribution
+        // ('ipfs'/'ar'; 'local' is never eligible, see
+        // application/SnapshotDistributionContentBackendSelection.js). Read
+        // once: the registry is filled at startup.
         const snapshotDistributionAvailableStorageTypesCommand = inject('snapshotDistributionAvailableStorageTypes', null);
-        // 0.9.667 — Role Provider Preference As Dropdown Default. The SAME
-        // resolved ANNOUNCEMENT_AND_DISCOVERY/CONTENT preferences ui/main.js
-        // already computes once at boot (from the SAME roleProviderPreferenceStore
-        // ContentProviderSettingsView.js/AnnouncementDiscoveryProviderSettingsView.js
-        // save into) — read here only to seed each entry's own picker below
-        // at construction time; never re-read afterward, and never used to
-        // override a choice a Wanderer has already made on this page. See
-        // application/SavedProviderDefaultChoice.js's own header.
+        // Saved provider preferences, used only to seed each entry's picker
+        // when the entry is created; never re-read, and never override a choice
+        // already made on this page.
         const defaultAnnouncementDiscoveryProvider = inject('defaultAnnouncementDiscoveryProvider', 'nostr');
         const defaultContentDistributionProvider = inject('defaultContentDistributionProvider', null);
         const snapshotDistributionStorageTypes = snapshotDistributionAvailableStorageTypesCommand
@@ -1204,310 +547,89 @@ export default {
         // its first entry is the fallback default below.
         const snapshotDistributionStorageOptions = sortOptionsByLabel(snapshotDistributionStorageTypes, humanizeStorageType);
         const publicationDistributionLifecycleStore = inject('publicationDistributionLifecycleStore', null);
-        // 0.8.70 — IPFS Publication & Content Verification UI. Optional —
-        // absent here (e.g. a test harness that never provides it), the
-        // "Content retrieval" sub-section simply never renders, the
-        // identical degrade-gracefully posture every other optional
-        // coordinator on this page already holds.
         const ipfsPublicationContentVerificationCoordinator = inject('ipfsPublicationContentVerificationCoordinator', null);
-        // 0.8.75 — Durable Publication Observation Records. Unlike every
-        // other injected coordinator on this page, this one has a real,
-        // safe, zero-config default: storage/
-        // LocalStoragePublicationObservationArchive.js's own constructor
-        // already defaults to a real, browser-backed storage/
-        // LocalStorageProvider.js. A caller (a test harness, most likely)
-        // can still inject its own instance — over an in-memory
-        // StorageProvider, say — to keep persistence out of a real
-        // browser's localStorage entirely.
+        // Unlike the other services this one has a working default: the archive
+        // store falls back to browser localStorage. A test harness can inject
+        // an in-memory one.
         const publicationObservationArchiveStorage = inject('publicationObservationArchiveStorage', null)
             || new LocalStoragePublicationObservationArchive();
-        // 0.8.33 — Local Snapshot Content Availability & Integrity UX.
-        // Optional — absent here (e.g. a test harness that never provides
-        // it), "Local Snapshot" simply never renders, the identical
-        // degrade-gracefully posture `placementResolutionCoordinator`
-        // above already holds.
         const localSnapshotContentAvailabilityUseCase = inject('localSnapshotContentAvailabilityUseCase', null);
-        // 0.8.34 — Explicit Snapshot Materialization UX. Optional —
-        // absent here (e.g. a test harness that never provides it),
-        // "Import Snapshot" simply never renders, the identical
-        // degrade-gracefully posture `localSnapshotContentAvailabilityUseCase`
-        // immediately above already holds.
         const snapshotContentMaterializationCoordinator = inject('snapshotContentMaterializationCoordinator', null);
-        // 0.8.35 — Explicit Placement-Backed Snapshot Materialization.
-        // Optional — absent here (e.g. a test harness that never provides
-        // it), "Materialize Snapshot" simply never renders on a placement
-        // card, the identical degrade-gracefully posture
-        // `placementResolutionCoordinator` above already holds for
-        // "Resolve Snapshot".
         const snapshotPlacementMaterializationCoordinator = inject('snapshotPlacementMaterializationCoordinator', null);
-        // 0.8.37 — Explicit Peer Snapshot Content Transfer. Optional —
-        // absent here (e.g. a test harness that never provides it), "Get
-        // Snapshot from Peer" simply never renders, the identical
-        // degrade-gracefully posture `snapshotPlacementMaterializationCoordinator`
-        // above already holds for "Materialize Snapshot".
         const snapshotPeerMaterializationCoordinator = inject('snapshotPeerMaterializationCoordinator', null);
-        // 0.8.40 — Snapshot Possession Observation Exchange. Optional —
-        // absent here, "Peer Snapshot Possession" simply never renders,
-        // the identical degrade-gracefully posture every optional
-        // coordinator above already holds. Deliberately independent of
-        // `snapshotPeerMaterializationCoordinator` immediately above: one
-        // asks a peer for bytes, this one only ever asks a peer a
-        // question — see application/ObservePeerSnapshotPossessionUseCase.js's
-        // own header on why neither ever calls the other.
+        // Asks a peer whether it holds a snapshot; independent of
+        // snapshotPeerMaterializationCoordinator, which fetches bytes.
         const snapshotPeerPossessionCoordinator = inject('snapshotPeerPossessionCoordinator', null);
-        // 0.8.42 — Explicit Snapshot Source Selection & Materialization UX.
-        // Optional — absent here, "Get Snapshot" never renders on a Peer
-        // Snapshot Possession Comparison row, the identical
-        // degrade-gracefully posture every coordinator above already
-        // holds. Used ONLY to turn an already-rendered peer observation
-        // row into an explicit action — see `materializeFromComparisonPeer()`
-        // below; never used to discover, rank, or automatically choose a
-        // peer on a person's behalf.
+        // Only turns an already-rendered peer observation row into an explicit
+        // action; never picks or ranks a peer on the person's behalf.
         const snapshotMaterializationSelectionCoordinator = inject('snapshotMaterializationSelectionCoordinator', null);
-        // 0.8.57 — Bitcoin Anchor Proof & Confirmation Inspection UI.
-        // Optional — absent here, the "Bitcoin Anchor" section simply never
-        // renders on any evidence card, the identical degrade-gracefully
-        // posture every optional coordinator above already holds. The ONE
-        // place this page ever asks the Bitcoin network about confirmation
-        // or content-hash proof — see `reconcileBitcoinAnchor()` below, and
-        // application/BitcoinAnchorProofReconciliationView.js's own header
-        // on why it composes, rather than duplicates, application/
-        // BitcoinAnchorConfirmationObserver.js and anchoring/
-        // BitcoinOpReturnProofVerifier.js.
+        // The only place this page asks the Bitcoin network about an anchor's
+        // confirmation or content proof (see reconcileBitcoinAnchor()).
         const bitcoinAnchorProofReconciliationView = inject('bitcoinAnchorProofReconciliationView', null);
-        // 0.8.58 — Explicit Bitcoin Wallet Connection & Signing UX.
-        // Optional — absent here, the "Bitcoin Wallet" section simply never
-        // renders, the identical degrade-gracefully posture every optional
-        // coordinator on this page already holds. Deliberately independent
-        // of `bitcoinAnchorProofReconciliationView` immediately above:
-        // reading confirmation/content-proof status needs no wallet at
-        // all, and connecting a wallet reads or changes no anchor, no
-        // publication, and no confirmation history — see
-        // anchoring/BitcoinWalletConnection.js's own header on why this is
-        // the ONE place this page ever asks a browser wallet extension for
-        // an account or a signing capability. This single injected
-        // instance is shared across every evidence card on this page —
-        // connecting once is reflected everywhere, exactly like
-        // `bitcoinAnchorProofReconciliationView` above being one shared
-        // reconciliation view rather than one per card.
+        // One shared wallet connection for the whole page (connecting once
+        // shows everywhere), and the only place this page asks a browser wallet
+        // for an account or a signing capability. Reading confirmation status
+        // needs no wallet.
         const bitcoinWalletConnection = inject('bitcoinWalletConnection', null);
-        // 0.8.60 — Explicit Bitcoin Anchor Funding & Address Preparation.
-        // Optional — absent here, the "Bitcoin Funding" section simply
-        // never renders, the identical degrade-gracefully posture every
-        // optional coordinator on this page already holds. Page-level, not
-        // per evidence card — the identical reasoning
-        // `bitcoinAnchorTransactionReview` below already holds: funding is
-        // being prepared for a transaction that has NOT YET been built, so
-        // there is no evidence entry for it to attach to. This is the ONE
-        // place this page ever asks a funding source what a connected
-        // wallet's own account can currently spend — see anchoring/
-        // BitcoinWalletFundingObserver.js's own header on why that is
-        // always a fresh, explicitly-triggered observation, never a
-        // background poll.
+        // Page-level, not per evidence card: funding is prepared for a
+        // transaction that has not been built yet. Always a fresh,
+        // explicitly-triggered read, never a background poll.
         const bitcoinWalletFundingObserver = inject('bitcoinWalletFundingObserver', null);
-        // 0.8.90 — Explicit Base Network & Account Observation. Optional —
-        // absent here, the "Base Network" section simply never renders,
-        // the identical degrade-gracefully posture every optional
-        // coordinator on this page already holds. Page-level, not per
-        // evidence card, and entirely unrelated to `bitcoinWalletConnection`/
-        // `bitcoinWalletFundingObserver` above — there is no Base
-        // publication or anchor yet for a section to attach to, and
-        // connecting a Base wallet reads or changes no Bitcoin state at
-        // all. See base/BaseWalletConnection.js's own header on why this
-        // exposes an account address and NOTHING resembling a signing
-        // capability, and base/BaseNetworkObserver.js's own header on why
-        // this is the ONE place this page ever asks a Base RPC endpoint
-        // for a chain id or a native balance — always a fresh,
-        // explicitly-triggered observation, never a background poll.
+        // Page-level and unrelated to the Bitcoin wallet. A Base wallet
+        // connection exposes an account address only, never a signing
+        // capability; network observations are fresh, explicitly-triggered
+        // reads.
         const baseWalletConnection = inject('baseWalletConnection', null);
         const baseNetworkObserver = inject('baseNetworkObserver', null);
-        // 0.8.91 — Explicit Base Publication Transaction Construction.
-        // Optional — absent here, no "Create Base Transaction Plan" action
-        // ever renders, the identical degrade-gracefully posture every
-        // optional coordinator on this page already holds. ONE shared
-        // instance, exactly like `bitcoinAnchorTransactionConstructionCoordinator`
-        // below: constructing a plan for one publication uses no state
-        // that is specific to any other. See application/
-        // BasePublicationTransactionPlanCoordinator.js's own header on why
-        // this never observes an account itself — this page still
-        // requires an explicit, already-OBSERVED
-        // `baseAccountObservationState.observation` before "Create Base
-        // Transaction Plan" does anything.
+        // Requires an already-observed baseAccountObservationState.observation;
+        // the coordinator never observes an account itself.
         const basePublicationTransactionPlanCoordinator = inject('basePublicationTransactionPlanCoordinator', null);
-        // 0.8.93 — Explicit Base Reviewed Transaction Signing. Optional —
-        // absent either, the "Sign Reviewed Transaction" button simply
-        // never renders, the identical degrade-gracefully posture every
-        // optional section on this page already holds.
-        // `baseInjectedProviderWalletTransactionSigner` is a wholly
-        // separate signing capability from `baseWalletConnection` — see
-        // `base/BaseWalletConnection.js`'s own header on why account
-        // identity is never widened into a signing capability.
+        // A signing capability kept separate from baseWalletConnection, which
+        // only ever exposes an account.
         const baseInjectedProviderWalletTransactionSigner = inject('baseInjectedProviderWalletTransactionSigner', null);
         const baseReviewedSigningCoordinator = inject('baseReviewedSigningCoordinator', null);
-        // 0.8.94 — Explicit Base Signed Transaction Verification &
-        // Finalization. Optional — absent, the "Verify & Finalize
-        // Transaction" section simply never renders, the identical
-        // degrade-gracefully posture every optional section on this page
-        // already holds. `baseSignedTransactionFinalizationCoordinator` is
-        // a thin bridge to `base/BaseSignedTransactionFinalizer.js`'s own
-        // pure, offline cryptographic check — see that file's own header.
         const baseSignedTransactionFinalizationCoordinator = inject('baseSignedTransactionFinalizationCoordinator', null);
-        // 0.8.95 — Explicit Base Transaction Broadcast. Optional — absent,
-        // the "Broadcast Transaction" section simply never renders, the
-        // identical degrade-gracefully posture every optional section on
-        // this page already holds. `baseTransactionBroadcastCoordinator`
-        // is a thin bridge to `base/BaseTransactionBroadcaster.js`'s own
-        // "broadcasting submits; it does not decide" boundary — see that
-        // file's own header.
         const baseTransactionBroadcastCoordinator = inject('baseTransactionBroadcastCoordinator', null);
-        // 0.8.96 — Explicit Base Transaction Inclusion & Confirmation
-        // Observation. Optional — absent, the "Base Transaction Inclusion"
-        // section simply never renders, the identical degrade-gracefully
-        // posture every optional section on this page already holds.
-        // `baseTransactionInclusionObservationCoordinator` is a thin
-        // bridge to `base/BaseTransactionInclusionObserver.js`'s own
-        // "broadcast ≠ inclusion; inclusion is an independently observed
-        // fact" boundary — see that file's own header.
         const baseTransactionInclusionObservationCoordinator = inject('baseTransactionInclusionObservationCoordinator', null);
-        // 0.9.472 — Expose Review-Preserving Base Anchor Action. Optional —
-        // absent, the "Create Base Anchor" action simply never renders, the
-        // identical degrade-gracefully posture every optional section on
-        // this page already holds. `baseAnchorPublisher` is
-        // anchoring/BaseAnchorPublisher.js's own review-preserving bridge —
-        // never a second, ad hoc sign/finalize/broadcast sequence built
-        // here in the UI layer.
+        // anchoring/BaseAnchorPublisher.js's review-preserving path; the UI
+        // never assembles its own sign/finalize/broadcast sequence.
         const baseAnchorPublisher = inject('baseAnchorPublisher', null);
-        // 0.8.59/0.8.62 — Explicit Bitcoin Anchor Transaction Review &
-        // Signing UI. `bitcoinAnchorTransactionReview` is now this page's
-        // OWN reactive holder (declared below, alongside
-        // `bitcoinWalletConnectionState`) for the single, page-level
-        // transaction presently under review — never an injected object, a
-        // design 0.8.59 first sketched but never wired (nothing ever
-        // provided it; `describeBitcoinAnchorTransactionReview()` always
-        // saw `null`). This milestone completes that wiring: a review
-        // exists for a transaction that has NOT YET been published — there
-        // is no evidence entry for it to attach to — so, exactly as before,
-        // this stays a single, page-level fact, populated by
-        // `constructBitcoinAnchorTransaction()` below rather than by a
-        // composition root.
-        //
-        // 0.8.62 — Explicit Reviewed Bitcoin Anchor Signing UI. Optional —
-        // absent either coordinator, no PSBT is ever built and no "Sign
-        // Reviewed Transaction" button ever renders, the identical
-        // degrade-gracefully posture every optional coordinator on this
-        // page already holds. `bitcoinAnchorTransactionReviewCoordinator`
-        // is the new bridge that turns an already-CONSTRUCTED plan (0.8.61)
-        // into the PSBT-shaped description 0.8.59's own review and signer
-        // have always required; `bitcoinAnchorReviewedSigningCoordinator`
-        // is the new coordinator behind the explicit signing action itself.
-        // See application/BitcoinAnchorTransactionReviewCoordinator.js and
-        // application/BitcoinAnchorReviewedSigningCoordinator.js's own
-        // headers — neither ever signs, finalizes, or broadcasts anything
-        // on its own; this page still only ever displays what it is handed
-        // and acts only on an explicit click.
+        // The Bitcoin anchor pipeline: review coordinator turns a constructed
+        // plan into a signable PSBT description, then signing, finalization,
+        // broadcast and confirmation each run on their own explicit click. None
+        // of these coordinators advances to the next step on its own.
         const bitcoinAnchorTransactionReviewCoordinator = inject('bitcoinAnchorTransactionReviewCoordinator', null);
         const bitcoinAnchorReviewedSigningCoordinator = inject('bitcoinAnchorReviewedSigningCoordinator', null);
-        // 0.8.63 — Explicit Signed PSBT Verification & Transaction
-        // Finalization UI. Optional — absent here, no "Verify & Finalize
-        // Transaction" action ever renders, the identical degrade-gracefully
-        // posture every optional coordinator on this page already holds.
-        // `bitcoinAnchorSignedPsbtFinalizationCoordinator` is a thin bridge
-        // to the unchanged 0.8.51 anchoring/BitcoinAnchorSignedPsbtFinalizer.js
-        // — see application/BitcoinAnchorSignedPsbtFinalizationCoordinator.js's
-        // own header on why no new cryptography lives here either.
         const bitcoinAnchorSignedPsbtFinalizationCoordinator = inject('bitcoinAnchorSignedPsbtFinalizationCoordinator', null);
-        // 0.8.64 — Explicit Bitcoin Anchor Broadcast UI. Optional — absent
-        // here, no "Broadcast Transaction" action ever renders, the
-        // identical degrade-gracefully posture every optional coordinator
-        // on this page already holds. `bitcoinAnchorBroadcastCoordinator`
-        // is a thin bridge to the unchanged 0.8.52
-        // anchoring/BitcoinAnchorTransactionBroadcaster.js — see
-        // application/BitcoinAnchorBroadcastCoordinator.js's own header on
-        // why no new Bitcoin logic lives here either, and why it only ever
-        // accepts the exact output of a successful finalization.
         const bitcoinAnchorBroadcastCoordinator = inject('bitcoinAnchorBroadcastCoordinator', null);
-        // 0.8.65 — Explicit Bitcoin Anchor Confirmation UI. Optional —
-        // absent here, no "Observe Confirmation" action ever renders, the
-        // identical degrade-gracefully posture every optional coordinator
-        // on this page already holds. `bitcoinAnchorConfirmationCoordinator`
-        // is a thin bridge to the unchanged 0.8.54
-        // anchoring/BitcoinAnchorConfirmationObserver.js — see application/
-        // BitcoinAnchorConfirmationCoordinator.js's own header on why it
-        // only ever observes the exact txid a real BROADCASTED outcome
-        // carries, never an arbitrary displayed value. This is a SEPARATE
-        // coordinator instance from `bitcoinAnchorProofReconciliationView`
-        // above, even though both ultimately read through the SAME
-        // injected observer — this one is bound to THIS page's own
-        // captured broadcast identity, that one to a persisted
-        // PublicationAnchor's own `proof.txid`.
+        // A separate instance from bitcoinAnchorProofReconciliationView even
+        // though both use the same observer: this one only observes the txid of
+        // this page's own BROADCASTED outcome, that one a persisted anchor's
+        // proof.txid.
         const bitcoinAnchorConfirmationCoordinator = inject('bitcoinAnchorConfirmationCoordinator', null);
-        // 0.9.512 — Bitcoin Granular Pipeline Anchor Publication
-        // Integration. Optional — absent here, a successful broadcast
-        // simply never mints a real anchor (only the existing, unchanged
-        // 0.8.80 local publication record still does) — the identical
-        // degrade-gracefully posture every optional coordinator on this
-        // page already holds. `bitcoinAnchorPublicationCoordinator` is the
-        // SAME shared instance ui/main.js constructs from this app's own
-        // `publicationCatalog`/`createPublicationAnchorUseCase`/
-        // `publicationAnchorCatalog` — never a second, disconnected one.
-        // See application/BitcoinAnchorPublicationCoordinator.js's own
-        // header on `publishBroadcastedAnchor()` — the ONE method this
-        // page ever calls on it.
+        // Mints a real PublicationAnchor after a successful broadcast (via
+        // publishBroadcastedAnchor()). Without it, only the local publication
+        // record is kept.
         const bitcoinAnchorPublicationCoordinator = inject('bitcoinAnchorPublicationCoordinator', null);
-        // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.
-        // Optional — absent here, no "Create Transaction Plan" action ever
-        // renders, the identical degrade-gracefully posture every optional
-        // coordinator on this page already holds. ONE shared instance,
-        // exactly like `bitcoinWalletFundingObserver`/`bitcoinWalletConnection`
-        // above: constructing a plan for one publication uses no state that
-        // is specific to any other. See application/
-        // BitcoinAnchorTransactionConstructionCoordinator.js's own header
-        // on why this is a deliberately thin wiring on top of the unchanged
-        // 0.8.47 builder — it never observes funding itself, so this page
-        // still requires an explicit, already-OBSERVED `bitcoinAnchorFundingState.observation`
-        // before "Create Transaction Plan" does anything.
+        // Requires an already-observed bitcoinAnchorFundingState.observation;
+        // the coordinator never observes funding itself.
         const bitcoinAnchorTransactionConstructionCoordinator = inject('bitcoinAnchorTransactionConstructionCoordinator', null);
 
-        // 0.8.11 — Explicit External Anchoring UX. Every anchorType this
-        // replica can currently ask to create evidence for, read ONCE at
-        // setup (a synchronous, side-effect-free registry read — see
-        // application/PublicationAnchorCreationCoordinator.js#
-        // availableAnchorTypes() own header) rather than per publication;
-        // which publishers exist is a property of this replica, not of
-        // any one entry. Empty when no `creationCoordinator` was provided,
-        // or when this replica has no publisher configured at all — in
-        // either case no "Create Anchor" control is ever offered, exactly
-        // as "Retrieve from Peers" already stays hidden with no
-        // authenticated peer connected.
+        // Which publishers exist is a property of this replica, not of an
+        // entry, so the list is read once. Empty means no "Create Anchor"
+        // control is offered.
         const availableAnchorTypes = creationCoordinator ? creationCoordinator.availableAnchorTypes() : [];
-        // 0.8.25 — Explicit Snapshot Placement Creation UX. The
-        // placement-side counterpart of `availableAnchorTypes` above, one
-        // axis over — every storage type this replica can currently ask
-        // to place bytes onto, read ONCE at setup (application/
-        // SnapshotPlacementCreationCoordinator.js#availableStorageTypes()
-        // own header). Empty when no `placementCreationCoordinator` was
-        // provided, or when this replica has no content store registered
-        // at all — in either case no "Create Placement" control is ever
-        // offered.
+        // Same for storage types and "Create Placement".
         const availableStorageTypes = placementCreationCoordinator ? placementCreationCoordinator.availableStorageTypes() : [];
 
         const entries = reactive([]);
         const loading = ref(true);
 
-        // 0.8.58 — Explicit Bitcoin Wallet Connection & Signing UX. ONE
-        // shared reactive mirror of `bitcoinWalletConnection`'s own
-        // `status`/`account`/`network` — never per-publication, unlike
-        // `entry.bitcoinAnchorReconciliations` above, because a browser
-        // wallet extension is a single, session-wide capability, not a
-        // fact about any one publication's own evidence. Vue cannot see
-        // through a plain class instance's own mutations, so
-        // `connectBitcoinWallet()`/`disconnectBitcoinWallet()` below copy
-        // `bitcoinWalletConnection`'s own state into this object after
-        // every call — the same "the UI owns the reactive result of an
-        // injected collaborator's own call" discipline `entry.
-        // bitcoinAnchorReconciliations[anchorId]` already holds, one level
-        // less nested because there is exactly one wallet, not one per
-        // anchor.
+        // Wallet, funding, account and pipeline state below is page-level: one
+        // wallet and one in-progress transaction per page, not per publication.
+        // Vue can't observe a plain class instance's mutations, so each action
+        // copies the collaborator's state into these reactive holders after
+        // every call.
         const bitcoinWalletConnectionState = reactive({
             status: BitcoinWalletConnectionState.DISCONNECTED,
             account: null,
@@ -1515,17 +637,8 @@ export default {
             reason: null
         });
 
-        // 0.8.60 — Explicit Bitcoin Anchor Funding & Address Preparation.
-        // ONE shared reactive holder for the single, page-level funding
-        // observation this page ever asks for — the identical "the UI owns
-        // the reactive result of an injected collaborator's own call"
-        // discipline `bitcoinWalletConnectionState` immediately above
-        // already holds, one level over: `observation` is `null` until
-        // `observeBitcoinAnchorFunding()` below is explicitly clicked, and
-        // is replaced wholesale — never merged or patched — by every
-        // subsequent "Refresh Funding" click, exactly as anchoring/
-        // BitcoinWalletFundingObserver.js's own header requires ("EVERY
-        // OBSERVATION IS A FRESH READ, NEVER... REMEMBERED").
+        // Replaced wholesale by every observation, never merged: each
+        // observation is a fresh read.
         const bitcoinAnchorFundingState = reactive({
             observing: false,
             observation: null,
@@ -1533,186 +646,55 @@ export default {
         });
         const bitcoinAnchorFundingUtxosExpanded = ref(false);
 
-        // 0.8.90 — Explicit Base Network & Account Observation. Mirrors
-        // `bitcoinWalletConnectionState` above exactly, one chain over —
-        // ONE shared reactive mirror of `baseWalletConnection`'s own
-        // `status`/`account`, copied in after every explicit
-        // connect()/disconnect() call rather than watched, for the
-        // identical reason: Vue cannot see through a plain class
-        // instance's own mutations.
         const baseWalletConnectionState = reactive({
             status: BaseWalletConnectionState.DISCONNECTED,
             account: null,
             reason: null
         });
 
-        // 0.8.90 — Explicit Base Network & Account Observation. Mirrors
-        // `bitcoinAnchorFundingState` above exactly, one chain over: ONE
-        // shared, page-level holder for the single Base account
-        // observation this page ever asks for. `observation` is `null`
-        // until `observeBaseAccount()` below is explicitly clicked, and is
-        // replaced wholesale — never merged or patched — by every
-        // subsequent click, exactly as base/BaseNetworkObserver.js's own
-        // header requires ("A FRESH READ, NEVER A CACHED OR REMEMBERED
-        // ONE").
         const baseAccountObservationState = reactive({
             observing: false,
             observation: null,
             error: null
         });
 
-        // 0.8.59/0.8.62 — Explicit Bitcoin Anchor Transaction Review &
-        // Signing UI. ONE shared reactive holder for the single,
-        // page-level transaction presently under review — see this file's
-        // own `bitcoinAnchorTransactionReviewCoordinator` injection comment
-        // above on why this replaces the never-wired 0.8.59 injection of
-        // the same name. `description` is `null` until
-        // `constructBitcoinAnchorTransaction()` below both constructs a
-        // plan AND successfully bridges it to a signable PSBT description;
-        // `reason` names honestly why bridging failed (e.g. an account this
-        // codebase cannot yet decode a scriptPubKey for) when it did.
-        // Replaced wholesale, never merged, by every subsequent "Create
-        // Transaction Plan" click — exactly as `bitcoinAnchorFundingState`
-        // above already requires of itself.
+        // The transaction under review. description is null until a plan is
+        // constructed AND bridged to a signable PSBT; reason says why bridging
+        // failed (e.g. an account whose scriptPubKey can't be decoded).
         const bitcoinAnchorTransactionReview = reactive({
             description: null,
             publicationId: null,
             reason: null
         });
 
-        // 0.8.62 — Explicit Reviewed Bitcoin Anchor Signing UI. The single,
-        // page-level result of the last explicit "Sign Reviewed
-        // Transaction" click — `null` until one has ever been made for the
-        // CURRENT review. Held as a plain ref, replaced wholesale by
-        // `signBitcoinAnchorReviewedTransaction()` below and reset to
-        // `null` by every fresh `constructBitcoinAnchorTransaction()` call,
-        // exactly as application/BitcoinAnchorReviewedSigningState.js's own
-        // header requires: "a fresh plan always starts unsigned again,
-        // never inheriting a previous plan's own SIGNED outcome."
+        // Each pipeline result below is replaced wholesale by its own step and
+        // reset to null whenever an earlier step runs again, so a new plan or
+        // signature never inherits a later step's outcome from a previous
+        // transaction.
         const bitcoinAnchorReviewedSigningOutcome = ref(null);
 
-        // 0.8.63 — Explicit Signed PSBT Verification & Transaction
-        // Finalization UI. The single, page-level result of the last
-        // explicit "Verify & Finalize Transaction" click — `null` until one
-        // has ever been made for the CURRENT signed PSBT. Held as a plain
-        // ref, replaced wholesale by `finalizeBitcoinAnchorSignedPsbt()`
-        // below, and reset to `null` by every fresh "Sign Reviewed
-        // Transaction" click AND every fresh "Create Transaction Plan"
-        // click — a newly signed PSBT always starts unfinalized again,
-        // never inheriting a previous attempt's own FINALIZED outcome. See
-        // application/BitcoinAnchorSignedPsbtFinalizationState.js's own
-        // header, and `bitcoinAnchorReviewedSigningOutcome`'s own
-        // declaration immediately above, the identical restraint one stage
-        // earlier.
         const bitcoinAnchorSignedPsbtFinalizationOutcome = ref(null);
 
-        // 0.8.64 — Explicit Bitcoin Anchor Broadcast UI.
-        //
-        // `bitcoinAnchorFinalizedTransaction` is the exact finalization
-        // ARTIFACT a broadcast attempt is bound to — `{ txid, rawTransaction,
-        // finalizedAt }` — captured once, the moment `finalizeBitcoinAnchorSignedPsbt()`
-        // below produces a FINALIZED outcome, and handed to
-        // `bitcoinAnchorBroadcastCoordinator.broadcast()` completely
-        // unmodified. This is deliberately a SEPARATE fact from
-        // `bitcoinAnchorSignedPsbtFinalizationOutcome` immediately above —
-        // not merely `broadcastReady = true` — so a broadcast attempt is
-        // always tied to a specific transaction's own identity, never to
-        // "whatever this page happens to be displaying right now." Reset to
-        // `null` at the exact same three points `bitcoinAnchorSignedPsbtFinalizationOutcome`
-        // itself is retired (a fresh "Create Transaction Plan", "Sign
-        // Reviewed Transaction", or "Verify & Finalize Transaction" click)
-        // — a new transaction, once constructed, reviewed, or signed, never
-        // leaves a previous transaction's own finalized bytes eligible for
-        // broadcast.
+        // The exact finalized transaction ({ txid, rawTransaction, finalizedAt
+        // }) a broadcast is bound to, kept separate from the finalization
+        // outcome so a broadcast is always tied to one specific transaction,
+        // never to whatever is on screen.
         const bitcoinAnchorFinalizedTransaction = ref(null);
 
-        // The single, page-level result of the last explicit "Broadcast
-        // Transaction" click — `null` until one has ever been made for the
-        // CURRENT finalized transaction. Held as a plain ref, replaced
-        // wholesale by `broadcastBitcoinAnchorTransaction()` below, and
-        // reset to `null` every time `bitcoinAnchorFinalizedTransaction`
-        // itself is retired — a newly finalized transaction always starts
-        // unbroadcast again, never inheriting a previous attempt's own
-        // BROADCASTED outcome. See application/BitcoinAnchorBroadcastState.js's
-        // own header, and `bitcoinAnchorSignedPsbtFinalizationOutcome`'s own
-        // declaration immediately above, the identical restraint one stage
-        // earlier.
         const bitcoinAnchorBroadcastOutcome = ref(null);
 
-        // 0.8.74 — Cross-Domain Publication Observation Timeline.
-        //
-        // `bitcoinAnchorBroadcastedAt` is the ONE new piece of state this
-        // milestone adds to the broadcast flow above — the moment THIS
-        // replica observed `bitcoinAnchorBroadcastOutcome` settle, captured
-        // once, in `broadcastBitcoinAnchorTransaction()` below. Application/
-        // BitcoinAnchorBroadcastCoordinator.js's own outcome carries no
-        // timestamp of its own (see that file's own header) — broadcasting
-        // is a one-time action a caller observes once, not a durable,
-        // timestamped domain fact — so this page captures it itself,
-        // mirroring exactly how `bitcoinAnchorFinalizedTransaction`'s own
-        // `finalizedAt: Date.now()` above already captures an equivalent
-        // fact one stage earlier in the identical pipeline. Reset to `null`
-        // at the exact same three points `bitcoinAnchorBroadcastOutcome`
-        // itself is retired, immediately below each of those. See
-        // application/PublicationObservationTimelineView.js's own header —
-        // `crossDomainPublicationObservationTimelineView()` further below
-        // reads this to build one, and only one, Bitcoin broadcast entry
-        // for the session's own freshly broadcast transaction; a discovered,
-        // already-catalogued anchor never gets one, because no independent
-        // broadcast observation exists for it in this replica.
+        // When this replica saw the broadcast settle. The broadcast outcome
+        // carries no timestamp, so the page records one; the cross-domain
+        // timeline uses it for the session's own broadcast only.
         const bitcoinAnchorBroadcastedAt = ref(null);
 
-        // 0.9.512 — Bitcoin Granular Pipeline Anchor Publication
-        // Integration.
-        //
-        // `bitcoinAnchorPublicationAttempt` is the single, page-level
-        // result of the MOST RECENT `bitcoinAnchorPublicationCoordinator
-        // .publishBroadcastedAnchor()` call — called automatically, exactly
-        // once, immediately after `broadcastBitcoinAnchorTransaction()`
-        // below reaches its own real BROADCASTED outcome, never from a
-        // `*View()` projection or any other passive re-observation (see
-        // that function's own comment). Reuses application/
-        // PublicationAnchorCreationView.js's own `describeCreationAttempt()`
-        // — the identical outcome vocabulary `createAnchor()`/`createBaseAnchor()`
-        // already project through, never a second, competing one. Reset to
-        // `null` at the exact same three points `bitcoinAnchorBroadcastOutcome`
-        // itself is retired, immediately below each of those — a freshly
-        // constructed, signed, or finalized transaction never leaves a
-        // previous transaction's own anchor-creation result on screen.
+        // Result of the automatic publishBroadcastedAnchor() call made once,
+        // right after a real BROADCASTED outcome.
         const bitcoinAnchorPublicationAttempt = ref(null);
 
-        // 0.8.65 — Explicit Bitcoin Anchor Confirmation UI.
-        //
-        // `bitcoinAnchorBroadcastConfirmationOutcome` is the single,
-        // page-level result of the MOST RECENT explicit "Observe
-        // Confirmation" click, bound to `bitcoinAnchorBroadcastOutcome`'s
-        // own txid — never to whatever txid happens to be displayed
-        // anywhere else on this page (see `observeBitcoinAnchorBroadcastConfirmation()`
-        // below, and application/BitcoinAnchorConfirmationCoordinator.js's
-        // own header). `null` until a BROADCASTED outcome exists AND at
-        // least one "Observe Confirmation" click has completed for it.
-        // Reaching BROADCASTED never populates this automatically — this
-        // ref is written ONLY by an explicit click, never by
-        // `broadcastBitcoinAnchorTransaction()` itself.
-        //
-        // `bitcoinAnchorBroadcastConfirmationHistory` is the FULL
-        // chronological sequence of every "Observe Confirmation" click's
-        // own observation for the CURRENT broadcast transaction — built
-        // with application/BitcoinAnchorConfirmationObservationHistory.js
-        // (0.8.56) UNCHANGED, the SAME append-only mechanism
-        // `entry.bitcoinAnchorConfirmationHistories[anchorId]` below
-        // already uses for "Reconcile" clicks against a persisted anchor —
-        // a DIFFERENT, separately kept history, never merged with that
-        // one. Every click appends; none is ever rewritten into "the
-        // current one."
-        //
-        // Both, along with the observing/error/disclosure state below, are
-        // reset at the exact same three points `bitcoinAnchorBroadcastOutcome`
-        // itself is retired (a fresh "Create Transaction Plan", "Sign
-        // Reviewed Transaction", or "Verify & Finalize Transaction" click)
-        // — a new transaction, once constructed, reviewed, signed, or
-        // finalized, never leaves a previous transaction's own confirmation
-        // context observable or clickable.
+        // Confirmation of this page's own broadcast txid, written only by an
+        // explicit "Observe Confirmation" click. The history is append-only and
+        // separate from the per-anchor "Reconcile" histories.
         const bitcoinAnchorBroadcastConfirmationOutcome = ref(null);
         const bitcoinAnchorBroadcastConfirmationHistory = ref([]);
         const bitcoinAnchorBroadcastConfirmationObserving = ref(false);
@@ -1729,26 +711,9 @@ export default {
             bitcoinAnchorBroadcastConfirmationHistoryEntryExpanded.value = {};
         }
 
-        // 0.8.75 — Durable Publication Observation Records. The one
-        // piece of page-level state this milestone adds: a durable,
-        // cross-domain application/PublicationObservationArchive.js
-        // instance, loaded once from `publicationObservationArchiveStorage`
-        // at mount (see onMounted() below) and kept in sync with it by
-        // every explicit `archiveXxx()` helper further down this file —
-        // never a second, separate in-memory history of its own.
-        //
-        // EVERY EXISTING HISTORY ON THIS PAGE STAYS EXACTLY AS EPHEMERAL
-        // AS ITS OWN HEADER ALREADY SAYS. `entry.ipfsPublicationRecordHistory`,
-        // `entry.ipfsPublicationVerificationHistoriesByRecordIndex`,
-        // `entry.bitcoinAnchorConfirmationHistories`, and
-        // `bitcoinAnchorBroadcastConfirmationHistory` are UNCHANGED by
-        // this milestone — still reset the moment this page reloads,
-        // still never themselves read from or written to anything
-        // durable. `publicationObservationArchive` is a SEPARATE,
-        // ADDITIONAL copy of the same underlying facts, kept durable —
-        // appending to it never touches any of those existing histories,
-        // and vice versa; every append site below does both, explicitly,
-        // side by side.
+        // The durable, cross-domain observation archive, loaded at mount and
+        // saved by every archiveXxx() helper. The per-entry histories on this
+        // page stay ephemeral; each append site writes both, side by side.
         const publicationObservationArchive = ref(PublicationObservationArchive.empty());
         const publicationObservationArchiveExpanded = ref(false);
 
@@ -1764,27 +729,17 @@ export default {
             }
         }
 
-        // Called immediately after `entry.ipfsPublicationRecordHistory` is
-        // appended to, with that SAME record and its SAME newly-appended
-        // `localIndex` in `entry.ipfsPublicationRecordHistory`. Records
-        // `entry.archiveIpfsRecordIndexByLocalIndex[localIndex]` — the
-        // position the record landed at in the shared, page-level
-        // archive's own `ipfsPublicationRecords`, a DIFFERENT index than
-        // `localIndex` itself, since the archive holds every entry's own
-        // records together — so a later verification of this exact
-        // record can find its way back to this exact archive position.
+        // Remembers where the record landed in the shared archive (a different
+        // index from localIndex, since the archive holds every entry's records)
+        // so a later verification can find it.
         function archivePublishIpfsRecord(entry, localIndex, record) {
             publicationObservationArchive.value = publicationObservationArchive.value.appendIpfsPublicationRecord(record);
             entry.archiveIpfsRecordIndexByLocalIndex[localIndex] = publicationObservationArchive.value.ipfsPublicationRecords.length - 1;
             persistPublicationObservationArchive();
         }
 
-        // Called immediately after `entry.ipfsPublicationVerificationHistoriesByRecordIndex[localIndex]`
-        // is appended to. A record this replica never itself archived (this
-        // entry's own `archiveIpfsRecordIndexByLocalIndex[localIndex]` is
-        // unset — e.g. a record discovered from elsewhere rather than
-        // published by this page) contributes no archived observation
-        // either — this function never guesses an archive position.
+        // A record this page never archived (e.g. discovered elsewhere) gets no
+        // archived verification; the archive position is never guessed.
         function archiveIpfsVerificationObservation(entry, localIndex, observation) {
             const archiveIndex = entry.archiveIpfsRecordIndexByLocalIndex[localIndex];
             if (!Number.isInteger(archiveIndex)) return;
@@ -1792,12 +747,9 @@ export default {
             persistPublicationObservationArchive();
         }
 
-        // `recordIndex` is always `null` here — this page has never
-        // tracked which IPFS publication record a given Bitcoin anchor
-        // corresponds to (see crossDomainPublicationObservationTimelineView()'s
-        // own header below, "NO recordIndex LINKAGE IS SUPPLIED"), and
-        // this archive holds the identical restraint rather than guessing
-        // one from a shared contentHash.
+        // recordIndex is always null: which IPFS record a Bitcoin anchor
+        // corresponds to is not tracked, and is never guessed from a shared
+        // contentHash.
         function archiveBitcoinBroadcast({ anchorId, txid, state, reason, broadcastedAt }) {
             publicationObservationArchive.value = publicationObservationArchive.value.appendBitcoinBroadcastRecord({
                 recordIndex: null, anchorId, txid, state, reason, broadcastedAt
@@ -1815,24 +767,11 @@ export default {
             persistPublicationObservationArchive();
         }
 
-        // 0.8.80 — Explicit Bitcoin Anchor Publication Lifecycle Record.
-        //
-        // Stateless — application/CreateBitcoinAnchorPublicationRecordUseCase.js
-        // takes no collaborator of its own, so this is constructed directly
-        // rather than injected, exactly like every other pure composition
-        // function this page already calls unwired (e.g.
-        // describeBitcoinAnchorObservationArchive()).
         const createBitcoinAnchorPublicationRecordUseCase = new CreateBitcoinAnchorPublicationRecordUseCase();
 
-        // Called ONCE, from `finalizeBitcoinAnchorSignedPsbt()` below, the
-        // moment a "Verify & Finalize Transaction" click reaches its own
-        // FINALIZED outcome — never at funding, construction, review, or
-        // signing, and never re-called on a later broadcast attempt for the
-        // SAME finalized transaction. Mints this replica's own durable
-        // identity for this publication attempt; whether the broadcast
-        // that follows succeeds or fails never retroactively erases it. See
-        // application/CreateBitcoinAnchorPublicationRecordUseCase.js's own
-        // header.
+        // Called once, when finalization succeeds. Mints this replica's durable
+        // identity for the publication attempt; a later broadcast failure never
+        // erases it.
         function archiveBitcoinAnchorPublicationRecord({ anchorId, contentHash, txid, network, createdAt }) {
             publicationObservationArchive.value = createBitcoinAnchorPublicationRecordUseCase.execute(publicationObservationArchive.value, {
                 anchorId, contentHash, txid, network, createdAt
@@ -1840,45 +779,17 @@ export default {
             persistPublicationObservationArchive();
         }
 
-        // 0.8.97 — Durable Base Transaction Inclusion Observation Archive.
-        //
-        // Mirrors `archiveBitcoinConfirmationObservation()` above exactly,
-        // one chain over: appends to the SAME durable, page-level archive
-        // every other archiveXxx() function here already writes to, keyed
-        // by the exact `txid` a real BROADCASTED outcome named — never
-        // `contentHash`. Called automatically, immediately after every
-        // explicit "Observe Transaction" click reaches its own outcome —
-        // see `observeBaseTransactionInclusion()` below — never behind a
-        // second, separate "Archive Observation" button: this page already
-        // established that "network observation" and "durable archival"
-        // are two different actions bridged by one automatic append, not
-        // two person-initiated clicks, for every other observation kind on
-        // this page, and Base's own durable archival mirrors that
-        // established behavior rather than inventing a second UX.
+        // Appended automatically after every explicit "Observe Transaction",
+        // keyed by txid, as with every other observation kind.
         function archiveBaseTransactionInclusionObservation(transactionHash, observation) {
             publicationObservationArchive.value = publicationObservationArchive.value.appendBaseTransactionInclusionObservation(transactionHash, observation);
             persistPublicationObservationArchive();
         }
 
-        // 0.8.99 — Durable Base Publication Identity Record.
-        //
-        // Stateless — application/CreateBaseAnchorPublicationRecordUseCase.js
-        // takes no collaborator of its own, so this is constructed directly
-        // rather than injected, mirroring exactly how
-        // `createBitcoinAnchorPublicationRecordUseCase` above is already
-        // constructed.
         const createBaseAnchorPublicationRecordUseCase = new CreateBaseAnchorPublicationRecordUseCase();
 
-        // Called ONCE, from `finalizeBaseSignedTransaction()` below, the
-        // moment a "Verify & Finalize Transaction" click reaches its own
-        // FINALIZED outcome — never at construction, review, or signing,
-        // and never re-called on a later broadcast attempt for the SAME
-        // finalized transaction. Mints this replica's own durable identity
-        // for this Base publication attempt; whether the broadcast that
-        // follows succeeds or fails never retroactively erases it. Mirrors
-        // `archiveBitcoinAnchorPublicationRecord()` above exactly, one
-        // chain over — see application/
-        // CreateBaseAnchorPublicationRecordUseCase.js's own header.
+        // Called once, when finalization succeeds; same as the Bitcoin record
+        // above.
         function archiveBaseAnchorPublicationRecord({ contentHash, txid, network, createdAt }) {
             publicationObservationArchive.value = createBaseAnchorPublicationRecordUseCase.execute(publicationObservationArchive.value, {
                 contentHash, txid, network, createdAt
@@ -1886,28 +797,14 @@ export default {
             persistPublicationObservationArchive();
         }
 
-        // Pure projection over `publicationObservationArchive` through
-        // application/PublicationObservationArchiveView.js's own
-        // `describePublicationObservationArchive()` — never a second,
-        // competing summary computed inline here.
         function publicationObservationArchiveView() {
             return describePublicationObservationArchive(publicationObservationArchive.value);
         }
 
-        // 0.8.83 — Publication Archive Provenance & Imported-Fact Boundary.
-        // Pure projection over the SAME `publicationObservationArchive`
-        // the function above already reads — never a second, competing
-        // archive of its own. See application/
-        // PublicationObservationArchiveProvenanceView.js's own header.
         function publicationObservationArchiveProvenanceView() {
             return describePublicationObservationArchiveProvenance(publicationObservationArchive.value);
         }
 
-        // 0.8.84 — Durable Publication Archive Fingerprint. Pure
-        // projection over the SAME `publicationObservationArchive` every
-        // card above already reads — never a second, competing archive of
-        // its own. See application/
-        // PublicationObservationArchiveFingerprintView.js's own header.
         function publicationObservationArchiveFingerprintView() {
             return describePublicationObservationArchiveFingerprint(publicationObservationArchive.value);
         }
@@ -1928,22 +825,13 @@ export default {
             }
         }
 
-        // 0.8.85 — Explicit Publication Archive Fingerprint Comparison.
-        // `archiveFingerprintComparisonInput` is a person's own pasted or
-        // typed text — never compared automatically. Only
-        // `compareArchiveFingerprint()`, fired by the one explicit
-        // "Compare" click below, ever writes
-        // `archiveFingerprintComparisonResult`. See application/
-        // PublicationObservationArchiveFingerprintComparison.js's own
-        // header for what MATCH/DIFFERENT/INVALID_FINGERPRINT/INVALID_ARCHIVE
-        // do and do not mean.
+        // Compared only on the explicit "Compare" click, never automatically.
         const archiveFingerprintComparisonInput = ref('');
         const archiveFingerprintComparisonResult = ref(null);
 
         function onArchiveFingerprintComparisonInputChanged() {
-            // A stale result naming text a person has since edited would
-            // misrepresent what "Compare" actually last checked — clearing
-            // it here is bookkeeping, never a second, implicit comparison.
+            // A result for text that has since changed would misrepresent what
+            // was compared.
             archiveFingerprintComparisonResult.value = null;
         }
 
@@ -1958,25 +846,15 @@ export default {
             publicationObservationArchiveExpanded.value = !publicationObservationArchiveExpanded.value;
         }
 
-        // THE ONE EXPLICIT, DESTRUCTIVE ACTION IN THIS MILESTONE. Never
-        // called by anything above — not a fresh publish, not a
-        // reconfiguration, not a page reload. A person clicks "Clear
-        // Archive" to reach this, and only this.
+        // The only destructive action on the archive, reached only from the
+        // "Clear Archive" button.
         function clearPublicationObservationArchive() {
             publicationObservationArchive.value = PublicationObservationArchive.empty();
             publicationObservationArchiveStorage.clear();
         }
 
-        // 0.8.82 — Durable Publication Archive Export & Import.
-        //
-        // A portable copy of the SAME durable archive the "Observation
-        // Archive" card above already reads — never a second, competing
-        // archive of its own. Exporting reads `publicationObservationArchive.value`
-        // as it stands at the moment of the click; nothing here is
-        // fetched, verified, or reconciled. Mirrors ui/views/
-        // IdentityManagementView.js's own export UI shape exactly: a
-        // `data:` URI a person clicks to download, never a
-        // programmatically triggered download.
+        // Export produces a data: URI the person clicks to download, never a
+        // programmatic download.
         const publicationArchiveExportedPackage = reactive({ json: '', fileName: '', downloadHref: '' });
 
         function exportPublicationArchive() {
@@ -1986,16 +864,8 @@ export default {
             publicationArchiveExportedPackage.downloadHref = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
         }
 
-        // Import state. `publicationArchiveImportOutcome` re-validates
-        // `publicationArchiveImportText` on every change — a pure,
-        // read-only preview computed via application/
-        // PublicationObservationArchiveExport.js's own
-        // `importPublicationObservationArchive()`, never itself touching
-        // `publicationObservationArchive.value`. Replacing the current
-        // archive happens ONLY inside `confirmPublicationArchiveImport()`
-        // below, from an explicit, separate click — the "explicit
-        // confirmation before replacing" this milestone's own proposal
-        // requires.
+        // The import preview re-validates on every change without touching the
+        // archive; only confirmPublicationArchiveImport() replaces it.
         const showPublicationArchiveImportForm = ref(false);
         const publicationArchiveImportText = ref('');
 
@@ -2024,70 +894,30 @@ export default {
             return describePublicationObservationArchive(outcome.archive);
         });
 
-        // THE ONE PLACE THIS MILESTONE EVER REPLACES THE CURRENT ARCHIVE.
-        // Never a merge — see application/PublicationObservationArchiveExport
-        // .js's own header. A person has already seen
-        // `publicationArchiveImportPreview` above before this is ever
-        // reachable; this function itself re-checks the outcome rather
-        // than trusting that preview alone, so a stale click can never
-        // import something that failed validation.
+        // Replaces (never merges) the archive. Re-checks the outcome instead of
+        // trusting the preview, so a stale click can never import something
+        // invalid.
         function confirmPublicationArchiveImport() {
             const outcome = publicationArchiveImportOutcome.value;
             if (!outcome || outcome.outcome !== PublicationObservationArchiveImportOutcome.IMPORTED) return;
-            // 0.8.83 — `outcome.archive` already holds every fact stamped
-            // `IMPORTED` (see application/PublicationObservationArchiveExport.js's
-            // own `importPublicationObservationArchive()`). This is the
-            // one place the durable `archiveImportEvents` fact itself gets
-            // minted — at the moment this explicit click actually
-            // replaces the archive, never earlier at preview time.
+            // The import event is minted when the archive is actually replaced,
+            // not at preview time.
             publicationObservationArchive.value = recordPublicationObservationArchiveImport(outcome.archive, { importedAt: new Date() });
             persistPublicationObservationArchive();
             showPublicationArchiveImportForm.value = false;
             publicationArchiveImportText.value = '';
         }
 
-        // 0.8.86 — Non-Replacing External Publication Archive Inspection.
-        //
-        // A THIRD, deliberately separate action alongside "Export Archive"
-        // and "Import Archive" immediately above — never a mode of either
-        // one. `publicationArchiveInspectionText` is a person's own pasted
-        // or file-chosen text, re-validated on every change through
-        // `inspectPublicationObservationArchive()`, mirroring
-        // `publicationArchiveImportOutcome`'s own computed shape exactly.
-        // Unlike import, there is no confirmation click that ever assigns
-        // anything to `publicationObservationArchive.value` — inspecting
-        // has nothing left to confirm, because it never touches the
-        // current archive in the first place. See application/
-        // PublicationObservationArchiveInspection.js's own header, "INSPECT
-        // != IMPORT."
+        // Inspecting an external archive never touches the current one, so
+        // there is nothing to confirm.
         const showPublicationArchiveInspectionForm = ref(false);
         const publicationArchiveInspectionText = ref('');
 
-        // 0.8.87 — Durable Publication Archive Difference Projection.
-        // `publicationArchiveDifferenceResult` is written ONLY by the one
-        // explicit "Compare With Current Archive" click below — never
-        // computed automatically the way `publicationArchiveInspectionOutcome`
-        // re-validates on every keystroke. Any change to the inspected
-        // text (a new paste, a new file, closing the form) invalidates a
-        // stale result via `invalidatePublicationArchiveDifference()`
-        // below, mirroring `onArchiveFingerprintComparisonInputChanged()`'s
-        // own identical "clear on input change, never re-run automatically"
-        // discipline one card above. See application/
-        // PublicationObservationArchiveDifference.js's own header for what
-        // this result does and does not mean.
+        // Written only by the explicit "Compare With Current Archive" click.
+        // Any change to the inspected text clears a stale result, and a stale
+        // difference also clears the replacement review computed from it.
         const publicationArchiveDifferenceResult = ref(null);
 
-        // 0.8.88 — Explicit Publication Archive Replacement Review.
-        // `publicationArchiveReplacementReviewResult` is written ONLY by
-        // the one explicit "Review Replacement" click below — never
-        // computed automatically, and never before a difference has
-        // already been computed. It is strictly DOWNSTREAM of
-        // `publicationArchiveDifferenceResult`: anything that invalidates
-        // a stale difference (a new paste, a new file, closing the form, a
-        // fresh "Compare" click) invalidates a stale review the identical
-        // way, below. See application/
-        // PublicationObservationArchiveReplacementReview.js's own header
-        // for what this result composes and does not decide.
         const publicationArchiveReplacementReviewResult = ref(null);
 
         function invalidatePublicationArchiveDifference() {
@@ -2116,15 +946,8 @@ export default {
             return inspectPublicationObservationArchive(text);
         });
 
-        // THE ONE PLACE THIS CARD EVER COMPUTES A DIFFERENCE — fired only
-        // by an explicit click, never after inspection completes on its
-        // own. Reconstructs the external archive from the SAME text
-        // `publicationArchiveInspectionOutcome` already validated as
-        // INSPECTED above, via `PublicationObservationArchive.fromJSON()`
-        // — the identical faithful reconstruction 0.8.86's own inspection
-        // already performs internally — never a second parsing path. Reads
-        // `publicationObservationArchive.value` as the current archive
-        // stands at the moment of THIS click; touches neither archive.
+        // Reconstructs the external archive from the already-validated
+        // inspection text; touches neither archive.
         function comparePublicationArchiveDifference() {
             const outcome = publicationArchiveInspectionOutcome.value;
             if (!outcome || outcome.outcome !== PublicationObservationArchiveInspectionOutcome.INSPECTED) return;
@@ -2139,11 +962,6 @@ export default {
             publicationArchiveReplacementReviewResult.value = null;
         }
 
-        // A plain, UI-local list pairing each of the seven durable
-        // collections' own difference (0.8.97 adds Base transaction
-        // inclusion observations) with its own display label — pure
-        // presentation wiring over `publicationArchiveDifferenceResult`'s
-        // own already-computed counts, computing no new count of its own.
         function publicationArchiveDifferenceCollectionRows() {
             const difference = publicationArchiveDifferenceResult.value;
             if (!difference) return [];
@@ -2158,20 +976,8 @@ export default {
             ];
         }
 
-        // 0.8.88 — Explicit Publication Archive Replacement Review.
-        //
-        // A FOURTH, deliberately separate action on this card — "Review
-        // Replacement" — available once a difference has already been
-        // computed above. Reconstructs the external archive from the SAME
-        // already-inspected text `comparePublicationArchiveDifference()`
-        // itself reads, via `PublicationObservationArchive.fromJSON()` —
-        // never a second parsing path — and calls this milestone's own
-        // `describePublicationObservationArchiveReplacementReview()`. Reads
-        // `publicationObservationArchive.value` as the current archive
-        // stands at the moment of THIS click; touches neither archive. See
-        // application/PublicationObservationArchiveReplacementReview.js's
-        // own header — a review composes existing information, it never
-        // decides whether replacement should happen.
+        // A review composes existing information; it never decides whether
+        // replacement should happen.
         function reviewPublicationArchiveReplacement() {
             const outcome = publicationArchiveInspectionOutcome.value;
             if (!outcome || outcome.outcome !== PublicationObservationArchiveInspectionOutcome.INSPECTED) return;
@@ -2182,25 +988,12 @@ export default {
             );
         }
 
-        // Dismisses the review without replacing anything — the current
-        // archive was never touched by reviewing it in the first place, so
-        // "Cancel" here is pure UI bookkeeping, not an undo.
         function cancelPublicationArchiveReplacementReview() {
             publicationArchiveReplacementReviewResult.value = null;
         }
 
-        // THE ONE PLACE THIS CARD EVER REPLACES THE CURRENT ARCHIVE — and
-        // it does so through 0.8.82/0.8.83's own EXISTING, UNCHANGED
-        // import mechanism, never a second replacement implementation of
-        // its own. Re-runs `importPublicationObservationArchive()` on the
-        // SAME inspected text a person has already reviewed, rather than
-        // trusting `publicationArchiveReplacementReviewResult` alone, so a
-        // stale click can never replace the archive with something that
-        // fails validation — mirrors `confirmPublicationArchiveImport()`'s
-        // own identical re-check discipline exactly. `recordPublicationObservationArchiveImport()`
-        // mints the one durable `archiveImportEvents` fact for this act of
-        // importing, at the moment it actually happens — never earlier, at
-        // review time.
+        // Replaces through the existing import path, re-validating the reviewed
+        // text rather than trusting the review.
         function confirmPublicationArchiveReplacementFromReview() {
             const outcome = importPublicationObservationArchive(publicationArchiveInspectionText.value.trim());
             if (!outcome || outcome.outcome !== PublicationObservationArchiveImportOutcome.IMPORTED) return;
@@ -2212,27 +1005,9 @@ export default {
             publicationArchiveInspectionText.value = '';
         }
 
-        // 0.8.79 — Durable Bitcoin Anchor Evidence Restoration & Historical
-        // Inspection.
-        //
-        // A second, deliberately separate disclosure over the SAME
-        // `publicationObservationArchive` the "Observation Archive" card
-        // above already reads — never a second archive, never a second
-        // persisted copy. Where that card narrates a single, cross-domain
-        // CHRONOLOGICAL timeline, this one is scoped to Bitcoin anchors
-        // specifically and organized BY ANCHOR: application/
-        // BitcoinAnchorObservationArchiveView.js's own
-        // `describeBitcoinAnchorObservationArchive()` lists every anchorId
-        // this archive holds any Bitcoin fact for, and application/
-        // BitcoinAnchorDurableEvidenceView.js's own
-        // `reconstructBitcoinAnchorDurableEvidence()` reconstructs one
-        // anchor's own full evidence bundle — broadcast, confirmation,
-        // content-proof, chain-placement, consistency — ENTIRELY FROM
-        // ALREADY-PERSISTED FACTS, deriving those last two sections fresh
-        // on every read rather than reading anything this milestone stored
-        // for them, exactly as both files' own headers require. Expanding
-        // an anchor here performs ZERO network operations — the identical
-        // restraint the "Observation Archive" card above already holds.
+        // Per-anchor view of Bitcoin evidence reconstructed entirely from
+        // already-persisted facts; chain placement and consistency are derived
+        // fresh on every read. No network access.
         const historicalBitcoinAnchorsExpanded = ref(false);
         const historicalBitcoinAnchorEntryExpanded = reactive({});
 
@@ -2240,8 +1015,6 @@ export default {
             historicalBitcoinAnchorsExpanded.value = !historicalBitcoinAnchorsExpanded.value;
         }
 
-        // Pure projection — never a second, competing per-anchor index
-        // computed inline here.
         function historicalBitcoinAnchorArchiveView() {
             return describeBitcoinAnchorObservationArchive(publicationObservationArchive.value);
         }
@@ -2254,23 +1027,12 @@ export default {
             return Boolean(historicalBitcoinAnchorEntryExpanded[anchorId]);
         }
 
-        // The one anchorId → reconstructed evidence lookup this section
-        // ever performs — never by contentHash, never by txid. See
-        // application/BitcoinAnchorDurableEvidenceView.js's own header.
         function historicalBitcoinAnchorEvidenceView(anchorId) {
             return reconstructBitcoinAnchorDurableEvidence(publicationObservationArchive.value, anchorId);
         }
 
-        // 0.8.80 — Explicit Bitcoin Anchor Publication Lifecycle Record.
-        //
-        // A DIFFERENT INDEX THAN "Historical Bitcoin Anchor Evidence"
-        // ABOVE. That card lists every `anchorId` this archive holds ANY
-        // Bitcoin fact for; this one lists only the `anchorId`s this
-        // replica minted an explicit PUBLICATION IDENTITY for — a
-        // narrower, and deliberately different, question. An anchor
-        // broadcast before this milestone existed (or discovered from
-        // elsewhere, never finalized by this replica) can appear above
-        // without ever appearing here, and that is correct, not a bug.
+        // A different index from the evidence list above: only anchors this
+        // replica minted a publication identity for.
         const bitcoinAnchorPublicationsExpanded = ref(false);
         const bitcoinAnchorPublicationInspectionExpanded = reactive({});
 
@@ -2278,8 +1040,6 @@ export default {
             bitcoinAnchorPublicationsExpanded.value = !bitcoinAnchorPublicationsExpanded.value;
         }
 
-        // Pure projection — never a second, competing record listing
-        // computed inline here.
         function bitcoinAnchorPublicationRecordHistoryView() {
             return describeBitcoinAnchorPublicationRecordHistory(publicationObservationArchive.value.bitcoinAnchorPublicationRecords);
         }
@@ -2292,27 +1052,12 @@ export default {
             return Boolean(bitcoinAnchorPublicationInspectionExpanded[anchorId]);
         }
 
-        // "Inspect Observations" — joins this one publication's own
-        // identity back to application/BitcoinAnchorDurableEvidenceView.js's
-        // own (0.8.79, unchanged) reconstructed evidence for the identical
-        // anchorId. Performs zero network operations, exactly like
-        // `historicalBitcoinAnchorEvidenceView()` above.
         function bitcoinAnchorPublicationInspectionView(anchorId) {
             return inspectBitcoinAnchorPublication(publicationObservationArchive.value, anchorId);
         }
 
-        // 0.8.81 — Bitcoin Anchor Publication Lifecycle Timeline.
-        //
-        // A THIRD, DIFFERENT DISCLOSURE FOR THE SAME ROW — never a
-        // replacement for "Inspect Observations" above. That disclosure
-        // groups this publication's own five fact categories UNDER THEIR
-        // OWN HEADINGS; this one interleaves the exact same, already-described
-        // facts into ONE chronological read. Neither is more authoritative
-        // than the other — they are two different projections over the
-        // identical durable facts. Collapsed by default, and computes
-        // nothing of its own: every field a row shows is read straight off
-        // reconstructBitcoinAnchorPublicationLifecycleTimeline()'s own
-        // output. Performs zero network operations.
+        // A chronological view of the same facts "Inspect Observations" groups
+        // by category; neither is more authoritative. No network access.
         const bitcoinAnchorPublicationLifecycleExpanded = reactive({});
 
         function toggleBitcoinAnchorPublicationLifecycle(anchorId) {
@@ -2346,39 +1091,19 @@ export default {
             }
         }
 
-        // 0.8.99 — Durable Base Publication Identity Record.
-        //
-        // The Base counterpart to `bitcoinAnchorPublicationsExpanded`/
-        // `bitcoinAnchorPublicationRecordHistoryView()` above, one chain
-        // over: lists only the txids this replica minted an explicit
-        // PUBLICATION IDENTITY for — never every txid this archive happens
-        // to hold a Base fact for.
+        // Only txids this replica minted a Base publication identity for.
         const baseAnchorPublicationsExpanded = ref(false);
 
         function toggleBaseAnchorPublications() {
             baseAnchorPublicationsExpanded.value = !baseAnchorPublicationsExpanded.value;
         }
 
-        // Pure projection — never a second, competing record listing
-        // computed inline here.
         function baseAnchorPublicationRecordHistoryView() {
             return describeBaseAnchorPublicationRecordHistory(publicationObservationArchive.value.baseAnchorPublicationRecords);
         }
 
-        // 0.8.101 — Base Anchor Publication Lifecycle Timeline.
-        //
-        // Mirrors `bitcoinAnchorPublicationLifecycleExpanded`/
-        // `toggleBitcoinAnchorPublicationLifecycle()`/
-        // `isBitcoinAnchorPublicationLifecycleExpanded()`/
-        // `bitcoinAnchorPublicationLifecycleTimelineView()` above exactly,
-        // one chain over — scoped by `txid`, Base's own correlation key,
-        // rather than Bitcoin's own `anchorId`. Collapsed by default, and
-        // computes nothing of its own: every field a row shows is read
-        // straight off reconstructBaseAnchorPublicationLifecycleTimeline()'s
-        // own output. Performs zero network operations. Only ever shows a
-        // PUBLICATION entry and INCLUSION_OBSERVATION entries — see
-        // application/BaseAnchorPublicationLifecycleTimelineView.js's own
-        // header on why this domain's timeline names no BROADCAST stage.
+        // Keyed by txid. Base's timeline has no BROADCAST stage (see
+        // application/BaseAnchorPublicationLifecycleTimelineView.js).
         const baseAnchorPublicationLifecycleExpanded = reactive({});
 
         function toggleBaseAnchorPublicationLifecycle(txid) {
@@ -2404,35 +1129,10 @@ export default {
             }
         }
 
-        // 0.8.104 — Explicit Publication Reference Relationship.
-        //
-        // A DELIBERATELY EXPLICIT, PERSON-INITIATED ACTION — NEVER
-        // AUTOMATIC. Unlike `archiveBitcoinAnchorPublicationRecord()`/
-        // `archiveBaseAnchorPublicationRecord()` above, nothing here is
-        // ever called from a finalization, broadcast, or observation flow.
-        // A reference exists only when a person explicitly picks two
-        // ALREADY-DURABLE publication identities from the dropdowns below
-        // and clicks "Record Reference" — see application/
-        // CreatePublicationReferenceRecordUseCase.js's own header, "No
-        // Automatic Call Site."
-        //
-        // BOTH DROPDOWNS ARE POPULATED ENTIRELY FROM THIS ARCHIVE'S OWN
-        // ALREADY-DURABLE `bitcoinAnchorPublicationRecords`/
-        // `baseAnchorPublicationRecords` — NEVER A FREE-TEXT FIELD. Exactly
-        // as application/BlockchainPublicationIdentity.js's own header
-        // requires ("A Projection Target, Never A Replacement"), every
-        // identity offered here is reached by calling an existing
-        // record's own `toBlockchainPublicationIdentity()` — never
-        // assembled by hand from typed `blockchain`/`contentHash`/
-        // `chainReference` strings. This is a genuine, honest scope limit
-        // for this milestone's own first version: only publications this
-        // replica already holds a durable identity record for — its own,
-        // or ones an archive import already brought in — can be named on
-        // EITHER side of a reference; naming an arbitrary publication this
-        // replica has never independently recorded is left to the archive
-        // import/inspection machinery already built (0.8.82/0.8.86),
-        // never a new, hand-typed identity path this card would otherwise
-        // need to invent.
+        // References are recorded only by an explicit "Record Reference" click,
+        // never from another flow. Both sides are picked from identities this
+        // archive already holds durably (via
+        // toBlockchainPublicationIdentity()), never typed by hand.
         const publicationReferencesExpanded = ref(false);
         const publicationReferenceSourceKey = ref('');
         const publicationReferenceReferencedKey = ref('');
@@ -2442,11 +1142,9 @@ export default {
             publicationReferencesExpanded.value = !publicationReferencesExpanded.value;
         }
 
-        // Pure projection — never a second, competing identity list
-        // computed inline in the template. `key` is `blockchain:chainReference`
-        // — unique per publication identity, exactly the pair application/
-        // BlockchainPublicationIdentity.js's own `sameAs()` already
-        // recognizes as identity, never `contentHash`.
+        // key is blockchain:chainReference, the pair
+        // BlockchainPublicationIdentity.sameAs() treats as identity (never
+        // contentHash).
         function knownPublicationIdentityOptions() {
             const bitcoinOptions = publicationObservationArchive.value.bitcoinAnchorPublicationRecords.map((record) => {
                 const identity = record.toBlockchainPublicationIdentity();
@@ -2464,22 +1162,10 @@ export default {
             return match ? match.identity : null;
         }
 
-        // Stateless — application/CreatePublicationReferenceRecordUseCase.js
-        // takes no collaborator of its own, so this is constructed
-        // directly rather than injected, mirroring exactly how
-        // `createBaseAnchorPublicationRecordUseCase` above is already
-        // constructed.
         const createPublicationReferenceRecordUseCase = new CreatePublicationReferenceRecordUseCase();
 
-        // The one place this page ever mints a durable publication
-        // reference — never automatic, never inferred, only ever the
-        // exact source/referenced pair a person explicitly chose above.
-        // `PublicationReferenceRecord`'s own constructor is the ONLY
-        // validation performed (a missing selection, or the identical
-        // publication chosen on both sides) — this handler adds no second
-        // validation pass of its own, it only turns that constructor's own
-        // thrown error into a plain, displayed message rather than an
-        // uncaught exception.
+        // PublicationReferenceRecord's constructor is the only validation; its
+        // error is shown as a message.
         function recordPublicationReference() {
             publicationReferenceError.value = '';
             const sourceIdentity = findKnownPublicationIdentity(publicationReferenceSourceKey.value);
@@ -2501,26 +1187,11 @@ export default {
             }
         }
 
-        // Pure projection — never a second, competing history narration
-        // computed inline here.
         function publicationReferenceRecordHistoryView() {
             return describePublicationReferenceRecordHistory(publicationObservationArchive.value.publicationReferenceRecords);
         }
 
-        // 0.8.105 — Publication Reference Graph Projection.
-        //
-        // A READ-ONLY RECONSTRUCTION OF THE "PUBLICATION REFERENCES" CARD'S
-        // OWN ALREADY-DURABLE RECORDS ABOVE — never a second, competing
-        // input path. Nothing here mints, edits, or removes a
-        // PublicationReferenceRecord; recording a reference still happens
-        // exclusively through recordPublicationReference() above. This card
-        // only groups those SAME records into a graph shape — application/
-        // PublicationReferenceGraphView.js's own
-        // reconstructPublicationReferenceGraph(), UNCHANGED — so a person
-        // can see a publication's own outgoing/incoming reference counts
-        // without counting rows by hand. Collapsed by default, and every
-        // node within it collapsed by default too. Performs ZERO network
-        // operations.
+        // Read-only graph of the recorded references. No network access.
         const publicationReferenceGraphExpanded = ref(false);
         const publicationReferenceGraphNodeExpanded = reactive({});
 
@@ -2528,15 +1199,10 @@ export default {
             publicationReferenceGraphExpanded.value = !publicationReferenceGraphExpanded.value;
         }
 
-        // Pure projection — never a second, competing graph computation
-        // inline in the template.
         function publicationReferenceGraphView() {
             return reconstructPublicationReferenceGraph(publicationObservationArchive.value);
         }
 
-        // Node expansion is keyed by the identical `blockchain:chainReference`
-        // shorthand knownPublicationIdentityOptions() above already uses for
-        // the same two fields — never a second identity shape invented here.
         function publicationReferenceGraphNodeKey(node) {
             return `${node.identity.blockchain}:${node.identity.chainReference}`;
         }
@@ -2550,18 +1216,7 @@ export default {
             return Boolean(publicationReferenceGraphNodeExpanded[publicationReferenceGraphNodeKey(node)]);
         }
 
-        // 0.8.103 — Achievement Badge Presentation.
-        //
-        // A HUMAN-FACING PRESENTATION OVER application/AchievementEvent.js's
-        // OWN ACHIEVEMENT EVENTS (0.8.102) — composed unchanged through
-        // application/AchievementBadgeView.js's own
-        // reconstructAchievementBadges(), never a second, competing
-        // achievement computation inline here. Collapsed by default, and
-        // computes nothing of its own: every field a badge shows is read
-        // straight off reconstructAchievementBadges()'s own output.
-        // Performs zero network operations. Mirrors the same
-        // expanded-by-key reactive() pattern "Historical Bitcoin Anchor
-        // Evidence"/"Bitcoin Anchor Publications" above already use.
+        // Presentation over reconstructAchievementBadges(). No network access.
         const achievementsExpanded = ref(false);
         const achievementBadgeExpanded = reactive({});
 
@@ -2569,8 +1224,6 @@ export default {
             achievementsExpanded.value = !achievementsExpanded.value;
         }
 
-        // Pure projection — never a second, competing badge computation
-        // inline here.
         function achievementBadgesView() {
             return reconstructAchievementBadges(publicationObservationArchive.value);
         }
@@ -2583,14 +1236,9 @@ export default {
             return Boolean(achievementBadgeExpanded[index]);
         }
 
-        // "Badge → achievement event → publication identity → lifecycle."
-        // Never a new lifecycle view of its own — this opens the exact
-        // same "Bitcoin Anchor Publications"/"Base Anchor Publications"
-        // lifecycle disclosures already built above, by the exact same
-        // anchorId/txid those cards already key on. A Bitcoin badge whose
-        // own sourceAnchorId this replica could not resolve (see
-        // application/AchievementBadgeView.js's own header on why that can
-        // honestly happen) opens nothing — never a guessed anchorId.
+        // Opens the existing lifecycle disclosure for the badge's
+        // anchorId/txid. A Bitcoin badge whose anchorId couldn't be resolved
+        // opens nothing; the id is never guessed.
         function canViewAchievementBadgeLifecycle(badge) {
             return badge.sourcePublicationIdentity.blockchain === BlockchainKind.BASE
                 || Boolean(badge.sourceAnchorId);
@@ -2606,20 +1254,8 @@ export default {
             }
         }
 
-        // 0.8.107 — Achievement Profile Projection.
-        //
-        // A PUBLICATION-IDENTITY-SCOPED REDUCTION OVER THE "ACHIEVEMENTS"
-        // CARD'S OWN ACHIEVEMENT EVENTS ABOVE — application/
-        // AchievementProfileView.js's own reconstructAchievementProfile(),
-        // never a second, competing achievement computation inline here.
-        // Deliberately publication-centric, NEVER a human/wallet profile —
-        // see that file's own header on why publication identity and human
-        // identity stay deliberately distinct. The dropdown below is
-        // populated from the SAME knownPublicationIdentityOptions() the
-        // "Publication References" card above already uses — never a
-        // free-text field, and never a profile guessed from a shared
-        // content hash. Collapsed by default. Performs ZERO network
-        // operations.
+        // Publication-scoped, never a person or wallet profile. The publication
+        // is picked from known identities, never guessed from a content hash.
         const achievementProfileExpanded = ref(false);
         const achievementProfileSelectedKey = ref('');
 
@@ -2627,33 +1263,16 @@ export default {
             achievementProfileExpanded.value = !achievementProfileExpanded.value;
         }
 
-        // Pure projection — never a second, competing achievement
-        // computation inline in the template. No publication selected yet
-        // yields a valid, empty profile (application/
-        // AchievementProfileView.js's own Section A) — never an error.
+        // With no publication selected this is a valid, empty profile.
         function achievementProfileView() {
             const identity = findKnownPublicationIdentity(achievementProfileSelectedKey.value);
             return reconstructAchievementProfile(publicationObservationArchive.value, identity);
         }
 
-        // 0.8.108 — Explicit Publisher Identity Association.
-        //
-        // A DELIBERATELY EXPLICIT, PERSON-INITIATED ACTION — NEVER
-        // AUTOMATIC. Exactly like `recordPublicationReference()` above,
-        // nothing here is ever called from a finalization, broadcast, or
-        // observation flow. An association exists only when a person types
-        // a publisher identifier, picks one ALREADY-DURABLE publication
-        // identity from the dropdown below (the SAME
-        // `knownPublicationIdentityOptions()` the "Publication References"
-        // card already uses — never a free-text publication field), and
-        // clicks "Add Publication" — see application/
-        // CreatePublisherPublicationAssociationRecordUseCase.js's own
-        // header, "No Automatic Call Site."
-        //
-        // A PUBLISHER IDENTIFIER IS A BARE, EXPLICIT LABEL — NEVER A
-        // CRYPTOGRAPHIC IDENTITY, AND NEVER NORMALIZED. See application/
-        // PublisherIdentityRecord.js's own header: "Publisher A" and
-        // "publisher a" are two different publishers here, deliberately.
+        // Associations are recorded only by an explicit "Add Publication"
+        // click. A publisher identifier is a bare label, not a cryptographic
+        // identity, and is never normalized ("Publisher A" and "publisher a"
+        // differ).
         const publisherAssociationsExpanded = ref(false);
         const publisherAssociationPublisherId = ref('');
         const publisherAssociationPublicationKey = ref('');
@@ -2664,36 +1283,18 @@ export default {
             publisherAssociationsExpanded.value = !publisherAssociationsExpanded.value;
         }
 
-        // Pure projection — never a second, competing association listing
-        // computed inline here.
         function publisherPublicationAssociationRecordHistoryView() {
             return describePublisherPublicationAssociationRecordHistory(publicationObservationArchive.value.publisherPublicationAssociationRecords);
         }
 
-        // Every DISTINCT publisher identifier this archive's own
-        // association records already name — a convenience for choosing an
-        // existing publisher below, never a second identity a caller could
-        // construct from this string alone.
         function distinctPublisherIdentifiersView() {
             return sortLabels(reconstructDistinctPublisherIdentifiers(publicationObservationArchive.value));
         }
 
-        // Stateless — application/CreatePublisherPublicationAssociationRecordUseCase.js
-        // takes no collaborator of its own, so this is constructed
-        // directly, mirroring exactly how
-        // `createPublicationReferenceRecordUseCase` above is already
-        // constructed.
         const createPublisherPublicationAssociationRecordUseCase = new CreatePublisherPublicationAssociationRecordUseCase();
 
-        // The one place this page ever mints a durable publisher
-        // association — never automatic, never inferred, only ever the
-        // exact publisher/publication pair a person explicitly chose
-        // above. `PublisherIdentityRecord`'s/`PublisherPublicationAssociationRecord`'s
-        // own constructors are the ONLY validation performed (an empty
-        // publisher identifier, a missing publication selection) — this
-        // handler adds no second validation pass of its own, it only turns
-        // that constructor's own thrown error into a plain, displayed
-        // message rather than an uncaught exception.
+        // The record constructors are the only validation; their errors are
+        // shown as a message.
         function recordPublisherAssociation() {
             publisherAssociationError.value = '';
             const publicationIdentity = findKnownPublicationIdentity(publisherAssociationPublicationKey.value);
@@ -2714,12 +1315,8 @@ export default {
             }
         }
 
-        // A publisher-scoped reduction over the SAME association records
-        // above — application/PublisherAssociationView.js's own
-        // reconstructPublisherAssociatedPublications(), never a second,
-        // competing computation inline here. No publisher selected yet
-        // yields `null` — never an error, and never a profile guessed from
-        // a shared content hash or wallet.
+        // null with no publisher selected; never guessed from a shared content
+        // hash or wallet.
         function publisherAssociationProfileView() {
             if (!publisherAssociationSelectedPublisherId.value) return null;
             return reconstructPublisherAssociatedPublications(
@@ -2728,11 +1325,8 @@ export default {
             );
         }
 
-        // Every currently AUTHENTICATED peer, in registry order — the
-        // full candidate list this page now hands to application/
-        // PublicationResolutionCoordinator.js#resolve() as `peers`. See
-        // this file's own header on why this replaced 0.7.5's own
-        // single `retrievalPeer`.
+        // Every authenticated peer, in registry order: the candidate list
+        // handed to PublicationResolutionCoordinator#resolve().
         const retrievalPeers = computed(() => peerSessionManager.listPeers()
             .filter((peer) => peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED));
 
@@ -2748,21 +1342,10 @@ export default {
             return entries.find((entry) => entry.publication.id === publicationId);
         }
 
-        // 0.9.337 — Wire Resolved Decentralized Publications into
-        // Repository Discovery. The single semantic boundary this
-        // milestone exists to enforce: a decentralized envelope that
-        // merely arrived is NOT a Repository discovery candidate — only
-        // a Publication this replica has actually, successfully resolved
-        // is. `view.resolved` already means "outcome === RESOLVED" (see
-        // application/PublicationResolutionView.js's own header); the
-        // `instanceof Publication` check is what keeps every OTHER
-        // content kind (Blueprint Attribution, Place Naming Claim) out —
-        // resolvePublicationView()'s own `content` is genuinely a
-        // publisher/Publication.js instance for exactly one registered
-        // kindPlugin, never the others. A failed resolution, or a
-        // non-Publication kind, hits neither branch here — no
-        // placeholder, no failed entry, no retry queue, exactly as this
-        // milestone's own brief specifies.
+        // Only a successfully resolved Publication is admitted to Repository
+        // discovery; an envelope that merely arrived is not. The instanceof
+        // check keeps other content kinds (attributions, naming claims) out. A
+        // failed resolution is simply not admitted: no placeholder, no retry.
         function admitToRepositoryDiscovery(view) {
             if (discoveryProvider && view && view.resolved && view.content instanceof Publication) {
                 discoveryProvider.add(view.content);
@@ -2779,11 +1362,8 @@ export default {
             }
         }
 
-        // Rebuilds the entry LIST from the catalog (cheap, synchronous —
-        // application/LocalPublicationCatalog.js#list() never touches the
-        // network) without discarding a view already computed for a
-        // publication still on file, then resolves whichever entries are
-        // new.
+        // Rebuilds the entry list from the catalog (local and synchronous),
+        // keeping existing entry state, then resolves only the new entries.
         async function refreshList() {
             const known = new Map(entries.map((entry) => [entry.publication.id, entry]));
             const current = catalog.list();
@@ -2793,624 +1373,159 @@ export default {
                 view: null,
                 checking: false,
                 retrieving: false,
-                // Which tab of this entry's own "Snapshot, Anchoring, IPFS &
-                // Evidence Details" disclosure is currently showing — a pure
-                // presentation grouping over the same four facets that
-                // disclosure has always held (Local Snapshot/Snapshot State,
-                // Decentralization/External Evidence, Snapshot Placements/
-                // IPFS Publishing, and the Cross-Domain Observation
-                // Timeline), never a new fact about the publication itself.
-                // Reused, not reset, across refreshList()'s own known.get()
-                // reuse of this entry — exactly like evidenceExpanded/
-                // placementsExpanded below stay put across a refresh.
+                // Per-entry UI state. Everything below is ephemeral for the
+                // page's lifetime and never written to anything durable.
+                // detailsTab is the open tab of the entry's details disclosure.
                 detailsTab: 'snapshot',
                 evidenceAnchors: [],
                 evidence: null,
                 evidenceExpanded: false,
                 verifications: {},
-                // 0.8.13 — Multi-Evidence Comparison & Conflict UX. The
-                // derived structural relationship among THIS entry's own
-                // `evidenceAnchors` — application/
-                // PublicationEvidenceConvergence.js's own result, and
-                // application/PublicationEvidenceConvergenceView.js's own
-                // shaping of it. Recomputed, never accumulated, every
-                // time `loadEvidence()`/`verifyAnchor()` already run —
-                // ephemeral exactly like `evidence` immediately above.
+                // Recomputed from evidenceAnchors whenever
+                // loadEvidence()/verifyAnchor() run.
                 convergence: null,
                 convergenceView: null,
-                // 0.8.12 — External Anchor Lifecycle & Stale Evidence
-                // Semantics. Keyed by anchorId, each value the ORDERED
-                // list of every application/
-                // PublicationAnchorVerificationObservation.js this replica
-                // has made for that anchor THIS SESSION — appended to,
-                // never overwritten, unlike `verifications` above (which
-                // still holds only the latest result, exactly as 0.8.3
-                // left it, feeding the unchanged badge/label). Ephemeral
-                // for the lifetime of this page, exactly like
-                // `verifications` and `creationAttempts` — never read
-                // from or written to anything durable. See application/
-                // PublicationAnchorVerificationObservation.js's own
-                // header.
+                // Keyed by anchorId: every verification this session, appended
+                // in order. verifications keeps only the latest result.
                 verificationHistory: {},
-                // 0.8.14 — External Evidence Inspection & Locator UX.
-                // Keyed by anchorId; ephemeral for the lifetime of this
-                // page, exactly like `verifications`/`verificationHistory`
-                // above — never read from or written to anything durable,
-                // and never touched by loadEvidence()/verifyAnchor(). See
-                // toggleInspect()'s own comment below.
                 inspections: {},
-                // 0.8.16 — Evidence Synchronization UX & Explicit
-                // Historical Discovery. A single ephemeral attempt object
-                // for THIS entry — never keyed by anchorId, since
-                // discovery asks about the whole publication at once, not
-                // one anchor at a time. `null` until "Discover from
-                // Peers" is clicked; see `discoverFromPeers()`'s own
-                // comment below and application/
-                // PublicationEvidenceDiscoveryView.js's own header on the
-                // exact shape.
+                // Discovery asks about the whole publication, so there is one
+                // attempt per entry.
                 discoveryAttempt: null,
-                // 0.8.30 — Explicit Replica Knowledge Synchronization. A
-                // single ephemeral attempt object for THIS entry, the
-                // identical shape `discoveryAttempt` above holds — `null`
-                // until "Synchronize with Peers" is clicked; see
-                // `synchronizeWithPeers()`'s own comment below and
-                // application/PublicationKnowledgeSynchronizationView.js's
-                // own header on the exact shape.
                 synchronizationAttempt: null,
-                // 0.8.11 — Explicit External Anchoring UX. Keyed by
-                // anchorType; ephemeral for the lifetime of this page,
-                // exactly like `verifications` above — never read from or
-                // written to anything durable. See application/
-                // ExternalAnchorCreationUiState.js's own header.
                 creationAttempts: {},
-                // Preferred Proof & Anchoring Provider Creation Integration.
-                // A SEPARATE field from `creationAttempts` above, never a
-                // synthetic key inside that same anchorType-keyed map — the
-                // "Use Preferred Provider" trigger has no anchorType value
-                // to key its own attempt under before resolution completes,
-                // and reusing a real anchorType key (or inventing a
-                // sentinel one) could let an explicit per-anchorType attempt
-                // and a preferred attempt that happens to resolve to the
-                // SAME anchorType clobber each other's displayed outcome —
-                // mirrors `preferredPlacementCreationAttempt` below, one
-                // role over. Ephemeral for the lifetime of this page,
-                // exactly like `creationAttempts` itself.
+                // Kept apart from creationAttempts: the preferred trigger has
+                // no anchorType until it resolves, and sharing a key could let
+                // the two attempts overwrite each other's outcome.
                 preferredAnchorCreationAttempt: null,
-                // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction
-                // UI. A single ephemeral outcome object for THIS entry —
-                // never keyed by anything, since one publication has at
-                // most one transaction plan under construction at a time,
-                // exactly like `discoveryAttempt` above. `null` until
-                // "Create Transaction Plan" is clicked; see
-                // `constructBitcoinAnchorTransaction()`'s own comment below
-                // and application/BitcoinAnchorTransactionConstructionCoordinator.js#construct()'s
-                // own return shape.
+                // One publication has at most one transaction plan at a time.
                 bitcoinAnchorTransactionConstruction: null,
-                // 0.8.20 — Snapshot Placement Inspection & Explicit
-                // Resolution UX. `placements`/`placementsView` mirror
-                // `evidenceAnchors`/`evidence` above exactly, one axis
-                // over; `resolutions`/`placementInspections` mirror
-                // `verifications`/`inspections` — every one of them
-                // ephemeral for the lifetime of this page, never read
-                // from or written to anything durable.
+                // The placement-side counterparts of the evidence fields above.
                 placements: [],
                 placementsView: null,
                 placementsExpanded: false,
                 resolutions: {},
-                // 0.8.35 — Explicit Placement-Backed Snapshot
-                // Materialization. Keyed by placementId, exactly like
-                // `resolutions` immediately above — ephemeral for the
-                // lifetime of this page, never read from or written to
-                // anything durable, and never touched by loadPlacements()/
-                // resolvePlacement(). See `materializePlacement()`'s own
-                // comment below.
                 materializations: {},
-                // 0.8.26 — Snapshot Placement Lifecycle & Stale
-                // Availability Semantics. Keyed by placementId, each
-                // value the ORDERED list of every application/
-                // SnapshotPlacementResolutionObservation.js this replica
-                // has made for that placement THIS SESSION — appended to,
-                // never overwritten, unlike `resolutions` above (which
-                // still holds only the latest result, exactly as 0.8.20
-                // left it, feeding the unchanged badge/label). Ephemeral
-                // for the lifetime of this page, exactly like
-                // `resolutions` and `verificationHistory` above — never
-                // read from or written to anything durable. See
-                // application/SnapshotPlacementResolutionObservation.js's
-                // own header.
+                // Keyed by placementId: every resolution this session, appended
+                // in order. resolutions keeps only the latest result.
                 resolutionHistory: {},
                 placementInspections: {},
-                // 0.8.23 — Multi-Placement Convergence & Relationship UX.
-                // The derived structural relationship among THIS entry's
-                // own `placements` — application/
-                // PublicationSnapshotPlacementConvergence.js's own
-                // result, and application/
-                // PublicationSnapshotPlacementConvergenceView.js's own
-                // shaping of it. Recomputed, never accumulated, every
-                // time `loadPlacements()` already runs — ephemeral
-                // exactly like `placementsView` immediately above, and
-                // NEVER recomputed from `entry.resolutions` — see
-                // `loadPlacements()`'s own comment below.
+                // Recomputed from placements whenever loadPlacements() runs,
+                // never from resolutions.
                 placementConvergence: null,
                 placementConvergenceView: null,
-                // 0.8.27 — Unified Publication Decentralization View. The
-                // pure combination of THIS entry's own `convergenceView`
-                // and `placementConvergenceView` above — application/
-                // PublicationDecentralizationView.js's own reshaping,
-                // never a new derivation. Recomputed by
-                // `recomputeDecentralization()` whenever EITHER
-                // `recomputeConvergence()` or `recomputePlacementConvergence()`
-                // already runs, so it is always current regardless of
-                // which of the two loads first. Never fed a lifecycle or
-                // a knowledge/provenance record — see that file's own
-                // header on why neither has a parameter here at all.
+                // Combines convergenceView and placementConvergenceView;
+                // recomputed when either changes.
                 decentralization: null,
-                // 0.8.28 — Offline Publication Reconstruction & Replica
-                // Knowledge. `entry.decentralization` above, plus exactly
-                // one new fact: whether THIS replica has ever cataloged
-                // the publication envelope itself. Recomputed alongside
-                // `decentralization` — see `recomputeReplicaKnowledge()`
-                // below.
+                // decentralization plus whether this replica has cataloged the
+                // envelope itself.
                 replicaKnowledge: null,
-                // 0.8.31 — Replica Knowledge Provenance & Synchronization
-                // Inspection. The claim-level sibling of `replicaKnowledge`
-                // immediately above — application/
-                // PublicationReplicaKnowledgeDetailView.js's own result,
-                // recomputed by `recomputeReplicaKnowledgeDetail()`
-                // alongside `loadEvidence()`/`loadPlacements()`/
-                // `verifyAnchor()`/`resolvePlacement()`. `replicaKnowledgeExpanded`
-                // gates only whether the "Replica Knowledge" disclosure is
-                // open on screen, mirroring `evidenceExpanded`/
-                // `placementsExpanded` below.
                 replicaKnowledgeDetail: null,
                 replicaKnowledgeExpanded: false,
-                // 0.8.25 — Explicit Snapshot Placement Creation UX. Keyed
-                // by storage type; ephemeral for the lifetime of this
-                // page, exactly like `creationAttempts` above — never
-                // read from or written to anything durable. See
-                // application/SnapshotPlacementCreationUiState.js's own
-                // header.
                 placementCreationAttempts: {},
-                // 0.9.301 — Preferred Content Provider Placement Trigger. A
-                // SEPARATE field from `placementCreationAttempts` above,
-                // never a synthetic key inside that same storage-keyed map
-                // — the "Use Preferred Provider" trigger has no storage
-                // value to key its own attempt under before resolution
-                // completes, and reusing a real storage key (or inventing a
-                // sentinel one) could let an explicit per-storage attempt
-                // and a preferred attempt that happens to resolve to the
-                // SAME storage clobber each other's displayed outcome (see
-                // tests/ContentProviderPreferenceReachabilityAudit.test.js,
-                // Section C3). Ephemeral for the lifetime of this page,
-                // exactly like `placementCreationAttempts` itself.
+                // Kept apart from placementCreationAttempts for the same reason
+                // as preferredAnchorCreationAttempt.
                 preferredPlacementCreationAttempt: null,
-                // 0.8.68 — Explicit Remote IPFS Publishing Configuration &
-                // UX. `ipfsRemotePublishingConfiguration` is an ephemeral
-                // application/IpfsRemotePublishingConfiguration.js instance
-                // for THIS entry — `null` until "Configure Remote
-                // Publishing" is explicitly submitted, and never read from
-                // or written to anything durable (see that class's own
-                // header, and application/IpfsRemotePublishingConfiguration
-                // .js's own header, "EPHEMERAL BY CONSTRUCTION").
-                // `ipfsRemotePublishingConfigureFormOpen`/
-                // `ipfsRemotePublishingDraft` hold only the in-progress
-                // form fields — discarded, never promoted to a real
-                // configuration, unless that submit actually happens.
-                // `ipfsRemotePublicationOutcome` is a single ephemeral
-                // outcome object for THIS entry, `null` until "Publish to
-                // Remote IPFS" is explicitly clicked, and reset to `null`
-                // every time the configuration itself is replaced —
-                // mirroring `bitcoinAnchorBroadcastOutcome`'s own "a fresh
-                // attempt retires whatever was previously in-flight"
-                // restraint, one axis over. None of these four fields is
-                // ever read from or written to localStorage, IndexedDB, a
-                // cookie, or anything else durable — they live exactly as
-                // long as this page does.
+                // Remote IPFS publishing: the configuration exists only in
+                // memory until the page closes (see
+                // application/IpfsRemotePublishingConfiguration.js); the draft
+                // holds unsubmitted form fields. A new configuration clears the
+                // previous publication outcome.
                 ipfsRemotePublishingConfiguration: null,
                 ipfsRemotePublishingConfigureFormOpen: false,
                 ipfsRemotePublishingDraft: { endpoint: '', credential: '', requestField: '', responseField: '' },
                 ipfsRemotePublicationOutcome: null,
-                // 0.8.70 — IPFS Publication & Content Verification UI.
-                // `ipfsPublicationRecord` is the exact application/
-                // IpfsPublicationRecord.js captured the moment
-                // `ipfsRemotePublicationOutcome` last reached PUBLISHED —
-                // `null` until then, and reset to `null` every time a
-                // fresh publish attempt or a (re)configuration retires
-                // the previous one, mirroring `ipfsRemotePublicationOutcome`
-                // 's own "a fresh attempt retires whatever was previously
-                // in-flight" restraint. `ipfsPublicationContentVerification`
-                // is a single ephemeral outcome object for THIS entry,
-                // `null` until "Verify IPFS Content" is explicitly
-                // clicked — it is deliberately NEVER reset by a fresh
-                // verification of the SAME record (a "Verify Again" click
-                // simply replaces it), only by a fresh publish attempt
-                // binding a NEW record, so that a stale record's own last
-                // observation can never be mistaken for the current
-                // record's. Neither field is ever read from or written to
-                // localStorage, IndexedDB, a cookie, or anything else
-                // durable.
+                // The record from the last PUBLISHED outcome and its latest
+                // verification. A new publish (a new record) clears both, so an
+                // old record's verification is never shown for the new one;
+                // "Verify Again" just replaces the verification.
                 ipfsPublicationRecord: null,
                 ipfsPublicationContentVerification: null,
-                // 0.8.71 — IPFS Publication Record History & Inspection.
-                // `ipfsPublicationRecordHistory` is the FULL, append-only
-                // sequence of every `IpfsPublicationRecord` a PUBLISHED
-                // outcome for THIS entry has ever bound — built with
-                // application/IpfsPublicationRecordHistory.js, the SAME
-                // append-only mechanism application/
-                // BitcoinAnchorConfirmationObservationHistory.js already
-                // uses for a different domain. Publishing again NEVER
-                // clears or replaces an earlier entry here, and — unlike
-                // `ipfsPublicationRecord`/`ipfsPublicationContentVerification`
-                // above — this history also survives reconfiguring or
-                // clearing the remote pinning provider, because a past
-                // publication remains a historical fact regardless of
-                // whatever provider is presently configured.
-                // `ipfsPublicationRecordHistoryExpanded` gates the "Show/
-                // Hide Publication History" disclosure. `
-                // ipfsPublicationRecordInspectionExpanded` is keyed by a
-                // history entry's own stable array index — stable because
-                // this history is append-only and never reordered — and
-                // holds that one record's own "Inspect" disclosure state.
-                // Verifying record #0 never touches record #1's own entry,
-                // and vice versa. None of these three fields is ever read
-                // from or written to localStorage, IndexedDB, a cookie, or
-                // anything else durable.
+                // Append-only history of every published record; it survives
+                // reconfiguring the provider because a past publication stays a
+                // fact. Keyed maps below use the stable history index.
                 ipfsPublicationRecordHistory: [],
                 ipfsPublicationRecordHistoryExpanded: false,
                 ipfsPublicationRecordInspectionExpanded: {},
-                // 0.8.72 — IPFS Publication Verification History &
-                // Inspection UI. 0.8.71's own single-slot `
-                // ipfsPublicationVerificationsByRecordIndex[index]` — one
-                // MOST RECENT observation per history record, silently
-                // overwritten by the next "Verify Again" click — is
-                // replaced by `ipfsPublicationVerificationHistoriesByRecordIndex
-                // [index]`, an append-only application/
-                // IpfsPublicationContentVerificationHistory.js sequence:
-                // EVERY observation a record has ever received, in order,
-                // forever. `ipfsPublicationRecordVerifyingByRecordIndex
-                // [index]` is a transient, ephemeral "a verification is
-                // currently in flight for this record" flag — it is never
-                // itself appended into the history, because "a check is
-                // running" is not an observation about the content.
-                // `ipfsPublicationVerificationHistoryExpandedByRecordIndex
-                // [index]` gates that one record's own "Show/Hide
-                // Verification History" disclosure. All three are keyed
-                // by a history entry's own stable array index, exactly
-                // like `ipfsPublicationRecordInspectionExpanded` above —
-                // verifying record #0 never touches record #1's own entry
-                // in any of these maps, and vice versa. None of these
-                // three fields is ever read from or written to
-                // localStorage, IndexedDB, a cookie, or anything else
-                // durable.
+                // Per-record verification histories (append-only) and in-flight
+                // flags, keyed by record index. "Verifying" is never recorded
+                // as an observation.
                 ipfsPublicationVerificationHistoriesByRecordIndex: {},
                 ipfsPublicationRecordVerifyingByRecordIndex: {},
                 ipfsPublicationVerificationHistoryExpandedByRecordIndex: {},
-                // 0.8.73 — IPFS Publication Observation Timeline. Gates the
-                // "Show/Hide Timeline" disclosure below the existing
-                // Publication History disclosure. This is the ONLY new
-                // piece of state this milestone adds — the timeline itself
-                // is computed on demand by
-                // ipfsPublicationObservationTimelineView(entry), a pure
-                // projection over the two histories above; nothing here is
-                // fetched, polled, or persisted, and expanding this
-                // disclosure performs zero network operations.
                 ipfsPublicationObservationTimelineExpanded: false,
-                // 0.8.75 — Durable Publication Observation Records. Maps
-                // THIS entry's own local `ipfsPublicationRecordHistory`
-                // index to the position the same record landed at in the
-                // shared, page-level `publicationObservationArchive` —
-                // see archivePublishIpfsRecord()'s own header below. Never
-                // itself read from or written to anything durable; only
-                // the page-level archive it points into is.
+                // Maps a local record index to its position in the shared
+                // archive (see archivePublishIpfsRecord()).
                 archiveIpfsRecordIndexByLocalIndex: [],
-                // 0.8.33 — Local Snapshot Content Availability &
-                // Integrity UX. A single ephemeral attempt object for
-                // THIS entry — `null` until "Check Local Snapshot" is
-                // clicked, then `{ checking: true }`, then application/
-                // CheckLocalSnapshotContentAvailabilityUseCase.js#
-                // execute()'s own resolved shape. Never read from or
-                // written to anything durable, and never recomputed by
-                // any of `loadEvidence()`/`loadPlacements()`/
-                // `recomputeDecentralization()` above — a local content
-                // check is its own explicit action, exactly like
-                // `resolutions`/`verifications`.
+                // Written only by "Check Local Snapshot"; never recomputed by
+                // the evidence or placement loaders.
                 localSnapshotAvailability: null,
-                // 0.8.34 — Explicit Snapshot Materialization UX. `materializationFormOpen`
-                // gates only whether the file-picker/paste panel is on
-                // screen — opening it never imports anything, mirroring
-                // IdentityManagementView.js#showImportForm's own restraint.
-                // `materializationImportText` is whatever a chosen file's
-                // contents, or a person's own paste, currently holds — read
-                // only when "Import Snapshot" is explicitly clicked.
-                // `materializationAttempt` is a single ephemeral attempt
-                // object for THIS entry, `null` until that click, mirroring
-                // `localSnapshotAvailability` immediately above exactly.
+                // Opening the import panel never imports anything; only the
+                // "Import Snapshot" click does.
                 materializationFormOpen: false,
                 materializationImportText: '',
                 materializationAttempt: null,
-                // 0.8.36 — Unified Explicit Snapshot Materialization
-                // Sources. The most recent SUCCESSFUL application/
-                // SnapshotMaterializationAttempt.js this entry has seen,
-                // from EITHER "Import Snapshot" or "Materialize Snapshot"
-                // — whichever explicit action most recently actually
-                // stored bytes. `null` until one of them succeeds at
-                // least once, in this browsing session. Never itself a
-                // third action, never read by either action's own click
-                // handler, and never persisted — see that file's own
-                // header. Feeds only the shared "Local Snapshot" summary's
-                // "Source: …" line below, alongside `localSnapshotAvailability`
-                // above, which independently answers whether bytes are
-                // present RIGHT NOW.
+                // The most recent successful materialization, from any source.
+                // Feeds the "Source: …" line only.
                 lastMaterializationAttempt: null,
-                // 0.8.37 — Explicit Peer Snapshot Content Transfer.
-                // `peerMaterializationSelectedPeerId` is whichever
-                // `retrievalPeers` connectionId a person has picked from
-                // this entry's own dropdown — the person's own explicit
-                // choice of PEER, never a peer this page selects, ranks,
-                // or falls back through on their behalf.
-                // `peerMaterializationAttempt` is a single ephemeral
-                // attempt object for THIS entry, `null` until "Get
-                // Snapshot from Peer" is explicitly clicked, mirroring
-                // `materializationAttempt` above exactly, one axis over.
+                // The person's own peer choice; the page never picks, ranks or
+                // falls back between peers.
                 peerMaterializationSelectedPeerId: '',
                 peerMaterializationAttempt: null,
-                // 0.8.40 — Snapshot Possession Observation Exchange.
-                // `peerPossessionSelectedPeerId` is whichever
-                // `retrievalPeers` connectionId a person has picked from
-                // this entry's own "Peer Snapshot Possession" dropdown —
-                // a SEPARATE choice from `peerMaterializationSelectedPeerId`
-                // above; asking whether a peer has bytes and asking that
-                // same peer FOR bytes remain two independent actions, each
-                // with their own selected peer. `peerPossessionAttempt` is
-                // a single ephemeral observation attempt for THIS entry,
-                // `null` until "Check with Peer" is explicitly clicked —
-                // never a history, mirroring `localSnapshotAvailability`
-                // (0.8.33) rather than `materializationHistory` (0.8.38):
-                // an observation is a fact about one moment, and a NEW
-                // check simply replaces it, exactly as application/
-                // SnapshotPeerPossessionObservation.js's own header
-                // describes.
+                // A separate peer choice from the one above: asking whether a
+                // peer has bytes and asking it for them are independent
+                // actions. A new check replaces the previous observation.
                 peerPossessionSelectedPeerId: '',
                 peerPossessionAttempt: null,
-                // 0.8.38 — Snapshot Materialization History & Source
-                // Inspection. The ORDERED, ephemeral sequence of every
-                // application/SnapshotMaterializationAttempt.js this entry
-                // has seen THIS SESSION from ANY of the three explicit
-                // actions above, appended to by `recordMaterializationHistoryEntry()`
-                // below — never overwritten, and never filtered down to
-                // only the successful ones `lastMaterializationAttempt`
-                // above already tracks. `materializationHistoryExpanded`
-                // gates only whether the "Materialization History"
-                // disclosure is on screen, mirroring
-                // `replicaKnowledgeExpanded` above. See application/
-                // SnapshotMaterializationHistory.js's own header.
+                // Every materialization attempt this session, successful or
+                // not, appended in order.
                 materializationHistory: [],
                 materializationHistoryExpanded: false,
-                // 0.8.44 — Explicit Snapshot Acquisition Attempt
-                // Inspection. Keyed by an entry's own position in
-                // `materializationHistory` above (that array is only ever
-                // appended to, never reordered — see application/
-                // SnapshotMaterializationHistory.js's own header — so an
-                // index stays a stable identity for one attempt for the
-                // life of this page). Gates only whether ONE row's own
-                // extra fields (Publication, Content hash) are on screen;
-                // never itself a second history, and never anything the
-                // row's own facts didn't already carry. Mirrors
-                // `entry.inspections` (0.8.17) one axis over.
+                // Keyed by stable history index (the history is append-only).
                 materializationHistoryEntryExpanded: {},
-                // 0.8.41 — Peer Snapshot Possession Comparison & Observation
-                // History. A DELIBERATELY SEPARATE selection and history
-                // from `peerPossessionSelectedPeerId`/`peerPossessionAttempt`
-                // above: this milestone never retrofits the single-peer
-                // "Check with Peer" flow into a history, it only ADDS a new,
-                // explicit multi-peer action alongside it.
-                // `peerPossessionCompareSelectedPeerIds` is the set of
-                // `retrievalPeers` connectionIds a person has checked the
-                // box for — the person's own explicit, caller-supplied
-                // list application/SnapshotPeerPossessionCoordinator.js#
-                // observePeers() requires, never a list this page assembles
-                // or ranks on their behalf.
-                // `peerPossessionObservationHistory` is the append-only,
-                // ephemeral application/
-                // SnapshotPeerPossessionObservationHistory.js sequence every
-                // observation from "Check Selected Peers" (below) has
-                // joined THIS SESSION — never overwritten, and never
-                // filtered down to only the current answer; see that file's
-                // own header. `peerPossessionComparisonHistoryExpanded`
-                // gates only whether the full chronological history
-                // disclosure is on screen, mirroring
-                // `materializationHistoryExpanded` immediately above.
+                // Multi-peer comparison, separate from the single-peer check
+                // above: the peers the person ticked, and an append-only
+                // history of every answer.
                 peerPossessionCompareSelectedPeerIds: [],
                 peerPossessionObservationHistory: [],
                 peerPossessionComparisonChecking: false,
                 peerPossessionComparisonHistoryExpanded: false,
-                // 0.8.45 — Explicit Peer Possession Observation Inspection.
-                // Keyed by an observation's own position in
-                // `peerPossessionObservationHistory` above (that array is
-                // only ever appended to, never reordered — see application/
-                // SnapshotPeerPossessionObservationHistory.js's own header —
-                // so an index stays a stable identity for one observation
-                // for the life of this page). Gates only whether ONE row's
-                // own extra fields (the full state sentence, Publication,
-                // Content hash) are on screen; never itself a second
-                // history, and never anything the row's own facts didn't
-                // already carry. Mirrors `entry.materializationHistoryEntryExpanded`
-                // (0.8.44) exactly, one domain over.
+                // Keyed by stable history index (the history is append-only).
                 peerPossessionObservationHistoryEntryExpanded: {},
-                // 0.8.42 — Explicit Snapshot Source Selection &
-                // Materialization UX. `peerPossessionComparisonMaterializations`
-                // is keyed by peerId, exactly mirroring `materializations`
-                // above (keyed by placementId) one axis over: one ephemeral
-                // application/MaterializeSnapshotFromPeerUseCase.js-shaped
-                // attempt per peer row in "Peer Snapshot Possession
-                // Comparison," each independent of every other peer's own
-                // attempt AND of `peerPossessionAttempt`/
-                // `peerMaterializationAttempt` above — clicking "Get
-                // Snapshot from Alice" never touches Carol's own state, and
-                // never touches Alice's own POSSESSION OBSERVATION either;
-                // see `materializeFromComparisonPeer()` below.
+                // Keyed by peerId: one attempt per comparison row, independent
+                // of every other row and of the peer's possession observation.
                 peerPossessionComparisonMaterializations: {},
-                // 0.8.57 — Bitcoin Anchor Proof & Confirmation Inspection UI.
-                // The one new state this milestone adds: making 0.8.54's
-                // confirmation observer, 0.8.55's reconciliation view, and
-                // 0.8.56's confirmation history OBSERVABLE, without
-                // introducing any new fact those three files do not already
-                // produce. Every key below is keyed by anchorId, exactly
-                // mirroring `entry.inspections`/`entry.placementInspections`
-                // one axis over — a publication could in principle carry
-                // more than one `bitcoin-op-return` anchor (0.8.11's own
-                // Section D already proves creating the same anchorType
-                // twice succeeds), and each anchor's own confirmation/proof
-                // state stays entirely independent of every other anchor's.
-                //
-                // `bitcoinAnchorReconciliations[anchorId]` is a single
-                // ephemeral attempt object — `{ reconciling, error,
-                // publicationId, anchorId, contentHash, transaction,
-                // contentProof }` — the SAME shape application/
-                // BitcoinAnchorProofReconciliationView.js#reconcile() itself
-                // returns, merged with two UI-only flags, mirroring
-                // `entry.peerPossessionAttempt` (0.8.40): a NEW reconcile
-                // click simply REPLACES it — the current reconciliation
-                // describes what both independent observations say RIGHT
-                // NOW, never a history of its own.
-                //
-                // `bitcoinAnchorConfirmationHistories[anchorId]` is the
-                // DELIBERATELY SEPARATE, append-only application/
-                // BitcoinAnchorConfirmationObservationHistory.js sequence —
-                // every reconcile() click's own `transaction.confirmation`
-                // joins this array, never replacing an earlier entry,
-                // mirroring `entry.peerPossessionObservationHistory`
-                // (0.8.41) one domain over. There is no equivalent history
-                // for `contentProof` — see this milestone's own design
-                // conversation and docs/Principles.md, "Confirmation And
-                // Content-Proof Histories Stay Separate, Never Unified,
-                // Because They Are Independent Observations (0.8.57)": only
-                // confirmation status changes shape over time in a way
-                // worth narrating (NOT_CONFIRMED -> CONFIRMED as blocks
-                // accumulate); a content-hash match against an immutable
-                // OP_RETURN output does not evolve the same way, so this
-                // milestone builds no history for it, exactly as
-                // `bitcoinAnchorContentProofView()` below only ever reads
-                // the CURRENT reconciliation's own `contentProof`.
-                //
-                // `bitcoinAnchorConfirmationHistoryExpanded`/
-                // `bitcoinAnchorConfirmationHistoryEntryExpanded` gate only
-                // whether the "Confirmation History" disclosure, and one of
-                // its own rows, are on screen — mirroring
-                // `entry.peerPossessionComparisonHistoryExpanded`/
-                // `entry.peerPossessionObservationHistoryEntryExpanded`
-                // (0.8.41/0.8.45) exactly, one domain over.
+                // Bitcoin anchor inspection, keyed by anchorId (a publication
+                // can carry several bitcoin anchors). A new reconcile replaces
+                // bitcoinAnchorReconciliations[anchorId]; confirmations are
+                // also appended to a separate history. Content proof has no
+                // history: a hash match against an immutable OP_RETURN output
+                // doesn't change over time.
                 bitcoinAnchorReconciliations: {},
                 bitcoinAnchorConfirmationHistories: {},
                 bitcoinAnchorConfirmationHistoryExpanded: {},
                 bitcoinAnchorConfirmationHistoryEntryExpanded: {},
-                // 0.8.76 — Bitcoin Anchor Chain Placement Change
-                // Observation. Gates only the "Compare Confirmation
-                // Observations" disclosure below the existing
-                // "Confirmation History" one — mirroring
-                // `bitcoinAnchorConfirmationHistoryExpanded` exactly, one
-                // sibling disclosure over. Comparing is read-only and
-                // synchronous (application/
-                // BitcoinAnchorChainPlacementObserver.js makes no network
-                // call), so this key needs no matching "in flight"/"error"
-                // state the way `bitcoinAnchorReconciliations[anchorId]`
-                // does — there is nothing here that can fail.
+                // Comparing, consistency analysis and evidence correlation
+                // below are synchronous and local, so they need no in-flight or
+                // error state.
                 bitcoinAnchorChainPlacementComparisonExpanded: {},
-                // 0.8.77 — Bitcoin Anchor Observation Consistency Analysis.
-                // Gates only the "Observation Consistency" disclosure — a
-                // SIBLING to "Compare Confirmation Observations" (0.8.76)
-                // above it, never nested inside it. Consuming exactly the
-                // same `bitcoinAnchorConfirmationHistories[anchorId]` array
-                // both disclosures already read, application/
-                // BitcoinAnchorObservationConsistencyAnalyzer.js makes no
-                // network call either, so this key needs no matching "in
-                // flight"/"error" state, the identical reasoning
-                // `bitcoinAnchorChainPlacementComparisonExpanded` above
-                // already holds.
                 bitcoinAnchorObservationConsistencyExpanded: {},
-                // 0.8.78 — Bitcoin Anchor Observation Evidence Correlation.
-                // Gates the "Bitcoin Anchor Evidence" disclosure — a
-                // SIBLING to "Compare Confirmation Observations" (0.8.76)
-                // and "Observation Consistency" (0.8.77) above it, never
-                // nested inside either one. This disclosure composes
-                // exactly what those two, and "Show Confirmation History"
-                // (0.8.56) and the "Bitcoin Anchor" card's own current
-                // reconciliation (0.8.57) immediately above, already read
-                // and already show — application/
-                // BitcoinAnchorObservationEvidence.js recomputes none of
-                // their analysis, so this key needs no matching "in
-                // flight"/"error" state either, the identical reasoning
-                // `bitcoinAnchorChainPlacementComparisonExpanded` (0.8.76)
-                // and `bitcoinAnchorObservationConsistencyExpanded`
-                // (0.8.77) both already hold.
                 bitcoinAnchorObservationEvidenceExpanded: {},
-                // 0.8.74 — Cross-Domain Publication Observation Timeline.
-                // Gates the "Show/Hide Cross-Domain Timeline" disclosure,
-                // placed as a SIBLING to the existing IPFS and Bitcoin
-                // cards below — never nested inside either one, because the
-                // timeline this disclosure shows is a view over BOTH of
-                // this entry's own domains at once. This is the ONLY new
-                // piece of per-entry state this milestone adds; the
-                // timeline itself is computed on demand by
-                // crossDomainPublicationObservationTimelineView(entry), a
-                // pure projection over state already held above. Nothing
-                // here is fetched, polled, or persisted, and expanding this
-                // disclosure performs zero network operations.
                 crossDomainPublicationObservationTimelineExpanded: false,
-                // 0.9.436 — Publications Distribution Section
-                // Reorganization. Announcement/Discovery's own per-entry
-                // ephemeral state, following the identical convention
-                // `creationAttempts`/`placementCreationAttempts` above
-                // already establish, one role over.
-                // `discoveryDistributionProvider` is THIS entry's own
-                // explicit Nostr/Arweave choice — mirrors
-                // WorldEncounterCanvas's own `selectedDiscoveryProvider`
-                // (0.9.430), one entry at a time rather than one
-                // page-global selection, because this page lists many
-                // entries at once (see this milestone's own audit,
-                // tests/PublicationsDistributionSectionProductAndUIBoundaryAudit.test.js,
-                // Section D). `discoveryDistributionAttempt`/
-                // `snapshotDistributionAttempt` are single ephemeral
-                // attempt objects for THIS entry, `null` until
-                // "Distribute Publication"/"Distribute Snapshot" is
-                // clicked — mirroring `discoveryAttempt`/
-                // `bitcoinAnchorTransactionConstruction` above exactly,
-                // never keyed by anything, since one publication has at
-                // most one of each in flight at a time. None of the
-                // three is ever read from or written to anything durable
-                // — the durable record stays entirely
-                // publicationDistributionLifecycleStore's own, read
-                // fresh through discoveryObservationsView(entry) below.
-                //
-                // 0.9.667 — opens on this replica's own saved Announcement/
-                // Discovery preference when one is on file and is still one
-                // of the two real substrates this page offers ('nostr' or
-                // 'arweave'); falls back to 'nostr' — this field's own
-                // pre-0.9.667 default — otherwise. Still just this entry's
-                // OWN initial choice: changing the select afterward, or
-                // saving a different preference later, never reaches back
-                // into an already-constructed entry.
+                // The entry's own Nostr/Arweave choice (per entry, since the
+                // page lists many). Seeded from the saved
+                // Announcement/Discovery preference when it is one of the
+                // offered substrates, else 'nostr'; later preference changes
+                // never reach an existing entry. Attempts are single ephemeral
+                // objects; the durable record is
+                // publicationDistributionLifecycleStore's.
                 discoveryDistributionProvider: resolveSavedProviderDefault(
                     defaultAnnouncementDiscoveryProvider, ['nostr', 'arweave'], 'nostr'
                 ),
                 discoveryDistributionAttempt: null,
-                // 0.9.506 — Make Snapshot Distribution Content Backend
-                // Selectable. THIS entry's own explicit IPFS/Arweave
-                // Content choice — mirrors `discoveryDistributionProvider`
-                // immediately above exactly, one role over. Defaults to
-                // the first currently-eligible backend
-                // (`snapshotDistributionStorageTypes`, above) so the picker
-                // never opens on a backend this replica cannot actually
-                // use; falls back to `'ar'` — this family's own pre-0.9.506
-                // behavior — only when nothing is currently eligible at
-                // all.
-                //
-                // 0.9.667 — that first-eligible fallback now yields to this
-                // replica's own saved Content preference whenever it names
-                // one of the backends `snapshotDistributionStorageTypes`
-                // currently lists — see `discoveryDistributionProvider`
-                // immediately above for the identical restraint, one role
-                // over.
+                // The entry's own Content backend. Seeded from the saved
+                // Content preference when it is currently eligible, else the
+                // first eligible backend, else 'ar'.
                 snapshotDistributionStorage: resolveSavedProviderDefault(
                     defaultContentDistributionProvider, snapshotDistributionStorageTypes, snapshotDistributionStorageTypes[0] || 'ar'
                 ),
@@ -3421,14 +1536,8 @@ export default {
             entries.forEach(loadPlacements);
         }
 
-        // 0.8.3 — Publication Center: External Evidence UX. DISCOVERY
-        // only: a synchronous local catalog read through application/
-        // PublicationEvidenceCoordinator.js#discover(), never a call to
-        // application/ExternalAnchorVerifier.js. Re-running this is
-        // always cheap and safe — it re-reads whatever this replica's
-        // catalog currently holds without disturbing `entry.
-        // verifications`, the ephemeral per-anchor results a person may
-        // already have on screen.
+        // Discovery only: a local catalog read that never verifies and leaves
+        // existing verification results alone.
         function loadEvidence(entry) {
             if (!evidenceCoordinator) return;
             entry.evidenceAnchors = evidenceCoordinator.discover(entry.publication.id);
@@ -3437,20 +1546,9 @@ export default {
             recomputeReplicaKnowledgeDetail(entry);
         }
 
-        // 0.8.13 — Multi-Evidence Comparison & Conflict UX. Re-derives
-        // `entry.convergence`/`entry.convergenceView` from THIS entry's
-        // own `evidenceAnchors` — never a second discovery call, never
-        // touching application/ExternalAnchorVerifier.js itself.
-        // `verificationByAnchorId` carries this replica's own already-
-        // completed local observations (a "checking" in-flight
-        // placeholder is never passed through as an outcome) purely so
-        // application/PublicationEvidenceConvergence.js's own per-anchor
-        // `verification` field stays populated alongside the structural
-        // comparison — see that file's own header on why supplying it
-        // can never change `contentBindingConflict`/`contentHashGroups`
-        // themselves, which application/
-        // PublicationEvidenceConvergenceView.js's own `contentGroups`/
-        // `hasConflict` reflect unchanged either way.
+        // Local verification outcomes are passed along only to populate each
+        // anchor's verification field; they never change the conflict/grouping
+        // result.
         function recomputeConvergence(entry) {
             const verificationByAnchorId = {};
             for (const anchorId of Object.keys(entry.verifications)) {
@@ -3469,17 +1567,8 @@ export default {
             recomputeDecentralization(entry);
         }
 
-        // 0.8.27 — Unified Publication Decentralization View. Re-derives
-        // `entry.decentralization` from THIS entry's own already-computed
-        // `convergenceView`/`placementConvergenceView` — never a second
-        // discovery, verification, or resolution call, and never itself
-        // touching a catalog, coordinator, or the network. Safe to call
-        // before either convergence view exists yet (both start `null`,
-        // and application/PublicationDecentralizationView.js's own
-        // `known: false` degrade handles that); called from BOTH
-        // `recomputeConvergence()` and `recomputePlacementConvergence()`
-        // so the combined view is never stale after either dimension
-        // alone changes.
+        // Called from both convergence recomputes so the combined view is never
+        // stale; safe before either exists.
         function recomputeDecentralization(entry) {
             entry.decentralization = describePublicationDecentralization({
                 publicationId: entry.publication.id,
@@ -3489,15 +1578,8 @@ export default {
             recomputeReplicaKnowledge(entry);
         }
 
-        // 0.8.28 — Offline Publication Reconstruction & Replica
-        // Knowledge. `entry.publication` came from `catalog.list()` in
-        // the first place (see `refreshList()` above), so `hasPublication`
-        // is always true for an entry already on screen here — this
-        // still calls `catalog.has()` explicitly, rather than hard-coding
-        // `true`, so this function stays correct if a future caller ever
-        // builds an entry from something other than the catalog's own
-        // list. Never touches the network, a verifier, or a resolver —
-        // see application/PublicationReplicaKnowledgeView.js's own header.
+        // Calls catalog.has() rather than assuming true, so this stays right
+        // for an entry built from elsewhere.
         function recomputeReplicaKnowledge(entry) {
             entry.replicaKnowledge = describePublicationReplicaKnowledge({
                 publicationId: entry.publication.id,
@@ -3511,16 +1593,8 @@ export default {
             return describeDecentralizationRelationshipContrast(entry.decentralization);
         }
 
-        // 0.8.33 — Local Snapshot Content Availability & Integrity UX.
-        // The one place this page calls application/
-        // CheckLocalSnapshotContentAvailabilityUseCase.js — always for
-        // exactly this entry's own publication, always because a person
-        // clicked "Check Local Snapshot". Mirrors resolvePlacement()/
-        // verifyAnchor() above exactly: a plain in-flight marker while
-        // the (local, but still async) ContentStore read is underway,
-        // then the resolved observation, replacing whatever this entry's
-        // own previous check reported — a fresh read, never a merge with
-        // the one before it.
+        // Explicit "Check Local Snapshot" only. Each check replaces the
+        // previous one.
         async function checkLocalSnapshotAvailability(entry) {
             if (!localSnapshotContentAvailabilityUseCase) return;
             entry.localSnapshotAvailability = { checking: true };
@@ -3541,25 +1615,13 @@ export default {
             return describeAvailabilityCheckButtonLabel({ checking: view.checking, checked: view.checked });
         }
 
-        // 0.8.39 — Local Snapshot Possession & Replica Content Knowledge.
-        // A pure reshaping of THIS entry's own `localSnapshotAvailability`
-        // (whatever "Check Local Snapshot" above most recently reported) into
-        // application/PublicationSnapshotPossessionView.js's own small
-        // `{ publicationId, contentHash, possession: { state } }` shape —
-        // never a second check, never touching content/ContentStore.js
-        // itself. `state` is `null` until "Check Local Snapshot" is clicked
-        // at least once, mirroring `localSnapshotAvailabilityView(entry)
-        // .checked` exactly.
+        // state is null until "Check Local Snapshot" has run.
         function currentPossessionView(entry) {
             return describePublicationSnapshotPossession(entry.localSnapshotAvailability);
         }
 
-        // The tiny, deliberately non-"complete" composed fact application/
-        // PublicationReplicaContentKnowledgeView.js exists to report:
-        // whether THIS replica knows the publication's own envelope, and
-        // whether it currently possesses valid bytes for it — nothing about
-        // evidence or placement counts, which the existing "Decentralization"
-        // summary below already shows on its own, independently gated card.
+        // Only whether this replica knows the envelope and holds valid bytes;
+        // evidence and placement counts stay on the Decentralization card.
         function replicaContentKnowledgeView(entry) {
             return describePublicationReplicaContentKnowledge({
                 publicationId: entry.publication.id,
@@ -3568,14 +1630,6 @@ export default {
             });
         }
 
-        // 0.8.43 — Unified Snapshot Acquisition Outcome & Possession UX.
-        // Composes THIS entry's own `currentPossessionView(entry)` (0.8.39)
-        // and `entry.materializationHistory` (0.8.38) — both already
-        // computed by this page for their own existing disclosures — into
-        // application/PublicationSnapshotAcquisitionView.js's own small
-        // `{ possession, acquisition }` shape. Never a third check, never a
-        // second history: pure, synchronous re-reading of state this page
-        // already holds.
         function snapshotAcquisitionView(entry) {
             return describePublicationSnapshotAcquisition({
                 publicationId: entry.publication.id,
@@ -3585,13 +1639,8 @@ export default {
             });
         }
 
-        // A plain, non-judgmental count sentence over `snapshotAcquisitionView
-        // (entry).acquisition` — "4 attempts · 2 stored · 1 already available
-        // · 1 hash mismatch" — mirroring `materializationSourceCountsSentence()`
-        // below exactly, one axis over (outcome counts rather than source
-        // counts). `null` when no attempt has ever been recorded, so the
-        // "Snapshot Acquisition" summary stays silent rather than showing
-        // "0 attempts."
+        // null when nothing was recorded, so the summary shows nothing rather
+        // than "0 attempts".
         function snapshotAcquisitionOutcomeCountsSentence(entry) {
             const acquisition = snapshotAcquisitionView(entry).acquisition;
             if (acquisition.attemptCount === 0) return null;
@@ -3602,34 +1651,16 @@ export default {
             return parts.join(' · ');
         }
 
-        // True only once a local availability check has actually completed
-        // AND reported this replica does not currently possess valid bytes
-        // — NOT_AVAILABLE or CONTENT_HASH_MISMATCH. Gates a single hint
-        // sentence pointing at the sources already offered further down
-        // this same "Local Snapshot" card; never itself a source, a check,
-        // or a materialization attempt. `null`/not-yet-checked reports
-        // `false` here — this page never nudges a person toward a source
-        // before it has any honest basis to.
+        // True only after a completed check reported no valid bytes; the page
+        // never nudges toward a source before that.
         function snapshotAcquisitionNeedsSourceHint(entry) {
             const state = snapshotAcquisitionView(entry).possession.state;
             return state === LocalSnapshotContentAvailabilityOutcome.NOT_AVAILABLE
                 || state === LocalSnapshotContentAvailabilityOutcome.CONTENT_HASH_MISMATCH;
         }
 
-        // 0.8.46 — Unified Snapshot State Inspection. Composes FOUR facts
-        // this page already computes for its own independent disclosures —
-        // `currentPossessionView(entry)` (0.8.39), `snapshotAcquisitionView(entry)`
-        // (0.8.43), THIS entry's own `entry.placementConvergenceView`
-        // (0.8.23, null until "Show Placements" has ever loaded placements),
-        // and `peerPossessionComparisonView(entry)` (0.8.41) — into
-        // application/SnapshotStateInspectionView.js's own small, composed
-        // `{ possession, acquisition, placements, peerObservations }` shape.
-        // Never a fifth check, never a new store: pure, synchronous
-        // re-reading of state this page already holds, exactly mirroring
-        // `snapshotAcquisitionView(entry)`'s own restraint one layer up. See
-        // application/SnapshotStateInspectionView.js's own header and
-        // docs/Principles.md, "A Snapshot's Independently Observed Facts Are
-        // Exposed Side By Side, Never Collapsed Into One Verdict (0.8.46)."
+        // Shows the snapshot's independently observed facts side by side, never
+        // collapsed into one verdict.
         function snapshotStateInspectionView(entry) {
             return describeSnapshotStateInspection({
                 publicationId: entry.publication.id,
@@ -3641,23 +1672,13 @@ export default {
             });
         }
 
-        // A plain word for `snapshotStateInspectionView(entry).placements
-        // .relationship` — mirrors the inline string comparison "Snapshot
-        // Placements" already uses further down this same file
-        // (`entry.placementConvergenceView.relationship === 'conflict'`),
-        // just named once here rather than repeated a second time.
         function snapshotStatePlacementRelationshipLabel(view) {
             if (!view || !view.placements) return null;
             return view.placements.relationship === SnapshotPlacementRelationship.CONFLICT ? 'Conflict' : 'Agreement';
         }
 
-        // 0.8.34 — Explicit Snapshot Materialization UX. `event.target.
-        // files[0]` is whatever file a person just chose through the
-        // "Import Snapshot" panel's own file input — read as text and
-        // placed into `entry.materializationImportText`, exactly mirroring
-        // IdentityManagementView.js#onImportFileChosen()'s own shape.
-        // Never itself parses JSON or imports anything; only the explicit
-        // "Import Snapshot" click below does.
+        // Only loads the chosen file into the text box; nothing is imported
+        // until "Import Snapshot".
         function onMaterializationFileChosen(entry, event) {
             const file = event.target.files && event.target.files[0];
             if (!file) return;
@@ -3666,20 +1687,8 @@ export default {
             reader.readAsText(file);
         }
 
-        // 0.8.34 — Explicit Snapshot Materialization UX. The one place
-        // this page calls application/
-        // SnapshotContentMaterializationCoordinator.js#import() — always
-        // for whatever `entry.materializationImportText` currently holds,
-        // always because a person clicked "Import Snapshot". `JSON.parse`
-        // and the coordinator call are each wrapped separately, mirroring
-        // EditorView.js#importBlueprint()'s own two-stage "is this even
-        // JSON" / "is this a valid package" error handling — a malformed
-        // PublicationSnapshotTransferPackageError and a bad-JSON paste
-        // both land in the identical UNAVAILABLE display state (see
-        // application/SnapshotContentMaterializationView.js's own header
-        // on why). A completed attempt replaces whatever this entry's own
-        // previous attempt reported — a fresh result, never a merge with
-        // the one before it.
+        // JSON.parse and the import are guarded separately; bad JSON and an
+        // invalid package both show as UNAVAILABLE.
         async function importSnapshotContent(entry) {
             if (!snapshotContentMaterializationCoordinator) return;
             let pkg;
@@ -3716,22 +1725,9 @@ export default {
             }
         }
 
-        // 0.8.36 — Unified Explicit Snapshot Materialization Sources.
-        // Builds `entry.lastMaterializationAttempt` from whichever
-        // explicit action just completed — "Import Snapshot" or
-        // "Materialize Snapshot" — ONLY when that action actually
-        // resulted in this replica possessing the bytes. A rejected or
-        // unavailable attempt leaves `entry.lastMaterializationAttempt`
-        // exactly as it was: the shared "Local Snapshot" summary's own
-        // "Source: …" line always names the last action that actually
-        // succeeded, never the most recent attempt regardless of
-        // outcome. Deliberately collapses STORED and ALREADY_AVAILABLE
-        // onto the identical application/StoreSnapshotContentOutcome.js
-        // STORED for this purpose — the action-specific badge above
-        // already shows that distinction; this line exists only to name
-        // WHICH source, never to repeat what that badge already says.
-        // See application/SnapshotMaterializationAttempt.js and
-        // application/SnapshotMaterializationView.js's own headers.
+        // Updated only when bytes were actually stored, so "Source: …" names
+        // the last action that succeeded. STORED and ALREADY_AVAILABLE both
+        // count.
         function recordMaterializationSource(entry, source, stored, contentReference, publicationId) {
             if (!stored || !source) return;
             entry.lastMaterializationAttempt = createSnapshotMaterializationAttempt({
@@ -3747,23 +1743,9 @@ export default {
             return describeLocalSnapshotMaterializationSource(entry.lastMaterializationAttempt);
         }
 
-        // 0.8.38 — Snapshot Materialization History & Source Inspection.
-        // Each of the three explicit actions' own use case reports the
-        // outcome in ITS OWN outer vocabulary (application/
-        // SnapshotContentTransferOutcome.js, application/
-        // SnapshotPlacementMaterializationOutcome.js, application/
-        // PeerSnapshotMaterializationOutcome.js) — these three functions
-        // map each of those onto the shared inner application/
-        // StoreSnapshotContentOutcome.js vocabulary application/
-        // StoreSnapshotContentUseCase.js itself always resolves to,
-        // exactly the mapping each use case's own header already
-        // documents. Returning `null` for
-        // SnapshotPlacementMaterializationOutcome.UNAVAILABLE/
-        // INVALID_PLACEMENT and PeerSnapshotMaterializationOutcome.UNAVAILABLE
-        // is deliberate: those outcomes mean resolution or transport never
-        // reached application/StoreSnapshotContentUseCase.js at all, so
-        // recording a history entry for them would narrate a storage
-        // decision that never actually happened.
+        // Map each action's outcome onto StoreSnapshotContentOutcome. null
+        // means the store was never reached (resolution or transport failed),
+        // so no history entry is written for it.
         function mapPackageOutcomeToStoreOutcome(outcome) {
             switch (outcome) {
                 case SnapshotContentTransferOutcome.STORED: return StoreSnapshotContentOutcome.STORED;
@@ -3791,39 +1773,18 @@ export default {
             }
         }
 
-        // Appends ONE application/SnapshotMaterializationAttempt.js entry
-        // to `entry.materializationHistory` for EVERY completed attempt
-        // that actually reached application/StoreSnapshotContentUseCase.js
-        // — STORED, ALREADY_AVAILABLE, AND HASH_MISMATCH alike — unlike
-        // `recordMaterializationSource()` above, which only ever updates
-        // `lastMaterializationAttempt` on a successful one. `outcome` here
-        // is already one of application/StoreSnapshotContentOutcome.js's
-        // three values (the caller having already run it through one of
-        // the three mapping functions above); `null` means the underlying
-        // action never reached that boundary at all, and nothing is
-        // recorded. See application/SnapshotMaterializationHistory.js's
-        // own header on why this is APPENDED, never overwritten.
+        // Appends every attempt that reached the store, including a
+        // HASH_MISMATCH; null outcomes are skipped.
         function recordMaterializationHistoryEntry(entry, { sourceKind, outcome, publicationId, contentHash, contentReference }) {
             if (!sourceKind || !outcome) return;
             const attempt = createSnapshotMaterializationAttempt({ sourceKind, outcome, contentReference, publicationId, contentHash });
             entry.materializationHistory = appendSnapshotMaterializationHistoryEntry(entry.materializationHistory, attempt);
         }
 
-        // 0.8.44 — Explicit Snapshot Acquisition Attempt Inspection.
-        // Composes application/SnapshotMaterializationHistoryDetailView.js's
-        // own describeSnapshotMaterializationHistoryDetails() over this
-        // entry's existing `materializationHistory` (0.8.38) — the
-        // IDENTICAL sequence materializationSourceCountsSentence() below
-        // and the "Snapshot Acquisition" summary already read, never a
-        // second, separately-tracked history.
         function materializationHistoryDetailsView(entry) {
             return describeSnapshotMaterializationHistoryDetails(entry.materializationHistory);
         }
 
-        // Per-attempt disclosure state, addressed by that attempt's own
-        // stable index (see `entry.materializationHistoryEntryExpanded`'s
-        // own header). Toggling one row never touches another, and never
-        // touches the outer "Show/Hide Acquisition History" state above it.
         function isMaterializationHistoryEntryExpanded(entry, index) {
             return Boolean(entry.materializationHistoryEntryExpanded[index]);
         }
@@ -3832,12 +1793,7 @@ export default {
             entry.materializationHistoryEntryExpanded[index] = !entry.materializationHistoryEntryExpanded[index];
         }
 
-        // A plain, non-judgmental tally of how many recorded history
-        // entries named each source — "1 via transfer package, 1 via
-        // placement, 2 via peer" — mirroring `acquisitionBreakdownSentence()`
-        // above exactly, one axis over. Never a ranking: see application/
-        // SnapshotMaterializationHistory.js#describeSnapshotMaterializationSourceCounts()'s
-        // own header.
+        // A tally, never a ranking.
         function materializationSourceCountsSentence(entry) {
             const counts = describeSnapshotMaterializationSourceCounts(entry.materializationHistory);
             const parts = [];
@@ -3865,23 +1821,10 @@ export default {
             return describeMaterializationButtonLabel({ importing: materializationView(entry).importing });
         }
 
-        // 0.8.31 — Replica Knowledge Provenance & Synchronization
-        // Inspection. Builds the two claim arrays application/
-        // PublicationReplicaKnowledgeDetailView.js expects straight from
-        // THIS entry's own already-loaded `evidenceAnchors`/`placements`
-        // plus a purely local, synchronous read of `anchorKnowledgeStore`/
-        // `placementKnowledgeStore` (the identical "Inspection Is
-        // Observation" read `toggleInspect()`/`togglePlacementInspect()`
-        // already perform per-claim, done here for every known claim at
-        // once) and THIS entry's own `verificationHistory`/
-        // `resolutionHistory` (0.8.12/0.8.26, unchanged). Never touches
-        // the network, a verifier, or a resolver — see that file's own
-        // header. Called explicitly wherever the claim set or a
-        // verification/resolution observation could have changed, rather
-        // than chained through `recomputeDecentralization()`, so a fresh
-        // `verificationHistory`/`resolutionHistory` entry (pushed AFTER
-        // `verifyAnchor()`/`resolvePlacement()` already call
-        // `recomputeConvergence()`) is never one action stale.
+        // Called explicitly wherever the claim set or an observation changes,
+        // rather than chained through recomputeDecentralization():
+        // verify/resolve push their history entry after recomputing
+        // convergence, so chaining would leave this one step stale.
         function recomputeReplicaKnowledgeDetail(entry) {
             const evidenceClaims = entry.evidenceAnchors.map((anchor) => ({
                 anchorId: anchor.id,
@@ -3907,11 +1850,7 @@ export default {
             entry.replicaKnowledgeExpanded = !entry.replicaKnowledgeExpanded;
         }
 
-        // A plain, non-judgmental tally of how many of a dimension's
-        // claims were learned each way — "2 learned via peer exchange, 1
-        // learned via package import" — never a ranking. See application/
-        // PublicationReplicaKnowledgeDetailView.js#describeAcquisitionBreakdown()'s
-        // own header.
+        // A tally, never a ranking.
         function acquisitionBreakdownSentence(claims) {
             const counts = describeAcquisitionBreakdown(claims);
             const parts = [];
@@ -3926,21 +1865,13 @@ export default {
             entry.evidenceExpanded = !entry.evidenceExpanded;
         }
 
-        // Switches which of the four facet tabs this entry's own "Snapshot,
-        // Anchoring, IPFS & Evidence Details" disclosure currently shows —
-        // presentation only, mirrors setPublicationsToolsTab() above, one
-        // level down (per-entry rather than page-level).
         function setEntryDetailsTab(entry, tab) {
             entry.detailsTab = tab;
         }
 
-        // The one place this page calls application/
-        // ExternalAnchorVerifier.js (through the coordinator) — always
-        // for exactly ONE anchor, always because a person clicked
-        // "Verify Evidence" on it. Cross-checks against THIS entry's own
-        // publicationId/contentHash, so a mismatched anchor is reported
-        // as CONTENT_MISMATCH rather than silently accepted as evidence
-        // for the wrong publication.
+        // Verifies exactly one anchor, on an explicit click, against this
+        // entry's own publicationId/contentHash, so an anchor for another
+        // publication is reported as CONTENT_MISMATCH.
         async function verifyAnchor(entry, anchorView) {
             const anchor = entry.evidenceAnchors.find((candidate) => candidate.id === anchorView.anchorId);
             if (!anchor || !evidenceCoordinator) return;
@@ -3953,46 +1884,25 @@ export default {
             entry.verifications[anchor.id] = { outcome: result.outcome, reason: result.reason };
             entry.evidence = publicationEvidenceView(entry.evidenceAnchors, entry.verifications);
             recomputeConvergence(entry);
-            // 0.8.12 — record this attempt as its own observation, on top
-            // of whatever this replica already observed for this SAME
-            // anchor earlier this session, rather than replacing it — see
-            // `verificationHistory`'s own comment above.
+            // Append, never replace: see verificationHistory.
             const history = entry.verificationHistory[anchor.id] || (entry.verificationHistory[anchor.id] = []);
             history.push(createVerificationObservation({ anchorId: anchor.id, outcome: result.outcome, reason: result.reason }));
-            // 0.8.31 — re-derive AFTER the history push above, so this
-            // anchor's own `verificationState` reflects the attempt that
-            // just completed rather than the one before it.
+            // After the history push, so verificationState reflects this
+            // attempt.
             recomputeReplicaKnowledgeDetail(entry);
         }
 
-        // 0.8.12 — External Anchor Lifecycle & Stale Evidence Semantics.
-        // A single, optional sentence shown ALONGSIDE the existing
-        // verification badge/label (unchanged) — never a replacement for
-        // it. `null` in every case except the one this milestone exists
-        // to surface: this anchor was independently verified at some
-        // earlier point in this session, and the most recent check came
-        // back `PROOF_UNAVAILABLE`. See application/
-        // PublicationAnchorVerificationLifecycleView.js's own header.
+        // An extra sentence beside the badge, shown only when an anchor that
+        // verified earlier this session now comes back PROOF_UNAVAILABLE.
         function lifecycleNote(entry, anchorView) {
             const lifecycle = deriveAnchorVerificationLifecycle(entry.verificationHistory[anchorView.anchorId]);
             return describeAnchorVerificationLifecycleNote(lifecycle);
         }
 
-        // 0.8.14 — External Evidence Inspection & Locator UX. The one
-        // place this page calls application/PublicationAnchorDetailView.js
-        // (and, separately, `evidenceViewRegistry`) — always for exactly
-        // ONE anchor, always because a person clicked "Inspect Evidence."
-        // Both calls are pure and synchronous: nothing here awaits
-        // anything, touches evidenceCoordinator/creationCoordinator, or
-        // mutates `entry.evidenceAnchors`/`entry.evidence`/
-        // `entry.verifications`/`entry.verificationHistory`/
-        // `entry.convergence` — see tests/
-        // PublicationAnchorInspectionUX.test.js's own invariant section,
-        // which asserts exactly this against the real anchor/catalog.
-        // Toggling closed keeps the already-computed detail cached rather
-        // than discarding it — re-opening never needs to recompute, since
-        // nothing about a cataloged PublicationAnchor ever changes in
-        // place (core/PublicationAnchor.js's own header).
+        // Pure and synchronous: reads the anchor detail and the optional
+        // anchorType-specific view, and changes no entry state. Closing keeps
+        // the computed detail cached; a cataloged anchor never changes in
+        // place.
         function toggleInspect(entry, anchorView) {
             const state = entry.inspections[anchorView.anchorId]
                 || (entry.inspections[anchorView.anchorId] = { expanded: false, detail: null, typeSpecific: null, knowledge: null });
@@ -4004,14 +1914,7 @@ export default {
                 state.typeSpecific = (evidenceViewRegistry && evidenceViewRegistry.has(anchor.anchorType))
                     ? evidenceViewRegistry.get(anchor.anchorType).describe(anchor)
                     : null;
-                // 0.8.17 — Evidence Provenance & Observation Boundary. A
-                // purely local, synchronous read — application/
-                // LocalAnchorKnowledgeStore.js#get() never touches the
-                // network and never mutates anything, the identical
-                // "Inspection Is Observation" restraint this file's own
-                // header already holds for `publicationAnchorDetailView()`
-                // above, extended to cover this replica's own acquisition
-                // bookkeeping.
+                // Local, synchronous read; no network access.
                 state.knowledge = anchorKnowledgeStore
                     ? describeAnchorKnowledge(anchorKnowledgeStore.get(anchor.id))
                     : null;
@@ -4033,36 +1936,16 @@ export default {
             return state ? state.typeSpecific : null;
         }
 
-        // 0.8.17 — Evidence Provenance & Observation Boundary.
         function inspectionKnowledge(entry, anchorView) {
             const state = entry.inspections[anchorView.anchorId];
             return state ? state.knowledge : null;
         }
 
-        // 0.8.57 — Bitcoin Anchor Proof & Confirmation Inspection UI.
-        //
-        // The ONE explicit action this section offers, and the ONLY place
-        // this page ever calls `bitcoinAnchorProofReconciliationView.
-        // reconcile()`. Never triggered by opening this page, expanding
-        // evidence, or any other disclosure — mirroring
-        // `checkSnapshotPossessionWithPeer()`'s own restraint one domain
-        // over. A single click asks BOTH independent questions at once
-        // (confirmation status, content-hash proof) because that is
-        // exactly what `reconcile()` itself already does, concurrently, in
-        // one call — see that class's own header on why this is a
-        // COMPOSITION, never a second verification, and never two separate
-        // buttons pretending to be independent when the domain layer
-        // beneath them only ever offers one combined read.
-        //
-        // The reconciliation result REPLACES `entry.
-        // bitcoinAnchorReconciliations[anchorId]` — it describes what both
-        // observations say right now, never a history of its own — while
-        // its own `transaction.confirmation` is separately APPENDED to
-        // `entry.bitcoinAnchorConfirmationHistories[anchorId]`, never
-        // replacing an earlier entry there. Both updates always happen
-        // together, from the SAME reconcile() result, so the two views
-        // below can never disagree about what the most recent click
-        // reported.
+        // The only call to reconcile(), on an explicit click. One click asks
+        // both questions (confirmation and content proof) because reconcile()
+        // answers them together. The result replaces the current
+        // reconciliation, and its confirmation is appended to the history, both
+        // from the same result so the two views can't disagree.
         async function reconcileBitcoinAnchor(entry, anchorView) {
             if (!bitcoinAnchorProofReconciliationView) return;
             const anchor = entry.evidenceAnchors.find((candidate) => candidate.id === anchorView.anchorId);
@@ -4074,13 +1957,8 @@ export default {
                 const history = entry.bitcoinAnchorConfirmationHistories[anchorView.anchorId] || [];
                 entry.bitcoinAnchorConfirmationHistories[anchorView.anchorId] =
                     appendBitcoinAnchorConfirmationObservationHistoryEntry(history, result.transaction.confirmation);
-                // 0.8.75 — both facts this SAME reconcile() result carries
-                // are archived durably, side by side with the ephemeral
-                // state above — a content-proof observation has no
-                // history of its own anywhere else in this codebase (see
-                // application/PublicationObservationArchive.js's own
-                // header, "NO HISTORY IS INVENTED FOR CONTENT PROOF"), but
-                // this archive still records every one it is given.
+                // Both facts are also archived durably, content proof included,
+                // even though content proof keeps no in-memory history.
                 archiveBitcoinConfirmationObservation(anchorView.anchorId, result.transaction.confirmation);
                 if (result.contentProof) {
                     archiveBitcoinContentProofObservation(anchorView.anchorId, result.contentProof);
@@ -4090,23 +1968,8 @@ export default {
             }
         }
 
-        // Pure, synchronous: always re-derived from THIS entry's own
-        // `bitcoinAnchorReconciliations[anchorId]` — never a second,
-        // separately maintained "current" field. `confirmation` projects
-        // application/BitcoinAnchorConfirmationObservationHistoryDetailView.js's
-        // own `describeBitcoinAnchorConfirmationObservationDetail()`
-        // UNCHANGED over the most recent reconciliation's own
-        // `transaction.confirmation` — the SAME per-observation shape
-        // `bitcoinAnchorConfirmationHistoryView()` below already uses for
-        // every history row, so a person sees one consistent vocabulary
-        // whether they are looking at "right now" or at history.
-        // `contentProof` projects application/BitcoinAnchorContentProofView.js's
-        // own `describeBitcoinAnchorContentProof()`, unchanged, the same
-        // way. NEITHER field is ever combined with the other into a third,
-        // aggregate field — a caller wanting both places them side by
-        // side, exactly as `entry.bitcoinAnchorReconciliations[anchorId]`
-        // itself already keeps them: two sibling keys on one object, never
-        // one merged verdict.
+        // Derived from the current reconciliation. Confirmation and content
+        // proof stay two sibling fields, never combined into one verdict.
         function bitcoinAnchorReconciliationView(entry, anchorView) {
             const state = entry.bitcoinAnchorReconciliations[anchorView.anchorId];
             if (!state) return { reconciling: false, error: null, confirmation: null, contentProof: null };
@@ -4134,14 +1997,6 @@ export default {
             return view.confirmation ? 'Reconcile Again' : 'Reconcile';
         }
 
-        // The FULL chronological narration of every "Reconcile" click's own
-        // confirmation observation for THIS anchor — composes application/
-        // BitcoinAnchorConfirmationObservationHistoryDetailView.js's own
-        // `describeBitcoinAnchorConfirmationObservationHistoryDetails()`
-        // over `entry.bitcoinAnchorConfirmationHistories[anchorId]`,
-        // exactly mirroring `peerPossessionObservationDetailsView()` one
-        // domain over — never a second history, and never anything the
-        // history itself did not already carry.
         function bitcoinAnchorConfirmationHistoryView(entry, anchorView) {
             return describeBitcoinAnchorConfirmationObservationHistoryDetails(entry.bitcoinAnchorConfirmationHistories[anchorView.anchorId] || []);
         }
@@ -4154,12 +2009,6 @@ export default {
             return Boolean(entry.bitcoinAnchorConfirmationHistoryExpanded[anchorView.anchorId]);
         }
 
-        // Per-observation disclosure state, addressed by that
-        // observation's own stable index within THIS anchor's own history
-        // — mirroring `togglePeerPossessionObservationHistoryEntry()`
-        // exactly, one domain over. Toggling one row never touches
-        // another row, another anchor's own history, or the outer
-        // "Show/Hide Confirmation History" state above it.
         function toggleBitcoinAnchorConfirmationHistoryEntry(entry, anchorView, index) {
             const bucket = entry.bitcoinAnchorConfirmationHistoryEntryExpanded[anchorView.anchorId]
                 || (entry.bitcoinAnchorConfirmationHistoryEntryExpanded[anchorView.anchorId] = {});
@@ -4171,24 +2020,9 @@ export default {
             return Boolean(bucket && bucket[index]);
         }
 
-        // 0.8.76 — Bitcoin Anchor Chain Placement Change Observation.
-        //
-        // Pure, synchronous, always re-derived from THIS anchor's own
-        // `bitcoinAnchorConfirmationHistories[anchorId]` — the SAME array
-        // `bitcoinAnchorConfirmationHistoryView()` above already narrates,
-        // never a second, separately maintained history. Composes
-        // application/BitcoinAnchorChainPlacementObserver.js's own
-        // `observeBitcoinAnchorChainPlacementChanges()` (which performs no
-        // network access — it only compares observations this replica
-        // already recorded) with application/
-        // BitcoinAnchorChainPlacementObservationView.js's own
-        // `describeBitcoinAnchorChainPlacementObservations()`, exactly
-        // mirroring `bitcoinAnchorConfirmationHistoryView()`'s own
-        // observer-then-view composition, one layer over. There is no
-        // "Compare" button handler that performs work of its own — every
-        // click only toggles `toggleBitcoinAnchorChainPlacementComparison()`
-        // below; the comparison itself is already complete the moment
-        // this function is called.
+        // Comparison, consistency and evidence below are pure and synchronous,
+        // derived from the recorded confirmation history (no network access);
+        // their buttons only toggle visibility.
         function bitcoinAnchorChainPlacementComparisonView(entry, anchorView) {
             const history = entry.bitcoinAnchorConfirmationHistories[anchorView.anchorId] || [];
             return describeBitcoinAnchorChainPlacementObservations(observeBitcoinAnchorChainPlacementChanges(history));
@@ -4203,25 +2037,6 @@ export default {
             return Boolean(entry.bitcoinAnchorChainPlacementComparisonExpanded[anchorView.anchorId]);
         }
 
-        // 0.8.77 — Bitcoin Anchor Observation Consistency Analysis.
-        //
-        // Pure, synchronous, always re-derived from THIS anchor's own
-        // `bitcoinAnchorConfirmationHistories[anchorId]` — the SAME array
-        // `bitcoinAnchorConfirmationHistoryView()` and
-        // `bitcoinAnchorChainPlacementComparisonView()` above already read,
-        // never a second, separately maintained history. Composes
-        // application/BitcoinAnchorObservationConsistencyAnalyzer.js's own
-        // `analyzeBitcoinAnchorObservationConsistency()` (no network
-        // access — it only analyzes observations this replica already
-        // recorded) with application/BitcoinAnchorObservationConsistencyView.js's
-        // own `describeBitcoinAnchorObservationConsistency()`, exactly
-        // mirroring `bitcoinAnchorChainPlacementComparisonView()`'s own
-        // analyzer-then-view composition, one sibling over. There is no
-        // "Observation Consistency" button handler that performs work of
-        // its own — every click only toggles
-        // `toggleBitcoinAnchorObservationConsistency()` below; the
-        // analysis itself is already complete the moment this function is
-        // called.
         function bitcoinAnchorObservationConsistencyView(entry, anchorView) {
             const history = entry.bitcoinAnchorConfirmationHistories[anchorView.anchorId] || [];
             return describeBitcoinAnchorObservationConsistency(analyzeBitcoinAnchorObservationConsistency(history));
@@ -4236,35 +2051,9 @@ export default {
             return Boolean(entry.bitcoinAnchorObservationConsistencyExpanded[anchorView.anchorId]);
         }
 
-        // 0.8.78 — Bitcoin Anchor Observation Evidence Correlation.
-        //
-        // Composes application/BitcoinAnchorObservationEvidence.js's own
-        // `composeBitcoinAnchorObservationEvidence()` — which recomputes
-        // NOTHING of its own — over exactly the same, already-in-memory
-        // facts this anchor's own cards above already read:
-        // `entry.bitcoinAnchorConfirmationHistories[anchorId]` (the SAME
-        // array `bitcoinAnchorConfirmationHistoryView()`,
-        // `bitcoinAnchorChainPlacementComparisonView()`, and
-        // `bitcoinAnchorObservationConsistencyView()` above already read),
-        // `entry.bitcoinAnchorReconciliations[anchorId].contentProof` (the
-        // SAME single current reconciliation `bitcoinAnchorReconciliationView()`
-        // already reads — there is no content-proof HISTORY to read,
-        // exactly as that function's own header already explains), and
-        // 0.8.76/0.8.77's own placement/consistency results, called fresh
-        // here exactly as `bitcoinAnchorChainPlacementComparisonView()`/
-        // `bitcoinAnchorObservationConsistencyView()` above already call
-        // them. `anchorView.anchorId` — this anchor's own EXPLICIT
-        // identity — is the one and only key used throughout; nothing
-        // here reads or infers from `contentHash` or `txid`.
-        //
-        // NO BROADCAST OBSERVATION FOR A DISCOVERED ANCHOR, EVER — the
-        // identical restraint `crossDomainPublicationObservationTimelineView()`
-        // (0.8.74) already holds, one section over: every `anchorView`
-        // this loop iterates over (`entry.evidence.anchors`) is an
-        // already-catalogued, discovered claim, never a transaction THIS
-        // replica itself broadcast, so it honestly contributes an empty
-        // `broadcastObservations` section — never a fabricated one. See
-        // that function's own header for the full reasoning.
+        // Keyed only by anchorId, never by contentHash or txid. A discovered
+        // anchor contributes no broadcast observations: this replica never
+        // broadcast it.
         function bitcoinAnchorObservationEvidenceView(entry, anchorView) {
             const anchorId = anchorView.anchorId;
             const history = entry.bitcoinAnchorConfirmationHistories[anchorId] || [];
@@ -4290,17 +2079,9 @@ export default {
             return Boolean(entry.bitcoinAnchorObservationEvidenceExpanded[anchorView.anchorId]);
         }
 
-        // 0.8.58 — Explicit Bitcoin Wallet Connection & Signing UX.
-        //
-        // The ONE place this page ever calls
-        // `bitcoinWalletConnection.connect()` — never triggered
-        // automatically on page load, on opening the Publication Center,
-        // or on expanding any evidence card; only an explicit "Connect
-        // Bitcoin Wallet" click. Mirrors `reconcileBitcoinAnchor()` above:
-        // the injected collaborator performs the action and returns a
-        // result, and this page copies that result into its own reactive
-        // state rather than relying on Vue to see through the collaborator's
-        // own internal mutation.
+        // Only on an explicit "Connect Bitcoin Wallet" click, never on load.
+        // The result is copied into reactive state (see
+        // bitcoinWalletConnectionState).
         async function connectBitcoinWallet() {
             if (!bitcoinWalletConnection) return;
             bitcoinWalletConnectionState.status = BitcoinWalletConnectionState.CONNECTING;
@@ -4309,12 +2090,8 @@ export default {
             try {
                 result = await bitcoinWalletConnection.connect();
             } catch (error) {
-                // A provider-contract violation — see anchoring/
-                // BitcoinWalletConnection.js's own header on why this is
-                // the one case connect() itself throws rather than
-                // resolving. Reported here exactly like any other
-                // unavailable outcome; never left showing "Connecting…"
-                // forever.
+                // connect() throws only on a provider-contract violation; show
+                // it as unavailable rather than "Connecting…" forever.
                 bitcoinWalletConnectionState.status = bitcoinWalletConnection.status;
                 bitcoinWalletConnectionState.account = null;
                 bitcoinWalletConnectionState.network = null;
@@ -4327,9 +2104,8 @@ export default {
             bitcoinWalletConnectionState.reason = result.connected ? null : result.reason;
         }
 
-        // Local-only, honestly — see anchoring/BitcoinWalletConnection.js's
-        // own header, "DISCONNECT IS LOCAL-ONLY, HONESTLY." Never claims to
-        // revoke the browser extension's own permission grant.
+        // Local-only: never claims to revoke the extension's own permission
+        // grant.
         function disconnectBitcoinWallet() {
             if (!bitcoinWalletConnection) return;
             bitcoinWalletConnection.disconnect();
@@ -4339,15 +2115,8 @@ export default {
             bitcoinWalletConnectionState.reason = null;
         }
 
-        // Pure projection of `bitcoinWalletConnectionState` through
-        // application/BitcoinWalletConnectionView.js's own
-        // `describeBitcoinWalletConnection()` — the identical "the UI
-        // projects an application-layer describe function, unchanged"
-        // discipline `bitcoinAnchorReconciliationView()` above already
-        // holds. `expectedNetwork` matches anchoring/
-        // BitcoinAnchorTransactionBuilder.js's own default network — this
-        // page anchors to Bitcoin mainnet exclusively, so a wallet
-        // connected to any other network is always, honestly, a mismatch.
+        // expectedNetwork is mainnet: this page anchors to Bitcoin mainnet
+        // only, so any other wallet network is a mismatch.
         function bitcoinWalletConnectionView() {
             return describeBitcoinWalletConnection(bitcoinWalletConnectionState, { expectedNetwork: 'mainnet' });
         }
@@ -4364,44 +2133,23 @@ export default {
             return bitcoinWalletConnectionView().state === BitcoinWalletConnectionState.CONNECTING;
         }
 
-        // 0.8.59 — Explicit Bitcoin Anchor Transaction Review UI. A pure
-        // projection of `bitcoinAnchorTransactionReview.description` through
-        // application/BitcoinAnchorTransactionReviewView.js — the identical
-        // "the UI owns no facts of its own, it only projects an injected
-        // collaborator's own state" discipline every other `*View()`
-        // function on this page already holds. `null` whenever no review
-        // injection was provided, or nothing is presently awaiting review —
-        // the section below simply does not render either way.
+        // null when nothing is awaiting review.
         function bitcoinAnchorTransactionReviewView() {
             if (!bitcoinAnchorTransactionReview || !bitcoinAnchorTransactionReview.description) return null;
             return describeBitcoinAnchorTransactionReview(bitcoinAnchorTransactionReview.description);
         }
 
-        // A connected wallet's own network, checked against THIS review's
-        // own transaction network — never the page-wide "Bitcoin Wallet"
-        // section's hardcoded `mainnet` default immediately above, since a
-        // review already names the exact network the transaction it
-        // describes actually belongs to. See application/
-        // BitcoinWalletConnectionView.js's own header, "A MISMATCH IS
-        // REPORTED, NEVER RESOLVED" — unchanged here, one call site over.
+        // Checks the wallet against the review's own transaction network, not
+        // the page-wide mainnet default. A mismatch is reported, never
+        // resolved.
         function bitcoinAnchorTransactionReviewWalletMatchView() {
             const review = bitcoinAnchorTransactionReviewView();
             if (!review || !bitcoinWalletConnection) return null;
             return describeBitcoinWalletConnection(bitcoinWalletConnectionState, { expectedNetwork: review.network });
         }
 
-        // 0.8.60 — Explicit Bitcoin Anchor Funding & Address Preparation.
-        //
-        // The ONE place this page ever calls
-        // `bitcoinWalletFundingObserver.observeFunding()` — never triggered
-        // automatically on connecting the wallet, on page load, or on a
-        // timer; only an explicit "Observe Wallet Funding"/"Refresh
-        // Funding" click. Mirrors `connectBitcoinWallet()` above: the
-        // injected collaborator performs the observation and returns a
-        // fresh, frozen record, and this page copies it into its own
-        // reactive state wholesale — never merged with whatever the
-        // previous observation said, exactly as anchoring/
-        // BitcoinWalletFundingObserver.js's own header requires.
+        // Only on an explicit click, never on connect, load or a timer. Each
+        // observation replaces the previous one wholesale.
         async function observeBitcoinAnchorFunding() {
             if (!bitcoinWalletFundingObserver || !isBitcoinWalletConnected()) return;
             bitcoinAnchorFundingState.observing = true;
@@ -4425,18 +2173,9 @@ export default {
             bitcoinAnchorFundingUtxosExpanded.value = !bitcoinAnchorFundingUtxosExpanded.value;
         }
 
-        // Pure projection of `bitcoinAnchorFundingState.observation` through
-        // application/BitcoinAnchorFundingView.js's own
-        // `describeBitcoinAnchorFunding()` — the identical "the UI owns no
-        // facts of its own, it only projects an injected collaborator's own
-        // state" discipline every other `*View()` function on this page
-        // already holds. `expectedNetwork` is the CONNECTED wallet's own
-        // CURRENT network, so a person who reconnects on a different
-        // network after observing funding sees that staleness named, never
-        // silently ignored — see application/BitcoinAnchorFundingView.js's
-        // own header on `networkMismatch`. `null` whenever nothing has been
-        // observed yet — the section below simply does not render either
-        // way.
+        // expectedNetwork is the connected wallet's current network, so
+        // reconnecting on another network after observing funding shows the
+        // observation as stale.
         function bitcoinAnchorFundingView() {
             if (!bitcoinAnchorFundingState.observation) return null;
             return describeBitcoinAnchorFunding(bitcoinAnchorFundingState.observation, { expectedNetwork: bitcoinWalletConnectionState.network });
@@ -4453,11 +2192,7 @@ export default {
             return Boolean(view && view.state === BitcoinAnchorFundingObservationState.OBSERVED);
         }
 
-        // 0.8.90 — Explicit Base Network & Account Observation. Mirrors
-        // connectBitcoinWallet()/disconnectBitcoinWallet() above exactly,
-        // one chain over — the ONE place this page ever calls
-        // `baseWalletConnection.connect()`. No auto-connect, no
-        // reconnect-on-page-load, no polling.
+        // Only on an explicit click; no auto-connect or polling.
         async function connectBaseWallet() {
             if (!baseWalletConnection) return;
             baseWalletConnectionState.status = BaseWalletConnectionState.CONNECTING;
@@ -4476,23 +2211,17 @@ export default {
             baseWalletConnectionState.reason = result.connected ? null : result.reason;
         }
 
-        // Local-only, honestly — see base/BaseWalletConnection.js's own
-        // header, "DISCONNECT IS LOCAL-ONLY, HONESTLY."
+        // Local-only (see base/BaseWalletConnection.js).
         function disconnectBaseWallet() {
             if (!baseWalletConnection) return;
             baseWalletConnection.disconnect();
             baseWalletConnectionState.status = baseWalletConnection.status;
             baseWalletConnectionState.account = null;
             baseWalletConnectionState.reason = null;
-            // A disconnected wallet's own address can no longer be relied
-            // on — the last observation stays visible as a dated fact
-            // (never silently erased), but nothing here re-fetches it
-            // against whatever wallet connects next.
+            // The last observation stays visible as a dated fact, but is never
+            // re-fetched for the next wallet.
         }
 
-        // Pure projection of `baseWalletConnectionState` through
-        // application/BaseWalletConnectionView.js's own
-        // `describeBaseWalletConnection()`.
         function baseWalletConnectionView() {
             return describeBaseWalletConnection(baseWalletConnectionState);
         }
@@ -4509,17 +2238,8 @@ export default {
             return baseWalletConnectionView().state === BaseWalletConnectionState.CONNECTING;
         }
 
-        // 0.8.90 — Explicit Base Network & Account Observation.
-        //
-        // The ONE place this page ever calls
-        // `baseNetworkObserver.observeAccount()` — never triggered
-        // automatically on connecting the wallet, on page load, or on a
-        // timer; only an explicit "Observe Base Account"/"Refresh
-        // Observation" click. Mirrors observeBitcoinAnchorFunding() above:
-        // the injected collaborator performs the observation and returns a
-        // fresh, frozen record, and this page copies it into its own
-        // reactive state wholesale — never merged with whatever the
-        // previous observation said.
+        // Only on an explicit click. Each observation replaces the previous one
+        // wholesale.
         async function observeBaseAccount() {
             if (!baseNetworkObserver || !isBaseWalletConnected()) return;
             baseAccountObservationState.observing = true;
@@ -4536,11 +2256,6 @@ export default {
             baseAccountObservationState.observation = observation;
         }
 
-        // Pure projection of `baseAccountObservationState.observation`
-        // through application/BaseAccountObservationView.js's own
-        // `describeBaseAccountObservation()`. `null` whenever nothing has
-        // been observed yet — the section below simply does not render
-        // either way.
         function baseAccountObservationView() {
             if (!baseAccountObservationState.observation) return null;
             return describeBaseAccountObservation(baseAccountObservationState.observation);
@@ -4557,63 +2272,18 @@ export default {
             return Boolean(view && view.state === BaseNetworkObservationState.OBSERVED);
         }
 
-        // 0.8.91 — Explicit Base Publication Transaction Construction.
-        //
-        // The ONE place this page ever calls
-        // `basePublicationTransactionPlanCoordinator.construct()` — never
-        // triggered automatically by observing or refreshing a Base
-        // account, never on page load, and never re-run on a timer; only
-        // an explicit "Create Base Transaction Plan" click, exactly one
-        // entry at a time. Unlike `constructBitcoinAnchorTransaction()`
-        // below (fully synchronous), `construct()` here genuinely awaits
-        // real Base RPC reads — CONSTRUCTING is set before the call and
-        // replaced by whatever the coordinator resolves to.
-        //
-        // Uses the account observation exactly as last observed —
-        // `baseAccountObservationState.observation` — never a fresher one
-        // fetched here; see application/
-        // BasePublicationTransactionPlanCoordinator.js's own header on why
-        // staleness is never silently resolved by re-observing on this
-        // entry's behalf.
-        //
-        // A thrown error (a caller-contract violation — e.g. no account
-        // has been observed at all yet) is caught HERE, at the UI
-        // boundary, and turned into its own honest FAILED outcome —
-        // mirroring exactly how `constructBitcoinAnchorTransaction()`
-        // below already handles its own coordinator's thrown errors.
+        // Only on an explicit click, one entry at a time; this awaits real Base
+        // RPC reads. Uses the account observation exactly as last observed,
+        // never re-observing on the entry's behalf. A thrown error (e.g. no
+        // account observed yet) becomes a FAILED outcome here.
         async function constructBasePublicationTransaction(entry) {
             if (!basePublicationTransactionPlanCoordinator) return;
             entry.basePublicationTransactionConstruction = { state: BasePublicationTransactionPlanState.CONSTRUCTING, construction: null, reason: null };
-            // 0.8.93 — Explicit Base Reviewed Transaction Signing. A fresh
-            // plan always starts unsigned again — never leaves a previous
-            // plan's own SIGNED/DECLINED/etc. outcome showing against a
-            // transaction this click is about to replace. See
-            // `application/BaseReviewedSigningState.js`'s own header,
-            // "IDLE... the state after a person constructs (or
-            // reconstructs) a Base transaction plan."
+            // A new plan starts unsigned, unfinalized and unbroadcast; clear
+            // the later steps' outcomes.
             entry.baseReviewedTransactionSigningOutcome = null;
-            // 0.8.94 — Explicit Base Signed Transaction Verification &
-            // Finalization. A fresh plan always starts unfinalized again
-            // too — never leaves a previous plan's own FINALIZED/
-            // INVALID_SIGNATURE/FAILED outcome showing against a
-            // transaction this click is about to replace. See
-            // `application/BaseSignedTransactionFinalizationState.js`'s
-            // own header, the identical restraint one stage later.
             entry.baseSignedTransactionFinalizationOutcome = null;
-            // 0.8.95 — Explicit Base Transaction Broadcast. A fresh plan
-            // always starts unbroadcast again too — never leaves a
-            // previous plan's own BROADCASTED/REJECTED/etc. outcome
-            // showing against a transaction this click is about to
-            // replace. See `application/BaseTransactionBroadcastState.js`'s
-            // own header, the identical restraint one stage later still.
             entry.baseTransactionBroadcastOutcome = null;
-            // 0.8.96 — Explicit Base Transaction Inclusion & Confirmation
-            // Observation. A fresh plan always starts unobserved again too
-            // — never leaves a previous plan's own inclusion outcome or
-            // history showing against a transaction this click is about to
-            // replace. See `application/
-            // BaseTransactionInclusionObservationHistory.js`'s own header,
-            // the identical restraint one stage later still.
             entry.baseTransactionInclusionOutcome = null;
             entry.baseTransactionInclusionHistory = [];
             entry.baseTransactionInclusionObserving = false;
@@ -4629,14 +2299,6 @@ export default {
             }
         }
 
-        // Pure projection of `entry.basePublicationTransactionConstruction`
-        // through application/BasePublicationTransactionPlanView.js's own
-        // `describeBasePublicationTransactionPlan()` — the identical "the
-        // UI owns no facts of its own, it only projects an injected
-        // collaborator's own result" discipline every other `*View()`
-        // function on this page already holds. `null` whenever nothing
-        // has been constructed for this entry yet — the section below
-        // simply does not render either way.
         function basePublicationTransactionPlanView(entry) {
             if (!entry.basePublicationTransactionConstruction) return null;
             return describeBasePublicationTransactionPlan(entry.basePublicationTransactionConstruction);
@@ -4648,62 +2310,21 @@ export default {
             return BASE_PUBLICATION_TRANSACTION_PLAN_BADGE_CLASSES[view.state] || 'peer-badge--pending';
         }
 
-        // 0.8.92 — Explicit Base Transaction Review.
-        //
-        // A PURE PROJECTION OF THE ALREADY-CONSTRUCTED PLAN — NEVER A
-        // SEPARATE ACTION. Unlike `bridgeBitcoinAnchorTransactionToReview()`
-        // below (which must call out to an injected PSBT builder to turn a
-        // construction into something reviewable), reviewing a Base plan
-        // needs no collaborator and no additional step at all: 0.8.91's own
-        // `construction.plan` already carries every fact a review needs.
-        // So there is no "review coordinator," no separate reactive review
-        // state, and no bridging function to call after construction — this
-        // function simply reads `entry.basePublicationTransactionConstruction`
-        // fresh, every time it is called, through `application/
-        // BasePublicationTransactionReview.js`'s own
-        // `describeBasePublicationTransactionReview()`. That already makes
-        // review "automatically available after construction" (this
-        // milestone's own architectural point) — there is no click that
-        // could be missing, because there is nothing here TO click.
-        //
-        // `null` whenever construction has not reached CONSTRUCTED — the
-        // review section below simply does not render either way, the
-        // identical degrade-gracefully posture every other `*View()`
-        // function on this page already holds.
+        // Reviewing a Base plan needs no extra step or collaborator: the
+        // constructed plan already carries everything, so the review is a pure
+        // projection, available as soon as construction reaches CONSTRUCTED.
         function basePublicationTransactionReviewView(entry) {
             if (!entry.basePublicationTransactionConstruction) return null;
             if (entry.basePublicationTransactionConstruction.state !== BasePublicationTransactionPlanState.CONSTRUCTED) return null;
             return describeBasePublicationTransactionReview(entry.basePublicationTransactionConstruction.construction.plan);
         }
 
-        // 0.9.472 — Expose Review-Preserving Base Anchor Action.
-        //
-        // tests/BaseReviewPreservingAnchorPublishingIntegrationBoundaryAudit
-        // .test.js (0.9.471) found anchoring/BaseAnchorPublisher.js (0.9.470)
-        // real, review-preserving, and proof-round-trip-complete, but
-        // reachable from no production entry point — this is that one
-        // missing UI action, and nothing more.
-        //
-        // A DELIBERATE ALTERNATIVE TO THE GRANULAR PIPELINE BELOW, NEVER A
-        // REPLACEMENT FOR IT. `signBaseReviewedTransaction()`/
-        // `finalizeBaseSignedTransaction()`/`broadcastBaseTransaction()`
-        // remain fully usable exactly as before. This function hands
-        // `baseAnchorPublisher.publish()` the EXACT `plan` and the EXACT
-        // `reviewedTransaction` the review card above already rendered on
-        // screen — never a bare contentHash, and never a review this
-        // function reconstructs itself — and lets that one class perform
-        // signing, finalization, and broadcast internally, then catalog a
-        // real core/PublicationAnchor.js the same way "Create Bitcoin/
-        // Arweave Anchor" already does. See anchoring/BaseAnchorPublisher
-        // .js's own header on why this is the only honest way to expose it.
-        //
-        // REUSES application/PublicationAnchorCreationView.js's OWN
-        // describeCreationAttempt()/describeCreationButtonLabel() — never a
-        // second, competing outcome vocabulary. `published`/`unavailable`
-        // from BaseAnchorPublisher's own result maps onto exactly the same
-        // CREATED/PUBLISH_REJECTED/PUBLISH_UNAVAILABLE states application/
-        // ExternalAnchorCreationOutcome.js already names for Bitcoin/
-        // Arweave.
+        // An alternative to the granular sign/finalize/broadcast pipeline
+        // below, not a replacement. Hands baseAnchorPublisher.publish() the
+        // exact plan and reviewedTransaction the review card rendered (never a
+        // bare contentHash); the publisher signs, finalizes, broadcasts and
+        // catalogs the anchor. Outcomes use the same creation vocabulary as the
+        // other anchor types.
         async function createBaseAnchor(entry) {
             if (!baseAnchorPublisher) return;
             const review = basePublicationTransactionReviewView(entry);
@@ -4721,19 +2342,15 @@ export default {
                 });
 
                 if (result.published) {
-                    // Mirrors `archiveBaseAnchorPublicationRecord()`'s own
-                    // "append, never mutate" discipline — `result.archive`
-                    // is a NEW PublicationObservationArchive already
-                    // holding the fresh BaseAnchorPublicationRecord.
+                    // result.archive is a new archive that already holds the
+                    // Base publication record.
                     publicationObservationArchive.value = result.archive;
                     persistPublicationObservationArchive();
                     entry.baseAnchorCreationAttempt = {
                         creating: false, outcome: ExternalAnchorCreationOutcome.CREATED, anchor: result.anchor, reason: null, error: null
                     };
-                    // Re-discover from the catalog so the newly created
-                    // anchor immediately appears in the ordinary evidence
-                    // list below — mirrors `createAnchor()`'s own identical
-                    // call.
+                    // Re-discover so the new anchor appears in the evidence
+                    // list.
                     loadEvidence(entry);
                     entry.evidenceExpanded = true;
                 } else {
@@ -4741,10 +2358,8 @@ export default {
                     entry.baseAnchorCreationAttempt = { creating: false, outcome, anchor: null, reason: result.reason, error: null };
                 }
             } catch (error) {
-                // A caller-contract violation (e.g. the plan has drifted
-                // from what was reviewed) never reached a wallet or the
-                // network at all — mirrors `createAnchor()`'s own identical
-                // treatment of a thrown error.
+                // A thrown error (e.g. the plan drifted from what was reviewed)
+                // never reached a wallet or the network.
                 entry.baseAnchorCreationAttempt = { creating: false, outcome: null, anchor: null, reason: null, error: error.message };
             }
         }
@@ -4763,45 +2378,19 @@ export default {
             return describeCreationButtonLabel('Base', { creating: view.state === ExternalAnchorCreationUiState.CREATING, hasExisting });
         }
 
-        // 0.8.93 — Explicit Base Reviewed Transaction Signing.
-        //
-        // THE ONE EXPLICIT ACTION THIS WHOLE REVIEW EXISTS TO GATE — nothing
-        // above this function ever signs anything. Hands
-        // `application/BaseReviewedSigningCoordinator.js#sign()` the exact
-        // plan the review card above was built from, and the exact review
-        // object it already rendered on screen (`reviewedTransaction`) —
-        // never a hash, never a bare account, and never anything this
-        // function reconstructs itself. See `base/
-        // BaseReviewedTransactionSigner.js`'s own header on why a plan that
-        // has drifted from `reviewedTransaction` is refused before the
-        // wallet is ever consulted.
-        //
-        // EVERY CLICK IS ITS OWN FRESH ATTEMPT — NEVER A RETRY. No
-        // catch-and-resign, no automatic reconnect, no automatic
-        // re-construction. A DECLINED/UNAVAILABLE/FAILED outcome stays
-        // exactly that until this function is explicitly called again.
+        // The only place this page signs a Base transaction, on an explicit
+        // click, with the exact plan and reviewed transaction on screen (the
+        // signer refuses a plan that drifted from the review). Every click is a
+        // fresh attempt: no automatic retry, reconnect or re-construction.
         async function signBaseReviewedTransaction(entry) {
             if (!baseReviewedSigningCoordinator) return;
             const review = basePublicationTransactionReviewView(entry);
             if (!review || entry.basePublicationTransactionConstruction.state !== BasePublicationTransactionPlanState.CONSTRUCTED) return;
             const plan = entry.basePublicationTransactionConstruction.construction.plan;
 
-            // 0.8.94 — a fresh signing attempt retires whatever was
-            // previously finalized — never left showing a stale
-            // finalization result for a signed artifact this click is
-            // about to replace. See `entry.baseSignedTransactionFinalizationOutcome`'s
-            // own declaration above.
+            // A new signature clears the later steps' outcomes.
             entry.baseSignedTransactionFinalizationOutcome = null;
-            // 0.8.95 — a fresh signing attempt retires whatever was
-            // previously broadcast — never left showing a stale broadcast
-            // result for a signed artifact this click is about to
-            // replace. See `entry.baseTransactionBroadcastOutcome`'s own
-            // declaration below.
             entry.baseTransactionBroadcastOutcome = null;
-            // 0.8.96 — a fresh signing attempt retires whatever was
-            // previously observed for inclusion — never left showing a
-            // stale observation for a broadcast this click is about to
-            // replace.
             entry.baseTransactionInclusionOutcome = null;
             entry.baseTransactionInclusionHistory = [];
             entry.baseTransactionInclusionObserving = false;
@@ -4818,13 +2407,6 @@ export default {
             }
         }
 
-        // Pure projection of `entry.baseReviewedTransactionSigningOutcome`
-        // through `application/BaseReviewedSigningView.js`'s own
-        // `describeBaseReviewedSigning()` — the identical "the UI owns no
-        // facts of its own, it only projects an injected collaborator's own
-        // result" discipline every other `*View()` function on this page
-        // already holds. Never `null` — an entry with no signing attempt
-        // yet simply projects as IDLE.
         function baseReviewedTransactionSigningView(entry) {
             return describeBaseReviewedSigning(entry.baseReviewedTransactionSigningOutcome || null);
         }
@@ -4837,26 +2419,10 @@ export default {
             return baseReviewedTransactionSigningView(entry).state === BaseReviewedSigningState.SIGNING;
         }
 
-        // 0.8.94 — Explicit Base Signed Transaction Verification &
-        // Finalization.
-        //
-        // The ONE place this page ever calls
-        // `baseSignedTransactionFinalizationCoordinator.finalize()` —
-        // never triggered automatically by a SIGNED result; only an
-        // explicit "Verify & Finalize Transaction" click. Exactly as
-        // `application/BaseReviewedSigningState.js`'s own header names it:
-        // "SIGNED IS NOT VERIFIED, AND NOT YET EVEN STRUCTURALLY
-        // INSPECTED" — the wallet's own claimed signature
-        // (`entry.baseReviewedTransactionSigningOutcome.rawTransaction`)
-        // is handed to the finalizer completely unmodified, together with
-        // the EXACT plan it was signed against, exactly as the wallet and
-        // this page's own construction step produced them. Synchronous —
-        // see `application/BaseSignedTransactionFinalizationCoordinator.js`'s
-        // own header on why `finalize()` performs no async work of any
-        // kind. A thrown error is caught HERE, at the UI boundary, and
-        // turned into its own honest FAILED outcome — mirroring exactly
-        // how `signBaseReviewedTransaction()` above already handles its
-        // own coordinator's thrown errors.
+        // Only on an explicit click, never automatically after SIGNED: a
+        // wallet's signature is untrusted until verified. The wallet's raw
+        // transaction is passed unmodified with the plan it was signed against.
+        // Synchronous; a thrown error becomes FAILED.
         function finalizeBaseSignedTransaction(entry) {
             if (!baseSignedTransactionFinalizationCoordinator) return;
             const signing = baseReviewedTransactionSigningView(entry);
@@ -4866,16 +2432,8 @@ export default {
             const rawTransaction = entry.baseReviewedTransactionSigningOutcome ? entry.baseReviewedTransactionSigningOutcome.rawTransaction : null;
             if (!rawTransaction) return;
 
-            // 0.8.95 — a fresh finalization attempt retires whatever was
-            // previously broadcast — never left showing a stale broadcast
-            // result for a finalized transaction this click is about to
-            // replace. See `entry.baseTransactionBroadcastOutcome`'s own
-            // declaration below.
+            // A new finalization clears the later steps' outcomes.
             entry.baseTransactionBroadcastOutcome = null;
-            // 0.8.96 — a fresh finalization attempt retires whatever was
-            // previously observed for inclusion — never left showing a
-            // stale observation for a broadcast this click is about to
-            // replace.
             entry.baseTransactionInclusionOutcome = null;
             entry.baseTransactionInclusionHistory = [];
             entry.baseTransactionInclusionObserving = false;
@@ -4888,22 +2446,10 @@ export default {
                 return;
             }
 
-            // 0.8.99 — Durable Base Publication Identity Record. THE ONE
-            // place this page ever mints a durable Base publication
-            // identity — right here, at successful finalization, never
-            // earlier and never re-run automatically on a later broadcast
-            // attempt. `txid` is `base/BaseSignedTransactionFinalizer.js`'s
-            // (0.8.94, unchanged) own deterministically computed
-            // `transactionHash` — never a network-returned value, and
-            // never looked up separately — see application/
-            // CreateBaseAnchorPublicationRecordUseCase.js's own header,
-            // "The transaction identity comes from the finalized artifact,
-            // never from the broadcaster or an RPC lookup." `contentHash`
-            // is this entry's own already-known publication content
-            // reference, never re-derived from the transaction's own
-            // `data`; `network` is this exact plan's own network. Mirrors
-            // `finalizeBitcoinAnchorSignedPsbt()`'s own identical 0.8.80
-            // wiring above, one chain over.
+            // Mint the durable Base publication identity here, once, at
+            // successful finalization. txid is the finalizer's own computed
+            // transactionHash, never a network-returned value; contentHash is
+            // the entry's known content reference.
             if (entry.baseSignedTransactionFinalizationOutcome.state === BaseSignedTransactionFinalizationState.FINALIZED) {
                 archiveBaseAnchorPublicationRecord({
                     contentHash: entry.publication.contentReference.hash,
@@ -4914,14 +2460,6 @@ export default {
             }
         }
 
-        // Pure projection of `entry.baseSignedTransactionFinalizationOutcome`
-        // through `application/BaseSignedTransactionFinalizationView.js`'s
-        // own `describeBaseSignedTransactionFinalization()` — the
-        // identical "the UI owns no facts of its own, it only projects an
-        // injected collaborator's own result" discipline every other
-        // `*View()` function on this page already holds. Never `null` —
-        // an entry with no finalization attempt yet simply projects as
-        // IDLE.
         function baseSignedTransactionFinalizationView(entry) {
             return describeBaseSignedTransactionFinalization(entry.baseSignedTransactionFinalizationOutcome || null);
         }
@@ -4930,23 +2468,9 @@ export default {
             return BASE_SIGNED_TRANSACTION_FINALIZATION_BADGE_CLASSES[baseSignedTransactionFinalizationView(entry).state] || 'peer-badge--pending';
         }
 
-        // 0.8.95 — Explicit Base Transaction Broadcast.
-        //
-        // THE ONE place this page ever calls
-        // `baseTransactionBroadcastCoordinator.broadcast()` — never
-        // triggered automatically by a FINALIZED result; only an explicit
-        // "Broadcast Transaction" click, and only ever with THIS entry's
-        // own `entry.baseSignedTransactionFinalizationOutcome.finalizedTransaction`
-        // — never re-read from anywhere else on this page. No automatic
-        // retry: a REJECTED or UNAVAILABLE result is the end of this
-        // attempt — a person clicks "Broadcast Transaction" again,
-        // explicitly, to make another one (see `base/
-        // BaseTransactionBroadcaster.js`'s own header on why resubmitting
-        // the identical, already-finalized bytes is always safe when a
-        // person chooses to). A thrown error is caught HERE, at the UI
-        // boundary, and turned into its own honest FAILED outcome —
-        // mirroring exactly how `finalizeBaseSignedTransaction()` above
-        // already handles its own coordinator's thrown errors.
+        // Only on an explicit click, with this entry's own finalized
+        // transaction. No automatic retry; resubmitting the same finalized
+        // bytes is safe. A thrown error becomes FAILED.
         async function broadcastBaseTransaction(entry) {
             if (!baseTransactionBroadcastCoordinator) return;
             const finalization = baseSignedTransactionFinalizationView(entry);
@@ -4956,13 +2480,7 @@ export default {
                 : null;
             if (!finalizedTransaction) return;
 
-            // 0.8.96 — a fresh broadcast attempt retires whatever was
-            // previously observed for inclusion — the txid a previous
-            // BROADCASTED outcome named is about to be replaced (or
-            // resubmitted as a brand-new attempt), so any inclusion
-            // observation made against it no longer describes the
-            // transaction this entry is now tracking. See `application/
-            // BaseTransactionInclusionObservationHistory.js`'s own header.
+            // A new broadcast makes earlier inclusion observations stale.
             entry.baseTransactionInclusionOutcome = null;
             entry.baseTransactionInclusionHistory = [];
             entry.baseTransactionInclusionObserving = false;
@@ -4978,13 +2496,6 @@ export default {
             }
         }
 
-        // Pure projection of `entry.baseTransactionBroadcastOutcome`
-        // through `application/BaseTransactionBroadcastView.js`'s own
-        // `describeBaseTransactionBroadcast()` — the identical "the UI
-        // owns no facts of its own, it only projects an injected
-        // collaborator's own result" discipline every other `*View()`
-        // function on this page already holds. Never `null` — an entry
-        // with no broadcast attempt yet simply projects as IDLE.
         function baseTransactionBroadcastView(entry) {
             return describeBaseTransactionBroadcast(entry.baseTransactionBroadcastOutcome || null);
         }
@@ -4997,36 +2508,10 @@ export default {
             return baseTransactionBroadcastView(entry).state === BaseTransactionBroadcastState.BROADCASTING;
         }
 
-        // 0.8.96 — Explicit Base Transaction Inclusion & Confirmation
-        // Observation.
-        //
-        // THE ONE place this page ever calls
-        // `baseTransactionInclusionObservationCoordinator.observeInclusion()`
-        // — never triggered automatically by a BROADCASTED result; only an
-        // explicit "Observe Transaction" click, and only ever with THIS
-        // entry's own `baseTransactionBroadcastView(entry)`'s own bound
-        // `txid` — never a txid read from anywhere else on this page (not
-        // an unrelated entry's own broadcast, not a field a person could
-        // edit). Passing `broadcasted: true` alongside it mirrors exactly
-        // how `broadcastBaseTransaction()` above hands `finalized: true` to
-        // `baseTransactionBroadcastCoordinator.broadcast()` — a
-        // caller-contract proof that this txid genuinely came from a real
-        // BROADCASTED outcome, checked by the coordinator itself before the
-        // injected observer is ever consulted.
-        //
-        // Every explicit click appends its own observation to
-        // `entry.baseTransactionInclusionHistory` via `application/
-        // BaseTransactionInclusionObservationHistory.js`'s own
-        // `appendBaseTransactionInclusionObservationHistoryEntry()`,
-        // UNCHANGED — no observation is ever rewritten into "the current
-        // one"; each click performs its own independent, fresh read, even
-        // when it repeats the identical state as the click before it. A
-        // thrown error (a caller-contract violation this page's own guard
-        // below should already prevent — the injected observer itself
-        // never throws) is caught HERE, at the UI boundary, and surfaced
-        // honestly rather than silently swallowed — mirroring exactly how
-        // `broadcastBaseTransaction()` above already handles its own
-        // coordinator's thrown errors.
+        // Only on an explicit click, with the txid bound to this entry's own
+        // BROADCASTED outcome (broadcasted: true is the proof the coordinator
+        // checks). Every click appends a fresh observation, even when nothing
+        // changed.
         async function observeBaseTransactionInclusion(entry) {
             if (!baseTransactionInclusionObservationCoordinator) return;
             const broadcast = baseTransactionBroadcastView(entry);
@@ -5042,8 +2527,7 @@ export default {
                 entry.baseTransactionInclusionOutcome = observation;
                 entry.baseTransactionInclusionHistory =
                     appendBaseTransactionInclusionObservationHistoryEntry(entry.baseTransactionInclusionHistory || [], observation);
-                // 0.8.97 — archived durably, keyed by the SAME txid this
-                // page's own broadcast fact was archived under.
+                // Archived under the same txid as the broadcast.
                 archiveBaseTransactionInclusionObservation(broadcast.txid, observation);
             } catch (error) {
                 entry.baseTransactionInclusionError = error.message;
@@ -5052,14 +2536,6 @@ export default {
             }
         }
 
-        // Pure projection of `entry.baseTransactionInclusionOutcome`
-        // through `application/BaseTransactionInclusionObservationView.js`'s
-        // own `describeBaseTransactionInclusionObservation()` — the
-        // identical "the UI owns no facts of its own, it only projects an
-        // injected collaborator's own result" discipline every other
-        // `*View()` function on this page already holds. `null` until at
-        // least one "Observe Transaction" click has completed for this
-        // entry's current broadcast transaction.
         function baseTransactionInclusionView(entry) {
             return describeBaseTransactionInclusionObservation(entry.baseTransactionInclusionOutcome || null);
         }
@@ -5073,11 +2549,6 @@ export default {
             return Boolean(entry.baseTransactionInclusionObserving);
         }
 
-        // The FULL chronological narration of every past "Observe
-        // Transaction" click for THIS entry's current broadcast transaction
-        // — composes `application/BaseTransactionInclusionObservationView.js`'s
-        // own `describeBaseTransactionInclusionObservationHistory()` over
-        // `entry.baseTransactionInclusionHistory`.
         function baseTransactionInclusionHistoryView(entry) {
             return describeBaseTransactionInclusionObservationHistory(entry.baseTransactionInclusionHistory || []);
         }
@@ -5086,46 +2557,15 @@ export default {
             entry.baseTransactionInclusionHistoryExpanded = !entry.baseTransactionInclusionHistoryExpanded;
         }
 
-        // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.
-        //
-        // The ONE place this page ever calls
-        // `bitcoinAnchorTransactionConstructionCoordinator.construct()` —
-        // never triggered automatically by observing or refreshing
-        // funding, never on page load, and never re-run on a timer; only
-        // an explicit "Create Transaction Plan" click, exactly one entry at
-        // a time. `construct()` itself is synchronous (see that class's own
-        // header) — no `await` here, and CONSTRUCTING is set and cleared
-        // within the same synchronous call, existing so the state this
-        // entry's own reactive slot holds is always one of application/
-        // BitcoinAnchorTransactionConstructionState.js's own four named
-        // values, never inferred from a boolean flag.
-        //
-        // Uses the funding observation exactly as last observed —
-        // `bitcoinAnchorFundingState.observation` — never a fresher one
-        // fetched here; see application/
-        // BitcoinAnchorTransactionConstructionCoordinator.js's own header
-        // on why staleness is named (via `bitcoinAnchorFundingView().networkMismatch`
-        // above), never silently resolved by re-observing on this entry's
-        // behalf.
-        //
-        // A thrown error (a caller-contract violation — e.g. no funding has
-        // been observed at all yet) is caught HERE, at the UI boundary, and
-        // turned into its own honest FAILED outcome, mirroring exactly how
-        // `createAnchor()` above already handles
-        // `PublicationAnchorCreationCoordinator`'s own thrown errors.
+        // Only on an explicit click, one entry at a time. construct() is
+        // synchronous; CONSTRUCTING is still set so the slot always holds a
+        // named state. Uses the funding observation as last observed (staleness
+        // is shown via networkMismatch, never fixed by re-observing). A thrown
+        // error becomes FAILED.
         function constructBitcoinAnchorTransaction(entry) {
             if (!bitcoinAnchorTransactionConstructionCoordinator) return;
             entry.bitcoinAnchorTransactionConstruction = { state: BitcoinAnchorTransactionConstructionState.CONSTRUCTING, construction: null, reason: null };
-            // A fresh construction attempt retires whatever was previously
-            // under review/signed/finalized/broadcast-ready — never left
-            // showing stale review facts, a stale SIGNED badge, a stale
-            // FINALIZED badge, or a stale broadcast result for a
-            // transaction this click is about to replace. See
-            // `bitcoinAnchorTransactionReview`'s,
-            // `bitcoinAnchorReviewedSigningOutcome`'s,
-            // `bitcoinAnchorSignedPsbtFinalizationOutcome`'s, and
-            // `bitcoinAnchorFinalizedTransaction`'s/`bitcoinAnchorBroadcastOutcome`'s
-            // own declarations above.
+            // A new construction clears the review and every later step.
             bitcoinAnchorTransactionReview.description = null;
             bitcoinAnchorTransactionReview.publicationId = null;
             bitcoinAnchorTransactionReview.reason = null;
@@ -5149,21 +2589,8 @@ export default {
             bridgeBitcoinAnchorTransactionToReview(entry);
         }
 
-        // 0.8.62 — Explicit Reviewed Bitcoin Anchor Signing UI.
-        //
-        // The ONE place this page ever calls
-        // `bitcoinAnchorTransactionReviewCoordinator.review()` — always
-        // immediately after a successful construction, never on its own
-        // trigger, and never re-run on a timer. Reviewing a plan is not an
-        // authorization action — unlike signing it, it touches no wallet
-        // and commits to nothing — so, exactly as application/
-        // BitcoinAnchorTransactionReviewView.js's own header already holds,
-        // this runs the moment a plan exists rather than waiting on a
-        // second explicit click. A thrown error (a caller-contract
-        // violation on this page's own, already-CONSTRUCTED entry) is
-        // caught HERE, at the UI boundary, mirroring exactly how
-        // `constructBitcoinAnchorTransaction()` itself handles the
-        // construction coordinator's own thrown errors.
+        // Runs right after a successful construction: reviewing touches no
+        // wallet and commits to nothing, so it needs no separate click.
         function bridgeBitcoinAnchorTransactionToReview(entry) {
             if (entry.bitcoinAnchorTransactionConstruction.state !== BitcoinAnchorTransactionConstructionState.CONSTRUCTED) return;
             if (!bitcoinAnchorTransactionReviewCoordinator) return;
@@ -5184,32 +2611,16 @@ export default {
             }
         }
 
-        // The ONE place this page ever calls
-        // `bitcoinAnchorReviewedSigningCoordinator.sign()` — never
-        // triggered automatically by construction, by review, or merely by
-        // a wallet being connected; only an explicit "Sign Reviewed
-        // Transaction" click. `reviewedUnsignedPsbtHex` is read fresh from
-        // `bitcoinAnchorTransactionReviewView()` at the moment of THIS
-        // click, never cached earlier — the exact bytes a person is
-        // looking at right now are the exact bytes handed to the signer,
-        // which independently re-serializes and compares them before ever
-        // consulting the wallet (anchoring/BitcoinAnchorReviewedPsbtSigner.js,
-        // 0.8.59, unchanged). A thrown error is caught HERE, at the UI
-        // boundary, and turned into its own honest FAILED outcome —
-        // mirroring exactly how `constructBitcoinAnchorTransaction()` above
-        // already handles its own coordinator's thrown errors.
+        // Only on an explicit click. The PSBT hex is read from the review at
+        // click time, so the bytes on screen are the bytes signed; the signer
+        // re-serializes and compares them before asking the wallet. A thrown
+        // error becomes FAILED.
         async function signBitcoinAnchorReviewedTransaction() {
             if (!bitcoinAnchorReviewedSigningCoordinator) return;
             const review = bitcoinAnchorTransactionReviewView();
             if (!review || !bitcoinAnchorTransactionReview.description) return;
 
-            // A fresh signing attempt retires whatever was previously
-            // finalized or broadcast-ready — never left showing a stale
-            // FINALIZED badge or a stale broadcast result for a signature
-            // this click is about to replace. See
-            // `bitcoinAnchorSignedPsbtFinalizationOutcome`'s and
-            // `bitcoinAnchorFinalizedTransaction`'s/`bitcoinAnchorBroadcastOutcome`'s
-            // own declarations above.
+            // A new signature clears the later steps' outcomes.
             bitcoinAnchorSignedPsbtFinalizationOutcome.value = null;
             bitcoinAnchorFinalizedTransaction.value = null;
             bitcoinAnchorBroadcastOutcome.value = null;
@@ -5228,12 +2639,6 @@ export default {
             }
         }
 
-        // Pure projection of `bitcoinAnchorReviewedSigningOutcome` through
-        // application/BitcoinAnchorReviewedSigningView.js's own
-        // `describeBitcoinAnchorReviewedSigning()` — the identical "the UI
-        // owns no facts of its own, it only projects an injected
-        // collaborator's own result" discipline every other `*View()`
-        // function on this page already holds.
         function bitcoinAnchorReviewedSigningView() {
             return describeBitcoinAnchorReviewedSigning(bitcoinAnchorReviewedSigningOutcome.value);
         }
@@ -5246,25 +2651,9 @@ export default {
             return bitcoinAnchorReviewedSigningView().state === BitcoinAnchorReviewedSigningState.SIGNING;
         }
 
-        // 0.8.63 — Explicit Signed PSBT Verification & Transaction
-        // Finalization UI.
-        //
-        // The ONE place this page ever calls
-        // `bitcoinAnchorSignedPsbtFinalizationCoordinator.finalize()` —
-        // never triggered automatically by a SIGNED result; only an
-        // explicit "Verify & Finalize Transaction" click. Exactly as
-        // application/BitcoinAnchorReviewedSigningState.js's own header
-        // names it: "A wallet-returned PSBT is an untrusted artifact until
-        // ForkBuild independently verifies and finalizes it" — the wallet's
-        // own claimed signature (`bitcoinAnchorReviewedSigningOutcome.value.psbt`)
-        // is handed to the finalizer completely unmodified, exactly as the
-        // wallet returned it. Synchronous — see application/
-        // BitcoinAnchorSignedPsbtFinalizationCoordinator.js's own header on
-        // why `finalize()` performs no async work of any kind. A thrown
-        // error is caught HERE, at the UI boundary, and turned into its own
-        // honest FAILED outcome — mirroring exactly how
-        // `signBitcoinAnchorReviewedTransaction()` above already handles
-        // its own coordinator's thrown errors.
+        // Only on an explicit click: a wallet-returned PSBT is untrusted until
+        // verified and finalized here. The wallet's PSBT is passed unmodified.
+        // Synchronous; a thrown error becomes FAILED.
         function finalizeBitcoinAnchorSignedPsbt() {
             if (!bitcoinAnchorSignedPsbtFinalizationCoordinator) return;
             const signing = bitcoinAnchorReviewedSigningView();
@@ -5272,11 +2661,7 @@ export default {
             const signedPsbt = bitcoinAnchorReviewedSigningOutcome.value ? bitcoinAnchorReviewedSigningOutcome.value.psbt : null;
             if (!signedPsbt || !bitcoinAnchorTransactionReview.description) return;
 
-            // A fresh finalization attempt retires whatever was previously
-            // broadcast-ready — never left showing a stale broadcast result
-            // for a finalized transaction this click is about to replace.
-            // See `bitcoinAnchorFinalizedTransaction`'s/`bitcoinAnchorBroadcastOutcome`'s
-            // own declarations above.
+            // A new finalization clears the later steps' outcomes.
             bitcoinAnchorFinalizedTransaction.value = null;
             bitcoinAnchorBroadcastOutcome.value = null;
             bitcoinAnchorBroadcastedAt.value = null;
@@ -5293,11 +2678,8 @@ export default {
                 return;
             }
 
-            // 0.8.64 — Explicit Bitcoin Anchor Broadcast UI. THE ONE place
-            // this page ever captures a broadcast-eligible artifact — bound
-            // to this exact FINALIZED outcome's own txid/rawTransaction,
-            // never to "whatever this page happens to show right now." See
-            // `bitcoinAnchorFinalizedTransaction`'s own declaration above.
+            // Capture the broadcast-eligible transaction from this exact
+            // FINALIZED outcome.
             if (bitcoinAnchorSignedPsbtFinalizationOutcome.value.state === BitcoinAnchorSignedPsbtFinalizationState.FINALIZED) {
                 bitcoinAnchorFinalizedTransaction.value = Object.freeze({
                     txid: bitcoinAnchorSignedPsbtFinalizationOutcome.value.txid,
@@ -5305,18 +2687,9 @@ export default {
                     finalizedAt: Date.now()
                 });
 
-                // 0.8.80 — Explicit Bitcoin Anchor Publication Lifecycle
-                // Record. THE ONE place this page ever mints a durable
-                // publication identity — right here, at successful
-                // finalization, never earlier and never re-run
-                // automatically on a later broadcast attempt for this same
-                // finalized transaction. `anchorId` is this finalized
-                // transaction's own txid — the identical convention
-                // `archiveBitcoinBroadcast()` below already uses for this
-                // same granular pipeline's own `anchorId`. `contentHash`
-                // is looked up from the publication this construction was
-                // originally for, never re-derived from the PSBT itself;
-                // `network` is this exact PSBT description's own network.
+                // Mint the durable publication identity here, once, at
+                // successful finalization. anchorId is the txid; contentHash
+                // comes from the publication, never from the PSBT.
                 const finalizedEntry = findEntry(bitcoinAnchorTransactionReview.publicationId);
                 if (finalizedEntry) {
                     archiveBitcoinAnchorPublicationRecord({
@@ -5330,12 +2703,6 @@ export default {
             }
         }
 
-        // Pure projection of `bitcoinAnchorSignedPsbtFinalizationOutcome`
-        // through application/BitcoinAnchorSignedPsbtFinalizationView.js's
-        // own `describeBitcoinAnchorSignedPsbtFinalization()` — the
-        // identical "the UI owns no facts of its own, it only projects an
-        // injected collaborator's own result" discipline every other
-        // `*View()` function on this page already holds.
         function bitcoinAnchorSignedPsbtFinalizationView() {
             return describeBitcoinAnchorSignedPsbtFinalization(bitcoinAnchorSignedPsbtFinalizationOutcome.value);
         }
@@ -5344,25 +2711,9 @@ export default {
             return BITCOIN_ANCHOR_SIGNED_PSBT_FINALIZATION_BADGE_CLASSES[bitcoinAnchorSignedPsbtFinalizationView().state] || 'peer-badge--pending';
         }
 
-        // 0.8.64 — Explicit Bitcoin Anchor Broadcast UI.
-        //
-        // THE ONE place this page ever calls
-        // `bitcoinAnchorBroadcastCoordinator.broadcast()` — never triggered
-        // automatically by a FINALIZED result; only an explicit "Broadcast
-        // Transaction" click, and only ever with `bitcoinAnchorFinalizedTransaction`'s
-        // own bound `txid`/`rawTransaction` — never re-read from whatever
-        // `bitcoinAnchorSignedPsbtFinalizationOutcome` happens to hold at
-        // click time, exactly so a broadcast attempt is bound to a specific
-        // finalized transaction's own identity. No automatic retry: a
-        // REJECTED or UNAVAILABLE result is the end of this attempt — a
-        // person clicks "Broadcast Transaction" again, explicitly, to make
-        // another one (see anchoring/BitcoinAnchorTransactionBroadcaster.js's
-        // own header on why resubmitting the identical, already-finalized
-        // bytes is always safe when a person chooses to). A thrown error is
-        // caught HERE, at the UI boundary, and turned into its own honest
-        // FAILED outcome — mirroring exactly how
-        // `finalizeBitcoinAnchorSignedPsbt()` above already handles its own
-        // coordinator's thrown errors.
+        // Only on an explicit click, with bitcoinAnchorFinalizedTransaction
+        // (never whatever is on screen). No automatic retry; resubmitting the
+        // same finalized bytes is safe. A thrown error becomes FAILED.
         async function broadcastBitcoinAnchorTransaction() {
             if (!bitcoinAnchorBroadcastCoordinator) return;
             const bound = bitcoinAnchorFinalizedTransaction.value;
@@ -5378,13 +2729,8 @@ export default {
             } catch (error) {
                 bitcoinAnchorBroadcastOutcome.value = { state: BitcoinAnchorBroadcastState.FAILED, broadcasted: false, txid: null, reason: error.message };
             }
-            // 0.8.74 — captured once, the moment this outcome settled (see
-            // `bitcoinAnchorBroadcastedAt`'s own declaration above) — never
-            // re-captured by anything that merely reads the outcome later.
             bitcoinAnchorBroadcastedAt.value = new Date();
-            // 0.8.75 — archived durably, keyed by this transaction's own
-            // txid, exactly as crossDomainPublicationObservationTimelineView()
-            // below already keys this same wizard flow's own facts.
+            // Archived durably, keyed by txid.
             archiveBitcoinBroadcast({
                 anchorId: bound.txid,
                 txid: bitcoinAnchorBroadcastOutcome.value.txid,
@@ -5393,25 +2739,9 @@ export default {
                 broadcastedAt: bitcoinAnchorBroadcastedAt.value
             });
 
-            // 0.9.512 — Bitcoin Granular Pipeline Anchor Publication
-            // Integration.
-            //
-            // THE ONE place this page ever calls
-            // `bitcoinAnchorPublicationCoordinator.publishBroadcastedAnchor()`
-            // — reached automatically, but only immediately after THIS SAME
-            // broadcast attempt's own outcome just settled to a real
-            // BROADCASTED, never from a `*View()` projection, a re-render,
-            // or any other passive re-observation. Never reached for
-            // REJECTED/UNAVAILABLE/FAILED — no anchor is ever minted for a
-            // transaction the network did not accept, exactly as
-            // `bitcoinAnchorPublicationCoordinator`'s own header requires.
-            // A thrown error (an unknown publicationId — a caller-contract
-            // violation this page's own state should never actually
-            // produce, since `bitcoinAnchorTransactionReview.publicationId`
-            // was set by a real, already-succeeded construction) is caught
-            // HERE, at the UI boundary, mirroring exactly how
-            // `createAnchor()`/`createBaseAnchor()` above already handle
-            // their own coordinator's thrown errors.
+            // Mint the anchor automatically, but only right after this attempt
+            // reached a real BROADCASTED; never for a transaction the network
+            // didn't accept.
             if (bitcoinAnchorPublicationCoordinator && bitcoinAnchorBroadcastOutcome.value.state === BitcoinAnchorBroadcastState.BROADCASTED) {
                 const publicationId = bitcoinAnchorTransactionReview.publicationId;
                 const network = bitcoinAnchorTransactionReview.description ? bitcoinAnchorTransactionReview.description.network : null;
@@ -5425,10 +2755,8 @@ export default {
                     bitcoinAnchorPublicationAttempt.value = {
                         creating: false, outcome: ExternalAnchorCreationOutcome.CREATED, anchor: anchorResult.anchor, reason: null, error: null
                     };
-                    // Re-discover from the catalog so the newly minted
-                    // anchor immediately appears in the ordinary evidence
-                    // list below — mirrors `createAnchor()`'s/
-                    // `createBaseAnchor()`'s own identical call.
+                    // Re-discover so the new anchor appears in the evidence
+                    // list.
                     const broadcastEntry = findEntry(publicationId);
                     if (broadcastEntry) {
                         loadEvidence(broadcastEntry);
@@ -5440,12 +2768,6 @@ export default {
             }
         }
 
-        // Pure projection of `bitcoinAnchorPublicationAttempt` through
-        // application/PublicationAnchorCreationView.js's own
-        // `describeCreationAttempt()` — the identical "the UI owns no facts
-        // of its own, it only projects an injected collaborator's own
-        // result" discipline every other `*View()` function on this page
-        // already holds.
         function bitcoinAnchorPublicationView() {
             return describeCreationAttempt(bitcoinAnchorPublicationAttempt.value);
         }
@@ -5454,12 +2776,6 @@ export default {
             return CREATION_BADGE_CLASSES[bitcoinAnchorPublicationView().state] || null;
         }
 
-        // Pure projection of `bitcoinAnchorBroadcastOutcome` through
-        // application/BitcoinAnchorBroadcastView.js's own
-        // `describeBitcoinAnchorBroadcast()` — the identical "the UI owns no
-        // facts of its own, it only projects an injected collaborator's own
-        // result" discipline every other `*View()` function on this page
-        // already holds.
         function bitcoinAnchorBroadcastView() {
             return describeBitcoinAnchorBroadcast(bitcoinAnchorBroadcastOutcome.value);
         }
@@ -5472,38 +2788,10 @@ export default {
             return bitcoinAnchorBroadcastView().state === BitcoinAnchorBroadcastState.BROADCASTING;
         }
 
-        // 0.8.65 — Explicit Bitcoin Anchor Confirmation UI.
-        //
-        // THE ONE place this page ever calls
-        // `bitcoinAnchorConfirmationCoordinator.observeConfirmation()` —
-        // never triggered automatically by a BROADCASTED result; only an
-        // explicit "Observe Confirmation" click, and only ever with
-        // `bitcoinAnchorBroadcastView()`'s own bound `txid` — never a txid
-        // read from anywhere else on this page (not an anchor in the list
-        // below, not a field a person could edit). Passing
-        // `broadcasted: true` alongside it mirrors exactly how
-        // `broadcastBitcoinAnchorTransaction()` above hands `finalized: true`
-        // to `bitcoinAnchorBroadcastCoordinator.broadcast()` — a
-        // caller-contract proof that this txid genuinely came from a real
-        // BROADCASTED outcome, checked by the coordinator itself before the
-        // injected confirmation observer is ever consulted. See application/
-        // BitcoinAnchorConfirmationCoordinator.js's own header on why this
-        // is the ONE thing this milestone's coordinator refuses to skip.
-        //
-        // Every explicit click appends its own observation to
-        // `bitcoinAnchorBroadcastConfirmationHistory` via application/
-        // BitcoinAnchorConfirmationObservationHistory.js's own
-        // `appendBitcoinAnchorConfirmationObservationHistoryEntry()`,
-        // UNCHANGED — no observation is ever rewritten into "the current
-        // one"; each click performs its own independent, fresh read, even
-        // when it repeats the identical state as the click before it. A
-        // thrown error (a caller-contract violation this page's own guard
-        // below should already prevent — the injected observer itself
-        // never throws, see anchoring/BitcoinAnchorConfirmationObserver.js's
-        // own header) is caught HERE, at the UI boundary, and surfaced
-        // honestly rather than silently swallowed — mirroring exactly how
-        // `broadcastBitcoinAnchorTransaction()` above already handles its
-        // own coordinator's thrown errors.
+        // Only on an explicit click, with the txid bound to this page's own
+        // BROADCASTED outcome (broadcasted: true is the proof the coordinator
+        // checks). Every click appends a fresh observation, even when nothing
+        // changed. A thrown error is shown, never swallowed.
         async function observeBitcoinAnchorBroadcastConfirmation() {
             if (!bitcoinAnchorConfirmationCoordinator) return;
             const broadcast = bitcoinAnchorBroadcastView();
@@ -5519,8 +2807,7 @@ export default {
                 bitcoinAnchorBroadcastConfirmationOutcome.value = observation;
                 bitcoinAnchorBroadcastConfirmationHistory.value =
                     appendBitcoinAnchorConfirmationObservationHistoryEntry(bitcoinAnchorBroadcastConfirmationHistory.value, observation);
-                // 0.8.75 — archived durably, keyed by the SAME txid this
-                // wizard flow's own broadcast fact was archived under.
+                // Archived under the same txid as the broadcast.
                 archiveBitcoinConfirmationObservation(broadcast.txid, observation);
             } catch (error) {
                 bitcoinAnchorBroadcastConfirmationError.value = error.message;
@@ -5529,14 +2816,8 @@ export default {
             }
         }
 
-        // Pure projection of `bitcoinAnchorBroadcastConfirmationOutcome`
-        // through application/
-        // BitcoinAnchorConfirmationObservationHistoryDetailView.js's own
-        // `describeBitcoinAnchorConfirmationObservationDetail()` — the SAME
-        // per-observation projection `bitcoinAnchorReconciliationView()`
-        // below already uses for anchor reconciliation, one context over.
-        // `null` until at least one "Observe Confirmation" click has
-        // completed for the current broadcast transaction.
+        // null until "Observe Confirmation" has completed for the current
+        // broadcast.
         function bitcoinAnchorBroadcastConfirmationView() {
             return describeBitcoinAnchorConfirmationObservationDetail(bitcoinAnchorBroadcastConfirmationOutcome.value);
         }
@@ -5546,15 +2827,7 @@ export default {
             return view ? (BITCOIN_ANCHOR_CONFIRMATION_BADGE_CLASSES[view.state] || null) : null;
         }
 
-        // The FULL chronological narration of every past "Observe
-        // Confirmation" click for the CURRENT broadcast transaction —
-        // composes application/BitcoinAnchorConfirmationObservationHistoryDetailView.js's
-        // own `describeBitcoinAnchorConfirmationObservationHistoryDetails()`
-        // over `bitcoinAnchorBroadcastConfirmationHistory`, the SAME
-        // composition `bitcoinAnchorConfirmationHistoryView(entry, anchorView)`
-        // below already uses for "Reconcile" clicks against a persisted
-        // anchor — a DIFFERENT, separately kept history; never merged with
-        // that one, and never merged with content-proof history either.
+        // Kept separate from the per-anchor "Reconcile" histories.
         function bitcoinAnchorBroadcastConfirmationHistoryView() {
             return describeBitcoinAnchorConfirmationObservationHistoryDetails(bitcoinAnchorBroadcastConfirmationHistory.value);
         }
@@ -5574,14 +2847,6 @@ export default {
             return Boolean(bitcoinAnchorBroadcastConfirmationHistoryEntryExpanded.value[index]);
         }
 
-        // Pure projection of `entry.bitcoinAnchorTransactionConstruction`
-        // through application/BitcoinAnchorTransactionConstructionView.js's
-        // own `describeBitcoinAnchorTransactionConstruction()` — the
-        // identical "the UI owns no facts of its own, it only projects an
-        // injected collaborator's own result" discipline every other
-        // `*View()` function on this page already holds. `null` whenever
-        // nothing has been constructed for this entry yet — the section
-        // below simply does not render either way.
         function bitcoinAnchorTransactionConstructionView(entry) {
             if (!entry.bitcoinAnchorTransactionConstruction) return null;
             return describeBitcoinAnchorTransactionConstruction(entry.bitcoinAnchorTransactionConstruction);
@@ -5599,13 +2864,7 @@ export default {
             return EVIDENCE_BADGE_CLASSES[anchorView.verificationOutcome] || 'peer-badge--unchecked';
         }
 
-        // 0.8.20 — Snapshot Placement Inspection & Explicit Resolution
-        // UX. DISCOVERY only: a synchronous local catalog read through
-        // application/SnapshotPlacementResolutionCoordinator.js#
-        // discover(), never a call to application/
-        // SnapshotPlacementResolver.js. Re-running this is always cheap
-        // and safe — mirrors loadEvidence() above exactly, one axis
-        // over.
+        // Discovery only: a local catalog read that never resolves.
         function loadPlacements(entry) {
             if (!placementResolutionCoordinator) return;
             entry.placements = placementResolutionCoordinator.discover(entry.publication.id);
@@ -5614,23 +2873,8 @@ export default {
             recomputeReplicaKnowledgeDetail(entry);
         }
 
-        // 0.8.23 — Multi-Placement Convergence & Relationship UX.
-        // Re-derives `entry.placementConvergence`/
-        // `entry.placementConvergenceView` from THIS entry's own
-        // `placements` — never a second discovery call, and never
-        // touching application/SnapshotPlacementResolver.js. Unlike
-        // `recomputeConvergence()` above (which passes this replica's
-        // own `verificationByAnchorId` observations alongside the
-        // structural comparison, per application/
-        // PublicationEvidenceConvergence.js's own OPTIONAL parameter for
-        // exactly that), application/
-        // PublicationSnapshotPlacementConvergence.js has NO parameter
-        // capable of accepting `entry.resolutions` at all — this
-        // function is called from `loadPlacements()` only, never from
-        // `resolvePlacement()`, so a resolution result never even has
-        // the opportunity to influence the placements handed in here.
-        // See docs/Principles.md, "Multi-Placement Convergence Is
-        // Independent Of Resolution Observation (0.8.23)."
+        // Called from loadPlacements() only. Placement convergence takes no
+        // resolution input, so resolving a placement can never change it.
         function recomputePlacementConvergence(entry) {
             entry.placementConvergence = derivePublicationSnapshotPlacementConvergence({
                 publicationId: entry.publication.id,
@@ -5644,11 +2888,7 @@ export default {
             entry.placementsExpanded = !entry.placementsExpanded;
         }
 
-        // The one place this page calls application/
-        // SnapshotPlacementResolutionCoordinator.js#resolve() — always
-        // for exactly ONE placement, always because a person clicked
-        // "Resolve Snapshot" on it. Mirrors verifyAnchor() above exactly,
-        // one axis over.
+        // Resolves exactly one placement, on an explicit click.
         async function resolvePlacement(entry, placementView) {
             const placement = entry.placements.find((candidate) => candidate.id === placementView.placementId);
             if (!placement || !placementResolutionCoordinator) return;
@@ -5657,26 +2897,15 @@ export default {
             const result = await placementResolutionCoordinator.resolve(placement);
             entry.resolutions[placement.id] = { outcome: result.outcome, reason: result.reason };
             entry.placementsView = snapshotPlacementView(entry.placements, entry.resolutions);
-            // 0.8.26 — record this attempt as its own observation, on top
-            // of whatever this replica already observed for this SAME
-            // placement earlier this session, rather than replacing it —
-            // see `resolutionHistory`'s own comment above.
+            // Append, never replace: see resolutionHistory.
             const history = entry.resolutionHistory[placement.id] || (entry.resolutionHistory[placement.id] = []);
             history.push(createResolutionObservation({ placementId: placement.id, outcome: result.outcome, reason: result.reason }));
-            // 0.8.31 — re-derive AFTER the history push above, so this
-            // placement's own `resolutionState` reflects the attempt that
-            // just completed rather than the one before it.
+            // After the history push, so resolutionState reflects this attempt.
             recomputeReplicaKnowledgeDetail(entry);
         }
 
-        // 0.8.26 — Snapshot Placement Lifecycle & Stale Availability
-        // Semantics. A single, optional sentence shown ALONGSIDE the
-        // existing resolution badge/label (unchanged) — never a
-        // replacement for it. `null` in every case except the one this
-        // milestone exists to surface: this placement was independently
-        // resolved at some earlier point in this session, and the most
-        // recent check came back UNAVAILABLE. See application/
-        // SnapshotPlacementLifecycleView.js's own header.
+        // An extra sentence beside the badge, shown only when a placement that
+        // resolved earlier this session now comes back UNAVAILABLE.
         function placementLifecycleNote(entry, placementView) {
             const lifecycle = deriveSnapshotPlacementLifecycle(entry.resolutionHistory[placementView.placementId]);
             return describeSnapshotPlacementLifecycleNote(lifecycle);
@@ -5688,19 +2917,8 @@ export default {
             return PLACEMENT_BADGE_CLASSES[placementView.resolutionOutcome] || 'peer-badge--unchecked';
         }
 
-        // 0.8.35 — Explicit Placement-Backed Snapshot Materialization. The
-        // one place this page calls application/
-        // SnapshotPlacementMaterializationCoordinator.js#materialize() —
-        // always for exactly ONE placement, always because a person
-        // clicked "Materialize Snapshot"/"Materialize Again" on it.
-        // Mirrors resolvePlacement() immediately above almost exactly,
-        // one axis over — the one difference is what a SUCCESSFUL
-        // attempt means: resolvePlacement() only ever observes; a
-        // successful materialize() call actually writes bytes into this
-        // replica's own content/ContentStore.js. Never called from
-        // onMounted(), refreshList(), loadPlacements(), or
-        // resolvePlacement() itself — only this explicit click ever
-        // materializes anything.
+        // Like resolvePlacement(), but a successful attempt writes the bytes
+        // into this replica's ContentStore. Only on an explicit click.
         async function materializePlacement(entry, placementView) {
             const placement = entry.placements.find((candidate) => candidate.id === placementView.placementId);
             if (!placement || !snapshotPlacementMaterializationCoordinator) return;
@@ -5743,16 +2961,8 @@ export default {
             });
         }
 
-        // 0.8.37 — Explicit Peer Snapshot Content Transfer. The peer-backed
-        // sibling of materializePlacement() immediately above, one axis
-        // over: always for exactly ONE already-authenticated peer a person
-        // picked from THIS entry's own dropdown, always because they
-        // clicked "Get Snapshot from Peer"/"Get Snapshot from Peer Again"
-        // on it. This page never selects, ranks, or falls back to a
-        // different peer on their behalf — see application/
-        // MaterializeSnapshotFromPeerUseCase.js's own header. Never called
-        // from onMounted(), refreshList(), or any other action — only this
-        // explicit click ever asks a peer for bytes.
+        // Asks exactly the one authenticated peer the person picked, on an
+        // explicit click; never picks, ranks or falls back to another peer.
         function selectedPeerForMaterialization(entry) {
             return retrievalPeers.value.find((peer) => peer.connectionId === entry.peerMaterializationSelectedPeerId) || null;
         }
@@ -5801,20 +3011,8 @@ export default {
             });
         }
 
-        // 0.8.40 — Snapshot Possession Observation Exchange. The
-        // question-only sibling of `selectedPeerForMaterialization()`/
-        // `requestSnapshotFromPeer()` immediately above, one axis over:
-        // always for exactly ONE already-authenticated peer a person
-        // picked from THIS entry's own "Peer Snapshot Possession"
-        // dropdown, always because they clicked "Check with Peer"/"Check
-        // with Peer Again" on it. Never called from onMounted(),
-        // refreshList(), or any other action — only this explicit click
-        // ever asks a peer whether it possesses anything. Never touches
-        // `entry.peerMaterializationAttempt`, `recordMaterializationSource()`,
-        // or `recordMaterializationHistoryEntry()` — an observation is not
-        // a materialization, and never becomes one automatically; see
-        // application/ObservePeerSnapshotPossessionUseCase.js's own
-        // header.
+        // Only asks whether the picked peer has the bytes, on an explicit
+        // click. An observation never becomes a materialization.
         function selectedPeerForPossessionCheck(entry) {
             return retrievalPeers.value.find((peer) => peer.connectionId === entry.peerPossessionSelectedPeerId) || null;
         }
@@ -5854,17 +3052,8 @@ export default {
             });
         }
 
-        // 0.8.41 — Peer Snapshot Possession Comparison & Observation
-        // History. `togglePeerPossessionCompareSelection()` is the ONLY
-        // place `entry.peerPossessionCompareSelectedPeerIds` ever changes —
-        // a plain checkbox toggle, never touched by any automatic
-        // discovery, ranking, or "select all" gesture. `selectedPeersFor
-        // PossessionComparison()` turns those checked-box connectionIds
-        // back into real, currently-authenticated ConnectedPeer objects —
-        // a peer that disconnects between being checked and the click is
-        // silently dropped from the list actually asked, exactly mirroring
-        // `selectedPeerForPossessionCheck()`/`selectedPeerForMaterialization()`'s
-        // own identical restraint one axis over.
+        // Checkbox selection only. A peer that disconnects before the click is
+        // dropped from the list asked.
         function togglePeerPossessionCompareSelection(entry, connectionId) {
             const index = entry.peerPossessionCompareSelectedPeerIds.indexOf(connectionId);
             if (index === -1) {
@@ -5878,15 +3067,8 @@ export default {
             return retrievalPeers.value.filter((peer) => entry.peerPossessionCompareSelectedPeerIds.includes(peer.connectionId));
         }
 
-        // The explicit "Check Selected Peers" action — the ONLY place
-        // application/SnapshotPeerPossessionCoordinator.js#observePeers()
-        // is ever called. Every observation it returns is APPENDED to
-        // `entry.peerPossessionObservationHistory`, never replacing an
-        // earlier one — this is the one deliberate difference from
-        // `checkSnapshotPossessionWithPeer()` immediately above, whose own
-        // single `entry.peerPossessionAttempt` is still replaced each
-        // click. Neither function ever calls the other, and neither
-        // function's own state is ever read by the other's view.
+        // Answers are appended to the history, unlike the single-peer check,
+        // which replaces its result.
         async function checkSnapshotPossessionWithSelectedPeers(entry) {
             const peers = selectedPeersForPossessionComparison(entry);
             if (peers.length === 0 || !snapshotPeerPossessionCoordinator) return;
@@ -5905,11 +3087,7 @@ export default {
             }
         }
 
-        // Pure, synchronous: always recomputed from `entry.
-        // peerPossessionObservationHistory`'s own latest-per-peer
-        // reduction, never a separately maintained "current" field —
-        // exactly the same "derive, don't cache" discipline `currentPossessionView()`
-        // above already holds for local possession.
+        // Derived from the latest answer per peer, never cached.
         function peerPossessionComparisonView(entry) {
             const latest = latestSnapshotPeerPossessionObservationsByPeer(entry.peerPossessionObservationHistory, {
                 publicationId: entry.publication.id, contentHash: entry.publication.contentReference.hash
@@ -5925,28 +3103,10 @@ export default {
             return describeSnapshotPeerPossessionStateLabel(peerRow.state);
         }
 
-        // 0.8.42 — Explicit Snapshot Source Selection & Materialization UX.
-        // The missing link this milestone exists to add: turning ONE
-        // already-rendered "Peer Snapshot Possession Comparison" row into
-        // an explicit action, without turning the OBSERVATION that row
-        // shows into an automatic materialization. Always for exactly the
-        // ONE peer named on the row a person clicked "Get Snapshot from
-        // <peer>" on — never every AVAILABLE peer, never a "best" peer
-        // this page picked on their behalf. Routes through application/
-        // SnapshotMaterializationSelectionCoordinator.js, wrapping a PEER
-        // selection (application/SnapshotMaterializationSourceSelection.js)
-        // around EXACTLY the same underlying application/
-        // MaterializeSnapshotFromPeerUseCase.js "Get Snapshot from Peer"
-        // (0.8.37) already runs — never a fourth materialization
-        // mechanism. This function never reads, writes, or otherwise
-        // touches `entry.peerPossessionObservationHistory` — the row's own
-        // AVAILABLE/NOT_AVAILABLE/UNAVAILABLE label is a possession
-        // OBSERVATION, a frozen fact about a past moment, and stays
-        // exactly what it already said no matter what this materialization
-        // ATTEMPT — a brand new, independently-timed fact — goes on to
-        // report. See docs/Principles.md, "An Observation Can Inform A
-        // Person's Choice Without Becoming An Application Decision
-        // (0.8.42)."
+        // Turns one comparison row into an explicit "Get Snapshot from <peer>"
+        // for exactly that peer, through the same peer materialization path.
+        // The row's possession observation stays what it said; this attempt is
+        // a new, separate fact.
         async function materializeFromComparisonPeer(entry, peerId) {
             const peer = retrievalPeers.value.find((candidate) => candidate.connectionId === peerId);
             if (!peer || !snapshotMaterializationSelectionCoordinator) return;
@@ -5994,10 +3154,8 @@ export default {
                 : `Get Snapshot from ${peerLabel}`;
         }
 
-        // The FULL chronological narration — every recorded observation,
-        // including repeat checks of the same peer — for the "Possession
-        // Observation History" disclosure, deliberately separate from the
-        // latest-per-peer comparison above.
+        // Every recorded observation, including repeat checks, separate from
+        // the latest-per-peer comparison.
         function peerPossessionObservationHistoryView(entry) {
             return describeSnapshotPeerPossessionObservationHistory(entry.peerPossessionObservationHistory);
         }
@@ -6006,20 +3164,10 @@ export default {
             entry.peerPossessionComparisonHistoryExpanded = !entry.peerPossessionComparisonHistoryExpanded;
         }
 
-        // 0.8.45 — Explicit Peer Possession Observation Inspection.
-        // Composes application/SnapshotPeerPossessionObservationDetailView.js's
-        // own describeSnapshotPeerPossessionObservationDetails() over this
-        // entry's existing `peerPossessionObservationHistory` (0.8.41) — the
-        // IDENTICAL sequence `peerPossessionObservationHistoryView()` above
-        // already reads, never a second, separately-tracked history.
         function peerPossessionObservationDetailsView(entry) {
             return describeSnapshotPeerPossessionObservationDetails(entry.peerPossessionObservationHistory);
         }
 
-        // Per-observation disclosure state, addressed by that observation's
-        // own stable index (see `entry.peerPossessionObservationHistoryEntryExpanded`'s
-        // own header). Toggling one row never touches another, and never
-        // touches the outer "Show/Hide Observation History" state above it.
         function isPeerPossessionObservationHistoryEntryExpanded(entry, index) {
             return Boolean(entry.peerPossessionObservationHistoryEntryExpanded[index]);
         }
@@ -6028,14 +3176,8 @@ export default {
             entry.peerPossessionObservationHistoryEntryExpanded[index] = !entry.peerPossessionObservationHistoryEntryExpanded[index];
         }
 
-        // Display-only: turns a bare `peerId` (an application/
-        // SnapshotPeerPossessionObservation.js connectionId) back into a
-        // readable label, for a comparison row or a history row alike. A
-        // peer that has since disconnected — an observation is a
-        // historical fact, and stays on screen after the peer it named is
-        // gone — falls back to `shortId(peerId)` rather than disappearing
-        // or being relabeled "Unknown peer," which is reserved for a
-        // genuinely null peerId.
+        // A peer that has since disconnected still shows by shortId; "Unknown
+        // peer" is only for a null peerId.
         function peerPossessionRowLabel(peerId) {
             if (!peerId) return 'Unknown peer';
             const peer = retrievalPeers.value.find((candidate) => candidate.connectionId === peerId);
@@ -6043,14 +3185,8 @@ export default {
             return shortId(peerId);
         }
 
-        // 0.8.20 — the one place this page calls application/
-        // PublicationSnapshotPlacementDetailView.js (and, separately,
-        // `placementViewRegistry`) — always for exactly ONE placement,
-        // always because a person clicked "Inspect Placement." Both
-        // calls are pure and synchronous: nothing here awaits anything,
-        // touches placementResolutionCoordinator, or mutates
-        // `entry.placements`/`entry.placementsView`/`entry.resolutions`
-        // — mirrors toggleInspect() above exactly, one axis over.
+        // Pure and synchronous: reads the placement detail and the optional
+        // storage-specific view, and changes no entry state.
         function togglePlacementInspect(entry, placementView) {
             const state = entry.placementInspections[placementView.placementId]
                 || (entry.placementInspections[placementView.placementId] = { expanded: false, detail: null, typeSpecific: null, knowledge: null });
@@ -6062,11 +3198,7 @@ export default {
                 state.typeSpecific = (placementViewRegistry && placementViewRegistry.has(placement.storage))
                     ? placementViewRegistry.get(placement.storage).describe(placement)
                     : null;
-                // 0.8.24 — Snapshot Placement Provenance & Observation
-                // Boundary. A purely local, synchronous read — application/
-                // LocalPlacementKnowledgeStore.js#get() never touches the
-                // network and never mutates anything, mirroring
-                // toggleInspect()'s own identical 0.8.17 read above.
+                // Local, synchronous read; no network access.
                 state.knowledge = placementKnowledgeStore
                     ? describePlacementKnowledge(placementKnowledgeStore.get(placement.id))
                     : null;
@@ -6088,28 +3220,14 @@ export default {
             return state ? state.typeSpecific : null;
         }
 
-        // 0.8.24 — Snapshot Placement Provenance & Observation Boundary.
         function placementInspectionKnowledge(entry, placementView) {
             const state = entry.placementInspections[placementView.placementId];
             return state ? state.knowledge : null;
         }
 
-        // 0.8.25 — Explicit Snapshot Placement Creation UX. The one place
-        // this page calls application/
-        // SnapshotPlacementCreationCoordinator.js (through the
-        // coordinator) — always for exactly ONE storage type, always
-        // because a person clicked "Create <storage> Placement" on it.
-        // Never called from onMounted(), refreshList(), or
-        // loadPlacements() — merely opening or refreshing this page never
-        // triggers an external placement. Mirrors createAnchor() below
-        // exactly, one axis over.
-        //
-        // A thrown error (application/
-        // SnapshotPlacementCreationCoordinator.js#create() never catches
-        // one — see that class's own header) is caught HERE, at the UI
-        // boundary, and turned into its own honest display state via
-        // application/SnapshotPlacementCreationView.js#describeCreationAttempt()
-        // rather than crashing the page.
+        // Only on an explicit click for one storage type; never on open or
+        // refresh. A thrown error (create() never catches) is turned into a
+        // display state here.
         async function createPlacement(entry, storage) {
             if (!placementCreationCoordinator) return;
             entry.placementCreationAttempts[storage] = { creating: true, outcome: null, placement: null, reason: null, error: null };
@@ -6118,12 +3236,8 @@ export default {
                 entry.placementCreationAttempts[storage] = {
                     creating: false, outcome: result.outcome, placement: result.placement, reason: result.reason, error: null
                 };
-                // Re-discover from the catalog so a CREATED placement
-                // immediately appears in the ordinary placement list below
-                // — a purely local catalog read (application/
-                // SnapshotPlacementResolutionCoordinator.js#discover()),
-                // never a resolution. Mirrors createAnchor()'s own
-                // identical re-discovery below, one axis over.
+                // Re-discover (a local read, not a resolution) so the new
+                // placement appears in the list.
                 loadPlacements(entry);
                 if (result.outcome === SnapshotPlacementCreationOutcome.CREATED) {
                     entry.placementsExpanded = true;
@@ -6148,34 +3262,11 @@ export default {
             return describePlacementCreationButtonLabel(humanizeStorageType(storage), { creating: view.state === SnapshotPlacementCreationUiState.CREATING, hasExisting });
         }
 
-        // 0.9.301 — Preferred Content Provider Placement Trigger. The "Use
-        // Preferred Provider" counterpart of createPlacement() above — the
-        // ONE other place this page ever calls a placement-creation
-        // coordinator, and the only caller anywhere of
-        // preferredPlacementCreationCoordinator.create() (application/
-        // PreferredSnapshotPlacementCreationCoordinator.js, 0.9.299,
-        // composed by ui/main.js since 0.9.299 but never invoked by
-        // anything until this milestone).
-        //
-        // Always called with NO storage argument — deliberately never
-        // passes one. That absence is exactly what makes create() consult
-        // the stored CONTENT preference instead of short-circuiting
-        // straight to the wrapped coordinator, the identical contract
-        // application/PreferredSnapshotPlacementCreationCoordinator.js's
-        // own header documents. This function never resolves a preference
-        // itself, never picks a storage type, and never re-implements any
-        // part of that decision — it only triggers the ONE call and
-        // displays whatever comes back.
-        //
-        // Writes to `entry.preferredPlacementCreationAttempt` only — never
-        // `entry.placementCreationAttempts[storage]` — so a resolved-to-
-        // Ipfs preferred attempt can never be confused for, or overwrite,
-        // an explicit "Ipfs" button's own result, and vice versa (see this
-        // milestone's own tests, Section H).
-        //
-        // Mirrors createPlacement()'s own try/catch exactly: a thrown
-        // error (nobody signed in, or no local content to place) is caught
-        // HERE, at the UI boundary, never left to crash the page.
+        // The "Use Preferred Provider" counterpart of createPlacement().
+        // Deliberately passes no storage, which is what makes create() resolve
+        // the saved Content preference; this function never picks a storage
+        // itself. A thrown error (not signed in, no local content) is shown,
+        // not thrown.
         async function createPreferredPlacement(entry) {
             if (!preferredPlacementCreationCoordinator) return;
             entry.preferredPlacementCreationAttempt = { creating: true, outcome: null, placement: null, reason: null, error: null, preference: null };
@@ -6185,10 +3276,7 @@ export default {
                     creating: false, outcome: result.outcome, placement: result.placement, reason: result.reason, error: null,
                     preference: result.preference || null
                 };
-                // Re-discover from the catalog so a CREATED placement
-                // immediately appears in the ordinary placement list below
-                // — mirrors createPlacement()'s own identical re-discovery
-                // above, one trigger over.
+                // Re-discover so the new placement appears in the list.
                 loadPlacements(entry);
                 if (result.outcome === SnapshotPlacementCreationOutcome.CREATED) {
                     entry.placementsExpanded = true;
@@ -6207,36 +3295,17 @@ export default {
             return PLACEMENT_CREATION_BADGE_CLASSES[state] || null;
         }
 
-        // Deliberately storage-agnostic, unlike placementCreationButtonLabel()
-        // above — before a click, this trigger has no storage to name yet;
-        // WHICH storage it ultimately used is only ever known from the
-        // result itself (surfaced through preferredPlacementCreationView()'s
-        // own `placement`/`message`), never guessed at in the button label.
+        // Storage-agnostic: which storage was used is only known from the
+        // result.
         function preferredPlacementCreationButtonLabel(entry) {
             return preferredPlacementCreationView(entry).state === SnapshotPlacementCreationUiState.CREATING ? 'Creating…' : 'Use Preferred Provider';
         }
 
-        // 0.8.68 — Explicit Remote IPFS Publishing Configuration & UX.
-        //
-        // "Configure Remote Publishing" opens a small, entry-local form —
-        // draft fields only, never a real application/
-        // IpfsRemotePublishingConfiguration.js until "Save Configuration"
-        // is actually clicked. Opening or canceling the form never
-        // constructs, discards, or touches a configuration that already
-        // exists; canceling simply hides the form again, leaving whatever
-        // was previously configured (if anything) exactly as it was.
-        // 0.8.68+ — Tab-Lifetime Remote Publishing Credential Memory.
-        // Reopening a form for an EXISTING configuration still blanks
-        // `credential` unconditionally — that restraint (never project a
-        // saved credential back onto a screen) is untouched. A brand-new,
-        // never-yet-configured entry's form instead prefills from
-        // application/IpfsRemotePublishingCredentialMemory.js: a plain
-        // in-memory, tab-lifetime convenience (never Web Storage) so
-        // configuring several entries with the same credential in one tab
-        // session doesn't mean retyping it every time. See that file's
-        // own header for why this is not a loophole in application/
-        // IpfsRemotePublishingConfiguration.js's own "Ephemeral By
-        // Construction" restraint.
+        // Opening the form only seeds draft fields; nothing is configured until
+        // "Save Configuration". Reopening for an existing configuration always
+        // blanks the credential (a saved credential is never shown again); a
+        // new entry's form may prefill it from the tab-lifetime, in-memory
+        // credential memory.
         function openIpfsRemotePublishingConfigureForm(entry) {
             const existing = entry.ipfsRemotePublishingConfiguration;
             entry.ipfsRemotePublishingDraft = {
@@ -6252,10 +3321,6 @@ export default {
             entry.ipfsRemotePublishingConfigureFormOpen = false;
         }
 
-        // Mirrors togglePlacements()/toggleEvidence()'s own single-button
-        // shape exactly — opening re-seeds the draft from whatever is
-        // currently configured (see openIpfsRemotePublishingConfigureForm()
-        // above); canceling only hides the form again.
         function toggleIpfsRemotePublishingConfigureForm(entry) {
             if (entry.ipfsRemotePublishingConfigureFormOpen) {
                 cancelIpfsRemotePublishingConfigureForm(entry);
@@ -6264,13 +3329,8 @@ export default {
             }
         }
 
-        // Constructs a brand-new application/IpfsRemotePublishingConfiguration.js
-        // from this entry's own draft fields — THE ONE place this page
-        // ever constructs one. A (re)configuration always retires whatever
-        // was previously published under the OLD configuration: a newly
-        // configured capability always starts unpublished again, never
-        // inheriting a previous configuration's own PUBLISHED outcome. See
-        // application/IpfsRemotePublicationState.js's own header.
+        // The only place a remote IPFS configuration is built. A new
+        // configuration clears the previous publication outcome.
         function saveIpfsRemotePublishingConfiguration(entry) {
             const draft = entry.ipfsRemotePublishingDraft;
             try {
@@ -6284,34 +3344,21 @@ export default {
                 entry.ipfsRemotePublicationOutcome = { state: IpfsRemotePublicationState.FAILED, published: false, contentHash: null, locator: null, endpoint: null, publishedAt: null, reason: error.message };
                 entry.ipfsPublicationRecord = null;
                 entry.ipfsPublicationContentVerification = null;
-                // entry.ipfsPublicationRecordHistory is deliberately NOT
-                // cleared here — see clearIpfsRemotePublishingConfiguration()
-                // below for why.
+                // The record history is kept on purpose; see
+                // clearIpfsRemotePublishingConfiguration().
                 return;
             }
             entry.ipfsRemotePublicationOutcome = null;
             entry.ipfsPublicationRecord = null;
             entry.ipfsPublicationContentVerification = null;
             entry.ipfsRemotePublishingConfigureFormOpen = false;
-            // Tab-lifetime convenience only — see openIpfsRemotePublishingConfigureForm()
-            // above and application/IpfsRemotePublishingCredentialMemory.js.
+            // Tab-lifetime, in-memory only.
             rememberIpfsRemotePublishingCredential(draft.credential);
         }
 
-        // Discards this entry's own configuration and every fact drawn
-        // from it — mirroring anchoring/BitcoinWalletConnection.js#disconnect()'s
-        // own unconditional discard, one axis over: the capability is
-        // simply given up, never persisted anywhere first.
-        //
-        // 0.8.71 — entry.ipfsPublicationRecordHistory is deliberately NOT
-        // cleared here, unlike ipfsPublicationRecord/
-        // ipfsPublicationContentVerification above. Those two describe
-        // "the current publication attempt's own state," which a
-        // (re)configuration genuinely retires. The history describes
-        // PAST publications — historical facts about what this entry was
-        // actually published as, under whatever configuration was active
-        // at the time — and reconfiguring or clearing the provider used
-        // for the NEXT publish does not erase what already happened.
+        // Discards the configuration and the current publication/verification
+        // state. The record history is kept: past publications stay facts
+        // whatever provider is configured next.
         function clearIpfsRemotePublishingConfiguration(entry) {
             entry.ipfsRemotePublishingConfiguration = null;
             entry.ipfsRemotePublicationOutcome = null;
@@ -6324,39 +3371,20 @@ export default {
             return describeIpfsRemotePublishingConfiguration(entry.ipfsRemotePublishingConfiguration);
         }
 
-        // THE ONE place this page ever calls
-        // application/IpfsRemotePublicationCoordinator.js#publish() —
-        // never triggered automatically by saving a configuration; only an
-        // explicit "Publish to Remote IPFS" click. Bytes are sourced
-        // exactly the way application/CreateExternalSnapshotPlacementUseCase.js
-        // (0.8.18) already sources them for the unrelated Snapshot
-        // Placement pipeline — a local integrity check against this
-        // entry's own claimed content hash, then the same resolver's own
-        // `resolve()` — deliberately NOT by importing that use case
-        // itself, which is bound to application/
-        // SnapshotPlacementStoreRegistry.js and a persisted, cataloged
-        // placement; this milestone's own coordinator never catalogs
-        // anything (see that coordinator's own header). A thrown error is
-        // caught HERE, at the UI boundary, and turned into its own honest
-        // FAILED outcome, mirroring `broadcastBitcoinAnchorTransaction()`'s
-        // own identical restraint above.
+        // Only on an explicit click, never on save. Bytes are integrity-checked
+        // against the claimed hash and resolved the same way
+        // CreateExternalSnapshotPlacementUseCase does, without cataloging a
+        // placement. A thrown error becomes FAILED.
         async function publishToRemoteIpfs(entry) {
             if (!ipfsRemotePublicationCoordinator || !publicationContentStore) return;
             const configuration = entry.ipfsRemotePublishingConfiguration;
             if (!configuration) return;
 
             entry.ipfsRemotePublicationOutcome = { state: IpfsRemotePublicationState.PUBLISHING, published: false, contentHash: null, locator: null, endpoint: null, publishedAt: null, reason: null };
-            // 0.8.70 — a fresh publish attempt retires whatever record and
-            // verification observation the PREVIOUS attempt bound, exactly
-            // like finalizeBitcoinAnchorSignedPsbt() retires the previous
-            // broadcast/confirmation context above — a newly (re)published
-            // entry always starts unverified again, never inheriting a
-            // stale record's own last observation.
+            // A new publish starts unverified: clear the previous record and
+            // verification.
             entry.ipfsPublicationRecord = null;
             entry.ipfsPublicationContentVerification = null;
-            // 0.9.663 — a fresh publish attempt also retires whatever Nostr
-            // announcement outcome the PREVIOUS attempt bound, mirroring
-            // `entry.ipfsPublicationRecord`'s own reset immediately above.
             entry.ipfsRemoteSnapshotAnnouncement = null;
             try {
                 const bytes = publicationContentStore.get(entry.publication.contentReference);
@@ -6368,11 +3396,7 @@ export default {
                     throw new Error('local snapshot integrity check failed — refusing to publish it externally');
                 }
                 entry.ipfsRemotePublicationOutcome = await ipfsRemotePublicationCoordinator.publish({ bytes, configuration });
-                // 0.8.70 — the ONE place this page ever constructs an
-                // application/IpfsPublicationRecord.js: immediately after a
-                // REAL PUBLISHED outcome, from that outcome's own
-                // contentHash/locator/publishedAt — never re-derived, never
-                // typed in, never reused from a different entry.
+                // Build the record only from a real PUBLISHED outcome.
                 if (entry.ipfsRemotePublicationOutcome.state === IpfsRemotePublicationState.PUBLISHED) {
                     entry.ipfsPublicationRecord = new IpfsPublicationRecord({
                         contentHash: entry.ipfsRemotePublicationOutcome.contentHash,
@@ -6380,64 +3404,23 @@ export default {
                         publishedAt: entry.ipfsRemotePublicationOutcome.publishedAt,
                         publicationMethod: IpfsPublicationMethod.REMOTE_PINNING
                     });
-                    // 0.8.71 — the newly bound record is ALSO appended to
-                    // this entry's own append-only publication history —
-                    // never replacing an earlier entry there, even one
-                    // naming the identical contentHash. See application/
-                    // IpfsPublicationRecordHistory.js's own header for why
-                    // publishing the same content twice must still produce
-                    // two separate, independently inspectable records.
+                    // Also append to the history, even for an identical
+                    // contentHash: each publish is its own record.
                     entry.ipfsPublicationRecordHistory = appendIpfsPublicationRecordHistoryEntry(
                         entry.ipfsPublicationRecordHistory, entry.ipfsPublicationRecord
                     );
-                    // 0.8.75 — the newly bound record is ALSO archived
-                    // durably, side by side with the ephemeral history
-                    // above — see archivePublishIpfsRecord()'s own header.
+                    // And archive it durably.
                     archivePublishIpfsRecord(entry, entry.ipfsPublicationRecordHistory.length - 1, entry.ipfsPublicationRecord);
 
-                    // 0.9.663 — Connect Remote IPFS to Nostr Snapshot
-                    // Distribution. Reached ONLY after the REAL PUBLISHED
-                    // outcome immediately above — never for a REJECTED/
-                    // UNAVAILABLE/FAILED outcome, and never speculatively
-                    // before one. Announces the SAME contentHash/locator
-                    // this coordinator just produced, directly, through the
-                    // SAME snapshotDiscoveryPublisher instance the existing
-                    // Kubo/Arweave "Distribute Snapshot" action already
-                    // uses — the identical three-field
-                    // `{ contentHash, locator, storage }` call
-                    // application/SnapshotDistributionCommand.js's own
-                    // command function already makes internally after its
-                    // own contentStore.put(), called here directly instead
-                    // because the bytes are already pinned — going through
-                    // that command's own contentStore.put() would re-upload
-                    // them a second time for no reason. `storage` is
-                    // hardcoded to 'ipfs' — the same self-reported name
-                    // content/IpfsRemotePinningContentStore.js's own
-                    // `storage` getter always returns (see tests/
-                    // RemoteIpfsDistributionIntegrationBoundaryAudit.test.js's
-                    // own Section E/F). NEVER a publicationId — core/
-                    // SnapshotDiscoveryEnvelope.js's own
-                    // describeSnapshotDiscoveryEnvelope() requires a
-                    // publicationId and a claimedPosition to travel
-                    // together or not at all, and this call site has no
-                    // claimed position to offer; supplying one without the
-                    // other would silently invalidate every announcement
-                    // (publish() degrading to null) rather than failing
-                    // loudly. distributeEntrySnapshot()'s own
-                    // snapshotDistributionCommand() call, elsewhere in
-                    // this file, omits both for the identical reason.
-                    //
-                    // A NOSTR FAILURE NEVER FAILS THE REMOTE IPFS RESULT.
-                    // `entry.ipfsRemotePublicationOutcome` above already
-                    // reads PUBLISHED and stays that way regardless of what
-                    // happens here — content publication and discovery
-                    // announcement are two independent, sequential
-                    // operations (the content already exists on IPFS
-                    // whichever way this settles). This nested try/catch,
-                    // scoped to only this block, is what keeps a genuine
-                    // announcement failure from ever reaching the outer
-                    // catch below and overwriting a real PUBLISHED outcome
-                    // with FAILED.
+                    // Announce the published snapshot on Nostr through the same
+                    // snapshotDiscoveryPublisher "Distribute Snapshot" uses.
+                    // Called directly rather than through
+                    // SnapshotDistributionCommand, which would upload the
+                    // already-pinned bytes again. No publicationId: an envelope
+                    // needs a publicationId and a claimed position together or
+                    // neither, and there is no position here. A Nostr failure
+                    // never turns the PUBLISHED result into FAILED, hence this
+                    // inner try/catch.
                     if (snapshotDiscoveryPublisher) {
                         try {
                             const announcement = await snapshotDiscoveryPublisher.publish({
@@ -6468,21 +3451,10 @@ export default {
             return ipfsRemotePublicationView(entry).state === IpfsRemotePublicationState.PUBLISHING;
         }
 
-        // 0.8.70 — IPFS Publication & Content Verification UI. THE ONE
-        // place this page ever calls application/
-        // IpfsPublicationContentVerificationCoordinator.js#verify() —
-        // never triggered automatically by reaching PUBLISHED, opening
-        // this section, configuring a gateway, opening a different
-        // publication, or observing a Bitcoin confirmation elsewhere on
-        // this same page. Reads entry.ipfsPublicationRecord — the exact
-        // record publishToRemoteIpfs() bound above — never a CID or
-        // content hash reconstructed from whatever this section currently
-        // displays, so switching between publications can never verify
-        // one publication's locator against a different publication's
-        // content hash. A thrown error is caught HERE, at the UI
-        // boundary, mirroring publishToRemoteIpfs()'s and
-        // observeBitcoinAnchorBroadcastConfirmation()'s own identical
-        // restraint.
+        // Only on an explicit click. Verifies entry.ipfsPublicationRecord
+        // itself, never a CID/hash rebuilt from what's on screen, so one
+        // publication's locator is never checked against another's hash. A
+        // thrown error becomes FAILED.
         async function verifyIpfsPublicationContent(entry) {
             if (!ipfsPublicationContentVerificationCoordinator) return;
             const record = entry.ipfsPublicationRecord;
@@ -6514,25 +3486,11 @@ export default {
             return ipfsPublicationContentVerificationView(entry).state === IpfsPublicationContentVerificationCoordinatorState.VERIFYING;
         }
 
-        // "Verify IPFS Content" the first time a record exists with no
-        // observation yet; "Verify Again" for every click after — the
-        // identical relabeling reconcileBitcoinAnchor()'s own
-        // bitcoinAnchorReconcileButtonLabel() already performs one domain
-        // over.
         function ipfsPublicationContentVerifyButtonLabel(entry) {
             if (isVerifyingIpfsPublicationContent(entry)) return 'Verifying…';
             return entry.ipfsPublicationContentVerification ? 'Verify Again' : 'Verify IPFS Content';
         }
 
-        // 0.8.71 — IPFS Publication Record History & Inspection.
-        //
-        // The FULL chronological narration of every record
-        // publishToRemoteIpfs() has ever appended for THIS entry —
-        // composes application/IpfsPublicationRecordHistoryView.js's own
-        // describeIpfsPublicationRecordHistory() over `entry.
-        // ipfsPublicationRecordHistory`, unchanged — never a second
-        // history, and never anything the history itself did not already
-        // carry.
         function ipfsPublicationRecordHistoryView(entry) {
             return describeIpfsPublicationRecordHistory(entry.ipfsPublicationRecordHistory);
         }
@@ -6541,15 +3499,8 @@ export default {
             entry.ipfsPublicationRecordHistoryExpanded = !entry.ipfsPublicationRecordHistoryExpanded;
         }
 
-        // Per-record "Inspect" disclosure — a purely local, synchronous
-        // read of that ONE history entry's own fields, never a network
-        // request and never a call into the verification coordinator.
-        // "Inspect" and "Verify"/"Verify Again" below stay two genuinely
-        // separate actions, mirroring the same restraint this page's own
-        // "External Evidence" inspection already holds one domain over.
-        // Addressed by the record's own stable index within THIS entry's
-        // own history — stable because the history is append-only and
-        // never reordered or removed from.
+        // Inspect is a local read of one record; verifying is a separate
+        // action.
         function toggleIpfsPublicationRecordInspection(entry, index) {
             entry.ipfsPublicationRecordInspectionExpanded[index] = !entry.ipfsPublicationRecordInspectionExpanded[index];
         }
@@ -6558,39 +3509,10 @@ export default {
             return Boolean(entry.ipfsPublicationRecordInspectionExpanded[index]);
         }
 
-        // THE ONE PLACE THIS PAGE VERIFIES A HISTORICAL RECORD — unchanged
-        // from 0.8.71's own identical identity boundary: reads `entry.
-        // ipfsPublicationRecordHistory[index]` directly, the exact
-        // application/IpfsPublicationRecord.js instance that array
-        // position has always held, and passes it straight to the
-        // UNCHANGED IpfsPublicationContentVerificationCoordinator. This
-        // NEVER reconstructs `{ locator, contentHash }` from whatever this
-        // section currently displays, and never reads `entry.
-        // ipfsPublicationRecord` (the separate "current publication"
-        // binding above) — clicking "Verify" on history entry #0 verifies
-        // EXACTLY record #0, even after entries #1, #2, ... exist.
-        //
-        // 0.8.72 — what changes here is what happens to the RESULT.
-        // Instead of overwriting a single slot at `entry.
-        // ipfsPublicationVerificationsByRecordIndex[index]` (0.8.71), the
-        // resolved outcome is APPENDED onto that record's own,
-        // independently kept `entry.
-        // ipfsPublicationVerificationHistoriesByRecordIndex[index]` — an
-        // earlier HASH_MATCH observation for this exact record is never
-        // overwritten or discarded by a later UNAVAILABLE one, or vice
-        // versa; see application/
-        // IpfsPublicationContentVerificationHistory.js's own header.
-        // Verifying entry #1 never touches entry #0's own stored history,
-        // and vice versa. `entry.
-        // ipfsPublicationRecordVerifyingByRecordIndex[index]` is a
-        // transient, ephemeral "in flight" flag for THIS record only — it
-        // is set for the duration of the call and cleared afterward, and
-        // is never itself appended into the history. A thrown error is
-        // caught HERE, at the UI boundary, mirroring
-        // verifyIpfsPublicationContent()'s own identical restraint, and
-        // its FAILED outcome is appended exactly like any other
-        // observation — a caller/UI-boundary failure is still a real,
-        // dated fact about an attempt that was made.
+        // Verifies exactly the record at this history index, never one rebuilt
+        // from the screen or the "current" record. The outcome (including a
+        // thrown-error FAILED) is appended to that record's own history; the
+        // in-flight flag is never recorded.
         async function verifyIpfsPublicationRecordHistoryEntry(entry, index) {
             if (!ipfsPublicationContentVerificationCoordinator) return;
             const record = entry.ipfsPublicationRecordHistory[index];
@@ -6610,9 +3532,7 @@ export default {
             entry.ipfsPublicationVerificationHistoriesByRecordIndex[index] = appendIpfsPublicationContentVerificationHistoryEntry(
                 entry.ipfsPublicationVerificationHistoriesByRecordIndex[index], outcome
             );
-            // 0.8.75 — archived durably, side by side with the ephemeral
-            // per-record history above — see
-            // archiveIpfsVerificationObservation()'s own header.
+            // And archive it durably.
             archiveIpfsVerificationObservation(entry, index, outcome);
         }
 
@@ -6620,21 +3540,12 @@ export default {
             return Boolean(entry.ipfsPublicationRecordVerifyingByRecordIndex[index]);
         }
 
-        // The FULL, chronological sequence of every observation
-        // verifyIpfsPublicationRecordHistoryEntry() has ever appended for
-        // THIS history record — composes application/
-        // IpfsPublicationContentVerificationHistoryView.js's own
-        // describeIpfsPublicationContentVerificationHistory(), unchanged.
         function ipfsPublicationRecordVerificationHistoryView(entry, index) {
             return describeIpfsPublicationContentVerificationHistory(entry.ipfsPublicationVerificationHistoriesByRecordIndex[index]);
         }
 
-        // The single MOST RECENT observation for THIS history record —
-        // never a live re-verification, only the newest fact this
-        // record's own history happens to have on file. Used for the
-        // "Latest: ..." badge shown alongside "Verify Again" — the
-        // identical single-slot badge 0.8.71 already showed, now sourced
-        // from the history's own latest entry instead of a mutated slot.
+        // The newest observation on file for this record (never a live
+        // re-check), for the "Latest: …" badge.
         function latestIpfsPublicationRecordVerificationView(entry, index) {
             return describeIpfsPublicationContentVerification(
                 latestIpfsPublicationContentVerification(entry.ipfsPublicationVerificationHistoriesByRecordIndex[index])
@@ -6645,11 +3556,6 @@ export default {
             return IPFS_PUBLICATION_CONTENT_VERIFICATION_BADGE_CLASSES[latestIpfsPublicationRecordVerificationView(entry, index).state] || 'peer-badge--pending';
         }
 
-        // A condensed counterpart for one raw entry of `
-        // ipfsPublicationRecordVerificationHistoryView(entry, index)
-        // .verifications` — used for each individual row of the expanded
-        // "Verification History" disclosure, never for the "Latest: ..."
-        // badge above (see ipfsPublicationRecordVerificationBadgeClass()).
         function ipfsPublicationVerificationEntryBadgeClass(verification) {
             return IPFS_PUBLICATION_CONTENT_VERIFICATION_BADGE_CLASSES[verification.state] || 'peer-badge--pending';
         }
@@ -6659,14 +3565,7 @@ export default {
             return ipfsPublicationRecordVerificationHistoryView(entry, index).count > 0 ? 'Verify Again' : 'Verify Content';
         }
 
-        // Per-record "Show/Hide Verification History" disclosure — mirrors
-        // toggleIpfsPublicationRecordHistory()'s own identical shape, one
-        // level down: gates whether THIS record's own full, chronological
-        // observation sequence is shown, never whether a fresh
-        // verification is triggered. Opening this disclosure never calls
-        // the verification coordinator — see docs/Principles.md, "The UI
-        // Displays Observations; It Does Not Turn Them Into A Verdict
-        // (0.8.57)."
+        // Only shows the history; never triggers a verification.
         function toggleIpfsPublicationRecordVerificationHistory(entry, index) {
             entry.ipfsPublicationVerificationHistoryExpandedByRecordIndex[index] = !entry.ipfsPublicationVerificationHistoryExpandedByRecordIndex[index];
         }
@@ -6675,30 +3574,16 @@ export default {
             return Boolean(entry.ipfsPublicationVerificationHistoryExpandedByRecordIndex[index]);
         }
 
-        // 0.8.73 — IPFS Publication Observation Timeline. Composes
-        // application/IpfsPublicationObservationTimelineView.js's own
-        // describeIpfsPublicationObservationTimeline() over the SAME two
-        // histories the Publication History and per-record Verification
-        // History disclosures above already read — entry.
-        // ipfsPublicationRecordHistory and entry.
-        // ipfsPublicationVerificationHistoriesByRecordIndex — unchanged.
-        // This function reads only what those two histories already hold
-        // in memory; it never fetches, verifies, or appends anything of
-        // its own. Presentation-only: no new domain concept, no new
-        // verdict layer, just a chronological read of two existing,
-        // separately maintained facts.
+        // A chronological read of the publication and verification histories;
+        // fetches and appends nothing.
         function ipfsPublicationObservationTimelineView(entry) {
             return describeIpfsPublicationObservationTimeline(
                 entry.ipfsPublicationRecordHistory, entry.ipfsPublicationVerificationHistoriesByRecordIndex
             );
         }
 
-        // "Show/Hide Timeline" — mirrors toggleIpfsPublicationRecordHistory()'s
-        // own identical shape. There is deliberately no "refresh" action
-        // here, and no polling: opening the timeline reads whatever the
-        // existing histories already hold; new entries only ever appear
-        // after the existing, explicit "Publish"/"Verify Again" actions
-        // append into one of those two histories.
+        // No refresh or polling: new rows only come from explicit
+        // publish/verify actions.
         function toggleIpfsPublicationObservationTimeline(entry) {
             entry.ipfsPublicationObservationTimelineExpanded = !entry.ipfsPublicationObservationTimelineExpanded;
         }
@@ -6708,49 +3593,13 @@ export default {
             return IPFS_PUBLICATION_CONTENT_VERIFICATION_BADGE_CLASSES[item.state] || 'peer-badge--pending';
         }
 
-        // 0.8.74 — Cross-Domain Publication Observation Timeline. Composes
-        // application/PublicationObservationTimelineView.js's own
-        // describePublicationObservationTimeline() over this entry's own
-        // IPFS histories (the SAME two ipfsPublicationObservationTimelineView()
-        // immediately above already reads) and this entry's own Bitcoin
-        // facts. Nothing here is fetched, verified, or appended — it only
-        // reads what is already held in memory.
-        //
-        // ONLY A DISCOVERED ANCHOR'S OWN CONFIRMATION/CONTENT-PROOF FACTS
-        // EVER APPEAR — never a fabricated broadcast entry for it. A
-        // discovered anchor (entry.evidence.anchors, bitcoin-op-return) is
-        // an already-catalogued, signed claim; this replica never itself
-        // observed application/BitcoinAnchorBroadcastCoordinator.js accept
-        // it for broadcast, so it carries no `broadcastedAt` here at all —
-        // see application/PublicationObservationTimelineView.js's own
-        // header, "an anchor with no broadcastedAt contributes no broadcast
-        // entry." Its own confirmation history (entry.
-        // bitcoinAnchorConfirmationHistories[anchorId], from "Reconcile"
-        // clicks) and its own current content proof (entry.
-        // bitcoinAnchorReconciliations[anchorId].contentProof — there is no
-        // history for this one, by 0.8.57's own deliberate design) are both
-        // real, independently observed facts, and both appear unchanged.
-        //
-        // A SEPARATE, HONEST FACT FOR THE SESSION'S OWN FRESHLY BROADCAST
-        // TRANSACTION. When this page's own transaction-creation wizard
-        // (0.8.60–0.8.65) was used for THIS entry's own publicationId, and
-        // a broadcast attempt has actually been made
-        // (`bitcoinAnchorBroadcastOutcome`/`bitcoinAnchorBroadcastedAt`,
-        // both page-level, declared above), that real, independently
-        // observed outcome — and its own confirmation history,
-        // `bitcoinAnchorBroadcastConfirmationHistory` — is included too,
-        // keyed by its own txid. This wizard flow performs no content-proof
-        // check of its own, so it never contributes a content-proof entry.
-        //
-        // NO `recordIndex` LINKAGE IS SUPPLIED for any Bitcoin fact here —
-        // this page has never tracked which of an entry's own (possibly
-        // several) IPFS publication records a given Bitcoin anchor
-        // corresponds to, and application/PublicationObservationTimelineView
-        // .js's own header is explicit that this file must never guess one
-        // from a shared contentHash. Every Bitcoin entry below therefore
-        // projects with `recordIndex: null` — an honest "belongs to this
-        // publication, not further linked within it" — never a fabricated
-        // link.
+        // Reads only what's in memory. A discovered Bitcoin anchor contributes
+        // its confirmation history and current content proof, never a broadcast
+        // entry (this replica never broadcast it). The session's own wizard
+        // broadcast, if made for this publication, is included with its
+        // confirmations, keyed by txid. recordIndex is always null for Bitcoin
+        // facts: which IPFS record an anchor belongs to is not tracked and
+        // never guessed from a shared contentHash.
         function crossDomainPublicationObservationTimelineView(entry) {
             const discoveredAnchors = (entry.evidence && Array.isArray(entry.evidence.anchors) ? entry.evidence.anchors : [])
                 .filter((anchorView) => anchorView.anchorType === 'bitcoin-op-return')
@@ -6806,10 +3655,6 @@ export default {
                     return BITCOIN_ANCHOR_CONFIRMATION_BADGE_CLASSES[item.state] || 'peer-badge--pending';
                 case PublicationObservationTimelineEntryKind.BITCOIN_CONTENT_PROOF:
                     return BITCOIN_ANCHOR_CONTENT_PROOF_BADGE_CLASSES[item.state] || 'peer-badge--pending';
-                // 0.8.98 — Base Transaction Inclusion Observation Timeline.
-                // Reuses BASE_TRANSACTION_INCLUSION_BADGE_CLASSES (0.8.96)
-                // unchanged — the identical badge a lone "Observe
-                // Transaction" click already earns, now also read here.
                 case PublicationObservationTimelineEntryKind.BASE_TRANSACTION_INCLUSION:
                     return BASE_TRANSACTION_INCLUSION_BADGE_CLASSES[item.state] || 'peer-badge--pending';
                 default:
@@ -6823,22 +3668,9 @@ export default {
             return 'IPFS';
         }
 
-        // 0.8.11 — Explicit External Anchoring UX. The one place this
-        // page calls application/PublicationAnchorCreationCoordinator.js
-        // (through the coordinator) — always for exactly ONE anchorType,
-        // always because a person clicked "Create <type> Anchor" on it.
-        // Never called from onMounted(), refreshList(), or loadEvidence()
-        // — merely opening or refreshing this page never triggers an
-        // external recording. See this file's own header and
-        // docs/Principles.md, "External Anchoring Is An Explicit User
-        // Action (0.8.11)."
-        //
-        // A thrown error (application/PublicationAnchorCreationCoordinator
-        // .js#create() never catches one — see that class's own header)
-        // is caught HERE, at the UI boundary, and turned into its own
-        // honest display state via application/
-        // PublicationAnchorCreationView.js#describeCreationAttempt()
-        // rather than crashing the page.
+        // Only on an explicit click for one anchorType; never on open or
+        // refresh. A thrown error (create() never catches) is turned into a
+        // display state here.
         async function createAnchor(entry, anchorType) {
             if (!creationCoordinator) return;
             entry.creationAttempts[anchorType] = { creating: true, outcome: null, anchor: null, reason: null, error: null };
@@ -6847,13 +3679,8 @@ export default {
                 entry.creationAttempts[anchorType] = {
                     creating: false, outcome: result.outcome, anchor: result.anchor, reason: result.reason, error: null
                 };
-                // Re-discover from the catalog so a CREATED anchor
-                // immediately appears in the ordinary evidence list below
-                // — a purely local catalog read (application/
-                // PublicationEvidenceCoordinator.js#discover()), never a
-                // verification. See this file's own header, and
-                // application/PublicationEvidenceCoordinator.js's own, on
-                // why discovery and verification stay two separate calls.
+                // Re-discover (a local read, never a verification) so the new
+                // anchor appears in the list.
                 loadEvidence(entry);
                 if (result.outcome === ExternalAnchorCreationOutcome.CREATED) {
                     entry.evidenceExpanded = true;
@@ -6863,30 +3690,10 @@ export default {
             }
         }
 
-        // 0.8.16 — Evidence Synchronization UX & Explicit Historical
-        // Discovery. The one place this page calls application/
-        // PublicationEvidenceDiscoveryCoordinator.js — always for exactly
-        // ONE publication, always because a person clicked "Discover from
-        // Peers" on it. Never called from onMounted(), refreshList(), or
-        // loadEvidence() — see this file's own header and
-        // docs/Principles.md, "Discovery Is Not Verification, And 'No New
-        // Evidence' Is Not 'No Evidence' (0.8.16)."
-        //
-        // A discovered anchor is already cataloged by the time discover()
-        // resolves — application/PublicationAnchorPeerExchange.js#
-        // _importAndPublish() runs it through the identical validate ->
-        // construct -> verify-SIGNATURE boundary every other arrival
-        // path uses (0.8.4/0.8.5, unchanged) — so re-running
-        // loadEvidence() here is a purely local catalog re-read that
-        // simply picks up what discovery already cataloged, never a
-        // second network call and never a verification of anything.
-        //
-        // A thrown error (a local precondition failure — this coordinator
-        // never reaches the network itself on that path) is caught HERE,
-        // at the UI boundary, and turned into UNAVAILABLE via application/
-        // PublicationEvidenceDiscoveryView.js#describeEvidenceDiscoveryAttempt()
-        // rather than crashing the page — the identical pattern
-        // `createAnchor()` above already established.
+        // Only on an explicit click. Discovered anchors are already cataloged
+        // (after signature checks) when discover() resolves, so loadEvidence()
+        // is just a local re-read, never a verification. A thrown error becomes
+        // UNAVAILABLE.
         async function discoverFromPeers(entry) {
             if (!evidenceDiscoveryCoordinator) return;
             entry.discoveryAttempt = { discovering: true, result: null, error: null };
@@ -6917,18 +3724,8 @@ export default {
             return describeDiscoveryButtonLabel({ discovering, hasDiscovered });
         }
 
-        // 0.8.30 — Explicit Replica Knowledge Synchronization. The
-        // combined sibling of `discoverFromPeers()` immediately above:
-        // ONE explicit click asks every authenticated peer about
-        // anchors AND placements together, through application/
-        // PublicationKnowledgeSynchronizationCoordinator.js#synchronize()
-        // — never triggered by opening this page or expanding either
-        // "Show Evidence" or "Show Placements", the identical restraint
-        // `discoverFromPeers()` already holds. A synchronized claim is
-        // already cataloged by the time synchronize() resolves — this
-        // just re-reads both local catalogs afterward through the
-        // UNCHANGED `loadEvidence()`/`loadPlacements()` this page already
-        // calls elsewhere, never a second import path.
+        // One explicit click asks every authenticated peer about anchors and
+        // placements together; afterwards both local catalogs are re-read.
         async function synchronizeWithPeers(entry) {
             if (!knowledgeSynchronizationCoordinator) return;
             entry.synchronizationAttempt = { synchronizing: true, result: null, error: null };
@@ -6978,33 +3775,11 @@ export default {
             return describeCreationButtonLabel(humanizeAnchorType(anchorType), { creating: view.state === ExternalAnchorCreationUiState.CREATING, hasExisting });
         }
 
-        // Preferred Proof & Anchoring Provider Creation Integration. The
-        // "Use Preferred Provider" counterpart of createAnchor() above — the
-        // ONE other place this page ever calls an anchor-creation
-        // coordinator, and the only caller anywhere of
-        // preferredAnchorCreationCoordinator.create() (application/
-        // PreferredPublicationAnchorCreationCoordinator.js, composed by
-        // ui/main.js). Mirrors createPreferredPlacement() below exactly, one
-        // role over.
-        //
-        // Always called with NO anchorType argument — deliberately never
-        // passes one. That absence is exactly what makes create() consult
-        // the stored PROOF_AND_ANCHORING preference instead of short-
-        // circuiting straight to the wrapped coordinator, the identical
-        // contract application/PreferredPublicationAnchorCreationCoordinator
-        // .js's own header documents. This function never resolves a
-        // preference itself, never picks an anchorType, and never
-        // re-implements any part of that decision — it only triggers the
-        // ONE call and displays whatever comes back.
-        //
-        // Writes to `entry.preferredAnchorCreationAttempt` only — never
-        // `entry.creationAttempts[anchorType]` — so a resolved-to-Arweave
-        // preferred attempt can never be confused for, or overwrite, an
-        // explicit "Arweave" button's own result, and vice versa.
-        //
-        // Mirrors createAnchor()'s own try/catch exactly: a thrown error
-        // (nobody signed in, or no publisher registered) is caught HERE, at
-        // the UI boundary, never left to crash the page.
+        // The "Use Preferred Provider" counterpart of createAnchor().
+        // Deliberately passes no anchorType, which is what makes create()
+        // resolve the saved PROOF_AND_ANCHORING preference; this function never
+        // picks an anchorType itself. A thrown error (not signed in, no
+        // publisher) is shown, not thrown.
         async function createPreferredAnchor(entry) {
             if (!preferredAnchorCreationCoordinator) return;
             entry.preferredAnchorCreationAttempt = { creating: true, outcome: null, anchor: null, reason: null, error: null, preference: null };
@@ -7014,10 +3789,7 @@ export default {
                     creating: false, outcome: result.outcome, anchor: result.anchor, reason: result.reason, error: null,
                     preference: result.preference || null
                 };
-                // Re-discover from the catalog so a CREATED anchor
-                // immediately appears in the ordinary evidence list below —
-                // mirrors createAnchor()'s own identical re-discovery above,
-                // one trigger over.
+                // Re-discover so the new anchor appears in the list.
                 loadEvidence(entry);
                 if (result.outcome === ExternalAnchorCreationOutcome.CREATED) {
                     entry.evidenceExpanded = true;
@@ -7036,35 +3808,16 @@ export default {
             return CREATION_BADGE_CLASSES[state] || null;
         }
 
-        // Deliberately anchorType-agnostic, unlike creationButtonLabel()
-        // above — before a click, this trigger has no anchorType to name
-        // yet; WHICH anchorType it ultimately used is only ever known from
-        // the result itself (surfaced through preferredCreationView()'s own
-        // `anchor`/`message`), never guessed at in the button label.
+        // anchorType-agnostic: which type was used is only known from the
+        // result.
         function preferredCreationButtonLabel(entry) {
             return preferredCreationView(entry).state === ExternalAnchorCreationUiState.CREATING ? 'Creating…' : 'Use Preferred Provider';
         }
 
-        // 0.9.436 — Publications Distribution Section Reorganization.
-        // Announcement/Discovery's own two real write actions, wired onto
-        // THIS page for the first time. Mirrors
-        // ui/views/WorldView.js#distributeWorldEncounterPublication()/
-        // distributeWorldEncounterSnapshot() exactly, one call site over
-        // — this page constructs no new orchestrator, uploader, or
-        // publisher of its own, and reads no ownership field (see this
-        // milestone's own audit, Section C5).
-        // AMENDED BY 0.9.450 — Nostr Multi-Relay Publication Distribution
-        // Wiring. Mirrors `ui/views/WorldView.js`'s own
-        // `distributeWorldEncounterPublication()` 0.9.450 amendment exactly,
-        // one call site over: `discoveryProviderChoice === 'arweave'` keeps
-        // calling the single-relay `publicationDistributionCommand()`
-        // unchanged; every other choice (today, only `'nostr'` — see the
-        // Substrate `<select>`'s own two options, above) now calls the
-        // already-composed `multiRelayNostrPublicationDistributionCommand()`
-        // instead, resolving to an array of results (one per configured
-        // relay) rather than a single one. `entry.discoveryDistributionAttempt.result`
-        // is never rendered anywhere on this page (see its own template),
-        // so this shape change is invisible to this page's own display.
+        // Same as WorldView's distribution actions. Arweave uses the
+        // single-target publicationDistributionCommand; Nostr uses the
+        // multi-relay command, which resolves to one result per relay (the
+        // result isn't rendered here).
         function distributeEntryPublication(entry, discoveryProviderChoice) {
             if (discoveryProviderChoice === 'arweave') {
                 if (!publicationDistributionCommand) {
@@ -7096,20 +3849,8 @@ export default {
             return snapshotDistributionCommand(snapshotBytes, entry.snapshotDistributionStorage);
         }
 
-        // The only writer of `entry.discoveryDistributionAttempt`, and
-        // the only caller of distributeEntryPublication() in this file —
-        // mirrors createAnchor()/createPlacement() above exactly, one
-        // role over: a single explicit click, the most recent attempt's
-        // own outcome shown here and nowhere else persists it (the
-        // durable record stays publicationDistributionLifecycleStore's
-        // own — see discoveryObservationsView() below). Named
-        // `...ForEntry`, never bare `distributePublication`, to stay
-        // clear of the one-Publication-plus-a-target-list shape that
-        // name would suggest — this function still takes exactly one
-        // entry and this page's own already-selected discoveryProvider,
-        // never a `targets` array (see application/
-        // PublicationDistributionOrchestrator.js's own header, "no
-        // multi-relay fan-out," unrevisited here).
+        // The only writer of entry.discoveryDistributionAttempt. One entry and
+        // its own chosen substrate, never a target list.
         async function distributePublicationForEntry(entry) {
             if (entry.discoveryDistributionAttempt && entry.discoveryDistributionAttempt.distributing) {
                 return;
@@ -7129,10 +3870,6 @@ export default {
                 : 'Distribute Publication';
         }
 
-        // The only writer of `entry.snapshotDistributionAttempt`, and the
-        // only caller of distributeEntrySnapshot() in this file — mirrors
-        // distributePublicationForEntry() immediately above exactly, one
-        // action over.
         async function distributeSnapshot(entry) {
             if (entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.distributing) {
                 return;
@@ -7152,16 +3889,8 @@ export default {
                 : 'Distribute Snapshot';
         }
 
-        // Read-only projection over publicationDistributionLifecycleStore's
-        // own getDiscoveryObservations(publicationId) — the SAME
-        // store-side, already-portable multi-substrate observation model
-        // 0.9.433/0.9.434 already built (see this milestone's own audit,
-        // Section F). Never recomputed, never re-derived — a plain read,
-        // mirroring WorldEncounterCanvas's own discoveryObservations()
-        // computed one layer down (a plain function here, rather than a
-        // computed, since this page must key the read by
-        // `entry.publication.id` rather than one single page-wide
-        // selection).
+        // A plain read of the lifecycle store, keyed by this entry's
+        // publication id.
         function discoveryObservationsView(entry) {
             if (!publicationDistributionLifecycleStore || typeof publicationDistributionLifecycleStore.getDiscoveryObservations !== 'function') {
                 return [];
@@ -7169,30 +3898,16 @@ export default {
             return publicationDistributionLifecycleStore.getDiscoveryObservations(entry.publication.id);
         }
 
-        // 0.9.437 — Contextual Distribution Configuration Reachability.
-        // Resolves ONLY which already-registered Settings route
-        // (ui/router/index.js) corresponds to the substrate this entry's
-        // own Announcement/Discovery select currently has chosen — never
-        // a new configuration surface, never a duplicate of either
-        // Settings view's own controls. See this milestone's own audit
-        // (tests/PublicationsDistributionSectionProductAndUIBoundaryAudit.test.js,
-        // Section E) for why exactly these two routes, and only these
-        // two, are the correct targets for Announcement/Discovery.
+        // The Settings route for the entry's chosen Announcement/Discovery
+        // substrate.
         function discoveryDistributionConfigurationRoute(entry) {
             return entry.discoveryDistributionProvider === 'arweave'
                 ? '/settings/arweave-gateway'
                 : '/settings/nostr-relay';
         }
 
-        // 0.9.506 — Make Snapshot Distribution Content Backend Selectable.
-        // The Snapshot card's own Content configuration link, resolved the
-        // IDENTICAL way discoveryDistributionConfigurationRoute() immediately
-        // above already resolves the Publication card's own Substrate link —
-        // per-entry, from this entry's own current selection, never a fixed
-        // route. `/settings/content-provider` (not a dedicated IPFS-only
-        // Settings view, which does not exist) is IPFS's own target here,
-        // mirroring the Content role's own picker immediately below this
-        // card, which already links there for the identical reason.
+        // The Settings route for the entry's chosen Content backend; IPFS uses
+        // /settings/content-provider (there is no IPFS-only settings view).
         function snapshotDistributionConfigurationRoute(entry) {
             return entry.snapshotDistributionStorage === 'ar'
                 ? '/settings/arweave-gateway'
@@ -7236,17 +3951,9 @@ export default {
             return describePublicationOutcome(entry.view.outcome);
         }
 
-        // 0.7.6 — the "why is this available?" sentence this milestone's
-        // own design conversation asked for. Distinguishes "the bytes
-        // were already sitting in this device's own ContentStore" from
-        // "the bytes just arrived from a connected peer, and were
-        // accepted only after their hash matched" — application/
-        // PublicationResolutionView.js#describeRetrieval()'s own return
-        // value is null in the first case (no retrieval was ever
-        // attempted for this view) and a specific sentence in the
-        // second, so this function never has to duplicate that logic,
-        // only choose between it and the plain "available locally"
-        // default.
+        // describeRetrieval() returns null when the bytes were already local,
+        // or a sentence when they just arrived from a peer (accepted after
+        // their hash matched).
         function availabilityText(entry) {
             if (!entry.view) return null;
             if (entry.view.outcome === PublicationResolutionOutcome.RESOLVED) {
@@ -7263,12 +3970,8 @@ export default {
         let unsubscribeReceived = null;
         let unsubscribeContent = null;
         onMounted(async () => {
-            // 0.8.75 — the ONE place this page ever reads
-            // `publicationObservationArchiveStorage`. `load()` never
-            // throws (see storage/LocalStoragePublicationObservationArchive
-            // .js's own header) — corrupted or missing storage simply
-            // starts this session with an empty archive, never a crashed
-            // page.
+            // load() never throws: missing or corrupt storage starts an empty
+            // archive.
             publicationObservationArchive.value = publicationObservationArchiveStorage.load();
 
             loading.value = true;
@@ -7277,12 +3980,8 @@ export default {
             unsubscribeReceived = publicationPeerExchange
                 ? publicationPeerExchange.onPublicationReceived(() => refreshList())
                 : null;
-            // A newly retrieved hash may belong to more than one
-            // cataloged entry (independent publishers pointing at
-            // identical bytes — see application/
-            // LocalPublicationCatalog.js#findByContentHash()'s own
-            // header) — re-check every entry naming that hash, never
-            // just the one that happened to trigger the request.
+            // A hash can belong to several entries (independent publishers,
+            // identical bytes); re-check every one.
             unsubscribeContent = publicationPeerContentExchange
                 ? publicationPeerContentExchange.onContentReceived(({ hash }) => {
                     for (const entry of entries) {
@@ -7439,7 +4138,6 @@ export default {
             baseTransactionBroadcastCoordinator, broadcastBaseTransaction,
             baseTransactionBroadcastView, baseTransactionBroadcastBadgeClass, isBaseTransactionBroadcasting,
             BaseTransactionBroadcastState,
-            // 0.8.96 — Explicit Base Transaction Inclusion & Confirmation Observation.
             baseTransactionInclusionObservationCoordinator, observeBaseTransactionInclusion,
             baseTransactionInclusionView, baseTransactionInclusionBadgeClass, isBaseTransactionInclusionObserving,
             baseTransactionInclusionHistoryView, toggleBaseTransactionInclusionHistory,
@@ -7456,10 +4154,8 @@ export default {
             bitcoinAnchorFinalizedTransaction, broadcastBitcoinAnchorTransaction,
             bitcoinAnchorBroadcastView, bitcoinAnchorBroadcastBadgeClass, isBitcoinAnchorBroadcasting,
             BitcoinAnchorBroadcastState,
-            // 0.9.512 — Bitcoin Granular Pipeline Anchor Publication Integration.
             bitcoinAnchorPublicationCoordinator,
             bitcoinAnchorPublicationView, bitcoinAnchorPublicationBadgeClass,
-            // 0.8.65 — Explicit Bitcoin Anchor Confirmation UI.
             observeBitcoinAnchorBroadcastConfirmation,
             bitcoinAnchorBroadcastConfirmationObserving, bitcoinAnchorBroadcastConfirmationError,
             bitcoinAnchorBroadcastConfirmationView, bitcoinAnchorBroadcastConfirmationBadgeClass,
@@ -7484,26 +4180,12 @@ export default {
                 until one is. Connect to a peer first from <router-link to="/peers">Peers</router-link>.
             </p>
 
-            <!-- Reorganized so the page opens on the publication list itself
-                 rather than a wall of setup/inspection panels: everything
-                 below (wallet funding & connections, transaction review/
-                 signing/broadcast, archive export/import/comparison,
-                 anchor lifecycle records, reference graph, publisher
-                 achievements) is real, unchanged functionality — just
-                 collapsed behind one disclosure so it no longer pushes the
-                 catalog itself off-screen. -->
+            <!-- Page-level tools, collapsed so the publication list stays on
+                 screen. -->
             <details class="publications-tools-panel">
                 <summary class="publications-tools-panel-summary">Wallet, Archive &amp; Publisher Tools</summary>
 
-                <!-- Three tabs grouping the cards below by what they're
-                     actually about — Bitcoin/Base wallets & anchoring
-                     pipelines, the durable observation archive's own
-                     export/import/diff/fingerprint tools, and the
-                     reference-graph/achievement/publisher lookups. Each
-                     tab's own panel(s) below use v-show, not v-if: no card
-                     is removed from the page, so nothing about how any
-                     card's own state works changes, only whether it is
-                     currently on screen. -->
+                <!-- Tab panels use v-show so card state survives tab switches. -->
                 <div class="publications-tools-tabs" role="tablist">
                     <button type="button" role="tab" :aria-selected="publicationsToolsTab === 'anchoring'"
                             :class="['publications-tools-tab', { 'publications-tools-tab--active': publicationsToolsTab === 'anchoring' }]"
@@ -7523,20 +4205,8 @@ export default {
                 </div>
 
             <div v-show="publicationsToolsTab === 'anchoring'">
-            <!-- 0.8.60 — Explicit Bitcoin Anchor Funding & Address
-                 Preparation. A page-level panel, deliberately unrelated to
-                 any one publication's own evidence card below — this
-                 prepares funding for a transaction that has NOT YET been
-                 built, so there is no evidence entry for it to attach to.
-                 Absent bitcoinWalletFundingObserver, or with no wallet
-                 connected, this section simply never renders — the
-                 identical degrade-gracefully posture every optional
-                 section on this page already holds. Every field shown is
-                 read straight off the last real observation this page
-                 asked for — see application/BitcoinAnchorFundingView.js's
-                 own header. Nothing here selects a UTXO, builds a plan, or
-                 spends anything; "Refresh Funding" asks the SAME question
-                 again, fresh, never "Optimize" or "Best". -->
+            <!-- Bitcoin funding: page-level, for a transaction not built yet.
+                 Selects and spends nothing. -->
             <div v-if="bitcoinWalletFundingObserver && isBitcoinWalletConnected()" class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
                     <span class="identity-mgmt-name">Bitcoin Funding</span>
@@ -7596,22 +4266,8 @@ export default {
                 </div>
             </div>
 
-            <!-- 0.8.90 — Explicit Base Network & Account Observation. A
-                 page-level panel, entirely unrelated to the Bitcoin
-                 sections above and below it — there is no Base
-                 publication or anchor yet for this to attach to, and
-                 nothing here reads or changes any Bitcoin state. Absent
-                 baseWalletConnection, this section simply never renders,
-                 the identical degrade-gracefully posture every optional
-                 section on this page already holds. Every field shown is
-                 read straight off the last real observation this page
-                 asked for — see application/BaseAccountObservationView.js's
-                 own header. Nothing here constructs, signs, or broadcasts
-                 anything; "Observe Base Account" asks the SAME question
-                 again, fresh, and base/BaseWalletConnection.js exposes no
-                 signing capability of any kind for this section to even
-                 offer. See docs/Principles.md, "Network Observation Does
-                 Not Establish Publication Authority (0.8.90)." -->
+            <!-- Base network and account: page-level, observation only (no
+                 signing capability). -->
             <div v-if="baseWalletConnection" class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
                     <span class="identity-mgmt-name">Base Network</span>
@@ -7660,11 +4316,8 @@ export default {
                             <div class="evidence-field"><dt>Observed at</dt><dd>{{ baseAccountObservationView().observedAt }}</dd></div>
                         </dl>
 
-                        <!-- A connected network that answers but is not
-                             Base is never silently relabeled — the actual
-                             chain id observed is always shown, never
-                             discarded. See application/
-                             BaseNetworkObservationState.js's own header. -->
+                        <!-- A non-Base network is shown with its actual chain
+                             id, never relabeled. -->
                         <dl v-else-if="baseAccountObservationView().state === BaseNetworkObservationState.CHAIN_MISMATCH" class="evidence-fields">
                             <div class="evidence-field"><dt>Chain ID</dt><dd>{{ baseAccountObservationView().chainId }}</dd></div>
                         </dl>
@@ -7676,22 +4329,8 @@ export default {
                 </template>
             </div>
 
-            <!-- 0.8.59/0.8.62 — Explicit Bitcoin Anchor Transaction Review
-                 & Signing UI. A page-level panel, deliberately unrelated to
-                 any one publication's own evidence card below: this
-                 reviews a transaction BEFORE it has been published at all,
-                 so there is no evidence entry yet for it to attach to.
-                 Populated by an explicit "Create Transaction Plan" click
-                 above (see constructBitcoinAnchorTransaction()) — absent
-                 bitcoinAnchorTransactionReview.description, this section
-                 simply never renders, the identical degrade-gracefully
-                 posture every optional section on this page already
-                 holds. See application/BitcoinAnchorTransactionReviewView.js's
-                 own header on why every field here is read straight off
-                 the real transaction being reviewed, never a verdict
-                 about it, and anchoring/BitcoinAnchorReviewedPsbtSigner.js's
-                 own header on why a wallet is never asked to sign anything
-                 other than exactly what is shown here. -->
+            <!-- Bitcoin transaction review: page-level, before anything is
+                 published. -->
             <p v-if="bitcoinAnchorTransactionReview.reason && !bitcoinAnchorTransactionReviewView()" class="form-hint form-hint--neutral">
                 {{ bitcoinAnchorTransactionReview.reason }}
             </p>
@@ -7726,13 +4365,7 @@ export default {
                     </dl>
                 </div>
 
-                <!-- The wallet's own network is checked against THIS
-                     review's own transaction network — not a page-wide
-                     default — and, exactly as anchoring/
-                     BitcoinWalletConnection.js's own header requires, a
-                     mismatch is only ever named here, never auto-switched,
-                     auto-corrected, or silently allowed to proceed as if it
-                     matched. -->
+                <!-- A network mismatch is named, never auto-corrected. -->
                 <div v-if="bitcoinAnchorTransactionReviewWalletMatchView()" class="evidence-inspection-adapter">
                     <span class="evidence-inspection-adapter-title">Wallet</span>
                     <span class="peer-badge" :class="bitcoinWalletConnectionBadgeClass()">
@@ -7753,19 +4386,9 @@ export default {
                     </p>
                 </div>
 
-                <!-- 0.8.62 — Explicit Reviewed Bitcoin Anchor Signing UI.
-                     The ONE explicit action this whole review exists to
-                     gate: nothing above this button ever signs anything.
-                     Disabled whenever no wallet is connected, or the
-                     wallet's own network does not match this transaction's
-                     — a connected wallet is a signing CAPABILITY, never
-                     itself permission to sign (anchoring/
-                     BitcoinWalletConnection.js's own header, unchanged).
-                     Clicking it performs exactly one operation: the
-                     reviewed PSBT, byte for byte, is handed to the wallet —
-                     see anchoring/BitcoinAnchorReviewedPsbtSigner.js's own
-                     header on why a wallet is never asked to sign anything
-                     that has drifted from what is shown above. -->
+                <!-- The only signing action. A connected wallet is a
+                     capability, not permission; the reviewed PSBT is handed
+                     over byte for byte. -->
                 <div class="evidence-inspection-adapter">
                     <span class="evidence-inspection-adapter-title">Signing</span>
                     <button type="button" class="action-btn action-btn--secondary"
@@ -7782,15 +4405,8 @@ export default {
                         {{ bitcoinAnchorReviewedSigningView().reason }}
                     </p>
 
-                    <!-- A wallet's claim is not the signature (anchoring/
-                         BitcoinAnchorWalletSigner.js's own header,
-                         unchanged): SIGNED here names only that the wallet
-                         returned a PSBT that independently inspects as
-                         carrying recognized signing material for exactly
-                         this transaction — never that ForkBuild has
-                         cryptographically verified it, and never that it
-                         has been finalized or broadcast. Those remain
-                         their own, separately sized, explicit next steps. -->
+                    <!-- SIGNED only means the wallet returned signing material
+                         for this transaction, not that it has been verified. -->
                     <template v-if="bitcoinAnchorReviewedSigningView().state === BitcoinAnchorReviewedSigningState.SIGNED">
                         <dl class="evidence-fields">
                             <div class="evidence-field"><dt>Signed inputs</dt><dd>{{ bitcoinAnchorReviewedSigningView().signedInputCount }}</dd></div>
@@ -7802,19 +4418,8 @@ export default {
                     </template>
                 </div>
 
-                <!-- 0.8.63 — Explicit Signed PSBT Verification & Transaction
-                     Finalization UI. A wallet-returned PSBT is an untrusted
-                     artifact until ForkBuild independently verifies and
-                     finalizes it — this button is that explicit boundary.
-                     Only ever rendered once the wallet has returned a
-                     SIGNED result; clicking it hands the wallet's own
-                     claimed signature, unmodified, to anchoring/
-                     BitcoinAnchorSignedPsbtFinalizer.js (0.8.51, unchanged)
-                     via the new application/
-                     BitcoinAnchorSignedPsbtFinalizationCoordinator.js. See
-                     that file's own header on why an INVALID_SIGNATURE or
-                     FAILED result here is the end of this attempt — never
-                     retried, re-signed, or reconstructed automatically. -->
+                <!-- A wallet-returned PSBT is untrusted until verified and
+                     finalized here. -->
                 <div v-if="bitcoinAnchorReviewedSigningView().state === BitcoinAnchorReviewedSigningState.SIGNED" class="evidence-inspection-adapter">
                     <span class="evidence-inspection-adapter-title">Verification &amp; Finalization</span>
                     <p class="form-hint form-hint--neutral">
@@ -7833,13 +4438,6 @@ export default {
                         {{ bitcoinAnchorSignedPsbtFinalizationView().reason }}
                     </p>
 
-                    <!-- FINALIZED names the one real cryptographic fact this
-                         boundary checks — "Verified" is honest here, unlike
-                         at the signing stage above, because this class
-                         actually performed the verification. It is never
-                         promoted to a broader "safe" or "trusted" claim —
-                         see application/BitcoinAnchorSignedPsbtFinalizationView.js's
-                         own header. -->
                     <template v-if="bitcoinAnchorSignedPsbtFinalizationView().state === BitcoinAnchorSignedPsbtFinalizationState.FINALIZED">
                         <dl class="evidence-fields">
                             <div class="evidence-field"><dt>Signature verification</dt><dd>✓ Verified</dd></div>
@@ -7859,21 +4457,8 @@ export default {
                     </template>
                 </div>
 
-                <!-- 0.8.64 — Explicit Bitcoin Anchor Broadcast UI. The final
-                     explicit boundary in this pipeline: nothing above this
-                     button ever reaches the network. Only ever rendered
-                     once a FINALIZED outcome has bound a real
-                     bitcoinAnchorFinalizedTransaction artifact; clicking
-                     it hands that exact, already-verified txid/rawTransaction
-                     to anchoring/BitcoinAnchorTransactionBroadcaster.js
-                     (0.8.52, unchanged) via the new application/
-                     BitcoinAnchorBroadcastCoordinator.js. BROADCASTED here
-                     means only "the network accepted this transaction" —
-                     never that it has been confirmed; see application/
-                     BitcoinAnchorBroadcastState.js's own header. A REJECTED
-                     or UNAVAILABLE result is the end of this attempt —
-                     never retried automatically; a person clicks "Broadcast
-                     Transaction" again, explicitly, for another one. -->
+                <!-- The only step that reaches the network. BROADCASTED means
+                     accepted, not confirmed; no automatic retry. -->
                 <div v-if="bitcoinAnchorFinalizedTransaction" class="evidence-inspection-adapter">
                     <span class="evidence-inspection-adapter-title">Broadcast</span>
                     <dl class="evidence-fields">
@@ -7898,12 +4483,6 @@ export default {
                         {{ bitcoinAnchorBroadcastView().reason }}
                     </p>
 
-                    <!-- BROADCASTED names exactly one fact — the network
-                         accepted this transaction — never confirmation. See
-                         application/BitcoinAnchorBroadcastView.js's own
-                         header on why no confirmed/confirmations/blockHeight
-                         field exists here; observing confirmation remains
-                         its own, separately sized, explicit next step. -->
                     <template v-if="bitcoinAnchorBroadcastView().state === BitcoinAnchorBroadcastState.BROADCASTED">
                         <dl class="evidence-fields">
                             <div class="evidence-field"><dt>Transaction ID</dt><dd>{{ bitcoinAnchorBroadcastView().txid }}</dd></div>
@@ -7917,15 +4496,7 @@ export default {
                             separate, explicit step.
                         </p>
 
-                        <!-- 0.9.512 — Bitcoin Granular Pipeline Anchor
-                             Publication Integration. Reached automatically
-                             the moment the BROADCASTED outcome immediately
-                             above settled — never a separate click — see
-                             broadcastBitcoinAnchorTransaction()'s own
-                             comment. Absent bitcoinAnchorPublicationCoordinator,
-                             this status simply never renders and only the
-                             existing local publication record above still
-                             exists. -->
+                        <!-- Anchor minted automatically after BROADCASTED. -->
                         <template v-if="bitcoinAnchorPublicationCoordinator">
                             <span v-if="bitcoinAnchorPublicationView().label" class="peer-badge"
                                 :class="bitcoinAnchorPublicationBadgeClass()">
@@ -7944,22 +4515,8 @@ export default {
                     </template>
                 </div>
 
-                <!-- 0.8.65 — Explicit Bitcoin Anchor Confirmation UI. Only
-                     ever rendered once the Broadcast section immediately
-                     above reaches a real BROADCASTED outcome — reaching it
-                     never triggers this automatically; "Observe
-                     Confirmation" is its own, separate, explicit action,
-                     bound to bitcoinAnchorBroadcastView()'s own txid and
-                     nothing else on this page. Deliberately a SEPARATE
-                     evidence-inspection-adapter box from Broadcast above,
-                     never collapsed into it or into a single pipeline
-                     "status" — see application/
-                     BitcoinAnchorConfirmationCoordinator.js's own header.
-                     Every click appends its own entry to the Confirmation
-                     History disclosure below via application/
-                     BitcoinAnchorConfirmationObservationHistory.js (0.8.56,
-                     unchanged) — a later CONFIRMED entry never rewrites or
-                     discards an earlier NOT_CONFIRMED one. -->
+                <!-- Confirmation is a separate explicit action; each click
+                     appends to the history. -->
                 <div v-if="bitcoinAnchorBroadcastView().state === BitcoinAnchorBroadcastState.BROADCASTED" class="evidence-inspection-adapter">
                     <span class="evidence-inspection-adapter-title">Confirmation</span>
                     <p class="form-hint form-hint--neutral">
@@ -7995,12 +4552,8 @@ export default {
                         </button>
                     </template>
 
-                    <!-- The full chronological narration of every past
-                         "Observe Confirmation" click for THIS broadcast
-                         transaction — a DIFFERENT history from
-                         bitcoinAnchorConfirmationHistoryView(entry, anchorView)
-                         further below, which narrates "Reconcile" clicks
-                         against a persisted PublicationAnchor instead. -->
+                    <!-- Confirmations of this broadcast, separate from the
+                         per-anchor "Reconcile" history. -->
                     <div v-if="bitcoinAnchorBroadcastConfirmationHistoryExpanded">
                         <ul class="replica-knowledge-claim-list">
                             <li v-for="(item, index) in bitcoinAnchorBroadcastConfirmationHistoryView().entries" :key="index" class="replica-knowledge-claim">
@@ -8022,25 +4575,8 @@ export default {
                 </div>
             </div>
 
-            <!-- 0.8.79 — Durable Bitcoin Anchor Evidence Restoration &
-                 Historical Inspection. Page-level, deliberately unrelated
-                 to any one publication's own card below, mirroring the
-                 "Observation Archive" card (Archive Tools tab) exactly.
-                 Reads the SAME durable, persisted archive that card
-                 already reads — never a second archive, never a second
-                 persisted representation of derived evidence. See
-                 application/BitcoinAnchorObservationArchiveView.js's and
-                 application/BitcoinAnchorDurableEvidenceView.js's own
-                 headers, and docs/Principles.md, "Derived Evidence Is
-                 Reconstructed From Durable Facts; It Is Not Stored As A
-                 Second History (0.8.79)." Expanding an anchor below
-                 recomputes its chain-placement comparisons and consistency
-                 findings fresh from durable confirmation observations —
-                 nothing here is fetched, verified, or reconciled, and
-                 opening or closing this disclosure performs ZERO network
-                 operations. Combined Evidence, further below, is still
-                 only a correlation of independently recorded facts, never
-                 a verdict. -->
+            <!-- Bitcoin anchor evidence rebuilt from the durable archive; no
+                 network access. -->
             <div class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
                     <span class="identity-mgmt-name">Historical Bitcoin Anchor Evidence</span>
@@ -8152,17 +4688,7 @@ export default {
                 </div>
             </div>
 
-            <!-- 0.8.80 — Explicit Bitcoin Anchor Publication Lifecycle
-                 Record. A DIFFERENT list than "Historical Bitcoin Anchor
-                 Evidence" above: this one holds only the anchors this
-                 replica minted an explicit PUBLICATION IDENTITY for —
-                 { anchorId, contentHash, txid, network, createdAt } —
-                 never a confirmed/valid/trusted/status field of any kind.
-                 "Inspect Observations" reconstructs the SAME 0.8.79
-                 evidence bundle the card above already shows for this
-                 exact anchorId — evidence stays subordinate to identity,
-                 never becoming a second version of it. Performs ZERO
-                 network operations. -->
+            <!-- Only anchors this replica minted a publication identity for. -->
             <div class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
                     <span class="identity-mgmt-name">Bitcoin Anchor Publications</span>
@@ -8216,16 +4742,8 @@ export default {
                                 </p>
                             </div>
 
-                            <!-- 0.8.81 — Bitcoin Anchor Publication Lifecycle
-                                 Timeline. A third, different projection over
-                                 the SAME durable facts "Inspect Observations"
-                                 above already shows grouped by category —
-                                 this one interleaves them into one
-                                 chronological read, scoped to this exact
-                                 anchorId alone. Collapsed by default. Missing
-                                 stages (no broadcast, no content-proof, and
-                                 so on) simply produce no entry — never a
-                                 fabricated "missing" or "failed" row. -->
+                            <!-- Missing stages produce no row, never a
+                                 fabricated "missing" entry. -->
                             <button type="button" class="action-btn action-btn--secondary" @click="toggleBitcoinAnchorPublicationLifecycle(publicationRow.anchorId)">
                                 {{ isBitcoinAnchorPublicationLifecycleExpanded(publicationRow.anchorId) ? 'Hide Publication Lifecycle' : 'Show Publication Lifecycle' }}
                             </button>
@@ -8250,19 +4768,7 @@ export default {
                 </div>
             </div>
 
-            <!-- 0.8.99 — Durable Base Publication Identity Record; 0.8.101
-                 — Base Anchor Publication Lifecycle Timeline. The Base
-                 counterpart to "Bitcoin Anchor Publications" above, one
-                 chain over: only the txids this replica minted an explicit
-                 PUBLICATION IDENTITY for — { contentHash, txid, network,
-                 createdAt } — never a confirmed/included/valid/trusted/
-                 status field of any kind. "Show Publication Lifecycle"
-                 interleaves that identity with every recorded inclusion
-                 observation for this exact txid into one chronological
-                 read — never a BROADCAST entry, since this codebase has
-                 never made a Base broadcast fact durable (see application/
-                 BaseAnchorPublicationLifecycleTimelineView.js's own
-                 header). Performs ZERO network operations. -->
+            <!-- Only txids this replica minted a Base publication identity for. -->
             <div class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
                     <span class="identity-mgmt-name">Base Anchor Publications</span>
@@ -8298,11 +4804,6 @@ export default {
                                 Created: {{ formatWhen(publicationRow.createdAt) }}
                             </p>
 
-                            <!-- 0.8.101 — Base Anchor Publication Lifecycle
-                                 Timeline. Collapsed by default. Missing
-                                 stages (no inclusion observation yet)
-                                 simply produce no entry — never a
-                                 fabricated "missing" or "failed" row. -->
                             <button type="button" class="action-btn action-btn--secondary" @click="toggleBaseAnchorPublicationLifecycle(publicationRow.txid)">
                                 {{ isBaseAnchorPublicationLifecycleExpanded(publicationRow.txid) ? 'Hide Publication Lifecycle' : 'Show Publication Lifecycle' }}
                             </button>
@@ -8329,30 +4830,8 @@ export default {
             </div>
 
             <div v-show="publicationsToolsTab === 'archive'">
-            <!-- 0.8.75 — Durable Publication Observation Records.
-                 Page-level, deliberately unrelated to any one
-                 publication's own card below — this section reads
-                 application/PublicationObservationArchive.js's own
-                 durable, cross-domain archive, persisted via storage/
-                 LocalStoragePublicationObservationArchive.js. See that
-                 file's own header, and docs/Principles.md, "Persistence
-                 Restores Historical Facts; It Never Resurrects Invented
-                 Ones (0.8.75)." Nothing here is fetched, verified, or
-                 reconciled — opening or closing this disclosure performs
-                 ZERO network operations, and "Clear Archive" is the ONLY
-                 action on this page that discards a persisted fact;
-                 publishing, verifying, broadcasting, or observing a
-                 confirmation elsewhere on this page only ever ADDS to
-                 this archive, automatically, never removes from it.
-
-                 0.8.98 — Base Transaction Inclusion Observation Timeline.
-                 The "Archived Observation Timeline" disclosure below now
-                 also narrates every durably archived Base transaction
-                 inclusion observation (0.8.97), on this SAME list,
-                 chronologically interleaved with IPFS and Bitcoin facts —
-                 never a separate "Base Timeline" section. See
-                 application/PublicationObservationArchiveView.js's own
-                 0.8.98 header. -->
+            <!-- The durable observation archive. Other actions only ever add to
+                 it; "Clear Archive" is the only removal. -->
             <div class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
                     <span class="identity-mgmt-name">Observation Archive</span>
@@ -8406,17 +4885,8 @@ export default {
                 </div>
             </div>
 
-            <!-- 0.8.82 — Durable Publication Archive Export & Import.
-                 A portable copy of the SAME durable archive the
-                 "Observation Archive" card immediately above already
-                 reads — never a second, competing archive of its own.
-                 EXPORT is read-only over the current archive and performs
-                 ZERO network operations. IMPORT never merges with the
-                 current archive — it is an explicit REPLACEMENT, gated
-                 behind an explicit confirmation click, and a malformed or
-                 non-archive file is rejected outright rather than
-                 silently treated as an empty archive. See application/
-                 PublicationObservationArchiveExport.js's own header. -->
+            <!-- Import replaces (never merges) after an explicit confirmation;
+                 an invalid file is rejected. -->
             <div class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
                     <span class="identity-mgmt-name">Publication Archive</span>
@@ -8437,21 +4907,6 @@ export default {
                         {{ showPublicationArchiveImportForm ? 'Cancel Import' : 'Import Archive' }}
                     </button>
                 </div>
-                <!-- 0.9.400/0.9.408/0.9.411/0.9.417 originally linked
-                     /reconciliation-leaderboard, /reconciliation-workspace,
-                     /publisher-snapshot-claim, and /publisher-leaderboard
-                     directly from this card — an export from THIS card is
-                     the exact peer archive the Reconciliation Leaderboard's
-                     own "Use as Peer Archive" step asks a person to paste,
-                     which is why the entry points first landed here. Later
-                     consolidated onto ui/views/LeaderboardHubView.js: all
-                     four had grown into their own multi-card destination in
-                     their own right (the Publisher Achievement Profile/
-                     Badges/Statistics cards that used to sit further down
-                     this same page moved there too — see that file's own
-                     header), so one contextual link now stands in for what
-                     was four, the identical "contextual, not top-nav" shape
-                     this card's links have always used. -->
                 <p class="form-hint form-hint--neutral">
                     Reconciling this archive against a peer's, authoring or exporting
                     your own signed leaderboard snapshot claim, and seeing publishers
@@ -8495,19 +4950,7 @@ export default {
                 </div>
             </div>
 
-            <!-- 0.8.86 — Non-Replacing External Publication Archive
-                 Inspection. A THIRD action alongside "Export Archive" and
-                 "Import Archive" immediately above — never a mode of
-                 either one. Choosing a file or pasting JSON below and
-                 clicking "Inspect" reads that EXTERNAL archive only —
-                 nothing here ever touches, compares against, or replaces
-                 the "Observation Archive" above. There is no "Replace
-                 Current Archive" button on this card, and none will ever
-                 appear here — that action stays exactly where 0.8.82 put
-                 it, on the "Import Archive" form above, behind its own
-                 explicit confirmation. See application/
-                 PublicationObservationArchiveInspection.js's own header,
-                 "INSPECT != IMPORT." -->
+            <!-- Inspecting an external archive never touches the current one. -->
             <div class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
                     <span class="identity-mgmt-name">Inspect External Archive</span>
@@ -8572,16 +5015,8 @@ export default {
                             if you want this archive to replace it.
                         </p>
 
-                        <!-- 0.8.87 — Durable Publication Archive Difference
-                             Projection. A SEPARATE, explicit click — never
-                             triggered automatically by a successful
-                             inspection above. Describes which durable
-                             facts and which provenance tags differ between
-                             the current archive and the external archive
-                             above; it never says which archive is correct,
-                             newer, or better. See application/
-                             PublicationObservationArchiveDifference.js's
-                             own header. -->
+                        <!-- Difference is an explicit click; it never says
+                             which archive is right. -->
                         <div class="identity-mgmt-actions">
                             <button type="button" class="action-btn action-btn--secondary" @click="comparePublicationArchiveDifference">
                                 Compare With Current Archive
@@ -8620,20 +5055,8 @@ export default {
                                 the content fingerprint (0.8.84).
                             </p>
 
-                            <!-- 0.8.88 — Explicit Publication Archive
-                                 Replacement Review. A FOURTH, deliberately
-                                 separate action — never triggered
-                                 automatically by a successful comparison
-                                 above. Composes the difference above with
-                                 both archives' own factual and provenance
-                                 counts; it never says which archive should
-                                 replace the other. Only the explicit
-                                 "Replace Current Archive" button below —
-                                 reusing 0.8.82/0.8.83's own existing import
-                                 mechanism — ever changes the current
-                                 archive. See application/
-                                 PublicationObservationArchiveReplacementReview.js's
-                                 own header. -->
+                            <!-- Review composes the difference; only "Replace
+                                 Current Archive" changes anything. -->
                             <div class="identity-mgmt-actions">
                                 <button type="button" class="action-btn action-btn--secondary" @click="reviewPublicationArchiveReplacement">
                                     Review Replacement
@@ -8706,17 +5129,8 @@ export default {
                 </div>
             </div>
 
-            <!-- 0.8.83 — Publication Archive Provenance & Imported-Fact
-                 Boundary. Reads the SAME durable archive the two cards
-                 immediately above already read — never a second archive.
-                 States only WHERE a fact entered this archive (this
-                 replica's own local observation, or a prior archive
-                 import) — never whether it is trustworthy, verified, or
-                 healthy. See application/
-                 PublicationObservationArchiveProvenanceView.js's own
-                 header, and docs/Principles.md, "Provenance Describes
-                 Where A Fact Entered This Archive; It Does Not Establish
-                 Whether The Fact Is True (0.8.83)." -->
+            <!-- Provenance says where a fact entered the archive, not whether
+                 it is true. -->
             <div class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
                     <span class="identity-mgmt-name">Archive Provenance</span>
@@ -8745,32 +5159,9 @@ export default {
                 </div>
             </div>
 
-            <!-- 0.8.84 — Durable Publication Archive Fingerprint. Reads the
-                 SAME durable archive every card above already reads —
-                 never a second archive. A deterministic SHA-256 digest of
-                 this archive's own canonical facts and provenance
-                 (archiveImportEvents excluded — see application/
-                 PublicationObservationArchiveFingerprint.js's own header).
-                 States only that two matching fingerprints describe the
-                 identical durable bytes — never that either archive is
-                 authentic, verified, or trustworthy.
-
-                 0.8.85 — Explicit Publication Archive Fingerprint
-                 Comparison. Extends this SAME card with one explicit
-                 action: paste a fingerprint obtained elsewhere and click
-                 "Compare" to check it against THIS archive's own current
-                 fingerprint above — computed fresh, never read off a
-                 second archive. Typing or pasting alone compares nothing;
-                 only the "Compare" click ever runs
-                 comparePublicationObservationArchiveFingerprint(), and
-                 it runs exactly once per click. MATCH/DIFFERENT state only
-                 that the two digests are, or are not, byte-identical —
-                 never that either archive is authentic, verified,
-                 trustworthy, newer, or correct. See application/
-                 PublicationObservationArchiveFingerprintComparison.js's own
-                 header, and docs/Principles.md, "An Archive Fingerprint
-                 Identifies Durable Contents; It Does Not Establish Their
-                 Truth Or Origin (0.8.84)." -->
+            <!-- Fingerprint: SHA-256 of the archive's canonical facts.
+                 Comparing runs only on the "Compare" click; a match means
+                 identical contents, nothing more. -->
             <div class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
                     <span class="identity-mgmt-name">Archive Fingerprint</span>
@@ -8824,21 +5215,8 @@ export default {
             </div>
 
             <div v-show="publicationsToolsTab === 'connections'">
-            <!-- 0.8.104 — Explicit Publication Reference Relationship. A
-                 durable, EXPLICIT sourcePublicationIdentity ->
-                 referencedPublicationIdentity fact between two ALREADY-
-                 DURABLE publication identities — deliberately NOT called
-                 "fork," and never auto-created: it exists only when a
-                 person picks both sides here and clicks "Record
-                 Reference." Both dropdowns are populated entirely from
-                 this archive's own "Bitcoin/Base Anchor Publications"
-                 identities above — never a free-text field, and never a
-                 reference inferred from a shared content hash, matching
-                 snapshot, or timestamp. A reference record carries no
-                 weight, no score, and no "fork" classification of its
-                 own — see application/PublicationReferenceRecord.js's own
-                 header. Collapsed by default. Performs ZERO network
-                 operations. -->
+            <!-- References are recorded explicitly between known identities,
+                 never inferred. -->
             <div class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
                     <span class="identity-mgmt-name">Publication References</span>
@@ -8914,23 +5292,8 @@ export default {
                 </div>
             </div>
 
-            <!-- 0.8.105 — Publication Reference Graph Projection. A
-                 read-only RECONSTRUCTION of the "Publication References"
-                 card's own already-durable records above — never a
-                 second, competing input path; a reference is still ever
-                 minted only through that card's own "Record Reference"
-                 button. This card only groups the same records into a
-                 graph shape: one node per publication identity that
-                 appears as either side of any reference, each carrying
-                 its own outgoing/incoming reference counts and the exact
-                 edges behind them. Two A -> B references stay two
-                 entries here, never collapsed into one. Node identity is
-                 blockchain + chainReference alone — never contentHash.
-                 These remain plain factual counts, never a score or a
-                 rank: "7 incoming references" states a fact, it does not
-                 mean "better." Collapsed by default, every node
-                 collapsed by default too. Performs ZERO network
-                 operations. -->
+            <!-- Read-only graph of recorded references; counts are facts, not a
+                 ranking. -->
             <div class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
                     <span class="identity-mgmt-name">Publication Reference Graph</span>
@@ -8992,22 +5355,7 @@ export default {
                 </div>
             </div>
 
-            <!-- 0.8.103 — Achievement Badge Presentation. A human-facing
-                 presentation of application/AchievementEvent.js's own
-                 achievement events (0.8.102) — composed unchanged through
-                 application/AchievementBadgeView.js's own
-                 reconstructAchievementBadges(). An achievement event is
-                 evidence of a threshold crossing; a badge is a
-                 human-facing presentation of that same achievement — this
-                 card invents no new achievement, no points, no score, no
-                 rank, and no leaderboard. Every badge names the exact
-                 publication record that earned it; expanding one shows
-                 its own exact sourcePublicationIdentity and, where this
-                 replica can resolve it, a link back to that exact
-                 publication's own already-existing lifecycle timeline
-                 above — badge → achievement event → publication identity
-                 → lifecycle. Collapsed by default. Performs ZERO network
-                 operations. -->
+            <!-- Badges present achievement events; no points, scores or ranks. -->
             <div class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
                     <span class="identity-mgmt-name">Achievements</span>
@@ -9068,19 +5416,7 @@ export default {
                 </div>
             </div>
 
-            <!-- 0.8.107 — Achievement Profile Projection. A
-                 publication-identity-scoped reduction over the
-                 "Achievements" card's own achievement events above —
-                 application/AchievementProfileView.js's own
-                 reconstructAchievementProfile(). Deliberately NOT a user
-                 or wallet profile: ForkBuild can state that a publication
-                 identity earned an achievement, never yet that a person
-                 did, because no durable record here links a publication
-                 to a human. Choosing a publication below shows only ITS
-                 OWN earned achievements, matched by sameAs() — never
-                 inferred from a shared content hash, timestamp, or
-                 author. Collapsed by default. Performs ZERO network
-                 operations. -->
+            <!-- Scoped to a publication identity, never a person or wallet. -->
             <div class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
                     <span class="identity-mgmt-name">Achievement Profile</span>
@@ -9138,17 +5474,8 @@ export default {
                 </div>
             </div>
 
-            <!-- 0.8.108 — Explicit Publisher Identity Association. A
-                 durable, EXPLICIT publisherIdentity -> publicationIdentity
-                 fact — never inferred from a shared content hash, a
-                 shared wallet address, a shared name, or temporal
-                 proximity. A publisher identifier is a bare, explicit
-                 label a person types — never a cryptographic identity,
-                 never verified, never an "owner" claim. The publication
-                 dropdown is populated entirely from this archive's own
-                 "Bitcoin/Base Anchor Publications" identities above —
-                 never a free-text field. Collapsed by default. Performs
-                 ZERO network operations. -->
+            <!-- A publisher identifier is a bare typed label, never a verified
+                 identity or ownership claim. -->
             <div class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
                     <span class="identity-mgmt-name">Publisher Associations</span>
@@ -9262,16 +5589,8 @@ export default {
                 </div>
             </div>
 
-            <!-- 0.8.109/0.8.110/0.8.111 — Publisher Achievement Profile,
-                 Publisher Achievement Badges, and Publisher Achievement
-                 Statistics used to live here as three cards. Moved to
-                 ui/views/LeaderboardHubView.js: 0.8.111's own tally feeds
-                 application/PublisherRankingPolicy.js (0.8.112) directly,
-                 which application/PublisherLeaderboardView.js (0.8.113)
-                 presents as the Publisher Performance Leaderboard — these
-                 three cards were genuinely upstream of that leaderboard,
-                 not incidental to it, so they moved there with it. See
-                 that file's own header for the full chain. -->
+            <!-- Publisher achievement profile, badges and statistics live on
+                 ui/views/LeaderboardHubView.js. -->
             </div>
 
             </details>
@@ -9315,104 +5634,20 @@ export default {
                         </button>
                     </div>
 
-                    <!-- 0.9.436 — Publications Distribution Section
-                         Reorganization. One contextual "Distribution"
-                         section per publication, grouping the three
-                         RoleProviderRole roles (0.9.293) that were
-                         previously split across two structurally
-                         different views/locations — see tests/
-                         PublicationsDistributionSectionProductAndUIBoundaryAudit.test.js
-                         (0.9.435) for the audit this milestone implements.
-                         This section changes NO distribution semantics:
-                         Content and Proof/Anchoring below are the EXACT
-                         SAME availableStorageTypes()/availableAnchorTypes()
-                         driven cards, createPlacement()/createAnchor()
-                         calls, and per-entry ephemeral state
-                         (placementCreationAttempts/creationAttempts) this
-                         page already had — MOVED here verbatim from
-                         deeper in the "Snapshot, Anchoring, IPFS &
-                         Evidence Details" disclosure below, never
-                         rebuilt (see the two "moved verbatim" comments
-                         left at their old locations). Announcement/
-                         Discovery is the one genuinely NEW wiring on this
-                         page: the same already-composed, already-app-wide
-                         publicationDistributionCommand/
-                         snapshotDistributionCommand OwnPublicationPanel.js/
-                         WorldEncounterCanvas.js already call (0.9.104/
-                         0.9.138/0.9.430), reached from /publications for
-                         the first time — this milestone's own audit,
-                         Section C, already proved that command succeeds
-                         unmodified against a plain /publications-shaped
-                         entry.
-
-                         EACH ROLE KEEPS ITS OWN EXISTING VERB — "Distribute
-                         Publication"/"Distribute Snapshot" for Announcement/
-                         Discovery, "Create <type> Anchor" for Proof/
-                         Anchoring, "Create <type> Placement" for Content —
-                         deliberately never renamed to one generic "Publish"
-                         verb: see application/SnapshotPlacementCreationView.js's
-                         own header, "never called 'Publish to <storage>'...
-                         a snapshot placement is a claim about WHERE bytes
-                         can presently be retrieved, never a second act of
-                         publishing." Renaming it here would quietly
-                         reintroduce the exact distinction that file's own
-                         header explicitly rejects.
-
-                         NO NEW ORCHESTRATOR, COORDINATOR, OR PROVIDER
-                         ABSTRACTION. This section is presentation-only — a
-                         heading and a grouping around three independent
-                         collaborators this page either already called
-                         (createAnchor/createPlacement) or now calls the
-                         identical way another component already does
-                         (publicationDistributionCommand/
-                         snapshotDistributionCommand). No
-                         "DistributionProviderPanel," no unified
-                         AnnouncementProvider/ContentProvider/AnchorProvider
-                         abstraction — the three roles remain three
-                         independently meaningful facts, per publicationId
-                         (see discoveryObservationsView(entry) below,
-                         reading 0.9.433/0.9.434's own already-portable,
-                         per-substrate observation model unmodified).
-
-                         CONFIGURATION LINKS were deliberately left out of
-                         THIS milestone (0.9.436) — reaching Settings
-                         contextually from here (the CONFIGURATION_DISCOVERABILITY_GAP
-                         this milestone's own audit named, Section E) was a
-                         separate, later, already-scoped milestone's own job.
-                         0.9.437 is that milestone: each "Configure" link
-                         below is a plain router-link to an already-
-                         existing, already-registered Settings route — never
-                         a new configuration surface, never a duplicated
-                         control, and never a distribution command of any
-                         kind. See each link's own inline comment for why
-                         that specific route and no other.
-
-                         Collapsible, exactly like "Snapshot, Anchoring,
-                         IPFS & Evidence Details" below — but carries \`open\`
-                         so it starts expanded: these three roles remain the
-                         primary actions for a publication, never hidden
-                         behind a click on first load. Collapsing it once
-                         done is presentation only, same as every other
-                         disclosure on this page — nothing here is
-                         discarded, and no distribution/creation state
-                         lives on the disclosure's own open/closed flag. -->
+                    <!-- Distribution: the three roles (Announcement/Discovery,
+                         Content, Proof/Anchoring) for this publication.
+                         Presentation only: each role keeps its own verb and
+                         collaborator; a placement is never called "publishing".
+                         Open by default because these are the primary actions. -->
                     <details open class="identity-mgmt-card-details identity-mgmt-distribution">
                         <summary class="identity-mgmt-card-details-summary">Distribution</summary>
 
-                        <!-- Announcement / Discovery. Hidden entirely when
-                             neither command was ever provided — the same
-                             degrade-gracefully posture every optional
-                             section on this page already holds. -->
                         <div v-if="publicationDistributionCommand || multiRelayNostrPublicationDistributionCommand || snapshotDistributionCommand" class="identity-mgmt-distribution-role">
                             <span class="evidence-convergence-title">Announcement / Discovery</span>
                             <div class="evidence-list">
-                                <!-- AMENDED BY 0.9.450 — either command being
-                                     present is enough to render this card:
-                                     distributeEntryPublication() itself picks
-                                     between them per the Substrate choice
-                                     below, and degrades to a plain rejection
-                                     only when the ONE it actually needs for
-                                     the current choice is missing. -->
+                                <!-- Either command is enough;
+                                     distributeEntryPublication() picks one per
+                                     substrate. -->
                                 <div v-if="publicationDistributionCommand || multiRelayNostrPublicationDistributionCommand" class="evidence-anchor-card">
                                     <div class="evidence-anchor-header">
                                         <span class="evidence-anchor-type">Publication</span>
@@ -9435,41 +5670,22 @@ export default {
                                                 @click="distributePublicationForEntry(entry)">
                                             {{ discoveryDistributionButtonLabel(entry) }}
                                         </button>
-                                        <!-- 0.9.437 — Contextual Distribution Configuration
-                                             Reachability. Links to the already-existing Settings
-                                             view for whichever substrate is currently selected
-                                             above — never a duplicate relay/gateway control of its
-                                             own. Configuration, availability, and health remain
-                                             distinct: this link says only where to configure, never
-                                             whether the substrate is currently reachable. -->
+                                        <!-- Where to configure the chosen
+                                             substrate; says nothing about
+                                             whether it is reachable. -->
                                         <router-link :to="discoveryDistributionConfigurationRoute(entry)" class="action-btn action-btn--secondary">
                                             Configure {{ entry.discoveryDistributionProvider === 'arweave' ? 'Arweave' : 'Nostr' }}
                                         </router-link>
-                                        <!-- UNIFIED — a second contextual link used to
-                                             point here at the genuinely separate
-                                             /settings/nostr-publication-relays relay SET
-                                             a Nostr announcement fanned out to; removed
-                                             once that relay set was merged into the same
-                                             /settings/nostr-relay page the link above
-                                             already targets — see
-                                             core/NostrRelayConfiguration.js's own
-                                             "unified" header. -->
                                     </div>
                                     <p v-if="entry.discoveryDistributionAttempt && entry.discoveryDistributionAttempt.error" class="form-hint form-hint--neutral">
                                         {{ entry.discoveryDistributionAttempt.error }}
                                     </p>
-                                    <!-- 0.9.433/0.9.434 — every substrate this
-                                         Publication has been distributed
-                                         through, independently, read straight
-                                         from publicationDistributionLifecycleStore
-                                         — never collapsed into one aggregate
-                                         status. -->
+                                    <!-- One row per substrate, never collapsed
+                                         into one status. -->
                                     <dl v-if="discoveryObservationsView(entry).length > 0" class="evidence-fields">
-                                        <!-- 0.9.443 — keyed by (discoveryProvider, origin),
-                                             never discoveryProvider alone: two Nostr relay
-                                             observations now genuinely coexist here, and a
-                                             shared "nostr" key would collide, letting Vue
-                                             silently reuse one row's DOM for the other. -->
+                                        <!-- Keyed by provider and origin:
+                                             several Nostr relay observations
+                                             can coexist. -->
                                         <div v-for="observation in discoveryObservationsView(entry)" :key="observation.discoveryProvider + ':' + observation.origin" class="evidence-field">
                                             <dt>Discovery ({{ observation.discoveryProvider }})</dt>
                                             <dd>{{ observation.state }}</dd>
@@ -9485,26 +5701,10 @@ export default {
                                         Distributes this replica's own locally held Snapshot bytes — never
                                         available when this replica does not currently possess them.
                                     </p>
-                                    <!-- 0.9.506 — Make Snapshot Distribution Content Backend
-                                         Selectable. Mirrors the Publication card's own
-                                         "Substrate" select immediately above — but selects
-                                         WHERE the Snapshot's own bytes are stored (this
-                                         entry's own \`snapshotDistributionStorage\`), never
-                                         which Announcement/Discovery substrate carries the
-                                         resulting locator; that stays the fixed, unmodified
-                                         Nostr discoveryPublisher this family has always used
-                                         (see application/SnapshotDistributionCommand.js's own
-                                         header). Options come from
-                                         \`snapshotDistributionStorageTypes\` — the eligible
-                                         ('ipfs'/'ar' only, never 'local') AND currently
-                                         registered backends ui/main.js's own
-                                         \`snapshotDistributionAvailableStorageTypes\` reports —
-                                         never a fixed, hardcoded pair of \`<option>\`s, so this
-                                         picker can never offer a backend this replica cannot
-                                         actually distribute onto. Hidden entirely when nothing
-                                         is currently eligible, the same degrade-gracefully
-                                         posture every optional control on this page already
-                                         holds. -->
+                                    <!-- Where the snapshot's bytes are stored;
+                                         announcement stays on Nostr. Only
+                                         eligible, registered backends are
+                                         offered. -->
                                     <label v-if="snapshotDistributionStorageTypes.length > 0" class="form-label">
                                         Content
                                         <select v-model="entry.snapshotDistributionStorage" class="form-select"
@@ -9518,14 +5718,6 @@ export default {
                                                 @click="distributeSnapshot(entry)">
                                             {{ snapshotDistributionButtonLabel(entry) }}
                                         </button>
-                                        <!-- UPDATED 0.9.506 — the Content configuration link now
-                                             follows this entry's own selection above, mirroring the
-                                             Publication card's own contextual "Configure" link
-                                             immediately above this one; "Configure Nostr" stays
-                                             unconditional since Announcement/Discovery for this
-                                             family is still the fixed, single Nostr
-                                             discoveryPublisher it always was — never a per-entry
-                                             choice. -->
                                         <router-link :to="snapshotDistributionConfigurationRoute(entry)" class="action-btn action-btn--secondary">
                                             Configure {{ entry.snapshotDistributionStorage === 'ar' ? 'Arweave' : 'IPFS' }}
                                         </router-link>
@@ -9537,14 +5729,10 @@ export default {
                                     <dl v-if="entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.result" class="evidence-fields">
                                         <div class="evidence-field"><dt>Content</dt><dd>{{ entry.snapshotDistributionAttempt.result.contentReference }}</dd></div>
                                     </dl>
-                                    <!-- 0.9.664 — Node-less Distribution Product Reassessment. application/
-                                         SnapshotDistributionCommand.js's own result already carries an
-                                         'announcement' field alongside 'contentReference' — computed since
-                                         0.9.136, but never previously rendered here either, the identical gap
-                                         Section B found for the Remote IPFS path immediately above. 'null' is
-                                         SnapshotDistributionCommand.js's own documented "ordinary decline," not
-                                         a failed distribution — the content above is already placed either
-                                         way. -->
+                                    <!-- A null announcement is
+                                         SnapshotDistributionCommand's ordinary
+                                         decline, not a failure; the content is
+                                         placed either way. -->
                                     <p v-if="entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.result" class="form-hint form-hint--neutral">
                                         <span class="peer-badge" :class="entry.snapshotDistributionAttempt.result.announcement ? 'peer-badge--authenticated' : 'peer-badge--failed'">
                                             {{ entry.snapshotDistributionAttempt.result.announcement ? 'Nostr: Announced' : 'Nostr: Not announced' }}
@@ -9554,27 +5742,12 @@ export default {
                             </div>
                         </div>
 
-                        <!-- Content — MOVED VERBATIM from this card's own
-                             "Snapshot Placements" disclosure below (0.8.25);
-                             see the "moved verbatim" comment left at its old
-                             location. Same v-for, same createPlacement()/
-                             placementCreationView() calls, same per-entry
-                             placementCreationAttempts state — nothing about
-                             the action itself changed, only where it
-                             renders. Never called "Publish to <storage>" —
-                             a snapshot placement is a claim about WHERE
-                             bytes can presently be retrieved, never a
-                             second act of publishing (application/
-                             SnapshotPlacementCreationView.js's own header). -->
+                        <!-- Content: one card per available storage type. A
+                             placement says where bytes can be retrieved; it is
+                             never called publishing. -->
                         <div v-if="availableStorageTypes.length > 0" class="identity-mgmt-distribution-role">
-                            <!-- 0.9.437 — Contextual Distribution Configuration
-                                 Reachability. One link for the whole role, not one per
-                                 storage card: /settings/content-provider configures a
-                                 single CONTENT-wide preferred-provider preference (0.9.302),
-                                 never a per-storage-type setting, so it belongs at the role
-                                 heading rather than duplicated across every card below.
-                                 Reuses .evidence-discovery-header purely as a flex row —
-                                 no new CSS class introduced for this link. -->
+                            <!-- One Configure link for the role: the Content
+                                 preference is role-wide, not per storage type. -->
                             <div class="evidence-discovery-header">
                                 <span class="evidence-convergence-title">Content</span>
                                 <router-link to="/settings/content-provider" class="action-btn action-btn--secondary">Configure</router-link>
@@ -9608,55 +5781,19 @@ export default {
                             </div>
                         </div>
 
-                        <!-- Proof / Anchoring — MOVED VERBATIM from this
-                             card's own evidence disclosure below (0.8.11);
-                             see the "moved verbatim" comment left at its old
-                             location. Same v-for, same createAnchor()/
-                             creationView() calls, same per-entry
-                             creationAttempts state — nothing about the
-                             action itself changed, only where it renders.
-
-                             0.9.437 found no "Configure" link belonged here: Bitcoin/Base
-                             wallet-connection state is not a persisted preference — it already
-                             renders inline wherever the anchor action itself occurs, and no
-                             Settings view existed for the role as a whole. Preferred Proof &
-                             Anchoring Provider Creation Integration adds one now, mirroring
-                             Content's own identical role-heading link immediately above —
-                             /settings/anchor-provider configures the single PROOF_AND_ANCHORING-
-                             wide preferred-provider preference "Use Preferred Provider" below
-                             consumes, never a Bitcoin/Base wallet endpoint (which still has no
-                             persistent concept to configure, and still renders inline, unchanged). -->
+                        <!-- Proof / Anchoring: one card per available
+                             anchorType. Configure sets the role-wide preferred
+                             provider; wallet state still renders inline. -->
                         <div v-if="availableAnchorTypes.length > 0" class="identity-mgmt-distribution-role">
                             <div class="evidence-discovery-header">
                                 <span class="evidence-convergence-title">Proof / Anchoring</span>
                                 <router-link to="/settings/anchor-provider" class="action-btn action-btn--secondary">Configure</router-link>
                             </div>
-                            <!-- 0.9.514 — Proof/Anchoring Product Completion Reassessment.
-                                 A note ABOVE the generic card loop below, never inside it —
-                                 tests/ArweaveProofAnchorIntegrationBoundaryAudit.test.js's own
-                                 Section B already regression-guards that loop as containing ZERO
-                                 anchorType-specific branches and never naming a substrate
-                                 literally, so a substrate-specific pointer belongs here, at the
-                                 role level, instead.
-
-                                 Bitcoin's own card below is real and always honestly reports the
-                                 true reason it cannot proceed — but on this replica that reason
-                                 ("no wallet/broadcast capability configured") reads as "Bitcoin
-                                 anchoring is unavailable," when a real, working, wallet-guided
-                                 pipeline (fund/construct/review/sign/finalize/broadcast — 0.8.60
-                                 through 0.8.64, published via 0.9.512) is a few sections below on
-                                 this SAME page. Base has no card in the loop at all: creating a
-                                 Base anchor (anchoring/BaseAnchorPublisher.js, exposed via
-                                 0.9.472's "Create Base Anchor") needs an already-reviewed
-                                 transaction plan this generic, one-call-per-anchorType loop has
-                                 no way to supply — see that publisher's own header, and this
-                                 file's own header on why no generic transaction abstraction is
-                                 introduced to paper over that. Left unexplained, both read as
-                                 "unavailable"/"not offered" rather than "wallet-guided, and a few
-                                 sections below." Each half is shown only when its own real
-                                 collaborator is actually provided — never asserting a flow exists
-                                 in a build that lacks it. See
-                                 tests/ProofAnchoringProductCompletionReassessment.test.js. -->
+                            <!-- The generic loop can't run the wallet-guided
+                                 Bitcoin pipeline or Base (which needs a
+                                 reviewed plan), so point to those flows further
+                                 down. Each half shows only when its
+                                 collaborator exists. -->
                             <p v-if="bitcoinWalletConnection || baseAnchorPublisher" class="form-hint form-hint--neutral">
                                 <template v-if="bitcoinWalletConnection">Bitcoin anchoring is wallet-guided and multi-step — the button below only
                                 succeeds once a transaction has been connected, funded, constructed, reviewed, signed,
@@ -9694,18 +5831,8 @@ export default {
                                 </div>
                             </div>
 
-                            <!-- Preferred Proof & Anchoring Provider Creation Integration. The
-                                 anchoring counterpart of "Use Preferred Provider" above (Content's
-                                 own version further below) — a SINGLE button that resolves the
-                                 stored PROOF_AND_ANCHORING role preference (core/
-                                 RoleProviderPreference.js) and anchors onto whichever anchorType
-                                 it names, re-resolved on every click by application/
-                                 PreferredPublicationAnchorCreationCoordinator.js — never a default
-                                 silently substituted for an explicit choice. Hidden entirely when
-                                 no preferredAnchorCreationCoordinator was provided, exactly like the
-                                 per-anchorType cards above hide with no creationCoordinator. Never
-                                 offers Base — that substrate keeps its own separate wallet-guided
-                                 flow, untouched by this trigger. -->
+                            <!-- Resolves the saved PROOF_AND_ANCHORING
+                                 preference on every click; never offers Base. -->
                             <div v-if="preferredAnchorCreationCoordinator" class="evidence-discovery">
                                 <div class="evidence-discovery-header">
                                     <button class="action-btn action-btn--secondary"
@@ -9731,27 +5858,10 @@ export default {
                         </div>
                     </details>
 
-                    <!-- Everything below is unchanged functionality (local
-                         snapshot state, peer possession/transfer,
-                         decentralization & sync, external anchoring on
-                         Bitcoin/Base with wallet review/signing/broadcast/
-                         confirmation, snapshot placement, IPFS publishing,
-                         and the cross-domain observation timeline) —
-                         collapsed by default so each card in the list stays
-                         short, and opened per-publication only when that
-                         publication's own evidence is actually needed. -->
+                    <!-- Per-publication details, collapsed by default. -->
                     <details class="identity-mgmt-card-details">
                         <summary class="identity-mgmt-card-details-summary">Snapshot, Anchoring, IPFS &amp; Evidence Details</summary>
 
-                        <!-- Four tabs over this SAME disclosure's own facets — Local
-                             Snapshot/Snapshot State (this replica's own possession),
-                             Decentralization/External Evidence (anchoring claims and the
-                             Bitcoin/Base wallet-guided pipelines), Snapshot Placements/
-                             IPFS Publishing (where bytes can be retrieved), and the
-                             Cross-Domain Observation Timeline — grouped exactly along the
-                             boundaries this disclosure's own existing comments already
-                             draw between sections, so nothing about any one fact's own
-                             gating or wording changes, only which facet is on screen. -->
                         <div class="publications-tools-tabs" role="tablist">
                             <button type="button" role="tab" :aria-selected="entry.detailsTab === 'snapshot'"
                                     :class="['publications-tools-tab', { 'publications-tools-tab--active': entry.detailsTab === 'snapshot' }]"
@@ -9776,45 +5886,14 @@ export default {
                         </div>
 
                     <div v-show="entry.detailsTab === 'snapshot'">
-                    <!-- 0.8.33 — Local Snapshot Content Availability & Integrity UX. A
-                         replica-local OBSERVATION of whether THIS device's own
-                         content/ContentStore.js currently holds bytes for this
-                         publication's own contentReference, and whether those bytes
-                         still hash to it — never a network call, never a check of any
-                         anchor or placement, and never itself an import/materialization
-                         action (see application/
-                         CheckLocalSnapshotContentAvailabilityUseCase.js's own header).
-                         Deliberately its own section, separate from "Decentralization"
-                         below: that card describes DISTRIBUTED claims this replica
-                         knows about; this one describes a fact about THIS replica's own
-                         present content state.
-                         0.8.34 — Explicit Snapshot Materialization UX adds "Import
-                         Snapshot" to this SAME section — the explicit action that
-                         connects 0.8.32's own offline transfer pipeline to 0.8.33's own
-                         inspection above. The two remain two independent capabilities,
-                         each hidden on its own when its own coordinator/use case was not
-                         provided; this outer wrapper renders only when at least one of
-                         them was. -->
+                    <!-- This replica's own content state, separate from the
+                         distributed claims under Decentralization. -->
                     <div v-if="localSnapshotContentAvailabilityUseCase || snapshotContentMaterializationCoordinator || snapshotPeerMaterializationCoordinator" class="decentralization-summary">
                         <span class="evidence-convergence-title">Local Snapshot</span>
 
-                        <!-- 0.8.43 — Unified Snapshot Acquisition Outcome & Possession
-                             UX. A composed SUMMARY, sitting above every specialized
-                             disclosure this card already offers below it — never a
-                             replacement for any of them. Current possession is always
-                             read from localSnapshotAvailabilityView(entry) (0.8.33)
-                             unchanged; acquisition history is always a plain COUNT
-                             here, never the full per-attempt narration "Show
-                             Acquisition History" immediately below already shows
-                             (0.8.44 — Explicit Snapshot Acquisition Attempt
-                             Inspection). Visible only once at least
-                             one check or one attempt has ever happened THIS session —
-                             an untouched entry shows nothing here, rather than "0
-                             attempts." See application/PublicationSnapshotAcquisitionView.js's
-                             own header and docs/Principles.md, "Current Snapshot
-                             Possession Is Independent Of How The Snapshot Was Acquired
-                             (0.8.43)" and "Acquisition History Explains Past Attempts;
-                             It Does Not Determine Present Possession (0.8.43)." -->
+                        <!-- Summary of possession and acquisition counts;
+                             hidden until something was checked or attempted
+                             this session. -->
                         <div v-if="localSnapshotAvailabilityView(entry).checked || snapshotAcquisitionView(entry).acquisition.attemptCount > 0" class="evidence-list">
                             <span class="evidence-convergence-title">Snapshot Acquisition</span>
                             <p class="form-hint form-hint--neutral">
@@ -9833,34 +5912,9 @@ export default {
                                 Snapshot from Peer" — to try again.
                             </p>
 
-                            <!-- 0.8.44 — Explicit Snapshot Acquisition Attempt
-                                 Inspection. The ORDERED narration of EVERY explicit
-                                 "Import Snapshot"/"Materialize Snapshot"/"Get Snapshot
-                                 from Peer" attempt this entry has seen THIS SESSION
-                                 that actually reached application/
-                                 StoreSnapshotContentUseCase.js — including a rejected
-                                 HASH_MISMATCH attempt, never only the successful ones
-                                 "Source: …" below already names. Nested directly under
-                                 "Snapshot Acquisition" above: the summary immediately
-                                 above already reports a plain COUNT ("4 attempts · 2
-                                 stored · 1 already available · 1 hash mismatch"); this
-                                 disclosure is the SAME history, inspectable one attempt
-                                 at a time — never a replacement for that summary, and
-                                 never a replacement for "Current possession" above it
-                                 (see docs/Principles.md, "Current Snapshot Possession
-                                 Is Independent Of How The Snapshot Was Acquired
-                                 (0.8.43)"). Each row shows a compact "source → outcome"
-                                 summary; expanding a single row reveals the two facts
-                                 the compact row leaves out — Outcome (the full
-                                 sentence), Publication, and Content hash — never a new
-                                 fact this attempt didn't already carry. Deliberately a
-                                 plain narration, never a ranking: no source is called
-                                 better, more reliable, or more trustworthy than another
-                                 — see application/
-                                 SnapshotMaterializationHistoryDetailView.js's own
-                                 header and docs/Principles.md, "Materialization History
-                                 Describes Byte Acquisition, Not Source Trust
-                                 (0.8.38)." -->
+                            <!-- Every acquisition attempt this session,
+                                 including rejected ones; a narration, never a
+                                 ranking of sources. -->
                             <div v-if="materializationHistoryDetailsView(entry).count > 0" class="evidence-list">
                                 <button class="action-btn action-btn--secondary" @click="toggleMaterializationHistory(entry)">
                                     {{ entry.materializationHistoryExpanded ? 'Hide Acquisition History' : 'Show Acquisition History' }}
@@ -9891,22 +5945,9 @@ export default {
                             </div>
                         </div>
 
-                        <!-- 0.8.39 — Local Snapshot Possession & Replica Content
-                             Knowledge. The tiny, deliberately non-"complete" composed
-                             fact application/PublicationReplicaContentKnowledgeView.js
-                             exists to report — whether this replica knows the
-                             publication's own envelope, and whether it currently
-                             possesses valid bytes for it. Carries no anchor/placement
-                             counts of its own; those stay exactly where the existing
-                             "Decentralization" card below already shows them, on its
-                             own independently-gated card — this line and that card are
-                             two separate, un-merged facts, shown side by side, never
-                             combined into one score. Visible only once a local
-                             availability check has ever completed for this entry, this
-                             browsing session (mirrors localSnapshotAvailabilityView
-                             (entry).checked exactly) — before that, whether bytes are
-                             currently possessed is simply not yet observed, and this
-                             line stays silent rather than guessing. -->
+                        <!-- Shown once a local check has completed; evidence
+                             and placement counts stay on the Decentralization
+                             card. -->
                         <p v-if="localSnapshotContentAvailabilityUseCase && localSnapshotAvailabilityView(entry).checked" class="form-hint form-hint--neutral">
                             Publication: {{ replicaContentKnowledgeView(entry).hasPublication ? 'known locally' : 'not known locally' }}
                             · Snapshot: {{ replicaContentKnowledgeView(entry).hasValidSnapshot ? 'available' : 'not available' }}
@@ -9926,28 +5967,12 @@ export default {
                             {{ localSnapshotAvailabilityView(entry).message }}
                         </p>
 
-                        <!-- 0.8.36 — Unified Explicit Snapshot Materialization Sources. Names
-                             WHICH explicit action most recently actually stored these bytes —
-                             "Import Snapshot" or "Materialize Snapshot" — with no adjective in
-                             front of either (see application/SnapshotMaterializationView.js's
-                             own header on why neither source is ever called "preferred" or
-                             "recommended"). Shown only once at least one of the two actions has
-                             actually succeeded THIS session; silent otherwise, and never itself
-                             a third action. -->
                         <p v-if="localSnapshotMaterializationSourceView(entry).possessed" class="form-hint form-hint--neutral">
                             Source: {{ localSnapshotMaterializationSourceView(entry).sourceLabel }}
                         </p>
 
-                        <!-- 0.8.34 — Explicit Snapshot Materialization UX. Never triggered
-                             by opening this page, checking local availability, or expanding
-                             any disclosure — only this explicit "Import Snapshot" click
-                             (after choosing a file or pasting a package) ever imports a
-                             single byte. The source is always exactly what a person
-                             explicitly supplies here — a Publication Snapshot Transfer
-                             Package (0.8.32) — never a list this page discovers or ranks on
-                             their behalf (see application/
-                             SnapshotContentMaterializationCoordinator.js's own header on
-                             why availableSources() does not exist yet). -->
+                        <!-- Imports only what the person supplies, on an
+                             explicit click. -->
                         <div v-if="snapshotContentMaterializationCoordinator" class="evidence-list">
                             <button v-if="!entry.materializationFormOpen" class="action-btn action-btn--secondary"
                                     @click="entry.materializationFormOpen = true">
@@ -9977,16 +6002,8 @@ export default {
                             </p>
                         </div>
 
-                        <!-- 0.8.37 — Explicit Peer Snapshot Content Transfer. The person
-                             chooses the peer — never a coordinator, never a ranked list,
-                             never an automatic fallback to a second peer if the first
-                             one is unavailable. Requesting always asks for exactly this
-                             entry's own contentHash from exactly the selected peer; a
-                             peer that does not currently possess the bytes, or that never
-                             answers, reports the same UNAVAILABLE outcome as a genuine
-                             timeout — see application/PeerSnapshotMaterializationOutcome.js's
-                             own header. See application/
-                             MaterializeSnapshotFromPeerUseCase.js's own header. -->
+                        <!-- The person picks the peer; no ranking and no
+                             automatic fallback. -->
                         <div v-if="snapshotPeerMaterializationCoordinator" class="evidence-list">
                             <p v-if="retrievalPeers.length === 0" class="form-hint form-hint--neutral">
                                 No authenticated peer is connected right now — connect to one first from
@@ -10018,24 +6035,9 @@ export default {
                             </p>
                         </div>
 
-                        <!-- 0.8.40 — Snapshot Possession Observation Exchange. A
-                             DELIBERATELY SEPARATE section from "Get Snapshot from
-                             Peer" immediately above, with its own peer dropdown and
-                             its own selected peer — asking whether a peer has bytes,
-                             and asking that same peer FOR bytes, are two independent
-                             actions a person takes separately, never bundled into
-                             one click. Clicking "Check with Peer" never transfers a
-                             byte, never creates a placement, and never feeds
-                             "Materialization History" below — it produces exactly
-                             one ephemeral application/
-                             SnapshotPeerPossessionObservation.js record, replaced
-                             (never accumulated) by the next check. The result wording
-                             is deliberately a REPORT ("Peer reports snapshot
-                             available/not available"), never a verdict about the
-                             peer's trustworthiness — see application/
-                             SnapshotPeerPossessionView.js's own header and
-                             docs/Principles.md, "Peer Possession Responses Are
-                             Observations, Not Placement Claims (0.8.40)." -->
+                        <!-- Asking whether a peer has bytes is separate from
+                             asking it for them; a check never transfers
+                             anything. -->
                         <div v-if="snapshotPeerPossessionCoordinator" class="evidence-list">
                             <span class="evidence-convergence-title">Peer Snapshot Possession</span>
                             <p v-if="retrievalPeers.length === 0" class="form-hint form-hint--neutral">
@@ -10071,21 +6073,8 @@ export default {
                             </p>
                         </div>
 
-                        <!-- 0.8.41 — Peer Snapshot Possession Comparison &
-                             Observation History. A DELIBERATELY SEPARATE
-                             section from "Peer Snapshot Possession" immediately
-                             above, with its own peer selection (a checked-box
-                             SET, not a single dropdown choice) and its own
-                             ephemeral history — asking several peers at once
-                             and inspecting the answers side-by-side is a
-                             distinct action from checking one. "Check Selected
-                             Peers" never ranks, prefers, or recommends a peer;
-                             it only reports what each one said, and how many
-                             said what. See application/
-                             SnapshotPeerPossessionComparisonView.js's own
-                             header and docs/Principles.md, "Peer Possession
-                             Observations Describe What Peers Report; They Do
-                             Not Become Placement Claims (0.8.41)." -->
+                        <!-- Several peers at once, with a history; reports what
+                             each peer said, never ranks them. -->
                         <div v-if="snapshotPeerPossessionCoordinator" class="evidence-list">
                             <span class="evidence-convergence-title">Peer Snapshot Possession Comparison</span>
                             <p v-if="retrievalPeers.length === 0" class="form-hint form-hint--neutral">
@@ -10138,17 +6127,9 @@ export default {
                                                 <dd>{{ formatWhen(peerRow.observedAt) }}</dd>
                                             </div>
                                         </dl>
-                                        <!-- 0.8.42 — Explicit Snapshot Source Selection &
-                                             Materialization UX. An explicit action, shown
-                                             ONLY for a row that reported possession — never
-                                             a recommendation, never rendered for Bob's own
-                                             "Not available" row. Clicking it never changes
-                                             the "Reports"/"Observed" fields above: those
-                                             describe what this peer SAID at one moment; this
-                                             button describes a brand new, separately-timed
-                                             attempt to actually obtain the bytes, which may
-                                             honestly fail even though the row still reads
-                                             "Available." -->
+                                        <!-- A new attempt to fetch from this
+                                             peer; it never changes the row's
+                                             earlier report. -->
                                         <template v-if="snapshotMaterializationSelectionCoordinator && peerRow.possessed">
                                             <button class="action-btn action-btn--secondary"
                                                     :disabled="comparisonPeerMaterializationView(entry, peerRow.peerId).requesting"
@@ -10167,39 +6148,8 @@ export default {
                                 </ul>
                             </div>
 
-                            <!-- 0.8.45 — Explicit Peer Possession Observation
-                                 Inspection. The ORDERED narration of EVERY
-                                 recorded "Check Selected Peers" observation
-                                 this entry has collected THIS SESSION —
-                                 including repeat checks of the same peer,
-                                 never only the latest-per-peer rows the
-                                 comparison above already shows. Nested
-                                 directly under the comparison, mirroring
-                                 application/
-                                 SnapshotMaterializationHistoryDetailView.js's
-                                 (0.8.44) own "Show/Hide Acquisition
-                                 History" disclosure exactly, one domain
-                                 over: each row shows a compact
-                                 "peer → reported" summary; expanding a
-                                 single row reveals the two facts the
-                                 compact row leaves out — the full-sentence
-                                 report, Publication, and Content hash —
-                                 never a new fact this observation didn't
-                                 already carry, and never a rewrite of an
-                                 earlier observation even once the peer's
-                                 own current possession has since changed
-                                 (see application/
-                                 SnapshotPeerPossessionObservation.js's own
-                                 header). Deliberately a plain narration,
-                                 never a ranking, and never an availability
-                                 percentage: no peer is called more
-                                 reliable, more trustworthy, or "best" than
-                                 another — see application/
-                                 SnapshotPeerPossessionObservationDetailView.js's
-                                 own header and docs/Principles.md, "Peer
-                                 Possession Observations Describe What Peers
-                                 Report; They Do Not Become Placement Claims
-                                 (0.8.41)." -->
+                            <!-- Every recorded answer, including repeats; a
+                                 narration, never a ranking. -->
                             <div v-if="peerPossessionObservationDetailsView(entry).count > 0">
                                 <button class="action-btn action-btn--secondary" @click="togglePeerPossessionComparisonHistory(entry)">
                                     {{ entry.peerPossessionComparisonHistoryExpanded ? 'Hide Observation History' : 'Show Observation History' }}
@@ -10231,28 +6181,8 @@ export default {
                         </div>
                     </div>
 
-                    <!-- 0.8.46 — Unified Snapshot State Inspection. A pure MAP over
-                         four facts this page already computes for their own
-                         independent disclosures — "Current possession" (0.8.39),
-                         "Snapshot Acquisition" (0.8.43/0.8.44, immediately above),
-                         "Snapshot Placements" (0.8.20/0.8.23, further below), and
-                         "Peer Snapshot Possession Comparison" (0.8.41, immediately
-                         above) — composed side by side by application/
-                         SnapshotStateInspectionView.js#describeSnapshotStateInspection(),
-                         never replacing any one of them and never resolving their
-                         combination into a single verdict. It is entirely ordinary
-                         for this card to show local possession AVAILABLE, a
-                         placement relationship of Conflict, and a mix of "available"/
-                         "not available" peer reports all at once — none of the four
-                         dimensions is corrected, weighted, or read in light of the
-                         other three. Each sub-section is hidden on its own, exactly
-                         like its own full disclosure elsewhere on this card, until
-                         that dimension has ever actually been observed THIS session
-                         — never shown as a false "0" before that. See application/
-                         SnapshotStateInspectionView.js's own header and
-                         docs/Principles.md, "A Snapshot's Independently Observed
-                         Facts Are Exposed Side By Side, Never Collapsed Into One
-                         Verdict (0.8.46)." -->
+                    <!-- Independent facts side by side, never combined into one
+                         verdict; each hides until observed. -->
                     <div v-if="localSnapshotAvailabilityView(entry).checked || snapshotAcquisitionOutcomeCountsSentence(entry) || entry.placementConvergenceView || peerPossessionComparisonView(entry).peers.length > 0"
                          class="decentralization-summary">
                         <span class="evidence-convergence-title">Snapshot State</span>
@@ -10305,26 +6235,11 @@ export default {
                     </div>
 
                     <div v-show="entry.detailsTab === 'evidence'">
-                    <!-- 0.8.27 — Unified Publication Decentralization View. Always visible
-                         (never gated behind "Show Evidence"/"Show Placements") the moment
-                         either dimension has at least one known claim — the two parallel
-                         summaries application/PublicationDecentralizationView.js combines,
-                         side by side, so a person can compare them without expanding both
-                         disclosures below. Neither card is styled, ordered, or worded as more
-                         significant than the other; the optional contrast sentence beneath
-                         states only that the two dimensions' relationships DIFFER, never which
-                         one to believe. -->
+                    <!-- Evidence and placement summaries side by side; neither
+                         is ranked above the other. -->
                     <div v-if="entry.decentralization && (entry.decentralization.evidence.anchorCount > 0 || entry.decentralization.placements.placementCount > 0)"
                          class="decentralization-summary">
                         <span class="evidence-convergence-title">Decentralization</span>
-                        <!-- 0.8.28 — Offline Publication Reconstruction & Replica
-                             Knowledge. One plain fact ahead of the two dimension
-                             cards: does this replica have the publication itself
-                             cataloged, independent of how many anchor/placement
-                             claims it happens to also know. Never a completeness
-                             score, and never gated behind a "verified"/"resolved"
-                             check — see application/
-                             PublicationReplicaKnowledgeView.js's own header. -->
                         <p v-if="entry.replicaKnowledge" class="form-hint form-hint--neutral">
                             Publication: {{ entry.replicaKnowledge.hasPublication ? 'known locally' : 'not known locally' }}
                         </p>
@@ -10353,13 +6268,7 @@ export default {
                             {{ decentralizationContrast(entry) }}
                         </p>
 
-                        <!-- 0.8.30 — Explicit Replica Knowledge Synchronization. ONE explicit
-                             action spanning both dimensions above, mirroring "Discover from
-                             Peers" below but never triggered by opening this page or expanding
-                             either disclosure — only this click ever asks a peer for anything.
-                             Hidden entirely when no knowledgeSynchronizationCoordinator was
-                             provided, exactly like "Discover from Peers" hides with no
-                             evidenceDiscoveryCoordinator. -->
+                        <!-- Explicit click only. -->
                         <div v-if="knowledgeSynchronizationCoordinator" class="evidence-discovery">
                             <div class="evidence-discovery-header">
                                 <button class="action-btn action-btn--secondary"
@@ -10374,16 +6283,6 @@ export default {
                             <p v-if="synchronizationView(entry).message" class="form-hint form-hint--neutral">
                                 {{ synchronizationView(entry).message }}
                             </p>
-                            <!-- 0.8.31 — Replica Knowledge Provenance & Synchronization
-                                 Inspection. The per-dimension breakdown behind the single
-                                 combined message immediately above — application/
-                                 PublicationKnowledgeSynchronizationView.js's own
-                                 newAnchorCount/alreadyKnownAnchorCount/newPlacementCount/
-                                 alreadyKnownPlacementCount fields, UNCHANGED since 0.8.30,
-                                 simply shown as their own two short rows rather than only
-                                 folded into prose. Shown once a synchronize() attempt has
-                                 actually completed (newAnchorCount is null before then);
-                                 never a new tally of its own. -->
                             <dl v-if="synchronizationView(entry).newAnchorCount !== null" class="evidence-fields replica-sync-breakdown">
                                 <div class="evidence-field">
                                     <dt>New claims</dt>
@@ -10396,16 +6295,8 @@ export default {
                             </dl>
                         </div>
 
-                        <!-- 0.8.31 — Replica Knowledge Provenance & Synchronization
-                             Inspection. A claim-level INVENTORY, never a verdict — see
-                             application/PublicationReplicaKnowledgeDetailView.js's own
-                             header. Deliberately its own disclosure, separate from "Show
-                             Evidence"/"Show Placements" below (which list the CLAIMS
-                             themselves): this one answers "how did THIS replica come to
-                             know each one, and what has it independently observed about it
-                             right now," side by side, for every known claim at once, rather
-                             than one "Inspect Evidence"/"Inspect Placement" click at a
-                             time. -->
+                        <!-- How this replica learned each claim, and what it
+                             has observed about it: an inventory, not a verdict. -->
                         <div v-if="entry.replicaKnowledgeDetail" class="replica-knowledge">
                             <button class="action-btn action-btn--secondary" @click="toggleReplicaKnowledge(entry)">
                                 {{ entry.replicaKnowledgeExpanded ? 'Hide Replica Knowledge' : 'Show Replica Knowledge' }}
@@ -10482,12 +6373,7 @@ export default {
                             </button>
                         </div>
 
-                        <!-- 0.8.16 — Evidence Synchronization UX & Explicit Historical Discovery.
-                             Deliberately NOT triggered by opening this page or expanding "Show
-                             Evidence" above — only this explicit click ever asks a peer for
-                             anything. Hidden entirely when no evidenceDiscoveryCoordinator was
-                             provided, exactly like "Create <type> Anchor" hides with no
-                             creationCoordinator. -->
+                        <!-- Explicit click only. -->
                         <div v-if="evidenceDiscoveryCoordinator" class="evidence-discovery">
                             <div class="evidence-discovery-header">
                                 <button class="action-btn action-btn--secondary"
@@ -10504,13 +6390,8 @@ export default {
                             </p>
                         </div>
 
-                        <!-- 0.8.13 — Multi-Evidence Comparison & Conflict UX. Shown only while
-                             the per-anchor evidence list below is also expanded — a "how does this
-                             evidence relate to itself?" overview, never a substitute for reading the
-                             individual anchor cards. Groups are shown in application/
-                             PublicationEvidenceConvergence.js's own deterministic order (by
-                             contentHash, never by group size) — a group with more anchors is never
-                             styled, ordered, or worded as more likely correct than one with fewer. -->
+                        <!-- Groups are ordered by contentHash, never by size: a
+                             bigger group is not more likely correct. -->
                         <div v-if="entry.evidenceExpanded && entry.convergenceView && entry.convergenceView.anchorCount > 1"
                              class="evidence-convergence">
                             <span class="evidence-convergence-title">Content binding</span>
@@ -10528,39 +6409,9 @@ export default {
                             </p>
                         </div>
 
-                        <!-- 0.8.11 — Explicit External Anchoring UX. Its own
-                             per-anchorType creation card (one card per
-                             availableAnchorTypes()) now renders in this
-                             publication's own "Distribution > Proof / Anchoring"
-                             section, near the top of this card — see
-                             0.9.436's own header, above. Moved verbatim
-                             (same v-for, same createAnchor()/creationView()
-                             calls, same per-entry creationAttempts state);
-                             nothing about the action itself changed, only
-                             where it renders. -->
-
-                        <!-- 0.8.61 — Explicit Bitcoin Anchor Transaction
-                             Construction UI. One card per publication,
-                             hidden entirely absent
-                             bitcoinAnchorTransactionConstructionCoordinator
-                             (the identical degrade-gracefully posture every
-                             optional section on this page already holds),
-                             mirroring the "0.8.11 Explicit External
-                             Anchoring UX" card immediately above one step
-                             EARLIER in the pipeline: that card turns a
-                             published anchor into cataloged EVIDENCE;
-                             this one turns OBSERVED funding into an
-                             unsigned transaction PLAN — never a signature,
-                             never a broadcast, never itself an anchor.
-                             "Create Transaction Plan" is disabled until
-                             wallet funding has actually been observed
-                             (the "Bitcoin Funding" panel above) — this
-                             card never observes funding on its own, and
-                             never re-observes it, even when the funding
-                             shown there has gone stale since. See
-                             application/
-                             BitcoinAnchorTransactionConstructionCoordinator.js's
-                             own header. -->
+                        <!-- Turns observed funding into an unsigned plan; needs
+                             the funding panel's observation and never
+                             re-observes it. -->
                         <div v-if="bitcoinAnchorTransactionConstructionCoordinator" class="evidence-list">
                             <div class="evidence-anchor-card">
                                 <div class="evidence-anchor-header">
@@ -10627,25 +6478,9 @@ export default {
                             </div>
                         </div>
 
-                        <!-- 0.8.91 — Explicit Base Publication Transaction
-                             Construction. One card per publication, hidden
-                             entirely absent basePublicationTransactionPlanCoordinator
-                             (the identical degrade-gracefully posture every
-                             optional section on this page already holds),
-                             mirroring the "Bitcoin Anchor Transaction" card
-                             immediately above one chain over: it turns an
-                             OBSERVED Base account into an unsigned Base
-                             transaction PLAN — never a signature, never a
-                             broadcast, never itself a publication identity.
-                             "Create Base Transaction Plan" is disabled
-                             until a Base account has actually been
-                             observed (the "Base Network" panel above) —
-                             this card never observes an account on its
-                             own, and never re-observes it, even when the
-                             observation shown there has gone stale since.
-                             See application/
-                             BasePublicationTransactionPlanCoordinator.js's
-                             own header. -->
+                        <!-- Turns an observed Base account into an unsigned
+                             plan; needs the account observation and never
+                             re-observes it. -->
                         <div v-if="basePublicationTransactionPlanCoordinator" class="evidence-list">
                             <div class="evidence-anchor-card">
                                 <div class="evidence-anchor-header">
@@ -10702,19 +6537,8 @@ export default {
                                 </template>
                             </div>
 
-                            <!-- 0.8.92 — Explicit Base Transaction Review.
-                                 Appears automatically the moment the card
-                                 above reaches CONSTRUCTED — no separate
-                                 "Generate Review" click, since reviewing a
-                                 Base plan is local, synchronous, and
-                                 read-only (see basePublicationTransactionReviewView()'s
-                                 own header above). This card never signs,
-                                 never broadcasts, and never re-estimates
-                                 anything — every field below is read
-                                 straight off the exact plan the card above
-                                 constructed; see application/
-                                 BasePublicationTransactionReview.js's own
-                                 header. -->
+                            <!-- Shown as soon as the plan is CONSTRUCTED;
+                                 read-only. -->
                             <div v-if="basePublicationTransactionReviewView(entry)" class="evidence-anchor-card">
                                 <div class="evidence-anchor-header">
                                     <span class="evidence-anchor-type">Base Transaction Review</span>
@@ -10747,18 +6571,8 @@ export default {
                                     </dl>
                                 </div>
 
-                                <!-- 0.9.472 — Expose Review-Preserving Base
-                                     Anchor Action. A deliberate ALTERNATIVE
-                                     to the step-by-step Sign/Verify &amp;
-                                     Finalize/Broadcast pipeline below, never
-                                     a replacement for it — both remain fully
-                                     usable independently. One click hands
-                                     the exact plan and review shown above to
-                                     anchoring/BaseAnchorPublisher.js, which
-                                     signs, finalizes, and broadcasts it,
-                                     then catalogs a real anchor for this
-                                     publication. Absent baseAnchorPublisher,
-                                     this section simply never renders. -->
+                                <!-- One-click alternative to the step-by-step
+                                     pipeline below; both stay usable. -->
                                 <div v-if="baseAnchorPublisher" class="evidence-inspection-adapter">
                                     <span class="evidence-inspection-adapter-title">Create Base Anchor</span>
                                     <p class="form-hint form-hint--neutral">
@@ -10783,23 +6597,9 @@ export default {
                                     </p>
                                 </div>
 
-                                <!-- 0.8.93 — Explicit Base Reviewed
-                                     Transaction Signing. The ONE explicit
-                                     action this whole review exists to
-                                     gate: nothing above this button ever
-                                     signs anything. Absent
-                                     baseReviewedSigningCoordinator, this
-                                     section simply never renders. Clicking
-                                     it performs exactly one operation: the
-                                     exact plan and the exact review shown
-                                     above, unmodified, are handed to the
-                                     signing capability — see base/
-                                     BaseReviewedTransactionSigner.js's own
-                                     header on why a wallet is never asked
-                                     to sign anything that has drifted from
-                                     what is shown above. Signing produces
-                                     a signed transaction ARTIFACT; it does
-                                     not broadcast it. -->
+                                <!-- The only Base signing action; hands over
+                                     the exact plan and review shown. Signing
+                                     does not broadcast. -->
                                 <div v-if="baseReviewedSigningCoordinator" class="evidence-inspection-adapter">
                                     <span class="evidence-inspection-adapter-title">Signing</span>
                                     <p class="form-hint form-hint--neutral">
@@ -10820,15 +6620,9 @@ export default {
                                         {{ baseReviewedTransactionSigningView(entry).reason }}
                                     </p>
 
-                                    <!-- SIGNED here names only that the wallet
-                                         returned SOME signed artifact for a
-                                         plan that still matched its own
-                                         review — never that ForkBuild has
-                                         inspected or cryptographically
-                                         verified it, and never that it has
-                                         been broadcast. Those remain their
-                                         own, separately sized, explicit next
-                                         steps (0.8.94, 0.8.95). -->
+                                    <!-- SIGNED only means the wallet returned
+                                         an artifact for the reviewed plan, not
+                                         that it was verified or broadcast. -->
                                     <p v-if="baseReviewedTransactionSigningView(entry).state === BaseReviewedSigningState.SIGNED"
                                        class="form-hint form-hint--neutral">
                                         The wallet returned a signed transaction. ForkBuild has not yet
@@ -10837,26 +6631,9 @@ export default {
                                     </p>
                                 </div>
 
-                                <!-- 0.8.94 — Explicit Base Signed Transaction
-                                     Verification & Finalization. Only ever
-                                     shown once signing has actually reached
-                                     SIGNED — a wallet-returned artifact is
-                                     untrusted until ForkBuild independently,
-                                     cryptographically establishes that it
-                                     corresponds to the exact plan reviewed
-                                     above. Absent
-                                     baseSignedTransactionFinalizationCoordinator,
-                                     this section simply never renders.
-                                     Clicking it performs exactly one
-                                     operation: the wallet's own claimed
-                                     signature, unmodified, is decoded, its
-                                     sender cryptographically recovered, and
-                                     every field compared against the exact
-                                     plan shown above — see base/
-                                     BaseSignedTransactionFinalizer.js's own
-                                     header. Finalizing produces a finalized
-                                     transaction ARTIFACT; it does not
-                                     broadcast it. -->
+                                <!-- A wallet-returned artifact is untrusted
+                                     until verified against the reviewed plan
+                                     here. Finalizing does not broadcast. -->
                                 <div v-if="baseSignedTransactionFinalizationCoordinator && baseReviewedTransactionSigningView(entry).state === BaseReviewedSigningState.SIGNED"
                                      class="evidence-inspection-adapter">
                                     <span class="evidence-inspection-adapter-title">Verification & Finalization</span>
@@ -10879,18 +6656,10 @@ export default {
                                         {{ baseSignedTransactionFinalizationView(entry).reason }}
                                     </p>
 
-                                    <!-- FINALIZED here means, precisely and
-                                         only, that the signed bytes were
-                                         decoded, structurally match the
-                                         reviewed plan field-for-field, and
-                                         were cryptographically signed by the
-                                         exact account the plan names as
-                                         \`from\`. It does NOT mean broadcast,
-                                         accepted by Base, included in a
-                                         block, or confirmed — those remain
-                                         their own, separately sized,
-                                         explicit next steps (0.8.95,
-                                         0.8.96). -->
+                                    <!-- FINALIZED: decoded, matches the plan
+                                         field for field, and signed by the
+                                         plan's from account. Not broadcast or
+                                         confirmed. -->
                                     <template v-if="baseSignedTransactionFinalizationView(entry).state === BaseSignedTransactionFinalizationState.FINALIZED">
                                         <dl class="evidence-fields">
                                             <div class="evidence-field"><dt>Recovered signer</dt><dd>{{ baseSignedTransactionFinalizationView(entry).from }}</dd></div>
@@ -10903,23 +6672,8 @@ export default {
                                     </template>
                                 </div>
 
-                                <!-- 0.8.95 — Explicit Base Transaction
-                                     Broadcast. Only ever shown once
-                                     finalization has actually reached
-                                     FINALIZED — the identical gating the
-                                     Verification & Finalization section
-                                     above already holds toward SIGNED, one
-                                     stage later. Absent
-                                     baseTransactionBroadcastCoordinator,
-                                     this section simply never renders.
-                                     Clicking it submits the EXACT
-                                     finalizedTransaction.rawTransaction
-                                     produced above — unmodified, no
-                                     reconstruction, no re-signing, no
-                                     re-verification — to Base's own
-                                     eth_sendRawTransaction. See base/
-                                     BaseTransactionBroadcaster.js's own
-                                     header. BROADCASTED does not mean
+                                <!-- Submits the exact finalized raw
+                                     transaction. BROADCASTED does not mean
                                      confirmed. -->
                                 <div v-if="baseTransactionBroadcastCoordinator && baseSignedTransactionFinalizationView(entry).state === BaseSignedTransactionFinalizationState.FINALIZED"
                                      class="evidence-inspection-adapter">
@@ -10943,57 +6697,14 @@ export default {
                                         {{ baseTransactionBroadcastView(entry).reason }}
                                     </p>
 
-                                    <!-- BROADCASTED here means, precisely and
-                                         only, that Base's own JSON-RPC
-                                         endpoint accepted the finalized
-                                         transaction submission and returned
-                                         a transaction hash. It does NOT
-                                         mean mined, included in a block,
-                                         confirmed, finalized by the
-                                         network, or publication completed
-                                         — those remain their own,
-                                         separately sized, explicit next
-                                         step (0.8.96). -->
                                     <dl v-if="baseTransactionBroadcastView(entry).state === BaseTransactionBroadcastState.BROADCASTED" class="evidence-fields">
                                         <div class="evidence-field"><dt>Transaction ID</dt><dd>{{ baseTransactionBroadcastView(entry).txid }}</dd></div>
                                     </dl>
                                 </div>
 
-                                <!-- 0.8.96 — Explicit Base Transaction
-                                     Inclusion & Confirmation Observation.
-                                     Only ever shown once broadcasting has
-                                     actually reached BROADCASTED — the
-                                     identical gating the Broadcast section
-                                     above already holds toward FINALIZED,
-                                     one stage earlier. Absent
-                                     baseTransactionInclusionObservationCoordinator,
-                                     this section simply never renders.
-                                     Broadcast acceptance is not chain
-                                     inclusion — clicking "Observe
-                                     Transaction" asks Base's own network,
-                                     right now, whether the EXACT broadcast
-                                     transaction hash above has been
-                                     included in a block. Never automatic,
-                                     never polled — one click produces
-                                     exactly one fresh observation, and
-                                     every observation is preserved, never
-                                     overwritten. See base/
-                                     BaseTransactionInclusionObserver.js's
-                                     own header.
-
-                                     0.8.97 — Durable Base Transaction
-                                     Inclusion Observation Archive. Every
-                                     observation this click produces is ALSO
-                                     appended, automatically, to the SAME
-                                     durable "Observation Archive" card
-                                     below that every other observation on
-                                     this page already writes to — never a
-                                     second, separate "Archive Observation"
-                                     button, mirroring exactly how a Bitcoin
-                                     confirmation check already archives
-                                     itself the moment it completes. See
-                                     archiveBaseTransactionInclusionObservation()
-                                     above. -->
+                                <!-- Asks Base whether the broadcast hash is in
+                                     a block, one fresh observation per click;
+                                     every observation is kept and archived. -->
                                 <div v-if="baseTransactionInclusionObservationCoordinator && baseTransactionBroadcastView(entry).state === BaseTransactionBroadcastState.BROADCASTED"
                                      class="evidence-inspection-adapter">
                                     <span class="evidence-inspection-adapter-title">Base Transaction Inclusion</span>
@@ -11016,16 +6727,9 @@ export default {
                                             {{ baseTransactionInclusionView(entry).stateLabel }}
                                         </span>
 
-                                        <!-- INCLUDED here means, precisely
-                                             and only, that Base's own
-                                             network currently reports a
-                                             receipt for this exact
-                                             transaction hash. It does NOT
-                                             mean safe, final, irreversible,
-                                             or trusted — a chain
-                                             reorganization remains
-                                             possible, and this milestone
-                                             does not detect one. -->
+                                        <!-- INCLUDED only means a receipt
+                                             exists now; a reorganization is
+                                             still possible and is not detected. -->
                                         <dl v-if="baseTransactionInclusionView(entry).state === BaseTransactionInclusionObservationState.INCLUDED" class="evidence-fields">
                                             <div class="evidence-field"><dt>Block hash</dt><dd>{{ baseTransactionInclusionView(entry).blockHash }}</dd></div>
                                             <div class="evidence-field"><dt>Block number</dt><dd>{{ baseTransactionInclusionView(entry).blockNumber }}</dd></div>
@@ -11047,14 +6751,6 @@ export default {
                                         </button>
                                     </template>
 
-                                    <!-- The full chronological narration of
-                                         every past "Observe Transaction"
-                                         click for THIS entry's current
-                                         broadcast transaction — every
-                                         observation is preserved, never
-                                         overwritten. See application/
-                                         BaseTransactionInclusionObservationHistory.js's
-                                         own header. -->
                                     <div v-if="entry.baseTransactionInclusionHistoryExpanded">
                                         <ul class="replica-knowledge-claim-list">
                                             <li v-for="(item, index) in baseTransactionInclusionHistoryView(entry).observations" :key="index" class="replica-knowledge-claim">
@@ -11104,18 +6800,9 @@ export default {
                                     </button>
                                 </div>
 
-                                <!-- 0.8.58 — Explicit Bitcoin Wallet Connection & Signing UX. A
-                                     wallet connection is unrelated to, and renders independently
-                                     of, the "Bitcoin Anchor" reconciliation card immediately below
-                                     — reading confirmation/content-proof status (0.8.54-0.8.57)
-                                     needs no wallet and no private key at all, exactly as that
-                                     section's own header already established. This is the ONE
-                                     place this page ever asks a browser wallet extension for an
-                                     account or a signing capability; see anchoring/
-                                     BitcoinWalletConnection.js's own header on why ForkBuild only
-                                     ever receives a capability, never a secret. See
-                                     docs/Principles.md, "A Connection Grants A Capability; It Does
-                                     Not Grant Trust (0.8.58)." -->
+                                <!-- Wallet connection is independent of the
+                                     reconciliation card below, which needs no
+                                     wallet. -->
                                 <div v-if="anchorView.anchorType === 'bitcoin-op-return' && bitcoinWalletConnection"
                                      class="evidence-inspection">
                                     <span class="evidence-inspection-title">Bitcoin Wallet</span>
@@ -11127,10 +6814,8 @@ export default {
                                             <div class="evidence-field"><dt>Account</dt><dd>{{ shortId(bitcoinWalletConnectionView().account) }}</dd></div>
                                             <div class="evidence-field"><dt>Network</dt><dd>{{ bitcoinWalletConnectionView().network }}</dd></div>
                                         </dl>
-                                        <!-- No automatic network switching, wallet switching, or
-                                             retry — the mismatch is only ever named, never resolved
-                                             on a person's behalf. See anchoring/
-                                             BitcoinWalletConnection.js's own header. -->
+                                        <!-- A mismatch is named, never resolved
+                                             on the person's behalf. -->
                                         <p v-if="bitcoinWalletConnectionView().networkMismatch" class="form-hint form-hint--neutral">
                                             Wallet network ({{ bitcoinWalletConnectionView().network }}) does not match this anchor's network ({{ bitcoinWalletConnectionView().expectedNetwork }}). Connect a wallet on the matching network to continue.
                                         </p>
@@ -11150,20 +6835,10 @@ export default {
                                     </div>
                                 </div>
 
-                                <!-- 0.8.57 — Bitcoin Anchor Proof & Confirmation Inspection UI. A
-                                     SEPARATE section from "Verify Evidence" immediately above and
-                                     from "Inspect Evidence" immediately below: this displays what
-                                     application/BitcoinAnchorProofReconciliationView.js's own
-                                     reconcile() reports RIGHT NOW, side by side, for THIS one
-                                     "bitcoin-op-return" anchor — never a combined verdict. A
-                                     transaction reported CONFIRMED here and a content proof
-                                     reported HASH_MISMATCH right beside it is not an error this
-                                     section resolves, hides, or explains away — it is exactly the
-                                     honest combination application/
-                                     BitcoinAnchorProofReconciliationView.js's own header names as
-                                     the entire point of reconciliation. See docs/Principles.md,
-                                     "The UI Displays Observations; It Does Not Turn Them Into A
-                                     Verdict (0.8.57)." -->
+                                <!-- Confirmation and content proof as reported
+                                     now, side by side; a CONFIRMED transaction
+                                     next to a HASH_MISMATCH proof is shown as
+                                     is. -->
                                 <div v-if="anchorView.anchorType === 'bitcoin-op-return' && bitcoinAnchorProofReconciliationView"
                                      class="evidence-inspection">
                                     <span class="evidence-inspection-title">Bitcoin Anchor</span>
@@ -11180,9 +6855,6 @@ export default {
                                         {{ bitcoinAnchorReconciliationView(entry, anchorView).error }}
                                     </p>
 
-                                    <!-- Confirmation — application/BitcoinAnchorConfirmationState.js's
-                                         own vocabulary, projected UNCHANGED through application/
-                                         BitcoinAnchorConfirmationObservationHistoryDetailView.js. -->
                                     <div v-if="bitcoinAnchorReconciliationView(entry, anchorView).confirmation" class="evidence-inspection-adapter">
                                         <span class="evidence-inspection-adapter-title">Confirmation</span>
                                         <span class="peer-badge" :class="bitcoinAnchorConfirmationBadgeClass(entry, anchorView)">
@@ -11197,8 +6869,6 @@ export default {
                                         </p>
                                     </div>
 
-                                    <!-- Content proof — application/BitcoinAnchorContentProofState.js's
-                                         own, SEPARATE vocabulary — never merged with Confirmation above. -->
                                     <div v-if="bitcoinAnchorReconciliationView(entry, anchorView).contentProof" class="evidence-inspection-adapter">
                                         <span class="evidence-inspection-adapter-title">Content proof</span>
                                         <span class="peer-badge" :class="bitcoinAnchorContentProofBadgeClass(entry, anchorView)">
@@ -11220,46 +6890,22 @@ export default {
                                                 @click="toggleBitcoinAnchorConfirmationHistory(entry, anchorView)">
                                             {{ isBitcoinAnchorConfirmationHistoryExpanded(entry, anchorView) ? 'Hide Confirmation History' : 'Show Confirmation History' }}
                                         </button>
-                                        <!-- 0.8.76 — Bitcoin Anchor Chain Placement Change
-                                             Observation. Shown once THIS anchor's own history holds at
-                                             least two observations to compare — never before, since
-                                             application/BitcoinAnchorChainPlacementObserver.js's own
-                                             INSUFFICIENT_OBSERVATIONS outcome would be the only
-                                             possible result with fewer. Comparing is a pure, read-only
-                                             re-derivation of the SAME history "Show Confirmation
-                                             History" already narrates — never a new network call. -->
+                                        <!-- Needs at least two observations to
+                                             compare; a local re-derivation, no
+                                             network call. -->
                                         <button v-if="(entry.bitcoinAnchorConfirmationHistories[anchorView.anchorId] || []).length > 1"
                                                 class="action-btn action-btn--secondary"
                                                 @click="toggleBitcoinAnchorChainPlacementComparison(entry, anchorView)">
                                             {{ isBitcoinAnchorChainPlacementComparisonExpanded(entry, anchorView) ? 'Hide Placement Comparison' : 'Compare Confirmation Observations' }}
                                         </button>
-                                        <!-- 0.8.77 — Bitcoin Anchor Observation Consistency
-                                             Analysis. A SIBLING to "Compare Confirmation
-                                             Observations" above, shown under the identical
-                                             two-or-more-observations condition — never before,
-                                             since application/BitcoinAnchorObservationConsistencyAnalyzer.js's
-                                             own INSUFFICIENT_OBSERVATIONS state would be the only
-                                             possible result with fewer. Analyzing is a pure,
-                                             read-only re-derivation of the SAME history "Show
-                                             Confirmation History" already narrates — never a new
-                                             network call. -->
                                         <button v-if="(entry.bitcoinAnchorConfirmationHistories[anchorView.anchorId] || []).length > 1"
                                                 class="action-btn action-btn--secondary"
                                                 @click="toggleBitcoinAnchorObservationConsistency(entry, anchorView)">
                                             {{ isBitcoinAnchorObservationConsistencyExpanded(entry, anchorView) ? 'Hide Observation Consistency' : 'Observation Consistency' }}
                                         </button>
-                                        <!-- 0.8.78 — Bitcoin Anchor Observation Evidence
-                                             Correlation. A SIBLING to "Compare Confirmation
-                                             Observations" (0.8.76) and "Observation Consistency"
-                                             (0.8.77) above, shown whenever this anchor holds ANY
-                                             recorded fact at all — never gated behind the
-                                             two-or-more-observations condition those two share,
-                                             since application/BitcoinAnchorObservationEvidence.js
-                                             also bundles this anchor's own content-proof
-                                             observation, which those two never read. Composing
-                                             evidence is a pure, read-only re-derivation of facts
-                                             the cards above already show — never a new network
-                                             call. -->
+                                        <!-- Shown for any recorded fact (it
+                                             also includes content proof);
+                                             local, no network call. -->
                                         <button v-if="bitcoinAnchorObservationEvidenceView(entry, anchorView).confirmationObservations.count > 0
                                                        || bitcoinAnchorObservationEvidenceView(entry, anchorView).contentProofObservations.count > 0"
                                                 class="action-btn action-btn--secondary"
@@ -11268,14 +6914,9 @@ export default {
                                         </button>
                                     </div>
 
-                                    <!-- Each comparison names only whether the observed block
-                                         placement between two already-recorded observations stayed
-                                         the same or changed — never a reorganization, invalidation,
-                                         or trust verdict. See docs/Principles.md, "A Changed
-                                         Observation Is Not Automatically A Reorganization (0.8.76)."
-                                         No "danger" styling of any kind is applied to a changed
-                                         comparison; it is narrated in the same neutral voice as an
-                                         unchanged one. -->
+                                    <!-- A changed placement is narrated
+                                         neutrally, never labeled a
+                                         reorganization. -->
                                     <div v-if="isBitcoinAnchorChainPlacementComparisonExpanded(entry, anchorView)">
                                         <p v-if="bitcoinAnchorChainPlacementComparisonView(entry, anchorView).count === 0" class="form-hint form-hint--neutral">
                                             Not enough confirmed observations exist yet to compare block placement.
@@ -11305,17 +6946,9 @@ export default {
                                         </ul>
                                     </div>
 
-                                    <!-- 0.8.77 — Bitcoin Anchor Observation Consistency
-                                         Analysis. Each finding names only whether two
-                                         already-recorded observations are internally consistent
-                                         with each other — never a reorganization, invalidation,
-                                         fraud, or trust verdict, and never a claim about which
-                                         of the two (if either) is correct. See docs/
-                                         Principles.md, "An Internal Inconsistency Is Not
-                                         Automatically A Reorganization (0.8.77)." No "danger"
-                                         styling of any kind is applied to an INCONSISTENT
-                                         finding; it is narrated in the same neutral voice as a
-                                         CONSISTENT one. -->
+                                    <!-- An inconsistency is narrated neutrally,
+                                         never labeled a reorganization or
+                                         fraud. -->
                                     <div v-if="isBitcoinAnchorObservationConsistencyExpanded(entry, anchorView)">
                                         <p v-if="bitcoinAnchorObservationConsistencyView(entry, anchorView).count === 0" class="form-hint form-hint--neutral">
                                             Not enough confirmed observations exist yet to analyze consistency.
@@ -11345,22 +6978,9 @@ export default {
                                         </ul>
                                     </div>
 
-                                    <!-- 0.8.78 — Bitcoin Anchor Observation Evidence
-                                         Correlation. Puts this anchor's own five independent
-                                         facts — broadcast, confirmation, content-proof,
-                                         chain-placement comparisons, and consistency findings
-                                         — side by side, each still in its own domain's own
-                                         vocabulary, under this one explicit anchorId. This is
-                                         NOT a combined verdict: a person reading this section
-                                         still sees "4 confirmation observations" and "1
-                                         content-proof observation" as two entirely separate
-                                         facts, never a single "well evidenced" or "verified"
-                                         summary. See docs/Principles.md, "The UI Displays
-                                         Observations; It Does Not Turn Them Into A Verdict
-                                         (0.8.57)," and application/
-                                         BitcoinAnchorObservationEvidence.js's own header,
-                                         "Correlate Evidence By Explicit Identity, Never By
-                                         Resemblance." -->
+                                    <!-- This anchor's independent facts side by
+                                         side in their own vocabularies, never a
+                                         combined verdict. -->
                                     <ul v-if="isBitcoinAnchorObservationEvidenceExpanded(entry, anchorView)" class="replica-knowledge-claim-list">
                                         <li class="replica-knowledge-claim">
                                             <p class="form-hint form-hint--neutral">
@@ -11404,11 +7024,6 @@ export default {
                                         </li>
                                     </ul>
 
-                                    <!-- The full chronological narration of every past "Reconcile"
-                                         click's own confirmation observation for THIS anchor — a
-                                         later CONFIRMED entry never rewrites or discards an earlier
-                                         NOT_CONFIRMED one; see application/
-                                         BitcoinAnchorConfirmationObservationHistory.js's own header. -->
                                     <div v-if="isBitcoinAnchorConfirmationHistoryExpanded(entry, anchorView)">
                                         <ul class="replica-knowledge-claim-list">
                                             <li v-for="(item, index) in bitcoinAnchorConfirmationHistoryView(entry, anchorView).entries" :key="index" class="replica-knowledge-claim">
@@ -11429,12 +7044,8 @@ export default {
                                     </div>
                                 </div>
 
-                                <!-- 0.8.14 — External Evidence Inspection & Locator UX. A purely
-                                     local, synchronous read of THIS anchor's own fields — never a
-                                     network request, never a call to evidenceCoordinator.verify().
-                                     "Inspect Evidence" and "Verify Evidence"/"Verify Again" above
-                                     stay two genuinely separate actions, exactly as this file's own
-                                     header states. -->
+                                <!-- Local read; inspecting and verifying stay
+                                     separate actions. -->
                                 <div v-if="inspectionExpanded(entry, anchorView) && inspectionDetail(entry, anchorView)"
                                      class="evidence-inspection">
                                     <span class="evidence-inspection-title">External Evidence</span>
@@ -11447,10 +7058,6 @@ export default {
                                         <div class="evidence-field"><dt>External locator</dt><dd>{{ inspectionDetail(entry, anchorView).locator }}</dd></div>
                                     </dl>
 
-                                    <!-- Only the ONE registered anchorType-specific adapter (e.g.
-                                         anchoring/BitcoinAnchorEvidenceView.js) ever produces this
-                                         section — a generic anchorType with no adapter shows the
-                                         fields above alone. -->
                                     <div v-if="inspectionTypeSpecific(entry, anchorView)" class="evidence-inspection-adapter">
                                         <span class="evidence-inspection-adapter-title">{{ inspectionTypeSpecific(entry, anchorView).summary }}</span>
                                         <dl class="evidence-fields">
@@ -11466,21 +7073,14 @@ export default {
                                         </a>
                                     </div>
 
-                                    <!-- "proof" is shown raw and unexplained at the generic level —
-                                         see application/PublicationAnchorDetailView.js's own header
-                                         on why this file never reaches into it. -->
                                     <details class="evidence-inspection-proof">
                                         <summary>Proof (raw, adapter-defined evidence)</summary>
                                         <pre class="evidence-inspection-proof-json">{{ JSON.stringify(inspectionDetail(entry, anchorView).proof, null, 2) }}</pre>
                                     </details>
 
-                                    <!-- 0.8.17 — Evidence Provenance & Observation Boundary.
-                                         Deliberately separate from the "External Evidence" block
-                                         above: everything above describes what the anchor CLAIMS;
-                                         this describes how THIS replica came to know the claim at
-                                         all — see application/PublicationAnchorKnowledgeView.js's own
-                                         header on why the wording here never names a peer and never
-                                         reads as a trust signal. -->
+                                    <!-- How this replica learned the claim;
+                                         never names a peer or reads as a trust
+                                         signal. -->
                                     <div v-if="inspectionKnowledge(entry, anchorView) && inspectionKnowledge(entry, anchorView).known"
                                          class="evidence-inspection-knowledge">
                                         <span class="evidence-inspection-title">Local Knowledge</span>
@@ -11503,12 +7103,8 @@ export default {
                     </div>
 
                     <div v-show="entry.detailsTab === 'placements'">
-                    <!-- 0.8.20 — Snapshot Placement Inspection & Explicit Resolution UX.
-                         Deliberately a SEPARATE section from "External Evidence" above —
-                         a placement and an anchor answer two different questions, and this
-                         page keeps that distinction visible rather than merging both lists.
-                         Discovery here is exactly as inert as evidence discovery above:
-                         loading this list on page load never calls SnapshotPlacementResolver. -->
+                    <!-- Placements answer "where can I retrieve this", anchors
+                         "did something record this"; kept as separate lists. -->
                     <div v-if="entry.placementsView" class="evidence-section">
                         <div class="evidence-summary">
                             <span class="evidence-summary-title">Snapshot Placements</span>
@@ -11518,30 +7114,8 @@ export default {
                             </button>
                         </div>
 
-                        <!-- 0.8.25 — Explicit Snapshot Placement Creation UX. Its own
-                             per-storage-type creation card (one card per
-                             availableStorageTypes()) now renders in this
-                             publication's own "Distribution > Content"
-                             section, near the top of this card — see
-                             0.9.436's own header, above. Moved verbatim
-                             (same v-for, same createPlacement()/
-                             placementCreationView() calls, same per-entry
-                             placementCreationAttempts state); nothing
-                             about the action itself changed, only where it
-                             renders. Still never called "Publish to
-                             <storage>" there either — see that section's
-                             own comment. -->
-
-                        <!-- 0.9.301 — Preferred Content Provider Placement Trigger. A SEPARATE
-                             action from the per-storage cards above, never a replacement for any
-                             of them — those buttons still mean "explicitly use THIS provider for
-                             THIS placement" and remain completely unchanged. This one means "use
-                             whichever provider my saved CONTENT preference names," resolved fresh
-                             on every click by application/
-                             PreferredSnapshotPlacementCreationCoordinator.js (0.9.299) — never a
-                             default silently substituted for an explicit choice. Hidden entirely
-                             when no preferredPlacementCreationCoordinator was provided, exactly
-                             like the per-storage cards above hide with no placementCreationCoordinator. -->
+                        <!-- Resolves the saved Content preference on every
+                             click; the per-storage buttons stay unchanged. -->
                         <div v-if="preferredPlacementCreationCoordinator" class="evidence-discovery">
                             <div class="evidence-discovery-header">
                                 <button class="action-btn action-btn--secondary"
@@ -11565,16 +7139,7 @@ export default {
                             </dl>
                         </div>
 
-                        <!-- 0.8.23 — Multi-Placement Convergence & Relationship UX. Shown only
-                             while the per-placement list below is also expanded — a "how does
-                             this placement set relate to itself?" overview, never a substitute
-                             for reading the individual placement cards. Groups are shown in
-                             application/PublicationSnapshotPlacementConvergence.js's own
-                             deterministic order (by contentHash, never by group size) — a group
-                             with more placements is never styled, ordered, or worded as more
-                             likely correct, more available, or more trustworthy than one with
-                             fewer. Deliberately a separate card from "Content binding" above —
-                             see this file's own 0.8.23 header. -->
+                        <!-- Groups are ordered by contentHash, never by size. -->
                         <div v-if="entry.placementsExpanded && entry.placementConvergenceView && entry.placementConvergenceView.placementCount > 1"
                              class="evidence-convergence">
                             <span class="evidence-convergence-title">Placement relationships</span>
@@ -11627,15 +7192,8 @@ export default {
                                             @click="resolvePlacement(entry, placementView)">
                                         {{ placementView.checking ? 'Resolving…' : (placementView.resolved ? 'Resolve Again' : 'Resolve Snapshot') }}
                                     </button>
-                                    <!-- 0.8.35 — Explicit Placement-Backed Snapshot Materialization. A
-                                         THIRD, genuinely separate action from "Inspect Placement" and
-                                         "Resolve Snapshot" above — never triggered by either of them, and
-                                         never by opening this page or expanding "Show Placements". Only
-                                         this explicit click runs the SAME resolution "Resolve Snapshot"
-                                         already runs and, only once it succeeds, writes the retrieved
-                                         bytes into this replica's own content/ContentStore.js. Hidden
-                                         entirely with no snapshotPlacementMaterializationCoordinator
-                                         provided. -->
+                                    <!-- Resolves and, on success, stores the
+                                         bytes locally; explicit click only. -->
                                     <button v-if="snapshotPlacementMaterializationCoordinator" class="action-btn action-btn--primary"
                                             :disabled="placementMaterializationView(entry, placementView).materializing"
                                             @click="materializePlacement(entry, placementView)">
@@ -11653,11 +7211,8 @@ export default {
                                     {{ placementMaterializationView(entry, placementView).message }}
                                 </p>
 
-                                <!-- A purely local, synchronous read of THIS placement's own fields —
-                                     never a network request, never a call to
-                                     placementResolutionCoordinator.resolve(). "Inspect Placement" and
-                                     "Resolve Snapshot"/"Resolve Again" above stay two genuinely
-                                     separate actions, exactly as this file's own 0.8.20 header states. -->
+                                <!-- Local read; inspecting and resolving stay
+                                     separate actions. -->
                                 <div v-if="placementInspectionExpanded(entry, placementView) && placementInspectionDetail(entry, placementView)"
                                      class="evidence-inspection">
                                     <span class="evidence-inspection-title">Snapshot Placement</span>
@@ -11670,9 +7225,6 @@ export default {
                                         <div class="evidence-field"><dt>Locator</dt><dd>{{ placementInspectionDetail(entry, placementView).locator }}</dd></div>
                                     </dl>
 
-                                    <!-- Only a registered storage-specific adapter (e.g.
-                                         content/IpfsSnapshotPlacementView.js) ever produces this section —
-                                         a generic storage with no adapter shows the fields above alone. -->
                                     <div v-if="placementInspectionTypeSpecific(entry, placementView)" class="evidence-inspection-adapter">
                                         <span class="evidence-inspection-adapter-title">{{ placementInspectionTypeSpecific(entry, placementView).summary }}</span>
                                         <dl class="evidence-fields">
@@ -11688,13 +7240,9 @@ export default {
                                         </a>
                                     </div>
 
-                                    <!-- 0.8.24 — Snapshot Placement Provenance & Observation Boundary.
-                                         Deliberately separate from the "Snapshot Placement" block above:
-                                         everything above describes what the placement CLAIMS; this
-                                         describes how THIS replica came to know the claim at all — see
-                                         application/PublicationSnapshotPlacementKnowledgeView.js's own
-                                         header on why the wording here never names a peer and never
-                                         reads as a trust or availability signal. -->
+                                    <!-- How this replica learned the claim;
+                                         never names a peer or reads as a trust
+                                         signal. -->
                                     <div v-if="placementInspectionKnowledge(entry, placementView) && placementInspectionKnowledge(entry, placementView).known"
                                          class="evidence-inspection-knowledge">
                                         <span class="evidence-inspection-title">Local Knowledge</span>
@@ -11714,21 +7262,9 @@ export default {
                         </div>
                     </div>
 
-                    <!-- 0.8.68 — Explicit Remote IPFS Publishing Configuration & UX.
-                         Deliberately a SEPARATE section from "Snapshot Placements" above —
-                         a snapshot placement (0.8.18/0.8.25) is a claim, cataloged and signed,
-                         about where bytes can presently be retrieved; a remote publish attempt
-                         here is neither. It never touches application/
-                         SnapshotPlacementStoreRegistry.js, never calls application/
-                         CreateExternalSnapshotPlacementUseCase.js, and never creates a
-                         core/PublicationSnapshotPlacement.js — see application/
-                         IpfsRemotePublicationCoordinator.js's own header, "The existing store
-                         remains authoritative for content creation." This section only ever
-                         shows the result of the MOST RECENT explicit publish attempt, exactly
-                         like the Bitcoin Broadcast section above, one axis over. Absent
-                         ipfsRemotePublicationCoordinator or publicationContentStore,
-                         this section simply never renders — the identical degrade-gracefully
-                         posture every optional section on this page already holds. -->
+                    <!-- Remote IPFS publishing is not a placement: nothing here
+                         catalogs or signs a placement claim. Shows the most
+                         recent attempt only. -->
                     <div v-if="ipfsRemotePublicationCoordinator && publicationContentStore" class="evidence-section">
                         <div class="evidence-summary">
                             <span class="evidence-summary-title">IPFS Publishing</span>
@@ -11758,11 +7294,8 @@ export default {
                                 </button>
                             </div>
 
-                            <!-- Ephemeral draft fields — nothing here becomes a real
-                                 application/IpfsRemotePublishingConfiguration.js until "Save
-                                 Configuration" is explicitly clicked, and nothing here is ever
-                                 written to localStorage, IndexedDB, a cookie, or any other
-                                 persisted medium. See that class's own header. -->
+                            <!-- Draft fields, kept in memory only until "Save
+                                 Configuration". -->
                             <div v-if="entry.ipfsRemotePublishingConfigureFormOpen" class="evidence-inspection-adapter">
                                 <label class="form-field">
                                     <span class="form-label">Endpoint</span>
@@ -11800,10 +7333,8 @@ export default {
                                 </button>
                             </div>
 
-                            <!-- PUBLISHED names exactly one fact — the configured provider
-                                 accepted these bytes and returned this locator — never
-                                 "verified", "trusted", "safe", "permanent", or "guaranteed". See
-                                 application/IpfsRemotePublicationState.js's own header. -->
+                            <!-- PUBLISHED only means the provider accepted the
+                                 bytes and returned this locator. -->
                             <div v-if="ipfsRemotePublicationView(entry).state !== IpfsRemotePublicationState.IDLE" class="evidence-inspection-adapter">
                                 <span class="evidence-inspection-adapter-title">Remote IPFS</span>
                                 <span class="peer-badge" :class="ipfsRemotePublicationBadgeClass(entry)">{{ ipfsRemotePublicationView(entry).stateLabel }}</span>
@@ -11824,12 +7355,9 @@ export default {
                                         that it will still be retrievable later, and not a cataloged Snapshot
                                         Placement.
                                     </p>
-                                    <!-- 0.9.664 — Node-less Distribution Product Reassessment. Surfaces
-                                         entry.ipfsRemoteSnapshotAnnouncement (0.9.663) — computed on every
-                                         PUBLISHED outcome since that milestone, but never previously rendered
-                                         anywhere, leaving "announced" and "announcement failed" visually
-                                         identical. A missing announcement here is never a failed publish — the
-                                         content above is already on IPFS either way. -->
+                                    <!-- A missing announcement is not a failed
+                                         publish; the content is on IPFS either
+                                         way. -->
                                     <p v-if="entry.ipfsRemoteSnapshotAnnouncement" class="form-hint form-hint--neutral">
                                         <span class="peer-badge" :class="entry.ipfsRemoteSnapshotAnnouncement.announced ? 'peer-badge--authenticated' : 'peer-badge--failed'">
                                             {{ entry.ipfsRemoteSnapshotAnnouncement.announced ? 'Nostr: Announced' : 'Nostr: Not announced' }}
@@ -11839,18 +7367,9 @@ export default {
                                 </template>
                             </div>
 
-                            <!-- 0.8.70 — IPFS Publication & Content Verification UI.
-                                 Deliberately a SEPARATE evidence-inspection-adapter box from
-                                 "Remote IPFS" above, never collapsed into it — publishing is an
-                                 action, verification is an observation, and PUBLISHED +
-                                 UNAVAILABLE (or PUBLISHED + HASH_MISMATCH) must remain a
-                                 legitimate, honestly displayed combination, exactly like Broadcast
-                                 and Confirmation above stay two separate boxes one domain over.
-                                 Gated on entry.ipfsPublicationRecord — the exact record the most
-                                 recent PUBLISHED outcome bound — never on whatever this section
-                                 currently displays, so this box never appears for an entry that has
-                                 never actually published. No aggregate "IPFS status" is computed
-                                 anywhere in this box. -->
+                            <!-- Publishing is an action, verification an
+                                 observation: PUBLISHED next to UNAVAILABLE or
+                                 HASH_MISMATCH is shown as is. -->
                             <div v-if="ipfsPublicationContentVerificationCoordinator && entry.ipfsPublicationRecord" class="evidence-inspection-adapter">
                                 <span class="evidence-inspection-adapter-title">Content retrieval</span>
                                 <div class="identity-mgmt-actions">
@@ -11873,15 +7392,7 @@ export default {
                                 </template>
                             </div>
 
-                            <!-- 0.8.71 — IPFS Publication Record History & Inspection.
-                                 The FULL, append-only sequence of every record a
-                                 PUBLISHED outcome for THIS entry has ever bound — never
-                                 just the most recent one. Publishing again never
-                                 overwrites or hides an earlier record here; see
-                                 application/IpfsPublicationRecordHistory.js's own header.
-                                 Gated on there being at least one record, mirroring the
-                                 Bitcoin "Show/Hide Confirmation History" button's own
-                                 restraint above. -->
+                            <!-- Every published record, append-only. -->
                             <div v-if="ipfsPublicationRecordHistoryView(entry).count > 0" class="identity-mgmt-actions">
                                 <button type="button" class="action-btn action-btn--secondary"
                                         @click="toggleIpfsPublicationRecordHistory(entry)">
@@ -11897,8 +7408,6 @@ export default {
                                             {{ formatWhen(item.publishedAt) }} — {{ item.locator }}
                                         </button>
 
-                                        <!-- Purely local, synchronous — this record's own
-                                             facts, never a network read. -->
                                         <dl v-if="isIpfsPublicationRecordInspectionExpanded(entry, index)" class="evidence-fields">
                                             <div class="evidence-field"><dt>Locator</dt><dd>{{ item.locator }}</dd></div>
                                             <div class="evidence-field"><dt>Content hash</dt><dd>{{ item.contentHash }}</dd></div>
@@ -11906,16 +7415,8 @@ export default {
                                             <div v-if="item.publicationMethodLabel" class="evidence-field"><dt>Method</dt><dd>{{ item.publicationMethodLabel }}</dd></div>
                                         </dl>
 
-                                        <!-- 0.8.72 — IPFS Publication Verification History &
-                                             Inspection UI. This record's OWN, independently kept,
-                                             APPEND-ONLY verification history — never the "current
-                                             publication" verification above, and never any other
-                                             history entry's own history. Verifying record #0 can
-                                             never appear in record #1's own history, and vice
-                                             versa; see verifyIpfsPublicationRecordHistoryEntry()'s
-                                             own header. These are observations made at different
-                                             times — the latest one never retroactively changes an
-                                             earlier one. -->
+                                        <!-- This record's own append-only
+                                             verification history. -->
                                         <div v-if="ipfsPublicationContentVerificationCoordinator" class="evidence-inspection-adapter">
                                             <span class="evidence-inspection-adapter-title">Content retrieval</span>
                                             <span v-if="ipfsPublicationRecordVerificationHistoryView(entry, index).count > 0"
@@ -11931,12 +7432,8 @@ export default {
                                                 </button>
                                             </div>
 
-                                            <!-- No polling, no automatic verification after
-                                                 publication, and no automatic verification merely
-                                                 from expanding this disclosure — opening it only
-                                                 ever reads entry.
-                                                 ipfsPublicationVerificationHistoriesByRecordIndex
-                                                 [index], already in memory. -->
+                                            <!-- Opening this only reads memory;
+                                                 it never verifies. -->
                                             <div v-if="ipfsPublicationRecordVerificationHistoryView(entry, index).count > 0" class="identity-mgmt-actions">
                                                 <button type="button" class="action-btn action-btn--secondary"
                                                         @click="toggleIpfsPublicationRecordVerificationHistory(entry, index)">
@@ -11966,20 +7463,8 @@ export default {
                                 </ul>
                             </div>
 
-                            <!-- 0.8.73 — IPFS Publication Observation Timeline.
-                                 A pure, presentation-only chronological projection over
-                                 the SAME two histories the "Publication History" disclosure
-                                 above and each record's own "Verification History" already
-                                 read — never a new domain concept, never a new verdict
-                                 layer. Gated on there being at least one publication,
-                                 mirroring "Show/Hide Publication History"'s own restraint.
-                                 Opening this disclosure performs ZERO network operations —
-                                 it only reads entry.ipfsPublicationRecordHistory and entry.
-                                 ipfsPublicationVerificationHistoriesByRecordIndex, already in
-                                 memory. There is no "refresh" action here; new entries only
-                                 ever appear after the existing, explicit "Publish"/"Verify
-                                 Again" actions above. See application/
-                                 IpfsPublicationObservationTimelineView.js's own header. -->
+                            <!-- Chronological read of the publication and
+                                 verification histories; no network access. -->
                             <div v-if="ipfsPublicationObservationTimelineView(entry).count > 0" class="identity-mgmt-actions">
                                 <button type="button" class="action-btn action-btn--secondary"
                                         @click="toggleIpfsPublicationObservationTimeline(entry)">
@@ -12012,19 +7497,8 @@ export default {
                     </div>
 
                     <div v-show="entry.detailsTab === 'history'">
-                    <!-- 0.8.74 — Cross-Domain Publication Observation Timeline.
-                         Deliberately a SIBLING evidence-section, placed after both the
-                         "Bitcoin Anchor"/evidence card above and the "IPFS Publishing"
-                         card immediately above — never nested inside either one, because
-                         this disclosure is a view over BOTH of this entry's own domains at
-                         once. A pure, presentation-only chronological projection over
-                         application/PublicationObservationTimelineView.js's own
-                         describePublicationObservationTimeline() — it invents no new fact
-                         either domain's own cards above do not already show, and computes
-                         no combined status, confidence, or health of any kind. Opening
-                         this disclosure performs ZERO network operations. See that file's
-                         own header, and docs/Principles.md, "Unify The Timeline, Not The
-                         Meanings (0.8.74)." -->
+                    <!-- Both domains on one timeline; no combined status. No
+                         network access. -->
                     <div v-if="crossDomainPublicationObservationTimelineView(entry).count > 0" class="evidence-section">
                         <div class="evidence-summary">
                             <span class="evidence-summary-title">Cross-Domain Observation Timeline</span>
