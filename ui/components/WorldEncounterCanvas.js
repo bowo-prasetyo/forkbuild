@@ -1,4 +1,5 @@
 import WorldEncounterMarker from './WorldEncounterMarker.js';
+import PublicationCommentaryRemoteCheck from './PublicationCommentaryRemoteCheck.js';
 import WandererMarker from './WandererMarker.js';
 import WorldDistributionDialog from './WorldDistributionDialog.js';
 import { describeWorldFromDiscoveryRegistry } from '../../application/WorldDiscoveryRegistryProjection.js';
@@ -2875,7 +2876,7 @@ function shortContentHash(contentHash) {
 
 export default {
     name: 'WorldEncounterCanvas',
-    components: { WorldEncounterMarker, WandererMarker, WorldDistributionDialog },
+    components: { WorldEncounterMarker, WandererMarker, WorldDistributionDialog, PublicationCommentaryRemoteCheck },
     props: {
         // Exactly `describeWorldEncounterView()`'s own result shape —
         // see this file's own header, "receives the 0.9.2 view directly."
@@ -5727,6 +5728,8 @@ export default {
                     <div v-if="encounterCommentaryOpen" class="world-encounter-commentary-body">
                         <p v-if="encounterCommentaryError" class="world-encounter-commentary-error">{{ encounterCommentaryError }}</p>
 
+                        <PublicationCommentaryRemoteCheck :publication-id="encounterCommentaryPublicationId" @refreshed="refreshEncounterCommentaries" />
+
                         <p v-if="!encounterCommentaries.length" class="world-encounter-commentary-empty">No commentary yet.</p>
                         <ul v-else class="world-encounter-commentary-list">
                             <li
@@ -5881,6 +5884,8 @@ export default {
 
                     <div v-if="observerLocalEncounterCommentaryOpen" class="world-encounter-observer-local-commentary-body">
                         <p v-if="observerLocalEncounterCommentaryError" class="world-encounter-observer-local-commentary-error">{{ observerLocalEncounterCommentaryError }}</p>
+
+                        <PublicationCommentaryRemoteCheck :publication-id="observerLocalEncounterCommentaryPublicationId" @refreshed="refreshObserverLocalEncounterCommentaries" />
 
                         <p v-if="!observerLocalEncounterCommentaries.length" class="world-encounter-observer-local-commentary-empty">No commentary yet.</p>
                         <ul v-else class="world-encounter-observer-local-commentary-list">

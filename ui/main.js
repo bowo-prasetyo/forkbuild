@@ -198,6 +198,7 @@ import {
 } from '../application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
 import { composeDiscoverWorldEncounterPublicationCommand } from '../application/DiscoverWorldEncounterPublicationCommandComposition.js';
 import { composeWorldEncounterLeadAssociationsQuery } from '../application/WorldEncounterLeadAssociationsQueryComposition.js';
+import { composeRefreshPublicationCommentaryCommand } from '../application/RefreshPublicationCommentaryCommandComposition.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
@@ -2969,6 +2970,21 @@ function discoverPublicationCommentaryFromArweaveCommand(publicationId) {
     });
 }
 app.provide('discoverPublicationCommentaryFromArweaveCommand', discoverPublicationCommentaryFromArweaveCommand);
+
+// Fetch-on-open and "Check for new comments" — the product decision the
+// two discovery commands above left open. Every Commentary section mounts
+// ui/components/PublicationCommentaryRemoteCheck.js, which calls this for
+// the one Publication being viewed: both networks are checked side by
+// side, a failure on either is reported rather than thrown, and whatever
+// they admit lands in the same local store every section reads. See
+// application/RefreshPublicationCommentaryCommandComposition.js.
+const refreshPublicationCommentaryCommand = composeRefreshPublicationCommentaryCommand({
+    sources: [
+        { name: 'Nostr', discover: discoverPublicationCommentaryFromNostrCommand },
+        { name: 'Arweave', discover: discoverPublicationCommentaryFromArweaveCommand }
+    ]
+});
+app.provide('refreshPublicationCommentaryCommand', refreshPublicationCommentaryCommand);
 
 const arweavePublicationRuntimeCapabilities = createArweavePublicationDistributionRuntimeAdapter({ signer: arweaveHostSigner });
 // 0.9.492 — Wire Arweave Tagged Transaction Upload into Production
