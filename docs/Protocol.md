@@ -781,7 +781,7 @@ envelope's *structure* is unchanged, only a metadata field's presence,
 exactly like `license`/`parentDocumentId` before it.
 
 `publisher/Publication.js`'s wire shape is unchanged — `description`
-was deliberately not added there in 0.2.21 (see docs/Architecture.md,
+was deliberately not added there in 0.2.21 (see docs/ArchitectureHistory.md,
 "Deliberately not in 0.2.21").
 
 Publishing now validates before creating anything immutable
@@ -820,7 +820,7 @@ at mount:
 
 No new fields travel over any wire, no Document/Publication shape
 changed, and no new endpoint or query exists — see
-docs/Architecture.md, "Fork Transition & World View Document
+docs/ArchitectureHistory.md, "Fork Transition & World View Document
 Switching (0.2.22)" for the full mechanism.
 
 ## World Placement & Spatial Positioning (0.2.23)
@@ -1097,7 +1097,7 @@ replicas); and richer discovery diagnostics
 (`spatial/DiscoveryDiagnostics.js`, 0.2.19) reaching the live World
 View — that diagnostic surface belongs to
 `DecentralizedSpatialDiscoveryProvider`, which the live app does not
-yet wire in (see docs/Architecture.md) — so this milestone does not
+yet wire in (see docs/ArchitectureHistory.md, 0.2.30) — so this milestone does not
 extend the protocol to carry diagnostic detail the running system
 cannot yet produce.
 
@@ -1225,7 +1225,7 @@ equivocation, replay). 0.2.30 adds no new verification rule and no new
 wire-visible object; it only exposes, through a UI-facing summary, the
 TrustObservations that verification pipeline already produces on every
 call. The live World View does not wire this provider today (see
-docs/Architecture.md, 0.2.30, "What stays unchanged") — so in
+docs/ArchitectureHistory.md, 0.2.30, "What stays unchanged") — so in
 practice, the default deployed behavior issues no additional reads at
 all, and `diagnostics.available` stays `false`.
 

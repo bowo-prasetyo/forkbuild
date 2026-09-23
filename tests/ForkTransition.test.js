@@ -42,7 +42,7 @@ import { License, LicenseId } from '../core/License.js';
 // The router/title-binding half of this lives in ui/views/WorldView.js
 // (no unit harness in this repo touches ui/ — see every prior
 // milestone's test file) and is reasoned about directly in
-// docs/Architecture.md; what's tested here is the session-level
+// docs/ArchitectureHistory.md; what's tested here is the session-level
 // guarantee that binding depends on: getActiveDocumentId() is correct
 // and stable across every mutation path, immediately, with no
 // intermediate state where it points at neither the old nor the new

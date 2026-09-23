@@ -590,7 +590,7 @@ Application orchestrates; Core provides capabilities. Use cases, wiring,
 and editor workflows live in application/. Domain data, rules, and the
 event machinery that lets Core announce what happened live in core/ —
 even when application/ is what constructs and wires that machinery
-together (see docs/Architecture.md on why EventBus lives in core/events/
+together (see docs/ArchitectureHistory.md on why EventBus lives in core/events/
 rather than application/events/).
 
 Event vocabulary lives at the lowest layer both the publisher and every
@@ -911,10 +911,10 @@ effect of whichever root a replica happened to load first.
 
 *Changed by 0.5.9:* World View no longer edits bricks, so today the
 fork-on-edit described here only runs for its few remaining mutations
-(Region/Landmark naming, Animal Decorations, moving a
-StructurePlacement). Brick editing forks through "Edit a Copy" and the
-Editor instead. See "World View Observes and Navigates; Editor Mutates
-and Builds (0.5.9)" below and docs/CapabilityMatrix.md.
+(Region/Landmark naming and Animal Decorations). Brick editing forks
+through "Edit a Copy" and the Editor instead. See "World View Observes
+and Navigates; Editor Mutates and Builds (0.5.9)" below and
+docs/CapabilityMatrix.md.
 
 A published World View is immutable; a World View SESSION is editable.
 Opening a published snapshot never makes the snapshot itself editable
@@ -1011,10 +1011,10 @@ changes without the component remounting.
 
 *Changed by 0.5.9:* World View no longer edits bricks, so today the
 fork-on-edit described here only runs for its few remaining mutations
-(Region/Landmark naming, Animal Decorations, moving a
-StructurePlacement). Brick editing forks through "Edit a Copy" and the
-Editor instead. See "World View Observes and Navigates; Editor Mutates
-and Builds (0.5.9)" below and docs/CapabilityMatrix.md.
+(Region/Landmark naming and Animal Decorations). Brick editing forks
+through "Edit a Copy" and the Editor instead. See "World View Observes
+and Navigates; Editor Mutates and Builds (0.5.9)" below and
+docs/CapabilityMatrix.md.
 
 Lazy fork-on-first-mutation (0.2.20) exists specifically so that
 editing a published world feels like editing, not like requesting
@@ -1328,7 +1328,7 @@ staleness) is real, tested infrastructure — but it belongs to
 `DecentralizedSpatialDiscoveryProvider`, which is not the discovery
 backend `CreateWorldViewUseCase` actually wires into the live World
 View today (`LocalWorldLayoutProvider`/`LocalSpatialIndexProvider`
-are — see docs/Architecture.md, 0.2.26). A synchronous, fully-local
+are — see docs/ArchitectureHistory.md, 0.2.26). A synchronous, fully-local
 `localStorage` read cannot genuinely be "temporarily unavailable" the
 way a fetched index manifest can; presenting a manifest-unavailable
 message the live stack could never actually produce would be
@@ -1452,7 +1452,7 @@ cells → `SpatialIndexRoot` → `SpatialIndexManifest` →
 `PlacementRecord`s, exact distance test) answers the exact same
 question, with the spatial index as an accelerator and the placement
 records themselves remaining the authoritative source, never the
-reverse. See docs/Architecture.md, 0.2.28, for why that swap is
+reverse. See docs/ArchitectureHistory.md, 0.2.28, for why that swap is
 future work and not attempted here — the promise the API makes is
 what has to be right immediately; which concrete provider fulfills it
 can improve later without changing a single caller.
@@ -1592,7 +1592,7 @@ collapsing into a single true/false "is this trustworthy":
     wires the plain `LocalWorldLayoutProvider`/`LocalDiscoveryProvider`
     scan established in 0.2.26/0.2.28/0.2.29, which has no manifest,
     root, or signature concept to report on at all (see
-    docs/Architecture.md, 0.2.30, for why this milestone does not
+    docs/ArchitectureHistory.md, 0.2.30, for why this milestone does not
     change that wiring).
   - `available: true, fatal: <reason>` — a provider WAS consulted, but
     the index root/authority itself could not be trusted this pass
@@ -2644,7 +2644,7 @@ per-recipient addressing at all. Trust (`application/
 PresenceTrustBoundary.js`, 0.2.38) and visibility are deliberately
 opposite sides of the same boundary: visibility is the SENDER asking
 "should I even send this," trust is the RECEIVER asking "should I
-believe what arrived" — see docs/Architecture.md's own diagram.
+believe what arrived" — see docs/ArchitectureHistory.md's own diagram.
 
 ### AvatarProfile, AvatarPresence, and PresenceVisibilityPolicy Are Three Independent Concerns (0.2.40)
 
@@ -5885,7 +5885,7 @@ fixed coordinate's height independently before and after an entire
 scripted journey across the world and asserts the two values are
 identical. `DEFAULT_WORLD_SEED` is deliberately ONE hardcoded constant
 shared by the whole live World View today, not a field on `core/World.js`
-or `core/Document.js` — see docs/Architecture.md, 0.2.76, for why a
+or `core/Document.js` — see docs/ArchitectureHistory.md, 0.2.76, for why a
 per-World seed would be a real schema change this milestone didn't reach
 for, and why one shared constant already satisfies the invariant this
 milestone actually needed.
@@ -7740,7 +7740,7 @@ constraint's own existing `isStepClimbable()` check becomes the only
 gate deciding whether any specific tick's approach is actually
 climbable. This is not a special case bolted onto collision — it is a
 recognition that two constraints already running in sequence
-(`docs/Architecture.md`'s own five-stage 0.3.2 pipeline) can jointly
+(`docs/ArchitectureHistory.md`'s own five-stage 0.3.2 pipeline) can jointly
 answer a question neither could answer alone, without either one
 growing new knowledge of the other's domain. With stepping OFF entirely,
 this carve-out vanishes completely — there is no downstream check left
@@ -9114,8 +9114,8 @@ capabilities:
      a real feature, wildly out of proportion to this milestone, and
      not what "World View Observes and Navigates" is actually
      objecting to.
-  2. **`movePlacement()`** (0.2.23) — repositioning an existing
-     `StructurePlacement` within the shared World layout. Its own
+  2. **`movePlacement()`** (0.2.23) — repositioning a published
+     world's `WorldPlacement` in shared space. Its own
      pre-0.5.9 header already stated the principle this milestone
      merely reuses: "Moving A Placement Is Not Editing A Document — it
      never touches the Document/Publication, never forks anything."
@@ -9123,9 +9123,10 @@ capabilities:
      kind of act as naming a place — curating the World's own
      structure — never authoring the content itself.
 
-Both exceptions still route through the exact same `canEditDocument()`/
-`_ensureEditableDocumentId()`/`_forkForEdit()` machinery brick mutation
-used — 0.2.95's authorization seam and 0.2.20's fork-on-write are
+Region/Landmark naming still routes through the exact same
+`canEditDocument()`/`_ensureEditableDocumentId()`/`_forkForEdit()`
+machinery brick mutation used (`movePlacement()` never forks: it changes a
+PlacementRecord, not a Document) — 0.2.95's authorization seam and 0.2.20's fork-on-write are
 untouched, general-purpose infrastructure, not brick-specific. Undo/redo
 (`undo()`/`redo()`) and the history-preview/replay machinery
 (`beginHistoryPreview()`/`restoreHistoryAt()`/etc.) also stay for the

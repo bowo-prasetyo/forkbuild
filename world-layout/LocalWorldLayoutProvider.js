@@ -107,7 +107,7 @@ export class LocalWorldLayoutProvider extends WorldLayoutProvider {
                     // A document may have more than one placement (the
                     // same publication exhibited in several places) —
                     // picking the first is a deliberate simplification
-                    // for now (see docs/Architecture.md, 0.2.23);
+                    // for now (see docs/ArchitectureHistory.md, 0.2.23);
                     // browsing/choosing among several is future scope.
                     const p = placements[0];
                     return new WorldPosition(p.position.x, p.position.y, p.position.z);

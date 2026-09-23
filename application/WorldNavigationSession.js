@@ -6018,7 +6018,7 @@ export class WorldNavigationSession {
     // owned by this codebase) gain the envelope. searchWorld/
     // searchWorldByLocation (0.2.26/0.2.28, the more established API
     // WorldSearchPanel depends on) keep returning a plain array,
-    // unchanged — see docs/Architecture.md, 0.2.30, for why the two
+    // unchanged — see docs/ArchitectureHistory.md, 0.2.30, for why the two
     // were kept independent rather than unifying both under one
     // envelope shape in this pass.
     exploreLocation({ center, radius }) {

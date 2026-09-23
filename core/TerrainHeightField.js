@@ -14,7 +14,7 @@
 // coordinate space today, not a per-World/per-Document seed — see this
 // file's own "Deliberately not yet" note at the bottom. A per-world
 // seed would be a Document/World schema change (a new persisted field,
-// migration fixtures, the works — see docs/Architecture.md's own
+// migration fixtures, the works — see docs/ArchitectureHistory.md's own
 // schema-versioning discipline); a single shared constant needs none of
 // that and already satisfies the one invariant this milestone actually
 // asked for: every replica's camera sees the same ground everywhere.

@@ -281,7 +281,7 @@ async function runTests() {
 
     // -------------------------------------------------------------
     // 17. No spatialDiscoveryProvider wired at all (today's live
-    //     WorldNavigationSession wiring — see docs/Architecture.md,
+    //     WorldNavigationSession wiring — see docs/ArchitectureHistory.md,
     //     0.2.30) -> diagnostics honestly report unavailable, and
     //     nothing throws.
     // -------------------------------------------------------------

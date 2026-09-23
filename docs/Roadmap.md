@@ -145,10 +145,10 @@ be in flight when someone thinks of it.
 
 Wiring `DecentralizedSpatialDiscoveryProvider`'s richer diagnostics
 (manifest/equivocation/staleness) into the live World View remains
-OPTIONAL and unscheduled — see docs/Architecture.md, 0.2.26,
+OPTIONAL and unscheduled — see docs/ArchitectureHistory.md, 0.2.26,
 "Deliberately not in 0.2.26," for what it would actually require.
 Camera-focus / active-document / selection separation, previously
-listed here as deferred, shipped in 0.2.27 — see docs/Architecture.md,
+listed here as deferred, shipped in 0.2.27 — see docs/ArchitectureHistory.md,
 0.2.27.
 
 A UI affordance for setting the active document WITHOUT moving the
@@ -183,7 +183,7 @@ built on top of it, not an extension of the list itself.
 View (`core/DiscoveryDiagnosticsSummary.js`, `WorldNavigationSession`'s
 optional `spatialDiscoveryProvider`, the Location Browser's diagnostics
 banner) WITHOUT changing which provider actually resolves documents —
-see docs/Architecture.md, 0.2.30, "What stays unchanged," for why
+see docs/ArchitectureHistory.md, 0.2.30, "What stays unchanged," for why
 flipping the live wiring now would trade an honest "unavailable" for a
 dishonest "nothing here" (the live app has never built a populated
 `SpatialIndexRoot`; `CreateWorldViewUseCase`'s placement flow bypasses
@@ -216,7 +216,7 @@ Repository/Author View established a real catalog model
 `PublicationSort`/`SearchPublicationsUseCase`) and unified both views
 onto one shared `PublicationCatalog` component, tested against a
 10,000-publication synthetic catalog rather than a handful of fixtures
-— see docs/Architecture.md, 0.2.31.
+— see docs/ArchitectureHistory.md, 0.2.31.
 
 Deliberately deferred from 0.2.31, remaining OPTIONAL and unscheduled:
 
@@ -249,7 +249,7 @@ Deliberately deferred from 0.2.31, remaining OPTIONAL and unscheduled:
 `PreviewService` lazily renders each visible publication's actual
 document content (never its metadata) into a deterministically-framed
 image, cached in memory and never persisted, signed, or replicated —
-see docs/Architecture.md, 0.2.32. Deliberately not in 0.2.32: a
+see docs/ArchitectureHistory.md, 0.2.32. Deliberately not in 0.2.32: a
 persistent/disk preview cache, and generating previews for publications
 that haven't scrolled into view — see docs/Principles.md, "Preview
 Generation Is Bounded By What's Actually Visible."
@@ -259,7 +259,7 @@ just consumers of persistent content. It establishes the model
 boundary only — `core/AvatarProfile.js` (persistent, one per identity)
 and `core/AvatarPresence.js` (ephemeral, never signed, never
 persisted, never a WorldPlacement) — with no rendering, no movement,
-and no networking yet. See docs/Architecture.md, 0.2.33, and
+and no networking yet. See docs/ArchitectureHistory.md, 0.2.33, and
 docs/Principles.md, "Identity, Avatar Profile, and Presence Are Three
 Different Questions." The rest of the avatar arc is tracked below,
 each remaining milestone scoped narrowly on purpose:
@@ -272,7 +272,7 @@ components/options at write time, and lenient field-by-field fallback
 to the resolved template's defaults at read time, so a stale or
 unrecognized profile can never block World View access. Ships the
 first user-visible avatar surface, the Avatar Creator
-(`/avatar` — "My Avatar" in the nav). See docs/Architecture.md, 0.2.34,
+(`/avatar` — "My Avatar" in the nav). See docs/ArchitectureHistory.md, 0.2.34,
 and docs/Principles.md, "A Template Is A Closed Vocabulary, Not An
 Asset Loader" and "Validate Strictly On Write; Degrade Gracefully On
 Read." Deliberately deferred from 0.2.34, remaining OPTIONAL and
@@ -290,7 +290,7 @@ resolved appearance (`AvatarProfileUseCase.getEffectiveAvatar()`) and
 client rendering preference, never a new piece of avatar state; and a
 document's `WorldPlacement` is completely untouched by any avatar
 activity — verified directly (byte-identical placement JSON
-before/after) in the flagship test. See docs/Architecture.md, 0.2.35,
+before/after) in the flagship test. See docs/ArchitectureHistory.md, 0.2.35,
 and docs/Principles.md, "An Avatar's Location Comes From Presence,
 Never From The Avatar Itself." Deliberately deferred, matching the
 design doc's own list: WASD/controller movement, collision detection,
@@ -314,7 +314,7 @@ RUNNING gained a real, continuous gait cycle driven by elapsed time
 (never a frame count), and a "Follow Avatar" camera mode shifts the
 camera by exactly the avatar's own movement delta without ever
 redefining what document is focused or active. See
-docs/Architecture.md, 0.2.36, and docs/Principles.md, "Input Changes
+docs/ArchitectureHistory.md, 0.2.36, and docs/Principles.md, "Input Changes
 Presence; Presence Changes The Renderer" and "Movement Is Kinematic,
 Not Physically Simulated." Deliberately deferred, matching the design
 doc's own list: collision/navigation constraints against world
@@ -346,7 +346,7 @@ remains the sole authoritative value throughout. Appearance is
 deliberately NOT synchronized — every remote avatar renders with a
 fixed placeholder appearance; that's real appearance sync (and any
 `AvatarProfile` signature layer) is left for later. See
-docs/Architecture.md, 0.2.37, and docs/Principles.md, "0.2.37
+docs/ArchitectureHistory.md, 0.2.37, and docs/Principles.md, "0.2.37
 Establishes Transport Semantics; 0.2.38 Establishes Trust Semantics."
 Deliberately deferred, matching the design doc's own list: signatures
 on presence, CausalStamp, conflict resolution, equivocation
@@ -396,7 +396,7 @@ equivocation), and a different real signing identity impersonating her
 avatarId at a new sequence — every one rejected, Alice's own further
 movement unaffected throughout, and Document/Publication/
 WorldPlacement/SpatialIndex/AvatarProfile byte-identical from start to
-finish. See docs/Architecture.md and docs/Principles.md, "An Avatar ID
+finish. See docs/ArchitectureHistory.md and docs/Principles.md, "An Avatar ID
 Identifies An Avatar; It Does Not Prove Who Currently Controls It" and
 its neighboring 0.2.38 principles. Deliberately deferred, matching the
 design doc's own list: physical-plausibility checks on a claimed
@@ -436,7 +436,7 @@ deliberately NO Edit/Move/Delete/Save; the one available action,
 relationship, mutually exclusive with 0.2.36's own local-avatar-follow
 since there is only one camera. A targeted or followed avatar whose
 presence expires (0.2.38's ABSENT-pruning) clears gracefully rather
-than pointing at nothing. See docs/Architecture.md and
+than pointing at nothing. See docs/ArchitectureHistory.md and
 docs/Principles.md, "Selection Identifies What The User Is Interacting
 With; It Does Not Imply Ownership, Editability, Or Authority,"
 "Whichever Is Nearer Wins, Never Category," and "Looking At Something
@@ -484,7 +484,7 @@ the other. The flagship test proves the sender/receiver symmetry with
 receives nothing, doesn't even know her avatar exists — then Alice
 switches to PUBLIC and her very next movement reaches Bob normally,
 with zero special-casing anywhere in Bob's own session. See
-docs/Architecture.md and docs/Principles.md, "Visibility Happens
+docs/ArchitectureHistory.md and docs/Principles.md, "Visibility Happens
 Before Broadcasting, Never After," "AvatarProfile, AvatarPresence, and
 PresenceVisibilityPolicy Are Three Independent Concerns," and "A
 Policy Abstraction Can Exist Before The Mechanism It Fully Assumes."
@@ -532,7 +532,7 @@ configured privacy system — and a 15-second periodic republish
 in this eventually-consistent presentation state, letting a replica
 that joins mid-session, or missed the one edit, eventually catch up on
 a fire-and-forget transport with no request/response mechanism. See
-docs/Architecture.md and docs/Principles.md, "Appearance And Position
+docs/ArchitectureHistory.md and docs/Principles.md, "Appearance And Position
 Are Different Lifecycles, Never One Message," "Appearance Is Durable;
 Presence Is Ephemeral," "Presence And Profile Share One Publication
 Gate," and "A Fire-And-Forget Transport Needs Its Own 'Catch Me Up.'"
@@ -761,7 +761,7 @@ authentication session" while the identity and its key remain on disk,
 completely untouched, ready to be re-authenticated later; and a single
 device can now hold multiple independent identities (`listLocalIdentities()`),
 switching between them by authenticating a different one without ever
-deleting or overwriting another. See docs/Architecture.md, "Local
+deleting or overwriting another. See docs/ArchitectureHistory.md, "Local
 Identity & Authentication Session (0.2.46)," and docs/Principles.md,
 "Login Unlocks An Identity; It Does Not Derive One From A Typed Name"
 and "Identity Existence And Session Authentication Are Independent
@@ -812,7 +812,7 @@ time-based (not passphrase-based) cooldown
 after a fixed lifetime since last unlock
 (`identity/VaultTimeoutPolicy.js`, honestly NOT true activity
 detection — see docs/Principles.md) without ever ending the
-`AuthenticationSession` itself. See docs/Architecture.md, "Identity
+`AuthenticationSession` itself. See docs/ArchitectureHistory.md, "Identity
 Security & Key Protection (0.2.47)," and docs/Principles.md, "Identity
 Existence, Vault Unlock, And Session Authentication Are Three
 Independent Facts, Not Two."
@@ -875,7 +875,7 @@ which one is currently authenticated, export with its own inline
 passphrase prompt, and an import form that previews label/identityId/
 algorithm/already-exists status from the pasted package BEFORE any
 passphrase is entered or anything is decrypted. See
-docs/Architecture.md, "Portable Identity, Export, Import & Recovery
+docs/ArchitectureHistory.md, "Portable Identity, Export, Import & Recovery
 (0.2.48)," and docs/Principles.md, "Exporting And Importing An Identity
 Preserves The Identity, Not Merely Its Name," "Recovery Is Not Password
 Recovery," and "Duplicate Identity Import Is A No-Op, Never A Silent
@@ -1059,7 +1059,7 @@ actually determines, a captured invitation replayed after its own expiry
 is rejected by discovery before any connection is attempted, closing
 removes the peer from both sides' registries, and reconnecting produces a
 fresh `ConnectedPeer` with no alias or state carried over. See
-docs/Architecture.md, "Peer Discovery & Rendezvous (0.2.50)," and
+docs/ArchitectureHistory.md, "Peer Discovery & Rendezvous (0.2.50)," and
 docs/Principles.md, "An Invitation Is A Rendezvous Hint, Never A
 Credential," "Discovery Finds A Candidate; It Never Authenticates One,"
 "A Peer's Lifecycle Is Derived, Never A Third State Machine," and "A Peer
@@ -1183,7 +1183,7 @@ connection untouched; closing a real connection removes the peer from
 both sides' registries (a genuine network fact now, not an instantly
 mirrored one); and reconnecting opens a brand-new WebRTC connection with
 a fresh connectionId, re-authenticating completely from nothing. See
-docs/Architecture.md, "Real WebRTC Peer Transport & Signaling Handoff
+docs/ArchitectureHistory.md, "Real WebRTC Peer Transport & Signaling Handoff
 (0.2.51)," and docs/Principles.md, "A Signaling Payload Is Not An
 Identity Proof" and "A Transport Connection Is Never An Authenticated
 Peer."
@@ -1354,7 +1354,7 @@ anything, though Alice's own local presence keeps genuinely advancing),
 and PUBLIC again (both catch up together); a final tamper test sends a
 stolen-but-genuine signature over the very connection Bob just
 legitimately received presence over, rejected by the completely
-unmodified 0.2.38 trust boundary. See docs/Architecture.md, "Peer-Based
+unmodified 0.2.38 trust boundary. See docs/ArchitectureHistory.md, "Peer-Based
 Avatar Presence (0.2.53)," and docs/Principles.md, "A Transport
 Migration Should Leave The Trust Model Untouched," "Peer Selection Is A
 Transport Concern, Never A Presence-Core Concern," and "Presence Never
@@ -1430,7 +1430,7 @@ Neighbor." Charlie, notably, never has a presence transport wired at
 all for the entire test, and still resolves Alice's real appearance
 through profile alone — proving "a peer can know your profile without
 currently observing your avatar" structurally, not merely by
-assertion. See docs/Architecture.md, "Peer-Based Avatar Profile
+assertion. See docs/ArchitectureHistory.md, "Peer-Based Avatar Profile
 Synchronization (0.2.54)."
 
 Proposed, unscheduled follow-on milestones this opens: Peer-Based
@@ -81226,7 +81226,7 @@ sections:
   `application/CreateCollaborationUseCase.js` — six files) has zero
   callers anywhere in `application/` or `ui/` outside its own one wiring
   file, and is documented only under its own unedited historical
-  `docs/Architecture.md` section headers. It is architecturally
+  `docs/ArchitectureHistory.md` section headers. It is architecturally
   superseded, not merely unused: the old model is a single ordering
   authority that *rejects* conflicting operations; the shipped model is
   a peer-to-peer causal graph that *allows* divergence and names that
