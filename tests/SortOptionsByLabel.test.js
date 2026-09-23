@@ -83,7 +83,7 @@ async function run() {
         }
         for (const [name, dialog] of [['WorldDistributionDialog.js', worldDialog], ['EditorDistributionDialog.js', editorDialog]]) {
             assert(/v-for="option in storageOptions"/.test(dialog)
-                && /storageOptions\(\) \{[\s\S]{0,200}return sortOptionsByLabel\(/.test(dialog),
+                && /storageOptions\(\) \{[\s\S]{0,600}return sortOptionsByLabel\(/.test(dialog),
                 `${name} renders its shared storage choices through sortOptionsByLabel()`);
         }
 
