@@ -162,14 +162,6 @@ export class PeerSessionManager {
         return this._discoverPeersUseCase.discover(identityId);
     }
 
-    listCandidates() {
-        return this._discoverPeersUseCase.listDiscoveredPeers();
-    }
-
-    forgetCandidate(peerDiscoveryId) {
-        this._discoverPeersUseCase.forgetDiscoveredPeer(peerDiscoveryId);
-    }
-
     // 0.2.66 — "make me findable." Builds a fresh WebRTC offer exactly
     // like createInvitation() above (that pending connection shows up in
     // "My Peers" as CONNECTING immediately, exactly the same as an
