@@ -255,8 +255,8 @@ async function runTests() {
 
     connectedIdentityId = 'bob';
     summary = presence.getSummary('bob');
-    assert(summary.isConnectedNow === true && summary.lifecycleState === PeerLifecycleState.AUTHENTICATED,
-        'a live, AUTHENTICATED connection is reflected as isConnectedNow');
+    assert(summary.isConnectedNow === true && !('lifecycleState' in summary),
+        'a live, AUTHENTICATED connection is reflected as isConnectedNow — the one connection fact a summary carries');
 
     const outgoing1 = toChatMessage({ conversationId: deriveConversationId('me', 'bob'), senderIdentity: 'me', sequence: 1, body: 'hi' });
     conversations.append('bob', outgoing1, 'outgoing');
@@ -281,6 +281,94 @@ async function runTests() {
     assert(list.length === 1 && list[0].identityId === 'bob', 'list() unions relationships/friendships/conversation history, deduplicated — here, only "bob" has any signal at all');
 
     console.log('✓ application/PeerPresenceUseCase.js: getSummary()/markRead()/list() correctly compose relationship, friendship, connection, and conversation facts');
+}
+
+// ---------------------------------------------------------------------
+// 3b. application/PeerPresenceUseCase.js — list() reads each whole store
+//     once, not once per identity, and still agrees exactly with
+//     getSummary(); onChange() hands subscribers nothing to build.
+// ---------------------------------------------------------------------
+{
+    const loadsByStore = new Map();
+    class CountingStorageProvider extends InMemoryStorageProvider {
+        load(name) {
+            const store = name.split(':')[0];
+            loadsByStore.set(store, (loadsByStore.get(store) || 0) + 1);
+            return super.load(name);
+        }
+    }
+    const storage = new CountingStorageProvider();
+    const identityProvider = makeDevice('ListReadsOwner', storage).provider;
+    const conversations = new ConversationStore(storage, identityProvider);
+    const outbox = new ChatOutbox(storage, identityProvider);
+    const readTracker = new ConversationReadTracker(storage, identityProvider);
+    const friendStates = new Map();
+    const fakeFriends = {
+        getState: (id) => friendStates.get(id) || FriendshipState.NONE,
+        getRelationships: () => Array.from(friendStates.keys()).map((identityId) => ({ identityId })),
+        onRelationshipsChanged() { return () => {}; }
+    };
+    const fakeRegistry = {
+        list: () => [{ remoteIdentity: { identityId: 'peer-1' }, getLifecycleState: () => PeerLifecycleState.AUTHENTICATED }],
+        onChange() { return () => {}; }
+    };
+    const presence = new PeerPresenceUseCase({
+        connectedPeerRegistry: fakeRegistry,
+        peerRelationshipUseCase: new PeerRelationshipUseCase(storage, identityProvider),
+        friendRelationshipUseCase: fakeFriends,
+        conversationStore: conversations,
+        chatOutbox: outbox,
+        conversationReadTracker: readTracker
+    });
+
+    let sequence = 0;
+    function addPeer(identityId) {
+        friendStates.set(identityId, FriendshipState.FRIEND);
+        const conversationId = deriveConversationId('me', identityId);
+        conversations.append(identityId, toChatMessage({ conversationId, senderIdentity: identityId, sequence: ++sequence, body: 'in' }), 'incoming');
+        conversations.append(identityId, toChatMessage({ conversationId, senderIdentity: identityId, sequence: ++sequence, body: 'in' }), 'incoming');
+        outbox.enqueue(toChatMessage({ conversationId, senderIdentity: 'me', sequence: ++sequence, body: 'out' }), identityId);
+        readTracker.markRead(identityId, sequence - 2);
+    }
+    function loadsDuringList() {
+        loadsByStore.clear();
+        const list = presence.list();
+        return { list, loads: new Map(loadsByStore) };
+    }
+
+    addPeer('peer-1');
+    const one = loadsDuringList();
+    for (let i = 2; i <= 6; i++) addPeer(`peer-${i}`);
+    const six = loadsDuringList();
+    for (const store of ['conversation-history', 'chat-outbox', 'conversation-read-state', 'peer-relationships']) {
+        assert(one.loads.get(store) > 0, `list() reads the ${store} store`);
+        assert(six.loads.get(store) === one.loads.get(store),
+            `list() reads the ${store} store the same number of times for 6 identities as for 1 (${six.loads.get(store)} vs ${one.loads.get(store)}), never once per identity`);
+    }
+
+    assert(six.list.length === 6, 'list() still covers every identity');
+    for (const row of six.list) {
+        const single = presence.getSummary(row.identityId);
+        assert(JSON.stringify(row) === JSON.stringify(single),
+            `list()'s row for ${row.identityId} is identical to getSummary() — the batched and per-identity paths never disagree`);
+    }
+    const peer1 = six.list.find((row) => row.identityId === 'peer-1');
+    assert(peer1.isConnectedNow === true && peer1.conversation.messageCount === 2 && peer1.conversation.unreadCount === 1
+        && peer1.conversation.pendingOutboxCount === 1,
+        'a batched row still carries connection, message, unread, and outbox facts');
+
+    let listCalls = 0;
+    const realList = presence.list.bind(presence);
+    presence.list = () => { listCalls++; return realList(); };
+    const received = [];
+    const unsubscribe = presence.onChange((...args) => received.push(args));
+    presence.markRead('peer-2');
+    unsubscribe();
+    assert(received.length === 1 && received[0].length === 0,
+        'onChange() notifies with no arguments — each subscriber reads only what it needs');
+    assert(listCalls === 0, 'onChange() never builds a list() a subscriber did not ask for');
+
+    console.log('✓ application/PeerPresenceUseCase.js: list() reads each store once regardless of identity count, matches getSummary() row for row, and onChange() builds nothing on a subscriber\'s behalf');
 }
 
 // ---------------------------------------------------------------------

@@ -201,7 +201,7 @@ async function runTests() {
     summary = bobStack.presence.getSummary(alice.identity.identityId);
     assert(summary.isConnectedNow === false, 'every one of Alice\'s devices disconnected — Alice is OFFLINE');
     assert(summary.connectedDeviceCount === 0, 'connectedDeviceCount is 0 once nothing is live');
-    assert(summary.lifecycleState === null, 'lifecycleState reads null, never a fabricated DISCONNECTED value');
+    assert(!('lifecycleState' in summary), 'a summary carries no lifecycle field at all — isConnectedNow: false, never a fabricated DISCONNECTED value');
     console.log('✓ Section A.3: the LAST device disconnecting is what actually flips identity presence offline');
 
     // The Laptop reconnects on a brand-new connection.

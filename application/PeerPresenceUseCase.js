@@ -1,5 +1,4 @@
 import { EventBus } from '../core/events/EventBus.js';
-import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { resolveDirectSocialIdentity } from './SocialIdentityResolver.js';
 import { findLiveConnectedPeers, findLiveConnectedDevices } from './ConnectedIdentityPeers.js';
 
@@ -51,12 +50,14 @@ const PRESENCE_CHANGED_EVENT = 'PeerPresenceChanged';
 // PeerLifecycleState.js` already IS that vocabulary, and inventing a
 // second one here would be exactly the mistake that file's own header
 // already warns against — "what happens when it disagrees with the two
-// real state machines it's supposed to be summarizing?" A live
-// `ConnectedPeer`'s own `getLifecycleState()` is exposed here verbatim
-// when one exists; "no live ConnectedPeer for this identity right now"
-// is the one new fact worth naming, and `isConnectedNow: false` says
-// exactly that without minting a redundant DISCONNECTED value nothing
-// else in this codebase would ever produce or consume.
+// real state machines it's supposed to be summarizing?" The summary
+// carries no lifecycle field at all: "is at least one live,
+// AUTHENTICATED connection for this identity" is the one fact worth
+// naming, and the `isConnectedNow` boolean says exactly that without
+// minting a redundant DISCONNECTED value nothing else in this codebase
+// would ever produce or consume. A caller that needs a real connection's
+// own `getLifecycleState()` gets the connection itself from
+// `findConnectedPeer()`.
 //
 // 0.2.85 — Multi-Device Presence Semantics.
 //
@@ -138,7 +139,8 @@ export class PeerPresenceUseCase {
         if (!chatOutbox || typeof chatOutbox.list !== 'function') {
             throw new Error('PeerPresenceUseCase: a ChatOutbox is required');
         }
-        if (!conversationReadTracker || typeof conversationReadTracker.markRead !== 'function') {
+        if (!conversationReadTracker || typeof conversationReadTracker.markRead !== 'function'
+            || typeof conversationReadTracker.getLastReadSequences !== 'function') {
             throw new Error('PeerPresenceUseCase: a ConversationReadTracker is required');
         }
         this._registry = connectedPeerRegistry;
@@ -169,7 +171,22 @@ export class PeerPresenceUseCase {
     // record" rather than throwing), so a caller never needs a separate
     // existence check first.
     getSummary(identityId) {
-        const relationship = this._relationships.getRelationship(identityId);
+        return this._summarize(identityId, {
+            relationship: this._relationships.getRelationship(identityId),
+            entries: this._conversations.list(identityId),
+            lastReadSequence: this._readTracker.getLastReadSequence(identityId),
+            pendingOutboxCount: this._outbox.list(identityId).length
+        });
+    }
+
+    // The one place a summary is actually assembled, shared by
+    // getSummary() (one identity, per-identity reads) and list() (every
+    // identity, each store read ONCE and grouped) so the two can never
+    // disagree about what a summary contains. Only the facts that are
+    // cheap per identity — friendship state and live connections — are
+    // read here; everything backed by a whole-store storage read is
+    // handed in by the caller.
+    _summarize(identityId, { relationship, entries, lastReadSequence, pendingOutboxCount }) {
         const friendshipState = this._friends.getState(identityId);
         // 0.2.85 — every currently-live, currently-authorized device of
         // `identityId`, never just the first one — see this class's own
@@ -181,8 +198,6 @@ export class PeerPresenceUseCase {
         const connectedDeviceIdentityIds = Array.from(new Set(
             liveConnectedDevices.map(({ resolved }) => resolved.deviceIdentityId)
         ));
-        const entries = this._conversations.list(identityId);
-        const lastReadSequence = this._readTracker.getLastReadSequence(identityId);
         const unreadCount = entries.filter((entry) => entry.direction === 'incoming' && entry.message.sequence > lastReadSequence).length;
         const lastActivityAt = entries.length
             ? entries.reduce((latest, entry) => (entry.recordedAt > latest ? entry.recordedAt : latest), entries[0].recordedAt)
@@ -194,7 +209,6 @@ export class PeerPresenceUseCase {
             alias: relationship ? relationship.alias : null,
             friendshipState,
             isConnectedNow: liveConnectedDevices.length > 0,
-            lifecycleState: liveConnectedDevices.length > 0 ? PeerLifecycleState.AUTHENTICATED : null,
             // 0.2.85 — how many, and which, of identityId's authorized
             // devices this local device currently observes as reachable
             // — additive data the underlying model now carries so a
@@ -207,7 +221,7 @@ export class PeerPresenceUseCase {
                 messageCount: entries.length,
                 lastActivityAt,
                 unreadCount,
-                pendingOutboxCount: this._outbox.list(identityId).length
+                pendingOutboxCount
             }
         };
     }
@@ -246,14 +260,28 @@ export class PeerPresenceUseCase {
     // stable order). Mirrors `application/ConversationStore.js#conversations()`'s
     // own "most recently active first" ordering, extended to identities
     // that have no conversation at all yet.
+    //
+    // Reads the relationship, conversation, outbox, and read-marker
+    // stores exactly ONCE each and groups them by identity, rather than
+    // once per identity through getSummary() — the result is identical,
+    // but a refresh no longer re-parses whole stores for every row.
     list() {
+        const relationshipById = new Map(this._relationships.getRelationships().map((r) => [r.identityId, r]));
+        const entriesByPeer = groupByPeer(this._conversations.list());
+        const outboxByPeer = groupByPeer(this._outbox.list());
+        const lastReadByPeer = this._readTracker.getLastReadSequences();
         const identityIds = new Set([
-            ...this._relationships.getRelationships().map((r) => r.identityId),
+            ...relationshipById.keys(),
             ...this._friends.getRelationships().map((r) => r.identityId),
-            ...this._conversations.conversations().map((c) => c.peerIdentityId)
+            ...entriesByPeer.keys()
         ]);
         return Array.from(identityIds)
-            .map((identityId) => this.getSummary(identityId))
+            .map((identityId) => this._summarize(identityId, {
+                relationship: relationshipById.get(identityId) || null,
+                entries: entriesByPeer.get(identityId) || [],
+                lastReadSequence: lastReadByPeer.get(identityId) || 0,
+                pendingOutboxCount: (outboxByPeer.get(identityId) || []).length
+            }))
             .sort((a, b) => {
                 const aTime = a.conversation.lastActivityAt ? a.conversation.lastActivityAt.getTime() : -1;
                 const bTime = b.conversation.lastActivityAt ? b.conversation.lastActivityAt.getTime() : -1;
@@ -284,16 +312,19 @@ export class PeerPresenceUseCase {
         this._publishChange();
     }
 
-    // Returns an unsubscribe function. Fires with the full current
-    // `list()` on every connection change, relationship change, or
-    // friendship change — deliberately NOT on every new chat message
+    // Returns an unsubscribe function. Fires (with no arguments) on every
+    // connection change, relationship change, friendship change, or
+    // markRead() — deliberately NOT on every new chat message
     // (see this class's own header on why); a caller that also wants
     // that subscribes to `application/ChatUseCase.js#onMessage()`
     // separately, exactly like `markRead()`'s own caller
     // (`ui/views/ChatView.js`) already does for refreshing the open
-    // transcript.
+    // transcript. Each subscriber reads only what it needs —
+    // `list()` for the whole Conversations page, `getSummary()` for one
+    // open chat — rather than every subscriber being handed a full
+    // `list()` it may not want.
     onChange(callback) {
-        const subscription = this._eventBus.subscribe(PRESENCE_CHANGED_EVENT, () => callback(this.list()));
+        const subscription = this._eventBus.subscribe(PRESENCE_CHANGED_EVENT, () => callback());
         return () => subscription.unsubscribe();
     }
 
@@ -327,4 +358,20 @@ export class PeerPresenceUseCase {
     _publishChange() {
         this._eventBus.publish(PRESENCE_CHANGED_EVENT, {});
     }
+}
+
+// Groups entries carrying a `peerIdentityId` (ConversationStore and
+// ChatOutbox entries alike) into a `Map<peerIdentityId, entry[]>`,
+// preserving each store's own order within a peer.
+function groupByPeer(entries) {
+    const byPeer = new Map();
+    for (const entry of entries) {
+        const group = byPeer.get(entry.peerIdentityId);
+        if (group) {
+            group.push(entry);
+        } else {
+            byPeer.set(entry.peerIdentityId, [entry]);
+        }
+    }
+    return byPeer;
 }

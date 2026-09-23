@@ -37,8 +37,8 @@ export default {
         const isAuthenticated = ref(identityUseCase.isAuthenticated());
         const conversations = ref(isAuthenticated.value ? peerPresenceUseCase.list() : []);
 
-        function refresh(list) {
-            conversations.value = list || peerPresenceUseCase.list();
+        function refresh() {
+            conversations.value = peerPresenceUseCase.list();
         }
 
         function shortId(identityId) {
@@ -86,7 +86,7 @@ export default {
         let unsubscribeBlocks = null;
         let unsubscribeSession = null;
         onMounted(() => {
-            unsubscribePresence = peerPresenceUseCase.onChange((list) => refresh(list));
+            unsubscribePresence = peerPresenceUseCase.onChange(() => refresh());
             // A new/updated message never fires PeerPresenceUseCase's own
             // onChange (see that class's own header) — subscribed here
             // separately so an unread count or a "last active" timestamp
