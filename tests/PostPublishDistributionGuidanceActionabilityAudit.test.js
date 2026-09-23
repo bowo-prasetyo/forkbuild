@@ -404,7 +404,7 @@ async function run() {
 
         // refreshSpatialUI() re-derives ownPublication from the SAME
         // session call OwnPublicationPanel's own publication prop reads.
-        const refreshBlock = worldViewRaw.match(/ownPublication\.value = \(activeId[\s\S]*?: null;/)[0];
+        const refreshBlock = worldViewRaw.match(/ownPublication\.value = activeId[\s\S]*?: null;/)[0];
         assert(refreshBlock.includes('session.getPublicationForDocument(activeId)'),
             '22. refreshSpatialUI() re-derives ownPublication.value from session.getPublicationForDocument(activeId) — the exact same session call, re-run fresh, not a cached reference');
 

@@ -428,7 +428,7 @@ async function runTests() {
             'C1. The cascade\'s own header names its ONE admission question explicitly: does an already-known, already-authoritative WorldPlacement exist for this publicationId.');
 
         const worldViewSource = await rawSource('ui/views/WorldView.js');
-        assert(/resolvePlacementInfo:\s*\(publicationId\)\s*=>\s*\(typeof session\.getPlacementInfoForPublication/.test(worldViewSource),
+        assert(/resolvePlacementInfo:\s*\(publicationId\)\s*=>\s*session\.getPlacementInfoForPublication\(publicationId\)/.test(worldViewSource),
             'C2. The real composition root wires resolvePlacementInfo to session.getPlacementInfoForPublication(publicationId) — never a claim, never a signature check performed inline.');
 
         const sessionSource = codeOnlyLines(await rawSource('application/WorldNavigationSession.js'));

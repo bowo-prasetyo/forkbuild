@@ -421,7 +421,7 @@ async function run() {
         assert(/_findPublications\(documentId\) \{\s*\n\s*if \(!this\._discoveryProvider \|\| typeof this\._discoveryProvider\.findByDocumentId !== 'function'\) \{\s*\n\s*return \[\];\s*\n\s*\}\s*\n\s*return this\._discoveryProvider\.findByDocumentId\(documentId\) \|\| \[\];/.test(worldNavSrc),
             n('B6. ...which itself resolves entirely through `this._discoveryProvider.findByDocumentId(documentId)` — confirmed in real source — the SAME predicate B3 just proved returns empty for an observer-local-only encounter.'));
         const worldViewSrc = await source('ui/views/WorldView.js');
-        assert(/ownPublication\.value = \(activeId && typeof session\.getPublicationForDocument === 'function'\)\s*\n\s*\? session\.getPublicationForDocument\(activeId\)/.test(worldViewSrc),
+        assert(/ownPublication\.value = activeId \? session\.getPublicationForDocument\(activeId\)/.test(worldViewSrc),
             n('B7. ui/views/WorldView.js computes `ownPublication` — OwnPublicationPanel\'s own only input fact — from exactly this call, on every refreshSpatialUI() tick, confirmed in real source.'));
         assert(/function exploreEncounteredPublicationCommand\(publication\) \{\s*\n\s*focusWorld\(publication\.documentId\);/.test(worldViewSrc),
             n('B8. "Explore," the one observer-local action (0.9.558) that keeps a Wanderer inside World View rather than routing to the Editor, calls focusWorld(documentId) — which session.focusDocument()s that documentId as the new ACTIVE document, the exact activeId ownPublication is then computed from.'));

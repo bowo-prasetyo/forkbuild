@@ -416,7 +416,7 @@ async function runTests() {
         // Location Browser, Focus Panel's "Go", spatial inspection) funnels
         // through the SAME focusWorld() — reconfirmed for the newly
         // checked ones (0.9.559 F already proved this for Encounter).
-        assert(worldViewSource.includes('function focusSearchResult(documentId) {\n            focusWorld(documentId);\n        }'), 'F1a. World Search\'s own "Focus" reuses focusWorld() — no second in-World navigation mechanism.');
+        assert(/<WorldSearchPanel[^>]*@focus="focusWorld"/.test(worldViewSource), 'F1a. World Search\'s own "Focus" reuses focusWorld() — no second in-World navigation mechanism.');
         assert(worldViewSource.includes("// Search's own Focus action is exactly focusWorld"), 'F1b. This convergence is explicitly self-documented, not incidental.');
 
         // F2. "Enter World fresh, from OUTSIDE any live session" —

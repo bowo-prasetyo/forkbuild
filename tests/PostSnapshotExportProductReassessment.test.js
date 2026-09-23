@@ -611,11 +611,15 @@ async function runTests() {
         assert(/getRecentlyVisited\(/.test(recentWorldsViewSource), 'L1b. ...and still reads LocalWorldExperienceStore#getRecentlyVisited() directly — the Recent Worlds list is genuinely delivered, just not through this session wrapper');
         assert(/import RecentWorldsView from/.test(await rawSource('ui/router/index.js')), 'L1c. RecentWorldsView is still a real, routed view');
 
-        // L2 — getSelectionCount(): same shape. WorldView.js derives the
-        // selection count it actually needs from session.getSpatialSelection()
-        // (a richer read, items + ids, not just a count) rather than
-        // this narrower single-purpose wrapper.
-        assert(/session\.getSpatialSelection\(\)/.test(worldViewSource), 'L2. WorldView.js still reads session.getSpatialSelection() directly and derives its own selection count from it — the narrower getSelectionCount() wrapper was never adopted because a richer accessor already covers the need');
+        // L2 — getSelectionCount(): same shape. AMENDED by the World View
+        // dead-code cleanup: WorldView.js used to mirror
+        // session.getSpatialSelection() (count included) into a
+        // `spatialSelection` ref its template never rendered; that dead
+        // mirror is gone. World View displays no selection count at all —
+        // selection editing is Editor-only since 0.5.9 — so there is
+        // still nothing for the narrower wrapper to serve here.
+        assert(!/getSelectionCount\(/.test(worldViewSource) && !/spatialSelection\.value/.test(worldViewSource),
+            'L2. WorldView.js neither calls getSelectionCount() nor keeps a never-rendered selection mirror — World View shows no selection count, so the wrapper correctly stays unadopted');
 
         // L3 — getCurrentPlaceName(): genuinely never rendered anywhere.
         // The weakest of the six — a real, if minor, unreached read

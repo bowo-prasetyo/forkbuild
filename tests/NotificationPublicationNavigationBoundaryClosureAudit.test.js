@@ -138,9 +138,7 @@ function makeSession(recipientIdentityProvider, backend) {
 // closeNotificationHistoryPanel() so Section B can observe call ORDER.
 function makeViewPublicationCommand(session, onClose = () => {}) {
     return (publicationId) => {
-        const publication = typeof session.findPublicationById === 'function'
-            ? session.findPublicationById(publicationId)
-            : null;
+        const publication = session.findPublicationById(publicationId);
         if (!publication || !publication.documentId) {
             return false;
         }
@@ -444,7 +442,12 @@ async function runTests() {
         // lack of a defensive catch (Section H) is consistent with the
         // established trust boundary around focusWorld(), not a unique
         // gap introduced by this feature.
-        const otherCallers = ['focusSearchResult', 'focusLocationDocument', 'focusLocationBrowserResult'];
+        // World Search binds focusWorld directly in the template (its
+        // former focusSearchResult() one-line alias was removed as
+        // redundant), so it has no wrapper of its own to check here.
+        assert(/<WorldSearchPanel[^>]*@focus="focusWorld"/.test(worldViewSource),
+            'F4. World Search calls focusWorld() directly — no wrapper, so no try/catch either.');
+        const otherCallers = ['focusLocationDocument', 'focusLocationBrowserResult'];
         for (const name of otherCallers) {
             const match = worldViewSource.match(new RegExp(`function ${name}\\([^)]*\\) \\{([\\s\\S]*?)\\n {8}\\}`));
             assert(match, `F4a. ${name}() still exists in ui/views/WorldView.js.`);
@@ -471,7 +474,7 @@ async function runTests() {
         const diff = gitLog(`show ${introducingCommit} -- ui/views/WorldView.js`);
         assert(diff, 'G0b. That commit\'s diff against ui/views/WorldView.js is readable.');
 
-        // The three pre-existing focusWorld() callers this feature is
+        // The pre-existing focusWorld() callers this feature is
         // said to reuse, never touch, must not have their own
         // DEFINITION line changed (+/-) in the introducing commit's own
         // diff. A comment elsewhere in the diff merely naming one of
@@ -480,19 +483,18 @@ async function runTests() {
         // function itself, so this checks the `function <name>(` line
         // specifically rather than a bare substring match.
         const changedLines = diff.split('\n').filter((line) => /^[+-][^+-]/.test(line));
-        for (const name of ['focusSearchResult', 'focusLocationDocument', 'focusLocationBrowserResult']) {
+        for (const name of ['focusLocationDocument', 'focusLocationBrowserResult']) {
             const definitionPattern = new RegExp(`function ${name}\\(`);
             assert(!changedLines.some((line) => definitionPattern.test(line)),
                 `G1. ${name}()'s own definition line is not among the lines the introducing commit changed (a comment elsewhere may still name it as precedent).`);
         }
 
-        // Live behavior of the three untouched callers still matches
+        // Live behavior of the untouched callers still matches
         // their documented one-line shape: call focusWorld with the
-        // given documentId (and, for two of them, close their own
-        // dialog) — never anything else.
+        // given documentId, then close their own dialog — never anything
+        // else.
         const worldViewSource = await rawSource('ui/views/WorldView.js');
         const shapes = {
-            focusSearchResult: /function focusSearchResult\(documentId\) \{\s*focusWorld\(documentId\);\s*\}/,
             focusLocationDocument: /function focusLocationDocument\(documentId\) \{\s*focusWorld\(documentId\);\s*closeLocationDocuments\(\);\s*\}/,
             focusLocationBrowserResult: /function focusLocationBrowserResult\(documentId\) \{\s*focusWorld\(documentId\);\s*closeLocationBrowser\(\);\s*\}/
         };

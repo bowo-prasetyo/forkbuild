@@ -68,13 +68,20 @@ const DRAG_THRESHOLD_PX = 6;
 const DEFAULT_EXPLORE_RADIUS = 25;
 const NEARBY_RADIUS = 5;
 
-// 0.1.50 gave World View the same consolidated EditorActionRegistry/
-// EditingSidebar/CommandPalette the Editor uses, for editing parity by
-// construction. 0.5.9 retires all of it: World View no longer edits
-// Document content at all (see docs/Principles.md, "World View
-// Observes and Navigates; Editor Mutates and Builds") — hover/
-// inspection/focus panels are unchanged, everything mutation-shaped is
-// gone.
+// Fallback envelope for a failed/guarded World Location Browser call —
+// same shape exploreLocation always returns, so callers never have to
+// special-case "the call didn't happen" from "it happened and found
+// nothing with no diagnostics available." Its `diagnostics` is also the
+// browser banner's initial/reset value.
+const EMPTY_DISCOVERY_ENVELOPE = { documents: [], diagnostics: { available: false, fatal: null, complete: false, warnings: [] } };
+
+// 0.5.9 removed brick/structure editing from World View (the
+// EditorActionRegistry, EditingSidebar, CommandPalette, gizmo and
+// placement preview) — see docs/Principles.md, "World View Observes and
+// Navigates; Editor Mutates and Builds". What remains mutation-shaped is
+// document- and World-level only: Save/Publish/Edit Metadata, placement
+// moves, landmarks/regions/place names, and Undo/Redo/History over
+// those same commands.
 export default {
     name: 'WorldView',
     components: {
@@ -117,12 +124,11 @@ export default {
         const loadedWorlds = ref([]);
         const nearbyWorlds = ref([]);
         const failedWorlds = ref([]);
-        const spatialSelection = ref(null);
         const spatialHover = ref(null);
         const spatialInspection = ref(null);
-        // 0.2.21: superseded by documentInfo (getDocumentInfo already
-        // includes editabilityNotice — see below) — the Document Info
-        // panel now carries what this used to render standalone.
+        // The Document Info panel's data for the INSPECTED document (see
+        // activeDocumentInfo above for how that differs); includes the
+        // editabilityNotice the panel renders.
         const documentInfo = ref(null);
         const showMetadataEditor = ref(false);
         // Which info object (activeDocumentInfo or documentInfo) the
@@ -148,7 +154,7 @@ export default {
         // pattern exactly, one field over. `null` for an unpublished
         // fork or a document that was never published — OwnPublicationPanel
         // (below) renders that as "nothing to distribute yet," never a
-        // guess. Deliberately NEVER derived from spatialSelection,
+        // guess. Deliberately NEVER derived from the spatial selection,
         // worldDiscoverySourceRegistry, or anything World Encounters
         // itself produces — see that component's own header for why.
         const ownPublication = ref(null);
@@ -204,7 +210,7 @@ export default {
         // "unavailable" shape (no trust-capable provider consulted)
         // rather than null, so WorldLocationBrowser's banner always has
         // something well-formed to render.
-        const locationBrowserDiagnostics = ref({ available: false, fatal: null, complete: false, warnings: [] });
+        const locationBrowserDiagnostics = ref(EMPTY_DISCOVERY_ENVELOPE.diagnostics);
         const locationBrowserInspected = ref(null);
         const cameraPosition = ref(null);
         // 0.2.94 — World View Location & Navigation. `compassHeading`
@@ -421,7 +427,6 @@ export default {
         // and setPrimaryMode()/goBackInPlaces() below for the mirroring.
         const worldViewNav = new WorldViewNavigationState();
         const primaryMode = ref(worldViewNav.primaryMode);
-        const placesView = ref(worldViewNav.currentPlacesView);
         // 0.2.99 — World Collaboration UX. `worldMembers`/
         // `worldPresenceRoster` are the RAW facts session.
         // listWorldMembers()/getWorldPresenceRoster() already return for
@@ -827,12 +832,8 @@ export default {
             resolveSelectedSnapshotCommand,
             materializeSelectedSnapshotCommand,
             worldDiscoverySourceRegistry,
-            resolvePlacementInfo: (publicationId) => (typeof session.getPlacementInfoForPublication === 'function'
-                ? session.getPlacementInfoForPublication(publicationId)
-                : null),
-            findPublicationById: (publicationId) => (typeof session.findPublicationById === 'function'
-                ? session.findPublicationById(publicationId)
-                : null),
+            resolvePlacementInfo: (publicationId) => session.getPlacementInfoForPublication(publicationId),
+            findPublicationById: (publicationId) => session.findPublicationById(publicationId),
             isSessionActive: () => automaticCascadeSessionActive,
             // 0.9.552 — the SAME `spatialContext.value.position` read
             // `refreshSpatialUI()` already recomputes on every tick, below —
@@ -1074,17 +1075,8 @@ export default {
                 }, 2500);
             }
         };
-        // 0.5.9 — actionRegistry/EditorActionContext/CommandPalette/
-        // EditingSidebar are gone from World View entirely: every action
-        // createStandardActions() ever offered (selection mutation,
-        // transform, clipboard, groups, undo/redo) is now Editor-only —
-        // see docs/Principles.md, "World View Observes and Navigates;
-        // Editor Mutates and Builds (0.5.9)".
-
-        // Guards every direct session call this view makes outside the
-        // EditorActionRegistry (which already catches and surfaces
-        // errors itself in surfaceCall — see EditorActionRegistry.js).
-        // A rejected mutation (e.g. 0.2.20 fork-on-edit refusing to
+        // Guards direct session calls this view makes. A rejected
+        // mutation (e.g. 0.2.20 fork-on-edit refusing to
         // fork a fork-forbidden published snapshot) becomes a message,
         // not an uncaught exception breaking the pointer/keyboard
         // handler it came from.
@@ -1098,11 +1090,9 @@ export default {
         function guarded(fn) {
             try {
                 const result = fn();
-                if (typeof session.consumeForkNotice === 'function') {
-                    const notice = session.consumeForkNotice();
-                    if (notice) {
-                        feedback.show(`Created your own editable copy — "${notice.sourceTitle}" is unchanged`);
-                    }
+                const notice = session.consumeForkNotice();
+                if (notice) {
+                    feedback.show(`Created your own editable copy — "${notice.sourceTitle}" is unchanged`);
                 }
                 return result;
             } catch (err) {
@@ -1612,9 +1602,7 @@ export default {
             if (!snapshotDistributionCommand) {
                 return Promise.reject(new Error('Snapshot distribution is not available.'));
             }
-            const placementInfo = typeof session.getPlacementInfoForPublication === 'function'
-                ? session.getPlacementInfoForPublication(publication.id)
-                : null;
+            const placementInfo = session.getPlacementInfoForPublication(publication.id);
             return snapshotDistributionCommand(
                 snapshotBytes,
                 storage,
@@ -1986,9 +1974,7 @@ export default {
         // read back or touched here beyond the `publicationId` the panel
         // already handed this function — this stays navigation only.
         function viewNotificationPublicationCommand(publicationId) {
-            const publication = typeof session.findPublicationById === 'function'
-                ? session.findPublicationById(publicationId)
-                : null;
+            const publication = session.findPublicationById(publicationId);
             if (!publication || !publication.documentId) {
                 return false;
             }
@@ -2011,36 +1997,21 @@ export default {
             const docs = session.getLoadedDocuments();
             const pubMap = new Map(allPublications.value.map((p) => [p.documentId, p]));
 
-            loadedWorlds.value = state.loaded.map((id) => {
-                const doc = docs.find((d) => d.world.id === id);
+            // A loaded document's own metadata wins over its publication's;
+            // nearby/failed ids have no loaded document, so they fall
+            // straight through to the publication.
+            const worldRow = (id, doc = null) => {
                 const pub = pubMap.get(id);
                 return {
                     documentId: id,
                     title: doc?.metadata?.title || pub?.title || 'Untitled',
                     author: doc?.metadata?.author || pub?.author || 'anonymous'
                 };
-            });
-
+            };
+            loadedWorlds.value = state.loaded.map((id) => worldRow(id, docs.find((d) => d.world.id === id)));
             const loadedSet = new Set(state.loaded);
-            nearbyWorlds.value = state.nearby
-                .filter((id) => !loadedSet.has(id))
-                .map((id) => {
-                    const pub = pubMap.get(id);
-                    return {
-                        documentId: id,
-                        title: pub?.title || 'Untitled',
-                        author: pub?.author || 'anonymous'
-                    };
-                });
-
-            failedWorlds.value = state.failed.map((id) => {
-                const pub = pubMap.get(id);
-                return {
-                    documentId: id,
-                    title: pub?.title || 'Untitled',
-                    author: pub?.author || 'anonymous'
-                };
-            });
+            nearbyWorlds.value = state.nearby.filter((id) => !loadedSet.has(id)).map((id) => worldRow(id));
+            failedWorlds.value = state.failed.map((id) => worldRow(id));
 
             cameraPosition.value = state.cameraPosition;
             // 0.2.94 — re-read alongside cameraPosition on the exact
@@ -2084,7 +2055,7 @@ export default {
             if (worldSnapshotDiscoveryMonitor && spatialContext.value) {
                 worldSnapshotDiscoveryMonitor.observe(spatialContext.value).then(() => {
                     const candidates = worldSnapshotDiscoveryMonitor.lastResult;
-                    if (automaticSnapshotEncounterCascade && Array.isArray(candidates)) {
+                    if (Array.isArray(candidates)) {
                         candidates.forEach((candidate) => automaticSnapshotEncounterCascade.processCandidate(candidate).then((result) => {
                             // 0.9.190 — Automatic Snapshot Encounter Retention
                             // Integration. The ONLY place a subject ever becomes
@@ -2174,7 +2145,7 @@ export default {
             // 0.5.1 — World Maps & Geographic Navigation. Re-read on the
             // exact same cadence as spatialContext above — see
             // `mapContent`'s own ref comment.
-            mapContent.value = session.getMapContent((identityId) => resolveIdentityDisplayName(identityId));
+            refreshMapContent();
 
             // 0.5.6 — Geographic Place Navigation & Arrival. Re-read on
             // the exact same cadence — see `nearbyGeographicPlaces`'s
@@ -2182,26 +2153,7 @@ export default {
             nearbyGeographicPlaces.value = session.getNearbyGeographicPlaces();
 
             // 0.2.38 — see the ref's own comment above.
-            if (typeof session.getRemoteAvatarDiagnostics === 'function') {
-                remoteAvatarDiagnostics.value = session.getRemoteAvatarDiagnostics();
-            }
-
-            const sel = session.getSpatialSelection();
-            if (sel && !sel.isEmpty) {
-                const pub = pubMap.get(sel.documentId);
-                spatialSelection.value = {
-                    type: sel.type,
-                    documentId: sel.documentId,
-                    buildingId: sel.buildingId,
-                    brickId: sel.brickId,
-                    position: sel.position,
-                    count: sel.items.length,
-                    worldTitle: pub?.title || 'Untitled',
-                    worldAuthor: pub?.author || 'anonymous'
-                };
-            } else {
-                spatialSelection.value = null;
-            }
+            remoteAvatarDiagnostics.value = session.getRemoteAvatarDiagnostics();
 
             const inspection = session.getSpatialInspection();
             if (inspection && !inspection.isEmpty) {
@@ -2234,8 +2186,7 @@ export default {
             // 0.2.20's editability notice used, now folded into the
             // richer shape (title/description/license/status/
             // editabilityNotice together) getDocumentInfo returns.
-            documentInfo.value = (spatialInspection.value && spatialInspection.value.documentId
-                && typeof session.getDocumentInfo === 'function')
+            documentInfo.value = (spatialInspection.value && spatialInspection.value.documentId)
                 ? session.getDocumentInfo(spatialInspection.value.documentId)
                 : null;
 
@@ -2245,8 +2196,7 @@ export default {
             // the "don't blur the concepts" separation the milestone
             // design asked for. null (not a placement-shaped object
             // full of nulls) when the world has no known placement yet.
-            placementInfo.value = (spatialInspection.value && spatialInspection.value.documentId
-                && typeof session.getPlacementInfo === 'function')
+            placementInfo.value = (spatialInspection.value && spatialInspection.value.documentId)
                 ? session.getPlacementInfo(spatialInspection.value.documentId)
                 : null;
 
@@ -2257,23 +2207,17 @@ export default {
             // is ever non-null at a time, but they're read from
             // completely separate session state, never derived from
             // each other.
-            avatarInfo.value = typeof session.getAvatarInfo === 'function'
-                ? session.getAvatarInfo()
-                : null;
-            followedRemoteAvatarId.value = typeof session.getFollowedRemoteAvatarId === 'function'
-                ? session.getFollowedRemoteAvatarId()
-                : null;
+            avatarInfo.value = session.getAvatarInfo();
+            followedRemoteAvatarId.value = session.getFollowedRemoteAvatarId();
 
-            // 0.2.43 — independent of avatarInfo/spatialSelection above:
+            // 0.2.43 — independent of avatarInfo above:
             // "who is near me" is a standing fact about the local
             // avatar's own position, not tied to whatever is currently
             // selected or targeted.
-            nearbyAvatars.value = typeof session.getNearbyAvatars === 'function'
-                ? session.getNearbyAvatars().map((entry) => ({
-                    ...entry,
-                    displayName: session.getAvatarDisplayName(entry.avatarId)
-                }))
-                : [];
+            nearbyAvatars.value = session.getNearbyAvatars().map((entry) => ({
+                ...entry,
+                displayName: session.getAvatarDisplayName(entry.avatarId)
+            }));
 
             // 0.2.22: the header (title/author/status) and the route
             // always track the ACTIVE document — session.
@@ -2290,31 +2234,23 @@ export default {
             // documentId->route mechanism focusWorld() already used
             // for an explicit "Focus World" click, just applied
             // automatically instead of only on request.
-            const activeId = typeof session.getActiveDocumentId === 'function'
-                ? session.getActiveDocumentId()
-                : initialDocumentId;
+            const activeId = session.getActiveDocumentId();
             const activeDoc = docs.find((d) => d.world.id === activeId);
             if (activeDoc) {
                 title.value = activeDoc.metadata.title || 'Untitled';
                 author.value = activeDoc.metadata.author;
             }
-            activeDocumentInfo.value = (activeId && typeof session.getDocumentInfo === 'function')
-                ? session.getDocumentInfo(activeId)
-                : null;
+            activeDocumentInfo.value = activeId ? session.getDocumentInfo(activeId) : null;
             // 0.9.210 — World View Undo/Redo UI Integration. Same cadence
             // as activeDocumentInfo immediately above, since both track
             // "what can be done to the currently active document."
-            canUndo.value = typeof session.canUndo === 'function' && session.canUndo();
-            canRedo.value = typeof session.canRedo === 'function' && session.canRedo();
-            undoLabel.value = typeof session.getUndoLabel === 'function' ? session.getUndoLabel() : null;
-            redoLabel.value = typeof session.getRedoLabel === 'function' ? session.getRedoLabel() : null;
-            activePlacementInfo.value = (activeId && typeof session.getPlacementInfo === 'function')
-                ? session.getPlacementInfo(activeId)
-                : null;
+            canUndo.value = session.canUndo();
+            canRedo.value = session.canRedo();
+            undoLabel.value = session.getUndoLabel();
+            redoLabel.value = session.getRedoLabel();
+            activePlacementInfo.value = activeId ? session.getPlacementInfo(activeId) : null;
             // 0.9.140 — see ownPublication's own ref comment above.
-            ownPublication.value = (activeId && typeof session.getPublicationForDocument === 'function')
-                ? session.getPublicationForDocument(activeId)
-                : null;
+            ownPublication.value = activeId ? session.getPublicationForDocument(activeId) : null;
             if (activeId && activeId !== route.params.documentId) {
                 router.replace({ path: `/world/${activeId}` });
             }
@@ -2346,9 +2282,7 @@ export default {
             // can share a coordinate; focusing one, then the other,
             // moves the camera nowhere the second time, but Editing
             // still needs to say which one is now the mutation target.
-            const focusedId = typeof session.getFocusedDocumentId === 'function'
-                ? session.getFocusedDocumentId()
-                : activeId;
+            const focusedId = session.getFocusedDocumentId();
             if (!focusedId) {
                 focusedDocumentTitle.value = null;
             } else {
@@ -2467,15 +2401,11 @@ export default {
                 worldReturnInfo.value = null;
                 return;
             }
-            const hasVisitedBefore = typeof session.hasVisitedWorld === 'function'
-                && session.hasVisitedWorld(presentExperienceWorldDocumentId);
-            const priorExperience = hasVisitedBefore && typeof session.getWorldExperience === 'function'
+            const priorExperience = session.hasVisitedWorld(presentExperienceWorldDocumentId)
                 ? session.getWorldExperience(presentExperienceWorldDocumentId)
                 : null;
             worldReturnInfo.value = priorExperience ? { lastVisitedAt: priorExperience.lastVisitedAt } : null;
-            if (typeof session.restoreWorldExperience === 'function') {
-                session.restoreWorldExperience(presentExperienceWorldDocumentId);
-            }
+            session.restoreWorldExperience(presentExperienceWorldDocumentId);
         }
 
         function refreshCollaborationRoster(documentId) {
@@ -2555,9 +2485,7 @@ export default {
         // presentation-only resolver every other spatial-presence path
         // in this file already threads through.
         function refreshWelcomeContext() {
-            const context = typeof session.getWelcomeContext === 'function'
-                ? session.getWelcomeContext((identityId) => resolveIdentityDisplayName(identityId))
-                : null;
+            const context = session.getWelcomeContext((identityId) => resolveIdentityDisplayName(identityId));
             welcomeContext.value = context ? context.toJSON() : null;
         }
 
@@ -2579,22 +2507,7 @@ export default {
             // arrival showing — so primaryMode always agrees with what's
             // actually on screen, never left pointing at whatever mode
             // the viewer was in during a PREVIOUS World.
-            worldViewNav.setPrimaryMode(WorldViewPrimaryMode.EXPLORE);
-            primaryMode.value = worldViewNav.primaryMode;
-        }
-
-        // The Explore primary-mode entry point (section 7 of the
-        // original 0.3.9 design: "a small exploration control... selects
-        // a destination from existing derived information") — same
-        // content and component as the automatic arrival showing, just
-        // reopened on request rather than once automatically.
-        //
-        // 0.5.7 — routed through setPrimaryMode() so re-entering Explore
-        // also closes whatever other primary surface (Map, Places) was
-        // open, the same one-panel-at-a-time guarantee every other mode
-        // switch gets.
-        function openExplorePanel() {
-            setPrimaryMode(WorldViewPrimaryMode.EXPLORE);
+            syncPrimaryMode(WorldViewPrimaryMode.EXPLORE);
         }
 
         // 0.5.7 — dismissing Explore's own content returns primaryMode
@@ -2640,8 +2553,13 @@ export default {
         // which primaryDeviceId was clicked." session.focusCollaborator()
         // is the ONE call that actually moves the camera; nothing here
         // sends anything to anyone.
+        //
+        // Also the one handler for every other "go to this person" entry
+        // point — Nearby People's Go button and WorldMapPanel's
+        // `focus-collaborator` emit.
         function followCollaborator(deviceId) {
             session.focusCollaborator(deviceId);
+            refreshSpatialUI();
         }
 
         // Resolves a friendly label for a raw identityId — PRESENTATION
@@ -2820,8 +2738,7 @@ export default {
         // other primary surface uses, so it's never stacked on top of
         // the Map or Places directory.
         function openLocationsPanel() {
-            worldViewNav.setPrimaryMode(WorldViewPrimaryMode.EXPLORE);
-            primaryMode.value = worldViewNav.primaryMode;
+            syncPrimaryMode(WorldViewPrimaryMode.EXPLORE);
             closePrimaryNavigationPanels();
             refreshLocationsPanel();
             showLocationsPanel.value = true;
@@ -2834,7 +2751,10 @@ export default {
             showLocationsPanel.value = false;
         }
 
-        function focusLocationFromPanel(locationId) {
+        // The one handler for every "go to this location" entry point —
+        // the Locations panel, Nearby Landmarks, WorldMapPanel's
+        // `focus-location` and GeographicPlacePanel's `focus-region`.
+        function focusLocation(locationId) {
             session.focusLocation(locationId);
             refreshSpatialUI();
         }
@@ -3154,14 +3074,18 @@ export default {
         // paint is never stale. Once open, refreshSpatialUI() itself keeps
         // mapContent current — see that ref's own comment. Clicking a
         // marker on the map routes through the exact SAME
-        // focusLocation()/focusCollaborator() every other navigation
-        // entry point in this file already uses (goHome,
-        // focusLocationFromPanel, the Explore panel's suggestions) —
+        // focusLocation()/followCollaborator() every other navigation
+        // entry point in this file already uses (the Locations panel,
+        // Nearby Landmarks/People, the Explore panel's suggestions) —
         // WorldMapPanel itself never touches the camera or the session
         // directly.
         function openMapPanel() {
-            mapContent.value = session.getMapContent((identityId) => resolveIdentityDisplayName(identityId));
+            refreshMapContent();
             showMapPanel.value = true;
+        }
+
+        function refreshMapContent() {
+            mapContent.value = session.getMapContent((identityId) => resolveIdentityDisplayName(identityId));
         }
 
         function closeMapPanel() {
@@ -3175,8 +3099,7 @@ export default {
             // 0.5.7 — dismissing Map with nothing to replace it returns
             // primaryMode to Explore, its resting default, rather than
             // leaving the Map tab shown "active" over an empty panel.
-            worldViewNav.setPrimaryMode(WorldViewPrimaryMode.EXPLORE);
-            primaryMode.value = worldViewNav.primaryMode;
+            syncPrimaryMode(WorldViewPrimaryMode.EXPLORE);
         }
 
         // -----------------------------------------------------------------
@@ -3213,6 +3136,14 @@ export default {
             focusContext.value = null;
         }
 
+        // Records `mode` as current and mirrors it into primaryMode
+        // WITHOUT setPrimaryMode()'s own panel open/close side effects —
+        // for callers that have already arranged the panels themselves.
+        function syncPrimaryMode(mode) {
+            worldViewNav.setPrimaryMode(mode);
+            primaryMode.value = worldViewNav.primaryMode;
+        }
+
         function setPrimaryMode(mode) {
             if (!worldViewNav.setPrimaryMode(mode)) {
                 return;
@@ -3222,8 +3153,7 @@ export default {
             if (mode === WorldViewPrimaryMode.EXPLORE) {
                 openWelcomePanel(false);
             } else if (mode === WorldViewPrimaryMode.MAP) {
-                mapContent.value = session.getMapContent((identityId) => resolveIdentityDisplayName(identityId));
-                showMapPanel.value = true;
+                openMapPanel();
             } else if (mode === WorldViewPrimaryMode.PLACES) {
                 // Restores whichever screen (directory or one place's
                 // detail) the viewer left Places on — see
@@ -3232,7 +3162,6 @@ export default {
                 const view = worldViewNav.currentPlacesView;
                 if (view.screen === 'detail' && view.fingerprintKey) {
                     restoreGeographicPlaceDetail(view.fingerprintKey);
-                    placesView.value = worldViewNav.currentPlacesView;
                 } else {
                     openGeographicPlaceDirectory();
                 }
@@ -3250,7 +3179,7 @@ export default {
         // spatialCollaboratorRows) — nothing here queries the session a
         // second time. Collapsed state is mirrored from worldViewNav
         // into this one plain ref, the same "pure module, mirrored into
-        // a ref" pattern primaryMode/placesView above already use.
+        // a ref" pattern primaryMode above already uses.
         const NEARBY_PLACES_SECTION = 'explore:nearby-places';
         const NEARBY_LANDMARKS_SECTION = 'explore:nearby-landmarks';
         const NEARBY_PEOPLE_SECTION = 'explore:nearby-people';
@@ -3421,27 +3350,11 @@ export default {
             }))
         ));
 
-        function goToNearbyCollaborator(deviceId) {
-            if (deviceId) {
-                followCollaborator(deviceId);
-            }
-        }
-
-        function focusLocationFromMap(locationId) {
-            session.focusLocation(locationId);
-            refreshSpatialUI();
-        }
-
-        function focusCollaboratorFromMap(deviceId) {
-            session.focusCollaborator(deviceId);
-            refreshSpatialUI();
-        }
-
         // 0.9.260 — Nearby Place Naming Claim Interaction. Navigates the
         // camera to the EXACT region a nearby claim names, reusing
-        // focusLocation() — the SAME navigation machinery
-        // focusLocationFromMap()/focusCollaboratorFromMap() above already
-        // call — rather than inventing a Place Naming-specific navigation
+        // session.focusLocation() — the SAME navigation machinery
+        // focusLocation()/followCollaborator() above already call —
+        // rather than inventing a Place Naming-specific navigation
         // system. Navigate is deliberately NOT adopt, verify, trust, or a
         // preference: this function never touches WorldRegion naming,
         // LocalPlaceNamingClaimStore, LocalNamePreferenceStore, or
@@ -3672,7 +3585,7 @@ export default {
         // kind, is always correct, never merely "correct for two out of
         // three kinds."
         function currentReturnWorld() {
-            const id = (typeof session.getFocusedDocumentId === 'function' && session.getFocusedDocumentId())
+            const id = session.getFocusedDocumentId()
                 || route.params.documentId
                 || null;
             return { id, title: (id && focusedDocumentTitle.value) || title.value || '' };
@@ -3738,7 +3651,12 @@ export default {
         // preserves whatever detail screen was open).
         function openGeographicPlaceDirectory() {
             worldViewNav.openPlacesDirectory();
-            placesView.value = worldViewNav.currentPlacesView;
+            showGeographicPlaceDirectoryList();
+        }
+
+        // Re-reads the directory fresh (never cached across opens) and
+        // shows it — shared by opening Places and going back to it.
+        function showGeographicPlaceDirectoryList() {
             geographicPlaces.value = session.getGeographicPlaceDirectory().map((place) => place.toJSON());
             showGeographicPlaceDirectory.value = true;
         }
@@ -3778,9 +3696,7 @@ export default {
             // destination every other "you have arrived" path in this
             // file already lands on.
             worldViewNav.openPlacesDirectory();
-            placesView.value = worldViewNav.currentPlacesView;
-            worldViewNav.setPrimaryMode(WorldViewPrimaryMode.EXPLORE);
-            primaryMode.value = worldViewNav.primaryMode;
+            syncPrimaryMode(WorldViewPrimaryMode.EXPLORE);
         }
 
         // 0.5.7 — mirrors closeMapPanel()'s own header: dismissing the
@@ -3792,8 +3708,7 @@ export default {
         // fresh list.
         function closeGeographicPlaceDirectory() {
             showGeographicPlaceDirectory.value = false;
-            worldViewNav.setPrimaryMode(WorldViewPrimaryMode.EXPLORE);
-            primaryMode.value = worldViewNav.primaryMode;
+            syncPrimaryMode(WorldViewPrimaryMode.EXPLORE);
         }
 
         // 0.5.7 — reached only from the directory's own row click (see
@@ -3808,7 +3723,6 @@ export default {
             }
             geographicPlace.value = place.toJSON();
             worldViewNav.openPlaceDetail(fingerprintKey);
-            placesView.value = worldViewNav.currentPlacesView;
             showGeographicPlaceDirectory.value = false;
             showGeographicPlacePanel.value = true;
         }
@@ -3824,9 +3738,7 @@ export default {
         function restoreGeographicPlaceDetail(fingerprintKey) {
             const place = session.getGeographicPlace(fingerprintKey);
             if (!place) {
-                worldViewNav.openPlacesDirectory();
-                geographicPlaces.value = session.getGeographicPlaceDirectory().map((p) => p.toJSON());
-                showGeographicPlaceDirectory.value = true;
+                openGeographicPlaceDirectory();
                 return;
             }
             geographicPlace.value = place.toJSON();
@@ -3845,16 +3757,9 @@ export default {
         // two screens deep).
         function goBackInPlaces() {
             worldViewNav.goBackInPlaces();
-            placesView.value = worldViewNav.currentPlacesView;
             showGeographicPlacePanel.value = false;
             geographicPlace.value = null;
-            geographicPlaces.value = session.getGeographicPlaceDirectory().map((place) => place.toJSON());
-            showGeographicPlaceDirectory.value = true;
-        }
-
-        function focusRegionFromPlace(regionId) {
-            session.focusLocation(regionId);
-            refreshSpatialUI();
+            showGeographicPlaceDirectoryList();
         }
 
         function openNamesFromPlace(regionId) {
@@ -3893,8 +3798,7 @@ export default {
             // pointing at this same place's detail) — see
             // setPrimaryMode()'s own PLACES branch, which is exactly
             // what lets switching back to the Places tab return here.
-            worldViewNav.setPrimaryMode(WorldViewPrimaryMode.MAP);
-            primaryMode.value = worldViewNav.primaryMode;
+            syncPrimaryMode(WorldViewPrimaryMode.MAP);
         }
 
         // 0.2.93 — "Open Source": reuses the EXISTING /editor?load=<id>
@@ -4046,13 +3950,11 @@ export default {
             searchResults.value = guarded(() => session.searchWorld(options)) || [];
         }
 
-        // Search's own Focus action is exactly focusWorld — searching
-        // for a document and finding it in "Nearby Worlds" both end at
-        // the same operation, by design (see docs/Principles.md,
-        // "Focus Is Navigation, Not Discovery").
-        function focusSearchResult(documentId) {
-            focusWorld(documentId);
-        }
+        // Search's own Focus action is exactly focusWorld — bound straight
+        // to WorldSearchPanel's `focus` emit in the template. Searching for
+        // a document and finding it in "Nearby Worlds" both end at the same
+        // operation, by design (see docs/Principles.md, "Focus Is
+        // Navigation, Not Discovery").
 
         // Opened from PlacementInfoPanel's overlap "View" link — turns
         // 0.2.25's passive "N other documents share this location"
@@ -4082,11 +3984,6 @@ export default {
         // 0.2.29: World Location Browser — "Explore Here" / "What's Here?"
         // -----------------------------------------------------------------
 
-        // Fallback envelope for a failed/guarded call — same shape
-        // exploreLocation always returns, so callers never have to
-        // special-case "the call didn't happen" from "it happened and
-        // found nothing with no diagnostics available."
-        const EMPTY_DISCOVERY_ENVELOPE = { documents: [], diagnostics: { available: false, fatal: null, complete: false, warnings: [] } };
 
         // Shared open logic: both entry points differ only in which
         // session method resolves the initial envelope (and thus the
@@ -4358,9 +4255,7 @@ export default {
         // docs/Principles.md, "An Interaction Request Is Not Authority
         // Over Another Avatar."
         function performAvatarInteraction(kind) {
-            if (typeof session.performAvatarInteraction === 'function') {
-                session.performAvatarInteraction(kind);
-            }
+            session.performAvatarInteraction(kind);
         }
 
         // 0.2.43 — clicking a "Nearby Avatars" row reaches the SAME
@@ -4385,12 +4280,12 @@ export default {
         //
         // Deliberately separate from onKeyDown below: W/A/S/D/Shift/Space
         // only ever mean anything while Avatar Control Mode is
-        // explicitly on. Both handlers
-        // still respect the same "text inputs own their keys" rule
-        // onKeyDown already follows, so search/metadata fields never
-        // fight the avatar for keystrokes.
+        // explicitly on. onAvatarKeyDown is only ever called from
+        // onKeyDown, AFTER onKeyDown has already returned for text
+        // inputs, so search/metadata fields never fight the avatar for
+        // keystrokes.
         function onAvatarKeyDown(event) {
-            if (!avatarControlMode.value || InputRouter.isTextInputTarget(event.target)) {
+            if (!avatarControlMode.value) {
                 return false;
             }
             if (session.avatarKeyDown(event.key)) {
@@ -4519,23 +4414,20 @@ export default {
             // showing "[E] Mount/Dismount" while the key that would
             // actually do something is off would be misleading.
             vehicleInteractionInterval = setInterval(() => {
-                vehicleInteractionState.value = (hasLocalAvatar.value && avatarControlMode.value
-                    && typeof session.avatarVehicleInteractionState === 'function')
+                vehicleInteractionState.value = (hasLocalAvatar.value && avatarControlMode.value)
                     ? session.avatarVehicleInteractionState()
                     : null;
                 // 0.9.670 — Avatar Inventory (store/deploy). Same gating,
                 // same cadence, same interval as vehicleInteractionState
                 // immediately above — a second independent affordance,
                 // never a reason for a second interval.
-                storeInteractionState.value = (hasLocalAvatar.value && avatarControlMode.value
-                    && typeof session.avatarStoreInteractionState === 'function')
+                storeInteractionState.value = (hasLocalAvatar.value && avatarControlMode.value)
                     ? session.avatarStoreInteractionState()
                     : null;
                 // 0.9.700 — Animal Catching. Same gating, same cadence,
                 // same interval as the two above — a third independent
                 // affordance, never a reason for a third interval.
-                animalInteractionState.value = (hasLocalAvatar.value && avatarControlMode.value
-                    && typeof session.avatarAnimalInteractionState === 'function')
+                animalInteractionState.value = (hasLocalAvatar.value && avatarControlMode.value)
                     ? session.avatarAnimalInteractionState()
                     : null;
             }, 150);
@@ -4635,7 +4527,6 @@ export default {
             loadedWorlds,
             nearbyWorlds,
             failedWorlds,
-            spatialSelection,
             spatialHover,
             spatialInspection,
             documentInfo,
@@ -4668,7 +4559,6 @@ export default {
             searchResults,
             catalogEmpty,
             performSearch,
-            focusSearchResult,
             showLocationDocuments,
             locationDocumentsPosition,
             locationDocumentsOccupants,
@@ -4715,7 +4605,6 @@ export default {
             welcomeIsArrival,
             worldReturnInfo,
             welcomeIsReturning,
-            openExplorePanel,
             closeWelcomePanel,
             exploreWelcomeSuggestion,
             canEditActiveWorld,
@@ -4725,10 +4614,7 @@ export default {
             regionFormTarget,
             showMapPanel,
             mapContent,
-            openMapPanel,
             closeMapPanel,
-            focusLocationFromMap,
-            focusCollaboratorFromMap,
             mapHighlightRegionKeys,
             showFocusPanel,
             focusContext,
@@ -4744,11 +4630,8 @@ export default {
             geographicPlaces,
             showGeographicPlacePanel,
             geographicPlace,
-            openGeographicPlaceDirectory,
             closeGeographicPlaceDirectory,
             openGeographicPlace,
-            closeGeographicPlacePanel,
-            focusRegionFromPlace,
             openNamesFromPlace,
             showGeographicPlaceOnMap,
             nearbyGeographicPlaces,
@@ -4756,7 +4639,6 @@ export default {
             // 0.5.7 — World View UX & Progressive Exploration.
             WorldViewPrimaryMode,
             primaryMode,
-            placesView,
             setPrimaryMode,
             goBackInPlaces,
             nearbySectionsCollapsed,
@@ -4767,7 +4649,6 @@ export default {
             WORLD_ENCOUNTERS_SECTION,
             // 0.9.257 — World View Place Naming Presentation.
             NEARBY_PLACE_NAMING_SECTION,
-            nearbyPlaceNamingClaims,
             nearbyPlaceNamingClaimRows,
             placeNamingDiscoveryError,
             worldDiscoverySourceRegistry,
@@ -4780,13 +4661,12 @@ export default {
             publicationDiscoveryTag,
             nearbyLandmarkRows,
             nearbyPeopleRows,
-            goToNearbyCollaborator,
             navigateToNearbyPlaceNamingClaim,
             adoptNearbyPlaceNamingClaim,
             goHome,
             openLocationsPanel,
             closeLocationsPanel,
-            focusLocationFromPanel,
+            focusLocation,
             openAddLandmarkForm,
             openEditLandmarkForm,
             closeLandmarkForm,
@@ -5108,7 +4988,7 @@ export default {
                         <span class="world-view-nearby-row-label">★ {{ landmark.title }}</span>
                         <span class="world-view-nearby-row-distance">{{ landmark.distance }}m {{ landmark.direction }}</span>
                         <button class="action-btn world-view-nearby-row-go" @click="openFocusForLocation(landmark.id)">Info</button>
-                        <button class="action-btn world-view-nearby-row-go" @click="focusLocationFromPanel(landmark.id)">Go</button>
+                        <button class="action-btn world-view-nearby-row-go" @click="focusLocation(landmark.id)">Go</button>
                     </div>
                 </CollapsibleSection>
                 <CollapsibleSection
@@ -5129,7 +5009,7 @@ export default {
                         <button
                             v-if="person.deviceId"
                             class="action-btn world-view-nearby-row-go"
-                            @click="goToNearbyCollaborator(person.deviceId)"
+                            @click="followCollaborator(person.deviceId)"
                         >Go</button>
                     </div>
                 </CollapsibleSection>
@@ -5424,7 +5304,7 @@ export default {
                     <button class="action-btn" @click="whatsHere">What's Here?</button>
                 </div>
                 <p class="world-view-hint">
-                    Drag to orbit • Scroll to zoom • Home to reset • Ctrl/Cmd+K command palette • Click to inspect / place<template v-if="avatarControlMode"> • WASD to walk • Shift to run • Space to jump</template>
+                    Drag to orbit • Scroll to zoom • Home to reset • Click to inspect<template v-if="avatarControlMode"> • WASD to walk • Shift to run • Space to jump</template>
                 </p>
 
                 <!-- 0.2.35: a pure client rendering preference — see
@@ -5551,7 +5431,7 @@ export default {
                         :results="searchResults"
                         :catalog-empty="catalogEmpty"
                         @search="performSearch"
-                        @focus="focusSearchResult"
+                        @focus="focusWorld"
                     />
                 </div>
 
@@ -5835,7 +5715,7 @@ export default {
                 v-if="showLocationsPanel"
                 :locations="worldLocations"
                 :can-edit="canEditActiveWorld"
-                @focus="focusLocationFromPanel"
+                @focus="focusLocation"
                 @inspect="openFocusForLocation"
                 @cancel="closeLocationsPanel"
                 @add-landmark="openAddLandmarkForm"
@@ -5886,8 +5766,8 @@ export default {
                 v-if="showMapPanel"
                 :content="mapContent"
                 :highlight-region-keys="mapHighlightRegionKeys"
-                @focus-location="focusLocationFromMap"
-                @focus-collaborator="focusCollaboratorFromMap"
+                @focus-location="focusLocation"
+                @focus-collaborator="followCollaborator"
                 @cancel="closeMapPanel"
             />
             <GeographicPlaceDirectoryPanel
@@ -5901,7 +5781,7 @@ export default {
             <GeographicPlacePanel
                 v-if="showGeographicPlacePanel"
                 :place="geographicPlace"
-                @focus-region="focusRegionFromPlace"
+                @focus-region="focusLocation"
                 @open-names="openNamesFromPlace"
                 @show-on-map="showGeographicPlaceOnMap"
                 @go-to-place="goToGeographicPlace(geographicPlace.fingerprintKey)"

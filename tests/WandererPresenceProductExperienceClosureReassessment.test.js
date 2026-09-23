@@ -298,7 +298,7 @@ async function main() {
         // displayName, keyed off the SAME avatarId this section just
         // proved carries through untouched.
         const worldViewSource = codeOnly(await readSource('ui/views/WorldView.js'));
-        assert(/nearbyAvatars\.value = typeof session\.getNearbyAvatars === 'function'\s*\n\s*\? session\.getNearbyAvatars\(\)\.map\(\(entry\) => \(\{\s*\n\s*\.\.\.entry,\s*\n\s*displayName: session\.getAvatarDisplayName\(entry\.avatarId\)/.test(worldViewSource),
+        assert(/nearbyAvatars\.value = session\.getNearbyAvatars\(\)\.map\(\(entry\) => \(\{\s*\n\s*\.\.\.entry,\s*\n\s*displayName: session\.getAvatarDisplayName\(entry\.avatarId\)/.test(worldViewSource),
             'B2. ui/views/WorldView.js enriches every getNearbyAvatars() row with displayName by calling getAvatarDisplayName(entry.avatarId) — the exact avatarId B1 confirmed is never itself a name.');
 
         // B3 — the fallback order itself, cited from
