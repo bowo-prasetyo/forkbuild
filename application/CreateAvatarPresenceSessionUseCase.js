@@ -29,6 +29,6 @@ export class CreateAvatarPresenceSessionUseCase {
         const { avatarProfileVisibilityUseCase } = new CreateAvatarProfileVisibilityUseCase().execute(identityProvider);
         const profile = avatarProfileUseCase.getProfile();
         const presenceSession = new AvatarPresenceSession(profile, initialState);
-        return { presenceSession, avatarProfileUseCase, presenceVisibilityUseCase, avatarProfileVisibilityUseCase, profile };
+        return { presenceSession, avatarProfileUseCase, presenceVisibilityUseCase, avatarProfileVisibilityUseCase };
     }
 }

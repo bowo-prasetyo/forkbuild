@@ -33,10 +33,9 @@ const SKIN_TONE_SWATCHES = {
     'skin-05': '#8d5524',
     'skin-06': '#4a2c17'
 };
-const DEFAULT_SKIN_SWATCH = '#e0ac69';
 
 function skinSwatch(skinOptionId) {
-    return SKIN_TONE_SWATCHES[skinOptionId] || DEFAULT_SKIN_SWATCH;
+    return SKIN_TONE_SWATCHES[skinOptionId] || SKIN_TONE_SWATCHES['skin-03'];
 }
 
 export default {
@@ -135,14 +134,14 @@ export default {
             }
         }
 
-        function isAccessorySelected(componentName, optionId) {
-            const current = appearance[componentName];
+        function isAccessorySelected(optionId) {
+            const current = appearance.accessories;
             return Array.isArray(current) && current.includes(optionId);
         }
 
-        function toggleAccessory(componentName, optionId) {
-            const current = Array.isArray(appearance[componentName]) ? appearance[componentName] : [];
-            appearance[componentName] = current.includes(optionId)
+        function toggleAccessory(optionId) {
+            const current = Array.isArray(appearance.accessories) ? appearance.accessories : [];
+            appearance.accessories = current.includes(optionId)
                 ? current.filter((id) => id !== optionId)
                 : [...current, optionId];
         }
@@ -254,13 +253,10 @@ export default {
             <div v-else-if="loaded && selectedTemplate" class="avatar-settings-layout">
                 <div class="avatar-preview-panel">
                     <svg viewBox="0 0 100 140" class="avatar-preview-figure" role="img" aria-label="Avatar preview">
-                        <rect x="30" y="70" width="40" height="45" rx="6"
-                              :fill="appearance.pantsColor || '#222222'" />
-                        <rect x="25" y="40" width="50" height="38" rx="8"
-                              :fill="appearance.shirtColor || '#3366cc'" />
+                        <rect x="30" y="70" width="40" height="45" rx="6" :fill="appearance.pantsColor" />
+                        <rect x="25" y="40" width="50" height="38" rx="8" :fill="appearance.shirtColor" />
                         <circle cx="50" cy="24" r="20" :fill="skinSwatch(appearance.skin)" />
-                        <path d="M 30 20 Q 50 0 70 20 L 70 12 Q 50 -4 30 12 Z"
-                              :fill="appearance.hairColor || '#3b2416'" />
+                        <path d="M 30 20 Q 50 0 70 20 L 70 12 Q 50 -4 30 12 Z" :fill="appearance.hairColor" />
                         <text x="50" y="130" text-anchor="middle" class="avatar-preview-label">{{ displayName || user.displayName }}</text>
                     </svg>
                     <p class="avatar-preview-accessories" v-if="(appearance.accessories || []).length">
@@ -300,8 +296,8 @@ export default {
                             <label v-for="opt in componentOptions('accessories')" :key="opt" class="avatar-accessory-option">
                                 <input
                                     type="checkbox"
-                                    :checked="isAccessorySelected('accessories', opt)"
-                                    @change="toggleAccessory('accessories', opt)"
+                                    :checked="isAccessorySelected(opt)"
+                                    @change="toggleAccessory(opt)"
                                 />
                                 {{ opt }}
                             </label>
@@ -341,10 +337,6 @@ export default {
                         <option :value="PresenceVisibility.HIDDEN">Hidden — never advertise your presence</option>
                     </select>
                 </label>
-
-                <p v-if="visibility === PresenceVisibility.FRIENDS" class="form-hint form-hint--neutral">
-                    Only authenticated friends receive your live avatar presence.
-                </p>
 
                 <label class="form-field" v-if="visibility === PresenceVisibility.FRIENDS">
                     <span class="form-label">Additional authorized identities</span>
@@ -405,7 +397,7 @@ export default {
                 <button class="action-btn action-btn--primary" @click="saveProfileVisibility" :disabled="profileVisibilitySaveStatus === 'saving'">Save Profile Visibility</button>
             </div>
 
-            <p v-if="loaded" class="form-hint form-hint--neutral avatar-settings-visibility-note">
+            <p v-if="loaded" class="form-hint form-hint--neutral">
                 Friendship and visibility are separate. Being friends does not automatically reveal your avatar — your visibility policies above decide what is shared, and with whom. Withholding a future update is also not the same as remote deletion: a peer who already received your presence or appearance keeps whatever they last received.
             </p>
         </section>

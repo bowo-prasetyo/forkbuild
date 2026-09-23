@@ -1,8 +1,6 @@
-import { EventBus } from '../core/events/EventBus.js';
 import { AvatarProfileVisibilityPolicy } from '../core/AvatarProfileVisibilityPolicy.js';
 import { isValidPresenceVisibility } from '../core/PresenceVisibility.js';
 
-const POLICY_CHANGED_EVENT = 'AvatarProfileVisibilityPolicyChanged';
 const STORAGE_KEY_PREFIX = 'profile-visibility:';
 
 // 0.2.58 — the persistence half of core/AvatarProfileVisibilityPolicy.js,
@@ -25,7 +23,6 @@ export class AvatarProfileVisibilityUseCase {
     constructor(storageProvider, identityProvider) {
         this._storageProvider = storageProvider;
         this._identityProvider = identityProvider;
-        this._eventBus = new EventBus();
     }
 
     getPolicy() {
@@ -61,16 +58,7 @@ export class AvatarProfileVisibilityUseCase {
         }
 
         this._storageProvider.save(STORAGE_KEY_PREFIX + owner, policy.toJSON());
-        this._eventBus.publish(POLICY_CHANGED_EVENT, { policy });
         return policy;
-    }
-
-    onPolicyChanged(callback) {
-        const subscription = this._eventBus.subscribe(
-            POLICY_CHANGED_EVENT,
-            ({ policy }) => callback(policy)
-        );
-        return () => subscription.unsubscribe();
     }
 
     _requireCurrentUsername() {
