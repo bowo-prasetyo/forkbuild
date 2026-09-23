@@ -157,10 +157,16 @@ async function runTests() {
         // _syncWorldPresence(). See tests/
         // WorldPresenceActivityRefreshIntegration.test.js and
         // docs/Roadmap.md's own 0.9.217 entry.
-        for (const method of ['getRecentlyVisitedWorlds', 'getCurrentPlaceName', 'getSelectionCount', 'getWorldAccessLevel', 'canReadDocument']) {
+        //
+        // AMENDED by the My Worlds dead-code cleanup: the
+        // getRecentlyVisitedWorlds() wrapper, uncalled since 0.3.10
+        // (RecentWorldsView reads LocalWorldExperienceStore directly),
+        // was deleted — so it is now checked as absent, not declared.
+        for (const method of ['getCurrentPlaceName', 'getSelectionCount', 'getWorldAccessLevel', 'canReadDocument']) {
             assert(new RegExp(`^\\s{4}${method}\\(`, 'm').test(navigationSessionSource), `A6a. WorldNavigationSession still declares ${method}(...)`);
-            assert(countReferences(worldView, method) === 0, `A6b. ${method} still has no caller in WorldView.js (five classified COMPLETE/INTENTIONAL_BOUNDARY — see 0.9.216's own Section L)`);
+            assert(countReferences(worldView, method) === 0, `A6b. ${method} still has no caller in WorldView.js (classified COMPLETE/INTENTIONAL_BOUNDARY — see 0.9.216's own Section L)`);
         }
+        assert(!/getRecentlyVisitedWorlds/.test(navigationSessionSource), 'A6e. WorldNavigationSession no longer declares the dead getRecentlyVisitedWorlds() wrapper');
         assert(new RegExp(`^\\s{4}refreshWorldPresenceActivity\\(`, 'm').test(navigationSessionSource), 'A6c. WorldNavigationSession still declares refreshWorldPresenceActivity(...)');
         assert(countReferences(worldView, 'refreshWorldPresenceActivity') === 1, 'A6d. refreshWorldPresenceActivity now has exactly one caller in WorldView.js — 0.9.217 closed this ACTUAL_GAP (see tests/WorldPresenceActivityRefreshIntegration.test.js)');
 

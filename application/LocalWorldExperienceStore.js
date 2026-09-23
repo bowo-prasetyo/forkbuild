@@ -95,39 +95,6 @@ export class LocalWorldExperienceStore {
         this.saveExperience(experience);
     }
 
-    // Update just the camera target for a world (convenience method)
-    updateCameraTarget(worldId, target) {
-        let experience = this.getExperience(worldId);
-        if (!experience) {
-            experience = new LocalWorldExperience({ worldId });
-        }
-        experience.setCameraTarget(target);
-        experience.updateLastVisited();
-        this.saveExperience(experience);
-    }
-
-    // Update just the camera heading for a world (convenience method)
-    updateCameraHeading(worldId, heading) {
-        let experience = this.getExperience(worldId);
-        if (!experience) {
-            experience = new LocalWorldExperience({ worldId });
-        }
-        experience.setCameraHeading(heading);
-        experience.updateLastVisited();
-        this.saveExperience(experience);
-    }
-
-    // Update just the camera perspective for a world (convenience method)
-    updateCameraPerspective(worldId, perspective) {
-        let experience = this.getExperience(worldId);
-        if (!experience) {
-            experience = new LocalWorldExperience({ worldId });
-        }
-        experience.setCameraPerspective(perspective);
-        experience.updateLastVisited();
-        this.saveExperience(experience);
-    }
-
     // Record a complete visit with all camera state at once. `perspective`
     // is written even when explicitly null — leaving a World with the
     // free/orbit camera must clear a previously-recorded perspective,

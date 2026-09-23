@@ -257,8 +257,8 @@ async function runTests() {
         const bare = new WorldNavigationSession({ registry: brickRegistry, loadPublicationDocumentUseCase: null, worldLayoutProvider: null });
         assert(bare.hasVisitedWorld(WORLD_ID) === false, '29. hasVisitedWorld() is false with no store wired');
         assert(bare.getWorldExperience(WORLD_ID) === null, '30. getWorldExperience() is null with no store wired');
-        assert(Array.isArray(bare.getRecentlyVisitedWorlds()) && bare.getRecentlyVisitedWorlds().length === 0,
-            '31. getRecentlyVisitedWorlds() is an empty array with no store wired');
+        assert(bare.restoreWorldExperience(WORLD_ID) === null,
+            '31. restoreWorldExperience() returns null with no store wired — ui/views/WorldView.js reads worldReturnInfo straight from this return value');
         let threw = false;
         try { bare.saveWorldExperience(WORLD_ID); bare.restoreWorldExperience(WORLD_ID); } catch (e) { threw = true; }
         assert(!threw, '32. saveWorldExperience()/restoreWorldExperience() never throw with no store (or no camera controller) wired');
@@ -271,6 +271,8 @@ async function runTests() {
         // tilt information).
         const replica = buildReplica(registry, 'freecam-alice');
         const leaving = buildSession(brickRegistry, replica, { position: { x: 40, y: 22, z: -8 }, target: { x: 12, y: 3, z: 1 } });
+        assert(leaving.restoreWorldExperience(WORLD_ID) === null,
+            '32a. restoreWorldExperience returns null for a World this replica has never visited — WorldView treats that as a first visit');
         leaving.saveWorldExperience(WORLD_ID);
 
         const returning = buildSession(brickRegistry, replica, { position: { x: 0, y: 0, z: 0 }, target: { x: 5, y: 5, z: 5 } });
