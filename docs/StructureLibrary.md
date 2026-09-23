@@ -91,10 +91,11 @@ every Structure's bricks already render with) and a Fork button, wired
 through EditorSession.forkStructure(structure) (application/
 EditorSession.js) — which forks, then calls the session's own
 openDocument(), the identical path Load and "Fork Published World"
-already use. There is no separate structure-editing mode. Clicking Fork
-is the only action a Structure entry offers — nothing in the Build
-Library ever places a Structure directly into the current document,
-exactly as 0.2.81 established.
+already use. There is no separate structure-editing mode. In 0.2.81
+Fork was the only action a Structure entry offered. That changed later:
+0.4.0 added copying a Structure into the current document, and since
+0.4.5 clicking a structure card places it (see "Unified Build Placement"
+below).
 
 ## Placing a Document as a Structure (0.2.90)
 
@@ -152,11 +153,10 @@ around the origin by the placement's own rotation, translates by the
 placement's own position, then applies the containing document's own
 terrain offset exactly as it already does for ordinary bricks (0.2.76) —
 so a placed structure always arrives as one rigid, upright, undeformed
-unit. Placement meshes are tracked separately from `meshRegistry` and are
-NOT yet pickable — selecting, moving, rotating, duplicating, or deleting
-an already-placed instance through the viewport is "0.2.91 — World
-Editing / Placement Management," a deliberately later milestone; 0.2.90
-is the data model and reliable rendering of instances only. Removing a
+unit. Placement meshes are tracked separately from `meshRegistry`. In
+0.2.90 they were not pickable; 0.2.91 (World Instance Editing & Placement
+Management) added selecting, moving, rotating, duplicating and deleting a
+placed instance (`Move`/`Rotate`/`Duplicate`/`RemoveStructurePlacementCommand`). Removing a
 placement (`application/commands/RemoveStructurePlacementCommand.js`)
 never touches the Document it referenced — a placement and its content
 are two different lifecycles, exactly as removing a Brick never touches

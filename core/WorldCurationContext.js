@@ -19,7 +19,7 @@
 //   - No explicit Area entities (may be added later if needed)
 //   - Deterministic: same world state -> same grouping on any replica
 //
-// See docs/Principles.md, "Derived Grouping Before Explicit Membership (0.3.8)."
+// See docs/Principles.md, "Curation Organizes Content; It Does Not Own Content (0.3.8)."
 import { distanceXZ } from './WorldSpatialAnchor.js';
 
 // How far from a landmark must something be to be considered "nearby"?

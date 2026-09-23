@@ -145,7 +145,7 @@ genuinely different question than World Search does ("which
 publications match this description?" vs. "where is this in the
 world?"), returning a `PublicationPage` — items plus enough metadata
 to render explicit pagination (deliberately not infinite scroll — see
-docs/Architecture.md). Ordering is one of a small set of meaningful
+docs/ArchitectureHistory.md). Ordering is one of a small set of meaningful
 sorts (Recently/Oldest Published, Title A–Z/Z–A, Author A–Z) and is
 provably deterministic across replicas: identical timestamps always
 break their tie the same way, via an ordinal (not locale-dependent)
@@ -162,8 +162,8 @@ component rather than two slowly-diverging implementations, differing
 only by an author scope. Tested against a 10,000-publication synthetic
 catalog, not a handful of fixtures — pagination walks every page with
 zero gaps or duplicates, in exact sorted order. See
-[docs/Architecture.md](docs/Architecture.md) for the full write-up of
-each milestone.
+[docs/ArchitectureHistory.md](docs/ArchitectureHistory.md) for the full
+write-up of each milestone.
 
 0.2.32 answers the preview question 0.2.31 deliberately left open —
 and reverses its own earlier lean toward a signed, content-addressed
@@ -374,7 +374,7 @@ since there is only one camera. A targeted or followed avatar whose
 presence expires clears gracefully rather than pointing at nothing.
 Also documents, without implementing, a boundary worth naming now:
 presence has no privacy guarantee beyond transport scope — see
-docs/Protocol.md. The flagship test proves the whole thing end to end
+docs/ProtocolHistory.md. The flagship test proves the whole thing end to end
 over a real `BroadcastChannel`: Bob clicks Alice (avatar target,
 Avatar Info), clicks her building (brick selection), edits it
 (document forks) — Alice's AvatarPresence/AvatarProfile/Publication and
@@ -601,7 +601,7 @@ identity this device already holds (`IdentityUseCase.listIdentities()`)
 so logging back in means picking the identity you already have, and
 "Create New Identity" is an explicit, separate action
 (`createIdentity()` + `authenticate()`) rather than a side effect of
-retyping a name. See docs/Architecture.md, "Local Identity &
+retyping a name. See docs/ArchitectureHistory.md, "Local Identity &
 Authentication Session (0.2.46)," and docs/Principles.md, "Login
 Unlocks An Identity; It Does Not Derive One From A Typed Name" and
 "Identity Existence And Session Authentication Are Independent Facts."
@@ -653,7 +653,7 @@ identities and prompts for a passphrase inline before authenticating;
 `ui/components/UserWidget.js` shows a third, honest state — 🔒 name +
 Unlock — when the session is authenticated but the vault has
 idle-locked, rather than pretending signing still works. See
-docs/Architecture.md, "Identity Security & Key Protection (0.2.47),"
+docs/ArchitectureHistory.md, "Identity Security & Key Protection (0.2.47),"
 and docs/Principles.md, "Identity Existence, Vault Unlock, And Session
 Authentication Are Three Independent Facts, Not Two." Deliberately not
 in 0.2.47: changing or removing a passphrase once set, any PIN-strength
@@ -693,7 +693,7 @@ proves this device now holds a key, never that it has been
 authenticated with it. `ui/views/IdentityManagementView.js` (new,
 routed at `/identity`, "My Identities" in the nav) is a dedicated view
 — not an extension of `LoginModal` — for lock/unlock, export, and
-import across every identity a device holds. See docs/Architecture.md,
+import across every identity a device holds. See docs/ArchitectureHistory.md,
 "Portable Identity, Export, Import & Recovery (0.2.48)," and
 docs/Principles.md, "Exporting And Importing An Identity Preserves The
 Identity, Not Merely Its Name," "Recovery Is Not Password Recovery," and
@@ -730,7 +730,7 @@ signature itself no longer verifies. A verified PROOF yields a
 instant the connection closes, never persisted anywhere: a peer
 connection authenticates a key, not an account, and there is no
 "friends" list or trusted-peer database in this milestone at all. See
-docs/Architecture.md, "Authenticated Peer Connection Model (0.2.49),"
+docs/ArchitectureHistory.md, "Authenticated Peer Connection Model (0.2.49),"
 and docs/Principles.md, "A Peer Connection Authenticates A Key, Not An
 Account," "A Peer Authentication Signature Is Scoped To One Connection,
 Never To One Identity," and "Transport State And Authentication State
@@ -754,7 +754,7 @@ authentication into one derived `peer/PeerLifecycleState.js`
 (DISCOVERED → CONNECTING → CONNECTED → AUTHENTICATING → AUTHENTICATED),
 auto-removing a peer the instant its connection closes or fails — no
 persisted "connected peers" list, no automatic friend relationship. See
-docs/Architecture.md, "Peer Discovery & Rendezvous (0.2.50)."
+docs/ArchitectureHistory.md, "Peer Discovery & Rendezvous (0.2.50)."
 
 0.2.51 closes the transport gap both prior milestones named:
 `peer/WebRtcPeerConnection.js`/`peer/WebRtcPeerConnectionProvider.js`
@@ -768,7 +768,7 @@ STUN/TURN configured by default. A serialized offer is usable verbatim
 as a `PeerInvitation#endpoint`, so 0.2.50's discovery flow plugs into a
 real transport with zero code changes; the flagship test proves two
 genuinely separate `RTCPeerConnection`s reaching mutual 0.2.49
-authentication over a real DataChannel. See docs/Architecture.md, "Real
+authentication over a real DataChannel. See docs/ArchitectureHistory.md, "Real
 WebRTC Peer Transport & Signaling Handoff (0.2.51)."
 
 0.2.52 answers the question those milestones' own proposed follow-ons
@@ -798,7 +798,7 @@ Alice sends `test.alpha`/`test.beta`/`test.unknown` and Bob (subscribed
 only to the first two) receives exactly those two — over BOTH
 `LocalPeerConnectionProvider` and `WebRtcPeerConnectionProvider`,
 unmodified, proving the abstraction is real rather than an interface
-with one implementation underneath. See docs/Architecture.md,
+with one implementation underneath. See docs/ArchitectureHistory.md,
 "Authenticated Peer Messaging & Protocol Multiplexing (0.2.52)," and
 docs/Principles.md, "A Peer Connection Transports Messages; It Does Not
 Interpret Them," "A Peer Message Envelope Carries Routing Information,
@@ -1397,9 +1397,11 @@ See [docs/Architecture.md](docs/Architecture.md) for the full architectural over
 
 ## Documentation
 
-- [docs/Architecture.md](docs/Architecture.md) — engine architecture, layer rules, milestone notes.
+- [docs/Architecture.md](docs/Architecture.md) — engine architecture and layer rules, as they are now.
+- [docs/ArchitectureHistory.md](docs/ArchitectureHistory.md) — the architecture notes written milestone by milestone (0.1.x–0.3.4).
 - [docs/Roadmap.md](docs/Roadmap.md) — milestone roadmap.
-- [docs/Protocol.md](docs/Protocol.md) — the ForkBuild Protocol.
+- [docs/Protocol.md](docs/Protocol.md) — the ForkBuild Protocol: current serialized and wire formats.
+- [docs/ProtocolHistory.md](docs/ProtocolHistory.md) — the protocol notes written milestone by milestone (0.1.x–0.2.45).
 - [docs/Principles.md](docs/Principles.md) — engineering principles, including "Actions are not commands".
 - [docs/user/README.md](docs/user/README.md) — user guides, including the [Controls Reference](docs/user/ControlsReference.md) (generated from the action registry) and the [Interactive Transform Gizmo guide](docs/user/InteractiveTransformGizmo.md).
 

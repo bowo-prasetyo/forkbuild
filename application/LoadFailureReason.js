@@ -9,9 +9,8 @@
 // names for Fork.
 //
 // A separate enum, not a shared import of ForkFailureReason, on purpose:
-// Open and Fork are deliberately distinct actions (docs/Principles.md,
-// "Repository, World, Editor" — Open loads an existing document, Fork
-// explicitly creates a new one), and LoadDocumentUseCase has no
+// Open and Fork are deliberately distinct actions (Open loads an existing
+// document, Fork explicitly creates a new one), and LoadDocumentUseCase has no
 // equivalent of Fork's license-check vocabulary — ForkFailureReason.
 // LICENSE_DENIED simply does not apply to Open, so importing that enum
 // here would offer a value Open could never legitimately throw.

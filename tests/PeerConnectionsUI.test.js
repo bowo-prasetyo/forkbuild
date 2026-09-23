@@ -15,7 +15,7 @@ import { PeerSessionManager } from '../application/PeerSessionManager.js';
 // mutually-proven 0.2.49 AUTHENTICATED peer — never anything this
 // milestone invented itself. ui/views/PeerConnectionsView.js is pure
 // presentation over this class and is exercised manually in a browser
-// (see docs/Architecture.md, "Peer Connections & Rendezvous UI
+// (see docs/ArchitectureHistory.md, "Peer Connections & Rendezvous UI
 // (0.2.55)"), the same division every other view in this codebase
 // already keeps from its own use case.
 class InMemoryStorageProvider extends StorageProvider {

@@ -1,7 +1,5 @@
 // Deterministic tree COLLISION geometry for World View — see
-// docs/Roadmap.md, 0.9.59, "Deterministic World Tree Collision Geometry,"
-// and docs/Principles.md, "Tree Collision Geometry Is Derived From The
-// Same Placement As Rendering, Never A Second Placement Decision (0.9.59)."
+// docs/Roadmap.md, 0.9.59, "Deterministic World Tree Collision Geometry."
 // Answers exactly one question, and only that one:
 //
 //   core/NaturalFeatureField.js  = "Where does a tree stand, and how?"

@@ -90,8 +90,8 @@ export class LocalStructureLibraryStore {
     }
 
     // A Structure stays immutable/value-like — 0.4.3 deliberately does
-    // NOT add in-place brick editing (see docs/Roadmap.md, "Editing a
-    // personal Structure"). Renaming is really "replace the stored value
+    // NOT add in-place brick editing (see docs/Roadmap.md, 0.4.3, "No
+    // in-place Structure editing"). Renaming is really "replace the stored value
     // with a new Structure carrying the same id and bricks, different
     // metadata" — built here so callers never hand-roll that
     // reconstruction themselves. Returns null (and changes nothing) if

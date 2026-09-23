@@ -98,8 +98,7 @@ import { DecentralizedSnapshotResolutionOutcome } from './DecentralizedSnapshotR
 // input resembles. Inventing one here (from `attributeSelectedSnapshot()`'s
 // own separate comparison, say) would blur MATERIALIZATION back into
 // ATTRIBUTION, exactly the seam this milestone's own design keeps apart —
-// see docs/Roadmap.md, "materialization must consume the verified
-// resolution result, not the candidate... never attribution."
+// see docs/Roadmap.md, 0.9.158.
 //
 // DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
 // - **Calling `resolver.resolveCandidate()`, or accepting a bare

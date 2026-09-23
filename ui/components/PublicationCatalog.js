@@ -13,7 +13,7 @@ import PublicationPagination from './PublicationPagination.js';
 const DESCRIPTION_SNIPPET_LENGTH = 160;
 
 // 0.2.31 — the shared catalog RepositoryView and AuthorView both mount
-// (see docs/Architecture.md, 0.2.31) rather than maintaining two
+// (see docs/ArchitectureHistory.md, 0.2.31) rather than maintaining two
 // independent, slowly-diverging implementations. The ONLY difference
 // between the two is the `author` prop — everything else (search,
 // sort, pagination, grouping, card/list rendering, preview, actions)

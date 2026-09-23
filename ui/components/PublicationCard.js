@@ -12,8 +12,7 @@ import { License } from '../../core/License.js';
 // established.
 //
 // Open/Fork/Explore are the same three actions Repository/Author View
-// have always offered — see docs/Principles.md, "Repository, World,
-// Editor" for why they stay conceptually distinct: Open loads an
+// have always offered, and they stay conceptually distinct: Open loads an
 // editable document/fork per the existing fork-on-write lifecycle;
 // Explore navigates to the publication's World placement; Fork
 // explicitly creates an editable descendant. Nothing here changes

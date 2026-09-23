@@ -33,7 +33,7 @@
 // `contentHash` (the same content anchored twice, in two separate Bitcoin
 // transactions) or, in principle, even share superficially similar
 // fields; neither is ever, on its own, evidence of shared anchor
-// identity. See docs/Principles.md, "No New Global Identity Scheme" in
+// identity. See the "No New Global Identity Scheme" note in
 // application/PublicationObservationTimelineView.js's own header (0.8.74),
 // the identical restraint held here one domain over, for the reasoning in
 // full — and the flagship test in tests/BitcoinAnchorObservationEvidence.test.js,

@@ -1,3 +1,577 @@
+# Principles
+
+The sections below are in milestone order, the order they were written.
+This index groups them by theme. A † marks a principle that a later
+milestone changed; that section starts with a "Changed by" note, or its
+title says what changed it. "A World Unit Is One Meter" replaced an
+older section outright and keeps the history in its own text.
+
+## Index by theme
+
+- [Foundations (0.1.x–0.2.16)](#foundations-01x0216): the short, unheaded principles written before 0.2.17.
+
+**Trust, signatures and authorization**
+
+- [Signatures vs. Authorization (0.2.17)](#signatures-vs-authorization-0217)
+- [Replication and Conflict Handling (0.2.18)](#replication-and-conflict-handling-0218)
+- [Trust Is Separate From Cryptographic Validity (0.2.19)](#trust-is-separate-from-cryptographic-validity-0219)
+- [Arrival Order Is Never Trust (0.2.19)](#arrival-order-is-never-trust-0219)
+- [Identity Is Not Trust (0.2.19)](#identity-is-not-trust-0219)
+- [A Discovery Provider Must Never Say Only "Not Found" (0.2.19)](#a-discovery-provider-must-never-say-only-not-found-0219)
+- [A Valid Signature Proves Authorship, Not Exclusivity (0.2.19)](#a-valid-signature-proves-authorship-not-exclusivity-0219)
+
+**Documents, publishing and forking**
+
+- [A Published Snapshot Is Never Mutated In Place (0.2.20)](#a-published-snapshot-is-never-mutated-in-place-0220) †
+- [Forking Creates Provenance, Not Publication (0.2.20)](#forking-creates-provenance-not-publication-0220)
+- [A Default Value Is Not An Absent One (0.2.21)](#a-default-value-is-not-an-absent-one-0221)
+- [Status Is Computed, Not Stored (0.2.21)](#status-is-computed-not-stored-0221)
+- [Explaining A Decision Is Not Optional Once The System Can Make One (0.2.21)](#explaining-a-decision-is-not-optional-once-the-system-can-make-one-0221)
+- [The Displayed Document Is The Active Document (0.2.22)](#the-displayed-document-is-the-active-document-0222)
+- [A Fork Is Not A Modal Interruption (0.2.22)](#a-fork-is-not-a-modal-interruption-0222) †
+- [An Imported Document Always Gets A Fresh Identity (0.9.642)](#an-imported-document-always-gets-a-fresh-identity-09642)
+
+**Placement, world coordinates and overlap**
+
+- [A Publication Is What; A Placement Is Where (0.2.23)](#a-publication-is-what-a-placement-is-where-0223)
+- [Moving A Placement Is Not Editing A Document (0.2.23)](#moving-a-placement-is-not-editing-a-document-0223)
+- [A Position, Once Assigned, Is A Fact — Not A Projection (0.2.23)](#a-position-once-assigned-is-a-fact--not-a-projection-0223)
+- [World Coordinates Are Absolute; Documents Are Local (0.2.24)](#world-coordinates-are-absolute-documents-are-local-0224)
+- [Deterministic Placement Is Not Optional (0.2.24)](#deterministic-placement-is-not-optional-0224)
+- [A World Unit Is One Meter (0.9.548)](#a-world-unit-is-one-meter-09548)
+- [Overlap Is A Fact; Collision Is A Policy Decision (0.2.25)](#overlap-is-a-fact-collision-is-a-policy-decision-0225)
+- [The Default Policy Is WARN, Not Silent Correction (0.2.25)](#the-default-policy-is-warn-not-silent-correction-0225)
+- [Automatic Collision Resolution Is Deferred, Not Solved (0.2.25)](#automatic-collision-resolution-is-deferred-not-solved-0225)
+- [Geometric Collision Is A Later Question (0.2.25)](#geometric-collision-is-a-later-question-0225)
+
+**World navigation, focus and spatial discovery**
+
+- [Discovery Is One Path, Not Two (0.2.26)](#discovery-is-one-path-not-two-0226)
+- [Publication Found Is Not The Same As Placement Found (0.2.26)](#publication-found-is-not-the-same-as-placement-found-0226)
+- [Focus Is Navigation, Not Discovery — And Never Editing (0.2.26)](#focus-is-navigation-not-discovery--and-never-editing-0226)
+- [Diagnostics Should Say What Is Actually True, Not What Would Be Convenient (0.2.26)](#diagnostics-should-say-what-is-actually-true-not-what-would-be-convenient-0226)
+- [Camera Focus, Active Document, and Selection Are Three Different Things (0.2.27)](#camera-focus-active-document-and-selection-are-three-different-things-0227)
+- [Only The Active Document Is An Editing Target (0.2.27)](#only-the-active-document-is-an-editing-target-0227)
+- [Navigation Never Implies Editing (0.2.27)](#navigation-never-implies-editing-0227)
+- [The World View Header Shows What It's Actually Doing (0.2.27)](#the-world-view-header-shows-what-its-actually-doing-0227)
+- [A Spatial Query Is Authoritative Over Placement, Not A Local-Cache Scan (0.2.28)](#a-spatial-query-is-authoritative-over-placement-not-a-local-cache-scan-0228)
+- [Distance Is Derived, Never Persisted (0.2.28)](#distance-is-derived-never-persisted-0228)
+- [Exploring A Location Is Not A Second Search (0.2.29)](#exploring-a-location-is-not-a-second-search-0229)
+- ["Explore Here" Queries The Camera, Never The Active Document (0.2.29)](#explore-here-queries-the-camera-never-the-active-document-0229)
+- [A Tolerance Radius Is What Makes "What's Here?" Answerable From A Camera (0.2.29)](#a-tolerance-radius-is-what-makes-whats-here-answerable-from-a-camera-0229)
+- [The Location Browser's Three Actions Are Existing Operations, Not New Ones (0.2.29)](#the-location-browsers-three-actions-are-existing-operations-not-new-ones-0229)
+- [Discovery And Trust Are Related, But They Are Not The Same Operation (0.2.30)](#discovery-and-trust-are-related-but-they-are-not-the-same-operation-0230)
+- [Diagnostics Are Received From The Discovery Layer, Never Invented By The UI (0.2.30)](#diagnostics-are-received-from-the-discovery-layer-never-invented-by-the-ui-0230)
+- [A World Location Is Read From Existing Identity, Never A New Store (0.2.94)](#a-world-location-is-read-from-existing-identity-never-a-new-store-0294)
+- [A Camera Focus Never Jumps; It Interpolates Through A Deterministic Path (0.2.94)](#a-camera-focus-never-jumps-it-interpolates-through-a-deterministic-path-0294)
+- [A Compass Heading Is Computed From Camera Orientation, Never Stored Or Broadcast (0.2.94)](#a-compass-heading-is-computed-from-camera-orientation-never-stored-or-broadcast-0294) †
+- [World View Navigation Operates On Spatial Observation, Never On Document Mutation (0.2.94)](#world-view-navigation-operates-on-spatial-observation-never-on-document-mutation-0294)
+- [World Navigation Is Position Replacement, Not A Page Stack — Except At The Boundary Into World View (0.9.587)](#world-navigation-is-position-replacement-not-a-page-stack--except-at-the-boundary-into-world-view-09587)
+- [Exploration Is Derived From Place, Not Stored As Place (0.3.6)](#exploration-is-derived-from-place-not-stored-as-place-036)
+- [Exploration Guides Attention, Never Ownership or Mutation (0.3.9)](#exploration-guides-attention-never-ownership-or-mutation-039)
+- [A Focus Context Describes What You Are Looking At; It Does Not Navigate (0.5.8)](#a-focus-context-describes-what-you-are-looking-at-it-does-not-navigate-058)
+
+**World View and the Editor**
+
+- [Selection In World View Does Not Imply Editing Authority (0.2.93)](#selection-in-world-view-does-not-imply-editing-authority-0293)
+- [World View Observes and Navigates; Editor Mutates and Builds (0.5.9)](#world-view-observes-and-navigates-editor-mutates-and-builds-059)
+
+**Repository catalog and previews**
+
+- [Repository Search Is Not World Search (0.2.31)](#repository-search-is-not-world-search-0231)
+- [A Catalog Query Is Answered By The Application Layer, Not Assumed Efficient By The UI (0.2.31)](#a-catalog-query-is-answered-by-the-application-layer-not-assumed-efficient-by-the-ui-0231)
+- [Ordering Must Be Deterministic Across Replicas (0.2.31)](#ordering-must-be-deterministic-across-replicas-0231)
+- [Grouping Is Presentation, Never A Storage Concept (0.2.31)](#grouping-is-presentation-never-a-storage-concept-0231)
+- [A Preview Is Either Signed Or It Isn't (0.2.31, resolved 0.2.32)](#a-preview-is-either-signed-or-it-isnt-0231-resolved-0232) †
+- [Description Search Is Opt-In, Not Silent, Because It Has A Real Cost (0.2.31)](#description-search-is-opt-in-not-silent-because-it-has-a-real-cost-0231)
+- [Explicit Pagination Is A Decentralized Honesty Feature, Not Just A Layout Choice (0.2.31)](#explicit-pagination-is-a-decentralized-honesty-feature-not-just-a-layout-choice-0231)
+- [Previews Are Derived Client State (0.2.32)](#previews-are-derived-client-state-0232)
+- [A Preview's Camera Framing Is Deterministic; Its Pixels Are Not (0.2.32)](#a-previews-camera-framing-is-deterministic-its-pixels-are-not-0232)
+- [A Preview Failure Is Not A Publication Failure (0.2.32)](#a-preview-failure-is-not-a-publication-failure-0232)
+- [Preview Generation Is Bounded By What's Actually Visible (0.2.32)](#preview-generation-is-bounded-by-whats-actually-visible-0232)
+
+**Avatars, presence, movement and interaction**
+
+- [Identity, Avatar Profile, and Presence Are Three Different Questions (0.2.33)](#identity-avatar-profile-and-presence-are-three-different-questions-0233)
+- [Presence Is Never Signed, Never Persisted, Never Placed (0.2.33)](#presence-is-never-signed-never-persisted-never-placed-0233) †
+- [An Avatar Profile Can Gain A Signature Layer Later Without A Rewrite (0.2.33)](#an-avatar-profile-can-gain-a-signature-layer-later-without-a-rewrite-0233)
+- [A Template Is A Closed Vocabulary, Not An Asset Loader (0.2.34)](#a-template-is-a-closed-vocabulary-not-an-asset-loader-0234)
+- [Validate Strictly On Write; Degrade Gracefully On Read (0.2.34)](#validate-strictly-on-write-degrade-gracefully-on-read-0234)
+- [Switching An Avatar's Template Resets Its Appearance (0.2.34)](#switching-an-avatars-template-resets-its-appearance-0234)
+- [An Avatar's Location Comes From Presence, Never From The Avatar Itself (0.2.35)](#an-avatars-location-comes-from-presence-never-from-the-avatar-itself-0235)
+- [A Fresh Avatar Spawns Near What You're Looking At, Not At A Fixed Point (0.2.35 follow-up)](#a-fresh-avatar-spawns-near-what-youre-looking-at-not-at-a-fixed-point-0235-follow-up)
+- [An Accessory Option Id Is Still Just An Id — Its Shape Is A Renderer Decision (0.2.35 follow-up)](#an-accessory-option-id-is-still-just-an-id--its-shape-is-a-renderer-decision-0235-follow-up)
+- [A Preview And An Avatar Solve The Same Shape Of Problem Differently (0.2.35)](#a-preview-and-an-avatar-solve-the-same-shape-of-problem-differently-0235)
+- [Avatar Visibility Is A Client Rendering Preference, Not Avatar State (0.2.35)](#avatar-visibility-is-a-client-rendering-preference-not-avatar-state-0235)
+- [Input Changes Presence; Presence Changes The Renderer (0.2.36)](#input-changes-presence-presence-changes-the-renderer-0236)
+- [AvatarPresence Is The Result Of Simulation, Not The Simulation Itself (0.2.36)](#avatarpresence-is-the-result-of-simulation-not-the-simulation-itself-0236)
+- [Movement Is Kinematic, Not Physically Simulated (0.2.36)](#movement-is-kinematic-not-physically-simulated-0236)
+- [Animation Is Driven By Elapsed Time, Never By Frame Count (0.2.36)](#animation-is-driven-by-elapsed-time-never-by-frame-count-0236)
+- [Following The Avatar Never Redefines What The Camera Is Looking At (0.2.36)](#following-the-avatar-never-redefines-what-the-camera-is-looking-at-0236)
+- [0.2.37 Establishes Transport Semantics; 0.2.38 Establishes Trust Semantics](#0237-establishes-transport-semantics-0238-establishes-trust-semantics)
+- [Watching Presence Never Requires Having One (0.2.37)](#watching-presence-never-requires-having-one-0237)
+- [A Presence Advertisement Is A Transport Shape, Not A Second Presence Model (0.2.37)](#a-presence-advertisement-is-a-transport-shape-not-a-second-presence-model-0237)
+- [Presence Lifecycle State Is A Derived Observation, Not A Stored Fact (0.2.37)](#presence-lifecycle-state-is-a-derived-observation-not-a-stored-fact-0237)
+- [Never Let A Transport Callback Write Directly Into Session State (0.2.37)](#never-let-a-transport-callback-write-directly-into-session-state-0237)
+- [An Avatar ID Identifies An Avatar; It Does Not Prove Who Currently Controls It (0.2.38)](#an-avatar-id-identifies-an-avatar-it-does-not-prove-who-currently-controls-it-0238)
+- [Presence Trust Has One Real Policy Axis (0.2.38)](#presence-trust-has-one-real-policy-axis-0238)
+- [Replay Detection And Freshness Are Different Questions, Answered By Different Code (0.2.38)](#replay-detection-and-freshness-are-different-questions-answered-by-different-code-0238)
+- [Equal-But-Different Is Still A Conflict, Even At 60Hz (0.2.38)](#equal-but-different-is-still-a-conflict-even-at-60hz-0238)
+- [Do Not Let Arrival Order Choose A Winner (0.2.38)](#do-not-let-arrival-order-choose-a-winner-0238)
+- [Rendering Presence And Trusting Presence Remain Separate (0.2.38)](#rendering-presence-and-trusting-presence-remain-separate-0238)
+- [Selection Identifies What The User Is Interacting With; It Does Not Imply Ownership, Editability, Or Authority (0.2.39)](#selection-identifies-what-the-user-is-interacting-with-it-does-not-imply-ownership-editability-or-authority-0239)
+- [Avatars Are Never Document Selection (0.2.39)](#avatars-are-never-document-selection-0239)
+- [Whichever Is Nearer Wins, Never Category (0.2.39)](#whichever-is-nearer-wins-never-category-0239)
+- [Looking At Something Is Never The Same As Acting On It (0.2.39)](#looking-at-something-is-never-the-same-as-acting-on-it-0239)
+- [Avatar Presence Has No Privacy Guarantee Beyond Transport Scope (0.2.39)](#avatar-presence-has-no-privacy-guarantee-beyond-transport-scope-0239) †
+- [Visibility Happens Before Broadcasting, Never After (0.2.40)](#visibility-happens-before-broadcasting-never-after-0240)
+- [AvatarProfile, AvatarPresence, and PresenceVisibilityPolicy Are Three Independent Concerns (0.2.40)](#avatarprofile-avatarpresence-and-presencevisibilitypolicy-are-three-independent-concerns-0240)
+- [A Policy Abstraction Can Exist Before The Mechanism It Fully Assumes (0.2.40)](#a-policy-abstraction-can-exist-before-the-mechanism-it-fully-assumes-0240)
+- [The Authoritative Position Is Always The Latest Presence; Interpolation Is Only Ever A Presentation Detail (0.2.37)](#the-authoritative-position-is-always-the-latest-presence-interpolation-is-only-ever-a-presentation-detail-0237)
+- [Appearance And Position Are Different Lifecycles, Never One Message (0.2.41)](#appearance-and-position-are-different-lifecycles-never-one-message-0241)
+- [Appearance Is Durable; Presence Is Ephemeral — Neither Store Prunes Like The Other (0.2.41)](#appearance-is-durable-presence-is-ephemeral--neither-store-prunes-like-the-other-0241)
+- [Presence And Profile Share One Publication Gate (0.2.41)](#presence-and-profile-share-one-publication-gate-0241)
+- [A Fire-And-Forget Transport Needs Its Own "Catch Me Up," Deliberately Rare (0.2.41)](#a-fire-and-forget-transport-needs-its-own-catch-me-up-deliberately-rare-0241)
+- [Collision Is A Constraint Applied To Movement, Never Part Of The Movement Simulation Itself (0.2.42)](#collision-is-a-constraint-applied-to-movement-never-part-of-the-movement-simulation-itself-0242)
+- [The Local Avatar Is Constrained By Collision Geometry Currently Available To This Replica, Never By The Entire World (0.2.42)](#the-local-avatar-is-constrained-by-collision-geometry-currently-available-to-this-replica-never-by-the-entire-world-0242)
+- [Collision Is Derived From Document + Placement, Never A Third Relationship (0.2.42)](#collision-is-derived-from-document--placement-never-a-third-relationship-0242)
+- [Collided Is Movement Information, Not An Animation Vocabulary (0.2.42)](#collided-is-movement-information-not-an-animation-vocabulary-0242)
+- [Start Simple: A Box Is A Good Enough Capsule (0.2.42)](#start-simple-a-box-is-a-good-enough-capsule-0242)
+- [Proximity Is Derived, Never Announced (0.2.43)](#proximity-is-derived-never-announced-0243)
+- [Nearness Never Authorizes Mutation (0.2.43)](#nearness-never-authorizes-mutation-0243)
+- [A New Way To Reach An Avatar Is Not A New Way To Inspect One (0.2.43)](#a-new-way-to-reach-an-avatar-is-not-a-new-way-to-inspect-one-0243)
+- [Observation Does Not Imply Authority, And Interaction Does Not Imply Control (0.2.44)](#observation-does-not-imply-authority-and-interaction-does-not-imply-control-0244)
+- [A Gesture Is Presentation, Never Presence (0.2.44)](#a-gesture-is-presentation-never-presence-0244)
+- [Interaction Cooldowns Exist Before Interactions Are Networked (0.2.44)](#interaction-cooldowns-exist-before-interactions-are-networked-0244)
+- [State Synchronization And Event Synchronization Are Different Protocols (0.2.45)](#state-synchronization-and-event-synchronization-are-different-protocols-0245)
+- [Presence Describes An Avatar's Current State; Interaction Describes An Event That Happened (0.2.45)](#presence-describes-an-avatars-current-state-interaction-describes-an-event-that-happened-0245)
+- [A Claimed Target Is Never An Instruction (0.2.45)](#a-claimed-target-is-never-an-instruction-0245)
+- [A Bounded Replay Window Can Do Double Duty For An Identity And An Ordering Question At Once (0.2.45)](#a-bounded-replay-window-can-do-double-duty-for-an-identity-and-an-ordering-question-at-once-0245)
+- [An Event Stream Has No Room For Equivocation Detection, And That Gap Is Named, Not Hidden (0.2.45)](#an-event-stream-has-no-room-for-equivocation-detection-and-that-gap-is-named-not-hidden-0245)
+- [User-Controlled Avatar Mode Is Persistent Local Interaction State, Not A Transient Gesture (0.3.2)](#user-controlled-avatar-mode-is-persistent-local-interaction-state-not-a-transient-gesture-032)
+- [Camera Perspective Determines An Offset; It Never Replaces The Camera Machinery (0.3.2)](#camera-perspective-determines-an-offset-it-never-replaces-the-camera-machinery-032)
+- [Camera Perspective Is Local Perception, Never Shared Reality (0.3.2)](#camera-perspective-is-local-perception-never-shared-reality-032)
+- [Step-Up Movement Is A Deterministic Height Constraint, Never A Physics Climb (0.3.2)](#step-up-movement-is-a-deterministic-height-constraint-never-a-physics-climb-032)
+- [Step-Up Movement Builds On The Flat Walking Plane; It Does Not Replace It (0.3.2)](#step-up-movement-builds-on-the-flat-walking-plane-it-does-not-replace-it-032)
+- [Walkability Is Not Collision (0.3.3)](#walkability-is-not-collision-033)
+- [A Directional Walkable Shape Generalizes Its Own Seam, Never Reuses A Flat One (0.3.3)](#a-directional-walkable-shape-generalizes-its-own-seam-never-reuses-a-flat-one-033)
+- [A Per-Tick Height Delta Can Replace A Brick-Wide Wall Check, Once Something Downstream Is Equipped To Police It (0.3.3)](#a-per-tick-height-delta-can-replace-a-brick-wide-wall-check-once-something-downstream-is-equipped-to-police-it-033)
+- [Falling Still Asks WalkableSurface The Same Question Walking Always Has (0.3.4)](#falling-still-asks-walkablesurface-the-same-question-walking-always-has-034)
+- [A Ledge Is An Absence Of Support; A Wall Is Occupied Geometry — They Stop Being The Same Kind Of Blocked (0.3.4)](#a-ledge-is-an-absence-of-support-a-wall-is-occupied-geometry--they-stop-being-the-same-kind-of-blocked-034)
+- [Avatar Vertical State Is Derived, Never A Second Physics Bookkeeping (0.3.4)](#avatar-vertical-state-is-derived-never-a-second-physics-bookkeeping-034)
+- [Local Physics Is Local; Spatial Presence Is Observation (0.3.4)](#local-physics-is-local-spatial-presence-is-observation-034)
+
+**Identity, keys and devices**
+
+- [Login Unlocks An Identity; It Does Not Derive One From A Typed Name (0.2.46)](#login-unlocks-an-identity-it-does-not-derive-one-from-a-typed-name-0246)
+- [Identity Existence And Session Authentication Are Independent Facts (0.2.46)](#identity-existence-and-session-authentication-are-independent-facts-0246)
+- [Identity Existence, Vault Unlock, And Session Authentication Are Three Independent Facts, Not Two (0.2.47)](#identity-existence-vault-unlock-and-session-authentication-are-three-independent-facts-not-two-0247)
+- [An Unlocked Vault Must Never Touch Storage (0.2.47)](#an-unlocked-vault-must-never-touch-storage-0247)
+- [A Wrong Passphrase And A Tampered Record Must Fail Identically (0.2.47)](#a-wrong-passphrase-and-a-tampered-record-must-fail-identically-0247)
+- [Failed-Unlock Lockout Is Time-Based, Not Passphrase-Based (0.2.47)](#failed-unlock-lockout-is-time-based-not-passphrase-based-0247)
+- [A Bounded Unlock Lifetime Is Not The Same Claim As Idle Detection (0.2.47)](#a-bounded-unlock-lifetime-is-not-the-same-claim-as-idle-detection-0247)
+- [Exporting And Importing An Identity Preserves The Identity, Not Merely Its Name (0.2.48)](#exporting-and-importing-an-identity-preserves-the-identity-not-merely-its-name-0248)
+- [Recovery Is Not Password Recovery (0.2.48)](#recovery-is-not-password-recovery-0248)
+- [Duplicate Identity Import Is A No-Op, Never A Silent Overwrite (0.2.48)](#duplicate-identity-import-is-a-no-op-never-a-silent-overwrite-0248)
+- [An Identity Identifier Is Immutable For The Lifetime Of That Cryptographic Identity (0.2.67)](#an-identity-identifier-is-immutable-for-the-lifetime-of-that-cryptographic-identity-0267)
+- [A Successor Declaration Is Signed By The Predecessor, Never Counter-Signed By The Successor (0.2.67)](#a-successor-declaration-is-signed-by-the-predecessor-never-counter-signed-by-the-successor-0267)
+- [Declaring A Successor Does Not Revoke The Predecessor (0.2.67)](#declaring-a-successor-does-not-revoke-the-predecessor-0267)
+- [An Identity Can Be Revoked Without A Successor (0.2.67)](#an-identity-can-be-revoked-without-a-successor-0267)
+- [A Revocation Is Self-Attested, Never Third-Party (0.2.67)](#a-revocation-is-self-attested-never-third-party-0267)
+- [No Central Authority Can Revoke An Identity It Does Not Control (0.2.67)](#no-central-authority-can-revoke-an-identity-it-does-not-control-0267)
+- [Revocation Is A Signing Gate, Not A Session Gate (0.2.67)](#revocation-is-a-signing-gate-not-a-session-gate-0267)
+- [Revocation Prevents New Trust; It Does Not Retroactively Revoke Old Trust (0.2.67)](#revocation-prevents-new-trust-it-does-not-retroactively-revoke-old-trust-0267)
+- [Changing A Passphrase Never Changes The Identity (0.2.67)](#changing-a-passphrase-never-changes-the-identity-0267)
+- [Backup, Recovery, Rotation, And Revocation Are Four Different Questions (0.2.67)](#backup-recovery-rotation-and-revocation-are-four-different-questions-0267)
+- [A Relayed Identity Lifecycle Record Is Trusted By Its Own Signature, Never By Who Relayed It (0.2.68)](#a-relayed-identity-lifecycle-record-is-trusted-by-its-own-signature-never-by-who-relayed-it-0268)
+- [Propagation Reaches Identities This Device Already Knows, Never An Open Revocation Directory (0.2.68)](#propagation-reaches-identities-this-device-already-knows-never-an-open-revocation-directory-0268)
+- [Identity Lifecycle State Does Not Implicitly Rewrite Unrelated Durable Social State (0.2.68)](#identity-lifecycle-state-does-not-implicitly-rewrite-unrelated-durable-social-state-0268)
+- [Propagation Carries A Record, It Does Not Mint A New Claim (0.2.68)](#propagation-carries-a-record-it-does-not-mint-a-new-claim-0268)
+- [Identity Authentication Proves A Key; Device Authorization Proves Permission (0.2.78)](#identity-authentication-proves-a-key-device-authorization-proves-permission-0278)
+- [A Device Authorization Grant Is Signed By The Parent, Never Counter-Signed By The Device (0.2.78)](#a-device-authorization-grant-is-signed-by-the-parent-never-counter-signed-by-the-device-0278)
+- [Device Authorization Can Be Re-Granted; Identity Revocation Cannot (0.2.78)](#device-authorization-can-be-re-granted-identity-revocation-cannot-0278)
+- [A Connection Represents An Identity Either Directly Or Through One Verified Device Authorization, Never By Assumption (0.2.78)](#a-connection-represents-an-identity-either-directly-or-through-one-verified-device-authorization-never-by-assumption-0278)
+- [Device Authorization Changes Peer Authority, Never Social Identity (0.2.82)](#device-authorization-changes-peer-authority-never-social-identity-0282)
+- [Resolution Happens Strictly After Authentication, And Only On the Wire's Receiving Half (0.2.82)](#resolution-happens-strictly-after-authentication-and-only-on-the-wires-receiving-half-0282)
+- [A Device Is Never Taught To Resolve Itself, Except Reflexively Against Itself (0.2.82; narrowed 0.2.83)](#a-device-is-never-taught-to-resolve-itself-except-reflexively-against-itself-0282-narrowed-0283) †
+
+**Peers, friends, chat and voice**
+
+- [A Peer Connection Authenticates A Key, Not An Account (0.2.49)](#a-peer-connection-authenticates-a-key-not-an-account-0249)
+- [A Peer Authentication Signature Is Scoped To One Connection, Never To One Identity (0.2.49)](#a-peer-authentication-signature-is-scoped-to-one-connection-never-to-one-identity-0249)
+- [Transport State And Authentication State Are Two Different Questions (0.2.49)](#transport-state-and-authentication-state-are-two-different-questions-0249)
+- [An Invitation Is A Rendezvous Hint, Never A Credential (0.2.50)](#an-invitation-is-a-rendezvous-hint-never-a-credential-0250)
+- [Discovery Finds A Candidate; It Never Authenticates One (0.2.50)](#discovery-finds-a-candidate-it-never-authenticates-one-0250)
+- [A Peer's Lifecycle Is Derived, Never A Third State Machine (0.2.50)](#a-peers-lifecycle-is-derived-never-a-third-state-machine-0250)
+- [A Peer Alias Is A Local Note, Never A Claim About The Peer (0.2.50)](#a-peer-alias-is-a-local-note-never-a-claim-about-the-peer-0250)
+- [A Signaling Payload Is Not An Identity Proof (0.2.51)](#a-signaling-payload-is-not-an-identity-proof-0251)
+- [A Transport Connection Is Never An Authenticated Peer (0.2.51)](#a-transport-connection-is-never-an-authenticated-peer-0251)
+- [A Peer Connection Transports Messages; It Does Not Interpret Them (0.2.52)](#a-peer-connection-transports-messages-it-does-not-interpret-them-0252)
+- [A Peer Message Envelope Carries Routing Information, Never Meaning (0.2.52)](#a-peer-message-envelope-carries-routing-information-never-meaning-0252)
+- [Replay Semantics Belong To The Protocol, Never The Bus (0.2.52)](#replay-semantics-belong-to-the-protocol-never-the-bus-0252)
+- [A Transport Migration Should Leave The Trust Model Untouched (0.2.53)](#a-transport-migration-should-leave-the-trust-model-untouched-0253)
+- [Peer Selection Is A Transport Concern, Never A Presence-Core Concern (0.2.53)](#peer-selection-is-a-transport-concern-never-a-presence-core-concern-0253)
+- [Presence Never Establishes A Connection (0.2.53)](#presence-never-establishes-a-connection-0253)
+- [Profile Visibility Is Never Presence Visibility (0.2.54)](#profile-visibility-is-never-presence-visibility-0254)
+- [A Protocol's State-Keeping Semantics Are Its Own, Never Borrowed From Its Neighbor (0.2.54)](#a-protocols-state-keeping-semantics-are-its-own-never-borrowed-from-its-neighbor-0254)
+- [A Peer Session Manager Owns Connections, Never What Travels Over Them (0.2.55)](#a-peer-session-manager-owns-connections-never-what-travels-over-them-0255)
+- [An Authenticated Peer Is Not A Friend (0.2.55)](#an-authenticated-peer-is-not-a-friend-0255)
+- [A Peer Relationship Remembers An Identity, Never An Endpoint (0.2.56)](#a-peer-relationship-remembers-an-identity-never-an-endpoint-0256)
+- [Remembering A Peer Is A Deliberate Act, Never A Side Effect Of Authentication (0.2.56)](#remembering-a-peer-is-a-deliberate-act-never-a-side-effect-of-authentication-0256)
+- [Forgetting A Peer Deletes A Local Record, Never The Peer (0.2.56)](#forgetting-a-peer-deletes-a-local-record-never-the-peer-0256)
+- [Knowing Is Not Befriending (0.2.56)](#knowing-is-not-befriending-0256)
+- [Friendship Is Mutual Consent, Never A Unilateral Claim (0.2.57)](#friendship-is-mutual-consent-never-a-unilateral-claim-0257)
+- [A Friend Request Is Signed Evidence, Never A Server Record (0.2.57)](#a-friend-request-is-signed-evidence-never-a-server-record-0257)
+- [Friendship Can Be Established, But Not Yet Revoked (0.2.57)](#friendship-can-be-established-but-not-yet-revoked-0257) †
+- [A Social Relationship Grants Eligibility; A Visibility Policy Grants Access (0.2.58)](#a-social-relationship-grants-eligibility-a-visibility-policy-grants-access-0258)
+- [A Visibility Policy Consults A Fact, Never A Store (0.2.58)](#a-visibility-policy-consults-a-fact-never-a-store-0258)
+- [FRIENDS Means Mutual Friendship OR An Explicit Grant, Never Either Alone (0.2.58)](#friends-means-mutual-friendship-or-an-explicit-grant-never-either-alone-0258)
+- [The Sender's Own Friendship Record Decides, Never The Receiver's (0.2.58)](#the-senders-own-friendship-record-decides-never-the-receivers-0258)
+- [Profile Gets Its Own Publication Gate, Superseding The Shared One (0.2.58)](#profile-gets-its-own-publication-gate-superseding-the-shared-one-0258)
+- [Withholding A Future Advertisement Is Not Remote Deletion (0.2.58)](#withholding-a-future-advertisement-is-not-remote-deletion-0258)
+- [Friendship Persists Across A Connection; Its Eligibility Is Re-Proven On Every One (0.2.58)](#friendship-persists-across-a-connection-its-eligibility-is-re-proven-on-every-one-0258)
+- [A Transport Migration Is Complete Only Once Something Actually Uses It (0.2.59)](#a-transport-migration-is-complete-only-once-something-actually-uses-it-0259)
+- [Once A Peer Is Authenticated, Avatar State Travels Through It, Never Around It (0.2.59)](#once-a-peer-is-authenticated-avatar-state-travels-through-it-never-around-it-0259)
+- [No Authenticated Peers Is A Population Of Zero, Never An Absent Transport (0.2.59)](#no-authenticated-peers-is-a-population-of-zero-never-an-absent-transport-0259)
+- [BroadcastChannel Is A Development Transport, Never A Production One (0.2.59)](#broadcastchannel-is-a-development-transport-never-a-production-one-0259)
+- [Login Does Not Make Someone Globally Visible (0.2.59)](#login-does-not-make-someone-globally-visible-0259)
+- [A Cyclic Consent Vocabulary Needs A Reference, Never Just A Type (0.2.60)](#a-cyclic-consent-vocabulary-needs-a-reference-never-just-a-type-0260)
+- [Friendship Is Mutual Relationship State; Blocking Is A Unilateral Local Decision (0.2.60)](#friendship-is-mutual-relationship-state-blocking-is-a-unilateral-local-decision-0260)
+- [Blocking Is An Additional Local Authorization Gate, Never A Replacement For One (0.2.60)](#blocking-is-an-additional-local-authorization-gate-never-a-replacement-for-one-0260)
+- [Blocking Is Wired Twice, Once Per Direction, Because Neither Side May Trust The Other To Enforce It (0.2.60)](#blocking-is-wired-twice-once-per-direction-because-neither-side-may-trust-the-other-to-enforce-it-0260)
+- [Blocking Is Silent — Never Announced To The Blocked Identity (0.2.60)](#blocking-is-silent--never-announced-to-the-blocked-identity-0260)
+- [Unblocking Restores Nothing But The Ability To Be Heard Again (0.2.60)](#unblocking-restores-nothing-but-the-ability-to-be-heard-again-0260)
+- [Chat Is A Protocol Running Over Authenticated Peers, Never A Feature Of The Transport Itself (0.2.61)](#chat-is-a-protocol-running-over-authenticated-peers-never-a-feature-of-the-transport-itself-0261)
+- [Friendship Authorizes A Protocol; It Is Never The Protocol (0.2.61)](#friendship-authorizes-a-protocol-it-is-never-the-protocol-0261)
+- [An Authenticated Connection Surviving Unfriend/Block Does Not Mean Chat Survives It (0.2.61)](#an-authenticated-connection-surviving-unfriendblock-does-not-mean-chat-survives-it-0261)
+- [0.2.61 Ships Live Chat, Not A Message Database (0.2.61)](#0261-ships-live-chat-not-a-message-database-0261) †
+- [A Chat Message's Identity, Its Sequence, And Its Delivery Order Are Three Different Facts (0.2.61)](#a-chat-messages-identity-its-sequence-and-its-delivery-order-are-three-different-facts-0261)
+- [A Reconnect Verifies An Identity; It Never Assumes One (0.2.62)](#a-reconnect-verifies-an-identity-it-never-assumes-one-0262)
+- [A Rejected Reconnect Is Not A Failed Handshake (0.2.62)](#a-rejected-reconnect-is-not-a-failed-handshake-0262)
+- [Connection Incarnation Was Already Solved; 0.2.62 Only Named It (0.2.62)](#connection-incarnation-was-already-solved-0262-only-named-it-0262)
+- [Send Means Live Delivery; SendOrQueue Means Deliberate Durability (0.2.63)](#send-means-live-delivery-sendorqueue-means-deliberate-durability-0263)
+- [A Durable Outbox Is Addressed To An Identity, Never A Connection (0.2.63)](#a-durable-outbox-is-addressed-to-an-identity-never-a-connection-0263)
+- [Sent Is Not Delivered (0.2.63)](#sent-is-not-delivered-0263)
+- [The Outbox Prunes Itself; It Is Not A Message Database (0.2.63)](#the-outbox-prunes-itself-it-is-not-a-message-database-0263)
+- [Discovery Is Untrusted Input; Only Authentication Answers Who (0.2.64)](#discovery-is-untrusted-input-only-authentication-answers-who-0264)
+- [A Discovery Record's Freshness Outlives Neither The Identity Nor The Relationship It Might Lead To (0.2.64)](#a-discovery-records-freshness-outlives-neither-the-identity-nor-the-relationship-it-might-lead-to-0264)
+- [Rediscovering A Candidate Refreshes It; It Never Duplicates It (0.2.64)](#rediscovering-a-candidate-refreshes-it-it-never-duplicates-it-0264)
+- [A Discovery Source Describes Provenance, Never Trustworthiness (0.2.64)](#a-discovery-source-describes-provenance-never-trustworthiness-0264)
+- [Rendezvous Distributes Candidates; Authentication Establishes Identity (0.2.65)](#rendezvous-distributes-candidates-authentication-establishes-identity-0265)
+- [A Rendezvous Publication Is Never A Permanent Directory Entry (0.2.65)](#a-rendezvous-publication-is-never-a-permanent-directory-entry-0265)
+- [A Rendezvous Lookup Degrades; It Never Fails Loud (0.2.65)](#a-rendezvous-lookup-degrades-it-never-fails-loud-0265)
+- [A Bootstrap List Is Configuration, Never An Authority (0.2.65)](#a-bootstrap-list-is-configuration-never-an-authority-0265)
+- [Rendezvous Can Introduce An Endpoint; It Can Never Establish Identity (0.2.66)](#rendezvous-can-introduce-an-endpoint-it-can-never-establish-identity-0266)
+- [A Rendezvous Transport Cannot Stay Synchronous (0.2.66)](#a-rendezvous-transport-cannot-stay-synchronous-0266)
+- [A Rendezvous Publication's Signature Is Tamper-Evidence, Never Trust (0.2.66)](#a-rendezvous-publications-signature-is-tamper-evidence-never-trust-0266)
+- [STUN Is Free Public Infrastructure; TURN Is Transport Infrastructure, Never A Trusted Application Server (0.2.66)](#stun-is-free-public-infrastructure-turn-is-transport-infrastructure-never-a-trusted-application-server-0266)
+- [One Publication Answers At Most One Connection Attempt (0.2.66)](#one-publication-answers-at-most-one-connection-attempt-0266)
+- [A Reload Continues A Conversation; It Never Starts A New One (0.2.69)](#a-reload-continues-a-conversation-it-never-starts-a-new-one-0269)
+- [Sequence Continuity Is What Makes A Reload Actually Work, Not Merely Look Like It Works (0.2.69)](#sequence-continuity-is-what-makes-a-reload-actually-work-not-merely-look-like-it-works-0269)
+- [A Durable Conversation Store Is Addressed To An Identity, Never A Connection (0.2.69)](#a-durable-conversation-store-is-addressed-to-an-identity-never-a-connection-0269)
+- [A Local History Store Is Never An Authorization Mechanism (0.2.69)](#a-local-history-store-is-never-an-authorization-mechanism-0269)
+- [Never Reuse A Durable Outbox As A Message Database, Or A Message Database As An Outbox (0.2.69)](#never-reuse-a-durable-outbox-as-a-message-database-or-a-message-database-as-an-outbox-0269)
+- [Idempotent Local Storage Is What Makes A Bounded, Resettable Replay Window Safe To Leave Alone (0.2.69)](#idempotent-local-storage-is-what-makes-a-bounded-resettable-replay-window-safe-to-leave-alone-0269)
+- [Offline Is Not Absence: Identity, Relationship, Friendship, And Conversation All Outlive The Connection (0.2.70)](#offline-is-not-absence-identity-relationship-friendship-and-conversation-all-outlive-the-connection-0270)
+- [A Peer Presence Summary Reconciles Independent Lifetimes; It Is Never A Fourth Store (0.2.70)](#a-peer-presence-summary-reconciles-independent-lifetimes-it-is-never-a-fourth-store-0270)
+- [A Read Marker Is A Local Note About What THIS Device Has Seen, Never A Receipt Sent To Anyone (0.2.70)](#a-read-marker-is-a-local-note-about-what-this-device-has-seen-never-a-receipt-sent-to-anyone-0270)
+- [A Read Marker Answers A Third Question; It Is Never Folded Into The Outbox Or The History Store (0.2.70)](#a-read-marker-answers-a-third-question-it-is-never-folded-into-the-outbox-or-the-history-store-0270)
+- [A Read Receipt Is Computed Independently From The Local Read Marker, Never Transmitted From It (0.2.71)](#a-read-receipt-is-computed-independently-from-the-local-read-marker-never-transmitted-from-it-0271)
+- [A Coalescing Outbox Remembers The Latest Value, Not Every Event (0.2.71)](#a-coalescing-outbox-remembers-the-latest-value-not-every-event-0271)
+- [A Read Marker And A Read Receipt Are Opposite-Direction Facts, Never The Same Store (0.2.71)](#a-read-marker-and-a-read-receipt-are-opposite-direction-facts-never-the-same-store-0271)
+- [Social Authorization Controls What May Happen Next; It Never Rewrites What Already Happened (0.2.72)](#social-authorization-controls-what-may-happen-next-it-never-rewrites-what-already-happened-0272)
+- [Queued Mail Answers To The Same Eligibility Check As A Fresh Send, Never A Softer One (0.2.72)](#queued-mail-answers-to-the-same-eligibility-check-as-a-fresh-send-never-a-softer-one-0272)
+- [A Fact About Time And A Fact About Authorization Are Different Terminal States, Never One Reused For The Other (0.2.72)](#a-fact-about-time-and-a-fact-about-authorization-are-different-terminal-states-never-one-reused-for-the-other-0272)
+- [Media Never Establishes Peer Identity; Authenticated Peer Identity Authorizes Media (0.2.73)](#media-never-establishes-peer-identity-authenticated-peer-identity-authorizes-media-0273)
+- [One Logical PeerConnection Serves Every Protocol, Including Media (0.2.73)](#one-logical-peerconnection-serves-every-protocol-including-media-0273)
+- [Renegotiation Travels In-Band, Over The Connection It Renegotiates (0.2.73)](#renegotiation-travels-in-band-over-the-connection-it-renegotiates-0273)
+- [Exactly One Side Renegotiates; Role Decides Which, Forever (0.2.73)](#exactly-one-side-renegotiates-role-decides-which-forever-0273)
+- [Voice Lifecycle Is Independent Of Peer Lifecycle (0.2.73)](#voice-lifecycle-is-independent-of-peer-lifecycle-0273)
+- [Voice Reuses Chat's Own Authorization Question; It Never Invents A Second Trust System (0.2.73)](#voice-reuses-chats-own-authorization-question-it-never-invents-a-second-trust-system-0273)
+- [Audio Device State Is Never Presence, Never A Wire Fact (0.2.73)](#audio-device-state-is-never-presence-never-a-wire-fact-0273)
+- [Voice Is Ephemeral Like Presence And Connections, Never Durable Like Conversations Or Relationships (0.2.73)](#voice-is-ephemeral-like-presence-and-connections-never-durable-like-conversations-or-relationships-0273)
+- [Ringing Is Bounded By Local Policy, Never By The Network (0.2.74)](#ringing-is-bounded-by-local-policy-never-by-the-network-0274)
+- [Reasons Are Local Judgments, Never Transmitted Facts (0.2.74)](#reasons-are-local-judgments-never-transmitted-facts-0274)
+- [A Call Failure Always Tells The Other Side (0.2.74)](#a-call-failure-always-tells-the-other-side-0274)
+- [A Local Microphone Failure Is Never A Peer Or Connection Failure (0.2.74)](#a-local-microphone-failure-is-never-a-peer-or-connection-failure-0274)
+- [Device Selection Is Local State, Not Peer Protocol State (0.2.75)](#device-selection-is-local-state-not-peer-protocol-state-0275)
+- [A Live Device Switch Reuses RTCRtpSender#replaceTrack(), Never A Second Renegotiation (0.2.75)](#a-live-device-switch-reuses-rtcrtpsenderreplacetrack-never-a-second-renegotiation-0275)
+- [A Local Media Problem Never Ends A Call By Itself (0.2.75)](#a-local-media-problem-never-ends-a-call-by-itself-0275)
+- [Output Device Selection Never Enters VoiceSession (0.2.75)](#output-device-selection-never-enters-voicesession-0275)
+- [Conversation Synchronization Is A Protocol Between A Device And Itself, Never A Wider Chat Feature (0.2.83)](#conversation-synchronization-is-a-protocol-between-a-device-and-itself-never-a-wider-chat-feature-0283)
+- [Sibling Eligibility Is A Symmetric Identity Comparison, Never A Device Allowlist (0.2.83)](#sibling-eligibility-is-a-symmetric-identity-comparison-never-a-device-allowlist-0283)
+- [A Device That Authors A Grant Never Waits For Its Own Broadcast To Come Back To Believe It (0.2.83)](#a-device-that-authors-a-grant-never-waits-for-its-own-broadcast-to-come-back-to-believe-it-0283)
+- [Per-Device Local Read State And Identity-Observed Read State Are Never The Same Fact (0.2.83)](#per-device-local-read-state-and-identity-observed-read-state-are-never-the-same-fact-0283)
+- [Identity Presence Is An Aggregate Of Authorized Device Observations, Never A Fourth Store (0.2.85)](#identity-presence-is-an-aggregate-of-authorized-device-observations-never-a-fourth-store-0285)
+
+**Terrain, water and nature**
+
+- [Terrain Is A Pure Function Of World Coordinates And A World Seed, Never Persisted State (0.2.76)](#terrain-is-a-pure-function-of-world-coordinates-and-a-world-seed-never-persisted-state-0276)
+- [Terrain Elevation Is A Rendering-Time Offset, Never A Presence Or Placement Fact (0.2.76)](#terrain-elevation-is-a-rendering-time-offset-never-a-presence-or-placement-fact-0276)
+- [The Terrain Height Field Is The Shared Authority; The Renderer Is An Adapter, Not The Owner (0.2.77)](#the-terrain-height-field-is-the-shared-authority-the-renderer-is-an-adapter-not-the-owner-0277)
+- [Terrain Walkability Is A Movement Constraint, Never A Physics Slope (0.2.77)](#terrain-walkability-is-a-movement-constraint-never-a-physics-slope-0277)
+- [Terrain Requires No Streaming Concept; Collision Does (0.2.77)](#terrain-requires-no-streaming-concept-collision-does-0277)
+- [Terrain Surface Color Is A Function Of World Coordinates, Never Tile Coordinates (0.2.79)](#terrain-surface-color-is-a-function-of-world-coordinates-never-tile-coordinates-0279)
+- [Terrain Surface Color Is Deliberately Restrained; Buildings And Avatars Are The Visual Focus (0.2.79)](#terrain-surface-color-is-deliberately-restrained-buildings-and-avatars-are-the-visual-focus-0279)
+- [Ecology Is A Third Pure Function Layered On Terrain, Never A New Ground Truth (0.2.88)](#ecology-is-a-third-pure-function-layered-on-terrain-never-a-new-ground-truth-0288)
+- [Natural Features Are Sampled, Never Stored (0.2.88)](#natural-features-are-sampled-never-stored-0288)
+- [Tree Density Is Independent Of The Zone That Gates It, So Cover Fades Instead Of Stopping (0.2.88)](#tree-density-is-independent-of-the-zone-that-gates-it-so-cover-fades-instead-of-stopping-0288)
+- [Hydrology Is A Fourth Pure Function Layered On Terrain, Sibling To Ecology, Never A New Ground Truth (0.2.89)](#hydrology-is-a-fourth-pure-function-layered-on-terrain-sibling-to-ecology-never-a-new-ground-truth-0289)
+- [A River Is A Bounded, Local Channel Field, Never A Global Drainage Simulation (0.2.89)](#a-river-is-a-bounded-local-channel-field-never-a-global-drainage-simulation-0289)
+- [A Lake Is Rendered Geometry; A River Is Ground Color (0.2.89)](#a-lake-is-rendered-geometry-a-river-is-ground-color-0289)
+- [Wildlife Is A Fifth Pure Function Layered On Terrain, Sibling To Natural Features, Never A New Ground Truth (0.9.667)](#wildlife-is-a-fifth-pure-function-layered-on-terrain-sibling-to-natural-features-never-a-new-ground-truth-09667)
+- [A Sparser Population Is A Coarser Lattice And Stricter Thresholds, Never A Second Kind Of Gate (0.9.667)](#a-sparser-population-is-a-coarser-lattice-and-stricter-thresholds-never-a-second-kind-of-gate-09667)
+- [Water Depth Is Still A Rendering-Time Offset (0.9.615, 0.9.634)](#water-depth-is-still-a-rendering-time-offset-09615-09634)
+
+**Bricks, structures and blueprints**
+
+- [A Brick Is A Primitive, Never A Preassembled Structure (0.2.80)](#a-brick-is-a-primitive-never-a-preassembled-structure-0280)
+- [A Brick's Bounding Box Is An Approximation Contract, Not A Shape Description (0.2.80)](#a-bricks-bounding-box-is-an-approximation-contract-not-a-shape-description-0280)
+- [A Mesh Factory's Own Orientation Belongs On The Geometry, Never On mesh.rotation (0.2.80)](#a-mesh-factorys-own-orientation-belongs-on-the-geometry-never-on-meshrotation-0280)
+- [A Structure Is The Next Rung On The Brick Ladder, Not An Escape From It (0.2.81)](#a-structure-is-the-next-rung-on-the-brick-ladder-not-an-escape-from-it-0281) †
+- [Forking A Structure Records Provenance, Never A Live Dependency (0.2.81)](#forking-a-structure-records-provenance-never-a-live-dependency-0281)
+- [A Structure Placement Transforms Its Content At Render Time, Never At Rest (0.2.90)](#a-structure-placement-transforms-its-content-at-render-time-never-at-rest-0290)
+- [A Missing Placement Target Is Absence, Not An Error (0.2.90)](#a-missing-placement-target-is-absence-not-an-error-0290)
+- [Selecting An Instance Selects Its Spatial Reference, Never Its Content (0.2.91)](#selecting-an-instance-selects-its-spatial-reference-never-its-content-0291)
+- [Duplicating An Instance Is A Spatial Operation; Forking Its Content Is Not (0.2.91)](#duplicating-an-instance-is-a-spatial-operation-forking-its-content-is-not-0291)
+- [The Interactive Gizmo Dispatches By Selection Kind; It Never Merges Two Gesture Kernels Into One (0.2.92)](#the-interactive-gizmo-dispatches-by-selection-kind-it-never-merges-two-gesture-kernels-into-one-0292)
+- [A Placement's Elevation Is Never A Gizmo Or Numeric Target (0.2.92)](#a-placements-elevation-is-never-a-gizmo-or-numeric-target-0292)
+- [Copying Composes A Blueprint; Forking Creates One (0.4.0)](#copying-composes-a-blueprint-forking-creates-one-040)
+- [Extraction Copies A Blueprint; It Never Moves One (0.4.2)](#extraction-copies-a-blueprint-it-never-moves-one-042)
+- [A Personal Library Persists What Extraction Only Returns (0.4.3)](#a-personal-library-persists-what-extraction-only-returns-043)
+- [Library Membership Is Not Structure Identity (0.4.3)](#library-membership-is-not-structure-identity-043)
+- [A Structure Is A Reusable Spatial Composition, Never A Synonym For "Building" (0.4.4)](#a-structure-is-a-reusable-spatial-composition-never-a-synonym-for-building-044)
+- [Buildable Things Share One Placement Experience (0.4.5)](#buildable-things-share-one-placement-experience-045)
+- [A Blueprint Package Is Portable Data, Never A Live Dependency (0.4.6)](#a-blueprint-package-is-portable-data-never-a-live-dependency-046)
+- [A Structure Has Two Different Forks, And Neither Is A Version Of The Other (0.6.3)](#a-structure-has-two-different-forks-and-neither-is-a-version-of-the-other-063)
+- [Sorting Is Presentation, Never Identity (0.6.4)](#sorting-is-presentation-never-identity-064)
+- [Usage History Is Local Presentation Metadata, Never Structure State (0.6.4)](#usage-history-is-local-presentation-metadata-never-structure-state-064)
+- [A Blueprint Fingerprint Is Derived From Design Content, Never From Local Identity (0.6.5)](#a-blueprint-fingerprint-is-derived-from-design-content-never-from-local-identity-065)
+- [Attribution Is An External Assertion About A Fingerprint, Never Structure State (0.6.5)](#attribution-is-an-external-assertion-about-a-fingerprint-never-structure-state-065)
+- [Attribution Exchange Distributes Assertions; It Never Establishes Who Actually Made A Design (0.6.6)](#attribution-exchange-distributes-assertions-it-never-establishes-who-actually-made-a-design-066)
+- [Attribution Resolution Ranks Presentation, Never Authorship (0.6.7)](#attribution-resolution-ranks-presentation-never-authorship-067)
+- [Lineage Is A Signed Claim, Never A Fact (0.6.8)](#lineage-is-a-signed-claim-never-a-fact-068)
+- [Similarity Is Evidence; It Never Becomes Lineage (0.6.8)](#similarity-is-evidence-it-never-becomes-lineage-068)
+
+**Shared worlds and collaboration**
+
+- [World Mutation Requires Explicit Document Editing Authority (0.2.95)](#world-mutation-requires-explicit-document-editing-authority-0295)
+- [Ownership Is A Cryptographic Identity Fact, Never A Free-Text Label, When One Is Available (0.2.95)](#ownership-is-a-cryptographic-identity-fact-never-a-free-text-label-when-one-is-available-0295)
+- [Authorization Composes With Device Resolution; It Never Reimplements It (0.2.95)](#authorization-composes-with-device-resolution-it-never-reimplements-it-0295)
+- [World Synchronization Is A Command Protocol, Never A Document Sync Channel (0.2.96)](#world-synchronization-is-a-command-protocol-never-a-document-sync-channel-0296)
+- [A Remote Operation Is Durable World State; It Is Never A Local Undo-Stack Entry (0.2.96)](#a-remote-operation-is-durable-world-state-it-is-never-a-local-undo-stack-entry-0296)
+- [Authorization For A World Operation Is Asked About One Specific World, Never "Authorized Somewhere" (0.2.96)](#authorization-for-a-world-operation-is-asked-about-one-specific-world-never-authorized-somewhere-0296)
+- [The Claimed Author Of An Operation Is Never Trusted Ahead Of The Connection That Carried It (0.2.96)](#the-claimed-author-of-an-operation-is-never-trusted-ahead-of-the-connection-that-carried-it-0296)
+- [Ordering Is A Deterministic Total Order, Never Wall-Clock Time (0.2.97)](#ordering-is-a-deterministic-total-order-never-wall-clock-time-0297)
+- [A Conflict Resolver Reorders Commands; It Never Reinvents Them (0.2.97)](#a-conflict-resolver-reorders-commands-it-never-reinvents-them-0297)
+- [Delete Is Terminal — A Stated Conflict Policy, Not An Accident Of Arrival Order (0.2.97)](#delete-is-terminal--a-stated-conflict-policy-not-an-accident-of-arrival-order-0297)
+- [The Composition Gap Is Closed Through The Existing Event, Never A New Call Site (0.2.97)](#the-composition-gap-is-closed-through-the-existing-event-never-a-new-call-site-0297)
+- [A World Edit Grant Is A Signed Capability About One World, Never A Role And Never A Second Kind Of Ownership (0.2.98)](#a-world-edit-grant-is-a-signed-capability-about-one-world-never-a-role-and-never-a-second-kind-of-ownership-0298)
+- [Only The World's Own True Owner May Ever Issue A Membership Grant — Checked Structurally, On Every Replica, Against A Forged Claim (0.2.98)](#only-the-worlds-own-true-owner-may-ever-issue-a-membership-grant--checked-structurally-on-every-replica-against-a-forged-claim-0298)
+- [World Presence Is Computed From Live, Authorized Connections, Never Persisted (0.2.98)](#world-presence-is-computed-from-live-authorized-connections-never-persisted-0298)
+- [Being Online Is Not The Same As Being Authorized To Edit — A Presence Roster's `canEdit` Is Always Recomputed, Never Read Off A Remote Claim (0.2.98)](#being-online-is-not-the-same-as-being-authorized-to-edit--a-presence-rosters-canedit-is-always-recomputed-never-read-off-a-remote-claim-0298)
+- [The UI Displays Authorization; It Never Decides It (0.2.99)](#the-ui-displays-authorization-it-never-decides-it-0299)
+- [A Collaboration UI Component Is Shared, Never Duplicated, Between World View And A Future Editor Surface (0.2.99)](#a-collaboration-ui-component-is-shared-never-duplicated-between-world-view-and-a-future-editor-surface-0299)
+- [Collaborative Spatial Presence Is Ephemeral Observation, Never World Content (0.3.0)](#collaborative-spatial-presence-is-ephemeral-observation-never-world-content-030)
+- [Remote Selection Observation Is Never Local Editing Selection (0.3.0)](#remote-selection-observation-is-never-local-editing-selection-030)
+- [A Compass Heading's LABEL Stays Local; Raw Camera Orientation May Now Travel As Ephemeral Presence (0.3.0 amends 0.2.94)](#a-compass-headings-label-stays-local-raw-camera-orientation-may-now-travel-as-ephemeral-presence-030-amends-0294)
+- [A Spatial Anchor Is A Presentation Decision, Never Remote Authority (0.3.1)](#a-spatial-anchor-is-a-presentation-decision-never-remote-authority-031)
+- [Follow Is Local Camera Navigation, Never A Shared Camera (0.3.1)](#follow-is-local-camera-navigation-never-a-shared-camera-031)
+
+**Places, landmarks and naming**
+
+- [A Landmark Is World Content, Not Spatial Presence (0.3.7)](#a-landmark-is-world-content-not-spatial-presence-037)
+- [Derived Place Describes the World; Landmarks Deliberately Modify Its Meaning (0.3.7)](#derived-place-describes-the-world-landmarks-deliberately-modify-its-meaning-037)
+- [Curation Organizes Content; It Does Not Own Content (0.3.8)](#curation-organizes-content-it-does-not-own-content-038)
+- [Personal Experience Is Not Shared World State (0.3.10)](#personal-experience-is-not-shared-world-state-0310)
+- [Users Name Places; The World Derives Geography From Names (0.5.0)](#users-name-places-the-world-derives-geography-from-names-050)
+- [A World Map Is A Derived View, Never A Second World (0.5.1)](#a-world-map-is-a-derived-view-never-a-second-world-051)
+- [A Name Is A Claim, Not A Fact (0.5.2)](#a-name-is-a-claim-not-a-fact-052)
+- [Naming Exchange Distributes Claims; It Never Establishes Truth (0.5.3)](#naming-exchange-distributes-claims-it-never-establishes-truth-053)
+- [Geographic Similarity Suggests Identity; It Never Mutates Identity (0.5.4)](#geographic-similarity-suggests-identity-it-never-mutates-identity-054)
+- [A Geographic Place Is A Derived View, Never A Fourth Stored Object (0.5.5)](#a-geographic-place-is-a-derived-view-never-a-fourth-stored-object-055)
+- [A Geographic Place Highlights Existing Geometry; It Never Draws New Geometry (0.5.5)](#a-geographic-place-highlights-existing-geometry-it-never-draws-new-geometry-055)
+- [A Geographic Place Is Navigable; It Does Not Become World Content (0.5.6)](#a-geographic-place-is-navigable-it-does-not-become-world-content-056)
+- [A Discovered Naming Claim Is Still Just A Claim (0.9.253)](#a-discovered-naming-claim-is-still-just-a-claim-09253)
+- [Proximity Filtering Is Not Ranking, Is Not Conflict Resolution (0.9.255)](#proximity-filtering-is-not-ranking-is-not-conflict-resolution-09255)
+- [Automatic Discovery Is Not Automatic Adoption (0.9.256)](#automatic-discovery-is-not-automatic-adoption-09256)
+- [Presentation Is Not Adoption (0.9.257)](#presentation-is-not-adoption-09257)
+- [Navigation Is Not Adoption (0.9.260)](#navigation-is-not-adoption-09260)
+- [Discovery Makes Adoption Available; It Never Makes Adoption Automatic (0.9.263)](#discovery-makes-adoption-available-it-never-makes-adoption-automatic-09263)
+- [Displaying Metadata Is Not Verifying It (0.9.266)](#displaying-metadata-is-not-verifying-it-09266)
+
+**Decentralized publication, content and replicas**
+
+- [Publication Makes Content Discoverable; It Does Not Make It Authoritative (0.7.0)](#publication-makes-content-discoverable-it-does-not-make-it-authoritative-070)
+- [Availability Is Not Validity (0.7.1)](#availability-is-not-validity-071)
+- [Discovery Is Not Resolution (0.7.2)](#discovery-is-not-resolution-072)
+- [A Peer Connection Transports Publications; It Does Not Resolve Them (0.7.3)](#a-peer-connection-transports-publications-it-does-not-resolve-them-073)
+- [Content Delivery Is Not Content Authority (0.7.4)](#content-delivery-is-not-content-authority-074)
+- [A Resolution Coordinator Sequences; It Does Not Decide (0.7.5)](#a-resolution-coordinator-sequences-it-does-not-decide-075)
+- [Replication Creates Availability; It Does Not Create Authority (0.7.6)](#replication-creates-availability-it-does-not-create-authority-076)
+- [A Persistent Store Is An Untrusted Byte Source, Not A Second Trust Root (0.8.15)](#a-persistent-store-is-an-untrusted-byte-source-not-a-second-trust-root-0815)
+- [Restoration Re-Earns Trust In The Claim; It Never Re-Asks The External System (0.8.15)](#restoration-re-earns-trust-in-the-claim-it-never-re-asks-the-external-system-0815)
+- [Discovery Is Not Verification, And 'No New Evidence' Is Not 'No Evidence' (0.8.16)](#discovery-is-not-verification-and-no-new-evidence-is-not-no-evidence-0816)
+- [Discovery Asks A Collective Question; It Never Asks Which Peer To Trust (0.8.16)](#discovery-asks-a-collective-question-it-never-asks-which-peer-to-trust-0816)
+- [Acquisition Provenance Is Not Evidence Rank (0.8.17)](#acquisition-provenance-is-not-evidence-rank-0817)
+- [A Placement Is A Locator, Not Evidence Of History (0.8.18)](#a-placement-is-a-locator-not-evidence-of-history-0818)
+- [Peers Exchange Placement Claims, Not Resolution Results (0.8.19)](#peers-exchange-placement-claims-not-resolution-results-0819)
+- [Resolving A Placement Observes Present Availability; It Does Not Rewrite The Placement Claim (0.8.20)](#resolving-a-placement-observes-present-availability-it-does-not-rewrite-the-placement-claim-0820)
+- [A Placement's Persistent Store Is An Untrusted Byte Source Too (0.8.21)](#a-placements-persistent-store-is-an-untrusted-byte-source-too-0821)
+- [Restoring A Snapshot Placement Re-establishes The Signed Claim, Not Its Current Availability (0.8.21)](#restoring-a-snapshot-placement-re-establishes-the-signed-claim-not-its-current-availability-0821)
+- [Package Import Is Placement Ingestion, Not Placement Resolution (0.8.22)](#package-import-is-placement-ingestion-not-placement-resolution-0822)
+- [Package Import Preserves Placement Claims; It Does Not Establish Retrieval Availability (0.8.22)](#package-import-preserves-placement-claims-it-does-not-establish-retrieval-availability-0822)
+- [Multi-Placement Convergence Mirrors Multi-Evidence Convergence, Never Copies It (0.8.23)](#multi-placement-convergence-mirrors-multi-evidence-convergence-never-copies-it-0823)
+- [Multi-Placement Convergence Is Independent Of Resolution Observation (0.8.23)](#multi-placement-convergence-is-independent-of-resolution-observation-0823)
+- [Acquisition Provenance Is Not Placement Rank (0.8.24)](#acquisition-provenance-is-not-placement-rank-0824)
+- [Snapshot Placement Creation Is An Explicit User Action, Never A Second Publish (0.8.25)](#snapshot-placement-creation-is-an-explicit-user-action-never-a-second-publish-0825)
+- [A Resolution Result Describes Whether Bytes Can Be Retrieved Now; It Does Not Rewrite The Placement Claim (0.8.26)](#a-resolution-result-describes-whether-bytes-can-be-retrieved-now-it-does-not-rewrite-the-placement-claim-0826)
+- [Publication Decentralization Is Two Separate Dimensions, Never One Combined Verdict (0.8.27)](#publication-decentralization-is-two-separate-dimensions-never-one-combined-verdict-0827)
+- [Replica Knowledge Describes What This Replica Possesses, Not What The World Has Proven (0.8.28)](#replica-knowledge-describes-what-this-replica-possesses-not-what-the-world-has-proven-0828)
+- [A Replica Package Transfers Durable Claims, Not The Exporting Replica's Own Acquisition History (0.8.29)](#a-replica-package-transfers-durable-claims-not-the-exporting-replicas-own-acquisition-history-0829)
+- [Replica Synchronization Composes Existing Discovery, It Builds No Second Trust Boundary (0.8.30)](#replica-synchronization-composes-existing-discovery-it-builds-no-second-trust-boundary-0830)
+- [Replica Knowledge Explains What Is Known And How It Was Acquired; It Does Not Judge What Should Be Trusted (0.8.31)](#replica-knowledge-explains-what-is-known-and-how-it-was-acquired-it-does-not-judge-what-should-be-trusted-0831)
+- [Knowledge Of Content Is Not Possession Of Content (0.8.32)](#knowledge-of-content-is-not-possession-of-content-0832)
+- [Local Content Availability Is An Observation, Not A Verdict (0.8.33)](#local-content-availability-is-an-observation-not-a-verdict-0833)
+- [Snapshot Materialization Is An Explicit User Action, Distinct From Every Other Way A Replica Learns About Content (0.8.34)](#snapshot-materialization-is-an-explicit-user-action-distinct-from-every-other-way-a-replica-learns-about-content-0834)
+- [Placement Resolution Observes Present Availability; Materialization Turns It Into Possession (0.8.35)](#placement-resolution-observes-present-availability-materialization-turns-it-into-possession-0835)
+- [A Shared Storage Boundary Does Not Merge The Sources That Feed It (0.8.36)](#a-shared-storage-boundary-does-not-merge-the-sources-that-feed-it-0836)
+- [Peer Content Transfer Is Transport; Verification And Storage Stay Centralized (0.8.37)](#peer-content-transfer-is-transport-verification-and-storage-stay-centralized-0837)
+- [Materialization History Describes Byte Acquisition, Not Source Trust (0.8.38)](#materialization-history-describes-byte-acquisition-not-source-trust-0838)
+- [Current Snapshot Possession Is A Local Observation, Not A Distributed Claim (0.8.39)](#current-snapshot-possession-is-a-local-observation-not-a-distributed-claim-0839)
+- [Peer Possession Responses Are Observations, Not Placement Claims (0.8.40)](#peer-possession-responses-are-observations-not-placement-claims-0840)
+- [Peer Possession Observations Describe What Peers Report; They Do Not Become Placement Claims (0.8.41)](#peer-possession-observations-describe-what-peers-report-they-do-not-become-placement-claims-0841)
+- [A Source Selection Is A Person's Own Action, Never An Application Recommendation (0.8.42)](#a-source-selection-is-a-persons-own-action-never-an-application-recommendation-0842)
+- [An Observation Can Inform A Person's Choice Without Becoming An Application Decision (0.8.42)](#an-observation-can-inform-a-persons-choice-without-becoming-an-application-decision-0842)
+- [Current Snapshot Possession Is Independent Of How The Snapshot Was Acquired (0.8.43)](#current-snapshot-possession-is-independent-of-how-the-snapshot-was-acquired-0843)
+- [Acquisition History Explains Past Attempts; It Does Not Determine Present Possession (0.8.43)](#acquisition-history-explains-past-attempts-it-does-not-determine-present-possession-0843)
+- [History Records What Happened During An Explicit Acquisition Attempt; Inspection Must Not Reinterpret Why It Happened (0.8.44)](#history-records-what-happened-during-an-explicit-acquisition-attempt-inspection-must-not-reinterpret-why-it-happened-0844)
+- [A Peer Possession Observation Records What A Peer Reported At A Particular Time; Inspection Must Not Turn It Into A Current Claim About The Peer (0.8.45)](#a-peer-possession-observation-records-what-a-peer-reported-at-a-particular-time-inspection-must-not-turn-it-into-a-current-claim-about-the-peer-0845)
+- [A Snapshot's Independently Observed Facts Are Exposed Side By Side, Never Collapsed Into One Verdict (0.8.46)](#a-snapshots-independently-observed-facts-are-exposed-side-by-side-never-collapsed-into-one-verdict-0846)
+- [A Locator Is Not The Content; A Gateway Is Not A Verdict (0.8.66)](#a-locator-is-not-the-content-a-gateway-is-not-a-verdict-0866)
+- [A Capability Is Exposed Only Where It Exists; A Credential Is Never Owned (0.8.67)](#a-capability-is-exposed-only-where-it-exists-a-credential-is-never-owned-0867)
+- [A Configured Credential Lives Only As Long As The Capability It Grants (0.8.68)](#a-configured-credential-lives-only-as-long-as-the-capability-it-grants-0868)
+- [A Gateway Moves Bytes; It Never Judges Them (0.8.69)](#a-gateway-moves-bytes-it-never-judges-them-0869)
+
+**External anchoring and chain transactions**
+
+- [External Anchoring Provides Evidence; It Does Not Establish Authority (0.8.0)](#external-anchoring-provides-evidence-it-does-not-establish-authority-080)
+- [A Proof Verifier Reports "Cannot Presently Verify" Separately From "Proof Is Wrong" (0.8.1)](#a-proof-verifier-reports-cannot-presently-verify-separately-from-proof-is-wrong-081)
+- [External Evidence Adapters Never Change What PublicationAnchor Means (0.8.1)](#external-evidence-adapters-never-change-what-publicationanchor-means-081)
+- [Cataloging External Evidence Does Not Validate External Evidence (0.8.2)](#cataloging-external-evidence-does-not-validate-external-evidence-082)
+- [Known Evidence Is Not Verified Evidence, And Verified Evidence Is Not Authority (0.8.3)](#known-evidence-is-not-verified-evidence-and-verified-evidence-is-not-authority-083)
+- [Signature Verification Is Not Proof Verification (0.8.4)](#signature-verification-is-not-proof-verification-084)
+- [Peers Exchange Anchor Claims, Not Verification Results (0.8.4)](#peers-exchange-anchor-claims-not-verification-results-084)
+- [Synchronization Distributes Claims, Not Verification, Truth, Or Authority (0.8.5)](#synchronization-distributes-claims-not-verification-truth-or-authority-085)
+- [Evidence Set Convergence Does Not Imply Truth Convergence (0.8.5)](#evidence-set-convergence-does-not-imply-truth-convergence-085)
+- [Evidence Relationships Are Derived, Never Adjudicated (0.8.6)](#evidence-relationships-are-derived-never-adjudicated-086)
+- [Verification Observations Stay Local Even Under Comparison (0.8.6)](#verification-observations-stay-local-even-under-comparison-086)
+- [Package Import Is Evidence Ingestion, Not Evidence Verification (0.8.7)](#package-import-is-evidence-ingestion-not-evidence-verification-087)
+- [Importing Evidence Preserves The Claim; It Does Not Repair The Claim (0.8.7)](#importing-evidence-preserves-the-claim-it-does-not-repair-the-claim-087)
+- [Creating an Anchor Claim Does Not Create External Evidence (0.8.8)](#creating-an-anchor-claim-does-not-create-external-evidence-088)
+- [Broadcast Acceptance Is Not Anchor Validity (0.8.9)](#broadcast-acceptance-is-not-anchor-validity-089)
+- [A Publisher's Failure Is Not the Orchestration's Failure — But It Is Still No Anchor (0.8.10)](#a-publishers-failure-is-not-the-orchestrations-failure--but-it-is-still-no-anchor-0810)
+- [External Anchoring Is An Explicit User Action (0.8.11)](#external-anchoring-is-an-explicit-user-action-0811)
+- [A Verification Result Describes What Can Be Established Now; It Does Not Rewrite The Historical Claim Being Verified (0.8.12)](#a-verification-result-describes-what-can-be-established-now-it-does-not-rewrite-the-historical-claim-being-verified-0812)
+- [Evidence Comparison Is Not Adjudication (0.8.13)](#evidence-comparison-is-not-adjudication-0813)
+- [Inspection Is Observation; Verification Is An Explicit Operation (0.8.14)](#inspection-is-observation-verification-is-an-explicit-operation-0814)
+- [A Transaction Plan Is Not A Transaction (0.8.47)](#a-transaction-plan-is-not-a-transaction-0847)
+- [A PSBT Is A Description, Not A Signature (0.8.48)](#a-psbt-is-a-description-not-a-signature-0848)
+- [Real Bytes Are Still Not A Signature (0.8.49)](#real-bytes-are-still-not-a-signature-0849)
+- [A Wallet's Claim Is Not The Signature (0.8.50)](#a-wallets-claim-is-not-the-signature-0850)
+- [Signing Material Is Not Yet A Signature Until It Verifies (0.8.51)](#signing-material-is-not-yet-a-signature-until-it-verifies-0851)
+- [Broadcasting Submits; It Does Not Decide (0.8.52)](#broadcasting-submits-it-does-not-decide-0852)
+- [One Explicit Publication Action, Composed From Existing Primitives (0.8.53)](#one-explicit-publication-action-composed-from-existing-primitives-0853)
+- [Confirmation Observation Reports What Is; It Does Not Decide What It Means (0.8.54)](#confirmation-observation-reports-what-is-it-does-not-decide-what-it-means-0854)
+- [Reconciliation Composes Independent Observations; It Does Not Score Them (0.8.55)](#reconciliation-composes-independent-observations-it-does-not-score-them-0855)
+- [An Observation Describes The Network At The Time It Was Made, Not The Current State Of The Transaction (0.8.56)](#an-observation-describes-the-network-at-the-time-it-was-made-not-the-current-state-of-the-transaction-0856)
+- [The UI Displays Observations; It Does Not Turn Them Into A Verdict (0.8.57)](#the-ui-displays-observations-it-does-not-turn-them-into-a-verdict-0857)
+- [A Connection Grants A Capability; It Does Not Grant Trust (0.8.58)](#a-connection-grants-a-capability-it-does-not-grant-trust-0858)
+- [A Transaction Is Signed Only If It Is The Transaction That Was Reviewed (0.8.59)](#a-transaction-is-signed-only-if-it-is-the-transaction-that-was-reviewed-0859)
+- [A Funding Observation Is Not A Funding Commitment (0.8.60)](#a-funding-observation-is-not-a-funding-commitment-0860)
+- [A Transaction Plan Records What Produced It; It Does Not Refresh It (0.8.61)](#a-transaction-plan-records-what-produced-it-it-does-not-refresh-it-0861)
+- [Review Is An Authorization Boundary; Signing Is An External Capability Invocation (0.8.62)](#review-is-an-authorization-boundary-signing-is-an-external-capability-invocation-0862)
+- [Cryptographic Failure Terminates This Signing Attempt (0.8.63)](#cryptographic-failure-terminates-this-signing-attempt-0863)
+- [Broadcast Is Bound To Transaction Identity, Not UI Sequence (0.8.64)](#broadcast-is-bound-to-transaction-identity-not-ui-sequence-0864)
+- [Confirmation Is Bound To Broadcast Identity, Not Whatever Is On Screen (0.8.65)](#confirmation-is-bound-to-broadcast-identity-not-whatever-is-on-screen-0865)
+- [A Publication Record Is A Historical Fact; A Republish Never Erases It (0.8.71)](#a-publication-record-is-a-historical-fact-a-republish-never-erases-it-0871)
+- [An Observation Remains A Dated Fact; A Later Reading Never Erases An Earlier One (0.8.72)](#an-observation-remains-a-dated-fact-a-later-reading-never-erases-an-earlier-one-0872)
+- [History Preserves Occurrence Order; A Timeline Is Free To Provide Chronological Presentation (0.8.73)](#history-preserves-occurrence-order-a-timeline-is-free-to-provide-chronological-presentation-0873)
+- [Unify The Timeline, Not The Meanings (0.8.74)](#unify-the-timeline-not-the-meanings-0874)
+- [A Capability Can Be Ephemeral Even When The Facts Produced By Using It Are Durable (0.8.75)](#a-capability-can-be-ephemeral-even-when-the-facts-produced-by-using-it-are-durable-0875)
+- [A Changed Observation Is Not Automatically A Reorganization (0.8.76)](#a-changed-observation-is-not-automatically-a-reorganization-0876)
+- [An Internal Inconsistency Is Not Automatically A Reorganization (0.8.77)](#an-internal-inconsistency-is-not-automatically-a-reorganization-0877)
+- [Correlate Evidence By Explicit Identity, Never By Resemblance (0.8.78)](#correlate-evidence-by-explicit-identity-never-by-resemblance-0878)
+- [Derived Evidence Is Reconstructed From Durable Facts; It Is Not Stored As A Second History (0.8.79)](#derived-evidence-is-reconstructed-from-durable-facts-it-is-not-stored-as-a-second-history-0879)
+- [A Publication Record Establishes Identity; Observations Establish What Was Subsequently Observed About It (0.8.80)](#a-publication-record-establishes-identity-observations-establish-what-was-subsequently-observed-about-it-0880)
+- [A Lifecycle Timeline Presents Recorded Facts In Temporal Order; It Does Not Infer Missing Stages Or Interpret Them (0.8.81)](#a-lifecycle-timeline-presents-recorded-facts-in-temporal-order-it-does-not-infer-missing-stages-or-interpret-them-0881)
+- [An Archive Export Contains Facts, Not Capabilities Or Conclusions (0.8.82)](#an-archive-export-contains-facts-not-capabilities-or-conclusions-0882)
+- [Provenance Describes Where A Fact Entered This Archive; It Does Not Establish Whether The Fact Is True (0.8.83)](#provenance-describes-where-a-fact-entered-this-archive-it-does-not-establish-whether-the-fact-is-true-0883)
+- [An Archive Fingerprint Identifies Durable Contents; It Does Not Establish Their Truth Or Origin (0.8.84)](#an-archive-fingerprint-identifies-durable-contents-it-does-not-establish-their-truth-or-origin-0884)
+- [A Fingerprint Comparison Establishes Equality Of Digests, Not Which Archive Is Correct (0.8.85)](#a-fingerprint-comparison-establishes-equality-of-digests-not-which-archive-is-correct-0885)
+- [Inspecting An External Archive Never Touches The Current One (0.8.86)](#inspecting-an-external-archive-never-touches-the-current-one-0886)
+- [Archive Differences Describe Durable State Differences Without Selecting A Correct State (0.8.87)](#archive-differences-describe-durable-state-differences-without-selecting-a-correct-state-0887)
+- [A Replacement Review Composes Existing Information; It Does Not Authorize Replacement (0.8.88)](#a-replacement-review-composes-existing-information-it-does-not-authorize-replacement-0888)
+- [Blockchain Identity Is Explicit; A Shared Reference Is Never Evidence Of A Shared Publication (0.8.89)](#blockchain-identity-is-explicit-a-shared-reference-is-never-evidence-of-a-shared-publication-0889)
+- [Network Observation Does Not Establish Publication Authority (0.8.90)](#network-observation-does-not-establish-publication-authority-0890)
+- [A Transaction Plan Is Not A Publication (0.8.91)](#a-transaction-plan-is-not-a-publication-0891)
+- [Review Describes The Transaction Plan; It Does Not Commit It (0.8.92)](#review-describes-the-transaction-plan-it-does-not-commit-it-0892)
+- [Signing Authorizes The Exact Reviewed Plan; It Does Not Reconstruct Or Modify It (0.8.93)](#signing-authorizes-the-exact-reviewed-plan-it-does-not-reconstruct-or-modify-it-0893)
+- [A Signed Transaction Is Untrusted Until Independently, Cryptographically Verified Against The Exact Reviewed Plan (0.8.94)](#a-signed-transaction-is-untrusted-until-independently-cryptographically-verified-against-the-exact-reviewed-plan-0894)
+- [Broadcast Publishes An Already-Finalized Transaction; It Does Not Construct, Sign, Or Re-Verify One (0.8.95)](#broadcast-publishes-an-already-finalized-transaction-it-does-not-construct-sign-or-re-verify-one-0895)
+- [A Durable Archive Entry Requires An Explicit Append; Chain-Specific Observation Models Stay Chain-Specific Even When Made Durable (0.8.97)](#a-durable-archive-entry-requires-an-explicit-append-chain-specific-observation-models-stay-chain-specific-even-when-made-durable-0897)
+- [Unify The Timeline, Not The Meanings, Holds For A Third Domain Too (0.8.98)](#unify-the-timeline-not-the-meanings-holds-for-a-third-domain-too-0898)
+- [A Publication Record Establishes Identity; It Never Manufactures, Or Is Manufactured By, An Observation — Held For A Second Chain (0.8.99)](#a-publication-record-establishes-identity-it-never-manufactures-or-is-manufactured-by-an-observation--held-for-a-second-chain-0899)
+
+**Achievements, rankings and reconciliation**
+
+- [An Achievement Describes An Attributable Fact, Not A Person's Worth (0.8.102)](#an-achievement-describes-an-attributable-fact-not-a-persons-worth-08102)
+- [A Badge Presents An Achievement; It Does Not Redefine It (0.8.103)](#a-badge-presents-an-achievement-it-does-not-redefine-it-08103)
+- [A Reference Is A Fact One Publication States About Another; It Is Never Inferred, And Never A Verdict (0.8.104)](#a-reference-is-a-fact-one-publication-states-about-another-it-is-never-inferred-and-never-a-verdict-08104)
+- [A Reference Graph Is Grouped From Durable Facts, And Stays As Uninterpreted As They Are (0.8.105)](#a-reference-graph-is-grouped-from-durable-facts-and-stays-as-uninterpreted-as-they-are-08105)
+- [A Reference-Derived Achievement Is Attributed To A Publication, Never To The Archive As A Whole (0.8.106)](#a-reference-derived-achievement-is-attributed-to-a-publication-never-to-the-archive-as-a-whole-08106)
+- [A Publication Profile Names What A Publication Earned, Never Who Earned It (0.8.107)](#a-publication-profile-names-what-a-publication-earned-never-who-earned-it-08107)
+- [A Ranking Is A Policy Output, Not A Discovered Property (0.8.112)](#a-ranking-is-a-policy-output-not-a-discovered-property-08112)
+- [A Leaderboard Is A Presentation Of A Ranking, Never A Second Ranking System (0.8.113)](#a-leaderboard-is-a-presentation-of-a-ranking-never-a-second-ranking-system-08113)
+- [Evidence Is Portable; Achievements Are Derivable; Rankings Are Policy; Leaderboards Are Presentation (0.8.114)](#evidence-is-portable-achievements-are-derivable-rankings-are-policy-leaderboards-are-presentation-08114)
+- [Evidence May Be Merged; Conclusions Must Be Recomputed (0.8.115)](#evidence-may-be-merged-conclusions-must-be-recomputed-08115)
+- [An Evidence Fingerprint Identifies A Replica's Facts; It Never Authenticates Or Concludes Anything About Them (0.8.116)](#an-evidence-fingerprint-identifies-a-replicas-facts-it-never-authenticates-or-concludes-anything-about-them-08116)
+- [An Evidence Difference Names Missing Facts; It Is Never The Authority On Whether Two Replicas Agree (0.8.117)](#an-evidence-difference-names-missing-facts-it-is-never-the-authority-on-whether-two-replicas-agree-08117)
+- [A Synchronization Exchange Transports Evidence; A Fingerprint-Only Request Can Never Transport A Minimal Diff (0.8.118)](#a-synchronization-exchange-transports-evidence-a-fingerprint-only-request-can-never-transport-a-minimal-diff-08118)
+- [A Leaderboard Snapshot's Identity Is Its Evidence Fingerprint Plus Its Policy Version — Never A Timestamp, Never A Hash Of Itself (0.8.119)](#a-leaderboard-snapshots-identity-is-its-evidence-fingerprint-plus-its-policy-version--never-a-timestamp-never-a-hash-of-itself-08119)
+- [A Valid Signature Proves Who Signed; It Never Proves The Claim Is True Relative To A Replica's Own Evidence (0.8.121)](#a-valid-signature-proves-who-signed-it-never-proves-the-claim-is-true-relative-to-a-replicas-own-evidence-08121)
+- [A Stored Claim Is A Historical Signed Statement; Its Current Verification Result Is A Derived Observation (0.8.130)](#a-stored-claim-is-a-historical-signed-statement-its-current-verification-result-is-a-derived-observation-08130)
+- [Recording A Decision Does Not Execute, Validate, Or Interpret It (0.8.150)](#recording-a-decision-does-not-execute-validate-or-interpret-it-08150)
+- [Exchange Transports Historical Decisions; It Does Not Make New Ones (0.8.151)](#exchange-transports-historical-decisions-it-does-not-make-new-ones-08151)
+- [A Historical Decision Is Read By Its Own Embedded Fact, Never Recomputed Against Current State (0.8.153)](#a-historical-decision-is-read-by-its-own-embedded-fact-never-recomputed-against-current-state-08153)
+- [A Candidate's Decision History Is A Narration, Not A State Machine (0.8.154)](#a-candidates-decision-history-is-a-narration-not-a-state-machine-08154)
+
+**Notifications**
+
+- [A NotificationEvent Represents An Awareness-Worthy Fact; It Is Not A Delivery, A Read State, Or A Chat Message (0.9.273)](#a-notificationevent-represents-an-awareness-worthy-fact-it-is-not-a-delivery-a-read-state-or-a-chat-message-09273)
+- [A Producer Wraps The Command It Notifies About; It Never Becomes A Fourth Argument To It (0.9.275)](#a-producer-wraps-the-command-it-notifies-about-it-never-becomes-a-fourth-argument-to-it-09275)
+- [A Lifecycle Audit Names What It Finds; It Does Not Fix What It Finds (0.9.276)](#a-lifecycle-audit-names-what-it-finds-it-does-not-fix-what-it-finds-09276)
+- [Reconstructible, Safe To Regenerate, Deduplicated, And Exactly-Once Are Four Separate Facts (0.9.277)](#reconstructible-safe-to-regenerate-deduplicated-and-exactly-once-are-four-separate-facts-09277)
+- [A Dedup Identity Is Chosen From Outside The Fact It Names; The Fact Never Chooses For Itself (0.9.278)](#a-dedup-identity-is-chosen-from-outside-the-fact-it-names-the-fact-never-chooses-for-itself-09278)
+- [A Key Collision Is Necessary, Never Sufficient, Evidence Of Sameness (0.9.279)](#a-key-collision-is-necessary-never-sufficient-evidence-of-sameness-09279)
+- [Deduplication Identity Is A Decision About A Fact, Never A Capability Of It (0.9.280)](#deduplication-identity-is-a-decision-about-a-fact-never-a-capability-of-it-09280)
+- [A Persistence Layer Enforces A Policy; It Never Adjudicates What The Policy Leaves Open (0.9.281)](#a-persistence-layer-enforces-a-policy-it-never-adjudicates-what-the-policy-leaves-open-09281)
+- [Persisted, Delivered, Seen, And Read Are Four Different Claims — This System Makes Only The First One (0.9.286)](#persisted-delivered-seen-and-read-are-four-different-claims--this-system-makes-only-the-first-one-09286)
+
+**Distribution, settings and wallets**
+
+- [Local First, Network Second, For Every Distributed Write (0.9.620, 0.9.628, 0.9.631)](#local-first-network-second-for-every-distributed-write-09620-09628-09631)
+- [Choose One Substrate; Fan Out Only Within It (2026-09-20)](#choose-one-substrate-fan-out-only-within-it-2026-09-20)
+- [A Saved Preference Seeds A Choice; It Never Makes One (2026-09-21)](#a-saved-preference-seeds-a-choice-it-never-makes-one-2026-09-21)
+- [One Signer, One Request At A Time (2026-09-21)](#one-signer-one-request-at-a-time-2026-09-21)
+
+**Vehicles, inventory and animals**
+
+- [An Animal Has Three Possible Homes, Never Two At Once (0.9.700–0.9.703)](#an-animal-has-three-possible-homes-never-two-at-once-0970009703)
+- [A Transferred Entry Leaves Its Owner Before The Offer Does (0.9.702)](#a-transferred-entry-leaves-its-owner-before-the-offer-does-09702)
+
+## Foundations (0.1.x–0.2.16)
+
 Core modules must not depend on infrastructure.
 
 Everything is replaceable through interfaces.
@@ -16,7 +590,7 @@ Application orchestrates; Core provides capabilities. Use cases, wiring,
 and editor workflows live in application/. Domain data, rules, and the
 event machinery that lets Core announce what happened live in core/ —
 even when application/ is what constructs and wires that machinery
-together (see docs/Architecture.md on why EventBus lives in core/events/
+together (see docs/ArchitectureHistory.md on why EventBus lives in core/events/
 rather than application/events/).
 
 Event vocabulary lives at the lowest layer both the publisher and every
@@ -70,9 +644,11 @@ not editor session, not renderer state — the serialized document envelope
 is the single artifact that crosses every boundary: file, publish,
 network. Everything else is a consumer or mechanism around it.
 
-Migration happens before domain entry (0.2.0). Old-format compatibility
-code lives in the schema migrator, never in Brick, Group, World, or any
-editing service. Domain classes only ever see current-schema JSON.
+Migration happens before domain entry (0.2.0, restated 0.2.2).
+Old-format compatibility code lives in the schema migrator, never in
+Brick, Group, World, or any editing service. Domain classes only ever see
+current-schema JSON. This is the cardinal rule that keeps the domain clean
+as the protocol evolves.
 
 Save is not Publish (0.2.0). Saving persists the editable document
 (mutable, overwriteable). Publishing creates an immutable, validated,
@@ -83,11 +659,6 @@ makes mutation isolation impossible.
 Publishing validates before storing (0.2.0). A corrupt document must not
 enter the published corpus. The DocumentValidator runs as part of the
 publish pipeline, and refusal is a hard error, not a warning.
-
-Migration happens before domain entry (0.2.2). Old-format compatibility
-code lives in the schema migrator, never in Brick, Group, World, or any
-editing service. Domain classes only ever see current-schema JSON. This
-is the cardinal rule that keeps the domain clean as the protocol evolves.
 
 Validation is independent of the UI (0.2.2). DocumentValidator is pure:
 no Vue, no Three.js, no session, no browser APIs. Given only a plain
@@ -229,6 +800,8 @@ networks, key rotation, and revocation are later adapters around the
 same IdentityProvider/AuthorizationVerifier seam — not a prerequisite
 for the trust model.
 
+## Principles in milestone order
+
 ### Signatures vs. Authorization (0.2.17)
 Signatures establish *who acted*; authorization establishes *whether they were allowed to act*. 
 A valid signature alone is insufficient for delegated operations. When an actor is not the resource 
@@ -336,6 +909,13 @@ effect of whichever root a replica happened to load first.
 
 ### A Published Snapshot Is Never Mutated In Place (0.2.20)
 
+*Changed by 0.5.9:* World View no longer edits bricks, so today the
+fork-on-edit described here only runs for its few remaining mutations
+(Region/Landmark naming and Animal Decorations). Brick editing forks
+through "Edit a Copy" and the Editor instead. See "World View Observes
+and Navigates; Editor Mutates and Builds (0.5.9)" below and
+docs/CapabilityMatrix.md.
+
 A published World View is immutable; a World View SESSION is editable.
 Opening a published snapshot never makes the snapshot itself editable
 — the first mutation crosses the publication boundary and creates a
@@ -428,6 +1008,13 @@ began, or the two will disagree the first time the active document
 changes without the component remounting.
 
 ### A Fork Is Not A Modal Interruption (0.2.22)
+
+*Changed by 0.5.9:* World View no longer edits bricks, so today the
+fork-on-edit described here only runs for its few remaining mutations
+(Region/Landmark naming and Animal Decorations). Brick editing forks
+through "Edit a Copy" and the Editor instead. See "World View Observes
+and Navigates; Editor Mutates and Builds (0.5.9)" below and
+docs/CapabilityMatrix.md.
 
 Lazy fork-on-first-mutation (0.2.20) exists specifically so that
 editing a published world feels like editing, not like requesting
@@ -545,8 +1132,8 @@ falls back from is not actually a fix.
 
 This does not mean placements never collide — a bounded, hash-based
 grid can and will map two different ids to the same cell. Resolving
-that is explicitly out of scope here (see docs/Roadmap.md, "spatial
-allocation / collision policy"); determinism, not collision avoidance,
+that is explicitly out of scope here (see docs/Roadmap.md, 0.2.25,
+"Spatial Allocation & Placement Collision Policy"); determinism, not collision avoidance,
 is the property this milestone establishes.
 
 ### A World Unit Is One Meter (0.9.548)
@@ -741,7 +1328,7 @@ staleness) is real, tested infrastructure — but it belongs to
 `DecentralizedSpatialDiscoveryProvider`, which is not the discovery
 backend `CreateWorldViewUseCase` actually wires into the live World
 View today (`LocalWorldLayoutProvider`/`LocalSpatialIndexProvider`
-are — see docs/Architecture.md, 0.2.26). A synchronous, fully-local
+are — see docs/ArchitectureHistory.md, 0.2.26). A synchronous, fully-local
 `localStorage` read cannot genuinely be "temporarily unavailable" the
 way a fetched index manifest can; presenting a manifest-unavailable
 message the live stack could never actually produce would be
@@ -865,7 +1452,7 @@ cells → `SpatialIndexRoot` → `SpatialIndexManifest` →
 `PlacementRecord`s, exact distance test) answers the exact same
 question, with the spatial index as an accelerator and the placement
 records themselves remaining the authoritative source, never the
-reverse. See docs/Architecture.md, 0.2.28, for why that swap is
+reverse. See docs/ArchitectureHistory.md, 0.2.28, for why that swap is
 future work and not attempted here — the promise the API makes is
 what has to be right immediately; which concrete provider fulfills it
 can improve later without changing a single caller.
@@ -1005,7 +1592,7 @@ collapsing into a single true/false "is this trustworthy":
     wires the plain `LocalWorldLayoutProvider`/`LocalDiscoveryProvider`
     scan established in 0.2.26/0.2.28/0.2.29, which has no manifest,
     root, or signature concept to report on at all (see
-    docs/Architecture.md, 0.2.30, for why this milestone does not
+    docs/ArchitectureHistory.md, 0.2.30, for why this milestone does not
     change that wiring).
   - `available: true, fatal: <reason>` — a provider WAS consulted, but
     the index root/authority itself could not be trusted this pass
@@ -1295,6 +1882,12 @@ Placed," below, for the mechanism that makes that guarantee real
 rather than aspirational.
 
 ### Presence Is Never Signed, Never Persisted, Never Placed (0.2.33)
+
+*Changed by 0.2.38:* presence advertisements are now signed whenever the
+local identity provider can sign (`application/PresenceSigning.js`).
+`AvatarPresence` itself still has no signing descriptor, and presence is
+still never persisted or placed. See "Presence Trust, Replay & Conflict
+Handling" in docs/Roadmap.md, 0.2.38.
 
 `core/AvatarPresence.js` deliberately has no `getSigningDescriptor()`,
 and `application/AvatarPresenceSession.js` deliberately has no
@@ -2003,6 +2596,10 @@ avatar, the document, or anything persisted.
 
 ### Avatar Presence Has No Privacy Guarantee Beyond Transport Scope (0.2.39)
 
+*Changed by 0.2.40:* presence now passes a visibility policy before it
+is broadcast. See "Visibility Happens Before Broadcasting, Never After
+(0.2.40)" below.
+
 Made inspectable for the first time this milestone — `getAvatarInfo()`
 exposes a remote avatar's exact position, animation, and trust state
 to any replica that receives its presence — this is a good moment to
@@ -2011,7 +2608,7 @@ say plainly what was always implicitly true since 0.2.37: an
 the same broadcast transport, with no access control, no audience
 scoping, and no notion of "who is allowed to see this" beyond "who is
 listening." This is a deliberate, DOCUMENTED boundary, not an
-oversight — see docs/Protocol.md. A future `PUBLIC`/`FRIENDS`/`LOCAL`/
+oversight — see docs/ProtocolHistory.md. A future `PUBLIC`/`FRIENDS`/`LOCAL`/
 `HIDDEN` presence-visibility model is explicitly left for a later,
 deliberate milestone (see docs/Roadmap.md); 0.2.39 makes presence data
 easier to LOOK AT, but changes nothing about who it's already visible
@@ -2047,7 +2644,7 @@ per-recipient addressing at all. Trust (`application/
 PresenceTrustBoundary.js`, 0.2.38) and visibility are deliberately
 opposite sides of the same boundary: visibility is the SENDER asking
 "should I even send this," trust is the RECEIVER asking "should I
-believe what arrived" — see docs/Architecture.md's own diagram.
+believe what arrived" — see docs/ArchitectureHistory.md's own diagram.
 
 ### AvatarProfile, AvatarPresence, and PresenceVisibilityPolicy Are Three Independent Concerns (0.2.40)
 
@@ -2340,7 +2937,8 @@ over data Alice's own replica ALREADY holds — her own current
 position, and the SAME trusted remote-presence list
 `application/RemoteAvatarRegistry.js` already renders from. There is
 no message anywhere in this protocol that means "I am near you," and
-there never will be one — see docs/Protocol.md. This isn't a missing
+there never will be one — see docs/Protocol.md, "Presence, profiles
+and interactions". This isn't a missing
 feature; it's the correct design. A proximity CLAIM sent over the wire
 would be exactly the kind of fact 0.2.18's replication work already
 taught this codebase to be suspicious of: it could be stale, it could
@@ -3436,6 +4034,13 @@ step 15).
 
 ### Friendship Can Be Established, But Not Yet Revoked (0.2.57)
 
+*Changed by 0.2.60:* REJECT, CANCEL and UNFRIEND now exist
+(`core/FriendshipAction.js`,
+`application/FriendRelationshipUseCase.js#unfriend()`), and blocking is
+a separate local decision (`application/PeerBlockUseCase.js`). See
+"Friendship Is Mutual Relationship State; Blocking Is A Unilateral Local
+Decision (0.2.60)" below.
+
 `core/FriendshipAction.js` defines exactly two actions — REQUEST and
 ACCEPT — deliberately, not as a first installment waiting to be
 completed. REJECT, CANCEL, BLOCK, and UNFRIEND were all considered and
@@ -3871,6 +4476,10 @@ this directly: the connection's `PeerLifecycleState` is asserted to
 remain `AUTHENTICATED` throughout, while chat itself stops.
 
 ### 0.2.61 Ships Live Chat, Not A Message Database (0.2.61)
+
+*Changed by 0.2.63 and 0.2.69:* chat gained a durable outbox (0.2.63)
+and a durable per-identity conversation store (0.2.69). See "A Reload
+Continues A Conversation; It Never Starts A New One (0.2.69)" below.
 
 The deliberate boundary of this milestone: two authenticated friends
 exchange text over a direct connection, and nothing about that exchange
@@ -5277,7 +5886,7 @@ fixed coordinate's height independently before and after an entire
 scripted journey across the world and asserts the two values are
 identical. `DEFAULT_WORLD_SEED` is deliberately ONE hardcoded constant
 shared by the whole live World View today, not a field on `core/World.js`
-or `core/Document.js` — see docs/Architecture.md, 0.2.76, for why a
+or `core/Document.js` — see docs/ArchitectureHistory.md, 0.2.76, for why a
 per-World seed would be a real schema change this milestone didn't reach
 for, and why one shared constant already satisfies the invariant this
 milestone actually needed.
@@ -5640,6 +6249,12 @@ other both run, which is precisely why the rule is named here rather than
 left to be rediscovered.
 
 ### A Structure Is The Next Rung On The Brick Ladder, Not An Escape From It (0.2.81)
+
+*Changed by 0.4.0 and 0.4.5:* forking is no longer the only thing you
+can do with a Structure. It can also be copied into the current document
+(0.4.0), and clicking a structure card places it (0.4.5). It is still
+composed only of ordinary bricks. See "Copying Composes A Blueprint;
+Forking Creates One (0.4.0)" below.
 
 0.2.80 named the ladder explicitly: `Brick -> Building -> Structure`,
 and warned that a future forkable structure library "does not need, and
@@ -6277,6 +6892,11 @@ milestone adds animated navigation as new entry points
 call with motion those callers, and their tests, never asked for.
 
 ### A Compass Heading Is Computed From Camera Orientation, Never Stored Or Broadcast (0.2.94)
+
+*Changed by 0.3.0:* raw camera orientation may now travel as ephemeral
+presence; the heading LABEL still stays local. See "A Compass Heading's
+LABEL Stays Local; Raw Camera Orientation May Now Travel As Ephemeral
+Presence (0.3.0 amends 0.2.94)" below.
 
 `core/CompassHeading.js#computeCompassHeading()` takes nothing but the
 camera's current position and target and returns `{ degrees, label }` or
@@ -7121,7 +7741,7 @@ constraint's own existing `isStepClimbable()` check becomes the only
 gate deciding whether any specific tick's approach is actually
 climbable. This is not a special case bolted onto collision — it is a
 recognition that two constraints already running in sequence
-(`docs/Architecture.md`'s own five-stage 0.3.2 pipeline) can jointly
+(`docs/ArchitectureHistory.md`'s own five-stage 0.3.2 pipeline) can jointly
 answer a question neither could answer alone, without either one
 growing new knowledge of the other's domain. With stepping OFF entirely,
 this carve-out vanishes completely — there is no downstream check left
@@ -8495,8 +9115,8 @@ capabilities:
      a real feature, wildly out of proportion to this milestone, and
      not what "World View Observes and Navigates" is actually
      objecting to.
-  2. **`movePlacement()`** (0.2.23) — repositioning an existing
-     `StructurePlacement` within the shared World layout. Its own
+  2. **`movePlacement()`** (0.2.23) — repositioning a published
+     world's `WorldPlacement` in shared space. Its own
      pre-0.5.9 header already stated the principle this milestone
      merely reuses: "Moving A Placement Is Not Editing A Document — it
      never touches the Document/Publication, never forks anything."
@@ -8504,9 +9124,10 @@ capabilities:
      kind of act as naming a place — curating the World's own
      structure — never authoring the content itself.
 
-Both exceptions still route through the exact same `canEditDocument()`/
-`_ensureEditableDocumentId()`/`_forkForEdit()` machinery brick mutation
-used — 0.2.95's authorization seam and 0.2.20's fork-on-write are
+Region/Landmark naming still routes through the exact same
+`canEditDocument()`/`_ensureEditableDocumentId()`/`_forkForEdit()`
+machinery brick mutation used (`movePlacement()` never forks: it changes a
+PlacementRecord, not a Document) — 0.2.95's authorization seam and 0.2.20's fork-on-write are
 untouched, general-purpose infrastructure, not brick-specific. Undo/redo
 (`undo()`/`redo()`) and the history-preview/replay machinery
 (`beginHistoryPreview()`/`restoreHistoryAt()`/etc.) also stay for the
@@ -12636,7 +13257,7 @@ concerned, it did.
 
 See `docs/Roadmap.md`, 0.8.30, for the full milestone entry.
 
-## Replica Knowledge Explains What Is Known And How It Was Acquired; It Does Not Judge What Should Be Trusted (0.8.31)
+### Replica Knowledge Explains What Is Known And How It Was Acquired; It Does Not Judge What Should Be Trusted (0.8.31)
 
 `application/PublicationReplicaKnowledgeDetailView.js` places two facts
 that have existed since 0.8.12/0.8.17/0.8.24/0.8.26 on the same row, for
@@ -12710,7 +13331,7 @@ computed — it only ever places them on the same row for a person to read.
 
 See `docs/Roadmap.md`, 0.8.31, for the full milestone entry.
 
-## Knowledge Of Content Is Not Possession Of Content (0.8.32)
+### Knowledge Of Content Is Not Possession Of Content (0.8.32)
 
 Every milestone since 0.8.28 has drawn a line between what a replica
 KNOWS and what has been externally PROVEN or successfully RETRIEVED — a
@@ -12801,7 +13422,7 @@ has to guess which kind of fact it is holding.
 
 See `docs/Roadmap.md`, 0.8.32, for the full milestone entry.
 
-## Local Content Availability Is An Observation, Not A Verdict (0.8.33)
+### Local Content Availability Is An Observation, Not A Verdict (0.8.33)
 
 `docs/Principles.md`, "Known Is Not Available (0.8.28)," drew a line
 between what a replica knows and what has been externally proven or
@@ -12898,7 +13519,7 @@ adjusting to agree with the other.
 
 See `docs/Roadmap.md`, 0.8.33, for the full milestone entry.
 
-## Snapshot Materialization Is An Explicit User Action, Distinct From Every Other Way A Replica Learns About Content (0.8.34)
+### Snapshot Materialization Is An Explicit User Action, Distinct From Every Other Way A Replica Learns About Content (0.8.34)
 
 `docs/Principles.md`'s own "Knowledge Of Content Is Not Possession Of
 Content (0.8.32)" and "Local Content Availability Is An Observation, Not A
@@ -12987,7 +13608,7 @@ operations, never one that silently implies another.
 
 See `docs/Roadmap.md`, 0.8.34, for the full milestone entry.
 
-## Placement Resolution Observes Present Availability; Materialization Turns It Into Possession (0.8.35)
+### Placement Resolution Observes Present Availability; Materialization Turns It Into Possession (0.8.35)
 
 0.8.20 drew a careful line and held it for fifteen milestones: resolving a
 `PublicationSnapshotPlacement` retrieves bytes into memory long enough to
@@ -13085,7 +13706,7 @@ merging it with the path 0.8.34 already built.
 
 See `docs/Roadmap.md`, 0.8.35, for the full milestone entry.
 
-## A Shared Storage Boundary Does Not Merge The Sources That Feed It (0.8.36)
+### A Shared Storage Boundary Does Not Merge The Sources That Feed It (0.8.36)
 
 0.8.32 and 0.8.35 each built a complete, independent explicit path from
 "bytes exist somewhere" to "this replica possesses them," and each grew
@@ -13174,7 +13795,7 @@ not adding a third.
 
 See `docs/Roadmap.md`, 0.8.36, for the full milestone entry.
 
-## Peer Content Transfer Is Transport; Verification And Storage Stay Centralized (0.8.37)
+### Peer Content Transfer Is Transport; Verification And Storage Stay Centralized (0.8.37)
 
 0.8.36 built one shared boundary — `application/
 StoreSnapshotContentUseCase.js` — for the two explicit sources that
@@ -13283,7 +13904,7 @@ or comparing them remains exactly as premature as it was with two.
 
 See `docs/Roadmap.md`, 0.8.37, for the full milestone entry.
 
-## Materialization History Describes Byte Acquisition, Not Source Trust (0.8.38)
+### Materialization History Describes Byte Acquisition, Not Source Trust (0.8.38)
 
 **A materialization source identifies the mechanism through which bytes
 were supplied to the local content store. It does not establish
@@ -13381,7 +14002,7 @@ outperformed the others.
 
 See `docs/Roadmap.md`, 0.8.38, for the full milestone entry.
 
-## Current Snapshot Possession Is A Local Observation, Not A Distributed Claim (0.8.39)
+### Current Snapshot Possession Is A Local Observation, Not A Distributed Claim (0.8.39)
 
 **A replica can know that it possesses a valid snapshot without that fact
 becoming a publication claim, a placement claim, or a decentralization
@@ -13475,7 +14096,7 @@ something this milestone reaches for just because the shape now exists.
 
 See `docs/Roadmap.md`, 0.8.39, for the full milestone entry.
 
-## Peer Possession Responses Are Observations, Not Placement Claims (0.8.40)
+### Peer Possession Responses Are Observations, Not Placement Claims (0.8.40)
 
 **A replica's statement that it currently possesses snapshot bytes does not
 establish a placement, evidence claim, authority relationship, or
@@ -13565,7 +14186,7 @@ be added to it.
 
 See `docs/Roadmap.md`, 0.8.40, for the full milestone entry.
 
-## Peer Possession Observations Describe What Peers Report; They Do Not Become Placement Claims (0.8.41)
+### Peer Possession Observations Describe What Peers Report; They Do Not Become Placement Claims (0.8.41)
 
 **Collecting several peers' possession observations together — comparing
 them, counting them, keeping every one of them on file — never turns the
@@ -13649,7 +14270,7 @@ of its own on top of that guarantee.
 
 See `docs/Roadmap.md`, 0.8.41, for the full milestone entry.
 
-## A Source Selection Is A Person's Own Action, Never An Application Recommendation (0.8.42)
+### A Source Selection Is A Person's Own Action, Never An Application Recommendation (0.8.42)
 
 **A `SnapshotMaterializationSourceSelection` names a choice already made;
 it never makes one.** `application/
@@ -13688,7 +14309,7 @@ caller contract violation, not a degrade path.
 
 See `docs/Roadmap.md`, 0.8.42, for the full milestone entry.
 
-## An Observation Can Inform A Person's Choice Without Becoming An Application Decision (0.8.42)
+### An Observation Can Inform A Person's Choice Without Becoming An Application Decision (0.8.42)
 
 **A possession observation and a materialization attempt remain two
 independently true (or false) facts, at two independently timestamped
@@ -13731,7 +14352,7 @@ or more likely to succeed than another; each row's own button is offered
 purely because that peer said, at one past moment, that it possessed the
 bytes — nothing more.
 
-## Current Snapshot Possession Is Independent Of How The Snapshot Was Acquired (0.8.43)
+### Current Snapshot Possession Is Independent Of How The Snapshot Was Acquired (0.8.43)
 
 **`application/PublicationSnapshotAcquisitionView.js#describePublicationSnapshotAcquisition()`
 reports `possession.state` exactly as its own `possessionView` parameter
@@ -13772,7 +14393,7 @@ without merging, this milestone's own composed view is a fourth
 combination that still refuses to let any one of its two inputs decide
 the other. See `docs/Roadmap.md`, 0.8.43, for the full milestone entry.
 
-## Acquisition History Explains Past Attempts; It Does Not Determine Present Possession (0.8.43)
+### Acquisition History Explains Past Attempts; It Does Not Determine Present Possession (0.8.43)
 
 **`application/PublicationSnapshotAcquisitionView.js`'s own `acquisition`
 field is a plain, non-judgmental tally — `attemptCount`, `storedCount`,
@@ -13825,7 +14446,7 @@ snapshot. See `docs/Roadmap.md`, 0.8.43, for the full milestone entry.
 
 See `docs/Roadmap.md`, 0.8.42, for the full milestone entry.
 
-## History Records What Happened During An Explicit Acquisition Attempt; Inspection Must Not Reinterpret Why It Happened (0.8.44)
+### History Records What Happened During An Explicit Acquisition Attempt; Inspection Must Not Reinterpret Why It Happened (0.8.44)
 
 **`application/SnapshotMaterializationHistoryDetailView.js`'s two functions
 — `describeSnapshotMaterializationHistoryEntry(attempt)` and
@@ -13880,7 +14501,7 @@ milestone refuses to let a PER-ATTEMPT narration do either — inspecting a
 history in detail is still just reading it, never re-judging it. See
 `docs/Roadmap.md`, 0.8.44, for the full milestone entry.
 
-## A Peer Possession Observation Records What A Peer Reported At A Particular Time; Inspection Must Not Turn It Into A Current Claim About The Peer (0.8.45)
+### A Peer Possession Observation Records What A Peer Reported At A Particular Time; Inspection Must Not Turn It Into A Current Claim About The Peer (0.8.45)
 
 **`application/SnapshotPeerPossessionObservationDetailView.js`'s two
 functions — `describeSnapshotPeerPossessionObservationDetail(observation)`
@@ -13958,7 +14579,7 @@ an observation is never itself an acquisition attempt, a placement, or an
 automatic trigger for either. See `docs/Roadmap.md`, 0.8.45, for the full
 milestone entry.
 
-## A Snapshot's Independently Observed Facts Are Exposed Side By Side, Never Collapsed Into One Verdict (0.8.46)
+### A Snapshot's Independently Observed Facts Are Exposed Side By Side, Never Collapsed Into One Verdict (0.8.46)
 
 **`application/SnapshotStateInspectionView.js`'s `describeSnapshotStateInspection()`
 composes FOUR already-independent views — local possession (0.8.39),
@@ -14038,7 +14659,7 @@ four at once, and holds itself to the identical restraint each of them
 already modeled. See `docs/Roadmap.md`, 0.8.46, for the full milestone
 entry.
 
-## A Transaction Plan Is Not A Transaction (0.8.47)
+### A Transaction Plan Is Not A Transaction (0.8.47)
 
 **`anchoring/BitcoinAnchorTransactionBuilder.js#build()` selects
 caller-supplied UTXOs and computes a fee, and stops exactly there.** Its
@@ -14096,7 +14717,7 @@ Section C proves the order-independence directly, feeding the identical
 UTXO set in two different array orders and asserting byte-identical
 selection. See `docs/Roadmap.md`, 0.8.47, for the full milestone entry.
 
-## A PSBT Is A Description, Not A Signature (0.8.48)
+### A PSBT Is A Description, Not A Signature (0.8.48)
 
 **`anchoring/BitcoinAnchorPsbtBuilder.js#build()` turns a real
 `BitcoinAnchorTransactionBuilder` plan, plus the previous-output data a
@@ -14151,7 +14772,7 @@ tampered plan is refused here too, independently, proven directly in
 `tests/BitcoinAnchorPsbtConstruction.test.js`'s own Section E. See
 `docs/Roadmap.md`, 0.8.48, for the full milestone entry.
 
-## Real Bytes Are Still Not A Signature (0.8.49)
+### Real Bytes Are Still Not A Signature (0.8.49)
 
 **`anchoring/BitcoinAnchorPsbtSerializer.js#serialize()` turns a real
 `BitcoinAnchorPsbtBuilder` description into genuine BIP174 wire bytes —
@@ -14209,7 +14830,7 @@ class needs from upstream, it should never need to understand ForkBuild's
 own anchor bookkeeping to produce. See `docs/Roadmap.md`, 0.8.49, for the
 full milestone entry.
 
-## A Wallet's Claim Is Not The Signature (0.8.50)
+### A Wallet's Claim Is Not The Signature (0.8.50)
 
 **`anchoring/BitcoinAnchorWalletSigner.js#requestSignature()` asks an
 injected `wallet` to sign a real unsigned PSBT, and never calls the result
@@ -14274,7 +14895,7 @@ it supplies a fake broadcaster — a real wallet integration is its own,
 separately sized, future concern. See `docs/Roadmap.md`, 0.8.50, for the
 full milestone entry.
 
-## Signing Material Is Not Yet A Signature Until It Verifies (0.8.51)
+### Signing Material Is Not Yet A Signature Until It Verifies (0.8.51)
 
 **`anchoring/BitcoinAnchorSignedPsbtFinalizer.js#finalize()` never calls a
 signed PSBT "finalized" merely because it carries the right SHAPE of
@@ -14328,7 +14949,7 @@ vocabulary named itself as a deliberate, not-yet-taken widening one
 milestone earlier. See `docs/Roadmap.md`, 0.8.51, for the full milestone
 entry.
 
-## Broadcasting Submits; It Does Not Decide (0.8.52)
+### Broadcasting Submits; It Does Not Decide (0.8.52)
 
 **`anchoring/BitcoinAnchorTransactionBroadcaster.js#broadcast()` never
 asks whether a transaction is valid — that question was already closed,
@@ -14373,7 +14994,7 @@ application believed it was anchoring. A rejected broadcast stays
 rejected; the caller decides what happens next, this class never does.
 See `docs/Roadmap.md`, 0.8.52, for the full milestone entry.
 
-## One Explicit Publication Action, Composed From Existing Primitives (0.8.53)
+### One Explicit Publication Action, Composed From Existing Primitives (0.8.53)
 
 **`application/BitcoinAnchorPublicationCoordinator.js` adds no new
 Bitcoin primitive.** Six domain classes (`anchoring/
@@ -14427,7 +15048,7 @@ confirmed state occurs anywhere in this codebase. See `docs/Roadmap.md`,
 0.8.53, for the full milestone entry, and "0.8.54" for the separate,
 explicitly-triggered action confirmation observation belongs to.
 
-## Confirmation Observation Reports What Is; It Does Not Decide What It Means (0.8.54)
+### Confirmation Observation Reports What Is; It Does Not Decide What It Means (0.8.54)
 
 **`anchoring/BitcoinAnchorConfirmationObserver.js#observeConfirmation()`
 never asks whether an anchor is trustworthy — it asks only what the
@@ -14485,7 +15106,7 @@ claimed content hash." See `docs/Principles.md`, "External Anchoring
 Provides Evidence; It Does Not Establish Authority (0.8.0)," and `docs/
 Roadmap.md`, 0.8.54, for the full milestone entry.
 
-## Reconciliation Composes Independent Observations; It Does Not Score Them (0.8.55)
+### Reconciliation Composes Independent Observations; It Does Not Score Them (0.8.55)
 
 **`application/BitcoinAnchorProofReconciliationView.js#reconcile()` never
 asks whether a Bitcoin anchor is trustworthy — it asks only what two
@@ -14542,7 +15163,7 @@ structurally invalid proof was always a `HASH_MISMATCH`
 transaction side had nothing to say. See `docs/Roadmap.md`, 0.8.55, for
 the full milestone entry.
 
-## An Observation Describes The Network At The Time It Was Made, Not The Current State Of The Transaction (0.8.56)
+### An Observation Describes The Network At The Time It Was Made, Not The Current State Of The Transaction (0.8.56)
 
 **A history is APPENDED TO, NEVER OVERWRITTEN, NEVER MUTATED.**
 `anchoring/BitcoinAnchorConfirmationObserver.js#observeConfirmation()`
@@ -14623,7 +15244,7 @@ SnapshotPeerPossessionObservationHistory.js`'s own header already holds
 for peer possession, each one domain over. See `docs/Roadmap.md`, 0.8.56,
 for the full milestone entry.
 
-## The UI Displays Observations; It Does Not Turn Them Into A Verdict (0.8.57)
+### The UI Displays Observations; It Does Not Turn Them Into A Verdict (0.8.57)
 
 The Publication Center's new "Bitcoin Anchor" section is the first screen
 in this entire Bitcoin sequence — 0.8.47 through 0.8.56 built every piece
@@ -14710,7 +15331,7 @@ detail view, so the UI should simply project it."
 
 See `docs/Roadmap.md`, 0.8.57, for the full milestone entry.
 
-## A Connection Grants A Capability; It Does Not Grant Trust (0.8.58)
+### A Connection Grants A Capability; It Does Not Grant Trust (0.8.58)
 
 `anchoring/BitcoinAnchorWalletSigner.js` (0.8.50) drew a line this
 codebase has held ever since: ForkBuild never receives a private key,
@@ -14805,7 +15426,7 @@ standing in for a missing one.
 
 See `docs/Roadmap.md`, 0.8.58, for the full milestone entry.
 
-## A Transaction Is Signed Only If It Is The Transaction That Was Reviewed (0.8.59)
+### A Transaction Is Signed Only If It Is The Transaction That Was Reviewed (0.8.59)
 
 `docs/Principles.md`, "A Connection Grants A Capability; It Does Not Grant
 Trust (0.8.58)," drew one line: a connected wallet is a signing capability,
@@ -14882,7 +15503,7 @@ since 0.8.58.
 
 See `docs/Roadmap.md`, 0.8.59, for the full milestone entry.
 
-## A Funding Observation Is Not A Funding Commitment (0.8.60)
+### A Funding Observation Is Not A Funding Commitment (0.8.60)
 
 `anchoring/BitcoinAnchorTransactionBuilder.js`'s own header (0.8.47) has
 required caller-supplied UTXOs since the day it was built, and this
@@ -14948,7 +15569,7 @@ funding source say is spendable," never "what should be spent."
 
 See `docs/Roadmap.md`, 0.8.60, for the full milestone entry.
 
-## A Transaction Plan Records What Produced It; It Does Not Refresh It (0.8.61)
+### A Transaction Plan Records What Produced It; It Does Not Refresh It (0.8.61)
 
 `docs/Principles.md`, "A Transaction Plan Is Not A Transaction (0.8.47),"
 drew the first line in this pipeline: a plan is inputs, outputs, and a fee
@@ -15037,7 +15658,7 @@ withhold.
 
 See `docs/Roadmap.md`, 0.8.61, for the full milestone entry.
 
-## Review Is An Authorization Boundary; Signing Is An External Capability Invocation (0.8.62)
+### Review Is An Authorization Boundary; Signing Is An External Capability Invocation (0.8.62)
 
 `docs/Principles.md`, "A Connection Grants A Capability; It Does Not Grant
 Trust (0.8.58)," drew a line at the moment a wallet becomes reachable: being
@@ -15109,7 +15730,7 @@ that needs it.
 
 See `docs/Roadmap.md`, 0.8.62, for the full milestone entry.
 
-## Cryptographic Failure Terminates This Signing Attempt (0.8.63)
+### Cryptographic Failure Terminates This Signing Attempt (0.8.63)
 
 `docs/Principles.md`, "Signing Material Is Not Yet A Signature Until It
 Verifies (0.8.51)," and "Review Is An Authorization Boundary; Signing Is An
@@ -15181,7 +15802,7 @@ transaction, the wallet, or the person who signed it.
 
 See `docs/Roadmap.md`, 0.8.63, for the full milestone entry.
 
-## Broadcast Is Bound To Transaction Identity, Not UI Sequence (0.8.64)
+### Broadcast Is Bound To Transaction Identity, Not UI Sequence (0.8.64)
 
 `anchoring/BitcoinAnchorTransactionBroadcaster.js`'s own header (0.8.52)
 named "broadcasting submits; it does not decide" as this codebase's
@@ -15259,7 +15880,7 @@ deterministic.
 
 See `docs/Roadmap.md`, 0.8.64, for the full milestone entry.
 
-## Confirmation Is Bound To Broadcast Identity, Not Whatever Is On Screen (0.8.65)
+### Confirmation Is Bound To Broadcast Identity, Not Whatever Is On Screen (0.8.65)
 
 `application/BitcoinAnchorBroadcastCoordinator.js`'s own header (0.8.64)
 required that its caller prove a `txid`/`rawTransaction` genuinely came
@@ -15326,7 +15947,7 @@ independent axis.
 
 See `docs/Roadmap.md`, 0.8.65, for the full milestone entry.
 
-## A Locator Is Not The Content; A Gateway Is Not A Verdict (0.8.66)
+### A Locator Is Not The Content; A Gateway Is Not A Verdict (0.8.66)
 
 `core/ContentReference.js`'s own header has drawn this line since 0.7.0:
 "The cryptographic hash identifies the content. The URI describes one
@@ -15403,7 +16024,7 @@ Kubo's own publish capability anywhere else in this replica.
 
 See `docs/Roadmap.md`, 0.8.66, for the full milestone entry.
 
-## A Capability Is Exposed Only Where It Exists; A Credential Is Never Owned (0.8.67)
+### A Capability Is Exposed Only Where It Exists; A Credential Is Never Owned (0.8.67)
 
 `content/IpfsGatewayContentStore.js`'s own 0.8.66 header drew a hard line
 between what a public HTTPS gateway genuinely can and cannot do: resolve,
@@ -15472,7 +16093,7 @@ with it.
 
 See `docs/Roadmap.md`, 0.8.67, for the full milestone entry.
 
-## A Configured Credential Lives Only As Long As The Capability It Grants (0.8.68)
+### A Configured Credential Lives Only As Long As The Capability It Grants (0.8.68)
 
 `content/HttpPinningProvider.js`'s own 0.8.67 header already refused to
 own a credential: "the application receives a capability, not custody."
@@ -15544,7 +16165,7 @@ registries, never one silent overwrite" already holds for the read side.
 
 See `docs/Roadmap.md`, 0.8.68, for the full milestone entry.
 
-## A Gateway Moves Bytes; It Never Judges Them (0.8.69)
+### A Gateway Moves Bytes; It Never Judges Them (0.8.69)
 
 `content/IpfsGatewayContentStore.js`'s own 0.8.66 header already drew the
 line: "This class never validates the retrieved bytes against any
@@ -15606,7 +16227,7 @@ work.
 
 See `docs/Roadmap.md`, 0.8.69, for the full milestone entry.
 
-## A Publication Record Is A Historical Fact; A Republish Never Erases It (0.8.71)
+### A Publication Record Is A Historical Fact; A Republish Never Erases It (0.8.71)
 
 **A history is APPENDED TO, NEVER OVERWRITTEN, NEVER MUTATED — the
 identical restraint held one axis over, for a different kind of
@@ -15685,7 +16306,7 @@ BitcoinAnchorConfirmationObservationHistory.js`'s own header already
 holds for a different sequence entirely, each one domain over. See
 `docs/Roadmap.md`, 0.8.71, for the full milestone entry.
 
-## An Observation Remains A Dated Fact; A Later Reading Never Erases An Earlier One (0.8.72)
+### An Observation Remains A Dated Fact; A Later Reading Never Erases An Earlier One (0.8.72)
 
 **A verification history is APPENDED TO, NEVER OVERWRITTEN — the
 identical restraint held twice already, applied here to a third axis.**
@@ -15753,7 +16374,7 @@ milestone that appends to a history on a caller's behalf.
 restraint every history in this codebase already holds. See
 `docs/Roadmap.md`, 0.8.72, for the full milestone entry.
 
-## History Preserves Occurrence Order; A Timeline Is Free To Provide Chronological Presentation (0.8.73)
+### History Preserves Occurrence Order; A Timeline Is Free To Provide Chronological Presentation (0.8.73)
 
 **A history is an append log; a timeline is a read over it.** `entry.
 ipfsPublicationRecordHistory` (0.8.71) and `entry.
@@ -15814,7 +16435,7 @@ held here once more for opening the merged timeline — it only reads
 state already in memory. See `docs/Roadmap.md`, 0.8.73, for the full
 milestone entry.
 
-## Unify The Timeline, Not The Meanings (0.8.74)
+### Unify The Timeline, Not The Meanings (0.8.74)
 
 **Merging two domains' own facts onto one chronological view is
 composition of WHEN, never composition of WHAT.** `application/
@@ -15887,7 +16508,7 @@ Observation Is Not Automatically A Reorganization (0.8.76)" and "An
 Internal Inconsistency Is Not Automatically A Reorganization (0.8.77)"
 below). See `docs/Roadmap.md`, 0.8.74, for the full milestone entry.
 
-## A Capability Can Be Ephemeral Even When The Facts Produced By Using It Are Durable (0.8.75)
+### A Capability Can Be Ephemeral Even When The Facts Produced By Using It Are Durable (0.8.75)
 
 **Persistence is drawn around FACTS, never around the CAPABILITIES that
 produced them.** Every history this codebase has kept since 0.8.56 — an
@@ -15977,7 +16598,7 @@ button already hold, one UI surface over.
 
 See `docs/Roadmap.md`, 0.8.75, for the full milestone entry.
 
-## A Changed Observation Is Not Automatically A Reorganization (0.8.76)
+### A Changed Observation Is Not Automatically A Reorganization (0.8.76)
 
 **A changed `blockHash` is an observed change in placement; it is not,
 by itself, a chain reorganization, an invalidation, a double spend, a
@@ -16073,7 +16694,7 @@ it, unresolved, as `PLACEMENT_CHANGED`; 0.8.77 additionally names it
 
 See `docs/Roadmap.md`, 0.8.76, for the full milestone entry.
 
-## An Internal Inconsistency Is Not Automatically A Reorganization (0.8.77)
+### An Internal Inconsistency Is Not Automatically A Reorganization (0.8.77)
 
 **A decreased `confirmationCount`, a changed `blockHeight` under an
 unchanged `blockHash`, or two different `blockHash` values reported for
@@ -16178,7 +16799,7 @@ this milestone, they are what it is built directly on top of.
 
 See `docs/Roadmap.md`, 0.8.77, for the full milestone entry.
 
-## Correlate Evidence By Explicit Identity, Never By Resemblance (0.8.78)
+### Correlate Evidence By Explicit Identity, Never By Resemblance (0.8.78)
 
 **A shared `contentHash` is never evidence of a shared anchor.** Two
 Bitcoin anchors can easily carry byte-identical `contentHash` values — the
@@ -16248,7 +16869,7 @@ already holds for the identical fact (0.8.74).
 
 See `docs/Roadmap.md`, 0.8.78, for the full milestone entry.
 
-## Derived Evidence Is Reconstructed From Durable Facts; It Is Not Stored As A Second History (0.8.79)
+### Derived Evidence Is Reconstructed From Durable Facts; It Is Not Stored As A Second History (0.8.79)
 
 **A durable archive holds facts; it does not hold conclusions about those
 facts.** `application/PublicationObservationArchive.js` (0.8.75) persists
@@ -16309,7 +16930,7 @@ completely non-overlapping evidence bundles.
 
 See `docs/Roadmap.md`, 0.8.79, for the full milestone entry.
 
-## A Publication Record Establishes Identity; Observations Establish What Was Subsequently Observed About It (0.8.80)
+### A Publication Record Establishes Identity; Observations Establish What Was Subsequently Observed About It (0.8.80)
 
 **Identity and observation are two different kinds of fact, and this
 codebase now names both, separately.** Every stage from `application/
@@ -16387,7 +17008,7 @@ because none of this codebase's own prior principles ever promised one.
 
 See `docs/Roadmap.md`, 0.8.80, for the full milestone entry.
 
-## A Lifecycle Timeline Presents Recorded Facts In Temporal Order; It Does Not Infer Missing Stages Or Interpret Them (0.8.81)
+### A Lifecycle Timeline Presents Recorded Facts In Temporal Order; It Does Not Infer Missing Stages Or Interpret Them (0.8.81)
 
 **A timeline is a re-ordering, never a second analysis.** `application/
 BitcoinAnchorPublicationLifecycleTimelineView.js`'s own
@@ -16457,7 +17078,7 @@ observing it again" restraint (0.8.79) exactly, one presentation layer up.
 
 See `docs/Roadmap.md`, 0.8.81, for the full milestone entry.
 
-## An Archive Export Contains Facts, Not Capabilities Or Conclusions (0.8.82)
+### An Archive Export Contains Facts, Not Capabilities Or Conclusions (0.8.82)
 
 **Exporting is a serialization boundary, not a second storage adapter.**
 `application/PublicationObservationArchiveExport.js`'s own
@@ -16527,7 +17148,7 @@ layer down.
 
 See `docs/Roadmap.md`, 0.8.82, for the full milestone entry.
 
-## Provenance Describes Where A Fact Entered This Archive; It Does Not Establish Whether The Fact Is True (0.8.83)
+### Provenance Describes Where A Fact Entered This Archive; It Does Not Establish Whether The Fact Is True (0.8.83)
 
 **Two values, deliberately, forever.** `application/
 PublicationObservationArchiveProvenance.js`'s own
@@ -16593,7 +17214,7 @@ show."
 
 See `docs/Roadmap.md`, 0.8.83, for the full milestone entry.
 
-## An Archive Fingerprint Identifies Durable Contents; It Does Not Establish Their Truth Or Origin (0.8.84)
+### An Archive Fingerprint Identifies Durable Contents; It Does Not Establish Their Truth Or Origin (0.8.84)
 
 **A matching fingerprint means "byte-identical canonical content" and
 nothing else.** `application/PublicationObservationArchiveFingerprint.js`'s
@@ -16666,7 +17287,7 @@ milestone.
 
 See `docs/Roadmap.md`, 0.8.84, for the full milestone entry.
 
-## A Fingerprint Comparison Establishes Equality Of Digests, Not Which Archive Is Correct (0.8.85)
+### A Fingerprint Comparison Establishes Equality Of Digests, Not Which Archive Is Correct (0.8.85)
 
 **`MATCH` means the two digests are byte-identical; `DIFFERENT` means they
 are not; neither is a verdict.** `application/
@@ -16728,7 +17349,7 @@ no network fingerprint lookup, no peer discovery. A comparison answers
 
 See `docs/Roadmap.md`, 0.8.85, for the full milestone entry.
 
-## Inspecting An External Archive Never Touches The Current One (0.8.86)
+### Inspecting An External Archive Never Touches The Current One (0.8.86)
 
 **INSPECT is not IMPORT.** `application/
 PublicationObservationArchiveInspection.js`'s own
@@ -16793,7 +17414,7 @@ performs no network operation of its own.
 
 See `docs/Roadmap.md`, 0.8.86, for the full milestone entry.
 
-## Archive Differences Describe Durable State Differences Without Selecting A Correct State (0.8.87)
+### Archive Differences Describe Durable State Differences Without Selecting A Correct State (0.8.87)
 
 **An archive difference describes structural differences between two
 durable archive states; it does not determine which state is correct.**
@@ -16867,7 +17488,7 @@ rather than a single value.
 
 See `docs/Roadmap.md`, 0.8.87, for the full milestone entry.
 
-## A Replacement Review Composes Existing Information; It Does Not Authorize Replacement (0.8.88)
+### A Replacement Review Composes Existing Information; It Does Not Authorize Replacement (0.8.88)
 
 **Archive comparison may inform an explicit replacement decision, but it
 must never make that decision automatically.** `application/
@@ -16941,7 +17562,7 @@ itself, decides what they mean.
 
 See `docs/Roadmap.md`, 0.8.88, for the full milestone entry.
 
-## Blockchain Identity Is Explicit; A Shared Reference Is Never Evidence Of A Shared Publication (0.8.89)
+### Blockchain Identity Is Explicit; A Shared Reference Is Never Evidence Of A Shared Publication (0.8.89)
 
 **A publication's identity always names which blockchain recorded it —
 never only what was published or where.** `application/
@@ -17006,7 +17627,7 @@ needed to change to keep passing.
 
 See `docs/Roadmap.md`, 0.8.89, for the full milestone entry.
 
-## Network Observation Does Not Establish Publication Authority (0.8.90)
+### Network Observation Does Not Establish Publication Authority (0.8.90)
 
 **A blockchain capability may observe network and account facts without
 ever acquiring the authority to publish.** `base/BaseNetworkObserver.js`
@@ -17065,7 +17686,7 @@ remembered one.
 
 See `docs/Roadmap.md`, 0.8.90, for the full milestone entry.
 
-## A Transaction Plan Is Not A Publication (0.8.91)
+### A Transaction Plan Is Not A Publication (0.8.91)
 
 **Planning a Base transaction is not publishing anything.**
 `base/BasePublicationTransactionPlanner.js#plan()` and `application/
@@ -17137,7 +17758,7 @@ point in the pipeline from RPC response to the view a person reads.
 
 See `docs/Roadmap.md`, 0.8.91, for the full milestone entry.
 
-## Review Describes The Transaction Plan; It Does Not Commit It (0.8.92)
+### Review Describes The Transaction Plan; It Does Not Commit It (0.8.92)
 
 **A Base transaction plan must be explicitly reviewed before signing, and
 review must never modify, sign, or broadcast the plan.** `application/
@@ -17205,7 +17826,7 @@ to the commitment decoder.
 
 See `docs/Roadmap.md`, 0.8.92, for the full milestone entry.
 
-## Signing Authorizes The Exact Reviewed Plan; It Does Not Reconstruct Or Modify It (0.8.93)
+### Signing Authorizes The Exact Reviewed Plan; It Does Not Reconstruct Or Modify It (0.8.93)
 
 **A Base transaction signer must receive the already-constructed,
 already-reviewed plan — never a bare fact it could use to build a
@@ -17291,7 +17912,7 @@ header already holds, unweakened one chain over.
 
 See `docs/Roadmap.md`, 0.8.93, for the full milestone entry.
 
-## A Signed Transaction Is Untrusted Until Independently, Cryptographically Verified Against The Exact Reviewed Plan (0.8.94)
+### A Signed Transaction Is Untrusted Until Independently, Cryptographically Verified Against The Exact Reviewed Plan (0.8.94)
 
 **A wallet's claimed signature is external, untrusted output — never
 accepted merely because it was returned.** `base/
@@ -17371,7 +17992,7 @@ Modify It (0.8.93)," already extends it one stage earlier.
 
 See `docs/Roadmap.md`, 0.8.94, for the full milestone entry.
 
-## Broadcast Publishes An Already-Finalized Transaction; It Does Not Construct, Sign, Or Re-Verify One (0.8.95)
+### Broadcast Publishes An Already-Finalized Transaction; It Does Not Construct, Sign, Or Re-Verify One (0.8.95)
 
 **`base/BaseTransactionBroadcaster.js#broadcast()` never asks whether a
 transaction is valid — that question was already closed, cryptographically,
@@ -17452,7 +18073,7 @@ one stage earlier.
 
 See `docs/Roadmap.md`, 0.8.95, for the full milestone entry.
 
-## A Durable Archive Entry Requires An Explicit Append; Chain-Specific Observation Models Stay Chain-Specific Even When Made Durable (0.8.97)
+### A Durable Archive Entry Requires An Explicit Append; Chain-Specific Observation Models Stay Chain-Specific Even When Made Durable (0.8.97)
 
 **A Base inclusion observation becomes durable only when explicitly
 appended to the publication observation archive — the identical
@@ -17539,7 +18160,7 @@ Roadmap.md`, 0.8.96, itself already anticipated by naming both 0.8.97 and
 0.8.98 as distinct, future milestones rather than building either
 prematurely.
 
-## Unify The Timeline, Not The Meanings, Holds For A Third Domain Too (0.8.98)
+### Unify The Timeline, Not The Meanings, Holds For A Third Domain Too (0.8.98)
 
 **A cross-domain timeline projects WHEN observations occurred; it never
 translates WHAT they mean into a shared vocabulary — the same rule (0.8.74)
@@ -17609,7 +18230,7 @@ milestone's own UI contribution in full.
 
 See `docs/Roadmap.md`, 0.8.97, for the full milestone entry.
 
-## A Publication Record Establishes Identity; It Never Manufactures, Or Is Manufactured By, An Observation — Held For A Second Chain (0.8.99)
+### A Publication Record Establishes Identity; It Never Manufactures, Or Is Manufactured By, An Observation — Held For A Second Chain (0.8.99)
 
 **Identity generalizes across chains through one projection, never through
 one shared record shape.** `application/BitcoinAnchorPublicationRecord.js`
@@ -17685,7 +18306,7 @@ restraint for a positional, per-identity one.
 
 See `docs/Roadmap.md`, 0.8.99, for the full milestone entry.
 
-## An Achievement Describes An Attributable Fact, Not A Person's Worth (0.8.102)
+### An Achievement Describes An Attributable Fact, Not A Person's Worth (0.8.102)
 
 **An achievement event states that a specific, already-durable record
 caused a specific, named threshold to be crossed — never that a person,
@@ -17748,7 +18369,7 @@ system named and asked to avoid.
 
 See `docs/Roadmap.md`, 0.8.102, for the full milestone entry.
 
-## A Badge Presents An Achievement; It Does Not Redefine It (0.8.103)
+### A Badge Presents An Achievement; It Does Not Redefine It (0.8.103)
 
 **A badge is a human-facing presentation of an achievement event, never a
 second, competing achievement system.** `application/AchievementBadgeView.js`'s
@@ -17806,7 +18427,7 @@ file offers. When no matching record can be found, `sourceAnchorId` is
 
 See `docs/Roadmap.md`, 0.8.103, for the full milestone entry.
 
-## A Reference Is A Fact One Publication States About Another; It Is Never Inferred, And Never A Verdict (0.8.104)
+### A Reference Is A Fact One Publication States About Another; It Is Never Inferred, And Never A Verdict (0.8.104)
 
 **A publication reference exists only when a person explicitly records
 one — never because two publications resemble each other.** This extends
@@ -17874,7 +18495,7 @@ later, separate milestone's decision to make.
 
 See `docs/Roadmap.md`, 0.8.104, for the full milestone entry.
 
-## A Reference Graph Is Grouped From Durable Facts, And Stays As Uninterpreted As They Are (0.8.105)
+### A Reference Graph Is Grouped From Durable Facts, And Stays As Uninterpreted As They Are (0.8.105)
 
 **Grouping is not scoring.** `application/PublicationReferenceGraphView.js`
 takes 0.8.104's own flat, append-only `publicationReferenceRecords` and
@@ -17930,7 +18551,7 @@ answers would use the identical word "distinct."
 
 See `docs/Roadmap.md`, 0.8.105, for the full milestone entry.
 
-## A Reference-Derived Achievement Is Attributed To A Publication, Never To The Archive As A Whole (0.8.106)
+### A Reference-Derived Achievement Is Attributed To A Publication, Never To The Archive As A Whole (0.8.106)
 
 **A reference names two publications, so its achievements are scoped to
 identities, not to the entire archive.** `application/AchievementEvent.js`'s
@@ -18013,7 +18634,7 @@ history — and nothing more.
 
 See `docs/Roadmap.md`, 0.8.106, for the full milestone entry.
 
-## A Publication Profile Names What A Publication Earned, Never Who Earned It (0.8.107)
+### A Publication Profile Names What A Publication Earned, Never Who Earned It (0.8.107)
 
 **A reduction over an existing vocabulary is not license to invent a new
 one.** `application/AchievementProfileView.js`'s own `describeAchievementProfile()`
@@ -18125,7 +18746,7 @@ recording the former never fabricates the latter.
 
 See `docs/Roadmap.md`, 0.8.108, for the full milestone entry.
 
-## A Ranking Is A Policy Output, Not A Discovered Property (0.8.112)
+### A Ranking Is A Policy Output, Not A Discovered Property (0.8.112)
 
 **Every fact this codebase has computed since 0.8.75 answers "what
 happened?" A ranking answers a different question in kind, not merely in
@@ -18196,7 +18817,7 @@ authority's database.
 
 See `docs/Roadmap.md`, 0.8.112, for the full milestone entry.
 
-## A Leaderboard Is A Presentation Of A Ranking, Never A Second Ranking System (0.8.113)
+### A Leaderboard Is A Presentation Of A Ranking, Never A Second Ranking System (0.8.113)
 
 **Ranking answers how publishers are ordered; a leaderboard answers how
 that order is presented — and a presentation layer that quietly re-derives
@@ -18261,7 +18882,7 @@ asserts it directly rather than trusting the temptation never arises.
 
 See `docs/Roadmap.md`, 0.8.113, for the full milestone entry.
 
-## Evidence Is Portable; Achievements Are Derivable; Rankings Are Policy; Leaderboards Are Presentation (0.8.114)
+### Evidence Is Portable; Achievements Are Derivable; Rankings Are Policy; Leaderboards Are Presentation (0.8.114)
 
 **A conclusion that cannot be independently recomputed by the party
 receiving it is not evidence — it is a claim.** Every stage this codebase
@@ -18331,7 +18952,7 @@ is there because some downstream computation actually reads it, and
 nothing in it invites a receiving replica to trust something it was never
 asked to.
 
-## Evidence May Be Merged; Conclusions Must Be Recomputed (0.8.115)
+### Evidence May Be Merged; Conclusions Must Be Recomputed (0.8.115)
 
 **A decentralized network is not one replica importing one dump — it is
 many replicas, each with their own history, continually receiving
@@ -18397,7 +19018,7 @@ archive currently holding the fact.
 
 See `docs/Roadmap.md`, 0.8.114, for the full milestone entry.
 
-## An Evidence Fingerprint Identifies A Replica's Facts; It Never Authenticates Or Concludes Anything About Them (0.8.116)
+### An Evidence Fingerprint Identifies A Replica's Facts; It Never Authenticates Or Concludes Anything About Them (0.8.116)
 
 **A matching evidence fingerprint means "these four evidence collections
 are byte-identical between two replicas" and nothing else.** `application/
@@ -18477,7 +19098,7 @@ this milestone is what makes that agreement checkable.
 
 See `docs/Roadmap.md`, 0.8.116, for the full milestone entry.
 
-## An Evidence Difference Names Missing Facts; It Is Never The Authority On Whether Two Replicas Agree (0.8.117)
+### An Evidence Difference Names Missing Facts; It Is Never The Authority On Whether Two Replicas Agree (0.8.117)
 
 0.8.116 gave two replicas a cheap way to learn THAT their achievement
 evidence differs — compare two fingerprints. It deliberately never
@@ -18538,7 +19159,7 @@ and the identical difference, recomputed afterward, reports none at all.
 
 See `docs/Roadmap.md`, 0.8.117, for the full milestone entry.
 
-## A Synchronization Exchange Transports Evidence; A Fingerprint-Only Request Can Never Transport A Minimal Diff (0.8.118)
+### A Synchronization Exchange Transports Evidence; A Fingerprint-Only Request Can Never Transport A Minimal Diff (0.8.118)
 
 0.8.116 and 0.8.117 both assume a caller already holds BOTH archives being
 compared, side by side, in the same process. That is the natural shape for
@@ -18615,7 +19236,7 @@ the evidence, portably, and this milestone is that way.
 
 See `docs/Roadmap.md`, 0.8.118, for the full milestone entry.
 
-## A Leaderboard Snapshot's Identity Is Its Evidence Fingerprint Plus Its Policy Version — Never A Timestamp, Never A Hash Of Itself (0.8.119)
+### A Leaderboard Snapshot's Identity Is Its Evidence Fingerprint Plus Its Policy Version — Never A Timestamp, Never A Hash Of Itself (0.8.119)
 
 0.8.113 established that a leaderboard is a presentation of a ranking,
 never a second ranking system. 0.8.116 established that an evidence
@@ -18681,7 +19302,7 @@ this milestone is the statement that agreement is sufficient.
 
 See `docs/Roadmap.md`, 0.8.119, for the full milestone entry.
 
-## A Valid Signature Proves Who Signed; It Never Proves The Claim Is True Relative To A Replica's Own Evidence (0.8.121)
+### A Valid Signature Proves Who Signed; It Never Proves The Claim Is True Relative To A Replica's Own Evidence (0.8.121)
 
 0.8.119 proved a leaderboard conclusion is reproducible. 0.8.120 proved
 that reproducibility is independently checkable, without ever trusting a
@@ -18737,7 +19358,7 @@ verdict about which conclusion is "right."
 
 See `docs/Roadmap.md`, 0.8.121, for the full milestone entry.
 
-## A Stored Claim Is A Historical Signed Statement; Its Current Verification Result Is A Derived Observation (0.8.130)
+### A Stored Claim Is A Historical Signed Statement; Its Current Verification Result Is A Derived Observation (0.8.130)
 
 0.8.121-0.8.129 built a complete claim subsystem — signing, exchange,
 receipt, verification, and three read-only projections — entirely over a
@@ -18801,7 +19422,7 @@ header already required.
 
 See `docs/Roadmap.md`, 0.8.130, for the full milestone entry.
 
-## Recording A Decision Does Not Execute, Validate, Or Interpret It (0.8.150)
+### Recording A Decision Does Not Execute, Validate, Or Interpret It (0.8.150)
 
 0.8.145 built the reconciliation decision record on a single restraint:
 "`decided: true` means 'a caller explicitly recorded this disposition
@@ -18864,7 +19485,7 @@ state.
 
 See `docs/Roadmap.md`, 0.8.150, for the full milestone entry.
 
-## Exchange Transports Historical Decisions; It Does Not Make New Ones (0.8.151)
+### Exchange Transports Historical Decisions; It Does Not Make New Ones (0.8.151)
 
 0.8.126 already drew this line once, for signed claims:
 `PublisherLeaderboardClaimHistoryExchange.js` moves receipts, never
@@ -18933,7 +19554,7 @@ after that check as it was before transport.
 
 See `docs/Roadmap.md`, 0.8.151, for the full milestone entry.
 
-## A Historical Decision Is Read By Its Own Embedded Fact, Never Recomputed Against Current State (0.8.153)
+### A Historical Decision Is Read By Its Own Embedded Fact, Never Recomputed Against Current State (0.8.153)
 
 Every projection over `PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory`
 since 0.8.147 has read a decision record's own already-embedded `candidate`
@@ -18998,7 +19619,7 @@ nothing at all.
 
 See `docs/Roadmap.md`, 0.8.153, for the full milestone entry.
 
-## A Candidate's Decision History Is A Narration, Not A State Machine (0.8.154)
+### A Candidate's Decision History Is A Narration, Not A State Machine (0.8.154)
 
 0.8.148 already established, over the whole decision history at once,
 that a timeline is "a narration, never a state machine" — a later
@@ -19479,7 +20100,7 @@ A signature needed one this milestone deliberately declines to build.
 
 See `docs/Roadmap.md`, 0.9.266, for the full milestone entry.
 
-## A NotificationEvent Represents An Awareness-Worthy Fact; It Is Not A Delivery, A Read State, Or A Chat Message (0.9.273)
+### A NotificationEvent Represents An Awareness-Worthy Fact; It Is Not A Delivery, A Read State, Or A Chat Message (0.9.273)
 
 0.9.272's reassessment found several domains capable of producing a meaningful, user-directed event, and one real
 architectural precedent for durable delivery, `application/ChatOutbox.js` — but no domain-neutral representation of
@@ -19512,7 +20133,7 @@ producer is 0.9.274's question, not this milestone's to answer by fiat.
 
 See `docs/Roadmap.md`, 0.9.273, for the full milestone entry.
 
-## A Producer Wraps The Command It Notifies About; It Never Becomes A Fourth Argument To It (0.9.275)
+### A Producer Wraps The Command It Notifies About; It Never Becomes A Fourth Argument To It (0.9.275)
 
 0.9.274 found Publication Commentary ready to become a real `NotificationEvent` producer — a durable, conflict-guarded
 `commentaryId`, a recipient (`Publication.publisherIdentity`) already on file, and a genuine fact timestamp. The
@@ -19548,7 +20169,7 @@ of guess 0.9.272's own reassessment discipline exists to avoid.
 
 See `docs/Roadmap.md`, 0.9.275, for the full milestone entry.
 
-## A Lifecycle Audit Names What It Finds; It Does Not Fix What It Finds (0.9.276)
+### A Lifecycle Audit Names What It Finds; It Does Not Fix What It Finds (0.9.276)
 
 0.9.275 shipped `PublicationCommentaryNotificationProducer.js` and, in the same milestone, its own fourteen-section
 test suite covering the successful lifecycle, exact identity preservation, and both failure directions. 0.9.276
@@ -19582,7 +20203,7 @@ depend on whether the sink path ever ran.
 
 See `docs/Roadmap.md`, 0.9.276, for the full milestone entry.
 
-## Reconstructible, Safe To Regenerate, Deduplicated, And Exactly-Once Are Four Separate Facts (0.9.277)
+### Reconstructible, Safe To Regenerate, Deduplicated, And Exactly-Once Are Four Separate Facts (0.9.277)
 
 0.9.276 found that a caller retry of an already-persisted `commentaryId` produces a second, distinct
 `NotificationEvent` for the same Commentary, and classified the question of whether that should be acceptable as
@@ -19626,7 +20247,7 @@ milestone has an actual durability requirement in hand, not to the audit that me
 
 See `docs/Roadmap.md`, 0.9.277, for the full milestone entry.
 
-## A Dedup Identity Is Chosen From Outside The Fact It Names; The Fact Never Chooses For Itself (0.9.278)
+### A Dedup Identity Is Chosen From Outside The Fact It Names; The Fact Never Chooses For Itself (0.9.278)
 
 0.9.277 left a question open rather than answering it: if `NotificationEvent`s become durable, what exactly is being
 persisted, and what identity would make two representations of it "the same"? 0.9.278 does not answer that question
@@ -19677,7 +20298,7 @@ stays exactly as small as 0.9.273 first made it.
 
 See `docs/Roadmap.md`, 0.9.278, for the full milestone entry.
 
-## A Key Collision Is Necessary, Never Sufficient, Evidence Of Sameness (0.9.279)
+### A Key Collision Is Necessary, Never Sufficient, Evidence Of Sameness (0.9.279)
 
 0.9.278 asked whether two events compute the same dedup key. It never asked what happens once they do. 0.9.279 fixes
 0.9.278's own strongest surviving candidate — `commentaryId + eventType + recipientIdentityId` — as a stable
@@ -19729,7 +20350,7 @@ raises is a question about what happens BETWEEN two of them, asked and answered 
 
 See `docs/Roadmap.md`, 0.9.279, for the full milestone entry.
 
-## Deduplication Identity Is A Decision About A Fact, Never A Capability Of It (0.9.280)
+### Deduplication Identity Is A Decision About A Fact, Never A Capability Of It (0.9.280)
 
 0.9.278 and 0.9.279 were both audits: they characterized candidate identities and collision outcomes but, by their
 own brief, never wrote an adopted answer down anywhere a real caller could use. 0.9.280 does — `core/
@@ -19774,7 +20395,7 @@ extended here to the new file that finally has responsibility to hold.
 
 See `docs/Roadmap.md`, 0.9.280, for the full milestone entry.
 
-## A Persistence Layer Enforces A Policy; It Never Adjudicates What The Policy Leaves Open (0.9.281)
+### A Persistence Layer Enforces A Policy; It Never Adjudicates What The Policy Leaves Open (0.9.281)
 
 0.9.280 gave the Notification arc a decision function, `classifyNotificationCollision()`, but nothing ever called it
 against durable storage. 0.9.281 is the first thing that does — `storage/NotificationEventStore.js` — and its own
@@ -19816,7 +20437,7 @@ different questions, and 0.9.281 only answers the first.
 
 See `docs/Roadmap.md`, 0.9.281, for the full milestone entry.
 
-## Persisted, Delivered, Seen, And Read Are Four Different Claims — This System Makes Only The First One (0.9.286)
+### Persisted, Delivered, Seen, And Read Are Four Different Claims — This System Makes Only The First One (0.9.286)
 
 0.9.273-0.9.285 built and finally wired a complete notification vertical slice: a Publication Commentary produces a
 `NotificationEvent`, `NotificationEventStore` durably persists it, and `GetRecipientNotificationEventsUseCase`/
@@ -19865,7 +20486,7 @@ READ
 
 See `docs/Roadmap.md`, 0.9.286, for the full milestone entry.
 
-## Water Depth Is Still A Rendering-Time Offset (0.9.615, 0.9.634)
+### Water Depth Is Still A Rendering-Time Offset (0.9.615, 0.9.634)
 
 Shallow water follows the same rule as hills (see "Terrain Elevation Is A Rendering-Time Offset, Never A Presence
 Or Placement Fact (0.2.76)"). `AvatarPresence.position.y` never learns about lakes. The lakebed and the lake-surface
@@ -19875,7 +20496,7 @@ movement in only two ways, both stateless and recomputed every tick from `(x, z)
 vehicles. The same holds for a vehicle rider: the vehicle's position already includes terrain height, so render
 code must not add it again.
 
-## An Imported Document Always Gets A Fresh Identity (0.9.642)
+### An Imported Document Always Gets A Fresh Identity (0.9.642)
 
 A document file carries its source's `world.id`, but that id means nothing on the importing device. Worse,
 `documentId` is used directly as a storage key, so reusing it could overwrite an unrelated document or the manifest
@@ -19883,14 +20504,14 @@ itself. Import therefore always goes through `DocumentCloneService`: new documen
 remapped group membership, and `parentDocumentId: null`, because an import is not a fork of anything on this
 device. Export and Import are portability, not publication: no signature, no announcement, no network.
 
-## Local First, Network Second, For Every Distributed Write (0.9.620, 0.9.628, 0.9.631)
+### Local First, Network Second, For Every Distributed Write (0.9.620, 0.9.628, 0.9.631)
 
 A write that can leave the device (a Commentary, a Snapshot announcement after a successful pin) is committed
 locally before any network step, and a network failure never undoes it. The network is an extra delivery path, not
 the source of truth. A best-effort step that fails reports why (sanitized) next to the result that did succeed; it
 never turns the success into a failure.
 
-## Choose One Substrate; Fan Out Only Within It (2026-09-20)
+### Choose One Substrate; Fan Out Only Within It (2026-09-20)
 
 Across substrates, distribution selects: a Publication, Snapshot, Place Naming claim or Commentary is announced on
 Nostr or on Arweave, never both from one action. Within a substrate, the strategy follows what the endpoints are:
@@ -19903,7 +20524,7 @@ Nostr or on Arweave, never both from one action. Within a substrate, the strateg
 One relay set serves every Nostr feature. A separate set for Publications was tried and removed, because the two
 sets never actually differed.
 
-## A Saved Preference Seeds A Choice; It Never Makes One (2026-09-21)
+### A Saved Preference Seeds A Choice; It Never Makes One (2026-09-21)
 
 A saved Content, Announcement/Discovery or Proof/Anchoring preference does two things:
 
@@ -19915,7 +20536,7 @@ It never overrides a value the user already picked, and never triggers a network
 saved value (a legacy `local` Content preference, or a provider with no registered backend) reads as no
 preference, or as an explicit `PROVIDER_NOT_FOUND`, never as a silent substitute.
 
-## One Signer, One Request At A Time (2026-09-21)
+### One Signer, One Request At A Time (2026-09-21)
 
 A combined action whose steps may ask the same wallet extension to sign (Publication and Snapshot distribution both
 announcing over NIP-07, for example) runs those steps one after the other, never concurrently. Wallet extensions
@@ -19923,7 +20544,7 @@ don't reliably handle two approval prompts at once, and the page can't tell when
 reason, every call waiting on a human approval gets the wallet's own bounded timeout (120 seconds), and no shorter
 outer timeout may cut it off first.
 
-## An Animal Has Three Possible Homes, Never Two At Once (0.9.700–0.9.703)
+### An Animal Has Three Possible Homes, Never Two At Once (0.9.700–0.9.703)
 
 - **Deterministic.** Recomputed from `(seed, x, z)` (`core/WildlifeField.js`), with a derived id. It is never
   stored, and a caught one is excluded locally rather than deleted.
@@ -19936,7 +20557,7 @@ Moving between homes always takes an animal out of the old one first: catching e
 decorating discards the runtime animal, and undecorating removes the decoration before releasing a fresh runtime
 animal. The renderer draws each animal from exactly one home, so none is ever drawn twice.
 
-## A Transferred Entry Leaves Its Owner Before The Offer Does (0.9.702)
+### A Transferred Entry Leaves Its Owner Before The Offer Does (0.9.702)
 
 An inventory transfer escrows first: the offered entry is removed from the sender's inventory before OFFER is sent,
 and is put back only on DECLINE or when the recipient's connection goes away. While an offer is open, the entry

@@ -8,8 +8,8 @@
 // presence rotation, with no unit conversion anywhere else.
 //
 // Deliberately knows nothing about AvatarPresence, AvatarInteractionState,
-// or Three.js — see docs/Principles.md, "Facing A Target Is
-// Presentation, Never Presence": this is pure geometry a caller
+// or Three.js — see docs/Principles.md, "A Gesture Is Presentation,
+// Never Presence" (its FACING paragraph): this is pure geometry a caller
 // applies as a temporary, local-only rendering override (see
 // renderer/AvatarVisual.js's setFacingOverride), never something that
 // gets written back into presence or broadcast.

@@ -46,7 +46,7 @@ constructs brick, structure or group content:
 |----------------------------------|-------|---------------|
 | World Region naming (create/update/remove) | ✓ | Avatar-position-driven annotation of the World, not Document construction — the Editor has no notion of "being somewhere in a live World" to build this on. |
 | World Landmark naming (create/update/remove) | ✓ | Same reasoning as Region naming. |
-| Move a `StructurePlacement`        | ✓ | "Moving A Placement Is Not Editing A Document" (0.2.23) — shared-layout arrangement, never touches the Document/Publication itself. |
+| Move or remove a world's placement (`WorldPlacement`, 0.2.23/0.9.197) | ✓ | "Moving A Placement Is Not Editing A Document" (0.2.23) — changes where a published world sits in shared space, never the Document/Publication itself, and never forks. |
 | World Animal Decoration (create/remove, the `G` key, 0.9.702/0.9.703) | ✓ | Turns a released animal the avatar is standing next to into decorative World content, or back. Like landmark naming, it depends on being somewhere in a live World. It goes through the same fork-on-write, authorization and command-history path as landmarks, and adds no geometry. |
 
 World View also changes **runtime state that is not document content**: riding
@@ -80,7 +80,7 @@ and `tests/WorldViewReadOnlyFork.test.js`.
 - Explore / Map / Places browsing, Focus (0.5.7/0.5.8)
 - World Region/Landmark naming (avatar-position-driven annotation)
 - World Animal Decorations (bake a released animal into the World, or undo it)
-- Moving a StructurePlacement (shared-layout arrangement)
+- Moving or removing a world's placement (WorldPlacement; where a published world sits)
 - Timeline / preview / restore (for the Region/Landmark/Animal Decoration commands above)
 - Vehicles, inventory and animal catching (runtime state, not document content)
 - Distribution of the user's own or encountered Publications (Distribute dialog)
@@ -98,7 +98,8 @@ and `tests/WorldViewReadOnlyFork.test.js`.
 brick/structure/group content-mutation operation lives on `EditorSession`
 alone. `WorldNavigationSession` exposes only read/navigation/focus
 operations, plus the deliberate exceptions above (World Region/Landmark
-naming, World Animal Decorations, and moving a StructurePlacement). None of
+naming, World Animal Decorations, and moving or removing a world's
+placement). None of
 them authors new geometry or composes content. `EditorActionRegistry`/`createStandardActions()`
 is no longer constructed by World View at all; there is nothing left in it
 a read-only surface could offer.

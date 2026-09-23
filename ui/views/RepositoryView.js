@@ -6,7 +6,7 @@ import PublicationCatalog from '../components/PublicationCatalog.js';
 // pagination, grouping, card/list views, preview, actions) — the
 // component that also backs AuthorView, scoped here to the whole
 // repository (no `author` prop) rather than one author's work. See
-// docs/Architecture.md, 0.2.31, for why the two views share one
+// docs/ArchitectureHistory.md, 0.2.31, for why the two views share one
 // implementation instead of maintaining parallel ones.
 export default {
     name: 'RepositoryView',

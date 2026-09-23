@@ -361,8 +361,9 @@ export class WebRtcPeerConnection extends PeerConnection {
         // 0.2.73 — a still-attached local audio track is stopped here
         // too, so closing the connection also releases the microphone
         // promptly rather than leaving it held until garbage collection
-        // — see docs/Principles.md, "Voice Is Ephemeral; Closing The
-        // Connection Is Always A Safe Way To End It."
+        // — see docs/Principles.md, "Voice Is Ephemeral Like Presence And
+        // Connections, Never Durable Like Conversations Or Relationships
+        // (0.2.73)."
         if (this._audioSender && this._audioSender.track) {
             this._audioSender.track.stop();
         }

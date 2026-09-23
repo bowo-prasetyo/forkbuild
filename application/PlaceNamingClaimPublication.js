@@ -7,8 +7,8 @@ import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
 // already established one domain over for a core/Structure.js: a small,
 // versioned, plain-JSON wrapper around the one signed fact that needs to
 // survive the trip, never a live reference to the store or device it was
-// exported from. See docs/Principles.md, "A Naming Publication Is
-// Portable Data, Never A Second Kind Of Claim (0.5.3)."
+// exported from. See docs/Principles.md, "Naming Exchange
+// Distributes Claims; It Never Establishes Truth (0.5.3)."
 //
 // Deliberately just `{ kind, schemaVersion, claim }` — no separate
 // envelope-level "publishedAt." A claim's own `createdAt` is ALREADY the

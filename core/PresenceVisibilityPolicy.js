@@ -20,7 +20,7 @@ import { PresenceVisibility, isValidPresenceVisibility } from './PresenceVisibil
 //
 // `authorizedPeerIdentities` is deliberately a PLAIN, manually-entered
 // allow-list of strings — not a friend-request system, not mutual, not
-// discovered. See docs/Principles.md and docs/Protocol.md for the
+// discovered. See docs/Principles.md and docs/ProtocolHistory.md for the
 // honest limitation this originally implied: `presence/
 // LocalAvatarPresenceBroadcastProvider.js`, still today's DEFAULT
 // transport, is a same-origin BROADCAST with no per-recipient
@@ -92,7 +92,7 @@ export class PresenceVisibilityPolicy {
                 // means "never advertise beyond this scope even if a
                 // wider-reach transport becomes available later,"
                 // which has nothing to assert yet because no such
-                // transport exists — see docs/Protocol.md.
+                // transport exists — see docs/ProtocolHistory.md.
                 return true;
         }
     }

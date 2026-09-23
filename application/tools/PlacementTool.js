@@ -13,10 +13,9 @@ import { PlacementPositionService } from '../PlacementPositionService.js';
 // picking before this tool ever sees the event.
 //
 // PlacementValidator is constructed here rather than threaded through
-// ToolContext from ui/: application/tools/ -> core/ is an allowed
-// dependency, but ui/ -> core/ isn't (see the AboutView exception noted
-// in Architecture.md — deliberately not repeating that mistake here just
-// because EditorView happens to assemble ToolContext).
+// ToolContext from ui/: ui/ may import core/ only for read-only types and
+// helpers, never to construct domain services (see docs/Architecture.md,
+// "Dependency direction"), even though EditorView assembles ToolContext.
 //
 // V0.1 simplification: assumes exactly one building exists in the world
 // (true for the demo world) and places into it. Choosing which building

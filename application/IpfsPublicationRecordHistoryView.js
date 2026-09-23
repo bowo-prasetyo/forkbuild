@@ -37,8 +37,7 @@ const PUBLICATION_METHOD_LABELS = {
 // history alone cannot establish any of those things — that question
 // belongs entirely to application/IpfsPublicationContentVerifier.js's own,
 // separately kept observations (see docs/Principles.md, "A Publication
-// Record Is A Historical Fact; Whether It Still Resolves Is A Separate,
-// Later Question (0.8.71)").
+// Record Is A Historical Fact; A Republish Never Erases It (0.8.71)").
 //
 // Every field this function returns is carried through UNCHANGED from the
 // record itself — `contentHash`, `locator`, `publishedAt`, and

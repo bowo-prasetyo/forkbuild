@@ -31,8 +31,8 @@ import { computeContentHash } from '../serializer/contentHash.js';
 // entire hash range. Two different ids CAN still land on the same
 // cell — this function makes no attempt to detect or avoid that.
 // Resolving collisions between independently-chosen positions is a
-// deliberate non-goal here (see docs/Roadmap.md, "spatial allocation
-// / collision policy") — determinism is the only property this
+// deliberate non-goal here (see docs/Roadmap.md, 0.2.25, "Spatial
+// Allocation & Placement Collision Policy") — determinism is the only property this
 // milestone establishes.
 const GRID_SPACING = 40;
 const GRID_EXTENT = 64;

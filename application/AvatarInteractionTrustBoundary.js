@@ -40,8 +40,9 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 //     the SAME bound authority's own key producing two DIFFERENT
 //     interactionIds at the identical sequence number, racing to see
 //     which one a given replica processes first — is a real, narrower
-//     gap this milestone does not close; see docs/Roadmap.md, "0.2.46
-//     — Interaction Trust, Replay & Abuse Controls." What IS enforced
+//     gap this milestone does not close (the "interaction trust, replay &
+//     abuse controls" follow-up docs/Roadmap.md lists after 0.2.45 was
+//     never scheduled). What IS enforced
 //     here: `sequence` must strictly increase to be accepted at all
 //     (core/AvatarInteractionIngestion.js), so a second claim reusing
 //     an already-accepted sequence is at minimum rejected as STALE,

@@ -4268,8 +4268,8 @@ export default {
         // owns every real decision (is there a target, is it a cooldown,
         // is the kind valid) — this handler doesn't second-guess a
         // false return, it just doesn't refresh anything extra. See
-        // docs/Principles.md, "An Interaction Request Is Not Authority
-        // Over Another Avatar."
+        // docs/Principles.md, "Observation Does Not Imply Authority, And
+        // Interaction Does Not Imply Control (0.2.44)."
         function performAvatarInteraction(kind) {
             session.performAvatarInteraction(kind);
         }

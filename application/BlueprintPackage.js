@@ -52,7 +52,8 @@ import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlaceme
 // A Structure imported from a package with no `attributions` at all (or
 // from a package built before this field existed) is exactly as usable
 // as one that arrived with several — see docs/Principles.md, "Attribution
-// Travels With A Blueprint, But Never Becomes Part Of It (0.6.6)."
+// Exchange Distributes Assertions; It Never Establishes Who Actually Made
+// A Design (0.6.6)."
 export const CURRENT_SCHEMA_VERSION = 1;
 export const BLUEPRINT_KIND = 'forkbuild.blueprint';
 
