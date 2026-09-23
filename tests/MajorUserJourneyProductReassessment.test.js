@@ -336,8 +336,10 @@ async function run() {
         // D1. Local authoring/distribution: real UI entry points, real
         // local persistence, real (best-effort, fire-and-forget)
         // distribution — reconfirmed structurally.
-        const cardSource = codeOnly(await rawSource('ui/components/PublicationCard.js'));
-        assert(/submitCommentary/.test(cardSource), 'D1a. PublicationCard.js defines a real commentary-submission method.');
+        // The card's Commentary lives in the shared
+        // PublicationCommentarySection.js it mounts.
+        const cardSource = codeOnly(await rawSource('ui/components/PublicationCard.js') + await rawSource('ui/components/PublicationCommentarySection.js'));
+        assert(/<PublicationCommentarySection/.test(cardSource) && /submitCommentary\(\) \{/.test(cardSource), 'D1a. PublicationCard.js mounts a real commentary-submission method (PublicationCommentarySection.submitCommentary()).');
         const commentaryStoreSource = codeOnly(await rawSource('storage/PublicationCommentaryStore.js'));
         assert(commentaryStoreSource.includes('PublicationCommentaryConflictError'), 'D1b. storage/PublicationCommentaryStore.js has a real conflict type — writes are not blind overwrites.');
 
@@ -356,8 +358,8 @@ async function run() {
         assert(/composeRefreshPublicationCommentaryCommand\(\{\s*sources: \[\s*\{ name: 'Nostr', discover: discoverPublicationCommentaryFromNostrCommand \},\s*\{ name: 'Arweave', discover: discoverPublicationCommentaryFromArweaveCommand \}/.test(mainSource),
             n('D2b. RESOLVED — both commands are composed into refreshPublicationCommentaryCommand, so a live session now reaches them'));
         const remoteCheckMounts = grepFiles('<PublicationCommentaryRemoteCheck', ['ui']);
-        assert(remoteCheckMounts.length === 4,
-            n(`D2c. RESOLVED — the fetch-on-open / "Check for new comments" component is mounted in every Commentary surface (Repository card and list, My Publication, World Encounters) — found: ${remoteCheckMounts.join(', ') || 'none'}. A Commentary distributed only via Nostr or Arweave now reaches a Wanderer who opens that Publication's Commentary.`));
+        assert(remoteCheckMounts.length === 3,
+            n(`D2c. RESOLVED — the fetch-on-open / "Check for new comments" component is mounted in every Commentary surface (Repository card and list, through their one shared PublicationCommentarySection; My Publication; World Encounters) — found: ${remoteCheckMounts.join(', ') || 'none'}. A Commentary distributed only via Nostr or Arweave now reaches a Wanderer who opens that Publication's Commentary.`));
 
         // D3. The 0.9.623 notification bridge IS wired into all three
         // substrates' own receive paths at the code level — the

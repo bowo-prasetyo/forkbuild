@@ -22,9 +22,10 @@ import { License } from '../../core/License.js';
 //
 // 0.9.289 — Other-Publication Commentary Entry Point. The Commentary
 // itself (read, compose, retry identity, distribution provider) lives
-// in ui/components/PublicationCommentarySection.js, shared with
-// PublicationList.js. This card only owns the "Comment"/"Hide Comments"
-// toggle and mounts that section while it is open. The toggle is
+// in ui/components/PublicationCommentarySection.js, which
+// PublicationList.js mounts too. This card only owns the
+// "Comment"/"Hide Comments" toggle and mounts that section while it is
+// open. The toggle is
 // offered only when the app-wide `getPublicationCommentariesCommand` is
 // provided — the same "feature hidden when its collaborator is absent"
 // gate every optional capability in this codebase's UI layer follows.
