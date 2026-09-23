@@ -213,7 +213,7 @@ function describeExternalArchiveInspection(archive) {
         fingerprintAlgorithm: fingerprint.algorithm,
 
         bitcoinAnchorIds: Object.freeze(collectBitcoinAnchorIds(archive)),
-        ipfsPublicationRecordIndexes: Object.freeze(archive.ipfsPublicationRecords.map((record, index) => index)),
+        ipfsPublicationRecordIndexes: Object.freeze(archive.ipfsPublicationRecords.map((_, index) => index)),
         baseTransactionHashes: Object.freeze(collectBaseTransactionHashes(archive))
     });
 }
@@ -273,7 +273,7 @@ function collectBaseTransactionHashes(archive) {
 function parseJSONOrNull(text) {
     try {
         return JSON.parse(text);
-    } catch (error) {
+    } catch {
         return null;
     }
 }

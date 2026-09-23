@@ -40,7 +40,3 @@ export const BitcoinAnchorContentProofState = Object.freeze({
     HASH_MISMATCH: 'hash-mismatch',
     UNAVAILABLE: 'unavailable'
 });
-
-export function isValidBitcoinAnchorContentProofState(value) {
-    return Object.values(BitcoinAnchorContentProofState).includes(value);
-}

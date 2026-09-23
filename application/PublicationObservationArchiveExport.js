@@ -140,7 +140,7 @@ export function importPublicationObservationArchive(payload) {
 function parseJSONOrNull(text) {
     try {
         return JSON.parse(text);
-    } catch (error) {
+    } catch {
         return null;
     }
 }

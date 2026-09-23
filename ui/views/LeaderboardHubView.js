@@ -301,7 +301,7 @@ export default {
                         </p>
                         <ul v-else class="replica-knowledge-claim-list">
                             <li v-for="badge in publisherAchievementBadgesView().badges" :key="badge.index" class="replica-knowledge-claim">
-                                <button type="button" class="peer-action-btn" @click="togglePublisherAchievementBadge(badge.index)">
+                                <button type="button" class="action-btn action-btn--secondary" @click="togglePublisherAchievementBadge(badge.index)">
                                     {{ badge.icon }} {{ badge.title }}
                                 </button>
                                 <p class="form-hint form-hint--neutral">

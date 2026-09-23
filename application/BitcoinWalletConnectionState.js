@@ -38,7 +38,3 @@ export const BitcoinWalletConnectionState = Object.freeze({
     CONNECTED: 'connected',
     UNAVAILABLE: 'unavailable'
 });
-
-export function isValidBitcoinWalletConnectionState(value) {
-    return Object.values(BitcoinWalletConnectionState).includes(value);
-}
