@@ -234,7 +234,9 @@ async function run() {
         // DecentralizedPublicationsView.js's own CONTENT storage picker,
         // A9 below), plus a Remote-Pinning endpoint/credential draft (read
         // only when that third storage is actually selected).
-        assert(/snapshotDistributionCommand\(publication, storage, remotePinningConfiguration, this\.snapshotDiscoveryProvider\)/.test(codeOnly(ownPanelSource)), n('A3. AMENDED BY 0.9.669 — "Distribute Snapshot" calls its command with the publication, its own explicit storage choice, AND its own explicit Announcement/Discovery substrate choice — no longer a role parameter Snapshot alone lacked'));
+        // AMENDED — One Shared Distribution Settings Block: that explicit
+        // choice is now the panel's one shared `distributionDiscoveryProvider`.
+        assert(/snapshotDistributionCommand\(publication, storage, remotePinningConfiguration, this\.distributionDiscoveryProvider\)/.test(codeOnly(ownPanelSource)), n('A3. AMENDED BY 0.9.669 — "Distribute Snapshot" calls its command with the publication, its own explicit storage choice, AND its own explicit Announcement/Discovery substrate choice — no longer a role parameter Snapshot alone lacked'));
         // AMENDED BY 0.9.668 — Bug fix. "Distribute Publication" no longer
         // takes only the publication: it now also forwards this panel's
         // own explicit `publicationDiscoveryProvider` choice, closing the
@@ -245,7 +247,9 @@ async function run() {
         // call site gained more forwarded arguments and was reformatted
         // across multiple lines — the regex now tolerates whitespace/
         // newlines and trailing arguments.
-        assert(/publicationDistributionCommand\(\s*publication,\s*this\.publicationDiscoveryProvider/.test(codeOnly(ownPanelSource)), n('A4. AMENDED BY 0.9.668 — "Distribute Publication" now also forwards its own explicit discovery substrate choice, the SAME shape WorldEncounterCanvas\'s own sibling action already used'));
+        // AMENDED — One Shared Distribution Settings Block: the one shared
+        // `distributionDiscoveryProvider`, also read by "Distribute Snapshot".
+        assert(/publicationDistributionCommand\(\s*publication,\s*this\.distributionDiscoveryProvider/.test(codeOnly(ownPanelSource)), n('A4. AMENDED BY 0.9.668 — "Distribute Publication" now also forwards its own explicit discovery substrate choice, the SAME shape WorldEncounterCanvas\'s own sibling action already used'));
         assert(!/Anchor|Bitcoin/.test(codeOnly(ownPanelSource)), n('A5. OwnPublicationPanel.js\'s own real code (comments stripped) contains no Proof/Anchoring action of any kind — its own header mentions "Bitcoin anchoring" only in prose, as a deliberate exclusion, never in any actual button, prop, or method'));
 
         // WorldEncounterCanvas.js — the identical two combined actions,
@@ -264,9 +268,17 @@ async function run() {
         // plain <select> directly.
         assert(/'Distribute Publication'/.test(worldDistributionDialogSource) && /'Distribute Snapshot'/.test(worldDistributionDialogSource), n('A6. WorldDistributionDialog.js exposes the identical two action labels'));
         assert(/v-model:discovery-provider="selectedDiscoveryProvider"/.test(canvasSource), n('A7. ...and WorldEncounterCanvas.js still threads its own Announcement/Discovery substrate choice (Nostr/Arweave) for Publication into the dialog — AMENDED BY 0.9.668: OwnPublicationPanel.js\'s own sibling action (A2/A4) now has the equivalent control too, see A4\'s own amendment above'));
-        assert(/v-model:snapshot-discovery-provider="selectedSnapshotDiscoveryProvider"/.test(canvasSource), n('A7b. AMENDED BY 0.9.669 — a SEPARATE Announcement/Discovery substrate choice exists for Snapshot too, closing the parity gap A3 (above) names — OwnPublicationPanel.js\'s own sibling action has the equivalent control, see A3\'s own amendment above'));
-        assert(/<select[\s\S]{0,80}v-model="discoveryProviderModel"/.test(worldDistributionDialogSource) && /<select[\s\S]{0,80}v-model="snapshotDiscoveryProviderModel"/.test(worldDistributionDialogSource),
-            n('A7c. WorldDistributionDialog.js itself still renders the two real <select> elements those choices control'));
+        // AMENDED — One Shared Distribution Settings Block. Snapshot keeps
+        // its explicit per-click substrate choice (the 0.9.669 parity fix),
+        // but it is now the SAME shared choice Publication reads, rendered
+        // once in the dialog's shared settings block.
+        assert(/this\.snapshotDistributionCommand\(publication, storage, remotePinningConfiguration, this\.selectedDiscoveryProvider\)/.test(canvasSource)
+            && !/snapshot-discovery-provider/.test(canvasSource),
+            n('A7b. AMENDED — Snapshot distribution forwards the SAME shared Announcement/Discovery substrate choice Publication does, never a second, separate one'));
+        assert((worldDistributionDialogSource.match(/<select[\s\S]{0,80}v-model="discoveryProviderModel"/g) || []).length === 1
+            && (worldDistributionDialogSource.match(/<select[\s\S]{0,80}v-model="storageModel"/g) || []).length === 1
+            && !/snapshotDiscoveryProviderModel|materialStorageModel|snapshotStorageModel/.test(worldDistributionDialogSource),
+            n('A7c. AMENDED — WorldDistributionDialog.js renders exactly one Storage <select> and one Announcement/Discovery <select>, shared by both actions'));
         assert(!/Anchor|Bitcoin/.test(canvasSource) || /Anchors<\/dt>/.test(canvasSource), n('A8. WorldEncounterCanvas.js has no Proof/Anchoring distribution action either (an incidental, unrelated "Anchors" label elsewhere in the file, if present, is not a distribution action)'));
 
         // DecentralizedPublicationsView.js — the other two roles, already

@@ -719,9 +719,15 @@ async function run() {
         const dialogSource = await source('ui/components/EditorDistributionDialog.js');
         const publicationSectionOpenIndex = dialogSource.indexOf('<div v-if="canDistributePublication" class="editor-distribution-dialog-section');
         assert(publicationSectionOpenIndex !== -1, n('I1a. the Publication section is gated on canDistributePublication'));
-        const selectIndex = dialogSource.indexOf('v-model="discoveryProviderModel"', publicationSectionOpenIndex);
+        // AMENDED — One Shared Distribution Settings Block. The substrate
+        // <select> is now the dialog's single shared one, above both
+        // sections (see EditorDistributionDialog.js's own header); the
+        // Publication action button still sits inside the gated section.
+        const settingsIndex = dialogSource.indexOf('<div class="editor-distribution-dialog-settings">');
+        const selectIndex = dialogSource.indexOf('v-model="discoveryProviderModel"');
         const buttonIndex = dialogSource.indexOf("$emit('distribute-publication')", publicationSectionOpenIndex);
-        assert(selectIndex > publicationSectionOpenIndex, n('I1. the substrate <select> sits inside the section gated on canDistributePublication'));
+        assert(settingsIndex !== -1 && settingsIndex < selectIndex && selectIndex < publicationSectionOpenIndex,
+            n('I1. AMENDED — the substrate <select> sits in the shared settings block, above the section gated on canDistributePublication'));
         assert(buttonIndex > publicationSectionOpenIndex, n('I2. the "Distribute now" button sits inside the SAME section — the identical canDistributePublication gate, applied once for both'));
 
         // The selector's mere existence never implies either provider is

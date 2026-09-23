@@ -504,7 +504,10 @@ async function run() {
         assert((distributionPanelTemplate.match(/<dt>Discovery/g) || []).length >= 2, n('G1. AMENDED BY 0.9.433 — the panel template now contains more than one literal "Discovery" row source: the fallback single row (unchanged text) plus the new per-provider `v-for` row, confirming the recommended change is genuinely present, not merely described'));
         assert(distributionPanelTemplate.includes('{{ distributionDiscoveryState }}'), n('G2. the pre-existing single-row fallback is still bound to the same computed `distributionDiscoveryState` (0.9.100, unmodified) — used whenever zero or one substrate observation exists, which Section D already proved is indistinguishable from today\'s behavior'));
 
-        assert(dialogSource.includes('<h4 class="world-distribution-dialog-section-title">Distribution</h4>'), n('G3. the existing "Distribution" heading is confirmed as the one place this change lives — never a new heading or a separate panel, matching the requesting brief\'s own "not a new dashboard" instruction'));
+        // AMENDED — One Shared Distribution Settings Block: the section
+        // heading now reads "Publication" (its settings moved to the
+        // shared block above), still the one heading this change lives in.
+        assert(dialogSource.includes('<h4 class="world-distribution-dialog-section-title">Publication</h4>'), n('G3. the existing "Distribution" heading is confirmed as the one place this change lives — never a new heading or a separate panel, matching the requesting brief\'s own "not a new dashboard" instruction'));
         assert(/v-for="observation in discoveryObservations"/.test(distributionPanelTemplate), n('G4. AMENDED BY 0.9.433 — the Distribution panel now contains exactly the `v-for` this section recommended, scoped to the Discovery row alone, over the seam\'s own `discoveryObservations` computed — never a modification of any pre-existing loop, since none existed before this milestone'));
         assert(canvasSource.includes('distributionMaterialState') && canvasSource.includes('discoveryObservations'),
             n('G5. WorldEncounterCanvas.js still OWNS these computeds — the dialog only ever receives their current value as a prop, never recomputes them itself'));

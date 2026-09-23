@@ -247,7 +247,10 @@ async function run() {
         // across multiple lines — the regex now tolerates whitespace/
         // newlines and trailing arguments, still confirming the same
         // 0.9.668 fact this section exists to protect.
-        assert(/publicationDistributionCommand\(\s*publication,\s*this\.publicationDiscoveryProvider/.test(ownPanelSource), n('B10. AMENDED BY 0.9.668 — Bug fix. OwnPublicationPanel.js\'s own, separate call site now forwards its own explicit Announcement/Discovery substrate choice too — no longer publication-only, closing the asymmetry this audit originally found'));
+        // AMENDED — One Shared Distribution Settings Block. The panel's
+        // Publication and Snapshot actions now read ONE shared substrate
+        // choice, `distributionDiscoveryProvider`.
+        assert(/publicationDistributionCommand\(\s*publication,\s*this\.distributionDiscoveryProvider/.test(ownPanelSource), n('B10. AMENDED BY 0.9.668 — Bug fix. OwnPublicationPanel.js\'s own, separate call site now forwards its own explicit Announcement/Discovery substrate choice too — no longer publication-only, closing the asymmetry this audit originally found'));
 
         console.log('\n=== SECTION B: REACHABILITY CHAINS ===');
         console.log('✓ Section B: CONTENT and PROOF_AND_ANCHORING each trace a complete, real chain from a registered route through an injected coordinator to a per-item template loop reading a live registry. ANNOUNCEMENT_AND_DISCOVERY traces an equally real chain to an actual, working "Distribute" action — but that chain has no branch point anywhere for a substrate identifier to enter it.');

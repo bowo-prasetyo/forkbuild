@@ -45,9 +45,17 @@ in a while; closing it again (**Close**, clicking outside it, or Escape)
 never loses anything it produced — reopening it shows the exact same
 result, error, or in-flight state you left it in.
 
+The dialog opens with one set of settings, used for everything it
+distributes: a **Storage** (**Arweave**, **IPFS (Local Kubo)**, or **IPFS
+(Remote Pinning)** — the last needs a fresh Endpoint and Credential typed
+in every time; nothing about it is ever saved) and an **Announcement /
+Discovery substrate** (**Nostr** or **Arweave**). Both open on your saved
+provider preferences, and Storage only lists the backends this device can
+actually place a Snapshot on (plus Remote Pinning).
+
 If both sections below are available, a combined **Distribute** button
-sits at the top of the dialog — a one-click convenience that fires both
-underneath, for whenever you don't want to click twice. It changes
+sits right under those settings — the main action, which distributes the
+Snapshot and the Publication together with the settings above. It changes
 nothing about either protocol: each still runs independently, each still
 reports into its own section, and a failure in one is never hidden by,
 or blocks, the other. Specifically, it runs them one after another —
@@ -55,21 +63,18 @@ Snapshot first, then Publication — never at the same time, since both can
 end up asking the same connected wallet extension to sign, and two
 signing requests fired at once is a real extension failure mode.
 
-A **Snapshot Distribution** section comes first: pick a **Snapshot
-storage** (**Arweave**, **IPFS (Local Kubo)**, or **IPFS (Remote
-Pinning)** — the last needs a fresh Endpoint and Credential typed in
-every time; nothing about it is ever saved) and an **Announcement /
-Discovery substrate** (**Nostr** or **Arweave**), then click **Distribute
-Snapshot**. Below it, a **Distribution** section offers the identical pair
-of pickers for the Publication's own Signed Claim, and a **Distribute
-now** button. Clicking either does exactly what World View's own
+A **Snapshot** section comes first, then a **Publication** section for
+the Publication's own Signed Claim. Each has its own smaller **Distribute
+Snapshot only** / **Distribute Publication only** button, using the same
+settings — handy if you only want one, or want to retry just the half
+that failed. Clicking either does exactly what World View's own
 equivalent button does for a publication you're inspecting there (see
 [World Encounters](03-WorldView.md#world-encounters--publications-and-avatars-your-peers-are-sharing)):
 a real attempt at an upload and an announcement, for the exact Publication
 your Publish click just produced — never a separate lookup by title or
 id.
 
-**Distribute now**'s result appears right below it:
+The Publication's result appears in its own section:
 
 | Field | Meaning |
 |---|---|
@@ -78,7 +83,7 @@ id.
 | **Discovery** | The announcement id, or "Not yet announced" if it didn't complete. |
 | **Repository** | An **Explore** button that jumps straight to this publication's page in World View — shown whenever the publication carries somewhere to explore, which in practice is always. |
 
-**Distribute Snapshot**'s own result — a **Content hash**, a **Locator**,
+The Snapshot's own result — a **Content hash**, a **Locator**,
 and an **Announcement** id, or "No announcement" for a placement that
 succeeded without one — is entirely separate, since Snapshots are placed
 and discovered independently of Signed Claim distribution; see

@@ -81,9 +81,11 @@ async function run() {
         for (const select of worldDialog.match(/<select[\s\S]*?<\/select>/g)) {
             assert(isAlphabetical(optionLabelsIn(select)), `WorldDistributionDialog.js select is alphabetical: ${optionLabelsIn(select).join(', ')}`);
         }
-        assert(/v-for="option in snapshotStorageOptions"/.test(worldDialog)
-            && /snapshotStorageOptions\(\) \{\s*return sortOptionsByLabel\(/.test(worldDialog),
-            'WorldDistributionDialog.js renders its snapshot storage choices through sortOptionsByLabel()');
+        for (const [name, dialog] of [['WorldDistributionDialog.js', worldDialog], ['EditorDistributionDialog.js', editorDialog]]) {
+            assert(/v-for="option in storageOptions"/.test(dialog)
+                && /storageOptions\(\) \{[\s\S]{0,600}return sortOptionsByLabel\(/.test(dialog),
+                `${name} renders its shared storage choices through sortOptionsByLabel()`);
+        }
 
         const publications = await source('ui/views/DecentralizedPublicationsView.js');
         assert(/snapshotDistributionStorageOptions = sortOptionsByLabel\(snapshotDistributionStorageTypes, humanizeStorageType\)/.test(publications)
