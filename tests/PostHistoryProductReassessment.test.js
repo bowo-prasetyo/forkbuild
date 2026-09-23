@@ -422,8 +422,7 @@ async function runTests() {
         for (const groupAction of ['group.create', 'group.rename', 'group.duplicate', 'group.delete', 'group.addSelection', 'group.removeSelection']) {
             assert(editingSidebarSource.includes(groupAction), `G1c. EditingSidebar.js's own Groups section still covers ${groupAction}`);
         }
-        const groupsPanelSource = await rawSource('ui/components/GroupsPanel.js');
-        assert(groupsPanelSource.length > 0, 'G1d. ui/components/GroupsPanel.js still exists on disk, unremoved — this milestone identifies it, per its own brief, but does not delete it');
+        assert(await rawSource('ui/components/GroupsPanel.js').then(() => false, () => true), 'G1d. ui/components/GroupsPanel.js has since been deleted as dead code (the Editor dead-code cleanup)');
 
         console.log('✓ Section G: repository-level obsolete-UI sweep — ui/components/GroupsPanel.js remains the one identified cleanup candidate (OBSOLETE leaf), unchanged since 0.9.206. No new obsolete file surfaced.');
     }

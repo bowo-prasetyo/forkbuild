@@ -187,12 +187,12 @@ async function main() {
     // ===============================================================
     {
         // A1. DocumentState's own real field set — exactly dirty/
-        // readOnly/loadedFrom/lastSaved, confirmed live, nothing added.
+        // loadedFrom/lastSaved, confirmed live, nothing added.
         const manager = new DocumentManager();
         const freshState = manager.state;
         assert('dirty' in freshState === false || typeof freshState.dirty === 'boolean', 'A1a. DocumentState exposes a real dirty getter.');
-        assert(freshState.dirty === false && freshState.readOnly === false && freshState.loadedFrom === null && freshState.lastSaved === null,
-            'A1b. A freshly constructed DocumentManager\'s state is exactly {dirty:false, readOnly:false, loadedFrom:null, lastSaved:null} — no fifth field, no "published" field of any kind.');
+        assert(freshState.dirty === false && !('readOnly' in freshState) && freshState.loadedFrom === null && freshState.lastSaved === null,
+            'A1b. A freshly constructed DocumentManager\'s state is exactly {dirty:false, loadedFrom:null, lastSaved:null} — no read-only flag, no fourth field, no "published" field of any kind.');
 
         // A2. DocumentLifecycleStatus's own three-tier vocabulary — the
         // real, single source of truth this codebase's own comment
@@ -241,7 +241,7 @@ async function main() {
         //   modified-after-publication  -> SAVED+dirty in the Editor surface (Section L); structurally
         //                                  BLOCKED at the World View surface, which forks first (0.9.577 Section B3)
         //   currently published snapshot -> a Publication instance itself, entirely outside DocumentState
-        console.log('✓ Section A: Editing-state inventory — the real production vocabulary is exactly DocumentState (dirty/readOnly/loadedFrom/lastSaved), DocumentLifecycleStatus\'s three tiers (Draft/Saved/Published, with dirty deliberately NOT a fourth tier), DocumentRevision (persistence metadata, never domain truth, never inside a Publication), and a recovery checkpoint (a genuine fourth persistence concept, its own key namespace). The brief\'s own seven proposed states each map onto this real vocabulary without inventing anything; one honest, narrow observation (A3e) is carried forward rather than glossed over.');
+        console.log('✓ Section A: Editing-state inventory — the real production vocabulary is exactly DocumentState (dirty/loadedFrom/lastSaved), DocumentLifecycleStatus\'s three tiers (Draft/Saved/Published, with dirty deliberately NOT a fourth tier), DocumentRevision (persistence metadata, never domain truth, never inside a Publication), and a recovery checkpoint (a genuine fourth persistence concept, its own key namespace). The brief\'s own seven proposed states each map onto this real vocabulary without inventing anything; one honest, narrow observation (A3e) is carried forward rather than glossed over.');
     }
 
     // ===============================================================

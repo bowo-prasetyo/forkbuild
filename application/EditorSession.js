@@ -18,8 +18,6 @@ import { RemoteDocumentOperationApplicationUseCase } from './RemoteDocumentOpera
 import { DocumentOperationCausalGapObservationUseCase } from './DocumentOperationCausalGapObservationUseCase.js';
 import { DocumentOperationCausalGapDetector } from '../core/DocumentOperationCausalGapDetector.js';
 import { DocumentOperationDeferralUseCase } from './DocumentOperationDeferralUseCase.js';
-import { DocumentOperationRecoveryUseCase } from './DocumentOperationRecoveryUseCase.js';
-import { RecoveredOperationReplayUseCase } from './RecoveredOperationReplayUseCase.js';
 import { SpatialEditingService } from './SpatialEditingService.js';
 import { TransformGizmoUseCase } from './TransformGizmoUseCase.js';
 import { TransformSettings } from './TransformSettings.js';
@@ -30,9 +28,7 @@ import { RenameGroupCommand } from './commands/RenameGroupCommand.js';
 import { AddToGroupCommand } from './commands/AddToGroupCommand.js';
 import { RemoveFromGroupCommand } from './commands/RemoveFromGroupCommand.js';
 import { DuplicateGroupCommand } from './commands/DuplicateGroupCommand.js';
-import { CopySelectionUseCase } from './CopySelectionUseCase.js';
-import { PasteClipboardUseCase, PASTE_OFFSET as DUPLICATE_OFFSET } from './PasteClipboardUseCase.js';
-import { RepeatSelectionUseCase } from './RepeatSelectionUseCase.js';
+import { PASTE_OFFSET as DUPLICATE_OFFSET } from './PasteClipboardUseCase.js';
 import { ForkStructureUseCase } from './ForkStructureUseCase.js';
 import { CopyStructureIntoDocumentUseCase } from './CopyStructureIntoDocumentUseCase.js';
 import { CreateStructureFromSelectionUseCase } from './CreateStructureFromSelectionUseCase.js';
@@ -100,8 +96,8 @@ export class EditorSession {
         previewUseCase,
         loadDocumentUseCase,
         identityProvider = null,
-        copySelectionUseCase = null,    // <--- ADD
-        pasteClipboardUseCase = null,    // <--- ADD
+        copySelectionUseCase = null,
+        pasteClipboardUseCase = null,
         forkStructureUseCase = new ForkStructureUseCase(),
         // 0.4.0 — Structure Composition & Blueprint Library.
         copyStructureIntoDocumentUseCase = new CopyStructureIntoDocumentUseCase(),
@@ -251,14 +247,6 @@ export class EditorSession {
             causalGapDetector: this._causalGapDetector
         });
         this._documentOperationRecovery = documentOperationRecovery;
-        // 0.9.236 — Recovered Operation Replay Boundary. Session-lifetime,
-        // exactly like _remoteDocumentOperationApplication above — records
-        // every operation this session's own documentOperationRecovery
-        // hands it (see attachToRecovery() below) but never calls
-        // replay() on its own. replayRecoveredOperation() below is the
-        // ONLY caller of replay() this class ever wires — an explicit,
-        // caller-invoked action, never automatic.
-        this._recoveredOperationReplay = new RecoveredOperationReplayUseCase();
 
         this._container = null;
         this._session = null;
@@ -383,35 +371,6 @@ export class EditorSession {
         this._unattachRecoveryToGapObservation = this._documentOperationRecovery
             ? this._documentOperationCausalGapObservation.attachToPropagation(this._documentOperationRecovery)
             : null;
-        // 0.9.236 — the ONLY consumer of documentOperationRecovery's own
-        // onOperationReceived() feed besides gap observation above. Purely
-        // records; see RecoveredOperationReplayUseCase's own header for
-        // why recording and replaying are kept as two separate acts.
-        this._unattachRecoveryToReplay = this._documentOperationRecovery
-            ? this._recoveredOperationReplay.attachToRecovery(this._documentOperationRecovery)
-            : null;
-    }
-
-    // 0.9.236 — Recovered Operation Replay Boundary. The ONE explicit
-    // seam through which a recovered-but-never-applied operation can ever
-    // change THIS session's own document state — see
-    // RecoveredOperationReplayUseCase's own header for the full
-    // reasoning, including why it must be invoked directly rather than
-    // via a redelivered network message (ReplayGuard already marked the
-    // operationId seen the moment recovery verified it). `target` is
-    // resolved fresh, the same live "what is this Editor looking at right
-    // now" pattern the constructor's own remote-application wiring above
-    // already uses — never cached. Returns a DocumentOperationReplayOutcome;
-    // never throws for an unknown operation or a document mismatch, only
-    // for a malformed (documentId, operationId) pair — see replay()'s own
-    // header. Nothing in this class ever calls this method itself.
-    replayRecoveredOperation(documentId, operationId) {
-        return this._recoveredOperationReplay.replay(
-            { documentId, operationId },
-            this._documentManager.document && this._commandHistory
-                ? { documentId: this._documentManager.document.world.id, commandHistory: this._commandHistory }
-                : null
-        );
     }
 
     // 0.9.237 — Causal Application Deferral Boundary. Lets a caller (a
@@ -421,29 +380,6 @@ export class EditorSession {
     // mutates; see DocumentOperationDeferralUseCase's own header.
     getDeferredOperationIds(documentId) {
         return this._documentOperationDeferral.getDeferredOperationIds(documentId);
-    }
-
-    // 0.9.230 — lets a caller observe an operation this session recovered
-    // (verified, but never applied) without reaching into a private
-    // field. Returns an unsubscribe function. When this session was built
-    // without a documentOperationRecovery, nothing is ever wired to
-    // publish a result, so the callback simply never fires — the same
-    // graceful-degradation posture onCausalGapObserved() already takes.
-    onDocumentOperationRecovered(callback) {
-        return this._documentOperationRecovery
-            ? this._documentOperationRecovery.onOperationReceived(callback)
-            : () => {};
-    }
-
-    // 0.9.229 — lets a caller observe this session's own causal-gap
-    // results without reaching into a private field. Returns an
-    // unsubscribe function. When this session was built without a
-    // documentCommandPropagation, nothing is ever wired to publish a
-    // result, so the callback simply never fires — the same graceful-
-    // degradation posture every other optional collaborator here already
-    // takes.
-    onCausalGapObserved(callback) {
-        return this._documentOperationCausalGapObservation.onGapObserved(callback);
     }
 
     get commandHistory() {
@@ -1860,10 +1796,6 @@ export class EditorSession {
         if (this._unattachRecoveryToGapObservation) {
             this._unattachRecoveryToGapObservation();
             this._unattachRecoveryToGapObservation = null;
-        }
-        if (this._unattachRecoveryToReplay) {
-            this._unattachRecoveryToReplay();
-            this._unattachRecoveryToReplay = null;
         }
     }
 

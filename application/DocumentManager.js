@@ -6,7 +6,7 @@ import { DocumentManagerEvent } from './events/DocumentManagerEvent.js';
 
 // Owns document lifecycle — mirrors what CommandHistory does for command
 // execution: one place decides what "the current document" is and how
-// its DocumentState (dirty/readOnly/loadedFrom/lastSaved) changes.
+// its DocumentState (dirty/loadedFrom/lastSaved) changes.
 // Nothing else should mutate DocumentState directly.
 //
 // As of 0.1.20B, every state change publishes DocumentManagerEvent.
@@ -33,7 +33,6 @@ export class DocumentManager {
     markDirty() {
         this._setState(new DocumentState({
             dirty: true,
-            readOnly: this._state.readOnly,
             loadedFrom: this._state.loadedFrom,
             lastSaved: this._state.lastSaved
         }));
@@ -49,7 +48,6 @@ export class DocumentManager {
         }
         this._setState(new DocumentState({
             dirty: false,
-            readOnly: this._state.readOnly,
             loadedFrom: this._state.loadedFrom,
             lastSaved: new Date()
         }));
@@ -114,7 +112,6 @@ export class DocumentManager {
         }
         this._setState(new DocumentState({
             dirty: this._trackedCommandHistory.isDirty(),
-            readOnly: this._state.readOnly,
             loadedFrom: this._state.loadedFrom,
             lastSaved: this._state.lastSaved
         }));

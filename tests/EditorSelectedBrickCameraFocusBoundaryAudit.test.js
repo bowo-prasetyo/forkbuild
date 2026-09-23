@@ -12,7 +12,6 @@ import { PreviewUseCase } from '../application/PreviewUseCase.js';
 import { EditorSession } from '../application/EditorSession.js';
 import { CommandHistory } from '../application/CommandHistory.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
-import { EditorEvent } from '../core/events/EditorEvent.js';
 import { EditorActionRegistry, createStandardActions } from '../application/EditorActionRegistry.js';
 import { EditorActionContext } from '../application/EditorActionContext.js';
 import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
@@ -351,14 +350,16 @@ async function run() {
         const beforeDirty = documentManager.state.dirty;
 
         const events = [];
-        const cameraListener = editorContext.eventBus.subscribe(EditorEvent.CAMERA_STATE_CHANGED, () => events.push(EditorEvent.CAMERA_STATE_CHANGED));
-        const selectionListener = editorContext.eventBus.subscribe(EditorEvent.SELECTION_CHANGED, () => events.push(EditorEvent.SELECTION_CHANGED));
+        const originalPublish = editorContext.eventBus.publish;
+        editorContext.eventBus.publish = function (type, payload) {
+            events.push(type);
+            return originalPublish.call(this, type, payload);
+        };
 
         const summary = editorSession.getSelectionSummary();
         editorSession.frameCameraOn(summary.bounds.center);
 
-        cameraListener.unsubscribe();
-        selectionListener.unsubscribe();
+        editorContext.eventBus.publish = originalPublish;
 
         assert(JSON.stringify(freshDoc.world.toJSON()) === beforeDocumentJSON,
             n('F1. document/world content is byte-for-byte unchanged after frameCameraOn()'));
@@ -371,20 +372,16 @@ async function run() {
         // F5. A real, previously-unremarked architectural fact, live-
         // confirmed rather than inferred from reading the method body:
         // frameCameraOn() writes directly to the RENDER session
-        // (`this._session.setCameraState()`), never through
-        // EditorContext's own setCameraState()/CAMERA_STATE_CHANGED path.
-        // Grepping the whole codebase confirms EditorContext's
-        // CAMERA_STATE_CHANGED has ZERO subscribers anywhere in
-        // production — it is defined and can be published (EditorContext
-        // #setCameraState() does so), but nothing publishes it for the
-        // Editor's real camera, and nothing listens for it either. This
+        // (`this._session.setCameraState()`); EditorContext carries no
+        // camera state at all (its unused setCameraState()/
+        // CAMERA_STATE_CHANGED pair was removed as dead code). This
         // is an even stronger isolation guarantee than "only one event
         // fires": frameCameraOn() doesn't touch EditorContext's EventBus
         // AT ALL, so it cannot be confused with, or accidentally coupled
         // to, selection/tool/preview state that DOES flow through that
         // bus.
         assert(events.length === 0,
-            n('F5. frameCameraOn() publishes NOTHING on EditorContext\'s own EventBus — it writes straight to the render session\'s camera state, bypassing EditorContext.setCameraState()/CAMERA_STATE_CHANGED entirely (which, grepped across the whole codebase, has no production subscriber anyway)'));
+            n('F5. frameCameraOn() publishes NOTHING on EditorContext\'s own EventBus — it writes straight to the render session\'s camera state; no event of any type is published'));
 
         console.log('\n=== SECTION F: CAMERA-ONLY INVARIANT ===');
         console.log('✓ Live-proven against real Document/SelectionState/CommandHistory/DocumentManager/EventBus');

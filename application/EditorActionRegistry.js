@@ -1,4 +1,3 @@
-import { EditorActionContext } from './EditorActionContext.js';
 
 // The Editor Action layer (0.1.50): one registry of user-facing
 // operations, consumed by the command palette, the consolidated

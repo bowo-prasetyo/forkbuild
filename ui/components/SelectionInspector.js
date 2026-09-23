@@ -51,7 +51,6 @@ export default {
     props: {
         registry: { type: Object, required: true },
         getContext: { type: Function, required: true },
-        selectionCount: { type: Number, default: 0 },
         // application/EditorSession.js#getSelectionSummary()'s return
         // value — { count, bounds } — or null (empty selection, or a
         // StructurePlacement selection, which this component never

@@ -549,8 +549,9 @@ async function runTests() {
     // milestone's own brief's explicit instruction.
     // ---------------------------------------------------------------
     {
+        // ui/components/GroupsPanel.js was on this list until the
+        // Editor dead-code cleanup deleted it.
         const obsoleteConfirmed = [
-            'ui/components/GroupsPanel.js',
             'application/CreatePublicationSnapshotPlacementCatalogUseCase.js',
             'application/CreatePublicationAnchorCatalogUseCase.js',
             'application/CreatePlacementRegistryUseCase.js'

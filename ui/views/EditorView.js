@@ -221,7 +221,6 @@ export default {
                         v-if="selectionSummary"
                         :registry="actionRegistry"
                         :get-context="getActionContext"
-                        :selection-count="selectionCount"
                         :summary="selectionSummary"
                         :recolor="recolorSelection"
                     />
@@ -2095,15 +2094,12 @@ export default {
             togglePalette() {
                 paletteOpen.value = !paletteOpen.value;
             },
-            // group.rename's own input-collection hook (same posture as
-            // structure.createFromSelection's ui.promptCreateStructure()
-            // below): EditorActionRegistry's execute() can't collect a
-            // new name itself, and renameSelectedGroup(name) has no
-            // default — called with none (the pre-fix behavior) it
-            // silently renamed the group to undefined. A native prompt,
-            // exactly ui/components/GroupsPanel.js's own (unused)
-            // renameGroup() already used, pre-filled with the current
-            // name; null means Cancel.
+            // group.rename's own input-collection hook:
+            // EditorActionRegistry's execute() can't collect a new name
+            // itself, and renameSelectedGroup(name) has no default —
+            // called with none it would rename the group to undefined.
+            // A native prompt pre-filled with the current name; null
+            // means Cancel.
             promptRenameGroup(currentName = '') {
                 return prompt('New group name:', currentName || '');
             },
@@ -2699,17 +2695,6 @@ export default {
             feedback,
             feedbackMessage,
             feedbackVisible,
-            // 0.9.377 — EditorView Post-Publish Distribution Action.
-            // AMENDED BY 0.9.450: multiRelayNostrPublicationDistributionCommand
-            // replaces publicationDistributionCommand here — see
-            // distributeEditorPublication()'s own 0.9.450 amendment.
-            // AMENDED BY 0.9.502: publicationDistributionCommand rejoins
-            // this list (now the Arweave-substrate branch, never the
-            // pre-0.9.450 default), alongside canDistributePublication/
-            // selectedDiscoveryProvider — see this view's own 0.9.502
-            // amendment, above.
-            multiRelayNostrPublicationDistributionCommand,
-            publicationDistributionCommand,
             canDistributePublication,
             selectedDiscoveryProvider,
             selectedDistributionStorage,

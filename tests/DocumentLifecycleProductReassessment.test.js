@@ -185,7 +185,7 @@ async function main() {
         const document = buildDocument({ title: 'Entry Points' });
         manager.newDocument(document);
         assert(manager.document === document, '1. LIVE: DocumentManager.newDocument() makes the new Document the session\'s own current document, by reference.');
-        assert(manager.state.dirty === false && manager.state.readOnly === false, '2. LIVE: a freshly created document starts clean and fully editable.');
+        assert(manager.state.dirty === false && !('readOnly' in manager.state), '2. LIVE: a freshly created document starts clean and fully editable.');
 
         // A2. Open: load() is the one path a previously-saved document
         // re-enters a session through, distinct from newDocument().
@@ -220,10 +220,10 @@ async function main() {
             '7. LIVE: publishing returns a real Publication referencing this exact document.');
         assert(manager.document === document, '8. LIVE: publishing never replaces, clones, or detaches DocumentManager\'s own current document.');
 
-        // A6. Return to editing after publication: DocumentState.readOnly
-        // never becomes true anywhere in DocumentManager — grep-verified
-        // structurally below, live-verified here.
-        assert(manager.state.readOnly === false, '9. LIVE: the document is still NOT read-only immediately after a successful publish.');
+        // A6. Return to editing after publication: DocumentState has no
+        // read-only flag at all — grep-verified structurally below,
+        // live-verified here.
+        assert(!('readOnly' in manager.state), '9. LIVE: the document is still NOT read-only immediately after a successful publish.');
         history.execute(new MoveBrickCommand({ worldId: document.world.id, buildingId, brickId, delta: { x: 1, y: 0, z: 0 } }));
         assert(manager.state.dirty === true, '10. LIVE: a further edit after publishing succeeds and is tracked normally — nothing about publish locked editing out.');
 
@@ -434,7 +434,7 @@ async function main() {
         history.execute(new MoveBrickCommand({ worldId: document.world.id, buildingId, brickId, delta: { x: 1, y: 0, z: 0 } }));
         assert(manager.state.dirty === true, '1. LIVE: the document is dirty before publishing.');
         publishDocumentUseCase.execute(manager);
-        assert(manager.state.dirty === true && manager.state.readOnly === false,
+        assert(manager.state.dirty === true && !('readOnly' in manager.state),
             '2. LIVE: publishing an Editor document with UNSAVED edits leaves it dirty AND fully editable afterward — Publish is never mistaken for Save.');
         saveDocumentUseCase.execute(manager);
         assert(manager.state.dirty === false, '3. LIVE: an explicit Save afterward clears dirty normally — publishing did not interfere with Save\'s own bookkeeping.');
