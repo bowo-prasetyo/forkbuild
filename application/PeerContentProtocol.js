@@ -23,8 +23,8 @@
 // state whose only purpose would be to describe absence.
 //
 // `hash` is a bare content hash string — never a URI, never a storage
-// backend hint. See docs/Principles.md, "A Content Reference Names Bytes,
-// Never A Location" (0.7.0/0.7.1): the peer on either end of this
+// backend hint. See docs/Principles.md, "Published content is identified
+// by its content hash, not its storage location" (0.2.14): the peer on either end of this
 // protocol needs to know WHAT is being asked for, never WHERE it might
 // also be found. `isValidContentHash()` below is deliberately
 // algorithm-agnostic (core/ContentReference.js already supports more than

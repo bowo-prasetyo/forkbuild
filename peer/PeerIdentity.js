@@ -26,8 +26,7 @@ import * as Ed25519 from '../identity/Ed25519.js';
 // never claim an identityId that doesn't match the key it also
 // carries — but this class carries no `label` (a remote peer's local
 // nickname, if one ever exists, is a UI/social-layer concern this
-// milestone deliberately does not add — see docs/Roadmap.md, "No
-// persistent peer trust yet") and no `createdAt` (this device did not
+// milestone deliberately does not add — see docs/Roadmap.md, 0.2.49) and no `createdAt` (this device did not
 // create this key and has no idea when it was).
 export class PeerIdentity {
     constructor({ identityId, publicKey, algorithm = 'Ed25519' } = {}) {

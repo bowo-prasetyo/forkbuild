@@ -336,6 +336,13 @@ effect of whichever root a replica happened to load first.
 
 ### A Published Snapshot Is Never Mutated In Place (0.2.20)
 
+*Changed by 0.5.9:* World View no longer edits bricks, so today the
+fork-on-edit described here only runs for its few remaining mutations
+(Region/Landmark naming, Animal Decorations, moving a
+StructurePlacement). Brick editing forks through "Edit a Copy" and the
+Editor instead. See "World View Observes and Navigates; Editor Mutates
+and Builds (0.5.9)" below and docs/CapabilityMatrix.md.
+
 A published World View is immutable; a World View SESSION is editable.
 Opening a published snapshot never makes the snapshot itself editable
 — the first mutation crosses the publication boundary and creates a
@@ -428,6 +435,13 @@ began, or the two will disagree the first time the active document
 changes without the component remounting.
 
 ### A Fork Is Not A Modal Interruption (0.2.22)
+
+*Changed by 0.5.9:* World View no longer edits bricks, so today the
+fork-on-edit described here only runs for its few remaining mutations
+(Region/Landmark naming, Animal Decorations, moving a
+StructurePlacement). Brick editing forks through "Edit a Copy" and the
+Editor instead. See "World View Observes and Navigates; Editor Mutates
+and Builds (0.5.9)" below and docs/CapabilityMatrix.md.
 
 Lazy fork-on-first-mutation (0.2.20) exists specifically so that
 editing a published world feels like editing, not like requesting
@@ -545,8 +559,8 @@ falls back from is not actually a fix.
 
 This does not mean placements never collide — a bounded, hash-based
 grid can and will map two different ids to the same cell. Resolving
-that is explicitly out of scope here (see docs/Roadmap.md, "spatial
-allocation / collision policy"); determinism, not collision avoidance,
+that is explicitly out of scope here (see docs/Roadmap.md, 0.2.25,
+"Spatial Allocation & Placement Collision Policy"); determinism, not collision avoidance,
 is the property this milestone establishes.
 
 ### A World Unit Is One Meter (0.9.548)

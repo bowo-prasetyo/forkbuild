@@ -25,9 +25,7 @@
 // ("this function NEVER reports NO_MATCH [for a non-RESOLVED outcome] — it
 // passes that same resolution-failure outcome... through unchanged"). This
 // file's own three values therefore describe only what happens ONCE
-// resolution has already succeeded — see docs/Principles.md, "Selection Is
-// Not Verification; Materialization Requires An Already-Verified Snapshot
-// (0.9.158)."
+// resolution has already succeeded — see docs/Roadmap.md, 0.9.158.
 export const SnapshotCandidateMaterializationOutcome = Object.freeze({
     // The selected candidate resolved (DecentralizedSnapshotResolutionOutcome
     // .RESOLVED — retrieved and hash-verified against its own declared

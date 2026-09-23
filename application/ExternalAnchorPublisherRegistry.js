@@ -21,8 +21,7 @@
 // registry only ever reads that name back, never invents or validates
 // it against any fixed list. It never ranks publishers, never picks a
 // "preferred" anchorType, and never falls back from one anchorType to
-// another — see docs/Principles.md, "External Anchor Creation
-// Orchestrates; It Does Not Decide (0.8.10)."
+// another — see docs/Roadmap.md, 0.8.10.
 export class ExternalAnchorPublisherRegistry {
     constructor() {
         this._publishers = new Map();

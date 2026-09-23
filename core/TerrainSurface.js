@@ -1,7 +1,7 @@
 // Deterministic terrain SURFACE classification and color for World View —
 // see docs/Roadmap.md, 0.2.79, "Terrain Surface & Natural Color," and
-// docs/Principles.md, "Terrain Surface Is A Second Pure Function Layered
-// On Elevation, Never A New Ground Truth." Answers a DIFFERENT question
+// docs/Principles.md, "Terrain Surface Color Is A Function Of World
+// Coordinates, Never Tile Coordinates (0.2.79)." Answers a DIFFERENT question
 // from core/TerrainHeightField.js:
 //
 //   TerrainHeightField  = "How high is the terrain?"

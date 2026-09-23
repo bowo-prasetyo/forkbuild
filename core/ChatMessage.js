@@ -40,9 +40,7 @@ import { createId } from './createId.js';
 //                      rejecting a stale replay, never reconstructing
 //                      an exact count of messages sent.
 //   kind            — TEXT only, for 0.2.61. A closed, one-value
-//                      vocabulary on purpose — see docs/Principles.md,
-//                      "Chat Ships With One Message Kind, Not Four
-//                      Half-Built Ones" (0.2.61): attachments, edits,
+//                      vocabulary on purpose (0.2.61): attachments, edits,
 //                      reactions, and typing indicators are all later,
 //                      additive work, never this milestone's.
 //   body            — bounded UTF-8 text. Never HTML, never markdown,

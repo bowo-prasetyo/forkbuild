@@ -13,8 +13,7 @@ import { resolveDirectSocialIdentity } from './SocialIdentityResolver.js';
 // a pile of chat/conversation/read-tracking concerns voice has no business
 // depending on. See docs/Roadmap.md, 0.2.86, "How does a caller currently
 // discover the concrete authenticated connections belonging to a social
-// identity?" and docs/Principles.md, "A Query Two Use Cases Both Need Is A
-// Shared Function, Never A New Dependency Between Them."
+// identity?"
 //
 // A `.filter()`, never a `.find()`, on purpose — Alice's Phone and Laptop
 // can both be live at once, and every caller of this function (identity

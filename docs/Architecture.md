@@ -71,20 +71,20 @@ the open document), gizmo presentation refresh, and exclusive input
 routing; 0.1.47 added TransformSettings and modifier/feedback plumbing;
 0.1.48/0.1.49 added alignSelection/distributeSelection/
 applyNumericTransform; 0.1.50 added selectAll()/clearSelection()/
-deleteSelection()/getSelectionCount() so the action layer can drive the
-Editor exactly like the World View. Group and clipboard surface
-(0.1.42/0.1.43) lives wherever this session is extended in the deployed
-tree; the action layer degrades gracefully when those methods are absent.
+deleteSelection() so the action layer can drive it (getSelectionCount()
+was removed on 2026-09-23; getSelectionSummary() replaces it). Group and
+clipboard operations (0.1.42/0.1.43) are EditorSession methods too.
 
 WorldNavigationSession (application/WorldNavigationSession.js), updated
-0.1.30, owns the live read-only runtime graph for World View: camera
+0.1.30, owns the live runtime graph for World View: camera
 positioning via SpatialCameraController, spatial discovery via
 WorldLayoutProvider, document loading, world load/unload
 reconciliation, spatial selection/hover state, and a shared EventBus
-feeding a single WorldRenderer. Since 0.1.46 it exposes the World View's
-gizmo surface through the SAME SpatialEditingService; 0.1.47–0.1.49
-mirror the Editor's transform additions; 0.1.50 added selectAll()/
-getSelectionCount().
+feeding a single WorldRenderer. From 0.1.46 to 0.5.8 it also exposed a
+gizmo and the Editor's transform operations; 0.5.9 removed all of them,
+so World View now only observes and navigates, apart from the few
+exceptions in docs/CapabilityMatrix.md. selectAll()/getSelectionCount()
+(0.1.50) remain, for inspection and focus.
 
 SpatialEditingService (application/SpatialEditingService.js) translates
 spatial editing intent into domain mutations via CommandHistory. Since
@@ -230,8 +230,11 @@ hover, preview), Gizmo Layer — real since 0.1.46.
 
 ui/
 
-Vue. Talks only to application/, never directly to core/, renderer/, or
-storage/. EditorView and WorldView route every pointer/key event through
+Vue. Goes through application/ for every mutation and never imports
+renderer/. It does import core/ directly for read-only value types,
+enums and pure helpers (about 36 files), and ui/main.js, the composition
+root, wires every adapter layer; RecentWorldsView and
+DecentralizedPublicationsView also import storage/ directly. EditorView and WorldView route every pointer/key event through
 the session's gizmo surface FIRST (0.1.46); as of 0.1.50 their keyboard
 surfaces are consolidated onto the EditorActionRegistry — editing
 shortcuts, the palette, the sidebar, and docs/user/ControlsReference.md
@@ -325,8 +328,9 @@ The invariants this architecture protects:
 - An active editing gesture temporarily owns the pointer. Generalized
   in 0.1.50 to the full Escape priority chain: input > palette >
   gesture > marquee > selection.
-- Parity is structural. Same operation in either view → byte-identical
-  committed transforms; since 0.1.50, identical action definitions too.
+- Parity was structural. Until 0.5.9 the same operation in either view
+  gave byte-identical committed transforms, and since 0.1.50 identical
+  action definitions too. Since 0.5.9 only the Editor transforms bricks.
 
 Transform Precision & Snapping (0.1.47)
 
@@ -381,10 +385,10 @@ accumulated kernel, sitting entirely ABOVE it.
 
 The key properties:
 
-- One registry, two surfaces. Both views construct
+- One registry, shared definitions. In 0.1.50 both views constructed
   createStandardActions() with their own session bound in; ids, labels,
-  shortcuts, and availability rules are shared by construction. No
-  second shortcut table, no Editor-only behavior.
+  shortcuts, and availability rules were shared by construction. Since
+  0.5.9 only the Editor builds the registry.
 - Actions are not commands. The action layer never touches
   CommandHistory or World; it invokes sessions. Some actions produce
   commands; most don't. This protects the architecture from the common
@@ -393,9 +397,9 @@ The key properties:
   and docs/user/ControlsReference.md all read the same metadata —
   documentation drift is structurally impossible as long as the docs
   are regenerated from the registry.
-- Explicit Escape routing. InputRouter.resolveEscapeTarget encodes the
-  priority chain; views implement the consequences. No scattered
-  if (Escape) handlers.
+- Explicit Escape routing. In 0.1.50, InputRouter.resolveEscapeTarget
+  encoded the priority chain. It was removed on 2026-09-23; EditorView's
+  own Escape handler now implements the chain.
 - Feedback with reasons. Disabled actions explain why ("Select at least
   2 bricks", "Select at least 3 bricks", "Clipboard is empty", "Select
   a group"); empty states describe what the surface is for; transient
@@ -418,10 +422,9 @@ be wrapped without being changed.
 View Modes
 
 Repository View (technical exploration), Author View (social
-exploration), World View (spatial exploration — and, since 0.1.46, a
-full editing surface with identical gizmo/transform semantics, since
-0.1.48 alignment/distribution, since 0.1.49 numeric input, since 0.1.50
-the consolidated command surface). All three consume the same
+exploration), World View (spatial exploration; from 0.1.46 to 0.5.8 also
+a full editing surface, read-only for document content since 0.5.9 — see
+docs/CapabilityMatrix.md). All three consume the same
 DiscoveryProvider and Publication abstraction.
 
 Domain State vs Editor State
@@ -451,6 +454,7 @@ abstraction leaks into another.
 Dependency direction
 
 ui -> application -> core
+ui -> core, for read-only value types, enums and pure helpers only
 application -> renderer
 application -> storage / publisher / identity / serializer / discovery / world-layout
 renderer -> core (reads domain events and data; never the reverse)
@@ -517,10 +521,9 @@ the flat-group model has proven sufficient for every operation built so
 far. If nesting is ever needed, it becomes its own architectural
 milestone.
 
-Next: 0.1.51 Stability / Performance / Large-Document Hardening, then
-0.1.52 Protocol & Persistence Hardening, then 0.2 Publishing &
-Multiplayer. The editing kernel is complete and consolidated; the
-architecture has earned the hardening pass.
+The 0.1.51 (Stability / Performance / Large-Document Hardening) and
+0.1.52 (Protocol & Persistence Hardening) milestones planned here were
+never done as separate milestones; work went straight to 0.2.0.
 
 Durable Documents & Publishing Boundary (0.2.0)
 
@@ -734,9 +737,6 @@ AutosaveDocumentUseCase) and framework-agnostic; persistence/ must not
 import application/.
 
 
-### `docs/Architecture.md` — add section
-
-```markdown
 Collaboration Protocol Foundation (0.2.7)
 
 The 0.2.7 milestone establishes the protocol for multiple clients
@@ -967,7 +967,6 @@ to IPFSContentStore or ArweaveContentStore without altering the publication
 pipeline. Trust is anchored to the content hash: resolvers retrieve by
 location but verify by content identity.
 
-<!-- === FILE: ./docs/Architecture.md === (append after the 0.2.14 section) -->
 
 ### Decentralized Spatial Discovery (0.2.15)
 
@@ -1046,7 +1045,6 @@ consensus between competing indexes, peer-to-peer replication,
 geographic coordinates, publication content retrieval, renderer or
 editing-kernel changes.
 
-<!-- === FILE: ./docs/Architecture.md === (append after the 0.2.15 section) -->
 
 ### Decentralized Identity & Signatures (0.2.16)
 
@@ -2685,7 +2683,7 @@ nearest-neighbor-indexed spatial queries (a plain Euclidean sphere,
 exactly as requested, is the whole of it); any geographic unit
 conversion (World Units stays the only unit named anywhere in this
 UI — see docs/Principles.md, "A World Unit Is Not (Yet) A Meter",
-0.2.24); and a combined spatial-query location BROWSER (clicking/
+0.2.24, since replaced by "A World Unit Is One Meter", 0.9.548); and a combined spatial-query location BROWSER (clicking/
 exploring a region, sorting, filtering interactively) — that is
 0.2.29's proposed scope, not this one's.
 
@@ -8180,161 +8178,6 @@ milestone from 0.2.69 through 0.2.71 already carried. See docs/Roadmap.md,
 0.2.78, for the full list of what this establishes versus what it
 deliberately leaves for later.
 
-### Multi-Device Social State Semantics (0.2.82)
-
-Recorded here as 0.2.82, not the "0.2.79" its own source headers still
-carry — see docs/Roadmap.md, 0.2.82, "Numbering note," for why: it shipped
-under a number Terrain Surface & Natural Color, below, had already claimed
-on a parallel branch.
-
-0.2.78 proved `resolvePeerAuthority()` correct in isolation but consulted
-it nowhere. 0.2.82 takes up the first of that milestone's own proposed
-follow-ons: wire the device-authority model into social communication —
-friendship, chat, and voice — while still deliberately avoiding full
-multi-device synchronization. The central question, from the design doc
-that opened this milestone: when two devices represent the same parent
-identity, what does it mean for one of those devices to communicate with
-another identity?
-
-**The governing rule: device authorization changes peer authority, never
-social identity.** A friendship formed over ANY of Alice's authorized
-devices is the SAME friendship her OTHER devices already benefit from,
-never a second, per-device relationship; a conversation with Alice stays
-one conversation regardless of which of her devices actually sent each
-message; blocking or unfriending the PARENT identity reaches every one of
-her currently-resolved devices at once. See docs/Principles.md, "Device
-Authorization Changes Peer Authority, Never Social Identity."
-
-**`application/DeviceAuthorizationPropagationUseCase.js` gains
-`resolveConnectionIdentity(connectedPeer)`, the counterpart query to
-0.2.78's own `resolvePeerAuthority()`.** Where that method needs a
-CANDIDATE identityId already in mind ("does this connection represent
-Alice specifically?"), this one answers from scratch: "who IS this
-connection, socially?" — DIRECT (the connection's own proven key) or
-DEVICE (a currently-authorized device of some OTHER, independently
-verified parent identity), always returning a full, self-sufficient
-identity shape including a derived `publicKey` (recovered directly from
-the parent's own did:key via `identity/Ed25519.js#didKeyToPublicKey` — no
-second lookup needed) so a caller can construct a `core/FriendshipRecord.js`/
-`core/PeerBlockRecord.js` for the resolved parent without any further
-round trip. An ambiguous case — this device somehow holding active grants
-from more than one distinct parent for the identical device key, a
-pathological scenario no single honest parent ever produces — resolves
-DIRECT rather than guessing, a named, deliberately conservative edge
-case.
-
-**`application/SocialIdentityResolver.js` (new) is the DEFAULT resolver
-every social use case falls back to** when no real device-authorization
-wiring is injected: `resolveDirectSocialIdentity()` treats a connection's
-own key as its own social identity, DIRECT, full stop — byte-identical to
-every pre-0.2.79 behavior, so every existing test and every caller that
-never opts in keeps working completely unchanged.
-
-**`application/FriendRelationshipUseCase.js`, `application/ChatUseCase.js`,
-and `application/VoiceUseCase.js` each gain an optional `resolveSocialIdentity`
-collaborator**, consulted through a small per-class `_resolvePeerSocialIdentity()`
-helper. Real app wiring (`ui/main.js`) constructs one app-wide
-`DeviceAuthorizationPropagationUseCase` (via the new `application/
-CreateDeviceAuthorizationUseCase.js`, mirroring `CreateFriendRelationshipUseCase.js`'s
-own storage-wrapping shape) and binds `resolveConnectionIdentity` into all
-three — a forward-reference closure (`let deviceAuthorizationUseCase`,
-assigned after `friendRelationshipUseCase` so its own `knowsIdentity` gate
-can consult it) breaks what would otherwise be a construction-order cycle
-between the two.
-
-**Two disciplines keep the resolution correct, both discovered by this
-milestone's own flagship test failing until they were made explicit — see
-docs/Principles.md, "Resolution Happens Strictly After Authentication, And
-Only On the Wire's Receiving Half."** First, resolution happens strictly
-AFTER every existing authentication check, never folded into it. Second,
-and the one an early implementation pass got wrong: a signed WIRE claim
-addressed to a specific connection — `core/FriendshipAdvertisement.js`'s
-own `subjectIdentity`/`actorIdentity`, `core/ChatMessage.js`'s own
-`conversationId` derivation, `core/VoiceCallSignal.js`'s own
-`calleeIdentity`/`callerIdentity` — stays addressed to the RAW,
-literally-authenticated key on BOTH ends; only business-state KEYING
-(which `FriendshipRecord`, which `LiveConversation`, which call record)
-resolves. `application/VoiceUseCase.js`'s own call record grew a
-dedicated `remoteConnectionIdentityId` field for exactly this split — its
-resolved `peerIdentityId` drives eligibility, UI exposure
-(`getActiveCall()`/`onIncomingCall()`/`onCallStateChanged()`), and the SAME
-block/friend reconciliation `application/ChatUseCase.js` already uses,
-while `remoteConnectionIdentityId` is what every outgoing
-`core/VoiceCallSignal.js` wire field actually carries.
-
-**Device provenance survives with zero schema changes.** A
-`FriendshipRecord`'s stored `incomingAction`/`outgoingAction` still
-carries the RAW authenticating device's key as its own `actorIdentity`/
-`subjectIdentity`, even though the record itself is now keyed by the
-resolved parent — "who this relationship is with" and "which specific
-device performed this action" are two independently available facts
-without a second field. `application/ChatUseCase.js` gets the identical
-property for free: `message.senderIdentity` stays the literal, raw,
-authenticated device key on every stored entry, while the `LiveConversation`
-bucket it lives in is now keyed by the resolved parent —
-`application/LiveConversation.js`'s own pre-existing "`conversationId` is
-carried for display/debugging only" already made this safe: a bucket
-shared by two of Alice's devices simply keeps whichever raw pairing
-happened to create it first as its own top-level `conversationId`, while
-every individual message's OWN wire-level `conversationId` stays exactly
-what it always was.
-
-**A device is never taught to resolve ITSELF, only the remote party it is
-connected to.** See docs/Principles.md, "A Device Is Never Taught To
-Resolve Itself": this is what keeps "who authorized me?" — a genuinely
-much harder, still-unsolved question — entirely out of scope.
-`application/ChatUseCase.js`'s own `sendMessage()`/`_handleIncoming()`
-resolve the PEER side only; `myIdentityId` (this device's own signing
-identity) is never resolved, exactly preserving "a conversation still
-belongs to one local device holding one identity's key" on the SENDING
-side, unchanged since 0.2.69.
-
-The flagship test (`tests/MultiDeviceSocialSemantics.test.js`) proves the
-design's own scripted scenario end to end, over real in-process
-`peer/PeerAuthenticationSession.js` handshakes: Alice authorizes two
-devices and broadcasts both grants to Bob (reusing 0.2.78's own proven
-propagation path as setup, not re-testing it); her Phone connects to Bob
-on an independent connection and sends an ordinary friend request — Bob's
-resulting `FriendshipRecord` is keyed to ALICE'S OWN PARENT identity,
-never the Phone's raw key, and there is exactly one such record. Her
-Laptop then connects on a THIRD independent connection, having never sent
-a friend request of its own — and Bob's own eligibility check already
-recognizes it as speaking for an existing friend. Chat messages from the
-Phone, and messages Bob sends back over the Laptop's own connection, land
-in ONE shared conversation, each still carrying its own true device
-provenance. SECURITY FLAGSHIP: Alice revokes the Phone's device
-authorization; the Phone still authenticates completely normally (its key
-is untouched, exactly like 0.2.78's own SECURITY FLAGSHIP B), but a
-further message from it now resolves to its own bare, un-friended raw key
-on Bob's RECEIVING side and is REJECTED — while the Laptop, never
-revoked, remains fully authorized throughout.
-
-Deliberately not in 0.2.79, matching the scope this milestone was given:
-message/conversation synchronization BETWEEN Alice's own several devices
-(each still has its own independent, local view of every conversation),
-shared/propagated read state, multi-device voice ringing (calling "Alice"
-still means calling one, explicitly chosen connection, never fanning out
-to every device at once), a device management UI, a device revocation UI,
-and cross-device presence aggregation. `application/PeerRelationshipUseCase.js`
-("Known Peers") deliberately was NOT taught to resolve social identity —
-remembering a peer stays 0.2.56's own "deliberate act, never automatic,"
-and extending it would mean automatically remembering every device of an
-already-known identity, a real product decision this milestone declines
-to make silently. `application/PeerBlockUseCase.js` stays completely
-untouched as a store — blocking already flows through the SAME `isBlocked`
-predicate every use case above now checks against the RESOLVED identity,
-so blocking Alice's parent identity already blocks every one of her
-currently-resolved devices for free — but the UI gesture of blocking a
-specific live connection (`ui/views/PeerConnectionsView.js#blockIdentity()`)
-still passes whatever raw identity shape a card exposes today, unresolved.
-Also named directly: `application/FriendRelationshipUseCase.js#acceptFriendRequest()`
-has no verb for acknowledging a SECOND device of an already-FRIEND parent
-identity once the first device's ACCEPT is already recorded — a device
-that never independently completes its own request/accept cycle is
-correctly RECOGNIZED by receivers but cannot pass its own local
-`sendMessage()` eligibility check while independently initiating contact.
-See docs/Roadmap.md, 0.2.79, for the full list of what this establishes
-versus what it deliberately leaves for later.
 ### Terrain Surface & Natural Color (0.2.79)
 
 0.2.76/0.2.77 gave World View a ground that exists and can be walked on,
@@ -8709,6 +8552,161 @@ View — 0.2.81 deliberately stays inside the Editor's existing New/Load
 surface rather than adding a second fork entry point to World View's
 already-larger navigation/placement session.
 
+### Multi-Device Social State Semantics (0.2.82)
+
+Recorded here as 0.2.82, not the "0.2.79" its own source headers still
+carry — see docs/Roadmap.md, 0.2.82, "Numbering note," for why: it shipped
+under a number Terrain Surface & Natural Color, below, had already claimed
+on a parallel branch.
+
+0.2.78 proved `resolvePeerAuthority()` correct in isolation but consulted
+it nowhere. 0.2.82 takes up the first of that milestone's own proposed
+follow-ons: wire the device-authority model into social communication —
+friendship, chat, and voice — while still deliberately avoiding full
+multi-device synchronization. The central question, from the design doc
+that opened this milestone: when two devices represent the same parent
+identity, what does it mean for one of those devices to communicate with
+another identity?
+
+**The governing rule: device authorization changes peer authority, never
+social identity.** A friendship formed over ANY of Alice's authorized
+devices is the SAME friendship her OTHER devices already benefit from,
+never a second, per-device relationship; a conversation with Alice stays
+one conversation regardless of which of her devices actually sent each
+message; blocking or unfriending the PARENT identity reaches every one of
+her currently-resolved devices at once. See docs/Principles.md, "Device
+Authorization Changes Peer Authority, Never Social Identity."
+
+**`application/DeviceAuthorizationPropagationUseCase.js` gains
+`resolveConnectionIdentity(connectedPeer)`, the counterpart query to
+0.2.78's own `resolvePeerAuthority()`.** Where that method needs a
+CANDIDATE identityId already in mind ("does this connection represent
+Alice specifically?"), this one answers from scratch: "who IS this
+connection, socially?" — DIRECT (the connection's own proven key) or
+DEVICE (a currently-authorized device of some OTHER, independently
+verified parent identity), always returning a full, self-sufficient
+identity shape including a derived `publicKey` (recovered directly from
+the parent's own did:key via `identity/Ed25519.js#didKeyToPublicKey` — no
+second lookup needed) so a caller can construct a `core/FriendshipRecord.js`/
+`core/PeerBlockRecord.js` for the resolved parent without any further
+round trip. An ambiguous case — this device somehow holding active grants
+from more than one distinct parent for the identical device key, a
+pathological scenario no single honest parent ever produces — resolves
+DIRECT rather than guessing, a named, deliberately conservative edge
+case.
+
+**`application/SocialIdentityResolver.js` (new) is the DEFAULT resolver
+every social use case falls back to** when no real device-authorization
+wiring is injected: `resolveDirectSocialIdentity()` treats a connection's
+own key as its own social identity, DIRECT, full stop — byte-identical to
+every pre-0.2.79 behavior, so every existing test and every caller that
+never opts in keeps working completely unchanged.
+
+**`application/FriendRelationshipUseCase.js`, `application/ChatUseCase.js`,
+and `application/VoiceUseCase.js` each gain an optional `resolveSocialIdentity`
+collaborator**, consulted through a small per-class `_resolvePeerSocialIdentity()`
+helper. Real app wiring (`ui/main.js`) constructs one app-wide
+`DeviceAuthorizationPropagationUseCase` (via the new `application/
+CreateDeviceAuthorizationUseCase.js`, mirroring `CreateFriendRelationshipUseCase.js`'s
+own storage-wrapping shape) and binds `resolveConnectionIdentity` into all
+three — a forward-reference closure (`let deviceAuthorizationUseCase`,
+assigned after `friendRelationshipUseCase` so its own `knowsIdentity` gate
+can consult it) breaks what would otherwise be a construction-order cycle
+between the two.
+
+**Two disciplines keep the resolution correct, both discovered by this
+milestone's own flagship test failing until they were made explicit — see
+docs/Principles.md, "Resolution Happens Strictly After Authentication, And
+Only On the Wire's Receiving Half."** First, resolution happens strictly
+AFTER every existing authentication check, never folded into it. Second,
+and the one an early implementation pass got wrong: a signed WIRE claim
+addressed to a specific connection — `core/FriendshipAdvertisement.js`'s
+own `subjectIdentity`/`actorIdentity`, `core/ChatMessage.js`'s own
+`conversationId` derivation, `core/VoiceCallSignal.js`'s own
+`calleeIdentity`/`callerIdentity` — stays addressed to the RAW,
+literally-authenticated key on BOTH ends; only business-state KEYING
+(which `FriendshipRecord`, which `LiveConversation`, which call record)
+resolves. `application/VoiceUseCase.js`'s own call record grew a
+dedicated `remoteConnectionIdentityId` field for exactly this split — its
+resolved `peerIdentityId` drives eligibility, UI exposure
+(`getActiveCall()`/`onIncomingCall()`/`onCallStateChanged()`), and the SAME
+block/friend reconciliation `application/ChatUseCase.js` already uses,
+while `remoteConnectionIdentityId` is what every outgoing
+`core/VoiceCallSignal.js` wire field actually carries.
+
+**Device provenance survives with zero schema changes.** A
+`FriendshipRecord`'s stored `incomingAction`/`outgoingAction` still
+carries the RAW authenticating device's key as its own `actorIdentity`/
+`subjectIdentity`, even though the record itself is now keyed by the
+resolved parent — "who this relationship is with" and "which specific
+device performed this action" are two independently available facts
+without a second field. `application/ChatUseCase.js` gets the identical
+property for free: `message.senderIdentity` stays the literal, raw,
+authenticated device key on every stored entry, while the `LiveConversation`
+bucket it lives in is now keyed by the resolved parent —
+`application/LiveConversation.js`'s own pre-existing "`conversationId` is
+carried for display/debugging only" already made this safe: a bucket
+shared by two of Alice's devices simply keeps whichever raw pairing
+happened to create it first as its own top-level `conversationId`, while
+every individual message's OWN wire-level `conversationId` stays exactly
+what it always was.
+
+**A device is never taught to resolve ITSELF, only the remote party it is
+connected to.** See docs/Principles.md, "A Device Is Never Taught To
+Resolve Itself": this is what keeps "who authorized me?" — a genuinely
+much harder, still-unsolved question — entirely out of scope.
+`application/ChatUseCase.js`'s own `sendMessage()`/`_handleIncoming()`
+resolve the PEER side only; `myIdentityId` (this device's own signing
+identity) is never resolved, exactly preserving "a conversation still
+belongs to one local device holding one identity's key" on the SENDING
+side, unchanged since 0.2.69.
+
+The flagship test (`tests/MultiDeviceSocialSemantics.test.js`) proves the
+design's own scripted scenario end to end, over real in-process
+`peer/PeerAuthenticationSession.js` handshakes: Alice authorizes two
+devices and broadcasts both grants to Bob (reusing 0.2.78's own proven
+propagation path as setup, not re-testing it); her Phone connects to Bob
+on an independent connection and sends an ordinary friend request — Bob's
+resulting `FriendshipRecord` is keyed to ALICE'S OWN PARENT identity,
+never the Phone's raw key, and there is exactly one such record. Her
+Laptop then connects on a THIRD independent connection, having never sent
+a friend request of its own — and Bob's own eligibility check already
+recognizes it as speaking for an existing friend. Chat messages from the
+Phone, and messages Bob sends back over the Laptop's own connection, land
+in ONE shared conversation, each still carrying its own true device
+provenance. SECURITY FLAGSHIP: Alice revokes the Phone's device
+authorization; the Phone still authenticates completely normally (its key
+is untouched, exactly like 0.2.78's own SECURITY FLAGSHIP B), but a
+further message from it now resolves to its own bare, un-friended raw key
+on Bob's RECEIVING side and is REJECTED — while the Laptop, never
+revoked, remains fully authorized throughout.
+
+Deliberately not in 0.2.79, matching the scope this milestone was given:
+message/conversation synchronization BETWEEN Alice's own several devices
+(each still has its own independent, local view of every conversation),
+shared/propagated read state, multi-device voice ringing (calling "Alice"
+still means calling one, explicitly chosen connection, never fanning out
+to every device at once), a device management UI, a device revocation UI,
+and cross-device presence aggregation. `application/PeerRelationshipUseCase.js`
+("Known Peers") deliberately was NOT taught to resolve social identity —
+remembering a peer stays 0.2.56's own "deliberate act, never automatic,"
+and extending it would mean automatically remembering every device of an
+already-known identity, a real product decision this milestone declines
+to make silently. `application/PeerBlockUseCase.js` stays completely
+untouched as a store — blocking already flows through the SAME `isBlocked`
+predicate every use case above now checks against the RESOLVED identity,
+so blocking Alice's parent identity already blocks every one of her
+currently-resolved devices for free — but the UI gesture of blocking a
+specific live connection (`ui/views/PeerConnectionsView.js#blockIdentity()`)
+still passes whatever raw identity shape a card exposes today, unresolved.
+Also named directly: `application/FriendRelationshipUseCase.js#acceptFriendRequest()`
+has no verb for acknowledging a SECOND device of an already-FRIEND parent
+identity once the first device's ACCEPT is already recorded — a device
+that never independently completes its own request/accept cycle is
+correctly RECOGNIZED by receivers but cannot pass its own local
+`sendMessage()` eligibility check while independently initiating contact.
+See docs/Roadmap.md, 0.2.79, for the full list of what this establishes
+versus what it deliberately leaves for later.
 ### Multi-Device Conversation & Read-State Synchronization (0.2.83)
 
 0.2.78 established that a device is just another `LocalIdentity`,
@@ -9719,6 +9717,28 @@ World View's Commentary panels still post only locally.
   `WorldRenderer#_onBrickUpdated` apply the result.
 - **Save failures (0.9.653).** Both Save entry points catch errors and show `SAVE_FAILURE_MESSAGE`. The sidebar
   scrolls inside `.sidebar-scroll` (0.9.647).
+
+### Not yet covered by a section in this file
+
+The milestone sections above stop at 0.3.4, and this "Current Subsystems"
+part starts around 0.9.600. The work in between (0.4.x structure
+composition and blueprints, 0.5.x regions and place naming, 0.6.x
+attribution, 0.7.x publication protocol and content addressing, 0.8.x
+anchoring, evidence and achievements) has no architecture section yet.
+Until it does, these are the places to start:
+
+| Directory | What it holds | Where it is explained |
+|-----------|---------------|------------------------|
+| `anchoring/` | Anchor publishers, evidence views and proof verifiers for Bitcoin (PSBT build/sign/broadcast, confirmation and funding observers, Esplora adapters), Arweave and Base | `docs/Roadmap.md` 0.8.0 onward; `docs/Principles.md` from "External Anchoring Provides Evidence; It Does Not Establish Authority (0.8.0)" |
+| `base/` | Base (EVM) wallet connection, transaction planning, signing, broadcast and inclusion observation | `docs/Roadmap.md`, the Base milestones from "0.8.90 — Explicit Base Network & Account Observation" through 0.8.101 |
+| `content/` | `ContentStore` implementations: local, Arweave, IPFS (Kubo, gateway, remote pinning) and the gateway-failover wrappers | `docs/Roadmap.md` 0.7.0 onward; "Distribution" and "Network endpoint configuration" above |
+| `nostr/`, `arweave/` | Injected-wallet signers (NIP-07, Arweave) and the Nostr relay query client | "Distribution: independent choices, one dialog" above |
+| `server/rendezvous-worker/` | Reference rendezvous server (Cloudflare Worker) for `peer/WebSocketRendezvousTransport.js` | `server/rendezvous-worker/README.md` |
+| `core/library/`, `application/*Blueprint*` | Structure libraries, personal blueprints, blueprint packages | `docs/StructureLibrary.md` |
+| `utils/` | Small shared helpers (e.g. `sortOptionsByLabel.js`) | `docs/CodingConventions.md` |
+
+Wire formats for these areas are indexed in `docs/Protocol.md`, "Wire
+Formats Not Yet Described Here".
 
 ### Removed in the 2026-09-23 cleanup passes
 

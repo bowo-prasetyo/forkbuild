@@ -461,8 +461,9 @@ export class RenderWorldViewUseCase {
             // by application/WorldNavigationSession.js the moment a
             // trusted AvatarInteractionAdvertisement is accepted, and
             // again with `null` once the gesture's own short lifetime
-            // expires — see docs/Principles.md, "Interaction Is
-            // Rendered, Never Retained." A no-op if the avatarId has no
+            // expires — see docs/Principles.md, "Presence Describes An
+            // Avatar's Current State; Interaction Describes An Event That
+            // Happened (0.2.45)." A no-op if the avatarId has no
             // presence-driven visual yet — exactly
             // updateRemoteAvatarAppearance's own "appearance never
             // creates a remote avatar on its own" rule, applied to a

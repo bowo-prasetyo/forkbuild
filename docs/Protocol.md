@@ -22,21 +22,13 @@ copy/paste, group duplication, and renderer geometry are all unsettled).
 Introducing Brick.scale is a protocol change, not a gizmo feature, and
 will be designed as such when it happens.
 
-World
-
-Library
-
-Metadata
-
-Publication (new in 0.1.22)
-
-Discovery (new in 0.1.23)
+World, Library, Metadata, Publication (0.1.22), Discovery (0.1.23),
+Discovery Views (0.1.26) and World Layout (0.1.27) never got their own
+entries here. See docs/Architecture.md for World and DocumentMetadata,
+docs/BrickLibrary.md and docs/BrickIDs.md for libraries, and
+docs/Publishing.md for publications and discovery.
 
 Forking (0.1.24)
-
-Discovery Views (0.1.26)
-
-World Layout (0.1.27)
 
 A fork is created by deriving a new Document from an existing one.
 The new Document's metadata carries parentDocumentId pointing to the
@@ -44,9 +36,11 @@ source document's world.id. The forked world's buildings and bricks
 receive fresh instance IDs, making the fork an independent document.
 DiscoveryProvider.findByParentId() reconstructs the ancestry graph.
 
-Merge (future)
-
-Permissions (future)
+Merging forks is not supported. Permissions, once listed here as future
+work, exist: see "Delegated Authorization (0.2.17)" below and World edit
+grants (docs/Principles.md, "A World Edit Grant Is A Signed Capability
+About One World, Never A Role And Never A Second Kind Of Ownership
+(0.2.98)").
 
 Identity
 
@@ -441,7 +435,6 @@ Forking a publication cryptographically binds the derivative attribution
 to the new document's metadata, ensuring provenance is preserved across
 the decentralized ecosystem.
 
-<!-- === FILE: ./docs/Protocol.md === (append) -->
 
 ## Spatial Index (0.2.15)
 
@@ -492,7 +485,6 @@ disagree about the revision, the NEWER revision wins. The stale entry
 is an accelerator lag, not an integrity violation. Proving WHO was
 authorized to create a revision is 0.2.16 territory.
 
-<!-- === FILE: ./docs/Protocol.md === (append) -->
 
 ## Identity & Signatures (0.2.16)
 
@@ -2000,6 +1992,49 @@ unscheduled — see docs/Roadmap.md). No change to `core/protocolVersion.js` —
 ADDITIVE, optional new advertisement shape a replica that has never
 heard of it simply never receives (no existing message shape changed,
 no existing field renamed or repurposed).
+
+## Wire Formats Not Yet Described Here (index, 2026-09-23)
+
+The milestone sections above stop at 0.2.45. Later wire formats have no
+section of their own yet. Until they do, the source files below are the
+reference; `docs/Roadmap.md` has each one's milestone entry.
+
+**Peer protocols** (the ids multiplexed over one authenticated peer
+connection, 0.2.52):
+
+- Presence and avatars: `forkbuild:avatar-presence`, `forkbuild:avatar-profile`,
+  `forkbuild:avatar-interaction`, `forkbuild:avatar-inventory-transfer`
+  (see "Avatar Inventory Transfer" below).
+- Identity: `forkbuild:identity-lifecycle`, `forkbuild:device-authorization`.
+- Social: `forkbuild:friendship`, `forkbuild:chat`, `forkbuild:chat-delivery-ack`,
+  `forkbuild:chat-read`, `forkbuild:device-conversation-sync`,
+  `forkbuild:voice-call`, `forkbuild:voice-media`.
+- Worlds and documents: `forkbuild:world-sync`, `forkbuild:world-membership`,
+  `forkbuild:world-presence`, `forkbuild:world-spatial-presence`,
+  `forkbuild:world-discovery`, `forkbuild:document-sync`,
+  `forkbuild:document-operation-recovery`.
+- Publications and content: `forkbuild:publication`, `forkbuild:content`,
+  `forkbuild:anchor`, `forkbuild:snapshot-placement`, `forkbuild:snapshot-possession`,
+  `forkbuild:snapshot-content-transfer`, `forkbuild:world-encounter-material`,
+  `forkbuild:commentary-distribution` (see "Publication Commentary
+  Distribution" below).
+
+Each id is defined as a constant in the application/ or presence/ file
+that sends it (search the source for the quoted id).
+
+**Nostr and Arweave discovery tags.** Announcements carry a `t` tag (Nostr)
+or a matching transaction tag (Arweave) naming their family:
+`forkbuild-publication` (signed decentralized Publications),
+`forkbuild-snapshot` (Snapshot placements) and `forkbuild-commentary`
+(below). Place-naming claims use a per-region tag from
+`core/PlaceNamingDiscoveryEnvelope.js#derivePlaceNamingDiscoveryTag()`.
+Envelope protocol names are set in `core/SnapshotDiscoveryEnvelope.js`
+(`forkbuild-snapshot-discovery`) and `core/PlaceNamingDiscoveryEnvelope.js`
+(`forkbuild-place-naming-discovery`). The families are separate on purpose,
+and a reader only ever queries its own. See `ui/main.js` (`PUBLICATION_DISCOVERY_TAG` and the
+snapshot runtime options) and the `*DiscoveryPublisher`/`*QueryService`
+classes in application/. (`forkbuild-publications` and `forkbuild-index`
+are local storage keys, not wire tags.)
 
 ## Brick Color (added 2026-09-22)
 

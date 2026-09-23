@@ -1511,9 +1511,8 @@ export class WorldNavigationSession {
             // AvatarPresenceSession actually accepted a new update
             // (the same event this subscription is already reacting
             // to) — an idle local avatar never reaches this line at
-            // all, so it publishes nothing. See
-            // docs/Principles.md, "No Movement, No Sequence
-            // Advancement, No Network Traffic."
+            // all, so it publishes nothing: no movement, no sequence
+            // advancement, no network traffic.
             //
             // 0.2.38 — signed whenever this session's identityProvider
             // is actually able to (see application/PresenceSigning.js);
@@ -2143,7 +2142,8 @@ export class WorldNavigationSession {
     // expiry: once a received gesture's short lifetime elapses, clears
     // it back to no-gesture, with no explicit "stop" message from the
     // sender ever required or expected — see docs/Principles.md,
-    // "Interaction Is Rendered, Never Retained." Reuses the SAME
+    // "Presence Describes An Avatar's Current State; Interaction Describes
+    // An Event That Happened (0.2.45)." Reuses the SAME
     // GESTURE_DURATION_MS a local gesture plays for, so a sender's own
     // avatar and everyone watching it see the gesture for the same
     // visual duration.
@@ -3330,8 +3330,8 @@ export class WorldNavigationSession {
         this._applyAvatarFacing(now);
     }
 
-    // 0.2.44 — see docs/Principles.md, "Facing A Target Is
-    // Presentation, Never Presence": computes (or clears) a temporary
+    // 0.2.44 — see docs/Principles.md, "A Gesture Is Presentation,
+    // Never Presence": computes (or clears) a temporary
     // yaw override that makes the local avatar face its current
     // interaction target, but ONLY while the player isn't actively
     // steering — an actively-moving player's own input always wins,

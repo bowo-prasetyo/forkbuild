@@ -11,23 +11,29 @@ ForkBuild's publishing layer is built on three principles:
 2. **Publication is the bridge.**
    The result of `publish()` is a `Publication` — pure data carrying
    `id`, `documentId`, `title`, `author`, `providerId`, `publishedAt`,
-   `url`, and `parentDocumentId`. Repository View, Author View, and
+   `url` and `parentDocumentId`, plus (since 0.2.x) `snapshotId`,
+   `contentHash`, `schemaVersion`, `license`, `contentReference`,
+   `publisherIdentity` and `signature` (see `publisher/Publication.js`).
+   Repository View, Author View, and
    World View all consume Publications without knowing how they were
    created.
 
 3. **No blockchain terminology leaks upward.**
    A Steem implementation might internally produce `author`, `permlink`,
    `transaction`, and `block`. ForkBuild doesn't care. The publisher
-   contract is simply:
+   contract is simply (`publisher/PublisherProvider.js`):
+
+       publish(document, identityProvider)  -> Publication
+       unpublish(publicationId)             -> boolean (did it exist?)
 
 ## Current Implementation (0.1.22–0.1.33)
 
 `LocalPublisherProvider` exercises the interface without a blockchain.
 It persists `Publication` records via an injected `StorageProvider`,
-so the flow is real and testable even in V0.1.
+so the flow is real and testable without any network.
 
 As of 0.1.23, `Publication` carries `parentDocumentId` (from
-`DocumentMetadata`), reserved for the upcoming Forking milestone. The
+`DocumentMetadata`), which Forking (0.1.24) sets. The
 publisher passes it through automatically; it does not interpret it.
 
 As of 0.1.26, the completed publication lifecycle connects to three
@@ -53,9 +59,11 @@ Publishing and Discovery are deliberately separate adapter families:
 
 `LocalDiscoveryProvider` reads the same storage key that
 `LocalPublisherProvider` writes to, returning `Publication` objects.
-A future `SteemDiscoveryProvider` would query Steem posts and convert
-them into `Publication` objects — without `SteemPublisherProvider`
-knowing it exists.
+A remote discovery provider queries its own network and converts what it
+finds into `Publication` objects without the matching publisher knowing it
+exists. The Steem pair planned here was never built;
+`discovery/DecentralizedPublicationDiscoveryProvider.js` (Nostr/Arweave) is
+the real example.
 
 This separation means the UI (Repository View, Author View, World View)
 consumes `Publication` objects through `DiscoveryProvider` without
@@ -78,8 +86,8 @@ The local simulation is now complete:
    published as a new `Publication` with its own `publication.id`.
 
 This exercises the full social/creation lifecycle without blockchain.
-When a `SteemPublisherProvider` arrives, it replaces only the concrete
-publisher adapter; the use cases, discovery, and UI remain unchanged.
+A new publisher backend replaces only the concrete publisher adapter; the
+use cases, discovery, and UI remain unchanged.
 
 ## Forking (0.1.24)
 
@@ -92,19 +100,20 @@ and opens the result as a new editable document. The publisher passes
 ## Spatial Integration (0.1.27–0.1.33)
 
 Published documents are positioned in a shared spatial coordinate system
-via `WorldLayoutProvider`. `LocalWorldLayoutProvider` arranges publications
-on a deterministic grid; future providers could use geographic coordinates,
-procedural islands, or curated exhibitions. World View streams documents
-in and out based on camera position, and users can inspect and edit bricks
-directly in this spatial context — all without the publisher interface
-changing.
+via `WorldLayoutProvider`. `LocalWorldLayoutProvider` reads each
+publication's explicit placement from the spatial index (0.2.5, 0.2.23) and
+falls back to a deterministic, id-keyed grid for publications that have none
+(0.2.24). World View streams documents in and out based on camera position
+and lets users inspect them in this spatial context — all without the
+publisher interface changing. Since 0.5.9 World View does not edit bricks;
+see "Forking from World View" below and `docs/CapabilityMatrix.md`.
 
 ## World View Publishing (0.1.39)
 
-Publish is now reachable from World View — the place where worlds are
-actually edited. WorldNavigationSession.publishDocument() resolves the
-active document (selection → focus → sole loaded), auto-saves it when
-dirty, then delegates to PublishDocumentUseCase — the exact same use case
+Publish is reachable from World View as well as the Editor.
+WorldNavigationSession.publishDocument() publishes the given document, or
+the session's active document (0.2.27), refuses one that is itself a
+published snapshot, auto-saves it when dirty, then delegates to PublishDocumentUseCase — the exact same use case
 the Editor's Publish button uses. The rule: a Publication always
 references the canonical current Document, never a stale saved version,
 and never transient spatial/editor state. Republishing an edited world
@@ -112,12 +121,15 @@ appends a new Publication record pointing at the same documentId —
 document identity stays stable, publication identity is fresh per
 publish.
 
-## Forking from World View (0.1.42)
+## Forking from World View (0.1.42, changed in 0.5.9)
 
-Fork is no longer Editor-only. WorldNavigationSession.forkDocument()
-forks the live loaded document through the same DocumentCloneService
-the storage-based ForkDocumentUseCase now delegates to: new document
-identity, fresh brick identities, "Fork of <title>", the current user
+0.1.42 added WorldNavigationSession.forkDocument(), which forks the live
+loaded document in place. Since 0.5.9 World View no longer edits, and its
+UI does not call forkDocument(). Its "Edit a Copy" action navigates to
+`/editor?fork=` instead, and the Editor forks the document there (see
+`docs/CapabilityMatrix.md`, "Edit a Copy"). Both paths use the same
+DocumentCloneService the storage-based ForkDocumentUseCase delegates to:
+new document identity, fresh brick identities, "Fork of <title>", the current user
 as author, lineage via parentDocumentId — adopted as a fresh dirty
 session (rooted history, invalidated save point) that the user edits,
 saves, and eventually publishes as a NEW publication referencing the
@@ -183,13 +195,10 @@ restart.
 Commentary section opens. See `docs/Protocol.md`, "Publication Commentary
 Distribution".
 
-The Steem publisher below never happened. Nostr and Arweave filled that role
-through the discovery and distribution adapters instead, with the `publisher/`
-contract unchanged.
-
-## Future Directions
-
-- **SteemPublisherProvider**: posts document JSON as a Steem custom_json
-  operation, using `identityProvider.sign()` via Steem Keychain.
-- **Multiplayer Publishing**: real-time collaborative editing with
-  operational transform or CRDT-based synchronization.
+A Steem publisher was planned early on (see the Steem examples above) but
+never built. Nostr and Arweave filled that role through the discovery and
+distribution adapters instead, with the `publisher/` contract unchanged.
+Real-time collaborative editing also exists now, but as command propagation
+with deterministic ordering (0.2.96/0.2.97), not as a publishing feature and
+never via OT or CRDTs; see `docs/Principles.md`, "Ordering Is A Deterministic
+Total Order, Never Wall-Clock Time (0.2.97)".

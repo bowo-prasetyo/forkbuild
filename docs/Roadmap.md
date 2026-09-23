@@ -17292,9 +17292,9 @@ LocalPublicationAnchorCatalog ───────────────► L
 > Bob verify an anchor VALID, restart, and finds it NOT_VERIFIED again in
 > the new process's own empty session state. This is the identical
 > restraint 0.8.12 first drew for a single session extended across a
-> process boundary — see docs/Principles.md, "Observations Describe What
-> A Replica Established At A Particular Time; They Do Not Become
-> Properties Of The Anchor (0.8.12)," and this milestone's own two new
+> process boundary — see docs/Principles.md, "A Verification Result
+> Describes What Can Be Established Now; It Does Not Rewrite The
+> Historical Claim Being Verified (0.8.12)," and this milestone's own two new
 > entries, "A Persistent Store Is An Untrusted Byte Source, Not A Second
 > Trust Root (0.8.15)" and "Restoration Re-Earns Trust In The Claim; It
 > Never Re-Asks The External System (0.8.15)."
@@ -28533,8 +28533,9 @@ Deliberately excluded, exactly as this milestone's own proposal named up front:
   composes.
 - **Reorganization detection, aggregate confidence over repeated
   observations, or any new domain vocabulary.** This milestone persists
-  facts; it does not reinterpret them — see docs/Principles.md, "No
-  Reorganization Detection" (0.8.56) and "The UI Displays Observations; It
+  facts; it does not reinterpret them — see docs/Principles.md, "An
+  Observation Describes The Network At The Time It Was Made, Not The
+  Current State Of The Transaction" (0.8.56) and "The UI Displays Observations; It
   Does Not Turn Them Into A Verdict" (0.8.57), both held here unchanged.
 - **Explicit Bitcoin ↔ IPFS content-hash reconciliation.** Still pushed
   forward — see "0.8.76 — Bitcoin Anchor Chain Placement Change

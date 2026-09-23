@@ -2,7 +2,7 @@ ES Modules only
 
 No jQuery
 
-Vue 3 Composition API
+Vue 3, components as plain objects with a template string (no build step). Views mostly use setup() (the Composition API); many older components use the Options API (data/methods). Prefer setup() in new code.
 
 One class (or module) per file
 
@@ -10,7 +10,7 @@ camelCase for variables
 
 PascalCase for classes
 
-Four-space indentation (or two—just choose one)
+Four-space indentation, no tabs
 
 No global variables except the Vue application bootstrap
 

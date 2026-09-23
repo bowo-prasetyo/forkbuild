@@ -38,8 +38,8 @@ import { describeLifecycleState, describeTrustStatus, describeAnimationState } f
 // core/AvatarInteractionKind.js value. This panel has no opinion about
 // cooldowns or whether the click actually took effect — it just asks;
 // WorldNavigationSession.performAvatarInteraction() is the one place
-// that decides yes/no (see docs/Principles.md, "An Interaction
-// Request Is Not Authority Over Another Avatar"). No "Inspect
+// that decides yes/no (see docs/Principles.md, "Observation
+// Does Not Imply Authority, And Interaction Does Not Imply Control"). No "Inspect
 // Profile" button: this panel being open already IS the inspection —
 // see docs/Principles.md, "Looking At Something Is Never The Same As
 // Acting On It" — reusing that existing surface rather than adding a

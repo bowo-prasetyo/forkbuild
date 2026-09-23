@@ -11,7 +11,7 @@
 // WAVE/POINT must never reach AvatarPresence.animation, or they would
 // silently start being networked the moment this shipped — which is
 // explicitly NOT this milestone's scope (see docs/Roadmap.md,
-// "0.2.45 — Networked Ephemeral Avatar Interactions"). Keeping this a
+// "0.2.45 — Ephemeral Avatar Interaction Synchronization"). Keeping this a
 // second, independent closed vocabulary is what makes "a gesture
 // cannot accidentally reach the transport" true by construction
 // rather than by convention — there is no code path that reads an

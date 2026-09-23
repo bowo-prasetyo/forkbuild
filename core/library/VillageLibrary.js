@@ -35,8 +35,8 @@ import { Position } from '../Position.js';
 // from the ground up (brick.position.y is a brick's CENTER, matching
 // every other Brick in the engine — see core/Brick.js). None of this
 // knows or cares where a fork of it eventually gets edited or placed;
-// see docs/Principles.md, "A Structure Is Reusable Content; Where It's
-// Placed Is A Separate Question."
+// see docs/Principles.md, "A Structure Is The Next Rung On The Brick
+// Ladder, Not An Escape From It (0.2.81)."
 //
 // Vertical stacking convention (unchanged since 0.2.81): each layer's
 // brick CENTER sits at (previous layer's top) + (this brick's own

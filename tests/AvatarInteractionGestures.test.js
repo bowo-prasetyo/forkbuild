@@ -30,8 +30,8 @@ import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUs
 // gesture is entirely LOCAL — it never touches AvatarPresence, never
 // reaches core/AvatarPresenceAdvertisement.js's wire shape, and is
 // never rendered on anyone but the LOCAL avatar. See
-// docs/Principles.md, "An Interaction Request Is Not Authority Over
-// Another Avatar."
+// docs/Principles.md, "Observation Does Not Imply Authority, And
+// Interaction Does Not Imply Control (0.2.44)."
 
 class InMemoryStorageProvider extends StorageProvider {
     constructor() { super(); this._data = new Map(); }

@@ -78,8 +78,8 @@ export class AvatarTemplate {
     // back to this template's own default. Never throws, unlike
     // core/AvatarAppearanceValidator.js's validateAvatarAppearance
     // (which is the strict, reject-on-write check). This is the
-    // lenient, never-fail READ path — see docs/Principles.md, "An
-    // Invalid Avatar Profile Must Never Block World View Access."
+    // lenient, never-fail READ path — see docs/Principles.md, "Validate
+    // Strictly On Write; Degrade Gracefully On Read (0.2.34)."
     resolveEffectiveAppearance(appearance) {
         const resolved = { ...this._defaultAppearance };
         if (!appearance || typeof appearance !== 'object' || Array.isArray(appearance)) {

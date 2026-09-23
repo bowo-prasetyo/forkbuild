@@ -40,4 +40,7 @@ village:market
 village:mill
 village:bridge
 
+0.4.4 (Village Library Expansion) grew that library to twenty structures;
+docs/StructureLibrary.md lists them all.
+
 See docs/StructureLibrary.md.
