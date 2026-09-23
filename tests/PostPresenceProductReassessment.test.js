@@ -502,7 +502,7 @@ async function runTests() {
         // (a use case that publishes an event, then performs MORE
         // authoritative work in the same synchronous call chain) recurs
         // in application/IdentityUseCase.js: authenticate()/endSession()/
-        // protectIdentity() each call _publishChange() (which itself
+        // changePassphrase() each call _publishChange() (which itself
         // fires TWO events in sequence) and THEN _publishLockChange().
         const identityUseCaseSource = codeOnlyLines(await rawSource('application/IdentityUseCase.js')).join('\n');
         assert(/this\._publishChange\(\);\s*this\._publishLockChange\(identityId\);/.test(identityUseCaseSource), 'C2a. authenticate() still calls _publishChange() then _publishLockChange() in sequence');

@@ -336,8 +336,7 @@ export class DeviceAuthorizationPropagationUseCase {
     // Returns an unsubscribe function. Fires with every accepted
     // (identityId, deviceIdentityId) fact this owner currently holds on
     // every accepted incoming grant/revocation, mirroring application/
-    // IdentityLifecyclePropagationUseCase.js#onRemoteLifecycleChanged's
-    // own shape exactly.
+    // FriendRelationshipUseCase.js#onRelationshipsChanged's own shape.
     onDeviceAuthorityChanged(callback) {
         const subscription = this._eventBus.subscribe(
             AUTHORITY_CHANGED_EVENT,

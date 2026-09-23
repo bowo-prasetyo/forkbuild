@@ -10,22 +10,19 @@ const VAULT_LOCK_EVENT = 'VaultLockChanged';
 // that EditorSession, ForkDocumentUseCase, and CreatePublisherUseCase
 // can receive the same shared instance that the UI logs in and out of.
 //
-// 0.2.46 adds the identity/session surface alongside the unchanged
-// 0.1.21 login()/logout()/currentUser() methods: createIdentity() and
+// 0.2.46 adds the identity/session surface: createIdentity() and
 // listIdentities() answer "which identities does this device hold?",
 // authenticate()/endSession()/currentSession() answer "is one of them
-// in use right now?" Both surfaces publish through the SAME two event
-// types other UI already relies on staying in sync — every path that
-// changes who's logged in (legacy login/logout, or the new
-// authenticate/endSession) fires both IdentityChanged and
-// AuthenticationSessionChanged, so a component can subscribe to
-// whichever question it actually cares about.
+// in use right now?" Every path that changes who's logged in fires
+// both IdentityChanged and AuthenticationSessionChanged, so a
+// component can subscribe to whichever question it actually cares
+// about.
 //
 // 0.2.47 adds a THIRD, independent event — VaultLockChanged — for the
 // fourth concept identity/VaultLock.js introduces: whether a protected
 // identity's key is currently decrypted in memory. This deliberately
 // does NOT ride along on IdentityChanged/AuthenticationSessionChanged
-// the way login/logout do: a vault can lock (idle timeout, an explicit
+// the way session changes do: a vault can lock (idle timeout, an explicit
 // lock() call) or unlock without who's-authenticated changing at all,
 // and a UI that only listened for the other two events would miss it.
 export class IdentityUseCase {
@@ -36,17 +33,6 @@ export class IdentityUseCase {
 
     get provider() {
         return this._identityProvider;
-    }
-
-    login(username, passphrase = null) {
-        const identity = this._identityProvider.login(username, passphrase);
-        this._publishChange();
-        return identity;
-    }
-
-    logout() {
-        this._identityProvider.logout();
-        this._publishChange();
     }
 
     currentUser() {
@@ -106,13 +92,6 @@ export class IdentityUseCase {
     }
 
     // --- 0.2.47: key protection ------------------------------------------
-    protectIdentity(identityId, passphrase) {
-        const identity = this._identityProvider.protectIdentity(identityId, passphrase);
-        this._publishChange();
-        this._publishLockChange(identityId);
-        return identity;
-    }
-
     unlock(identityId, passphrase) {
         const lock = this._identityProvider.unlock(identityId, passphrase);
         this._publishLockChange(identityId);
@@ -123,10 +102,6 @@ export class IdentityUseCase {
         const lock = this._identityProvider.lock(identityId);
         this._publishLockChange(identityId);
         return lock;
-    }
-
-    vaultLock(identityId) {
-        return this._identityProvider.vaultLock(identityId);
     }
 
     isUnlocked(identityId) {
@@ -156,30 +131,26 @@ export class IdentityUseCase {
     // Thin delegation, exactly like every other method in this file —
     // identity/LocalIdentityProvider.js's exportLocalIdentity()/
     // importLocalIdentity() already do the real work (see its own
-    // comment). importIdentity() only fires a change notification when
-    // something actually CHANGED (`status === 'IMPORTED'`): an
-    // ALREADY_EXISTS result is a pure no-op by design, and neither
-    // outcome ever touches currentUser()/currentSession() — importing an
-    // identity never authenticates it.
+    // comment). Neither publishes anything: importing an identity never
+    // authenticates it, so currentUser()/currentSession() are unchanged,
+    // and a caller showing the identities list re-reads it itself.
     exportIdentity(identityId, passphrase) {
         return this._identityProvider.exportLocalIdentity(identityId, passphrase);
     }
 
     importIdentity(pkg, passphrase, label = null) {
-        const result = this._identityProvider.importLocalIdentity(pkg, passphrase, { label });
-        return result;
+        return this._identityProvider.importLocalIdentity(pkg, passphrase, { label });
     }
 
     // --- 0.2.67: identity lifecycle hardening ----------------------------
     //
     // Thin delegation, exactly like every other method in this file —
     // identity/LocalIdentityProvider.js does the real work (see its own
-    // 0.2.67 comment block). Each of these three fires BOTH
-    // IdentityChanged (the identities list — lifecycleState/
-    // successorIdentityId are part of what a UI renders per identity)
-    // AND VaultLockChanged (all three force the vault closed afterward,
-    // exactly like protectIdentity() already does), so a UI subscribed
-    // to either already sees the result with no new event type to learn.
+    // 0.2.67 comment block). All three fire IdentityChanged (the
+    // identities list — lifecycleState/successorIdentityId are part of
+    // what a UI renders per identity). changePassphrase() and
+    // revokeIdentity() also fire VaultLockChanged, because both force
+    // the vault closed afterward.
     changePassphrase(identityId, oldPassphrase, newPassphrase) {
         const identity = this._identityProvider.changePassphrase(identityId, oldPassphrase, newPassphrase);
         this._publishChange();
@@ -198,14 +169,6 @@ export class IdentityUseCase {
         this._publishChange();
         this._publishLockChange(identityId);
         return record;
-    }
-
-    isRevoked(identityId) {
-        return this._identityProvider.isRevoked(identityId);
-    }
-
-    getRevocationRecord(identityId) {
-        return this._identityProvider.getRevocationRecord(identityId);
     }
 
     getSuccessionRecord(identityId) {

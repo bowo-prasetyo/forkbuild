@@ -31,10 +31,10 @@ import { EventBus } from '../core/events/EventBus.js';
 //               that publishes, in what sequence, and the one EventBus
 //               fact (no per-listener isolation) that makes the sequence
 //               matter at all.
-//   Section B — Behavioral reproduction, extended to ALL FIVE publish
+//   Section B — Behavioral reproduction, extended to ALL FOUR publish
 //               chains that share the 0.9.219 Section C2 precondition
-//               (authenticate/endSession/protectIdentity/
-//               changePassphrase/revokeIdentity), not only authenticate.
+//               (authenticate/endSession/changePassphrase/
+//               revokeIdentity), not only authenticate.
 //               Also establishes a fact 0.9.219 never checked: the
 //               authoritative provider-level state change is already
 //               committed to storage by the time a derived listener
@@ -90,11 +90,11 @@ async function runTests() {
     {
         const source = codeOnlyLines(await rawSource('application/IdentityUseCase.js')).join('\n');
 
-        // A1 — the five methods that share 0.9.219 Section C2's exact
+        // A1 — the four methods that share 0.9.219 Section C2's exact
         // precondition: _publishChange() (itself two sequential
         // publishes) followed by MORE authoritative-adjacent work
         // (_publishLockChange) in the same synchronous call.
-        for (const method of ['authenticate', 'endSession', 'protectIdentity', 'changePassphrase', 'revokeIdentity']) {
+        for (const method of ['authenticate', 'endSession', 'changePassphrase', 'revokeIdentity']) {
             const methodIndex = source.indexOf(`    ${method}(`);
             assert(methodIndex >= 0, `A1. IdentityUseCase still declares ${method}(...)`);
             const methodBody = source.slice(methodIndex, source.indexOf('\n    }', methodIndex));
@@ -105,13 +105,13 @@ async function runTests() {
             assert(changeIdx >= 0 && lockIdx > changeIdx, `A1. ${method}() still calls _publishChange() BEFORE _publishLockChange(), not after`);
         }
 
-        // A2 — methods that publish only ONE thing: login/logout/
-        // declareSuccessor call only _publishChange(); unlock/lock/
+        // A2 — methods that publish only ONE thing: declareSuccessor
+        // calls only _publishChange(); unlock/lock/
         // checkVaultTimeouts call only _publishLockChange(). Neither
         // shape carries C2's "publish, then separately-named more work"
         // precondition, so they are out of this audit's scope by
         // construction, not by oversight.
-        for (const method of ['login', 'logout', 'declareSuccessor']) {
+        for (const method of ['declareSuccessor']) {
             const methodIndex = source.indexOf(`    ${method}(`);
             const methodBody = source.slice(methodIndex, source.indexOf('\n    }', methodIndex));
             assert(/_publishChange\(\)/.test(methodBody) && !/_publishLockChange\(/.test(methodBody), `A2. ${method}() still publishes only _publishChange(), no lock event in the same call`);
@@ -143,11 +143,11 @@ async function runTests() {
         // real one the production code runs on.
         assert(/this\._eventBus = new EventBus\(\);/.test(source), 'A5. IdentityUseCase still constructs a plain core/events/EventBus.js instance, not a specialized/isolated bus');
 
-        console.log('✓ Section A: Event boundary mapped — five methods (authenticate/endSession/protectIdentity/changePassphrase/revokeIdentity) share the publish-then-more-work precondition (A1); three publish only one thing and are out of scope by construction (A2); export/import publish nothing (A3); EventBus.publish() has no per-listener isolation (A4), and IdentityUseCase runs on that exact bus (A5).');
+        console.log('✓ Section A: Event boundary mapped — four methods (authenticate/endSession/changePassphrase/revokeIdentity) share the publish-then-more-work precondition (A1); declareSuccessor/unlock/lock publish only one thing and are out of scope by construction (A2); export/import publish nothing (A3); EventBus.publish() has no per-listener isolation (A4), and IdentityUseCase runs on that exact bus (A5).');
     }
 
     // ---------------------------------------------------------------
-    // Section B — Behavioral reproduction across all five publish
+    // Section B — Behavioral reproduction across all four publish
     // chains, plus the "already committed" characterization 0.9.219
     // never checked.
     // ---------------------------------------------------------------
@@ -182,45 +182,33 @@ async function runTests() {
             assert(!provider.isAuthenticated(), 'B2c. BUT the session was already ended at the provider level before the listener ran — the exception does not un-end it');
         }
 
-        // B3 — protectIdentity(): the identity is already protected
-        // (and already forced locked) at the provider level despite the
-        // caller seeing an exception.
-        {
-            const { provider, identity, identityUseCase } = makeUseCase();
-            identityUseCase.onUserChanged(throwingListener('B3 injected failure'));
-            let threw = false;
-            try { identityUseCase.protectIdentity(identity.identityId, 'a-passphrase'); } catch { threw = true; }
-            assert(threw, 'B3a. protectIdentity() still lets a throwing onUserChanged() listener unwind to its own caller');
-            assert(provider.getLocalIdentity(identity.identityId).isProtected, 'B3b. BUT the identity is already protected at the provider level before the listener ran');
-        }
-
-        // B4 — changePassphrase(): the new passphrase is already active
+        // B3 — changePassphrase(): the new passphrase is already active
         // at the provider level despite the caller seeing an exception.
         {
             const { provider, identity, identityUseCase } = makeUseCase();
             provider.protectIdentity(identity.identityId, 'old-passphrase');
-            identityUseCase.onUserChanged(throwingListener('B4 injected failure'));
+            identityUseCase.onUserChanged(throwingListener('B3 injected failure'));
             let threw = false;
             try { identityUseCase.changePassphrase(identity.identityId, 'old-passphrase', 'new-passphrase'); } catch { threw = true; }
-            assert(threw, 'B4a. changePassphrase() still lets a throwing onUserChanged() listener unwind to its own caller');
+            assert(threw, 'B3a. changePassphrase() still lets a throwing onUserChanged() listener unwind to its own caller');
             let rejectedOld = false;
             try { provider.unlock(identity.identityId, 'old-passphrase'); } catch { rejectedOld = true; }
-            assert(rejectedOld, 'B4b. BUT the OLD passphrase is already rejected at the provider level before the listener ran — the change already took effect');
-            assert(provider.unlock(identity.identityId, 'new-passphrase'), 'B4c. ...and the NEW passphrase already works');
+            assert(rejectedOld, 'B3b. BUT the OLD passphrase is already rejected at the provider level before the listener ran — the change already took effect');
+            assert(provider.unlock(identity.identityId, 'new-passphrase'), 'B3c. ...and the NEW passphrase already works');
         }
 
-        // B5 — revokeIdentity(): the revocation record already exists at
+        // B4 — revokeIdentity(): the revocation record already exists at
         // the provider level despite the caller seeing an exception.
         {
             const { provider, identity, identityUseCase } = makeUseCase();
-            identityUseCase.onUserChanged(throwingListener('B5 injected failure'));
+            identityUseCase.onUserChanged(throwingListener('B4 injected failure'));
             let threw = false;
             try { identityUseCase.revokeIdentity(identity.identityId); } catch { threw = true; }
-            assert(threw, 'B5a. revokeIdentity() still lets a throwing onUserChanged() listener unwind to its own caller');
-            assert(provider.isRevoked(identity.identityId), 'B5b. BUT the identity is already revoked at the provider level before the listener ran');
+            assert(threw, 'B4a. revokeIdentity() still lets a throwing onUserChanged() listener unwind to its own caller');
+            assert(provider.isRevoked(identity.identityId), 'B4b. BUT the identity is already revoked at the provider level before the listener ran');
         }
 
-        console.log('✓ Section B: Behavioral reproduction — all five publish-then-more-work methods (authenticate/endSession/protectIdentity/changePassphrase/revokeIdentity) reproduce the identical failure-skips-a-later-broadcast shape 0.9.219 proved only for authenticate() (B1-B5, "a" facts). A fact 0.9.219 never established: in every case, the authoritative provider-level state change is already durably committed BEFORE the derived listener runs — a throwing listener is a notification-side failure, never a rollback of the identity operation itself ("b"/"c" facts).');
+        console.log('✓ Section B: Behavioral reproduction — all four publish-then-more-work methods (authenticate/endSession/changePassphrase/revokeIdentity) reproduce the identical failure-skips-a-later-broadcast shape 0.9.219 proved only for authenticate() (B1-B4, "a" facts). A fact 0.9.219 never established: in every case, the authoritative provider-level state change is already durably committed BEFORE the derived listener runs — a throwing listener is a notification-side failure, never a rollback of the identity operation itself ("b"/"c" facts).');
     }
 
     // ---------------------------------------------------------------
@@ -426,7 +414,7 @@ async function runTests() {
     // Section F — Verdict.
     // ---------------------------------------------------------------
     {
-        console.log('✓ Section F: Verdict — DEFERRED, reconfirmed with a materially larger evidence base than 0.9.219 Section C alone: all five publish chains (not one) behaviorally proven (Section B), all six real listener call sites (not two) classified with source evidence (Section C), the 0.9.218 precedent compared explicitly so its fix is never misread as a general rule (Section D), and a failure-isolation matrix covering same-event listener ordering, a failed-authentication case, and post-failure recovery that 0.9.219 never exercised (Section E). New fact this audit establishes that 0.9.219 did not: every affected method already durably commits its authoritative state change BEFORE the derived listener runs, so a throwing listener is a notification-side failure only, never a rollback (Section B). Zero production changes were made. This does NOT become a blanket "swallow all IdentityUseCase listener errors" rule — Section D names the actual trigger precisely: if a FUTURE listener on these three events performs fallible, externally-visible derived work the way World Presence\'s did (a network call, a write into a different use case\'s mutation surface), THAT listener\'s call site is the one to wrap in a local try/catch, mirroring WorldView.js\'s own 0.9.218 fix exactly — not a change to EventBus.js, not a change to every listener uniformly, and not a decision this milestone makes on a future author\'s behalf.');
+        console.log('✓ Section F: Verdict — DEFERRED, reconfirmed with a materially larger evidence base than 0.9.219 Section C alone: all four publish chains (not one) behaviorally proven (Section B), all six real listener call sites (not two) classified with source evidence (Section C), the 0.9.218 precedent compared explicitly so its fix is never misread as a general rule (Section D), and a failure-isolation matrix covering same-event listener ordering, a failed-authentication case, and post-failure recovery that 0.9.219 never exercised (Section E). New fact this audit establishes that 0.9.219 did not: every affected method already durably commits its authoritative state change BEFORE the derived listener runs, so a throwing listener is a notification-side failure only, never a rollback (Section B). Zero production changes were made. This does NOT become a blanket "swallow all IdentityUseCase listener errors" rule — Section D names the actual trigger precisely: if a FUTURE listener on these three events performs fallible, externally-visible derived work the way World Presence\'s did (a network call, a write into a different use case\'s mutation surface), THAT listener\'s call site is the one to wrap in a local try/catch, mirroring WorldView.js\'s own 0.9.218 fix exactly — not a change to EventBus.js, not a change to every listener uniformly, and not a decision this milestone makes on a future author\'s behalf.');
     }
 
     console.log('\n✅ All Identity Event/Error Boundary Audit tests passed.');
