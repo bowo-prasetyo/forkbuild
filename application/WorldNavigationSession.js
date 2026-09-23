@@ -4237,16 +4237,6 @@ export class WorldNavigationSession {
         return this._localWorldExperienceStore.getExperience(documentId);
     }
 
-    // Most-recently-visited Worlds this replica has a local experience
-    // record for — the "Recent Worlds" list's own data source. An empty
-    // array, never a throw, with no store wired.
-    getRecentlyVisitedWorlds(limit = 10) {
-        if (!this._localWorldExperienceStore) {
-            return [];
-        }
-        return this._localWorldExperienceStore.getRecentlyVisited(limit);
-    }
-
     // Snapshots THIS replica's current camera framing (position, target,
     // a derived heading reading) and active Camera Perspective for
     // `documentId`, right now. A no-op with no localWorldExperienceStore

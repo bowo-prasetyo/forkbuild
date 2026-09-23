@@ -591,7 +591,7 @@ async function runTests() {
         // UPDATE (0.9.217): refreshWorldPresenceActivity now HAS a
         // caller (see Section L5 below) — excluded from this "still has
         // no caller" baseline loop, checked on its own terms instead.
-        for (const method of ['getRecentlyVisitedWorlds', 'getCurrentPlaceName', 'getSelectionCount', 'getWorldAccessLevel', 'canReadDocument']) {
+        for (const method of ['getCurrentPlaceName', 'getSelectionCount', 'getWorldAccessLevel', 'canReadDocument']) {
             assert(new RegExp(`^\\s{4}${method}\\(`, 'm').test(navigationSessionSource), `L0. WorldNavigationSession still declares ${method}(...)`);
             assert(countReferences(worldViewSource, method) === 0, `L0. ${method} still has no caller in WorldView.js`);
         }
@@ -606,6 +606,11 @@ async function runTests() {
         // wrapper method itself is genuinely uncalled, but the CAPABILITY
         // it names is delivered, through a deliberately lighter,
         // documented, different path.
+        //
+        // AMENDED by the My Worlds dead-code cleanup: that uncalled
+        // wrapper has since been deleted (and dropped from the L0 loop
+        // above) — the capability is unaffected, as L1a–L1c still prove.
+        assert(!/getRecentlyVisitedWorlds/.test(navigationSessionSource), 'L1d. WorldNavigationSession no longer declares the dead getRecentlyVisitedWorlds() wrapper');
         const recentWorldsViewSource = await rawSource('ui/views/RecentWorldsView.js');
         assert(/No\s*\n\/\/\s*WorldNavigationSession is built here at all/.test(recentWorldsViewSource) || /never enters a live World/.test(recentWorldsViewSource), 'L1a. RecentWorldsView.js still documents, in its own header, that it deliberately never builds a WorldNavigationSession');
         assert(/getRecentlyVisited\(/.test(recentWorldsViewSource), 'L1b. ...and still reads LocalWorldExperienceStore#getRecentlyVisited() directly — the Recent Worlds list is genuinely delivered, just not through this session wrapper');

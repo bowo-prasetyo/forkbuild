@@ -283,11 +283,11 @@ export default {
         const welcomeIsArrival = ref(true);
         // 0.3.10 — World Persistence & Return Experience. `worldReturnInfo`
         // is null for a World this replica has never visited before (a
-        // first-timer, per session.hasVisitedWorld()), or
-        // `{ lastVisitedAt }` when it has — read fresh in
-        // _syncWorldExperience() below, BEFORE that same tick's
-        // restoreWorldExperience() call, so it always reflects the PRIOR
-        // visit, never the one currently in progress. Purely
+        // first-timer), or `{ lastVisitedAt }` when it has — taken in
+        // _syncWorldExperience() below from the record that tick's
+        // restoreWorldExperience() call returns (read before this visit
+        // is ever saved), so it always reflects the PRIOR visit, never
+        // the one currently in progress. Purely
         // presentational — WorldWelcomePanel uses it only to swap
         // "Welcome to X" for "Welcome back to X" / "Continue Exploring",
         // never to decide anything this view or the session doesn't
@@ -2411,11 +2411,11 @@ export default {
                 worldReturnInfo.value = null;
                 return;
             }
-            const priorExperience = session.hasVisitedWorld(presentExperienceWorldDocumentId)
-                ? session.getWorldExperience(presentExperienceWorldDocumentId)
-                : null;
+            // restoreWorldExperience() only reads the stored record (never
+            // writes it) and returns it, or null for a first visit — one
+            // lookup serves both the restore and worldReturnInfo.
+            const priorExperience = session.restoreWorldExperience(presentExperienceWorldDocumentId);
             worldReturnInfo.value = priorExperience ? { lastVisitedAt: priorExperience.lastVisitedAt } : null;
-            session.restoreWorldExperience(presentExperienceWorldDocumentId);
         }
 
         function refreshCollaborationRoster(documentId) {

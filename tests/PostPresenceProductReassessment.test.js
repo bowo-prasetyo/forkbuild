@@ -634,7 +634,11 @@ async function runTests() {
         // established INTENTIONAL_BOUNDARY or a redundant wrapper?
         const navigationSessionSource = await rawSource('application/WorldNavigationSession.js');
         const worldViewSource = await rawSource('ui/views/WorldView.js');
-        for (const method of ['getRecentlyVisitedWorlds', 'getCurrentPlaceName', 'getSelectionCount', 'getWorldAccessLevel', 'canReadDocument']) {
+        // AMENDED by the My Worlds dead-code cleanup: the redundant
+        // getRecentlyVisitedWorlds() wrapper was deleted outright (its
+        // capability stays delivered by ui/views/RecentWorldsView.js).
+        assert(!/getRecentlyVisitedWorlds/.test(navigationSessionSource), 'E1d. WorldNavigationSession no longer declares the dead getRecentlyVisitedWorlds() wrapper');
+        for (const method of ['getCurrentPlaceName', 'getSelectionCount', 'getWorldAccessLevel', 'canReadDocument']) {
             assert(new RegExp(`^\\s{4}${method}\\(`, 'm').test(navigationSessionSource), `E1a. WorldNavigationSession still declares ${method}(...)`);
             assert(countReferences(worldViewSource, method) === 0, `E1b. ${method} still has no caller in WorldView.js — unchanged since 0.9.216's own Section L, which already classified each individually (COMPLETE via a different path, a minor honest omission, or INTENTIONAL_BOUNDARY) — none is re-elevated to ACTUAL_GAP here without new evidence, and none exists`);
         }

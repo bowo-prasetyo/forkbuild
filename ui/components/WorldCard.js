@@ -62,7 +62,7 @@ export default {
             <h3>{{ world.title }}</h3>
             <p v-if="world.author" class="publication-meta">by {{ world.author }}</p>
             <p v-if="statsParts.length" class="publication-meta">{{ statsParts.join(' · ') }}</p>
-            <p v-if="lastVisitedLabel || perspectiveLabel" class="publication-date world-card-visit">
+            <p v-if="lastVisitedLabel || perspectiveLabel" class="publication-date">
                 <span v-if="lastVisitedLabel">Last visited {{ lastVisitedLabel }}</span><span v-if="perspectiveLabel" class="world-card-perspective"> · left in {{ perspectiveLabel }} view</span>
             </p>
             <div class="publication-actions">
