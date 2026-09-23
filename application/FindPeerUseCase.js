@@ -89,6 +89,13 @@ export class FindPeerUseCase {
         return this._peerSessionManager.publishSelf(options);
     }
 
+    isPublishing() {
+        if (typeof this._peerSessionManager.isPublishing !== 'function') {
+            return false;
+        }
+        return this._peerSessionManager.isPublishing();
+    }
+
     async stopPublishing() {
         if (typeof this._peerSessionManager.stopPublishing !== 'function') {
             return;
