@@ -317,6 +317,121 @@ publications with the application-wide decentralized discovery provider
   caches and cancels renders done by renderer/DocumentThumbnailRenderer.js,
   and a failed preview never fails the publication.
 
+## Placement and spatial discovery
+
+Three things answer three questions (docs/Principles.md, "A Publication
+Is What; A Placement Is Where"):
+
+- a Document: what the world contains, in its own local coordinates;
+- a Publication: which immutable version was released;
+- a placement: where that version sits in shared space.
+
+core/WorldPlacement.js is the spatial reference (publicationId, position,
+rotation, local SpatialBounds). core/PlacementRecord.js wraps it as a
+publishable record with its own id, owner, revision, content hash, owner
+signature and causal stamp. Several placements may point at one
+publication, and a document's author, its publisher and its placement's
+owner can be three different people.
+
+**What the live World View uses.** application/CreateWorldViewUseCase.js
+wires:
+
+- LocalSpatialIndexProvider (spatial/) and LocalPlacementRegistry
+  (placement/). The registry writes every record through to the index.
+- LocalWorldLayoutProvider (world-layout/). It answers "which documents
+  are near the camera, and where" from each publication's placement, and
+  falls back to a deterministic, id-keyed grid position
+  (core/DeterministicGridPlacement.js) for a publication with none.
+- PlacePublicationUseCase with GridPlacementStrategy
+  (application/InitialPlacementStrategy.js): the automatic first
+  placement after publishing. Its position is a pure function of the
+  publication id, so every replica computes the same one.
+- MoveWorldPlacementUseCase and RemoveWorldPlacementUseCase. A move
+  writes a new signed revision with an advanced causal stamp; earlier
+  revisions keep their own signatures. Removing a placement is not
+  unpublishing.
+- SearchWorldUseCase, behind WorldNavigationSession#searchWorld() and
+  searchWorldByLocation(); exploreLocation(), exploreHere() and
+  whatsHere() build on the same spatial query.
+
+Two placements may share a position. That is a derived observation (an
+overlap), not an error. What to do about it is core/SpatialAllocationPolicy.js
+(ALLOW/WARN/REJECT). An explicit move uses WARN
+(WorldNavigationSession#checkPlacementOverlap()); automatic placement
+always behaves as ALLOW. AUTO_OFFSET is declared but throws: automatic
+collision resolution is deliberately not implemented
+(docs/Principles.md, "Automatic Collision Resolution Is Deferred, Not
+Solved").
+
+**Built and tested, not wired into the running app:**
+
+- the decentralized spatial index: SpatialCell, SpatialIndexManifest and
+  SpatialIndexRoot (core/), SpatialIndexStore, SpatialIndexBuilder and
+  DecentralizedSpatialDiscoveryProvider (spatial/), and
+  RebuildSpatialIndexUseCase. The index is an accelerator, never the
+  truth: an entry that points at an older revision is resolved and the
+  newer valid revision wins;
+- placement-first discovery with distance tiers (DiscoverWorldAreaUseCase,
+  LocalSpatialDiscoveryProvider);
+- the streaming session in world/ (WorldViewStreamingSession,
+  LoadedWorld, WorldLoadState, PublicationContentCache), with separate
+  load and unload radii and one content load per publication.
+
+WorldNavigationSession accepts an optional `spatialDiscoveryProvider`
+used only for trust diagnostics, but nothing passes one today, because
+no live replica builds a populated index root (see the comment in
+WorldNavigationSession's constructor).
+
+Decentralized publications found through Nostr or Arweave, and Snapshots
+placed through the distribution flow, reach the World a different way:
+see "Publication presence across restarts" and "Distribution".
+
+## Signatures, trust and replication
+
+Hashes establish what an object is; signatures establish who authorized
+it. identity/Ed25519.js is a self-contained Ed25519/SHA-512
+implementation. identity/SigningIdentity.js is a public-key identity
+(did:key). core/Signature.js signs a canonical envelope
+`{ domain: 'forkbuild', type, id, revision, payload }`, so a signature
+for one object type can never be replayed as another.
+identity/LocalAuthorizationVerifier.js answers three questions for every
+signed object: is the signature authentic, is the signer known, and was
+the signer allowed.
+
+**Live today:**
+
+- Publications carry `publisherIdentity` and `signature`
+  (publisher/LocalPublisherProvider.js). A Publication's
+  `contentReference` (core/ContentReference.js) names the bytes by
+  content hash; where they are stored is a separate, retrievable detail,
+  and bytes are always checked against the hash.
+- PlacementRecords carry `ownerIdentity`, `signature`, `causalStamp`
+  (core/CausalStamp.js, a vector clock) and `parents`, all inside the
+  signed envelope (PlacePublicationUseCase, MoveWorldPlacementUseCase).
+- The same verifier checks identity lifecycle records, device
+  authorizations, world edit grants, naming claims and the other signed
+  records later milestones added.
+
+**Built and tested, not wired into the running app:**
+
+- delegation: core/Delegation.js grants one PLACE or MOVE capability,
+  checked by identity/DelegationVerifier.js;
+- replica merging (application/CreateReplicationUseCase.js,
+  replication/ReplicaMergeService.js and LocalReplicationStore.js).
+  ConflictResolver compares two causal stamps (EQUAL, BEFORE, AFTER,
+  CONCURRENT), ConflictPolicy picks a deterministic presentation winner
+  among concurrent revisions (smallest content hash), and core/ConflictSet.js
+  records the competitors without discarding either history;
+- the trust layer around it: core/TrustObservation.js (what a check
+  found), identity/TrustPolicy.js (what to do about it; the defaults
+  reproduce the pre-0.2.19 behavior), core/FreshnessProof.js and
+  core/IndexEquivocation.js (one authority signing two different roots
+  at the same causal position).
+
+The world command protocol (0.2.96–0.2.97) has its own ordering in
+replication/WorldOperationOrdering.js and WorldConflictResolver.js; see
+"Collaboration".
+
 ## Avatar movement constraint pipeline
 
 `application/AvatarMovementController.js` runs the simulated move through up to six optional constraints, in this
@@ -499,8 +614,6 @@ the middle column) and docs/Roadmap.md.
 
 | Area | docs/ArchitectureHistory.md | Also see |
 |------|-----------------------------|----------|
-| Placement and spatial discovery | World Placement & Spatial Discovery (0.2.5); 0.2.10–0.2.12; 0.2.15; 0.2.23–0.2.30 | docs/Principles.md, "Placement, world coordinates and overlap" |
-| Trust, signatures and replication | Decentralized Content Backend (0.2.14); 0.2.16–0.2.19 | |
 | Identity | 0.2.46–0.2.48, 0.2.67–0.2.68, 0.2.78, 0.2.82 | |
 | Peers, friends, chat and voice | 0.2.49–0.2.57, 0.2.69–0.2.75, 0.2.83 | docs/Protocol.md, "Wire Formats Not Yet Described Here" |
 | Avatars and presence | 0.2.33–0.2.45, 0.3.2–0.3.4 | "Avatar movement constraint pipeline" above |
