@@ -1,5 +1,6 @@
 import { LocalIdentity } from '../identity/LocalIdentity.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
+import { IdentityUseCase } from '../application/IdentityUseCase.js';
 import { IdentityLifecycleState } from '../core/IdentityLifecycleState.js';
 import { isValidIdentityRevocationRecord, toIdentityRevocationRecord } from '../core/IdentityRevocationEnvelope.js';
 import { isValidIdentitySuccessionRecord } from '../core/IdentitySuccessionEnvelope.js';
@@ -244,6 +245,29 @@ async function runTests() {
     assert(record.signature, 'the passphrase-gated revocation still produces a real, signed record');
     assert(!device.isUnlocked(alice.identityId), 'the vault is evicted again immediately after producing the revocation signature');
     console.log('✓ protected identities: revoke()/declareSuccessor() are gated by the same passphrase discipline as unlock()');
+}
+
+// ---------------------------------------------------------------------
+// 6b. Declaring a successor for a locked, protected identity unlocks it
+//     to sign (like any other passphrase-gated signing call), and
+//     IdentityUseCase announces that on VaultLockChanged — the event it
+//     documents as THE signal for lock-state changes, so a subscriber
+//     listening only to it never misses one.
+// ---------------------------------------------------------------------
+{
+    const device = makeDevice();
+    const identityUseCase = new IdentityUseCase(device);
+    const alice = device.createLocalIdentity('Alice', 'alice-pass');
+    const aliceNew = makeDevice().createLocalIdentity('Alice (rotated)');
+    const lockEvents = [];
+    identityUseCase.onVaultLockChanged((identityId, lock) => lockEvents.push({ identityId, unlocked: lock.isUnlocked }));
+
+    assert(!identityUseCase.isUnlocked(alice.identityId), 'Alice starts locked');
+    identityUseCase.declareSuccessor(alice.identityId, aliceNew.identityId, 'alice-pass');
+    assert(identityUseCase.isUnlocked(alice.identityId), 'signing the succession with the passphrase left the vault unlocked');
+    assert(lockEvents.length === 1 && lockEvents[0].identityId === alice.identityId, 'declareSuccessor() published exactly one VaultLockChanged, for Alice');
+    assert(lockEvents[0].unlocked, 'and that event reports the vault as it now is: unlocked');
+    console.log('✓ declareSuccessor via IdentityUseCase announces the vault it unlocked on VaultLockChanged');
 }
 
 // ---------------------------------------------------------------------

@@ -146,11 +146,12 @@ export class IdentityUseCase {
     //
     // Thin delegation, exactly like every other method in this file —
     // identity/LocalIdentityProvider.js does the real work (see its own
-    // 0.2.67 comment block). All three fire IdentityChanged (the
-    // identities list — lifecycleState/successorIdentityId are part of
-    // what a UI renders per identity). changePassphrase() and
-    // revokeIdentity() also fire VaultLockChanged, because both force
-    // the vault closed afterward.
+    // 0.2.67 comment block). Each of these three fires BOTH
+    // IdentityChanged (the identities list — lifecycleState/
+    // successorIdentityId are part of what a UI renders per identity)
+    // AND VaultLockChanged: changePassphrase() and revokeIdentity() force
+    // the vault closed afterward, and declareSuccessor() unlocks a locked,
+    // protected identity when it is given the passphrase to sign with.
     changePassphrase(identityId, oldPassphrase, newPassphrase) {
         const identity = this._identityProvider.changePassphrase(identityId, oldPassphrase, newPassphrase);
         this._publishChange();
@@ -161,6 +162,7 @@ export class IdentityUseCase {
     declareSuccessor(identityId, successorIdentityId, passphrase = null) {
         const record = this._identityProvider.declareSuccessor(identityId, successorIdentityId, { passphrase });
         this._publishChange();
+        this._publishLockChange(identityId);
         return record;
     }
 

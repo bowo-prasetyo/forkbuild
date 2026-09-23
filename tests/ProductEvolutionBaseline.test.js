@@ -172,12 +172,12 @@ async function runTests() {
     // ---------------------------------------------------------------
     {
         // B1. DEFERRED — Identity event/error boundary (0.9.219 Section
-        // C, fully characterized by 0.9.220). The four affected methods
+        // C, fully characterized by 0.9.220). The five affected methods
         // still share the exact precondition: each still calls
         // _publishChange() and THEN _publishLockChange() in the same
         // synchronous chain.
         const identityUseCase = await rawSource('application/IdentityUseCase.js');
-        const affectedMethods = ['authenticate', 'endSession', 'changePassphrase', 'revokeIdentity'];
+        const affectedMethods = ['authenticate', 'endSession', 'changePassphrase', 'revokeIdentity', 'declareSuccessor'];
         for (const method of affectedMethods) {
             const methodMatch = identityUseCase.match(new RegExp(`\\b${method}\\s*\\([^)]*\\)\\s*\\{([\\s\\S]*?)\\n    \\}`, 'm'));
             assert(methodMatch, `B1a. application/IdentityUseCase.js still defines ${method}().`);
@@ -228,7 +228,7 @@ async function runTests() {
                 `B3b. ${className} still has zero instantiations outside its own file — classification unchanged since 0.9.216/0.9.219.`);
         }
 
-        console.log(`✓ Section B: Technical-debt register reconfirmed unchanged — DEFERRED Identity event boundary still rests on its exact four-method precondition and EventBus's still-unisolated publish() (B1/B2); all ${obsoleteConfirmed.length} OBSOLETE and ${obsoleteCandidate.length} OBSOLETE_CANDIDATE files still exist, untouched, with zero live instantiations (B3). Nothing escalated, nothing deleted, nothing newly discovered.`);
+        console.log(`✓ Section B: Technical-debt register reconfirmed unchanged — DEFERRED Identity event boundary still rests on its exact five-method precondition and EventBus's still-unisolated publish() (B1/B2); all ${obsoleteConfirmed.length} OBSOLETE and ${obsoleteCandidate.length} OBSOLETE_CANDIDATE files still exist, untouched, with zero live instantiations (B3). Nothing escalated, nothing deleted, nothing newly discovered.`);
     }
 
     // ---------------------------------------------------------------
