@@ -488,9 +488,8 @@ async function runTests() {
         assert(listCode.includes("items: { type: Array, required: true }") &&
                listCode.includes("descriptions: { type: Object, default: () => ({}) }") &&
                listCode.includes("parentTitles: { type: Object, default: () => ({}) }") &&
-               listCode.includes("forkCounts: { type: Object, default: () => ({}) }") &&
                listCode.includes("preciseDateIds: { type: Set, default: () => new Set() }"),
-            '46. PublicationList.js\'s own props contract is unchanged — no new prop was added for this milestone');
+            '46. PublicationList.js\'s own props contract gained no new prop for this milestone (the unused forkCounts prop was later removed as dead code)');
 
         const catalogCode = await codeOnlySource('ui/components/PublicationCatalog.js');
         assert(catalogCode.includes('<PublicationList') &&

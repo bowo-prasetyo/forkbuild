@@ -43,29 +43,33 @@ function licenseLabel(publication) {
     return publication.license.id || 'Unspecified';
 }
 
+// How each grouping mode derives a publication's group key.
+const GROUP_KEY = Object.freeze({
+    [GroupBy.AUTHOR]: (publication) => publication.author || 'Anonymous',
+    [GroupBy.DATE]: (publication, now) => dateBucket(publication.publishedAt, now),
+    [GroupBy.LICENSE]: (publication) => licenseLabel(publication)
+});
+
 // Returns an ordered array of { key, label, items } groups. Group
 // ORDER follows first-appearance in the (already sorted) input for
 // AUTHOR/LICENSE — grouping never re-sorts the page, it only
 // partitions it — and a fixed Today/Yesterday/This Week/Earlier order
 // for DATE, since an arbitrary first-appearance order would read
 // strangely for a time-based grouping.
+//
+// GroupBy.NONE (or any unrecognized mode) yields one unlabeled group.
 export function groupPublications(items, mode = GroupBy.NONE, { now = new Date() } = {}) {
-    if (mode === GroupBy.NONE || !items || items.length === 0) {
-        return items && items.length > 0 ? [{ key: 'all', label: null, items }] : [];
+    if (!items || items.length === 0) {
+        return [];
+    }
+    const keyOf = GROUP_KEY[mode];
+    if (!keyOf) {
+        return [{ key: 'all', label: null, items }];
     }
 
     const groups = new Map();
     for (const publication of items) {
-        let key;
-        if (mode === GroupBy.AUTHOR) {
-            key = publication.author || 'Anonymous';
-        } else if (mode === GroupBy.DATE) {
-            key = dateBucket(publication.publishedAt, now);
-        } else if (mode === GroupBy.LICENSE) {
-            key = licenseLabel(publication);
-        } else {
-            key = 'all';
-        }
+        const key = keyOf(publication, now);
         if (!groups.has(key)) {
             groups.set(key, []);
         }

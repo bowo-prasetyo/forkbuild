@@ -27,8 +27,4 @@ export class PublicationPage {
         this.hasNext = hasNext;
         this.hasPrevious = hasPrevious;
     }
-
-    static empty(pageSize = 20) {
-        return new PublicationPage({ items: [], page: 1, pageSize, totalCount: 0, totalPages: 1, hasNext: false, hasPrevious: false });
-    }
 }

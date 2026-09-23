@@ -23,11 +23,11 @@ export default {
     computed: {
         // Always includes 1 and totalPages, plus a window around the
         // current page, with '…' markers filling any gap — e.g.
-        // [1, '…', 48, 49, 50, 51, 52, '…', 125].
+        // [1, '…', 48, 49, 50, 51, 52, '…', 125]. Only ever evaluated
+        // with totalPages > 1 — the template's own v-if guards that.
         pageWindow() {
             const total = this.totalPages;
             const current = this.page;
-            if (total <= 1) return [1];
 
             const pages = new Set([1, total]);
             for (let p = current - WINDOW_RADIUS; p <= current + WINDOW_RADIUS; p++) {
@@ -48,8 +48,9 @@ export default {
         }
     },
     methods: {
+        // '…' markers are rendered :disabled, so they never reach here.
         go(page) {
-            if (page === '…' || page === this.page || page < 1 || page > this.totalPages) return;
+            if (page === this.page || page < 1 || page > this.totalPages) return;
             this.$emit('go', page);
         }
     },
