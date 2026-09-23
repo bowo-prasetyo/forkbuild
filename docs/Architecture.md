@@ -7,7 +7,8 @@ time. It is edited in place when the code changes. Other docs:
   written, milestone by milestone, for 0.1.x through 0.3.4.
 - docs/Roadmap.md records why each change was made.
 - docs/Principles.md states the rules the design keeps.
-- docs/Protocol.md describes what crosses the wire or gets serialized.
+- docs/Protocol.md describes what crosses the wire or gets serialized;
+  docs/ProtocolHistory.md keeps the older milestone protocol notes.
 
 ## Layers
 

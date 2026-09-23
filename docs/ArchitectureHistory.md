@@ -614,10 +614,9 @@ Observes and Navigates; Editor Mutates and Builds (0.5.9)".
 The capability matrix (see docs/CapabilityMatrix.md) is the normative
 reference for the CURRENT boundary. Two mutation-shaped capabilities
 remain on WorldNavigationSession on purpose — World Region/Landmark
-naming (avatar-position-driven annotation) and moving a
-StructurePlacement (shared-layout arrangement, "Moving A Placement Is
-Not Editing A Document," 0.2.23) — neither is Document content
-construction. World View's own "Edit a Copy" is the one deliberate door
+naming (avatar-position-driven annotation) and moving a published
+world's WorldPlacement (0.2.23, "Moving A Placement Is Not Editing A
+Document") — neither is Document content construction. World View's own "Edit a Copy" is the one deliberate door
 from there into Editor-only mutation: it forks the Document actually
 containing whatever was focused and opens the fork in the Editor,
 reusing the same `/editor?fork=` navigation publication forking already
