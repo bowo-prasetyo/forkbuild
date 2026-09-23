@@ -27,6 +27,11 @@ import { ref, reactive, computed, onMounted, onBeforeUnmount, inject } from 'vue
 // validation needs no secret" property.
 export default {
     name: 'IdentityManagementView',
+    // A plain `autofocus` attribute only works on page load, not on an
+    // input Vue inserts later, which is how every form here appears.
+    directives: {
+        focus: { mounted: (el) => el.focus() }
+    },
     setup() {
         const identityUseCase = inject('identityUseCase');
         // 0.2.68 — optional: a test harness or a partial embedding of
@@ -62,30 +67,55 @@ export default {
             return identityUseCase.isUnlocked(identity.identityId);
         }
 
-        // --- lock / unlock -------------------------------------------------
-        const unlockingId = ref(null);
-        const unlockPassphrase = ref('');
-        const unlockError = ref('');
+        // Errors from the identity layer lead with the throwing module's
+        // name ("LocalIdentityProvider: incorrect passphrase…"), which
+        // means nothing to the person reading it.
+        function displayError(e) {
+            return e.message.replace(/^[A-Za-z.]+:\s*/, '');
+        }
 
-        function startUnlock(identity) {
-            unlockingId.value = identity.identityId;
-            unlockPassphrase.value = '';
-            unlockError.value = '';
+        // --- per-identity action forms -----------------------------------------
+        //
+        // Unlock, export, change passphrase, declare successor and revoke
+        // each open an inline form on one card. At most one is open at a
+        // time — opening another replaces it — and they share one set of
+        // fields, cleared on every open and close so a typed passphrase
+        // never outlives the form it was typed into.
+        const openForm = ref(null); // { kind, identityId }
+        const form = reactive({ passphrase: '', newPassphrase: '', successorIdentityId: '', reason: '', error: '' });
+        const exportedJson = ref('');
+        const exportDownloadHref = computed(() => 'data:application/json;charset=utf-8,' + encodeURIComponent(exportedJson.value));
+
+        function isFormOpen(kind, identity) {
+            return !!openForm.value && openForm.value.kind === kind && openForm.value.identityId === identity.identityId;
         }
-        function cancelUnlock() {
-            unlockingId.value = null;
-            unlockPassphrase.value = '';
-            unlockError.value = '';
+        function openFormFor(kind, identity) {
+            closeForm();
+            openForm.value = { kind, identityId: identity.identityId };
+            if (kind === 'revoke') {
+                form.successorIdentityId = identity.successorIdentityId || '';
+            }
         }
+        function closeForm() {
+            openForm.value = null;
+            form.passphrase = '';
+            form.newPassphrase = '';
+            form.successorIdentityId = '';
+            form.reason = '';
+            form.error = '';
+            exportedJson.value = '';
+        }
+
+        // --- lock / unlock -------------------------------------------------
         function confirmUnlock() {
-            if (!unlockPassphrase.value) {
+            if (!form.passphrase) {
                 return;
             }
             try {
-                identityUseCase.unlock(unlockingId.value, unlockPassphrase.value);
-                cancelUnlock();
+                identityUseCase.unlock(openForm.value.identityId, form.passphrase);
+                closeForm();
             } catch (e) {
-                unlockError.value = e.message.replace(/^LocalIdentityProvider:\s*/, '');
+                form.error = displayError(e);
             }
         }
         function lockIdentity(identity) {
@@ -93,41 +123,26 @@ export default {
         }
 
         // --- export ----------------------------------------------------------
-        const exportingId = ref(null);
-        const exportPassphrase = ref('');
-        const exportError = ref('');
-        const exportedPackage = reactive({ json: '', fileName: '', downloadHref: '' });
-
-        function startExport(identity) {
-            exportingId.value = identity.identityId;
-            exportPassphrase.value = '';
-            exportError.value = '';
-            exportedPackage.json = '';
-            exportedPackage.fileName = '';
-            exportedPackage.downloadHref = '';
-        }
-        function cancelExport() {
-            exportingId.value = null;
-        }
         function confirmExport() {
-            if (!exportPassphrase.value) {
+            if (!form.passphrase) {
                 return;
             }
-            exportError.value = '';
+            form.error = '';
             try {
-                const identity = identities.value.find((i) => i.identityId === exportingId.value);
-                const pkg = identityUseCase.exportIdentity(exportingId.value, exportPassphrase.value);
-                const json = JSON.stringify(pkg, null, 2);
-                const safeLabel = identity.label.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'identity';
-                exportedPackage.json = json;
-                exportedPackage.fileName = `forkbuild-identity-${safeLabel}.json`;
-                exportedPackage.downloadHref = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
+                const pkg = identityUseCase.exportIdentity(openForm.value.identityId, form.passphrase);
+                exportedJson.value = JSON.stringify(pkg, null, 2);
+                form.passphrase = '';
             } catch (e) {
-                exportError.value = e.message.replace(/^(LocalIdentityProvider|KeyEncryption):\s*/, '');
+                form.error = displayError(e);
             }
+        }
+        function exportFileName(identity) {
+            const safeLabel = identity.label.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'identity';
+            return `forkbuild-identity-${safeLabel}.json`;
         }
 
         // --- create new identity ---------------------------------------------
+        // createIdentity() publishes no event, so the list is re-read here.
         const newLabel = ref('');
         const newPassphrase = ref('');
         function createIdentity() {
@@ -149,23 +164,24 @@ export default {
         const importError = ref('');
         const importResult = ref(null); // { status: 'ALREADY_EXISTS' | 'IMPORTED', identity }
 
-        // Client-side, passphrase-free preview: parses the pasted JSON and
-        // checks its identityId against what this device already lists.
+        // The pasted text parsed once, for both the preview and
+        // confirmImport(); undefined when it isn't valid JSON.
+        const parsedImport = computed(() => {
+            try {
+                return JSON.parse(importText.value);
+            } catch (e) {
+                return undefined;
+            }
+        });
+
+        // Client-side, passphrase-free preview: checks the pasted
+        // package's identityId against what this device already lists.
         // Never validates cryptographic consistency itself (that's
         // identity/IdentityImport.js's job, run for real only when
         // confirmImport() actually calls importIdentity()) — this is
         // deliberately a lightweight preview, not a second validator.
         const importPreview = computed(() => {
-            const text = importText.value.trim();
-            if (!text) {
-                return null;
-            }
-            let pkg;
-            try {
-                pkg = JSON.parse(text);
-            } catch (e) {
-                return null;
-            }
+            const pkg = parsedImport.value;
             if (!pkg || typeof pkg !== 'object' || typeof pkg.identityId !== 'string') {
                 return null;
             }
@@ -191,13 +207,12 @@ export default {
             reader.readAsText(file);
         }
 
+        // importIdentity() publishes no event, so the list is re-read here.
         function confirmImport() {
             importError.value = '';
             importResult.value = null;
-            let pkg;
-            try {
-                pkg = JSON.parse(importText.value);
-            } catch (e) {
+            const pkg = parsedImport.value;
+            if (pkg === undefined) {
                 importError.value = 'That is not valid JSON — paste the exported identity file\'s contents exactly.';
                 return;
             }
@@ -211,7 +226,7 @@ export default {
                 }
                 refresh();
             } catch (e) {
-                importError.value = e.message.replace(/^(LocalIdentityProvider|IdentityImport|IdentityRecovery|KeyEncryption):\s*/, '');
+                importError.value = displayError(e);
             }
         }
 
@@ -219,89 +234,44 @@ export default {
             importResult.value = null;
         }
 
-        // --- 0.2.67: change passphrase ----------------------------------------
-        const changingPassphraseId = ref(null);
-        const changeOldPassphrase = ref('');
-        const changeNewPassphrase = ref('');
-        const changePassphraseError = ref('');
-
-        function startChangePassphrase(identity) {
-            changingPassphraseId.value = identity.identityId;
-            changeOldPassphrase.value = '';
-            changeNewPassphrase.value = '';
-            changePassphraseError.value = '';
-        }
-        function cancelChangePassphrase() {
-            changingPassphraseId.value = null;
-        }
+        // --- 0.2.67: change passphrase, declare successor, revoke --------------
+        // Each of these publishes IdentityChanged, which already runs
+        // refresh() through the subscriptions below.
         function confirmChangePassphrase() {
-            if (!changeOldPassphrase.value || !changeNewPassphrase.value) {
+            if (!form.passphrase || !form.newPassphrase) {
                 return;
             }
             try {
-                identityUseCase.changePassphrase(changingPassphraseId.value, changeOldPassphrase.value, changeNewPassphrase.value);
-                cancelChangePassphrase();
-                refresh();
+                identityUseCase.changePassphrase(openForm.value.identityId, form.passphrase, form.newPassphrase);
+                closeForm();
             } catch (e) {
-                changePassphraseError.value = e.message.replace(/^LocalIdentityProvider:\s*/, '');
+                form.error = displayError(e);
             }
         }
 
-        // --- 0.2.67: declare successor ------------------------------------------
-        const successorFormId = ref(null);
-        const successorIdentityInput = ref('');
-        const successorPassphrase = ref('');
-        const successorError = ref('');
-
-        function startDeclareSuccessor(identity) {
-            successorFormId.value = identity.identityId;
-            successorIdentityInput.value = '';
-            successorPassphrase.value = '';
-            successorError.value = '';
-        }
-        function cancelDeclareSuccessor() {
-            successorFormId.value = null;
-        }
         function confirmDeclareSuccessor() {
-            if (!successorIdentityInput.value.trim()) {
+            const successorIdentityId = form.successorIdentityId.trim();
+            if (!successorIdentityId) {
                 return;
             }
             try {
-                const record = identityUseCase.declareSuccessor(successorFormId.value, successorIdentityInput.value.trim(), successorPassphrase.value || null);
+                const record = identityUseCase.declareSuccessor(openForm.value.identityId, successorIdentityId, form.passphrase || null);
                 if (identityLifecyclePropagationUseCase) {
                     identityLifecyclePropagationUseCase.broadcastSuccession(record);
                 }
-                cancelDeclareSuccessor();
-                refresh();
+                closeForm();
             } catch (e) {
-                successorError.value = e.message.replace(/^LocalIdentityProvider:\s*/, '');
+                form.error = displayError(e);
             }
         }
 
-        // --- 0.2.67: revoke ------------------------------------------------------
-        const revokingId = ref(null);
-        const revokeReason = ref('');
-        const revokeSuccessor = ref('');
-        const revokePassphrase = ref('');
-        const revokeError = ref('');
-
-        function startRevoke(identity) {
-            revokingId.value = identity.identityId;
-            revokeReason.value = '';
-            revokeSuccessor.value = identity.successorIdentityId || '';
-            revokePassphrase.value = '';
-            revokeError.value = '';
-        }
-        function cancelRevoke() {
-            revokingId.value = null;
-        }
         function confirmRevoke() {
             try {
-                const revokedId = revokingId.value;
+                const revokedId = openForm.value.identityId;
                 const record = identityUseCase.revokeIdentity(revokedId, {
-                    passphrase: revokePassphrase.value || null,
-                    reason: revokeReason.value.trim() || null,
-                    successorIdentityId: revokeSuccessor.value.trim() || null
+                    passphrase: form.passphrase || null,
+                    reason: form.reason.trim() || null,
+                    successorIdentityId: form.successorIdentityId.trim() || null
                 });
                 if (identityLifecyclePropagationUseCase) {
                     identityLifecyclePropagationUseCase.broadcastRevocation(record);
@@ -314,10 +284,9 @@ export default {
                         identityLifecyclePropagationUseCase.broadcastSuccession(identityUseCase.getSuccessionRecord(revokedId));
                     }
                 }
-                cancelRevoke();
-                refresh();
+                closeForm();
             } catch (e) {
-                revokeError.value = e.message.replace(/^LocalIdentityProvider:\s*/, '');
+                form.error = displayError(e);
             }
         }
 
@@ -337,17 +306,13 @@ export default {
 
         return {
             sortedIdentities, shortId, isCurrentSession, isUnlocked,
-            unlockingId, unlockPassphrase, unlockError, startUnlock, cancelUnlock, confirmUnlock, lockIdentity,
-            exportingId, exportPassphrase, exportError, exportedPackage, startExport, cancelExport, confirmExport,
+            form, isFormOpen, openFormFor, closeForm,
+            confirmUnlock, lockIdentity,
+            exportedJson, exportDownloadHref, exportFileName, confirmExport,
+            confirmChangePassphrase, confirmDeclareSuccessor, confirmRevoke,
             newLabel, newPassphrase, createIdentity,
             showImportForm, importText, importLabel, importPassphrase, importError, importResult,
-            importPreview, onImportFileChosen, confirmImport, dismissImportResult,
-            changingPassphraseId, changeOldPassphrase, changeNewPassphrase, changePassphraseError,
-            startChangePassphrase, cancelChangePassphrase, confirmChangePassphrase,
-            successorFormId, successorIdentityInput, successorPassphrase, successorError,
-            startDeclareSuccessor, cancelDeclareSuccessor, confirmDeclareSuccessor,
-            revokingId, revokeReason, revokeSuccessor, revokePassphrase, revokeError,
-            startRevoke, cancelRevoke, confirmRevoke
+            importPreview, onImportFileChosen, confirmImport, dismissImportResult
         };
     },
     template: `
@@ -385,28 +350,28 @@ export default {
                         Successor: …{{ shortId(identity.successorIdentityId) }}
                     </p>
 
-                    <div v-if="unlockingId === identity.identityId" class="identity-unlock-form">
+                    <div v-if="isFormOpen('unlock', identity)" class="identity-unlock-form">
                         <p class="identity-unlock-label">🔒 Enter the passphrase for <strong>{{ identity.label }}</strong></p>
-                        <input v-model="unlockPassphrase" type="password" placeholder="Passphrase" class="modal-input"
-                               autocomplete="new-password" autofocus @keydown.enter="confirmUnlock" @keydown.escape="cancelUnlock" />
-                        <p v-if="unlockError" class="identity-unlock-error">{{ unlockError }}</p>
+                        <input v-model="form.passphrase" type="password" placeholder="Passphrase" class="modal-input"
+                               autocomplete="new-password" v-focus @keydown.enter="confirmUnlock" @keydown.escape="closeForm" />
+                        <p v-if="form.error" class="identity-unlock-error">{{ form.error }}</p>
                         <div class="modal-actions">
-                            <button class="modal-btn modal-btn--secondary" @click="cancelUnlock">Cancel</button>
+                            <button class="modal-btn modal-btn--secondary" @click="closeForm">Cancel</button>
                             <button class="modal-btn modal-btn--primary" @click="confirmUnlock">Unlock</button>
                         </div>
                     </div>
 
-                    <div v-else-if="exportingId === identity.identityId" class="identity-unlock-form">
+                    <div v-else-if="isFormOpen('export', identity)" class="identity-unlock-form">
                         <p class="identity-unlock-label">
                             Exporting requires the passphrase again, even if this identity is currently unlocked.
                         </p>
-                        <template v-if="!exportedPackage.json">
-                            <input v-model="exportPassphrase" type="password"
+                        <template v-if="!exportedJson">
+                            <input v-model="form.passphrase" type="password"
                                    :placeholder="identity.isProtected ? 'Current passphrase' : 'Choose a passphrase to protect the export'"
-                                   class="modal-input" autocomplete="new-password" autofocus @keydown.enter="confirmExport" @keydown.escape="cancelExport" />
-                            <p v-if="exportError" class="identity-unlock-error">{{ exportError }}</p>
+                                   class="modal-input" autocomplete="new-password" v-focus @keydown.enter="confirmExport" @keydown.escape="closeForm" />
+                            <p v-if="form.error" class="identity-unlock-error">{{ form.error }}</p>
                             <div class="modal-actions">
-                                <button class="modal-btn modal-btn--secondary" @click="cancelExport">Cancel</button>
+                                <button class="modal-btn modal-btn--secondary" @click="closeForm">Cancel</button>
                                 <button class="modal-btn modal-btn--primary" @click="confirmExport">Export</button>
                             </div>
                         </template>
@@ -415,62 +380,62 @@ export default {
                                 Save this file somewhere safe. Anyone with BOTH this file and its
                                 passphrase can act as {{ identity.label }} — treat it like the private key it contains.
                             </p>
-                            <textarea class="form-input identity-export-json" rows="6" readonly :value="exportedPackage.json"></textarea>
+                            <textarea class="form-input identity-export-json" rows="6" readonly :value="exportedJson"></textarea>
                             <div class="modal-actions">
-                                <button class="modal-btn modal-btn--secondary" @click="cancelExport">Close</button>
-                                <a class="modal-btn modal-btn--primary" :href="exportedPackage.downloadHref" :download="exportedPackage.fileName">Download</a>
+                                <button class="modal-btn modal-btn--secondary" @click="closeForm">Close</button>
+                                <a class="modal-btn modal-btn--primary" :href="exportDownloadHref" :download="exportFileName(identity)">Download</a>
                             </div>
                         </template>
                     </div>
 
-                    <div v-else-if="changingPassphraseId === identity.identityId" class="identity-unlock-form">
+                    <div v-else-if="isFormOpen('changePassphrase', identity)" class="identity-unlock-form">
                         <p class="identity-unlock-label">Changing the passphrase never changes the identity itself — its identityId, public key, and every signature it has ever produced stay exactly as valid as before.</p>
-                        <input v-model="changeOldPassphrase" type="password" placeholder="Current passphrase" class="modal-input" autocomplete="new-password" autofocus />
-                        <input v-model="changeNewPassphrase" type="password" placeholder="New passphrase" class="modal-input" autocomplete="new-password" @keydown.enter="confirmChangePassphrase" @keydown.escape="cancelChangePassphrase" />
-                        <p v-if="changePassphraseError" class="identity-unlock-error">{{ changePassphraseError }}</p>
+                        <input v-model="form.passphrase" type="password" placeholder="Current passphrase" class="modal-input" autocomplete="new-password" v-focus />
+                        <input v-model="form.newPassphrase" type="password" placeholder="New passphrase" class="modal-input" autocomplete="new-password" @keydown.enter="confirmChangePassphrase" @keydown.escape="closeForm" />
+                        <p v-if="form.error" class="identity-unlock-error">{{ form.error }}</p>
                         <div class="modal-actions">
-                            <button class="modal-btn modal-btn--secondary" @click="cancelChangePassphrase">Cancel</button>
+                            <button class="modal-btn modal-btn--secondary" @click="closeForm">Cancel</button>
                             <button class="modal-btn modal-btn--primary" @click="confirmChangePassphrase">Change Passphrase</button>
                         </div>
                     </div>
 
-                    <div v-else-if="successorFormId === identity.identityId" class="identity-unlock-form">
+                    <div v-else-if="isFormOpen('declareSuccessor', identity)" class="identity-unlock-form">
                         <p class="identity-unlock-label">
                             Declaring a successor signs a statement that another identity replaces this one. It does NOT revoke this identity — do that separately, below, when the rotation should actually take effect.
                         </p>
-                        <input v-model="successorIdentityInput" type="text" placeholder="Successor identity (did:key:z…)" class="modal-input" autocomplete="off" autofocus />
-                        <input v-if="identity.isProtected && !isUnlocked(identity)" v-model="successorPassphrase" type="password" placeholder="Passphrase" class="modal-input" autocomplete="new-password" @keydown.enter="confirmDeclareSuccessor" @keydown.escape="cancelDeclareSuccessor" />
-                        <p v-if="successorError" class="identity-unlock-error">{{ successorError }}</p>
+                        <input v-model="form.successorIdentityId" type="text" placeholder="Successor identity (did:key:z…)" class="modal-input" autocomplete="off" v-focus />
+                        <input v-if="identity.isProtected && !isUnlocked(identity)" v-model="form.passphrase" type="password" placeholder="Passphrase" class="modal-input" autocomplete="new-password" @keydown.enter="confirmDeclareSuccessor" @keydown.escape="closeForm" />
+                        <p v-if="form.error" class="identity-unlock-error">{{ form.error }}</p>
                         <div class="modal-actions">
-                            <button class="modal-btn modal-btn--secondary" @click="cancelDeclareSuccessor">Cancel</button>
+                            <button class="modal-btn modal-btn--secondary" @click="closeForm">Cancel</button>
                             <button class="modal-btn modal-btn--primary" @click="confirmDeclareSuccessor">Declare Successor</button>
                         </div>
                     </div>
 
-                    <div v-else-if="revokingId === identity.identityId" class="identity-unlock-form">
+                    <div v-else-if="isFormOpen('revoke', identity)" class="identity-unlock-form">
                         <p class="identity-unlock-label">
                             Revoking {{ identity.label }} is permanent. It can never sign anything new again, on this
                             device or any device that already holds its key. This does not affect anything already
                             established with it — only new activity going forward.
                         </p>
-                        <input v-model="revokeReason" type="text" placeholder="Reason (optional, shown only to you)" class="modal-input" autocomplete="off" autofocus />
-                        <input v-model="revokeSuccessor" type="text" placeholder="Successor identity (optional, did:key:z…)" class="modal-input" autocomplete="off" />
-                        <input v-if="identity.isProtected && !isUnlocked(identity)" v-model="revokePassphrase" type="password" placeholder="Passphrase" class="modal-input" autocomplete="new-password" @keydown.enter="confirmRevoke" @keydown.escape="cancelRevoke" />
-                        <p v-if="revokeError" class="identity-unlock-error">{{ revokeError }}</p>
+                        <input v-model="form.reason" type="text" placeholder="Reason (optional, shown only to you)" class="modal-input" autocomplete="off" v-focus />
+                        <input v-model="form.successorIdentityId" type="text" placeholder="Successor identity (optional, did:key:z…)" class="modal-input" autocomplete="off" />
+                        <input v-if="identity.isProtected && !isUnlocked(identity)" v-model="form.passphrase" type="password" placeholder="Passphrase" class="modal-input" autocomplete="new-password" @keydown.enter="confirmRevoke" @keydown.escape="closeForm" />
+                        <p v-if="form.error" class="identity-unlock-error">{{ form.error }}</p>
                         <div class="modal-actions">
-                            <button class="modal-btn modal-btn--secondary" @click="cancelRevoke">Cancel</button>
+                            <button class="modal-btn modal-btn--secondary" @click="closeForm">Cancel</button>
                             <button class="modal-btn modal-btn--danger" @click="confirmRevoke">Revoke Identity</button>
                         </div>
                     </div>
 
                     <div v-else class="identity-mgmt-actions">
                         <button v-if="identity.isProtected && isUnlocked(identity)" class="action-btn action-btn--secondary" @click="lockIdentity(identity)">Lock</button>
-                        <button v-else-if="identity.isProtected" class="action-btn action-btn--secondary" @click="startUnlock(identity)">Unlock</button>
-                        <button class="action-btn action-btn--secondary" @click="startExport(identity)">Export Identity</button>
-                        <button v-if="identity.isProtected" class="action-btn action-btn--secondary" @click="startChangePassphrase(identity)">Change Passphrase</button>
+                        <button v-else-if="identity.isProtected" class="action-btn action-btn--secondary" @click="openFormFor('unlock', identity)">Unlock</button>
+                        <button class="action-btn action-btn--secondary" @click="openFormFor('export', identity)">Export Identity</button>
+                        <button v-if="identity.isProtected" class="action-btn action-btn--secondary" @click="openFormFor('changePassphrase', identity)">Change Passphrase</button>
                         <template v-if="identity.lifecycleState !== 'REVOKED'">
-                            <button class="action-btn action-btn--secondary" @click="startDeclareSuccessor(identity)">Declare Successor</button>
-                            <button class="action-btn action-btn--danger" @click="startRevoke(identity)">Revoke</button>
+                            <button class="action-btn action-btn--secondary" @click="openFormFor('declareSuccessor', identity)">Declare Successor</button>
+                            <button class="action-btn action-btn--danger" @click="openFormFor('revoke', identity)">Revoke</button>
                         </template>
                     </div>
                 </div>
