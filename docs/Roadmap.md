@@ -97238,6 +97238,610 @@ action from `OwnPublicationPanel`'s existing `.own-publication-placements` listi
 place someone else's discovered work — is explicitly left open, a genuine product decision this audit surfaces
 but does not answer, consistent with this milestone's own type: a test-only audit that implements nothing.
 
+## 0.9.600 — Publication First-Placement Action Wiring Fix
+
+**Type:** implementation. **Production changes:** `application/CreateWorldViewUseCase.js` (`PlacePublicationUseCase`
+is now built with `publicationActionDiscoveryProvider` instead of the narrow `discoveryProvider`),
+`application/WorldNavigationSession.js` (new `placePublication(publicationId, position)`),
+`ui/components/OwnPublicationPanel.js` and `ui/views/WorldView.js` (a "Place" action on the existing,
+publicationId-keyed placements listing). Adds `tests/PublicationFirstPlacementActionWiringFix.test.js`.
+
+Implements exactly the three pieces 0.9.599 recommended. An already-published or Repository-admitted Publication
+with no placement can now be placed explicitly at the user's own position. Authorization (who may place someone
+else's work) stays open, as 0.9.599 left it.
+
+## 0.9.601 — Discovered Publication Placement Journey Closure Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+Runs DISCOVER → RESOLVE → VERIFY → ADMIT → Place → `PlacementRecord` end to end through the real pipeline for the
+first time. The journey closes with a real, signed `PlacementRecord`, but a Repository-admitted-only Publication
+never appears in World View rendering: `LocalWorldLayoutProvider` is built from the narrow `discoveryProvider`
+alone. Recorded as a narrow `CAPABILITY_GAP` in the rendering layer, not fixed here.
+
+## 0.9.602 — Post-Placement World Visibility Product Boundary Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+Isolates the rendering gap to two independent ingredients, neither sufficient alone: discovery scope
+(`LocalWorldLayoutProvider`'s own `discoveryProvider` argument) and document material (a discovered Publication's
+bytes live content-hash-addressed in `LocalContentStore`, never at `storage[documentId]`). Widening discovery alone
+would show a place-shaped marker whose content cannot stream in. Also records that `LocalWorldLayoutProvider`
+resolves Publications inline inside the visibility query, rather than following 0.2.11's two-phase design.
+**Classification: `POST_PLACEMENT_CONTINUITY_GAP`** (a discovery-scope `CAPABILITY_GAP` plus a larger
+`MATERIALIZATION_GAP`).
+
+## 0.9.603 — Publication World Materialization Boundary Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+Finds the material bridge already exists: `application/LoadPublishedWorldSessionUseCase.js`, composed with the same
+`contentStore` `CreateWorldViewUseCase` already builds, is a zero-copy, read-through bridge from verified
+content-hash material to a World document. `contentHash` and `documentId` stay two independent identities, bound
+only by a Publication's own signed envelope. Only verified, well-formed material ever renders.
+**Classification: `BOTH_BRIDGES_REQUIRED`.**
+
+## 0.9.604 — Publication World Rendering Discovery Boundary Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+Confirms `WorldLayoutProvider` needs exactly three `DiscoveryProvider` methods (`list`/`findById`/
+`findByDocumentId`), which `publicationActionDiscoveryProvider` (a `CompositeDiscoveryProvider`) already implements.
+Swapping that one constructor argument is safe: fork policy's own `_findPublications()` choke point reads a separate
+argument and is untouched. **Classification: `RENDERING_DISCOVERY_BRIDGE_GAP`.**
+
+## 0.9.605 — Wire Publication Discovery into World Rendering
+
+**Type:** implementation. **Production changes:** `application/CreateWorldViewUseCase.js` (`worldLayoutProvider`
+built from `publicationActionDiscoveryProvider`; constructs `LoadPublishedWorldSessionUseCase` and threads it into
+the session), `application/WorldNavigationSession.js` (`_loadWorld()` tries `LoadPublicationDocumentUseCase` first,
+then falls back to the material bridge via `_resolveWorldDocument()`/`_resolvePublicationMaterial()`; a document
+resolved that way is marked as an immutable published snapshot). Adds
+`tests/PublicationWorldRenderingDiscoveryWiringFix.test.js`.
+
+An explicitly placed, verified, Repository-admitted Publication now renders in the World. Fork policy and
+`PlacementRecord`/`claimedPosition` semantics are unchanged.
+
+## 0.9.606 — Publication Placement-to-World Presence Product Closure Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+The in-session journey is solid. Two findings: an admitted but never-placed Publication now also renders at its
+deterministic grid position (pre-existing 0.2.24 behavior made reachable by 0.9.605, recorded as expected), and
+the arc does not survive a restart — `LocalPlacementRegistry` persists the `PlacementRecord`, but the
+`DecentralizedPublicationDiscoveryProvider` in `ui/main.js` is in-memory only, so the Publication disappears from
+every World-presence signal. **Classification: `ARCHITECTURAL_GAP_CONFIRMED`.**
+
+## 0.9.607 — Publication Discovery Persistence Boundary Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+Every fact needed to rebuild a Repository-admitted Publication already survives a restart:
+`application/LocalPublicationCatalog.js` persists the signed envelope and `content/LocalContentStore.js` its bytes.
+The gap is a missing index, not a missing fact. A reconstruction routine built only from existing classes
+(`LocalPublicationCatalog` + `PublicationResolutionCoordinator` + `resolvePublicationView`) rebuilds the provider
+correctly, runs full verification, and never touches the network.
+**Classification: `ALREADY_PERSISTED_RECONSTRUCTION_GAP`.**
+
+## 0.9.608 — Reconstruct Publication Discovery at Application Composition
+
+**Type:** implementation. **Production changes:** `application/ReconstructPublicationDiscoveryUseCase.js` (new),
+`ui/main.js` (runs it right after the one `DecentralizedPublicationDiscoveryProvider` is constructed, awaited
+before `app.provide()` and mount). Adds `tests/ReconstructPublicationDiscoveryUseCase.test.js`.
+
+`execute()` resolves every cataloged entry and admits the ones that resolve; one malformed entry never suppresses
+another. It never passes peers to `resolvePublicationView()`, so no network retrieval runs, and it never reads or
+writes placement state. No new persistence layer.
+
+## 0.9.609 — Publication Discovery Reconstruction Lifecycle Closure Audit
+
+**Type:** closure audit with one in-place fix. **Production changes:**
+`application/ReconstructPublicationDiscoveryUseCase.js` (skips an id the provider already reports via `findById()`).
+
+Found one `LIFECYCLE_GAP`: `execute()` was not idempotent, because
+`DecentralizedPublicationDiscoveryProvider#add()` deliberately has no dedup policy. Closed in the use case, without
+changing the shared provider's contract. **Classification: `ARC_CLOSED`** for the 0.9.594–0.9.609 placement →
+World presence arc.
+
+## 0.9.610 — Structure Relative Snapping Boundary Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+Bricks snap flush against a neighbor (`PlacementPositionService#calculateStack`, fed by a raycast face normal);
+structures only snap to the global grid. The gap is two small additive pieces: `PickingService#pickPlacement()`
+never reads the hit's face normal, and `StructurePlacementTool` never reads `pickedPlacement`. `SpatialBounds` and
+`StructurePlacementValidator` already handle "touching" correctly. **Classification: `CAPABILITY_REUSE_CONFIRMED`.**
+
+## 0.9.611 — Add Structure Relative Face Snapping
+
+**Type:** implementation. **Production changes:** `renderer/PickingService.js` (`pickPlacement()` now returns a
+face `normal`), `application/PlacementPositionService.js` (new `calculateStructureStack(anchorPosition,
+anchorBounds, normal, movingBounds, settings)`), `application/tools/StructurePlacementTool.js` (reads
+`pickedPlacement` first, then falls back to `calculateStructureGround()`), `application/InputDispatcher.js`. Adds
+`tests/StructureRelativeFaceSnapping.test.js` and `tests/StructureRelativeFaceSnappingRendering.test.js`.
+
+Hovering a side face of a placed structure snaps the new structure flush against it. The touching axis is left
+unsnapped so contact is always exact; only the carried axis is grid-snapped. Top/bottom hits (no vertical
+structure stacking), a missing normal, or an unresolvable anchor fall back to the ground snap. The anchor is never
+moved.
+
+## 0.9.612 — Structure Relative Snapping Product Closure Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+Drives the real tool through all four faces, a non-grid-aligned anchor, fallback branches and a third-structure
+obstruction. Records one inherited invariant: the carried axis tracks the anchor's own grid-snapped coordinate, so
+a new structure cannot slide along a wide anchor face (exact parity with bricks). `SelectionTool` drag-move still
+never relative-snaps. **Classification: `ARC_CLOSED`**; vertical structure stacking stays an expected boundary.
+
+## 0.9.613 — Avatar-Water Interaction Product Boundary Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+Water is real geometry (`renderer/WaterTileMesh.js` renders lakes at `LAKE_SURFACE_HEIGHT`), but an avatar walks
+into a real lake unblocked and its rendered model sinks further below the surface the deeper it goes.
+`core/VehiclePlacement.js` already refuses to place a bicycle at the same coordinates. Rivers are ground color only.
+**Classification: `MINIMAL_WATER_INTERACTION_GAP`** — not a swimming requirement.
+
+## 0.9.614 — Avatar Basic Water Traversal Boundary Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+`AvatarPresence.position.y` is a flat simulated plane by design, so the fix belongs at the render-time layer
+(`RenderWorldViewUseCase#withGroundElevation()`), the same layer terrain elevation already uses. A candidate that
+floors rendered Y at `max(terrainHeight, LAKE_SURFACE_HEIGHT)` over WATER ground closes the gap; the movement-speed
+seam is already generic but has no terrain-derived producer. Rivers are never WATER-classified, so the rule is a
+no-op there.
+
+## 0.9.615 — Avatar Basic Water Surface Constraint
+
+**Type:** implementation. **Production changes:** `application/RenderWorldViewUseCase.js`
+(`withGroundElevation()` floors the avatar's rendered Y at the lake surface over WATER ground). Adds
+`tests/AvatarBasicWaterSurfaceConstraint.test.js`.
+
+Render-only: x/z movement is untouched, no swim state, no new `AvatarPresence` field, rivers unaffected. See
+`docs/Principles.md`, "Terrain Elevation Is A Rendering-Time Offset, Never A Presence Or Placement Fact (0.2.76)".
+
+## 0.9.616 — Avatar Basic Water Traversal Product Closure Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+The avatar never sinks through a real lake across repeated passes. Every consumer of `AvatarPresence.position.y`
+is checked for the render/simulation divergence; the only one that can observe it is opt-in Camera Perspective
+framing (`core/CameraPerspective.js#computeCameraFraming()`), which already ignores terrain elevation on hills too —
+a pre-existing, general gap, not a water one. **Classification: `ARC_CLOSED`.**
+
+## 0.9.617 — Publication Commentary Distribution Boundary Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+Commentary (`core/PublicationCommentary.js`, attached to a Publication, never a Snapshot) is a durable local fact
+that never leaves the device. Neither existing decentralized envelope fits its shape, and Commentary has no
+signature. `PublicationCommentaryStore`'s `commentaryId` identity already gives idempotent arrival. Notification is
+already correctly local-only. **Classification: `DISTRIBUTION_SEAM_GAP`.** Recommends a third envelope, a signing
+descriptor plus verifier branch, and reuse of the existing store.
+
+## 0.9.618 — Publication Commentary Distribution Envelope
+
+**Type:** implementation. **Production changes:** `core/PublicationCommentaryDistributionEnvelope.js` (new),
+`core/Signature.js` (new `PUBLICATION_COMMENTARY_DISTRIBUTION` type), `identity/LocalAuthorizationVerifier.js`
+(`verifyPublicationCommentaryDistributionEnvelope()` — signer must equal the commentary's author),
+`application/PublicationCommentaryDistributionExchange.js` (sign for export; verify and store on import) and
+`application/PublicationCommentaryDistributionPeerExchange.js` (ANNOUNCE-only over the existing
+`PeerMessageBus`). Adds `tests/PublicationCommentaryDistribution.test.js`.
+
+`core/PublicationCommentary.js` itself is unchanged and still unsigned; the signature lives on the envelope. A
+valid signature proves authorship of the comment, never Publication ownership. See `docs/Protocol.md`,
+"Publication Commentary Distribution (0.9.618–0.9.631)".
+
+## 0.9.619 — Publication Commentary Cross-Device Product Closure Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+The 0.9.618 capability is correct but unreachable: no composition root, no `ui/main.js` wiring, no production
+`announce()` call. **Classification: `PRODUCTION_WIRING_GAP`.**
+
+## 0.9.620 — Wire Publication Commentary Peer Distribution
+
+**Type:** implementation. **Production changes:**
+`application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js` (new, mirroring
+`CreatePublicationAnchorPeerExchangeUseCase.js`), `ui/main.js` (wraps `addPublicationCommentaryCommand` with an
+announce side effect). Adds `tests/PublicationCommentaryDistributionWiring.test.js`.
+
+Local creation first, announce second. A distribution failure is swallowed and never turns local creation into a
+network-dependent operation.
+
+## 0.9.621 — Publication Commentary Application Distribution Closure Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+Re-runs the arc and proves Application A → Application B delivery through the real wiring, including ordering,
+degradation with zero peers, tamper rejection and idempotent repeat delivery. **Classification: `ARC_CLOSED`.**
+
+## 0.9.622 — Post-Commentary-Distribution Product Reassessment
+
+**Type:** test-only audit. **Production changes:** none.
+
+One `CONCRETE_PRODUCT_GAP`: a Commentary arriving over the peer path never produces the `publication.commented`
+notification a locally created one does, because `onCommentaryReceived()` has no production subscriber. Also
+records that ordering is arrival order (never re-sorted) and that no offline-delivery promise exists.
+
+## 0.9.623 — Wire Remote Commentary Arrival into Local Notifications
+
+**Type:** implementation. **Production changes:** `application/PublicationCommentaryRemoteNotificationBridge.js`
+(new), `application/PublicationCommentaryNotificationProducer.js` (extracts
+`buildPublicationCommentedNotificationEvent()` so local and remote share one construction), `ui/main.js`.
+Adds `tests/PublicationCommentaryRemoteNotificationBridge.test.js` and
+`tests/PublicationCommentaryRemoteNotificationWiring.test.js`.
+
+A remote arrival notifies only when it is new and this replica's identity is the Publication's own publisher.
+`NotificationEvent` itself still never crosses the network.
+
+(0.9.624 was not used.)
+
+## 0.9.625 — Publication Commentary Persistent Distribution Boundary Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+Nostr and Arweave discovery publishers only carry unsigned locator envelopes, and all of them reject a signed
+Commentary envelope. Only the pattern is reusable. No concrete requirement for asynchronous Commentary delivery was
+found at the time. **Classification: `ARCHITECTURAL_MISMATCH`** for direct reuse; recommends not building it yet.
+
+## 0.9.626 — Publication Commentary Asynchronous Delivery Contract
+
+**Type:** implementation (contract only). **Production changes:**
+`core/PublicationCommentaryAsynchronousDeliveryContract.js` (new, pure). Adds
+`tests/PublicationCommentaryAsynchronousDeliveryContract.test.js`.
+
+Reopens 0.9.625 on a new argument: WebRTC delivers only to peers connected at the moment of posting. Defines a
+seven-stage `PublicationCommentaryDeliveryStatus` (CREATED, SIGNED, PERSISTENTLY_PUBLISHED, DISCOVERABLE,
+RETRIEVED, VERIFIED, ADMITTED), a forward-only transition predicate, and the `publish()`/`retrieve()` shape a
+substrate adapter must have. Names no substrate.
+
+## 0.9.627 — Publication Commentary Nostr Round-Trip Boundary Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+Composing the two raw Nostr transport primitives (`nostr/NostrInjectedProviderPublisher.js`,
+`nostr/NostrRelayQueryClient.js`) conforms to the 0.9.626 contract and carries a signed envelope through a real
+NIP-01 round trip. Records that a relay OK means "accepted," never durable retention, and that DISCOVERABLE and
+RETRIEVED collapse into one exchange on Nostr.
+
+## 0.9.628 — Publication Commentary Nostr Asynchronous Distribution
+
+**Type:** implementation. **Production changes:** `application/PublicationCommentaryNostrDistribution.js` (new;
+`publish`/`retrieve`/`discover`, fixed discovery tag `forkbuild-commentary`),
+`application/DiscoverPublicationCommentaryFromNostrUseCase.js` (new; filters by `publicationId`, imports through
+the existing exchange), `ui/main.js` (best-effort Nostr publish after local persistence and WebRTC announce; a
+separately invoked `discoverPublicationCommentaryFromNostrCommand`). Adds
+`tests/PublicationCommentaryNostrAsynchronousDistribution.test.js`.
+
+When to call discovery was left to a later milestone (answered by the unnumbered "Fetch Publication Commentary on
+open" change below).
+
+## 0.9.629 — Publication Commentary Nostr Asynchronous Distribution Closure Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+Flagship: Alice comments while Bob is offline, with no WebRTC connection anywhere; Bob later discovers, verifies,
+admits and is notified. WebRTC and Nostr arrivals converge on one bridge and one notification; dedup is by
+`commentaryId`, never Nostr event id. **Classification: `ARC_CLOSED`**; recommends not building Arweave yet.
+
+## 0.9.630 — Publication Commentary Arweave Distribution Boundary Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+`application/ArweaveTaggedTransactionUpload.js` plus `content/ArweaveContentStore.js#get()` already conform to the
+0.9.626 contract. Arweave's durability gap is wider than Nostr's: "not yet mined," "never published" and "gateway
+unreachable" all surface as the same `ContentUnavailableError`. An offline journey works on Arweave alone, with no
+Nostr call. **Classification: `PREPARED_SEAM`.**
+
+## 0.9.631 — Publication Commentary Arweave Asynchronous Distribution
+
+**Type:** implementation. **Production changes:** `application/ArweaveTaggedTransactionSearch.js` (new standalone
+GraphQL tag search), `application/PublicationCommentaryArweaveDistribution.js` (new adapter; tag name
+`ForkBuild-Commentary-Discovery-Tag`), `application/DiscoverPublicationCommentaryFromArweaveUseCase.js` (new),
+`ui/main.js` (`addPublicationCommentaryCommand` now selects Nostr or Arweave via `input.discoveryProvider`,
+defaulting to Nostr — selection, never fan-out; WebRTC stays always-on). Adds
+`tests/PublicationCommentaryArweaveAsynchronousDistribution.test.js`.
+
+Also fixes `arweaveHostSigner.sign(material, tags = [])`, which had silently dropped tags on every tagged upload
+since 0.9.490. `retrieve()` lets `ContentUnavailableError` propagate rather than claiming "verified absent."
+
+## 0.9.632 — Publication Commentary Cross-Substrate Distribution Closure Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+One signed Commentary delivered over WebRTC, Nostr and Arweave converges to one stored record and one
+notification. The same adversarial corpus fails identically on all three; verification stays centralized; the
+command selects at most one asynchronous substrate per call. **Classification: `ARC_CLOSED`.**
+
+## 0.9.633 — Avatar Shallow-Water Traversal Boundary Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+Real lakes under the default seed hold both walkable-shallow water and water deeper than `AVATAR_COLLISION_HEIGHT`
+(12.78% of WATER cells). The 0.9.615 floor renders ankle-deep and deep water at the same height. A depth-following
+render rule, a horizontal depth gate and a depth speed factor all fit existing seams (a fifth optional constraint
+slot). The threshold and curve are product decisions, since no body-segment geometry exists.
+
+## 0.9.634 — Avatar Shallow-Water Ground Traversal
+
+**Type:** implementation. **Production changes:** `core/AvatarWaterWalkability.js` (new;
+`DEFAULT_MAX_WALKING_DEPTH` = `AVATAR_COLLISION_HEIGHT`, `isWalkableWaterDepth()`, linear
+`waterDepthSpeedFactor()`), `application/AvatarWaterConstraint.js` (new; `{position, blocked}` like
+`AvatarTerrainConstraint`), `application/AvatarMovementController.js` (optional `waterConstraint`, applied after
+terrain slope and before step height; `isBlockedByWaterDepth()`), `core/AvatarMovementSimulation.js`
+(`waterSpeedFactor`), `application/RenderWorldViewUseCase.js` (feet follow the lakebed within the walkable depth;
+0.9.615's clamp beyond it), `application/WorldNavigationSession.js`. Adds
+`tests/AvatarShallowWaterTraversal.test.js`.
+
+Walking slows with depth and is blocked past the limit. Avatar-only (vehicles unaffected); no swimming, buoyancy or
+persisted water state.
+
+## 0.9.635 — Avatar Shallow-Water Traversal Product Closure Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+Confirms the pipeline order (building → terrain → water → step → tree) and one continuous land → shallow → blocked
+→ retreat journey. Two named nuances: a one-millimeter render discontinuity at the depth boundary that ordinary
+movement cannot reach, and a walkable limit equal to full body height. **Classification: `ARC_CLOSED`.**
+
+## Invisible-wall fix: unreachable bricks no longer count as floor (unnumbered, 2026-09-19)
+
+`application/AvatarStepConstraint.js#supportHeightAt()` took the maximum walkable surface of every brick above
+(x, z), so a bridge plate high overhead claimed its whole footprint as floor and blocked ground-level walking like
+a wall. It now takes an optional `referenceHeight` (the avatar's current Y) and only considers bricks whose base is
+within `maxStepHeight` of it. Adds `tests/AvatarStepConstraintUnreachableSurfaceFix.test.js`.
+
+## 0.9.636 — Post-Water Avatar Traversal Product Reassessment
+
+**Type:** test-only audit. **Production changes:** none.
+
+With all five constraints wired together, no user-reachable traversal gap remains. One `MECHANICAL_GAP`: tree
+collision runs last and slides, so its landing point is never re-checked against the water depth gate — unreachable
+in real terrain today (no real tree sits next to too-deep water). The building/terrain elevation mismatch is the
+same open question 0.2.76/0.2.77 named.
+
+## 0.9.637 — Publication Commentary Distribution Provider Selection UI Boundary Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+Two Commentary composers exist: the Repository cards/list (injecting the app-wide
+`addPublicationCommentaryCommand`, which already reads `discoveryProvider`) and World View's panels (bound to a
+session-scoped command that reaches no network). Recommends a selector on the Repository path only.
+
+## 0.9.638 — Publication Commentary Distribution Provider Selector
+
+**Type:** implementation. **Production changes:** `ui/components/PublicationCard.js`,
+`ui/components/PublicationList.js` (a "Distribution: Nostr / Arweave" selector forwarded as `discoveryProvider`).
+
+Status text reports only what was requested, never delivery. World View's panels are untouched.
+
+## 0.9.639 — Publication Commentary Distribution Provider Selection Product Closure Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+Both substrate journeys work end to end through the real components; the other substrate is never invoked. World
+View's Commentary path is recorded as a separate open question. **Classification: `ARC_CLOSED`.**
+
+## 0.9.640 — Editor Document Portability Boundary Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+Every ingredient for Export → Import already exists (`DocumentSerializer`, `DocumentValidator` +
+`DocumentSchemaMigrator`, `DocumentCloneService`, `DocumentManager`, `Toolbar.js`). Key finding: `documentId` is used
+verbatim as the storage key, and saving a document whose id equals `DocumentManifest`'s reserved key corrupts the
+catalog — so Import must always mint a fresh identity. Also records that `protocolVersion` has no migration path
+(`schemaVersion` does).
+
+## 0.9.641 — Editor Document Export
+
+**Type:** implementation. **Production changes:** `application/ExportDocumentUseCase.js` (new),
+`application/EditorSession.js` (`exportDocument()`), `ui/components/Toolbar.js` (Export button),
+`ui/views/EditorView.js` (browser download), `css/main.css`. Adds `tests/EditorDocumentExport.test.js`.
+
+The file is exactly `DocumentSerializer.serialize()`'s output — no new format, no persistence side effect.
+
+## 0.9.642 — Editor Document Import
+
+**Type:** implementation. **Production changes:** `application/ImportDocumentUseCase.js` (new; deserialize, then
+clone to a fresh identity with `parentDocumentId` null), `application/EditorSession.js` (`importDocument(json)`,
+opening through `openDocument()`), `ui/components/Toolbar.js` (Import button and hidden file input),
+`ui/views/EditorView.js`, `css/main.css`. Adds `tests/EditorDocumentImport.test.js`.
+
+An imported document never keeps the source file's `world.id`, even when it collides with a local document or
+the manifest key. Nothing is persisted until the user saves.
+
+## 0.9.643 — Editor Document Portability Product Closure Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+The cross-device journey works, but live-reproduces a pre-existing `DocumentCloneService` bug shared by Import,
+Fork and Duplicate: brick ids are regenerated but each Group's `brickIds` are copied verbatim, so a cloned
+document's groups resolve zero members.
+
+## 0.9.644 — Fix DocumentCloneService Group Membership Identity Remapping
+
+**Type:** implementation. **Production changes:** `application/DocumentCloneService.js` (remaps every group's
+`brickIds` through the same old → new brick-id map it builds while cloning; references already dangling in the
+source stay untouched). Adds `tests/DocumentCloneServiceGroupMembershipFix.test.js`.
+
+One fix covers Fork, Duplicate and Import.
+
+## 0.9.645 — Editor Document Portability Post-Fix Closure Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+Re-proves the journey with full group equivalence across every production consumer of `DocumentCloneService`.
+**Classification: `ARC_CLOSED`.**
+
+## 0.9.646 — Unified Application Layout & UI Consistency Boundary Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+Most layout differences are deliberate (Editor/World's canvas split, the 1400px Repository/Author/My Worlds
+catalog, one shared app shell). One real gap: the Editor sidebar has no scroll owner, the same bug World View fixed
+in 0.5.7. Publications' unbounded width is left open.
+
+## 0.9.647 — Editor Sidebar Scroll Ownership
+
+**Type:** implementation. **Production changes:** `ui/views/EditorView.js` (wraps sidebar content in
+`.sidebar-scroll`), `css/main.css`.
+
+Reuses World View's `.world-view-overlay-scroll` pattern.
+
+## 0.9.648 — Publications Page Container Consistency Boundary Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+The Publications page is built from `.identity-mgmt-card`/`.identity-mgmt-list` throughout — the 720px "social
+surface" convention shared by My Identities, Peers, Conversations and Leaderboards — but its container joined
+neither convention. Recommends that 720px rule, not the Repository grid.
+
+## 0.9.649 — Align Publications with the Application's Identity-Management Convention
+
+**Type:** implementation. **Production changes:** `css/main.css` (one container rule for `.publications-view`).
+
+## 0.9.650 — Major User Journey Product Reassessment
+
+**Type:** test-only audit. **Production changes:** none.
+
+Flagship: a Publication admitted through World Encounters (`WorldEncounterCanvas#admitToRepositoryDiscovery()`)
+never reaches `LocalPublicationCatalog`, so after a restart its placement survives but the Publication vanishes.
+Also records: Nostr/Arweave Commentary discovery commands are provided but never used by any UI; IPFS gateway
+configuration had no persisted store; Save had no error handling at all.
+
+## 0.9.651 — Persist World-Encounter Publication Admissions
+
+**Type:** implementation. **Production changes:** `application/LocalWorldEncounterPublicationAdmissionLog.js`,
+`application/CreateWorldEncounterPublicationAdmissionLogUseCase.js`,
+`application/ReconstructWorldEncounterPublicationDiscoveryUseCase.js` (all new),
+`ui/components/WorldEncounterCanvas.js`, `ui/main.js`, `ui/views/WorldView.js`.
+
+`LocalPublicationCatalog` can't be reused: it holds signed `DecentralizedPublication` locator envelopes, and adding
+a plain `publisher/Publication.js` corrupts its `list()`. A purpose-built durable log (the same shape as
+`LocalBlueprintAttributionPublicationLog`/`LocalPlaceNamingPublicationLog`) is replayed into the same discovery
+provider at startup. The AVAILABLE+VERIFIED admission gate is unchanged.
+
+## 0.9.652 — Document Save Failure Handling Boundary Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+Save has two unwrapped call sites (the Toolbar button and Ctrl/Cmd+S). `SaveDocumentUseCase.execute()` makes
+separate storage writes (document blob, then manifest), so a manifest-write failure leaves real bytes with no
+record of them. No case ever reports a false "saved"; a retry converges.
+
+## 0.9.653 — Surface Document Save Failures
+
+**Type:** implementation. **Production changes:** `ui/components/Toolbar.js`, `ui/views/EditorView.js` (try/catch,
+`console.error`, and a fixed `SAVE_FAILURE_MESSAGE` through `feedback.show()`), `application/SaveDocumentUseCase.js`
+(header note only). Adds `tests/SurfaceDocumentSaveFailuresClosureAudit.test.js`.
+
+Save failures are now visible. The two writes are still not transactional; that remains a separate question.
+
+## 0.9.654 — Sidebar Scrollbar Content Occlusion Boundary Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+Two separate defects: World View's action rows overflow their 280px panel with no scrollbar involved (Undo, Redo,
+History and Notifications were clipped and unreachable), and the Editor's tool switcher sits 4px from the scroll
+edge, which an overlay scrollbar covers.
+
+## 0.9.655 — Fix Sidebar Action Overflow and Scrollbar Content Clearance
+
+**Type:** implementation. **Production changes:** `css/main.css` (`flex-wrap: wrap` on World View's two action
+rows; `.sidebar-scroll` and `.world-view-overlay-scroll` share `padding-right: 1.0625rem`).
+
+## 0.9.656 — Sidebar Layout Fix Closure Audit
+
+**Type:** test-only audit. **Production changes:** none. Confirms every action is reachable and nothing else moved.
+Closes the UI-consistency arc opened by 0.9.646.
+
+## 0.9.657 — IPFS Gateway Configuration Persistence Boundary Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+Reconfirmed the 0.9.373/0.9.385 verdict that the IPFS gateway is deliberately not user-configurable:
+`DELIBERATE_BOUNDARY`. **Reversed by 0.9.665** on new evidence (the default `https://ipfs.io` blocks programmatic
+fetches). Its test file was later removed.
+
+## 0.9.658 — Expanded Editor Sidebar Scrollbar Occlusion Boundary Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+With Transform's "Advanced" section expanded, `AlignmentPanel.js` and `RepeatPanel.js` button rows overflow past
+the sidebar onto the canvas ("Distribute Z" about 133px out). Earlier audits only measured the collapsed state.
+
+## 0.9.659 — Fix Expanded Editor Sidebar Child-Row Overflow
+
+**Type:** implementation. **Production changes:** `ui/components/AlignmentPanel.js`, `ui/components/RepeatPanel.js`
+(`flexWrap: 'wrap'` on their rows, matching `EditingSidebar.js#rowStyle()`).
+
+## 0.9.660 — Editor Selected-Brick Camera Focus Boundary Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+`EditorSession#frameCameraOn()` already uses World View's fixed (12, 12, 12) offset, and
+`getSelectionSummary().bounds.center` is already the right target for single and multiple selections. Also found
+that `EditorContext#setCameraState()`/`CAMERA_STATE_CHANGED` had no production subscriber (both removed in the
+2026-09-23 Editor cleanup below). **Classification: `NARROW_WIRING_GAP`.**
+
+## 0.9.661 — Add Editor Selection Focus Action
+
+**Type:** implementation. **Production changes:** `application/EditorActionRegistry.js` (`selection.focus`),
+`ui/components/SelectionInspector.js` (a Focus button). Adds `tests/EditorSelectionFocusActionClosureAudit.test.js`.
+
+Frames the camera on the selected bricks instantly (no animation). Disabled for a structure-placement selection.
+
+## World collision and Home fixes (unnumbered, 2026-09-19 to 2026-09-20)
+
+Six fixes found while walking a large, off-origin published structure (a 576-brick pyramid):
+
+- **Placed structures collide.** `AvatarMovementConstraint`/`AvatarStepConstraint` take an optional
+  `structureResolver` and fold each `StructurePlacement`'s bricks (with its rotation) into obstacle and support
+  queries. Before this, an avatar walked straight through placed instances.
+- **Wider broad phase.** The per-document cull margin (`MAX_DOCUMENT_SPAN_MARGIN`) went from 64 to 200, so bricks
+  authored far from a document's local origin still collide. A larger margin costs little: documents beyond the
+  150-unit streaming radius are never loaded in the first place.
+- **Real placement bounds.** `PlacePublicationUseCase` loaded bounds with the Publication id instead of its
+  `documentId`, so every placement recorded a 1×1×1 placeholder and large worlds flickered in and out of streaming.
+- **No orphaned meshes.** `WorldRenderer#_addBrickMesh()`/`_renderStructurePlacement()` remove any existing entry
+  for a key before adding, so a fast stream-out/stream-in can't leave a visible but unpickable, uncollidable mesh.
+- **Home is your own world.** `WorldNavigationSession#goHome()` returns camera and avatar to the user's own world
+  (`_homeDocumentId`, set once and never cleared by unloading) instead of the shared origin. It spawns the avatar
+  outside the world's real bounds (`_safeSpawnPosition()`) rather than at a fixed (3, 0, 3) offset. The origin is
+  still listed first in the Locations directory.
+- **Vehicles on hills.** The vehicle render position gets the same ground-elevation lift as the avatar (later
+  corrected by the double-lift fix in the 2026-09-22 section below).
+
+## 0.9.662 — Remote IPFS Distribution Integration Boundary Audit
+
+**Type:** test-only audit. **Production changes:** none.
+
+Remote IPFS pinning produces the same `contentHash`/locator pair as local Kubo, then stops: its one call site
+(`DecentralizedPublicationsView#publishToRemoteIpfs()`) never announces. `IpfsRemotePinningContentStore` drops into
+the existing Snapshot distribution pipeline unchanged. Kubo and Remote Pinning both report `storage: 'ipfs'`, so
+they can't share one `SnapshotPlacementStoreRegistry` key. **Classification: `NARROW_WIRING_GAP`.**
+
+## 0.9.663 — Connect Remote IPFS to Nostr Snapshot Distribution
+
+**Type:** implementation. **Production changes:** `ui/main.js` (provides the existing `snapshotDiscoveryPublisher`),
+`ui/views/DecentralizedPublicationsView.js` (announces after a genuine PUBLISHED outcome; a Nostr failure is kept
+on `entry.ipfsRemoteSnapshotAnnouncement` and never fails the publish). Adds
+`tests/ConnectRemoteIpfsToNostrSnapshotDistributionClosureAudit.test.js`.
+
+A publish through Remote IPFS is now discoverable without a local node.
+
+## 0.9.664 — Node-less Distribution Product Reassessment
+
+**Type:** audit with one in-place UI fix. **Production changes:** `ui/views/DecentralizedPublicationsView.js`
+(renders both announcement outcomes). Adds `tests/NodelessDistributionProductReassessment.test.js`.
+
+Independent retrieval, not just discovery, already works end to end. The gap: announcement outcomes were computed
+but never shown, so a publish whose Nostr announcement failed looked identical to one that succeeded.
+**Classification: `NARROW_UX_GAP`**, closed here.
+
 ## 0.9.665 — User-Configurable IPFS Gateway Configuration Boundary (verdict reversed)
 
 **Type:** implementation. **Production changes:** `core/IpfsGatewayConfiguration.js` (new),
@@ -97532,3 +98136,310 @@ data (`core/AvatarVehicleMovementCapability.js`'s own CAR entry, real since 0.9.
 placement/rendering/movement gap, not an unfinished capability. 0.9.668 closed that gap for MOTORCYCLE
 specifically and left CAR/DRONE exactly where 0.9.599 found them; this milestone is the deliberate decision
 to close the same gap for CAR, leaving DRONE exactly where 0.9.668 found it.
+
+## A note on numbering from here on
+
+The entries below were recorded after the fact. Two things about their numbers:
+
+- Parallel sessions reused some numbers. 0.9.670, 0.9.671, 0.9.701 and 0.9.702 each name two unrelated changes.
+  Both are kept, because source comments already cite them by these labels. 0.9.673–0.9.699 were never used.
+- A lot of work in this period shipped with no number. It is recorded in dated, unnumbered sections, grouped by
+  area. New numbers were not made up for it.
+
+Between 0.9.399 and 0.9.587, milestones were recorded only in their own test files and commit messages, never here.
+The gap was not backfilled.
+
+## 0.9.670 — Publication Material Storage Selection
+
+**Type:** implementation. **Production changes:** `application/ContentStorePublicationMaterialUploader.js` and
+`application/PublicationMaterialUploaderComposition.js` (new), the Publication distribution orchestrator, command
+and composition files (a `materialStorage` option: `'ar' | 'ipfs' | 'remote-pinning'`), `ui/main.js`, and every
+"Distribute Publication" surface (`OwnPublicationPanel`, `WorldEncounterCanvas`, `EditorView`).
+
+"Distribute Publication" used to upload material to Arweave every time, even with Nostr chosen for the
+announcement, so Nostr users still got an Arweave wallet prompt. Where the material goes and where it is announced
+are now two separate choices. The IPFS options reuse `content/IpfsContentStore.js` and
+`content/IpfsRemotePinningContentStore.js`, both already proven for Snapshot distribution. The single-relay and
+multi-relay Nostr paths share one selection seam.
+
+## 0.9.670 — Avatar Inventory (number reused)
+
+**Type:** implementation. **Production changes:** `core/AvatarInventory.js` (immutable inventory of
+`{ id, kind, type }` entries), `core/AvatarVehicleStoreIntent.js`, `core/AvatarVehicleStoreTransition.js`,
+`core/AvatarVehicleDeployIntent.js`, `core/AvatarVehicleDeployTransition.js` (all new),
+`application/VehicleRuntimeInstances.js` (`add()`/`discard()`, so a stored vehicle's spawn slot never respawns a
+duplicate), `application/AvatarVehicleInteractionController.js` (the `Q` key), `ui/components/VehicleInteractionPrompt.js`,
+`ui/views/WorldView.js`.
+
+While mounted, `Q` stores the vehicle (removing it from the world); `Q` again anywhere deploys and mounts it with a
+fresh id at the avatar's position. Named `AvatarInventory`, not `AvatarVehicleInventory`, because the entry shape
+was designed to hold caught animals too (see 0.9.700).
+
+## 0.9.671 — Publication Distribution Result Shape Fix
+
+**Type:** fix. **Production changes:** `ui/components/OwnPublicationPanel.js`.
+
+`distributeWorldEncounterPublication()` resolves a bare result for Arweave and an array (one per relay) for Nostr.
+The panel read `result.publication.objectId` directly and crashed on the first successful Nostr distribution. It now
+normalizes to an array, as `EditorView` already did.
+
+## 0.9.671 — Avatar Inventory Cycle Selection (number reused)
+
+**Type:** implementation. **Production changes:** `core/AvatarInventory.js` (`get()`, `resolve()`, `next()`,
+`previous()`), `core/AvatarVehicleDeployTransition.js` (optional `selectedEntryId`),
+`application/AvatarVehicleInteractionController.js` (`[` and `]` cycle the selection),
+`ui/components/VehicleInteractionPrompt.js` ("Deploy Bicycle (2/3)").
+
+Deploy is no longer limited to the most recently stored vehicle. With no selection it still deploys the most recent.
+
+## 0.9.672 — World View and Editor View Distribution Dialogs
+
+**Type:** presentation. **Production changes:** `ui/components/WorldDistributionDialog.js` (shared by
+`WorldEncounterCanvas` and `OwnPublicationPanel`) and `ui/components/EditorDistributionDialog.js` (the Editor's
+post-publish overlay), both new and built on the existing `.modal-overlay`/`.modal-panel` convention.
+
+Every storage/substrate picker, distribution button and result display moved behind one "Distribute" trigger per
+host. No command, prop, state field or method moved; the combined action still runs its two legs one after the
+other.
+
+## 0.9.700 — Animal Catching
+
+**Type:** implementation. **Production changes:** `core/AnimalIdentity.js` (deterministic ids,
+`animal:<seed>:<cellX>,<cellZ>`), `core/AnimalPresence.js`, `core/AnimalPlacement.js`, the catch/release intent,
+target and transition files under `core/AvatarAnimal*`, `core/WildlifeField.js` (records now carry that id),
+`core/AvatarInventory.js` (an optional `kind` filter and `entriesOf(kind)`), `application/AvatarInventoryStore.js`
+(one shared inventory owner), `application/AnimalRuntimeInstances.js`, `application/AvatarAnimalInteractionController.js`
+(the `F` key), `renderer/WildlifeTileMesh.js` (an exclusion set), `renderer/TerrainStreamingController.js`
+(`invalidateTile()`), `ui/components/AnimalInteractionPrompt.js`.
+
+`F` catches a nearby deer or rabbit into the same inventory as vehicles, or releases the carried one; catching wins
+when both are possible. A caught animal disappears at once because its tile is rebuilt without it. Two bugs fixed
+along the way: an unscoped inventory call could deploy a carried animal as a vehicle (now kind-scoped), and a
+just-stored or just-caught id could be offered again as a target the next tick (`isExcluded()` on both runtime
+stores).
+
+## 0.9.701 — World View Persistence
+
+**Type:** implementation. **Production changes:** `storage/AvatarInventoryPersistenceStore.js`,
+`storage/VehicleRuntimeInstancePersistenceStore.js`, `storage/AnimalRuntimeInstancePersistenceStore.js` (all new),
+`application/AvatarInventoryStore.js`, `application/VehicleRuntimeInstances.js`,
+`application/AnimalRuntimeInstances.js`, `application/CreateWorldViewUseCase.js`,
+`application/WorldNavigationSession.js`.
+
+The carried inventory, placed or ridden vehicles, and released animals survive a reload. Runtime position writes are
+throttled to once per second while riding; `dispose()` flushes a final save. All three stores are optional
+constructor parameters, so existing callers are unaffected.
+
+## 0.9.701 — Released Animal Rendering (number reused)
+
+**Type:** implementation. **Production changes:** `renderer/AnimalRenderer.js`, `renderer/AnimalVisual.js`,
+`renderer/AnimalFieldRenderer.js` (new, mirroring the vehicle renderer trio), `renderer/WildlifeTileMesh.js`
+(exports `SPECIES_PRESET`), `application/AnimalRuntimeInstances.js` (`releasedNearby()`),
+`application/RenderWorldViewUseCase.js` (`syncAnimals()`), `application/WorldNavigationSession.js`.
+
+A released animal is now drawn every frame. Only released animals reach the per-frame renderer; deterministic ones
+stay baked into their tiles, so nothing is drawn twice. Geometry is shared with the tile system and never disposed
+per instance; only cloned materials are. A follow-up fix applies ground elevation, since a released animal carries
+the avatar's flat domain Y.
+
+## 0.9.702 — Avatar Inventory Transfer
+
+**Type:** implementation. **Production changes:** `application/AvatarInventoryTransferPeerProtocol.js` and
+`application/AvatarInventoryTransferPeerExchange.js` (new), `application/CreateWorldViewUseCase.js`,
+`application/WorldNavigationSession.js` (`avatarInventoryTransferPeerExchange()`).
+
+A connected avatar can offer a carried vehicle or animal to another avatar. The entry is held in escrow (removed from
+the sender) the moment the offer is sent, and restored if the offer is declined or the recipient disconnects first,
+so it can't be used elsewhere while the offer is open. One gap remains: a disconnect after the recipient accepts
+but before ACCEPT arrives leaves both sides holding the entry. Follows the `PublicationAnchorPeerExchange` shape. The session exposes
+the exchange; World View has no transfer UI yet. See `docs/Protocol.md`, "Avatar Inventory Transfer (0.9.702)".
+
+## 0.9.702 — World Animal Decorations (number reused)
+
+**Type:** implementation. **Production changes:** `core/AnimalDecoration.js` (new; like `WorldLandmark` but with an
+authoritative Y, since a decoration can sit on a structure), `core/World.js`
+(`addAnimalDecoration`/`getAnimalDecoration(s)`/`removeAnimalDecoration`, serialized as `animalDecorations`, two
+new domain events), `application/commands/CreateWorldAnimalDecorationCommand.js` (registered, so it gets
+persistence, replay and undo), `application/AnimalRuntimeInstances.js#nearestReleased()`,
+`application/WorldNavigationSession.js#decorateNearestReleasedAnimalHere()` (the `G` key), `renderer/WorldRenderer.js`.
+
+A released animal was session-local, so one released on top of a structure never traveled with it when the World
+was published. `G` now bakes the nearest released animal into the World as a decoration, following
+`createLandmarkHere()`'s fork-on-write and authorization rules. Decorative only: it is not a live, catchable creature
+for other peers.
+
+## 0.9.703 — Undo a World Animal Decoration
+
+**Type:** implementation. **Production changes:** `application/commands/RemoveWorldAnimalDecorationCommand.js`
+(new), `application/WorldNavigationSession.js` (`undecorateNearestAnimalDecorationHere()`,
+`toggleNearestAnimalDecorationHere()`).
+
+`G` is no longer one-way. With a released animal nearby it decorates; otherwise, with a decoration nearby (in any
+loaded World), it removes the decoration and releases the animal again with a fresh id.
+
+## Distribution, network settings and wallets (unnumbered, 2026-09-20 to 2026-09-23)
+
+**Publications page layout.** The tools disclosure is split into three tabs (Blockchain Anchoring, Archive Tools,
+References & Achievements); each entry's Details disclosure is split into four (Snapshot, Decentralization &
+Evidence, Placements & IPFS, History); each entry's Distribution section is a disclosure that starts open. All
+presentation only.
+
+**World View Snapshot distribution.** `distributeWorldEncounterSnapshot()` read a Publication's bytes from
+`LocalPublicationCatalog`, which never holds World Publications, so it failed for nearly every real click. It now
+reads `publicationContentStore.get(publication.contentReference)`; the same fix went into the Publications page.
+World View gained a storage picker (Arweave, IPFS (Local Kubo), IPFS (Remote Pinning)); Remote Pinning publishes
+through `ipfsRemotePublicationCoordinator` and announces through the Snapshot discovery publisher, returning the
+same result shape. Failures in both World View panels now go through `sanitizeDistributionErrorMessage()`. A Nostr
+announcement failure after a successful pin is kept as `result.announcementError` and never fails the pin.
+
+**One Nostr relay set, with fan-out.** `core/NostrRelayConfiguration.js` accepts `relayUrls` (a list). New
+`NostrMultiRelaySnapshotDiscoveryPublisher`, `NostrMultiRelaySnapshotDiscoveryQueryService`,
+`NostrMultiRelayPlaceNamingDiscoverySource` and `NostrMultiRelayPublicationCommentaryDistribution` query and publish
+across every relay. Relays are independent stores, so this is fan-out, not ordered failover (the Arweave/IPFS
+gateway rule). Snapshot announcements had been hardcoded to `wss://relay.damus.io`; they now use the configured set.
+The separate "Nostr Publication Relays" configuration (`core/NostrPublicationRelaySetConfiguration.js`, its store,
+use case, provider and settings page) was removed and merged into this one set, reversing the earlier decision to
+keep them apart. Later, the Set use cases for Arweave Gateway, IPFS Gateway and Nostr Relays accept only the list
+form.
+
+**Nostr or Arweave for every announcement.** New `application/ArweavePlaceNamingDiscoveryPublisher.js`; the Snapshot
+and Place Naming runtime compositions take `discoveryProvider: 'nostr' | 'arweave'`, like Publication distribution.
+A new settings page, `/settings/announcement-discovery-provider`, stores the default for Publication, Snapshot, Place
+Naming and Commentary. `ui/main.js` builds both Snapshot discovery publishers and exposes
+`resolveSnapshotDiscoveryPublisher(discoveryProvider)`, so Snapshot distribution also has a per-click override.
+
+**Proof & Anchoring preference.** `application/PreferredPublicationAnchorCreationCoordinator.js` (plus its
+composition use case) resolves the stored `PROOF_AND_ANCHORING` preference. A new `/settings/anchor-provider` page
+and a "Use Preferred Provider" button in the Publication Center use it. Base is excluded (it needs a reviewed wallet
+transaction), so the preference is Bitcoin or Arweave. A later fix returned `preferredAnchorCreationCoordinator`
+from the Publications page's `setup()`; the button had never actually rendered.
+
+**More endpoints are configurable.** `core/IpfsNodeConfiguration.js` (+ store and use case) sets the Kubo API URL for
+the IPFS write path, edited on the Content Provider page (previously always `127.0.0.1:5001`).
+`core/BitcoinEsploraConfiguration.js` (+ store, use case and `/settings/bitcoin-esplora`) sets the Esplora endpoint
+used for broadcast, confirmation, funding lookups and proof verification. Both follow the Arweave/IPFS Gateway
+pattern.
+
+**Saved preferences seed every picker.** `application/SavedProviderDefaultChoice.js`
+(`resolveSavedProviderDefault()`) picks the saved provider as a picker's initial value only when it is one of the
+options offered; otherwise the old default stands. It only seeds the first value and never overrides a choice
+already made. It is used by the Editor, Publications, Repository and both World View distribution surfaces.
+`OwnPublicationPanel` also gained the Nostr/Arweave selector it was missing (it always used Nostr).
+
+**Remote Pinning as the Content default.** Content Provider settings can save `remote-pinning`, and the composition
+root and every distribution dialog accept it. `local` is no longer offered, because content always stays on this
+device first: `PreferredSnapshotPlacementCreationCoordinator#preferableStorageTypes()` excludes it, and a legacy saved
+`local` reads as no preference.
+
+**Remote-pinning credential memory.** `application/IpfsRemotePublishingCredentialMemory.js` keeps the last saved
+pinning credential in a module-scope variable for the tab's lifetime only (no browser storage), so a new entry's
+form can be prefilled without breaking the 0.8.68 ephemeral-credential rule.
+
+**Wallet timeouts.** NIP-07 `getPublicKey()`/`signEvent()` now time out after 2 minutes, and
+`NostrPublicationDiscoveryPublisher`'s outer timeout went from 8s to 250s, so a slow nos2x approval is no longer
+abandoned early. The Arweave, Bitcoin (UniSat) and Base (EIP-1193) signers got the same 120s bound on their
+connect/sign calls.
+
+**One Distribute action.** World Encounters, My Publication and the Editor's post-publish overlay each gained one
+"Distribute" button that runs Publication and Snapshot distribution in sequence, never concurrently: both legs can
+sign through the same wallet extension, which can hang if asked twice at once. EditorView also gained Distribute
+Snapshot. The dialogs (0.9.672) later got one shared settings block (Storage, one Remote Pinning draft, one
+Announcement/Discovery substrate) read by both legs; results and errors stay per protocol. When Snapshot
+distribution is available, Storage lists only the backends the Snapshot registry reports, plus Remote Pinning.
+
+**Settings page code.** Every settings page uses the 560px card layout. The shared form lifecycle moved into
+`ui/composables/useEndpointSettingsForm.js` and `ui/composables/useRoleProviderPreferenceForm.js`, and the "one URL
+per line" parser into `utils/splitNonEmptyLines.js`. The never-visible `'saving'` status was removed.
+
+## World View, vehicles and wildlife (unnumbered, 2026-09-21 to 2026-09-23)
+
+**Tree species.** `core/NaturalFeatureField.js#TREE_SPECIES` (CONIFER/BROADLEAF/SCRUB) is chosen from the moisture
+field: grassland fringe trees are SCRUB, and forest splits into wetter CONIFER and drier BROADLEAF with a narrow blend
+band. `renderer/NaturalFeatureTileMesh.js` builds one instanced trunk/canopy pair per species present in a tile.
+
+**Lighting.** Instanced tree and animal colors rendered almost black: the materials set `vertexColors: true` on
+geometry with no color attribute. `renderer/Lights.js` also replaced its ambient light with a `HemisphereLight` and
+raised both intensities for `MeshStandardMaterial`.
+
+**Wildlife collision.** `core/WildlifeCollisionGeometry.js` (deer 0.5, rabbit 0.3 base radius, scaled per animal),
+`core/AvatarWildlifeCollisionQuery.js` and `application/AvatarWildlifeConstraint.js` (reusing
+`core/AvatarTreeMovement.js`'s circle resolution). The constraint runs after tree collision as a sixth optional
+constraint. It blocks walking, not riding.
+
+**Double elevation fix.** A mounted vehicle's domain position already carries real terrain height, so the render
+lift was adding it twice (sinking into valleys, floating over hills). `syncVehicles()` now renders the vehicle as is,
+and the avatar render path skips its own lift while riding (`ridingVehicle`, `_isRidingMovableVehicle()`).
+
+**Drones fly.** `core/AvatarDroneVerticalState.js` (GROUNDED/RISING/HOVERING/DESCENDING, `DRONE_HOVER_ALTITUDE = 4`,
+`stepDroneAltitude()`). Drones are placed (`VEHICLE_TYPE_DRONE_SHARE = 0.02`, the rarest type), rendered
+(`buildDrone()`), mountable, and movable as a real `AERIAL_VEHICLE` (speed 16). A drone can't be dismounted while
+meaningfully above the ground. Tree collision is skipped only while HOVERING. Building collision became
+height-aware for free by passing the drone's real Y into `core/AvatarCollision.js`. Ground vehicles now read
+BICYCLE 6 < MOTORCYCLE 9 < CAR 12 < DRONE 16.
+
+**Map, compass and styles.** The compass updates during an orbit drag. The `<style>` block `WorldView.js` injected at
+load is gone (it duplicated `css/main.css`). The map reads `getMapContent()` only while it is open.
+
+**World Encounter locations.** `application/WorldEncounterLeadAssociationsQueryComposition.js` supplies real
+lead-association evidence to `WorldEncounterCanvas` through a new `leadAssociationsQuery` prop. The
+`decentralizedLeadAssociations` array had never been passed in production, so every outcome was UNAVAILABLE and the
+Choose Location panel never appeared. One local-only publication provider is now shared by encounter discovery and
+this query.
+
+## Editor, Commentary and cleanup passes (unnumbered, 2026-09-22 to 2026-09-23)
+
+**Brick colors.** Each brick type's default color moved from `renderer/ThreeBrickFactory.js` onto
+`BrickDefinition#color`. `core/Brick.js` gained an optional per-instance `color` (0xRRGGBB, `null` = the
+definition's color), set with the undoable `SetBrickColorCommand`. There is a swatch in the Build Library (for the
+next bricks placed) and one in the Selection Inspector (to recolor the selection). `core/ColorHex.js` converts to
+and from CSS hex. `WorldRenderer#_onBrickUpdated` now also applies the color.
+
+**Commentary fetch-on-open.** `application/RefreshPublicationCommentaryCommandComposition.js` checks Nostr and
+Arweave side by side for one Publication and returns `{ newCount, checked, failed }`; it never rejects.
+`ui/components/PublicationCommentaryRemoteCheck.js` runs it when a Commentary section opens and from a "Check for new
+comments" button. It is mounted in every Commentary section. This answers 0.9.628's "when to fetch" question.
+Comments posted from World View's panels are still only saved locally.
+
+**Shared Commentary section.** `ui/components/PublicationCommentarySection.js` replaces the Repository card and
+list views' two drifting copies. The list view also now honors the saved Announcement/Discovery default.
+
+**Coding conventions.** `utils/sortOptionsByLabel.js`: choice lists are sorted alphabetically by label unless the
+order carries meaning. Comments explain why, and change history belongs here, not in code. See
+`docs/CodingConventions.md`.
+
+**Identity security.** `LocalIdentityProvider#exportLocalIdentity()` now counts wrong passphrases against the same
+per-identity lockout as unlock (`_decryptWithAttemptLimit()`), so Export can no longer be used to guess without a
+cooldown. `IdentityUseCase.declareSuccessor()` now also publishes `VaultLockChanged`. Passphrase fields use
+`autocomplete="new-password"`.
+
+**Peers and Conversations.** `ConnectedPeerRegistry#connectedSince()` and `PeerSessionManager#isPublishing()` make
+the connection timer and the "Be Discoverable" state app-wide instead of per page visit. "Open Chat" is gated on
+`chatUseCase.canChat()`, so a blocked friend gets none. `PeerPresenceUseCase#list()` reads each store once, and
+`onChange()` no longer passes a list.
+
+**My Worlds.** One damaged `world-experience:*` entry no longer breaks the page:
+`LocalWorldExperienceStore#getExperience()` treats it as never visited, and `LocalWorldExperience` validates
+`lastVisitedAt` and camera values.
+
+**My Avatar.** Component controls come from the template's declared components. The two visibility sections share
+`ui/components/VisibilityPolicyForm.js`.
+
+**Dead code removed.** Each pass kept behavior and updated the source-pinning tests:
+
+- Editor: `replayRecoveredOperation()` and its wiring; `EditorContext`'s camera state and `CAMERA_STATE_CHANGED`;
+  `DocumentState.readOnly`; `ui/components/GroupsPanel.js`; `application/TransformSelectionUseCase.js` (superseded by
+  `SpatialEditingService`); `InputRouter`'s `ESCAPE_PRIORITY`/`resolveEscapeTarget()` (EditorView implements the Escape
+  chain itself); `EditorActionRegistry`'s `capabilities.canEdit` gate, the `ui.promptCreateStructure()` fallback and
+  `getByCategory()`; `EditorSession#getSelectionCount()`/`snapSelectionToGrid()`; the unused key-up/wheel dispatch
+  chain. The Toolbar requires `feedback` (no `alert()` fallback).
+- World View: an unused handler and refs, all 29 `typeof session.x === 'function'` guards, and duplicate focus
+  handlers.
+- Repository: `PublicationPage.empty()`, `PublicationQuery.withPage()` and the unused `forkCounts` prop.
+  `License.idOf()` gives one "UNSPECIFIED" fallback.
+- My Worlds: `getRecentlyVisitedWorlds()` and `LocalWorldExperienceStore#updateCamera*()`.
+- My Avatar: `onPolicyChanged()` on both visibility use cases.
+- My Identities: `IdentityUseCase` `login()`, `logout()`, `protectIdentity()`, `vaultLock()`, `isRevoked()`,
+  `getRevocationRecord()` (the provider methods remain); `onRemoteLifecycleChanged()`. The per-identity forms were
+  collapsed into one open form at a time.
+- Peers: `PeerSessionManager#listCandidates()`/`forgetCandidate()`; the `lifecycleState` summary field.
+- Publications page: a third of the file's comments (version history) removed; five unused `isValid*State` exports.

@@ -322,10 +322,10 @@ ids, never references to the Document's own bricks.
 `clipboard.copy` except a `StructurePlacement` selection, which is never
 eligible — reachable today from the Command Palette (0.1.50), where
 every registered action already renders with no per-action wiring
-needed. `ui/views/EditorView.js#actionUi.promptCreateStructure()`
-captures Name/Category/Description with the same `window.prompt()`
-pattern `ui/components/GroupsPanel.js` already uses for a group's name;
-author, version, and generated thumbnails are deliberately not asked
+needed. In 0.4.2, `ui/views/EditorView.js#actionUi.promptCreateStructure()`
+captured Name/Category/Description with `window.prompt()`. Since 0.6.3 the
+Create Blueprint dialog does this instead, and the prompt fallback was removed
+on 2026-09-23 (see below). Author, version, and generated thumbnails are deliberately not asked
 for here — they belong to the Personal Blueprint Library (0.4.3), not
 the extraction mechanic itself.
 
@@ -392,9 +392,11 @@ pure, unpersisted observation 0.4.2 made it:
     editorSession.saveStructureToPersonalLibrary(structure);                 // 0.4.3, chained after
 
 `application/EditorActionRegistry.js`'s `structure.createFromSelection`
-action performs exactly this chain, then calls the optional
-`ui.onPersonalLibraryChanged()` hook so a surface that offers one (like
-`ui/views/EditorView.js`) can refresh its own list immediately. The 0.4.0
+action performed exactly this chain in 0.4.3. Since 0.6.3 the action only
+opens the Create Blueprint dialog, and `ui/views/EditorView.js#onCreateBlueprint()`
+runs the chain and refreshes the list itself. The optional
+`ui.onPersonalLibraryChanged()` hook the action used to call was removed on
+2026-09-23. The 0.4.0
 → 0.4.3 workflow this completes:
 
     Select bricks -> Create Structure -> metadata dialog ->
@@ -575,8 +577,9 @@ with placeholder metadata) before any name is typed. `application/EditorActionRe
 `structure.createFromSelection` (relabeled "Create Structure" ->
 **"Create Blueprint"**, `tier: 'advanced'`) now prefers a
 `ui.openCreateBlueprintDialog()` hook over the 0.4.2 `ui.promptCreateStructure()`
-chain, which stays exactly as it was as a fallback for a surface
-without the dialog. `ui/components/SelectionInspector.js` (0.6.2) gains
+chain. That chain stayed as a fallback until 2026-09-23, when it was removed:
+the Editor is the action registry's only caller and always supplies the
+dialog. `ui/components/SelectionInspector.js` (0.6.2) gains
 an "Advanced" section holding this same action — Create Blueprint is no
 longer Command-Palette-only.
 
@@ -636,3 +639,32 @@ registry contract (with the 0.4.2/0.4.3 prompt fallback proven
 byte-for-byte unchanged), `ForkStructureToLibraryUseCase`'s
 independence guarantees, and a full Build -> Extract -> Save -> Place
 -> Modify -> Extract -> Save -> Export -> Import -> Place capstone.
+
+## Relative Face Snapping (0.9.611)
+
+Placing a structure used to snap only to the global grid
+(`PlacementPositionService#calculateStructureGround()`). A forked structure's
+footprint is rarely a whole number of grid cells, so two structures placed side
+by side often ended up with a small gap between them.
+
+`application/tools/StructurePlacementTool.js` now reads the pointer's
+`pickedPlacement` first, like `PlacementTool` reads `pickedBrick` for bricks.
+When the pointer is on a side face of an already-placed structure,
+`PlacementPositionService#calculateStructureStack(anchorPosition, anchorBounds,
+normal, movingBounds, settings)` places the new structure flush against that
+face:
+
+- **Contact axis: exact.** It is never grid-snapped, so the faces touch with no
+  gap, whatever the footprint sizes.
+- **Other axes: grid-snapped.** They follow the anchor's own grid-snapped
+  coordinate, as `calculateStack()` does for bricks. You can't slide the new
+  structure along a wide face.
+- **Falls back to the ground snap** for a top or bottom hit (there is no vertical
+  structure stacking), a missing face normal, an anchor whose Document can't be
+  resolved, or no hit.
+
+`renderer/PickingService.js#pickPlacement()` supplies the hit's face `normal`.
+The anchor is never moved, and `StructurePlacementValidator` still rejects any
+overlap. Moving a structure by dragging it (`SelectionTool`) does not
+face-snap. A placement's serialized shape is unchanged: `{ id, documentId,
+position, rotation }`. See `docs/Roadmap.md`, 0.9.610–0.9.612.

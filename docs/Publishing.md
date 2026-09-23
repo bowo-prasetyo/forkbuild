@@ -132,6 +132,61 @@ The three identity layers hold exactly as designed: document identity
 stable per creation, publication identity fresh per publish, blockchain
 identity (future) a third layer again.
 
+## Current State: Publishing vs. Distribution (as of 2026-09-23)
+
+The sections above describe the local publishing core, which is still how
+every Publication starts: `PublishDocumentUseCase` → `LocalPublisherProvider`,
+stored on this device. Everything that leaves the device is a separate,
+explicit step called **distribution**. It is never a side effect of Publish.
+
+**What can be distributed.**
+
+- *Publication distribution* uploads the Publication's material and announces a
+  locator for it (a signed `DecentralizedPublication`), so other people can
+  discover it and verify it.
+- *Snapshot distribution* uploads the raw content bytes and announces a Snapshot
+  locator.
+
+The two are independent protocols with separate results. A combined
+"Distribute" action runs them one after the other.
+
+**The choices** (see `docs/Architecture.md`, "Distribution: independent
+choices, one dialog"):
+
+- **Storage** for the bytes: Arweave, IPFS (Local Kubo, at the configured IPFS
+  Node URL), or IPFS (Remote Pinning, any Pinata-compatible service; the
+  credential is kept in tab memory only).
+- **Announcement/Discovery** substrate: Nostr (every configured relay) or
+  Arweave (a tagged transaction). Each action uses one of them, never both.
+- **Proof/Anchoring**, optional and separate: Bitcoin, Arweave, or Base (Base
+  only through its own reviewed-transaction button).
+
+The saved Content, Announcement/Discovery and Proof/Anchoring preferences
+(Network Settings) seed every picker's first value and power the "Use
+Preferred Provider" buttons. They never trigger a network action on their own.
+
+**Where it happens.** The Editor's post-publish overlay and World View (My
+Publication, World Encounters) each open a Distribute dialog with one shared
+settings block. The Publications page (`/publications`) keeps the full
+per-entry controls: Remote IPFS publishing, snapshot placements, anchoring,
+evidence and history.
+
+**Discovery and presence.** Distributed Publications are found through Nostr
+or Arweave discovery (and World Encounters while walking), verified, and then
+admitted to the Repository. Admissions are recorded durably
+(`LocalPublicationCatalog`, `LocalWorldEncounterPublicationAdmissionLog`) and
+rebuilt at startup, so a placed Publication is still in the World after a
+restart.
+
+**Commentary** on a Publication is signed and distributed the same way
+(WebRTC to connected peers, plus Nostr or Arweave). It is fetched when a
+Commentary section opens. See `docs/Protocol.md`, "Publication Commentary
+Distribution".
+
+The Steem publisher below never happened. Nostr and Arweave filled that role
+through the discovery and distribution adapters instead, with the `publisher/`
+contract unchanged.
+
 ## Future Directions
 
 - **SteemPublisherProvider**: posts document JSON as a Steem custom_json
