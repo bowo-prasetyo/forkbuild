@@ -194,6 +194,30 @@ docs/CapabilityMatrix.md for exactly what each surface may do.
   - Save failures (0.9.653): both Save entry points catch errors and show
     SAVE_FAILURE_MESSAGE. The sidebar scrolls inside `.sidebar-scroll`.
 
+## Bricks, structures and blueprints
+
+docs/BrickLibrary.md, docs/BrickIDs.md and docs/StructureLibrary.md are
+the detailed references; in short:
+
+- BrickRegistry (core/) holds brick definitions from core/library/CoreLibrary.js.
+  StructureRegistry (core/StructureRegistry.js) holds Structures from
+  core/library/VillageLibrary.js. A Structure is only ordinary bricks in
+  local coordinates.
+- The Editor's Build Library (ui/components/BuildLibraryPanel.js) lists
+  both, with previews from application/LibraryPreviewService.js. Clicking
+  a structure places a copy of its bricks
+  (CopyStructureIntoDocumentUseCase through StructureCompositionTool);
+  Fork opens it as a new document.
+- A StructurePlacement (core/StructurePlacement.js) places a whole saved
+  Document inside another one by reference, resolved fresh by
+  application/StructureDocumentResolver.js; placements can be moved,
+  rotated, duplicated and removed with their own commands.
+- Blueprints: a personal structure library (LocalStructureLibraryStore,
+  local to the device), BlueprintPackage export and import, and
+  fingerprints, attribution and lineage claims (core/BlueprintFingerprint.js,
+  BlueprintAttribution*, BlueprintLineage*) that describe a design without
+  becoming part of it.
+
 ## World View
 
 World View (ui/views/WorldView.js, route `/world/:documentId`) walks
@@ -590,67 +614,6 @@ who you are, what your avatar looks like, and where it is right now.
   and falling (core/AvatarVerticalState.js) are height constraints, not
   physics.
 
-## Collaboration
-
-Several people can edit one World at the same time. The live design
-(0.2.95–0.2.99) sends commands, never documents:
-
-- WorldAuthorizationService decides, on every mutation attempt, whether
-  this identity may edit this World: by owning it, or through a signed
-  grant. Nothing is cached, so a revocation takes effect on the next try.
-- WorldMembershipUseCase issues and gossips grants and revocations
-  (core/WorldEditAuthorizationEnvelope.js, owner-signed only) over
-  `forkbuild:world-membership`.
-- WorldCommandPropagationUseCase sends each local command as a
-  core/WorldOperationEnvelope.js over `forkbuild:world-sync`, checks the
-  sender's authority for that specific World, and applies remote
-  operations idempotently. Operations are totally ordered by a Lamport
-  clock and operation id (core/LogicalClock.js,
-  replication/WorldOperationOrdering.js), never by wall-clock time;
-  replication/WorldConflictResolver.js reorders rather than rewrites,
-  and delete is terminal. Remote operations never enter the local undo
-  stack.
-- WorldPresenceUseCase (`forkbuild:world-presence`) says who is online in
-  a World, recomputing `canEdit` locally rather than trusting a claim.
-  WorldSpatialPresenceUseCase (`forkbuild:world-spatial-presence`) shares
-  camera position, heading, selection and activity as ephemeral
-  observation, drawn by RemoteSpatialPresenceRenderer. Following another
-  person is local camera navigation.
-- ui/components/WorldCollaborationRoster.js joins these for
-  WorldMembersPanel, WorldPresenceIndicator and WorldCollaboratorIndicator.
-
-The earlier protocol from Collaboration Protocol Foundation (0.2.7) and
-Multi-client Synchronization (0.2.9) (collaboration/: CollaborationSession,
-DocumentAuthority and the transports, wired by
-application/CreateCollaborationUseCase.js) still exists but has no callers
-in the app; the design notes are in docs/ArchitectureHistory.md.
-
-## Places, landmarks and naming
-
-- **Regions and landmarks** (core/WorldRegion.js, core/WorldLandmark.js,
-  core/RegionKind.js) are World content: World View creates, updates and
-  removes them with commands at the avatar's position, so they are
-  undoable and follow the World's authorization. World Animal
-  Decorations follow the same path.
-- **Derived structure.** core/WorldCurationContext.js groups content
-  near landmarks; core/WorldRegionGeography.js and the
-  core/GeographicPlace*.js modules derive geographic places from region
-  names. Places are computed views: they highlight existing geometry and
-  are navigable, but never become stored objects. WorldLocationDirectory
-  lists locations from existing identity data, and WorldFocusContext
-  describes what is being looked at.
-- **Naming claims.** A name is a claim, not a fact: core/PlaceNamingClaim.js
-  is a signed claim, managed by PlaceNamingClaimUseCase, shared by file
-  (PlaceNamingClaimExchange) or published and discovered over Nostr or
-  Arweave (PlaceNaming*Discovery* and *RuntimeComposition files) with a
-  per-region tag. Discovering a claim never adopts it: adopting a nearby
-  discovered claim is an explicit action in World View that runs the same
-  import path (PlaceNamingClaimExchange#importClaim()) as a manual import
-  from PlaceNamingPanel.
-- **Personal state.** LocalWorldExperienceStore remembers where you were
-  in each World you visited. It is local, never World content, and feeds
-  the Recent Worlds page.
-
 ## Avatar movement constraint pipeline
 
 `application/AvatarMovementController.js` runs the simulated move through up to six optional constraints, in this
@@ -717,6 +680,67 @@ pure function of `(seed, x, z)`:
 - `WildlifeField`: animals
 
 None of it is stored, so a tile that streams out and back in is identical.
+
+## Collaboration
+
+Several people can edit one World at the same time. The live design
+(0.2.95–0.2.99) sends commands, never documents:
+
+- WorldAuthorizationService decides, on every mutation attempt, whether
+  this identity may edit this World: by owning it, or through a signed
+  grant. Nothing is cached, so a revocation takes effect on the next try.
+- WorldMembershipUseCase issues and gossips grants and revocations
+  (core/WorldEditAuthorizationEnvelope.js, owner-signed only) over
+  `forkbuild:world-membership`.
+- WorldCommandPropagationUseCase sends each local command as a
+  core/WorldOperationEnvelope.js over `forkbuild:world-sync`, checks the
+  sender's authority for that specific World, and applies remote
+  operations idempotently. Operations are totally ordered by a Lamport
+  clock and operation id (core/LogicalClock.js,
+  replication/WorldOperationOrdering.js), never by wall-clock time;
+  replication/WorldConflictResolver.js reorders rather than rewrites,
+  and delete is terminal. Remote operations never enter the local undo
+  stack.
+- WorldPresenceUseCase (`forkbuild:world-presence`) says who is online in
+  a World, recomputing `canEdit` locally rather than trusting a claim.
+  WorldSpatialPresenceUseCase (`forkbuild:world-spatial-presence`) shares
+  camera position, heading, selection and activity as ephemeral
+  observation, drawn by RemoteSpatialPresenceRenderer. Following another
+  person is local camera navigation.
+- ui/components/WorldCollaborationRoster.js joins these for
+  WorldMembersPanel, WorldPresenceIndicator and WorldCollaboratorIndicator.
+
+The earlier protocol from Collaboration Protocol Foundation (0.2.7) and
+Multi-client Synchronization (0.2.9) (collaboration/: CollaborationSession,
+DocumentAuthority and the transports, wired by
+application/CreateCollaborationUseCase.js) still exists but has no callers
+in the app; the design notes are in docs/ArchitectureHistory.md.
+
+## Places, landmarks and naming
+
+- **Regions and landmarks** (core/WorldRegion.js, core/WorldLandmark.js,
+  core/RegionKind.js) are World content: World View creates, updates and
+  removes them with commands at the avatar's position, so they are
+  undoable and follow the World's authorization. World Animal
+  Decorations follow the same path.
+- **Derived structure.** core/WorldCurationContext.js groups content
+  near landmarks; core/WorldRegionGeography.js and the
+  core/GeographicPlace*.js modules derive geographic places from region
+  names. Places are computed views: they highlight existing geometry and
+  are navigable, but never become stored objects. WorldLocationDirectory
+  lists locations from existing identity data, and WorldFocusContext
+  describes what is being looked at.
+- **Naming claims.** A name is a claim, not a fact: core/PlaceNamingClaim.js
+  is a signed claim, managed by PlaceNamingClaimUseCase, shared by file
+  (PlaceNamingClaimExchange) or published and discovered over Nostr or
+  Arweave (PlaceNaming*Discovery* and *RuntimeComposition files) with a
+  per-region tag. Discovering a claim never adopts it: adopting a nearby
+  discovered claim is an explicit action in World View that runs the same
+  import path (PlaceNamingClaimExchange#importClaim()) as a manual import
+  from PlaceNamingPanel.
+- **Personal state.** LocalWorldExperienceStore remembers where you were
+  in each World you visited. It is local, never World content, and feeds
+  the Recent Worlds page.
 
 ## Publication presence across restarts
 
@@ -789,6 +813,59 @@ Credentials are never stored. The remote-pinning credential is kept only in tab 
 `ui/components/PublicationCommentarySection.js` is the Repository's single Commentary component (card and list).
 World View's Commentary panels still post only locally.
 
+## Decentralized publications, anchoring and evidence
+
+This is the largest part of the codebase (0.7.x–0.9.x). The sections
+above on publication presence, distribution, network settings and
+commentary describe what a user drives day to day; this is the map of
+the rest.
+
+- **Decentralized publication.** core/DecentralizedPublication.js is a
+  signed, protocol-neutral statement that a Publication's bytes can be
+  found at a locator, verified by content hash wherever they came from.
+  Peers exchange publications and content over `forkbuild:publication`
+  and `forkbuild:content` (PublicationPeerExchange, PeerContentExchange,
+  PeerContentRetrievalCoordinator). discovery/DecentralizedPublicationDiscoveryProvider.js
+  is the one application-wide catalog of verified, admitted publications,
+  rebuilt at startup from LocalPublicationCatalog.
+- **Snapshots.** A Snapshot placement records where a publication's raw
+  content was stored (Arweave, IPFS, local). Its application/ files
+  (*SnapshotPlacement*, Materialize*, DecentralizedSnapshotResolver)
+  cover creating, announcing, discovering, resolving and explicitly
+  materializing Snapshots. content/ holds the stores and
+  application/IpfsRemotePublicationCoordinator.js the remote-pinning path.
+- **World Encounters.** The DecentralizedWorld*/WorldDiscovery*
+  application files turn discovered publications and Snapshots into
+  encounters shown by ui/components/WorldEncounterCanvas.js.
+- **Anchoring.** core/PublicationAnchor.js is a claim that external
+  evidence (a Bitcoin OP_RETURN, an Arweave transaction or a Base
+  transaction) exists for a publication. anchoring/ and base/ build,
+  review, sign, broadcast and observe those transactions; proof verifiers
+  check them. Anchors are stored (LocalPublicationAnchorStore/Catalog),
+  exchanged over `forkbuild:anchor`, and never treated as authority:
+  verification results and observations are dated facts, kept apart from
+  the claims (see docs/Principles.md, "External anchoring and chain
+  transactions").
+- **Evidence, archives and timelines.** Observation histories, archives
+  with fingerprints and differences, and lifecycle timelines
+  (PublicationObservationArchive*, *TimelineView, *ArchiveView).
+- **Achievements, rankings and reconciliation.** Achievement events,
+  badges and profiles derived from evidence; leaderboards as a
+  presentation of a ranking policy; signed leaderboard claims and their
+  reconciliation (the `/leaderboard`, `/publisher-leaderboard`,
+  `/reconciliation-*` and `/evidence-export-comparison` routes).
+- **Notifications.** core/NotificationEvent.js,
+  storage/NotificationEventStore.js, GetRecipientNotificationEventsUseCase
+  and ui/components/NotificationHistoryPanel.js. Only persistence is
+  claimed: not delivery, seen or read.
+
+The user-facing entry point is the Publications page (`/publications`,
+ui/views/DecentralizedPublicationsView.js). docs/Roadmap.md has one entry
+per milestone for this area, and docs/Principles.md groups its rules
+under "Decentralized publication, content and replicas", "External
+anchoring and chain transactions", "Achievements, rankings and
+reconciliation" and "Notifications".
+
 ## Renderer
 
 renderer/Renderer.js owns the WebGL renderer, scene (SceneManager),
@@ -825,18 +902,7 @@ settings pages under `/settings/…`, the leaderboard and reconciliation
 views, and About. Views reach application/ through injected services;
 the two composables in ui/composables/ share the settings-form logic.
 
-## Subsystems described elsewhere for now
-
-These areas have no current-state section here yet. Until they do, their
-design is described in docs/ArchitectureHistory.md (the section named in
-the middle column) and docs/Roadmap.md.
-
-| Area | docs/ArchitectureHistory.md | Also see |
-|------|-----------------------------|----------|
-| Bricks, structures and blueprints | 0.2.80–0.2.81 | docs/BrickLibrary.md, docs/StructureLibrary.md |
-| Anchoring, evidence and achievements | (none) | docs/Roadmap.md, 0.8.0 onward |
-
-Directories without a section of their own:
+## Directories without a section of their own
 
 | Directory | What it holds | Where it is explained |
 |-----------|---------------|------------------------|
