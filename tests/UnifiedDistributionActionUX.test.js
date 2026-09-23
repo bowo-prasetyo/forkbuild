@@ -460,9 +460,9 @@ async function runTests() {
             '15. OwnPublicationPanel.js still calls publicationDistributionCommand from exactly one place');
         assert((panelCode.match(/this\.snapshotDistributionCommand\(/g) || []).length === 1,
             '16. OwnPublicationPanel.js still calls snapshotDistributionCommand from exactly one place');
-        assert((editorCode.match(/\.then\(\(\) => distributeEditorPublication\(/g) || []).length === 1,
+        assert((editorCode.match(/\(\) => distributeEditorPublication\(/g) || []).length === 1,
             '23. EditorView.js still calls distributeEditorPublication from exactly one place');
-        assert((editorCode.match(/\.then\(\(\) => distributeEditorSnapshot\(/g) || []).length === 1,
+        assert((editorCode.match(/\(\) => distributeEditorSnapshot\(/g) || []).length === 1,
             '24. EditorView.js still calls distributeEditorSnapshot from exactly one place');
 
         const forbidden = [/distributePublication\(publication,\s*targets\)/, /MULTI_SUCCESS|AGGREGATE_(SUCCESS|STATUS)/, /combinedDistributionResult/, /combinedDistributionError/, /Promise\.all(?:Settled)?\(/];

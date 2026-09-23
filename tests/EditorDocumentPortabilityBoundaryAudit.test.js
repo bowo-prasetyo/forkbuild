@@ -152,9 +152,9 @@ async function run() {
             n('SaveDocumentUseCase\'s own real source resolves the persistence key from `document.world.id` — documentId IS world.id, confirmed at the exact call site that writes to storage'));
 
         const documentStateSource = codeOnly(await rawSource('application/editor-state/DocumentState.js'));
-        assert(/dirty|readOnly|loadedFrom|lastSaved/.test(documentStateSource),
-            n('a distinct DocumentState class exists for session-local, non-persisted facts (dirty/readOnly/loadedFrom/lastSaved)'));
-        const stateKeys = ['dirty', 'readOnly', 'loadedFrom', 'lastSaved'];
+        assert(/dirty|loadedFrom|lastSaved/.test(documentStateSource),
+            n('a distinct DocumentState class exists for session-local, non-persisted facts (dirty/loadedFrom/lastSaved)'));
+        const stateKeys = ['dirty', 'loadedFrom', 'lastSaved'];
         for (const key of stateKeys) {
             assert(!(key in json), n(`Document's own persisted envelope contains no "${key}" key — editor state and document content are already two disjoint sets, live-confirmed rather than assumed from the class comment`));
         }

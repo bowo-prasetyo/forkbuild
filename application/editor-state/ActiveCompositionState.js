@@ -16,7 +16,6 @@ export class ActiveCompositionState {
     }
 
     get structure() { return this._structure; }
-    get isActive() { return this._structure !== null; }
 
     static none() {
         return new ActiveCompositionState();

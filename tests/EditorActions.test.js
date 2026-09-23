@@ -351,24 +351,6 @@ function rawKey(key, { ctrl = false, shift = false, alt = false, meta = false, r
 }
 
 // ---------------------------------------------------------------------
-// 13. Escape priority chain
-// ---------------------------------------------------------------------
-{
-    const resolve = InputRouter.resolveEscapeTarget;
-    assert(resolve({ textInputFocused: true, paletteOpen: true, gestureActive: true, marqueeActive: true }) === 'input',
-        'text input beats everything');
-    assert(resolve({ paletteOpen: true, gestureActive: true, marqueeActive: true }) === 'palette',
-        'palette beats gesture');
-    assert(resolve({ gestureActive: true, marqueeActive: true }) === 'gesture',
-        'gesture beats marquee');
-    assert(resolve({ marqueeActive: true }) === 'marquee', 'marquee beats selection');
-    assert(resolve({}) === 'selection', 'selection is the fallback');
-    assert(JSON.stringify(InputRouter.ESCAPE_PRIORITY) === JSON.stringify(['input', 'palette', 'gesture', 'marquee', 'selection']),
-        'priority order is explicit and stable');
-    console.log('✓ escape priority: input > palette > gesture > marquee > selection');
-}
-
-// ---------------------------------------------------------------------
 // 14. Text input detection
 // ---------------------------------------------------------------------
 {

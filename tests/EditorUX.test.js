@@ -272,11 +272,17 @@ function selectBricks(editorContext, building, brickIds) {
     const feedbackLog = [];
     const feedback = { show(message) { feedbackLog.push(message); } };
 
-    let promptedMetadata = null;
+    // Stands in for EditorView's own openCreateBlueprintDialog() +
+    // onCreateBlueprint() pair: the dialog "submits" immediately.
     let libraryRefreshed = false;
     const ui = {
-        promptCreateStructure: () => ({ name: 'Capstone Cottage', category: 'test', description: '' }),
-        onPersonalLibraryChanged: () => { libraryRefreshed = true; }
+        openCreateBlueprintDialog: () => {
+            const structure = session.createStructureFromSelection({ name: 'Capstone Cottage', category: 'test', description: '' });
+            if (session.saveStructureToPersonalLibrary(structure)) {
+                libraryRefreshed = true;
+                feedback.show(`"${structure.name}" created in My Structures`);
+            }
+        }
     };
     const registry = new EditorActionRegistry(createStandardActions({ session, feedback, ui }));
     const ctx = () => EditorActionContext.capture({
@@ -318,8 +324,8 @@ function selectBricks(editorContext, building, brickIds) {
     //    repeated selection extracts into a Structure exactly like any
     //    other brick selection (0.4.2/0.4.3 unchanged).
     assert(registry.execute('structure.createFromSelection', ctx()) === true, '11. Select -> Extract executes');
-    assert(feedbackLog.at(-1) === 'Saved "Capstone Cottage" to My Structures', '12. feedback names the save, not just the extraction');
-    assert(libraryRefreshed === true, '13. ui.onPersonalLibraryChanged() fires so a live UI would refresh its list');
+    assert(feedbackLog.at(-1) === '"Capstone Cottage" created in My Structures', '12. feedback names the save, not just the extraction');
+    assert(libraryRefreshed === true, '13. the blueprint lands in the personal library so a live UI would refresh its list');
 
     // 6. Blueprint -> Place -> independent bricks. copyStructureIntoDocument()
     //    is the "place a Structure" path (as opposed to placeDocument(),

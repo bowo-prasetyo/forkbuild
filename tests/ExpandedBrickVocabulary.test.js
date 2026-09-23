@@ -171,7 +171,7 @@ function assertApprox(actual, expected, tolerance, message) {
     const paletteUseCase = new PaletteUseCase(registry, editorContext);
     const paletteGroups = paletteUseCase.getGroupedDefinitions();
     assert(paletteGroups.length === groups.length, 'PaletteUseCase.getGroupedDefinitions() matches the registry');
-    assert(paletteUseCase.getDefinitions().length === 15, 'PaletteUseCase.getDefinitions() still returns everything');
+    assert(paletteGroups.reduce((total, group) => total + group.definitions.length, 0) === 15, 'PaletteUseCase.getGroupedDefinitions() covers everything');
 
     console.log('✓ Section B: groupByCategory() groups all 15 definitions correctly');
 }

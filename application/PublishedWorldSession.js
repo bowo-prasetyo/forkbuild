@@ -7,9 +7,8 @@ import { SpatialSelectionState } from './spatial-state/SpatialSelectionState.js'
 // inspection capabilities, but deliberately omits every editing,
 // history, and persistence method.
 //
-// Read-only-ness is enforced by the session's shape and the explicit
-// `capabilities` object, which the EditorActionRegistry reads to
-// formally disable mutation actions in the UI.
+// Read-only-ness is enforced by the session's shape; the `capabilities`
+// object below describes it explicitly.
 export class PublishedWorldSession {
     constructor({ document, publication }) {
         this._document = document;

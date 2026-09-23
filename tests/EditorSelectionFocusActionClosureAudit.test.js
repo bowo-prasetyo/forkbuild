@@ -16,7 +16,6 @@ import { PreviewUseCase } from '../application/PreviewUseCase.js';
 import { EditorSession } from '../application/EditorSession.js';
 import { CommandHistory } from '../application/CommandHistory.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
-import { EditorEvent } from '../core/events/EditorEvent.js';
 import { EditorActionRegistry, createStandardActions } from '../application/EditorActionRegistry.js';
 import { EditorActionContext } from '../application/EditorActionContext.js';
 
@@ -196,13 +195,15 @@ async function run() {
         const beforeDirty = documentManager.state.dirty;
 
         const events = [];
-        const cameraListener = editorContext.eventBus.subscribe(EditorEvent.CAMERA_STATE_CHANGED, () => events.push('camera'));
-        const selectionListener = editorContext.eventBus.subscribe(EditorEvent.SELECTION_CHANGED, () => events.push('selection'));
+        const originalPublish = editorContext.eventBus.publish;
+        editorContext.eventBus.publish = function (type, payload) {
+            events.push(type);
+            return originalPublish.call(this, type, payload);
+        };
 
         registry.execute('selection.focus', contextFor(1));
 
-        cameraListener.unsubscribe();
-        selectionListener.unsubscribe();
+        editorContext.eventBus.publish = originalPublish;
 
         assert(JSON.stringify(document.world.toJSON()) === beforeDocumentJSON,
             n('D1. document/world content unchanged'));

@@ -321,8 +321,6 @@ async function runTests() {
     {
         const editorViewSource = await rawSource('ui/views/EditorView.js');
         const directlyCalledUseCases = [
-            ['ForkStructureUseCase', 'forkStructureUseCase'],
-            ['CopyStructureIntoDocumentUseCase', 'copyStructureIntoDocumentUseCase'],
             ['CopySelectionUseCase', 'copySelectionUseCase'],
             ['RepeatSelectionUseCase', 'repeatSelectionUseCase'],
             ['PasteClipboardUseCase', 'pasteClipboardUseCase'],
@@ -336,6 +334,12 @@ async function runTests() {
         }
 
         const editorSessionSource = await rawSource('application/EditorSession.js');
+        // ForkStructureUseCase/CopyStructureIntoDocumentUseCase are
+        // EditorSession's own constructor defaults (EditorView no longer
+        // builds duplicate instances to pass in).
+        assert(/forkStructureUseCase = new ForkStructureUseCase\(\)/.test(editorSessionSource)
+            && /copyStructureIntoDocumentUseCase = new CopyStructureIntoDocumentUseCase\(\)/.test(editorSessionSource),
+            'E2e. EditorSession.js composes ForkStructureUseCase and CopyStructureIntoDocumentUseCase by default');
         assert(/new ExportBlueprintUseCase\(/.test(editorSessionSource), 'E2a. EditorSession.js still composes ExportBlueprintUseCase');
         assert(/new ImportBlueprintUseCase\(/.test(editorSessionSource), 'E2b. EditorSession.js still composes ImportBlueprintUseCase');
         assert(/editorSession\.exportBlueprint\(/.test(editorViewSource), 'E2c. EditorView.js still calls editorSession.exportBlueprint()');
@@ -422,8 +426,7 @@ async function runTests() {
         for (const groupAction of ['group.create', 'group.rename', 'group.duplicate', 'group.delete', 'group.addSelection', 'group.removeSelection']) {
             assert(editingSidebarSource.includes(groupAction), `G1c. EditingSidebar.js's own Groups section still covers ${groupAction}`);
         }
-        const groupsPanelSource = await rawSource('ui/components/GroupsPanel.js');
-        assert(groupsPanelSource.length > 0, 'G1d. ui/components/GroupsPanel.js still exists on disk, unremoved — this milestone identifies it, per its own brief, but does not delete it');
+        assert(await rawSource('ui/components/GroupsPanel.js').then(() => false, () => true), 'G1d. ui/components/GroupsPanel.js has since been deleted as dead code (the Editor dead-code cleanup)');
 
         console.log('✓ Section G: repository-level obsolete-UI sweep — ui/components/GroupsPanel.js remains the one identified cleanup candidate (OBSOLETE leaf), unchanged since 0.9.206. No new obsolete file surfaced.');
     }

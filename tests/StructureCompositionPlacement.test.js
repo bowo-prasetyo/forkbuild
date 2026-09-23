@@ -188,13 +188,13 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const editorContext = new CreateEditorContextUseCase().execute();
-        assert(editorContext.activeComposition.isActive === false, '14. no active composition by default');
+        assert(editorContext.activeComposition.structure === null, '14. no active composition by default');
         assert(editorContext.compositionPreview.visible === false, '15. composition preview hidden by default');
 
         let lastActiveEvent = null;
         const unsubA = editorContext.eventBus.subscribe(EditorEvent.ACTIVE_COMPOSITION_CHANGED, (payload) => { lastActiveEvent = payload; });
         editorContext.setActiveComposition(house);
-        assert(editorContext.activeComposition.isActive === true && editorContext.activeComposition.structure === house,
+        assert(editorContext.activeComposition.structure !== null && editorContext.activeComposition.structure === house,
             '16. setActiveComposition() stores the Structure instance');
         assert(lastActiveEvent && lastActiveEvent.structure === house, '17. setActiveComposition() publishes ACTIVE_COMPOSITION_CHANGED');
         unsubA.unsubscribe();
@@ -297,7 +297,7 @@ async function run() {
         assert(JSON.stringify(committedSnapshot) === JSON.stringify(expectedSnapshot),
             '36. Phase F: the committed bricks match EXACTLY what the preview last showed — preview is a visualization of the command, never an approximation');
         assert(editorContext.compositionPreview.visible === false, '37. Phase F: the preview hides after committing');
-        assert(editorContext.activeComposition.isActive === false, '38. Phase F: the active composition clears after committing');
+        assert(editorContext.activeComposition.structure === null, '38. Phase F: the active composition clears after committing');
         assert(editorContext.tool.activeTool === ToolId.SELECT, '39. Phase F: composing is one-shot — committing returns to Select, unlike StructurePlacementTool');
 
         const wellBrickIds = composedBricks.map((b) => b.id);
@@ -344,7 +344,7 @@ async function run() {
 
         tool.onKeyDown({ key: 'Escape', modifiers: {} });
         assert(editorContext.compositionPreview.visible === false, '45. Escape hides the preview');
-        assert(editorContext.activeComposition.isActive === false, '46. Escape clears the active composition');
+        assert(editorContext.activeComposition.structure === null, '46. Escape clears the active composition');
         assert(editorContext.tool.activeTool === ToolId.SELECT, '47. Escape returns to Select');
         assert(building.getBricks().length === 0, '48. Escape leaves the Document completely untouched — zero bricks, zero commands');
         assert(commandHistory.getCursor() === 0, '49. Escape creates no history entry to undo');

@@ -30,10 +30,6 @@ export class SelectionUseCase {
         );
     }
 
-    selectItems(items) {
-        this._editorContext.setSelection(new SelectionState({ items }));
-    }
-
     // 0.2.91 — World Instance Editing & Placement Management. Replaces
     // the selection with exactly one structure-placement item — a
     // placement selection is always whole-instance and exclusive, never

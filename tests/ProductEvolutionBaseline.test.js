@@ -199,8 +199,9 @@ async function runTests() {
         // exist (nothing deleted here — deletion is a deliberate, later,
         // human decision per 0.9.216's own Recommendation) and still
         // have zero instantiations from application/ or ui/.
+        // ui/components/GroupsPanel.js was on this list until the
+        // Editor dead-code cleanup deleted it.
         const obsoleteConfirmed = [
-            'ui/components/GroupsPanel.js',
             'application/CreatePublicationSnapshotPlacementCatalogUseCase.js',
             'application/CreatePublicationAnchorCatalogUseCase.js',
             'application/CreatePlacementRegistryUseCase.js'

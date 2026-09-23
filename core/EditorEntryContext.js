@@ -97,10 +97,6 @@ export const EditorEntryReason = Object.freeze({
     WORLD_VIEW_EDIT_COPY: 'world_view_edit_copy'
 });
 
-export function isValidEditorEntryReason(reason) {
-    return Object.values(EditorEntryReason).includes(reason);
-}
-
 export class EditorEntryContext {
     constructor({
         sourceDocumentId,

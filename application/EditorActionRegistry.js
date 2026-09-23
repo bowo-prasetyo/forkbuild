@@ -1,4 +1,3 @@
-import { EditorActionContext } from './EditorActionContext.js';
 
 // The Editor Action layer (0.1.50): one registry of user-facing
 // operations, consumed by the command palette, the consolidated
@@ -82,20 +81,6 @@ export class EditorActionRegistry {
 
     getAll() {
         return [...this._actions.values()];
-    }
-
-    get categories() {
-        const seen = [];
-        for (const action of this._actions.values()) {
-            if (!seen.includes(action.category)) {
-                seen.push(action.category);
-            }
-        }
-        return seen;
-    }
-
-    getByCategory(category) {
-        return this.getAll().filter((action) => action.category === category);
     }
 
     // Normalized substring matching across label, category, and id —
@@ -197,13 +182,8 @@ export function createStandardActions({ session, feedback, ui = {} }) {
         ...partial
     });
 
-    // Editing shortcuts make no sense while placing bricks, mid-gesture,
-    // or when the session explicitly declared canEdit: false (e.g.
-    // PublishedWorldSession in 0.2.4).
-    const editingAllowed = (ctx) => {
-        if (ctx.capabilities && ctx.capabilities.canEdit === false) return false;
-        return !ctx.placementMode && !ctx.gestureActive;
-    };
+    // Editing shortcuts make no sense while placing bricks or mid-gesture.
+    const editingAllowed = (ctx) => !ctx.placementMode && !ctx.gestureActive;
     const selectionRequired = (ctx) => (ctx.hasSelection ? null : 'No bricks selected');
 
     const surfaceCall = (methodName, unavailableMessage, run) => {
@@ -411,12 +391,9 @@ export function createStandardActions({ session, feedback, ui = {} }) {
             enabled: (ctx) => editingAllowed(ctx) && ctx.hasSelectedGroup,
             disabledReason: (ctx) => (ctx.hasSelectedGroup ? null : 'Select a group'),
             // renameSelectedGroup(name) has no default for `name` — this
-            // has to actually collect one before calling it, the same
-            // "ui hook, degrade to feedback if absent" posture
-            // structure.createFromSelection's ui.promptCreateStructure()
-            // already established below. Without ui.promptRenameGroup,
-            // calling rename() with nothing renamed the group to
-            // undefined instead of prompting for anything.
+            // has to actually collect one before calling it, through the
+            // same "ui hook, degrade to feedback if absent" posture as
+            // structure.createFromSelection's ui.openCreateBlueprintDialog.
             execute: () => surfaceCall('renameSelectedGroup', 'Groups are not available on this surface', (rename) => {
                 if (typeof ui.promptRenameGroup !== 'function') {
                     feedback.show('Groups are not available on this surface');
@@ -481,39 +458,17 @@ export function createStandardActions({ session, feedback, ui = {} }) {
         }),
 
         // --------------------------------------------------- Structure
-        // 0.4.2 — Structure Extraction & Blueprint Creation. Gated
-        // exactly like clipboard.copy (any brick selection will do)
-        // EXCEPT a StructurePlacement selection, which is never eligible
-        // — see application/CreateStructureFromSelectionUseCase.js's own
-        // header on why that stays a distinct, larger operation. `ui`
-        // supplies the metadata prompt (name/category/description);
-        // a surface without one degrades to feedback, same as every
-        // other ui.* hook here.
-        //
-        // 0.4.3 — Personal Blueprint Library. Extraction itself stays
-        // exactly what 0.4.2 made it — a pure, unpersisted observation —
-        // this action just chains ONE more step after it returns a valid
-        // Structure: session.saveStructureToPersonalLibrary(structure).
-        // A surface built without that method (or without the optional
-        // ui.onPersonalLibraryChanged() refresh hook) degrades to
-        // 0.4.2's original "Created" feedback, never throwing.
-        //
-        // 0.6.3 — Blueprint Authoring & Versioning UX. Promoted to a
-        // Selection Inspector button (SelectionInspector's own Advanced
-        // section) alongside its pre-existing Command Palette/keyboard
-        // reach — see docs/Roadmap.md, 0.6.3. Label renamed "Create
-        // Structure" -> "Create Blueprint" (display only; the id stays
-        // `structure.createFromSelection`, unchanged, per this file's
-        // own "unique, dotted, stable" id rule). `ui.openCreateBlueprintDialog`
-        // is the new preferred hook: a real surface owns opening
-        // ui/components/CreateBlueprintDialog.js and calls
+        // Create Blueprint. Gated exactly like clipboard.copy (any brick
+        // selection will do) EXCEPT a StructurePlacement selection, which
+        // is never eligible — see
+        // application/CreateStructureFromSelectionUseCase.js's own header.
+        // The id stays `structure.createFromSelection` per this file's own
+        // "unique, dotted, stable" id rule. Executing only opens
+        // ui/components/CreateBlueprintDialog.js via
+        // `ui.openCreateBlueprintDialog`: a modal cannot hand back its
+        // answer synchronously, so the host view runs
         // createStructureFromSelection()/saveStructureToPersonalLibrary()
-        // itself once the user actually submits it, because a modal
-        // cannot hand back its answer synchronously the way
-        // `ui.promptCreateStructure()`'s window.prompt() chain always
-        // could. A surface without the new hook (an older build, or a
-        // headless test harness) falls back to that exact 0.4.2/0.4.3
-        // prompt-based flow, unchanged byte-for-byte.
+        // itself once the user submits it (EditorView#onCreateBlueprint()).
         define({
             id: 'structure.createFromSelection',
             label: 'Create Blueprint',
@@ -526,31 +481,13 @@ export function createStandardActions({ session, feedback, ui = {} }) {
                 if (ctx.selectionIsStructurePlacement) return 'Create Structure requires brick selections only';
                 return null;
             },
-            execute: () => surfaceCall('createStructureFromSelection', 'Create Blueprint is not available on this surface', (createStructureFromSelection) => {
-                if (typeof ui.openCreateBlueprintDialog === 'function') {
-                    ui.openCreateBlueprintDialog();
-                    return;
-                }
-                if (typeof ui.promptCreateStructure !== 'function') {
+            execute: () => {
+                if (typeof ui.openCreateBlueprintDialog !== 'function') {
                     feedback.show('Create Blueprint is not available on this surface');
                     return;
                 }
-                const metadata = ui.promptCreateStructure();
-                if (!metadata) {
-                    return;
-                }
-                const structure = createStructureFromSelection(metadata);
-                if (!structure) {
-                    feedback.show('Nothing to create — select bricks first');
-                    return;
-                }
-                const saved = typeof session.saveStructureToPersonalLibrary === 'function'
-                    && session.saveStructureToPersonalLibrary(structure);
-                if (saved && typeof ui.onPersonalLibraryChanged === 'function') {
-                    ui.onPersonalLibraryChanged();
-                }
-                feedback.show(saved ? `Saved "${structure.name}" to My Structures` : `Created "${structure.name}"`);
-            })
+                ui.openCreateBlueprintDialog();
+            }
         }),
 
         // ----------------------------------------------------- Transform

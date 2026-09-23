@@ -61,14 +61,6 @@ export class InputDispatcher {
         this._toolManager.onKeyDown(this._toKeyEvent(rawEvent));
     }
 
-    dispatchKeyUp(rawEvent) {
-        this._toolManager.onKeyUp(this._toKeyEvent(rawEvent));
-    }
-
-    dispatchWheel(rawEvent) {
-        this._toolManager.onWheel(this._toWheelEvent(rawEvent));
-    }
-
     _toInteractionEvent(rawEvent) {
         const screenPosition = { x: rawEvent.clientX, y: rawEvent.clientY };
 
@@ -86,13 +78,6 @@ export class InputDispatcher {
     _toKeyEvent(rawEvent) {
         return {
             key: rawEvent.key,
-            modifiers: this._toModifiers(rawEvent)
-        };
-    }
-
-    _toWheelEvent(rawEvent) {
-        return {
-            deltaY: rawEvent.deltaY,
             modifiers: this._toModifiers(rawEvent)
         };
     }

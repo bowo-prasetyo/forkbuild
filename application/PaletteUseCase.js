@@ -16,14 +16,6 @@ export class PaletteUseCase {
         this._editorContext = editorContext;
     }
 
-    getDefinitions() {
-        return this._registry.getAll();
-    }
-
-    getDefinitionsByCategory(category) {
-        return this._registry.getByCategory(category);
-    }
-
     // Ordered [{ category, definitions }] — see
     // core/BrickRegistry.js#groupByCategory().
     getGroupedDefinitions() {

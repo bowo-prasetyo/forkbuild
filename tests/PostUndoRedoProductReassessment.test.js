@@ -515,8 +515,7 @@ async function runTests() {
         assert(!/GroupsPanel/.test(await rawSource('ui/main.js')), 'I1a. GroupsPanel is not registered in ui/main.js');
         const editorViewSource = await rawSource('ui/views/EditorView.js');
         assert(!/components:\s*\{[^}]*GroupsPanel/.test(editorViewSource), 'I1b. EditorView.js\'s own components: {} does not register GroupsPanel');
-        const groupsPanelSource = await rawSource('ui/components/GroupsPanel.js');
-        assert(groupsPanelSource.length > 0, 'I1c. ui/components/GroupsPanel.js still exists on disk, unremoved');
+        assert(await rawSource('ui/components/GroupsPanel.js').then(() => false, () => true), 'I1c. ui/components/GroupsPanel.js has since been deleted as dead code (the Editor dead-code cleanup)');
 
         // I2 — the repository-wide sweep this milestone's own brief asks
         // for turned up no THIRD obsolete UI file. ui/components/

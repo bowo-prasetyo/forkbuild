@@ -351,7 +351,7 @@ async function run() {
         const exportDocumentFnBody = exportDocumentFnMatch[0];
         assert(/editorSession\.exportDocument\(\)/.test(exportDocumentFnBody),
             '54. the handler calls editorSession.exportDocument() — the real application-level command, not a reimplementation');
-        assert(/link\.download\s*=\s*`forkbuild-document-/.test(exportDocumentFnBody),
+        assert(/downloadJson\(`forkbuild-document-/.test(exportDocumentFnBody),
             '55. the handler names the downloaded file using the existing forkbuild-<kind>-<slug>.json convention, not a new extension');
         assert(!/documentManager\.document\.toJSON\(\)/.test(exportDocumentFnBody),
             '56. the handler never calls document.toJSON() itself — serialization stays inside the application layer, not the view');

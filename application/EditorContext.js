@@ -1,6 +1,5 @@
 import { EventBus } from '../core/events/EventBus.js';
 import { EditorEvent } from '../core/events/EditorEvent.js';
-import { CameraState } from '../renderer/CameraState.js';
 import { SelectionState } from './editor-state/SelectionState.js';
 import { ToolState } from './editor-state/ToolState.js';
 import { ActiveBrickState } from './editor-state/ActiveBrickState.js';
@@ -13,8 +12,8 @@ import { CompositionPreviewState } from './editor-state/CompositionPreviewState.
 
 // EditorContext holds transient editor state — not domain state. Nothing
 // here belongs to a World and nothing here should ever be serialized into
-// the ForkBuild Protocol: selection, active tool, active brick, camera
-// pose, preview, and settings are purely local to this editing session.
+// the ForkBuild Protocol: selection, active tool, active brick,
+// preview, and settings are purely local to this editing session.
 //
 // Every change publishes an EditorEvent through its own EventBus (distinct
 // from the domain EventBus World publishes through — see EditorEvent.js),
@@ -26,7 +25,6 @@ export class EditorContext {
         this._selection = SelectionState.empty();
         this._tool = new ToolState();
         this._activeBrick = new ActiveBrickState();
-        this._cameraState = new CameraState();
         this._preview = PreviewState.hidden();
         this._settings = new EditorSettings();
         this._activeStructure = new ActiveStructureState();
@@ -78,15 +76,6 @@ export class EditorContext {
     // activeBrick.color on every pointer move.
     setActiveBrickColor(color) {
         this._activeBrick = new ActiveBrickState(this._activeBrick.definitionId, color);
-    }
-
-    get cameraState() {
-        return this._cameraState;
-    }
-
-    setCameraState(cameraState) {
-        this._cameraState = cameraState;
-        this._publish(EditorEvent.CAMERA_STATE_CHANGED, { cameraState });
     }
 
     get preview() {

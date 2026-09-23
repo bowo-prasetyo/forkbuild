@@ -1,39 +1,11 @@
-// Minimal input routing, introduced 0.1.50 where the accumulation of
-// Escape consumers (numeric fields, command palette, gizmo gestures,
-// marquee, selection) and the move to registry-driven shortcuts made
-// the fragmentation real enough to justify it — and not before.
-//
-// Two jobs, both pure:
-//
-// 1. Escape priority. Escape is context-sensitive and the priority is
-//    explicit, in this order:
-//        input (active text field) > palette > gizmo gesture >
-//        marquee > selection
-//    resolveEscapeTarget(state) answers WHICH layer owns a given
-//    Escape; views implement the consequence. No scattered
-//    if (key === 'Escape') chains.
-//
-// 2. Shortcut matching. matchShortcut(event, registry) normalizes a raw
-//    DOM keyboard event and resolves it against the EditorActionRegistry
-//    — the single source of truth for shortcuts (same registry feeds the
-//    palette, the sidebar, and docs/user/ControlsReference.md). Text
-//    input detection lives here so no view re-derives it.
+// Minimal input routing (0.1.50). Pure helpers for the Editor's keyboard handling: shortcut matching
+// (matchShortcut(event, registry) normalizes a raw DOM keyboard event
+// and resolves it against the EditorActionRegistry — the single source
+// of truth for shortcuts, the same registry that feeds the palette, the
+// sidebar, and docs/user/ControlsReference.md) and text-input detection,
+// so no view re-derives either. The Escape priority chain itself lives
+// in EditorView's keydown handler.
 export const InputRouter = Object.freeze({
-    ESCAPE_PRIORITY: Object.freeze(['input', 'palette', 'gesture', 'marquee', 'selection']),
-
-    resolveEscapeTarget({
-        textInputFocused = false,
-        paletteOpen = false,
-        gestureActive = false,
-        marqueeActive = false
-    } = {}) {
-        if (textInputFocused) return 'input';
-        if (paletteOpen) return 'palette';
-        if (gestureActive) return 'gesture';
-        if (marqueeActive) return 'marquee';
-        return 'selection';
-    },
-
     isTextInputTarget(target) {
         if (!target) {
             return false;

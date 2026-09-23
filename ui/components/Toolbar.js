@@ -28,10 +28,9 @@ const SEARCH_THRESHOLD = 8;
 // StorageProvider writes (document blob, then manifest — see
 // tests/DocumentSaveFailureHandlingBoundaryAudit.test.js Section B5) and
 // can throw raw, technical storage exceptions. Never shown to the user
-// verbatim — this stays deliberately generic and storage-agnostic,
-// matching the identical string EditorView.js's own Ctrl+S save path
-// shows on the same failure.
-const SAVE_FAILURE_MESSAGE = 'Save failed — your changes are still here, but were not saved. Try again.';
+// verbatim — this stays deliberately generic and storage-agnostic.
+// Exported so EditorView.js's Ctrl+S save path shows the same message.
+export const SAVE_FAILURE_MESSAGE = 'Save failed — your changes are still here, but were not saved. Try again.';
 
 export default {
     name: 'Toolbar',
@@ -56,15 +55,11 @@ export default {
             type: Object,
             required: true
         },
-        // 0.2.21: optional so existing/ad-hoc usages of Toolbar
-        // without a feedback channel keep working (falls back to
-        // alert() below) — but EditorView always provides one now, so
         // Save/Publish report through the same transient-toast
-        // mechanism every other action already uses instead of a
-        // blocking browser dialog.
+        // mechanism every other Editor action uses.
         feedback: {
             type: Object,
-            default: null
+            required: true
         },
         // 0.6.1 — World ↔ Editor Continuity & Return Navigation. The
         // EditorEntryContext (core/EditorEntryContext.js) EditorView
@@ -116,11 +111,7 @@ export default {
         let unsubscribe = null;
 
         function report(message) {
-            if (props.feedback) {
-                props.feedback.show(message);
-            } else {
-                alert(message);
-            }
+            props.feedback.show(message);
         }
 
         function save() {

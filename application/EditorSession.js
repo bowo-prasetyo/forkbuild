@@ -18,8 +18,6 @@ import { RemoteDocumentOperationApplicationUseCase } from './RemoteDocumentOpera
 import { DocumentOperationCausalGapObservationUseCase } from './DocumentOperationCausalGapObservationUseCase.js';
 import { DocumentOperationCausalGapDetector } from '../core/DocumentOperationCausalGapDetector.js';
 import { DocumentOperationDeferralUseCase } from './DocumentOperationDeferralUseCase.js';
-import { DocumentOperationRecoveryUseCase } from './DocumentOperationRecoveryUseCase.js';
-import { RecoveredOperationReplayUseCase } from './RecoveredOperationReplayUseCase.js';
 import { SpatialEditingService } from './SpatialEditingService.js';
 import { TransformGizmoUseCase } from './TransformGizmoUseCase.js';
 import { TransformSettings } from './TransformSettings.js';
@@ -30,9 +28,7 @@ import { RenameGroupCommand } from './commands/RenameGroupCommand.js';
 import { AddToGroupCommand } from './commands/AddToGroupCommand.js';
 import { RemoveFromGroupCommand } from './commands/RemoveFromGroupCommand.js';
 import { DuplicateGroupCommand } from './commands/DuplicateGroupCommand.js';
-import { CopySelectionUseCase } from './CopySelectionUseCase.js';
-import { PasteClipboardUseCase, PASTE_OFFSET as DUPLICATE_OFFSET } from './PasteClipboardUseCase.js';
-import { RepeatSelectionUseCase } from './RepeatSelectionUseCase.js';
+import { PASTE_OFFSET as DUPLICATE_OFFSET } from './PasteClipboardUseCase.js';
 import { ForkStructureUseCase } from './ForkStructureUseCase.js';
 import { CopyStructureIntoDocumentUseCase } from './CopyStructureIntoDocumentUseCase.js';
 import { CreateStructureFromSelectionUseCase } from './CreateStructureFromSelectionUseCase.js';
@@ -69,13 +65,10 @@ import { SelectionBoundsService } from './SelectionBoundsService.js';
 // applyNumericTransform. All routed to the same gesture service.
 //
 // 0.1.50 — the Editor half of the consolidated editing surface:
-// selectAll()/clearSelection()/deleteSelection()/getSelectionCount()
-// join the session API so the EditorActionRegistry can drive selection
-// operations from the command palette, the sidebar, and keyboard
-// shortcuts without any Editor-only code paths. Group and clipboard
-// surface (0.1.42/0.1.43) belongs wherever this session is extended in
-// the deployed tree; the action layer degrades gracefully when those
-// methods are absent rather than assuming them.
+// selectAll()/clearSelection()/deleteSelection() join the session API
+// so the EditorActionRegistry can drive selection operations from the
+// command palette, the sidebar, and keyboard shortcuts without any
+// Editor-only code paths.
 //
 // 0.6.0 — the SAME diagonal offset application/WorldNavigationSession.js
 // #focusLocation() already uses (its own LOCATION_FOCUS_OFFSET) — one
@@ -100,8 +93,8 @@ export class EditorSession {
         previewUseCase,
         loadDocumentUseCase,
         identityProvider = null,
-        copySelectionUseCase = null,    // <--- ADD
-        pasteClipboardUseCase = null,    // <--- ADD
+        copySelectionUseCase = null,
+        pasteClipboardUseCase = null,
         forkStructureUseCase = new ForkStructureUseCase(),
         // 0.4.0 — Structure Composition & Blueprint Library.
         copyStructureIntoDocumentUseCase = new CopyStructureIntoDocumentUseCase(),
@@ -251,14 +244,6 @@ export class EditorSession {
             causalGapDetector: this._causalGapDetector
         });
         this._documentOperationRecovery = documentOperationRecovery;
-        // 0.9.236 — Recovered Operation Replay Boundary. Session-lifetime,
-        // exactly like _remoteDocumentOperationApplication above — records
-        // every operation this session's own documentOperationRecovery
-        // hands it (see attachToRecovery() below) but never calls
-        // replay() on its own. replayRecoveredOperation() below is the
-        // ONLY caller of replay() this class ever wires — an explicit,
-        // caller-invoked action, never automatic.
-        this._recoveredOperationReplay = new RecoveredOperationReplayUseCase();
 
         this._container = null;
         this._session = null;
@@ -383,35 +368,6 @@ export class EditorSession {
         this._unattachRecoveryToGapObservation = this._documentOperationRecovery
             ? this._documentOperationCausalGapObservation.attachToPropagation(this._documentOperationRecovery)
             : null;
-        // 0.9.236 — the ONLY consumer of documentOperationRecovery's own
-        // onOperationReceived() feed besides gap observation above. Purely
-        // records; see RecoveredOperationReplayUseCase's own header for
-        // why recording and replaying are kept as two separate acts.
-        this._unattachRecoveryToReplay = this._documentOperationRecovery
-            ? this._recoveredOperationReplay.attachToRecovery(this._documentOperationRecovery)
-            : null;
-    }
-
-    // 0.9.236 — Recovered Operation Replay Boundary. The ONE explicit
-    // seam through which a recovered-but-never-applied operation can ever
-    // change THIS session's own document state — see
-    // RecoveredOperationReplayUseCase's own header for the full
-    // reasoning, including why it must be invoked directly rather than
-    // via a redelivered network message (ReplayGuard already marked the
-    // operationId seen the moment recovery verified it). `target` is
-    // resolved fresh, the same live "what is this Editor looking at right
-    // now" pattern the constructor's own remote-application wiring above
-    // already uses — never cached. Returns a DocumentOperationReplayOutcome;
-    // never throws for an unknown operation or a document mismatch, only
-    // for a malformed (documentId, operationId) pair — see replay()'s own
-    // header. Nothing in this class ever calls this method itself.
-    replayRecoveredOperation(documentId, operationId) {
-        return this._recoveredOperationReplay.replay(
-            { documentId, operationId },
-            this._documentManager.document && this._commandHistory
-                ? { documentId: this._documentManager.document.world.id, commandHistory: this._commandHistory }
-                : null
-        );
     }
 
     // 0.9.237 — Causal Application Deferral Boundary. Lets a caller (a
@@ -423,35 +379,8 @@ export class EditorSession {
         return this._documentOperationDeferral.getDeferredOperationIds(documentId);
     }
 
-    // 0.9.230 — lets a caller observe an operation this session recovered
-    // (verified, but never applied) without reaching into a private
-    // field. Returns an unsubscribe function. When this session was built
-    // without a documentOperationRecovery, nothing is ever wired to
-    // publish a result, so the callback simply never fires — the same
-    // graceful-degradation posture onCausalGapObserved() already takes.
-    onDocumentOperationRecovered(callback) {
-        return this._documentOperationRecovery
-            ? this._documentOperationRecovery.onOperationReceived(callback)
-            : () => {};
-    }
-
-    // 0.9.229 — lets a caller observe this session's own causal-gap
-    // results without reaching into a private field. Returns an
-    // unsubscribe function. When this session was built without a
-    // documentCommandPropagation, nothing is ever wired to publish a
-    // result, so the callback simply never fires — the same graceful-
-    // degradation posture every other optional collaborator here already
-    // takes.
-    onCausalGapObserved(callback) {
-        return this._documentOperationCausalGapObservation.onGapObserved(callback);
-    }
-
     get commandHistory() {
         return this._commandHistory;
-    }
-
-    get transformSettings() {
-        return this._transformSettings;
     }
 
     // 0.2.92 — checks BOTH gesture services: a placement drag now sets
@@ -466,10 +395,6 @@ export class EditorSession {
     }
 
     // -------------------------------- 0.1.50 consolidated editing surface
-
-    getSelectionCount() {
-        return this._editorContext.selection.items.length;
-    }
 
     selectAll() {
         const document = this._documentManager.document;
@@ -665,17 +590,6 @@ export class EditorSession {
             return false;
         }
         return this._gestureService.applyNumericTransform(this._editorContext.selection, intent, options);
-    }
-
-    // 0.4.9 — "align this selection to the existing construction grid."
-    // See SpatialEditingService#snapSelectionToGrid()'s own header:
-    // exact move onto the nearest grid intersection, collision-gated
-    // through the same commit path every free-form move already uses.
-    snapSelectionToGrid(gridSize) {
-        if (this._editorContext.tool.activeTool === ToolId.PLACE) {
-            return false;
-        }
-        return this._gestureService.snapSelectionToGrid(this._editorContext.selection, gridSize);
     }
 
     // They close the method-surface gap so the action registry and
@@ -1788,8 +1702,7 @@ export class EditorSession {
     // ------------------------------------------------------- marquee UI
     // Read by ui/views/EditorView.js to draw the `.marquee-rect` overlay
     // (css/main.css) and to route Escape to cancelMarquee() ahead of
-    // selection.clear — see application/InputRouter.js's own
-    // ESCAPE_PRIORITY: gesture > marquee > selection.
+    // selection.clear (Escape priority: gesture > marquee > selection).
 
     isMarqueeActive() {
         return !!this._marqueeState;
@@ -1860,10 +1773,6 @@ export class EditorSession {
         if (this._unattachRecoveryToGapObservation) {
             this._unattachRecoveryToGapObservation();
             this._unattachRecoveryToGapObservation = null;
-        }
-        if (this._unattachRecoveryToReplay) {
-            this._unattachRecoveryToReplay();
-            this._unattachRecoveryToReplay = null;
         }
     }
 
