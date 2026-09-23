@@ -3,6 +3,7 @@ import PublicationCommentaryRemoteCheck from './PublicationCommentaryRemoteCheck
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { formatPublicationDate } from '../../core/PublicationDateAmbiguity.js';
 import { createId } from '../../core/createId.js';
+import { License } from '../../core/License.js';
 
 // 0.2.31 — one publication, in card form. Pure presentation: every
 // piece of enriched data (description, parent title, fork count) is
@@ -229,7 +230,7 @@ export default {
     },
     computed: {
         licenseLabel() {
-            return this.publication.license ? this.publication.license.id : 'UNSPECIFIED';
+            return License.idOf(this.publication.license);
         },
         // 0.9.539 — the SAME `publishedAt` field, at finer precision,
         // never a new one. See needsPreciseDate's own comment above.

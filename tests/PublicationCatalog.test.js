@@ -315,9 +315,9 @@ async function runTests() {
             '27. GroupBy.DATE always orders buckets Today -> Yesterday -> This Week -> Earlier, regardless of input order');
 
         const byLicense = groupPublications(items, GroupBy.LICENSE);
-        const unspecified = byLicense.find((g) => g.key === 'Unspecified');
+        const unspecified = byLicense.find((g) => g.key === 'UNSPECIFIED');
         assert(unspecified && unspecified.items.length === 1 && unspecified.items[0].documentId === 'd3',
-            '28. GroupBy.LICENSE falls back to "Unspecified" for a publication with no license, rather than dropping it');
+            '28. GroupBy.LICENSE falls back to "UNSPECIFIED" for a publication with no license, rather than dropping it');
 
         assert(groupPublications([], GroupBy.AUTHOR).length === 0,
             '29. grouping an empty page produces no groups (not a group full of nothing)');

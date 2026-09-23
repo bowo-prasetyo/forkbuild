@@ -3,6 +3,7 @@ import PublicationCommentaryRemoteCheck from './PublicationCommentaryRemoteCheck
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { formatPublicationDate } from '../../core/PublicationDateAmbiguity.js';
 import { createId } from '../../core/createId.js';
+import { License } from '../../core/License.js';
 
 // 0.2.31 — the compact table/row view of a page of publications —
 // "best when there are hundreds or thousands," per the design doc,
@@ -78,14 +79,12 @@ import { createId } from '../../core/createId.js';
 // The identical control PublicationCard.js (this catalog's "cards"
 // view) already gained this milestone, extended here per-row exactly
 // the way 0.9.561 extended Commentary itself: each row's own
-// `rowCommentaryState()` entry now also carries `provider` ('nostr'
-// default) and `distributionProvider` (the last successful submission's
+// `rowCommentaryState()` entry now also carries `discoveryProvider` and `distributionProvider` (the last successful submission's
 // choice, for the honest status line), and `submitCommentary(pub)`
 // forwards that row's own provider verbatim as `discoveryProvider` on
-// the SAME addPublicationCommentaryCommand call. NOTE: unlike
-// PublicationCard.js (0.9.667), this default is still the hardcoded
-// 'nostr' rather than the injected `defaultAnnouncementDiscoveryProvider`
-// — a known divergence between the two views. No new command, no new
+// the SAME addPublicationCommentaryCommand call. Each row opens on the
+// injected `defaultAnnouncementDiscoveryProvider` (else 'nostr'), exactly
+// like PublicationCard.js (0.9.667). No new command, no new
 // distribution class imported here, no cross-row bleed — see this
 // file's own header, "one component, many rows." Status text carries
 // the identical "never a success/receipt claim" restraint
@@ -98,7 +97,12 @@ export default {
     inject: {
         getPublicationCommentariesCommand: { default: null },
         addPublicationCommentaryCommand: { default: null },
-        identityUseCase: { default: null }
+        identityUseCase: { default: null },
+        // The SAME app-wide saved ANNOUNCEMENT_AND_DISCOVERY preference
+        // PublicationCard.js injects (0.9.667) — seeds each row's own
+        // provider choice, so the list and card views open on the same
+        // default.
+        defaultAnnouncementDiscoveryProvider: { default: null }
     },
     props: {
         items: { type: Array, required: true },
@@ -137,7 +141,7 @@ export default {
     },
     methods: {
         licenseLabel(pub) {
-            return pub.license ? pub.license.id : 'UNSPECIFIED';
+            return License.idOf(pub.license);
         },
         // 0.9.539 — the SAME `publishedAt` field, at finer precision,
         // never a new one.
@@ -152,8 +156,8 @@ export default {
                 this.commentaryState[pub.id] = {
                     open: false, commentaries: [], newText: '',
                     submitting: false, error: null, pendingDraft: null,
-                    // 0.9.638 — this row's own substrate choice ('nostr'
-                    // default) and the last successful submission's own
+                    // 0.9.638 — this row's own substrate choice (the
+                    // saved preference, else 'nostr') and the last successful submission's own
                     // choice, for that row's own status line. Named
                     // discoveryProvider, never the bare `provider`, to
                     // stay unambiguous against this codebase's own,
@@ -162,7 +166,7 @@ export default {
                     // surfaced to a Wanderer — see
                     // tests/RepositoryDiscoveryMaterialTrustProductReassessment.test.js's
                     // own Section B).
-                    discoveryProvider: 'nostr', distributionProvider: null
+                    discoveryProvider: this.defaultAnnouncementDiscoveryProvider || 'nostr', distributionProvider: null
                 };
             }
             return this.commentaryState[pub.id];

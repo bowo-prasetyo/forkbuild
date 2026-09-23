@@ -1,7 +1,7 @@
 import { ref, computed, onMounted, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
-import { PublicationQuery, DEFAULT_PAGE_SIZE } from '../../core/PublicationQuery.js';
+import { PublicationQuery } from '../../core/PublicationQuery.js';
 import { PublicationSort } from '../../core/PublicationSort.js';
 import { GroupBy, groupPublications } from '../../core/PublicationGrouping.js';
 import { computeAmbiguousPublishedDateIds } from '../../core/PublicationDateAmbiguity.js';
@@ -75,7 +75,6 @@ export default {
                 author: props.author,
                 sort: sort.value,
                 page,
-                pageSize: DEFAULT_PAGE_SIZE,
                 includeDescriptions: includeDescriptions.value
             });
         }
@@ -136,13 +135,13 @@ export default {
         }
 
         onMounted(() => {
-            // Resolved independently of any query, purely to
-            // distinguish "the whole catalog is empty" from "this
-            // search matched nothing" in the empty-state message —
-            // same distinction WorldSearchPanel's catalogEmpty makes.
-            catalogHasAnyPublications.value = searchPublicationsUseCase
-                .execute(new PublicationQuery({ author: props.author, pageSize: 1 })).totalCount > 0;
             runQuery(1);
+            // Recorded once, from the first, unfiltered query (no search
+            // text is ever applied before mount), purely to distinguish
+            // "the whole catalog is empty" from "this search matched
+            // nothing" in the empty-state message — same distinction
+            // WorldSearchPanel's catalogEmpty makes.
+            catalogHasAnyPublications.value = pageResult.value.totalCount > 0;
         });
 
         function onSearch({ text, includeDescriptions: withDescriptions }) {

@@ -345,7 +345,8 @@ async function run() {
         ctx.selectObserverLocalEncounter({ publicationId, contentHash });
         await wait();
         const searchUseCase = new SearchPublicationsUseCase(decentralizedPublicationDiscoveryProvider);
-        assert(searchUseCase.execute({ query: 'Findable' }).items.some((i) => i.id === publicationId), 'D1. Repository\'s own real, unmodified SearchPublicationsUseCase finds this Publication by text.');
+        assert(searchUseCase.execute({ text: 'Findable' }).items.some((i) => i.id === publicationId), 'D1. Repository\'s own real, unmodified SearchPublicationsUseCase finds this Publication by text.');
+        assert(!searchUseCase.execute({ text: 'No Such Title' }).items.some((i) => i.id === publicationId), 'D1b. ...and a non-matching text search excludes it, so D1 really exercises the text filter.');
         assert(searchUseCase.execute({ author: 'bob' }).items.some((i) => i.id === publicationId), 'D2. ...and by author.');
         console.log('✓ D — Repository search finds the admitted Publication through its normal, unmodified query path.');
     }
