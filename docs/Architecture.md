@@ -538,6 +538,119 @@ microphone failure never ends a call by itself, and device selection
 (setMuted(), listInputDevices(), output device) is local state that never
 goes on the wire.
 
+## Avatars and presence
+
+Identity, avatar profile and presence answer three different questions:
+who you are, what your avatar looks like, and where it is right now.
+
+- **Profile.** core/AvatarProfile.js holds a template id and an
+  appearance, validated strictly on write and resolved leniently on read
+  (core/AvatarTemplate.js, templates from
+  core/library/CoreAvatarTemplateLibrary.js via AvatarTemplateRegistry).
+  AvatarProfileUseCase stores it durably per identity; the Avatar page
+  (`/avatar`) edits it. AvatarProfileSyncService shares it over
+  `forkbuild:avatar-profile`, signed (AvatarProfileSigning) and checked by
+  AvatarProfileTrustBoundary, under its own visibility policy
+  (AvatarProfileVisibilityUseCase).
+- **Presence.** AvatarPresenceSession holds the local avatar's current
+  AvatarPresence in memory only; it is never persisted or placed.
+  AvatarMovementController simulates movement (see "Avatar movement
+  constraint pipeline") and produces new presence. PresenceSyncService
+  broadcasts it as a core/AvatarPresenceAdvertisement.js, signed when the
+  identity provider can sign (PresenceSigning), through a
+  presence/ broadcast provider: PeerAvatarPresenceBroadcastProvider over
+  authenticated peers (`forkbuild:avatar-presence`) when peers are
+  available, LocalAvatarPresenceBroadcastProvider (BroadcastChannel,
+  development only) otherwise. An idle avatar sends nothing.
+- **Receiving presence.** PresenceTrustBoundary and core/ PresenceIngestion,
+  PresenceReplayWindow, PresenceFreshness and PresenceEquivocation decide
+  what to accept: a claim is bound to the connection it arrived on, and
+  arrival order never picks a winner. RemoteAvatarRegistry holds accepted
+  remote avatars, RemoteAvatarInterpolator smooths their movement, and
+  RemoteAvatarAppearanceRegistry their appearance. Lifecycle (fresh,
+  stale, gone) is derived, never stored.
+- **Visibility.** core/PresenceVisibilityPolicy.js (PUBLIC, FRIENDS,
+  LOCAL, HIDDEN, plus explicitly authorized identities) is applied before
+  broadcasting, never after; PresenceVisibilityUseCase stores the choice
+  and ui/components/VisibilityPolicyForm.js edits it. Withholding future
+  presence is not remote deletion.
+- **Interaction.** Selecting an avatar (0.2.39) opens AvatarInfoPanel;
+  proximity (core/AvatarProximity.js) is derived, never announced.
+  Gestures (core/AvatarInteractionKind.js: GREET, WAVE, POINT) are
+  their own vocabulary, separate from animation state, rate-limited by
+  core/AvatarInteractionCooldown.js. AvatarInteractionSyncService sends
+  them as signed events over `forkbuild:avatar-interaction`, checked by
+  AvatarInteractionTrustBoundary with a bounded replay window; a
+  claimed target is never an instruction to the target. Facing a target
+  (core/AvatarFacing.js) is a local rendering override only.
+- **Camera and movement modes.** core/CameraPerspective.js gives each
+  camera perspective an offset from the avatar; it never replaces the
+  camera machinery, and the chosen avatar control mode persists locally.
+  Step-up, walkable stairs and slopes (core/WalkableSurface.js), jumping
+  and falling (core/AvatarVerticalState.js) are height constraints, not
+  physics.
+
+## Collaboration
+
+Several people can edit one World at the same time. The live design
+(0.2.95–0.2.99) sends commands, never documents:
+
+- WorldAuthorizationService decides, on every mutation attempt, whether
+  this identity may edit this World: by owning it, or through a signed
+  grant. Nothing is cached, so a revocation takes effect on the next try.
+- WorldMembershipUseCase issues and gossips grants and revocations
+  (core/WorldEditAuthorizationEnvelope.js, owner-signed only) over
+  `forkbuild:world-membership`.
+- WorldCommandPropagationUseCase sends each local command as a
+  core/WorldOperationEnvelope.js over `forkbuild:world-sync`, checks the
+  sender's authority for that specific World, and applies remote
+  operations idempotently. Operations are totally ordered by a Lamport
+  clock and operation id (core/LogicalClock.js,
+  replication/WorldOperationOrdering.js), never by wall-clock time;
+  replication/WorldConflictResolver.js reorders rather than rewrites,
+  and delete is terminal. Remote operations never enter the local undo
+  stack.
+- WorldPresenceUseCase (`forkbuild:world-presence`) says who is online in
+  a World, recomputing `canEdit` locally rather than trusting a claim.
+  WorldSpatialPresenceUseCase (`forkbuild:world-spatial-presence`) shares
+  camera position, heading, selection and activity as ephemeral
+  observation, drawn by RemoteSpatialPresenceRenderer. Following another
+  person is local camera navigation.
+- ui/components/WorldCollaborationRoster.js joins these for
+  WorldMembersPanel, WorldPresenceIndicator and WorldCollaboratorIndicator.
+
+The earlier protocol from Collaboration Protocol Foundation (0.2.7) and
+Multi-client Synchronization (0.2.9) (collaboration/: CollaborationSession,
+DocumentAuthority and the transports, wired by
+application/CreateCollaborationUseCase.js) still exists but has no callers
+in the app; the design notes are in docs/ArchitectureHistory.md.
+
+## Places, landmarks and naming
+
+- **Regions and landmarks** (core/WorldRegion.js, core/WorldLandmark.js,
+  core/RegionKind.js) are World content: World View creates, updates and
+  removes them with commands at the avatar's position, so they are
+  undoable and follow the World's authorization. World Animal
+  Decorations follow the same path.
+- **Derived structure.** core/WorldCurationContext.js groups content
+  near landmarks; core/WorldRegionGeography.js and the
+  core/GeographicPlace*.js modules derive geographic places from region
+  names. Places are computed views: they highlight existing geometry and
+  are navigable, but never become stored objects. WorldLocationDirectory
+  lists locations from existing identity data, and WorldFocusContext
+  describes what is being looked at.
+- **Naming claims.** A name is a claim, not a fact: core/PlaceNamingClaim.js
+  is a signed claim, managed by PlaceNamingClaimUseCase, shared by file
+  (PlaceNamingClaimExchange) or published and discovered over Nostr or
+  Arweave (PlaceNaming*Discovery* and *RuntimeComposition files) with a
+  per-region tag. Discovering a claim never adopts it: adopting a nearby
+  discovered claim is an explicit action in World View that runs the same
+  import path (PlaceNamingClaimExchange#importClaim()) as a manual import
+  from PlaceNamingPanel.
+- **Personal state.** LocalWorldExperienceStore remembers where you were
+  in each World you visited. It is local, never World content, and feeds
+  the Recent Worlds page.
+
 ## Avatar movement constraint pipeline
 
 `application/AvatarMovementController.js` runs the simulated move through up to six optional constraints, in this
@@ -720,9 +833,6 @@ the middle column) and docs/Roadmap.md.
 
 | Area | docs/ArchitectureHistory.md | Also see |
 |------|-----------------------------|----------|
-| Avatars and presence | 0.2.33–0.2.45, 0.3.2–0.3.4 | "Avatar movement constraint pipeline" above |
-| Collaboration | Collaboration Protocol Foundation (0.2.7); Multi-client Synchronization (0.2.9); 0.3.0–0.3.1 | docs/Roadmap.md, 0.2.95–0.2.99 |
-| Places, landmarks and naming | (none) | docs/Roadmap.md, 0.3.6–0.3.10 and 0.5.x |
 | Bricks, structures and blueprints | 0.2.80–0.2.81 | docs/BrickLibrary.md, docs/StructureLibrary.md |
 | Anchoring, evidence and achievements | (none) | docs/Roadmap.md, 0.8.0 onward |
 
