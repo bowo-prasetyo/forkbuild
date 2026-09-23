@@ -243,8 +243,13 @@ to sign in first.
 
 When you post a comment from the **Repository** (a card or a list row),
 it's saved on your device, sent straight to any peer you're currently
-connected to, and published to Nostr (or Arweave, if you pick it next to
-**Post Comment**) so people who weren't connected can still find it.
+connected to, and published to Nostr or Arweave — whichever you pick next
+to **Post Comment**, which starts out on your saved
+[Announcement / Discovery Provider](#announcement--discovery-provider) —
+so people who weren't connected can still find it. A Repository card and
+a list row share the same Commentary section, so it works identically in
+either view; it loads when you open it, and closing it again (**Hide
+Comments**) discards any comment you'd typed but not yet posted.
 Comments posted from World View's **My Publication** or **World
 Encounters** panels are, for now, only saved on your device.
 
@@ -642,6 +647,31 @@ the specific technique used to write a hash into a Bitcoin transaction):
 Creating evidence never verifies it. A freshly created anchor shows up in
 the list below exactly like any other, "Not yet verified," until you check
 it yourself.
+
+### Anchoring on a preferred provider
+
+A publication card's **Proof / Anchoring** block shows one card per
+anchoring substrate this replica has registered, each with its own
+create button, plus a **Configure** link and a **Use Preferred Provider**
+button below them. **Configure** opens the **Proof / Anchoring Provider**
+settings page (`/settings/anchor-provider`), where you pick — with radio
+buttons — the substrate (**Arweave** or **Bitcoin**) you want new evidence
+anchored on by default, and click **Save**. After that, **Use Preferred
+Provider** creates an anchor on your saved substrate without asking you
+to name one, reporting the same outcomes as the per-substrate buttons
+(it reads **Creating…** while it works, and shows the new anchor's
+transaction and content hash once one is created).
+
+Saving a preference never changes what the explicit per-substrate buttons
+do, and never touches an anchor you already created. **Base** is never
+offered as a preferred provider: every Base anchor needs you to review
+and sign a wallet transaction at the moment it's made, so use its own
+flow in [The Base Anchor Pipeline](#the-base-anchor-pipeline) below.
+Likewise, Bitcoin anchoring is wallet-guided and multi-step — a Bitcoin
+button here only succeeds once a transaction has been connected, funded,
+built, reviewed, signed, finalized, and broadcast in the card's Bitcoin
+section (see [The Bitcoin Anchor Pipeline](#the-bitcoin-anchor-pipeline)
+below).
 
 ### Discover from Peers
 
@@ -1711,8 +1741,10 @@ preferred.
 
 If this device has at least one storage backend configured — this build
 always ships **Local** (this device's own storage) and **IPFS** (a real
-IPFS node's HTTP API, expected at `http://127.0.0.1:5001`) — you'll see a
-card per backend:
+IPFS node's HTTP API, expected at `http://127.0.0.1:5001` unless you've
+pointed it at another node — see
+[Using a preferred provider](#using-a-preferred-provider) below) — you'll
+see a card per backend:
 
 - **Create Local Placement** / **Create Ipfs Placement** — takes the bytes
   this device already holds for this publication and hands them to that
@@ -1733,8 +1765,9 @@ accepted these bytes just now.
 
 > **Creating an IPFS placement needs your own IPFS node; resolving one
 > doesn't.** **Create Ipfs Placement** always talks to a real IPFS node's
-> HTTP API on this device (expected at `http://127.0.0.1:5001`) — without
-> one running, you'll see **No placement was created**. **Resolve
+> HTTP API (expected at `http://127.0.0.1:5001`, or wherever you've
+> pointed **IPFS Node** on the Content Provider settings page) — without
+> one running there, you'll see **No placement was created**. **Resolve
 > Snapshot** and **Materialize Snapshot**, just below, are different: they
 > reach a public IPFS gateway (`https://ipfs.io`, unless you've overridden
 > it — see [IPFS Gateway](#ipfs-gateway) below) instead, whether or not you
@@ -1745,11 +1778,17 @@ accepted these bytes just now.
 
 ### Using a preferred provider
 
-Rather than naming **Local** or **IPFS** explicitly every time, you can
-set a standing preference once and let ForkBuild pick for you. Open
-**Content Provider** in the top bar (`/settings/content-provider`), choose
-one of the backends currently registered on this replica, and click
-**Save**. From then on, every publication card's **Use Preferred
+Rather than naming a backend explicitly every time, you can set a
+standing preference once and let ForkBuild pick for you. Open
+**Content Provider** from **Network Settings**
+(`/settings/content-provider`), choose one of the decentralized backends
+currently registered on this replica, and click **Save**. **Local** isn't
+offered: every publication is already stored on this device before any
+placement is made, so it was never a meaningful preference. If you saved
+**Local** in an earlier version, the page now shows nothing selected, with
+a note that the old preference no longer applies — **Use Preferred
+Provider** treats it exactly like having no preference until you choose
+and save another. From then on, every publication card's **Use Preferred
 Provider** button — sitting alongside the explicit **Create Local/Ipfs
 Placement** buttons above — creates a placement on whichever backend you
 saved, without asking you to name one there.
@@ -1787,6 +1826,16 @@ the Endpoint/Credential fields in those dialogs still always open empty.
 **IPFS (Remote Pinning)** aside, the rest of the list still only ever
 shows a backend this replica has genuinely registered — if none is, it's
 the only option on the page.
+
+The same page has a second, independent section, **IPFS Node**: the node
+the **IPFS** backend sends new content to when it creates a placement.
+With nothing saved it uses the deployment default
+(`http://127.0.0.1:5001`, a local Kubo node); type another node's API URL
+and click **Save** to use a remote one instead, or **Use Deployment
+Default** to go back. It never changes which backend **Use Preferred
+Provider** selects, and never changes the separate
+[IPFS Gateway](#ipfs-gateway) setting used for *reading* already-placed
+IPFS content.
 
 ### The Snapshot Placements list
 
@@ -1907,18 +1956,41 @@ derived purely from the claims themselves, every time.
 ## Network Settings
 
 Open **Network Settings** in the top bar for one hub linking every
-endpoint-server settings page ForkBuild has: **Content Provider** (see
-[Using a preferred provider](#using-a-preferred-provider) above),
-**Arweave Gateway**, **IPFS Gateway**, and **Nostr Relay** (below),
-**Nostr Publication Relays** (below), **STUN Servers** and **TURN
-Server** (see
-[TURN: relaying peer connections that can't find a direct
-path](07-PeerConnectionsAndFriends.md#turn-relaying-peer-connections-that-cant-find-a-direct-path)),
-and **Rendezvous Servers** (see
-[Peer Connections & Friends](07-PeerConnectionsAndFriends.md)). Each still
-keeps its own route and its own **Save** logic, described individually
-below and in the chapters just linked — Network Settings is only a single
-front door to all of them, not a shared form.
+network-related settings page ForkBuild has:
+
+| Page | Route | What it sets |
+|---|---|---|
+| **Content Provider** | `/settings/content-provider` | Where **Use Preferred Provider** places new Content, plus the IPFS node new IPFS placements go to — see [Using a preferred provider](#using-a-preferred-provider) above |
+| **Announcement / Discovery Provider** | `/settings/announcement-discovery-provider` | The default substrate — Nostr or Arweave — for announcing and discovering — see [below](#announcement--discovery-provider) |
+| **Proof / Anchoring Provider** | `/settings/anchor-provider` | Where the Publication Center's anchoring **Use Preferred Provider** button anchors — see [Anchoring on a preferred provider](#anchoring-on-a-preferred-provider) above |
+| **Arweave Gateway** | `/settings/arweave-gateway` | Gateway(s) for reading Arweave content — [below](#arweave-gateway) |
+| **IPFS Gateway** | `/settings/ipfs-gateway` | Gateway(s) for reading IPFS content — [below](#ipfs-gateway) |
+| **Bitcoin Endpoint** | `/settings/bitcoin-esplora` | The Esplora-compatible API Bitcoin anchoring uses — [below](#bitcoin-endpoint) |
+| **Nostr Relays** | `/settings/nostr-relay` | Every relay this app publishes to and discovers from — [below](#nostr-relays) |
+| **STUN Servers** / **TURN Server** | `/settings/stun`, `/settings/turn-server` | See [TURN: relaying peer connections that can't find a direct path](07-PeerConnectionsAndFriends.md#turn-relaying-peer-connections-that-cant-find-a-direct-path) |
+| **Rendezvous Servers** | `/settings/rendezvous` | See [Peer Connections & Friends](07-PeerConnectionsAndFriends.md) |
+
+Each page keeps its own route and its own **Save** button — saving one
+never saves another — and they all behave the same way: a **Save** that
+fails shows a plain error and leaves whatever was saved before untouched,
+a successful one shows "Saved.", and the endpoint pages (gateways,
+Bitcoin Endpoint, Nostr Relays, IPFS Node, STUN, TURN, Rendezvous) also
+offer **Use Deployment Default**, which clears your override and shows
+"Cleared — now using the deployment default." Wherever a page offers a
+list of choices, they're shown in alphabetical order.
+
+### Announcement / Discovery Provider
+
+Open **Announcement / Discovery Provider**
+(`/settings/announcement-discovery-provider`) to choose, with a pair of
+radio buttons, the default substrate — **Arweave** or **Nostr** — used to
+announce and discover Publications, Snapshots, Place Naming claims, and
+Commentary. It's only a default: every control that offers its own
+explicit choice (the Repository's per-card and per-row Distribution
+picker, the network picker next to **Post Comment**, the Distribute
+dialogs) starts out on the provider you saved here, and you can still
+switch it for that one action. Saving takes effect the next time the app
+loads; it never changes an announcement already in flight.
 
 ### Arweave Gateway
 
@@ -1997,87 +2069,52 @@ failing outright. Exactly like every other setting on this page, a change
 here only takes effect on the next app
 load.
 
-### Nostr Relay
+### Bitcoin Endpoint
 
-Open **Nostr Relay** in the top bar (`/settings/nostr-relay`). It works
-identically to Arweave Gateway above — the same "Current override" / "No
-override configured" display, the same free-text input (placeholder
-`wss://relay.damus.io`), the same **Save** and **Use Deployment Default**
-buttons, and equally modest validation: **Save** only ever checks that
-what you typed parses as an absolute `ws:`/`wss:` URL, never that the
-relay is actually reachable or speaks the Nostr protocol.
+Open **Bitcoin Endpoint** (`/settings/bitcoin-esplora`) to point Bitcoin
+anchoring at a different Esplora-compatible API — the service used to
+broadcast Bitcoin anchor transactions, observe their confirmation, look
+up wallet funding, and verify an anchor's OP_RETURN proof (see
+[The Bitcoin Anchor Pipeline](#the-bitcoin-anchor-pipeline) above). It
+takes a single `http://` or `https://` URL (placeholder
+`https://blockstream.info/api`), with the same "Current override" / "No
+override configured" display and **Save** / **Use Deployment Default**
+buttons as the gateway pages. It affects Bitcoin anchoring only, never
+any other substrate.
 
-This setting affects discovery only — never publishing — and, since
-**Nostr Publication Relays** (below) took over Publication discovery,
-it's narrower than it used to be: today it's the relay **Nearby Place
-Names** (see
-[Nearby Place Names](03-WorldView.md#nearby-place-names--discovering-claims-from-anyone))
-and Snapshot discovery consult. Discovering a Publication over Nostr —
-**World Encounters**' own decentralized lookups and **Discover
-Publication** (see
-[World Encounters](03-WorldView.md#world-encounters--publications-and-avatars-your-peers-are-sharing)
-and
-[Discover Publication](03-WorldView.md#discover-publication--searching-decentralized-networks-directly))
-— reads the separate **Nostr Publication Relays** set instead, described
-next. None of the places you *announce* something over Nostr — a
-place-naming claim's own **Publish to Nostr**, or the separate Snapshot
-distribution protocol — ever consult either setting; only the read paths
-named above do. Exactly like Arweave Gateway, a change here only takes
-effect on the next app load.
+### Nostr Relays
 
-### Nostr Publication Relays
+Open **Nostr Relays** (`/settings/nostr-relay`) to set the relays used
+**everywhere** ForkBuild publishes or discovers over Nostr — Publications,
+Snapshots, Place Naming claims, and Commentary. (Earlier versions had two
+separate pages, **Nostr Relay** and **Nostr Publication Relays**; they've
+been merged into this one page and one saved list.)
 
-Open **Nostr Publication Relays** in the top bar
-(`/settings/nostr-publication-relays`) — a genuinely separate page from
-**Nostr Relay** above, covering a genuinely separate concern: the set of
-relays a signed **Publication** (a Repository creation's decentralized
-record, or the Signed Claim behind **Distribute Publication** — see
-[Distributing straight from the Editor](04-PublishingAndForking.md#distributing-straight-from-the-editor)
-and
-[World Encounters](03-WorldView.md#world-encounters--publications-and-avatars-your-peers-are-sharing))
-is announced to, and queried against when **Discover Publication** or
-World Encounters' own decentralized lookup goes looking for one. It never
-affects Snapshot distribution or discovery, and it never changes the
-plain **Nostr Relay** preference above, still used for Place Naming
-discovery.
-
-Rather than one URL, this page shows a multi-line box — one relay URL per
-line, for example:
-
-```
-Current relay set (2): wss://relay-a.example, wss://relay-b.example
-
-wss://relay-a.example
-wss://relay-b.example
-
-[Save]   [Use Deployment Default]
-```
-
-With nothing saved, the page shows "No override configured. Currently
-using the deployment default: `wss://relay.damus.io`" — a single-relay
-fallback, exactly like every other setting on this page starts out. Type
-one relay URL per line and click **Save** to replace the whole set at
+Type one `ws://` or `wss://` relay URL per line (placeholder
+`wss://relay.damus.io`) and click **Save** to replace the whole set at
 once; **Save** rejects the whole attempt if any line isn't a valid
-absolute `ws:`/`wss:` URL, leaving whatever was previously saved
-untouched, and click **Use Deployment Default** to go back to having no
-override at all.
+absolute `ws:`/`wss:` URL, and never checks that a relay is actually
+reachable or speaks Nostr. With nothing saved, the page shows "No override
+configured. Currently using the deployment default: `wss://relay.damus.io`";
+once you've saved, it shows "Current override(s): `<your relays>`".
+**Use Deployment Default** goes back to having no override.
 
 **Every relay you list is an equal, independent target — never a
-priority order, and never failover.** Announcing a Publication fans out
-to every configured relay at once, each one attempted regardless of
-whether another succeeds or fails — unlike Arweave Gateway's ordered
-list above, where only an unreachable gateway falls through to the next
-one. There's no per-relay status shown on this settings page itself, no
-health check, and no way to mark one relay preferred over another; a
-relay that declines or fails never causes a different one to be skipped
-or retried in its place. (Where a distribution result *is* shown — the
-Editor's **Distribute** dialog, World Encounters' and My
-Publication's own Distribute Publication readouts — it still reports one
-combined **Discovery** outcome for the attempt, not a per-relay
-breakdown.)
+priority order, and never failover.** Announcing something fans out to
+every configured relay at once, and discovery queries every one of them,
+each attempted regardless of whether another succeeds or fails — unlike
+the gateway pages' ordered lists above, where only an unreachable gateway
+falls through to the next one. So a second relay stays useful even while
+the first is unreachable, and a Publication announced to more than one
+relay is findable by more people. There's no per-relay status on this
+page, no health check, and no way to mark one relay preferred over
+another. (Where a distribution result *is* shown — the Editor's
+**Distribute** dialog, World Encounters' and My Publication's own
+readouts — it still reports one combined **Discovery** outcome, not a
+per-relay breakdown.)
 
-A change here, like every other setting on this page, only takes effect
-on the next app load.
+Like the other pages here, a change only takes effect on the next app
+load.
 
 ## IPFS Publishing
 

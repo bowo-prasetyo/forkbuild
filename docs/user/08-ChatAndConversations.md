@@ -25,8 +25,10 @@ most recent activity. Each row shows:
   queued
 - The time of the last activity
 
-Only current friends get an **Open Chat** button; everyone else's row points
-you back to Peers instead.
+Only current friends you haven't blocked get an **Open Chat** button;
+everyone else's row points you back to Peers instead. A friend you've
+blocked shows "⛔ Blocked — unblock from Peers to chat again." in place of
+the button, and the row updates as soon as you block or unblock them.
 
 ## The chat view
 

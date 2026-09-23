@@ -10,7 +10,10 @@ in the Editor, the one place ForkBuild ever builds — see
 
 World Region and Landmark naming is the one exception: naming a place you're
 standing at is annotation, not construction, so it stays right here — see
-[Landmarks](#landmarks--marking-a-place-worth-remembering) below.
+[Landmarks](#landmarks--marking-a-place-worth-remembering) below. (Baking a
+released animal into the World as a decoration, with **G**, works the same
+way — see
+[Avatars & Presence](06-AvatarsAndPresence.md#decorating-a-world-with-an-animal).)
 
 ## Opening World View
 
@@ -141,6 +144,14 @@ If more than one connected peer offers the same encounter, a
 **Choose Source** list appears so you can pick which peer's copy to
 inspect. Like everything else in World View, this is purely for
 looking — nothing here moves your camera or edits anything.
+
+If you've run **Discover Publication** (below) and it turned up a
+decentralized lead — an Arweave or Nostr location — for the publication
+you've selected, a **Location** line shows which one will be used. When
+more than one lead matches, a **Choose Location** list appears instead:
+pick one, and Material/Verification below load from that location. Until
+you choose, nothing is loaded from any of them, and a choice made for one
+encounter never carries over to another.
 
 Selecting a publication also shows two more status blocks beneath it.
 **Material** / **Verification** try to actually load that publication's
@@ -618,7 +629,10 @@ grouping, and every other construction tool.
 
 World Region and Landmark naming is the one exception — see
 [Landmarks](#landmarks--marking-a-place-worth-remembering) above — because
-naming a place is annotation, not construction.
+naming a place is annotation, not construction. Animal decorations (the
+**G** key — see
+[Avatars & Presence](06-AvatarsAndPresence.md#decorating-a-world-with-an-animal))
+follow the same rule.
 
 ### Seeing other collaborators
 

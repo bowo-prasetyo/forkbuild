@@ -10,9 +10,12 @@ Open **My Avatar** in the top bar:
 
 1. Pick a **Template** — a body type (e.g. "Humanoid 01") — from the
    dropdown. A flat preview updates live as you choose.
-2. For each part the template defines (typically **skin, hair, shirt,
-   pants**), pick an option, and a color where the template allows one.
-3. Toggle any **accessories** the template offers, from a checklist.
+2. For each part the template declares (the built-in templates offer
+   **skin, hair, shirt, pants**), pick an option from its dropdown, and a
+   color where the template allows one.
+3. Toggle any **accessories** the template offers, from a checklist. (Any
+   part that allows several choices at once shows as a checklist like
+   this; the page shows exactly the parts the chosen template declares.)
 4. Set your **Display name** (up to 60 characters) — this is the name shown
    with your avatar and in Peers/Conversations.
 5. Click **Save**.
@@ -42,6 +45,10 @@ Both offer the same four levels:
   "friend" means.
 - **Local** — only within this session's own connection scope.
 - **Hidden** — never advertised, to anyone. This is how you go invisible.
+
+Each section has its own **Save** button — saving one never saves the
+other. "Saved." appears after a save and disappears as soon as you change
+that section again, so it always describes what you're looking at.
 
 Being someone's friend does **not** by itself reveal your avatar — these two
 settings decide what's actually shared, independently of each other. And
@@ -214,6 +221,35 @@ back. There's no limit today on how many animals you can carry, and
 catching one never disturbs a vehicle you're also carrying, or vice
 versa — they share the same backpack but never get mixed up.
 
+#### Decorating a World with an animal
+
+A released animal only lives in your own session. To make one a lasting
+part of the World — say, a rabbit sitting on top of something you built —
+stand next to an animal you released and press **G**. It becomes an
+**animal decoration**: saved into the World's own content, so it's
+included when that World is published or distributed and everyone who
+opens it sees it, looking exactly like the animal it came from.
+
+A decoration is decorative only — it can't be caught with **F**. Changed
+your mind? Stand next to it and press **G** again: the decoration is
+removed from the World and becomes a live, catchable animal again. When
+both are nearby, **G** decorates a fresh released animal first, just as
+**F** prefers catching over releasing. Only animals you released can be
+decorated — wildlife the world placed by itself can't — and there's no
+on-screen prompt for **G** yet. Like adding a
+[landmark](03-WorldView.md#landmarks--marking-a-place-worth-remembering),
+decorating needs you signed in with EDIT access to the World you're in.
+On someone else's published World, the decoration goes into your own
+copy of it — as long as its license allows forking. If none of that
+applies, **G** simply does nothing.
+
+#### What survives a reload
+
+Your inventory — every vehicle and animal you're carrying — is saved on
+this device, and so are the vehicles you've placed or ridden somewhere and
+the animals you've released, right where you left them. Reloading the
+page or coming back later picks up exactly where you were.
+
 ### Spatial awareness and activity
 
 When other people are present, you'll see contextual indicators showing what
@@ -230,7 +266,8 @@ understand what others are looking at without needing explicit communication.
 > **Presence describes activity; it never changes anything on its own.**
 > The activity indicator shows what someone is *doing*, but World View itself
 > is read-only — only an actual mutation, always in the Editor now (except
-> Region/Landmark naming), changes the shared environment. See
+> Region/Landmark naming and animal decorations), changes the shared
+> environment. See
 > [World View](03-WorldView.md#world-view-is-read-only--building-happens-in-the-editor).
 
 ## What's next?

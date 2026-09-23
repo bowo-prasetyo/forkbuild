@@ -32,7 +32,12 @@ information through some channel you already trust (chat, email, in person):
 - **Be Discoverable** — publishes your own identity to a rendezvous network
   so someone who already knows your identity ID can find and connect to you
   without a direct invitation. One publication answers one connection
-  attempt — republish to be found again. Opening this panel also shows
+  attempt — republish to be found again. The button reads **Stop Being
+  Discoverable** while your publication is still waiting for someone to
+  answer it; it flips back to **Be Discoverable** on its own once someone
+  connects, or once the offer closes or its invitation expires. That state
+  is kept app-wide, so leaving the Peers page and coming back doesn't
+  reset it. Opening this panel also shows
   **Your Identity** — your full ID, with a **Copy** button — which is what
   you actually need to send someone for **Find Someone** to work. It's
   deliberately different from the shortened `…last14chars` shown elsewhere
@@ -45,7 +50,10 @@ steps: **Rendezvous discovered → WebRTC connecting → Peer connected →
 Authenticating identity → Authenticated** (or **Failed**). An authenticated
 peer's card shows its identity, public key, and a reminder that the
 *connection* itself is session-only — "gone when this connection closes" —
-even though a Known Peer or Friend record survives it.
+even though a Known Peer or Friend record survives it. Each card's
+"connected …" timer counts from when that connection was actually made,
+not from when you opened the page, so it keeps counting correctly if you
+navigate away and come back.
 
 ## Remembering, friending, blocking
 
@@ -99,7 +107,7 @@ never shown back to you once saved, only that one is configured. Click
 **Clear** to remove it entirely.
 
 **There is deliberately no "Use Deployment Default" button here.**
-Unlike Arweave Gateway or Nostr Relay, ForkBuild ships no deployment-wide
+Unlike Arweave Gateway or Nostr Relays, ForkBuild ships no deployment-wide
 TURN server of its own — leaving this unconfigured simply means peer
 connections rely on STUN and direct connectivity alone, exactly as they
 always have. A TURN relay is entirely optional, and something you'd

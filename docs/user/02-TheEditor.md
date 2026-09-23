@@ -30,7 +30,9 @@ transform bricks, and how to organize your build with groups.
 - **Tools** — switch between **Select** (`1`) and **Place** (`2`).
 - **Build Library** — a search box and two tabs:
   - **Bricks** — everything you can place with the Place tool, grouped by
-    category. Click one to select it (and switch to the Place tool).
+    category. Click one to select it (and switch to the Place tool); a
+    **Color** swatch then appears for choosing its color — see
+    [Brick colors](#brick-colors) below.
   - **Structures** — twenty ready-made structures across five categories
     (residential, agricultural, commercial, community, infrastructure),
     plus your own **My Structures**. Click a card to place it — see
@@ -90,6 +92,25 @@ With one or more bricks selected:
 When you select multiple bricks, they rotate around their **shared center**, so
 a whole section swings as one unit.
 
+## Brick colors
+
+Every brick type has its own default color, but you can choose your own:
+
+- **Before placing** — once a brick is selected in the Build Library's
+  **Bricks** tab, click its **Color** swatch and pick a color. Every brick
+  you place from then on uses it, and the placement ghost previews it.
+  Picking a different brick type goes back to that type's own default
+  color until you choose one again.
+- **After placing** — select one or more bricks and use the **Color**
+  swatch in the **Selection** section to recolor them all at once. Each
+  change is undoable (`Ctrl/Cmd+Z`) like any other edit. The swatch isn't
+  offered for a structure-instance selection — edit the structure's own
+  document instead (see
+  [Structure instances](#structure-instances-a-live-reference) below).
+
+A brick's color is saved with your creation and travels with it when you
+publish or share it.
+
 ## Precise transforms: alignment, distribution, and numeric input
 
 The sidebar's **Transform** section (below Selection) gives you two more
@@ -107,7 +128,7 @@ exact ways to move a selection, alongside the gizmo and the keys above:
 
 Either way, the whole operation is **one undo step**, exactly like a gizmo
 drag or a keyboard nudge — see the
-[Controls Reference](ControlsReference.md#transform--numeric-panel) for the
+[Controls Reference](ControlsReference.md#transform--numeric-panel-editor-only) for the
 full field-by-field behavior.
 
 > **Collisions are blocked.** Dragging the gizmo or nudging with the keyboard

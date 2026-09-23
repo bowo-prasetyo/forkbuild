@@ -108,6 +108,12 @@ nearby or you're carrying one.
 |---|---|---|
 | `F` (near a catchable animal) | Catch it | Adds it to your inventory and removes it from the world |
 | `F` (not near a catchable animal, carrying one) | Release the most recently caught animal | Spawns it at your current position, catchable again |
+| `G` (near an animal you released) | Decorate the World with it | Saves it into the World's content as a decoration — no longer catchable; needs EDIT access; no on-screen prompt yet |
+| `G` (near an animal decoration, no released animal nearby) | Undo the decoration | Removes it from the World and turns it back into a live, catchable animal |
+
+Your inventory, placed vehicles, and released animals are saved on this
+device and survive a reload — see
+[Avatars & Presence](06-AvatarsAndPresence.md#what-survives-a-reload).
 
 ## Selection (click/marquee work in both views; only the Editor mutates)
 
@@ -211,7 +217,7 @@ selectable unit — a live reference, not a copy — see
 | `R` / `Shift+R` while placing | Rotate the pending instance ±90° | same placement-preview keys as a brick |
 | Click a placed instance (Select tool) | Select it as one unit, distinct from a brick selection | |
 | Drag in the viewport, or the gizmo | Move / rotate the instance | |
-| `Ctrl/Cmd+D` | Duplicate — places another instance of the same document | see [Duplicate](#duplicate) — instance selections get a fresh instance instead of a fresh brick copy |
+| `Ctrl/Cmd+D` | Duplicate — places another instance of the same document | see [Duplicate](#duplicate-editor-only) — instance selections get a fresh instance instead of a fresh brick copy |
 | Instance panel **X / Z / Rotation** fields, then Apply | Set an exact position/heading | Y (elevation) is always terrain-derived, never a target |
 | Instance panel **Edit Source Document** | Open the referenced document to change its bricks | every instance updates, since an instance is a live reference |
 | `Delete` / `Backspace` | Remove the instance | never touches the referenced document |
@@ -279,6 +285,10 @@ rule stated at the top. World View has no Place tool at all — see
 | `R` | Rotate the pending preview +90° | persists across brick switches; resets when you leave Place mode |
 | `Shift+R` | Rotate the pending preview −90° | |
 | Click | Commit the preview as a real Brick | refused at an occupied (red) position |
+| Build Library **Color** swatch | Choose the color for the next bricks you place | resets to the brick type's default when you pick a different type — see [Brick colors](02-TheEditor.md#brick-colors) |
+
+To recolor bricks you've already placed, select them and use the **Color**
+swatch in the Selection section — one undo step per change.
 
 ## Escape priority (Editor)
 
