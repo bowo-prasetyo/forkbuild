@@ -52,6 +52,15 @@ export class ConversationReadTracker {
         return marker ? marker.lastReadSequence : 0;
     }
 
+    // Every recorded high-water mark in one storage read, as a
+    // `Map<peerIdentityId, lastReadSequence>` — for a caller summarizing
+    // many peers at once (application/PeerPresenceUseCase.js#list()).
+    // A peer with no marker is simply absent; read it as 0, exactly like
+    // getLastReadSequence() above.
+    getLastReadSequences() {
+        return new Map(this._loadAll().map((m) => [m.peerIdentityId, m.lastReadSequence]));
+    }
+
     // Advances this peer's own high-water mark to `sequence` — a no-op
     // (never an error, never a regression) if `sequence` is at or below
     // what is already recorded, exactly like

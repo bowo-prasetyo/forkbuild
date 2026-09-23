@@ -23,11 +23,23 @@ import { resolveDirectSocialIdentity } from './SocialIdentityResolver.js';
 // every invocation and never cached here — this function holds no state
 // of its own at all.
 export function findLiveConnectedPeers(connectedPeerRegistry, resolveSocialIdentity, identityId) {
-    return connectedPeerRegistry.list().filter((peer) => {
+    return findLiveConnectedDevices(connectedPeerRegistry, resolveSocialIdentity, identityId).map(({ peer }) => peer);
+}
+
+// The same query, keeping each match's resolved social identity
+// alongside it — `{ peer, resolved }` — so a caller that also needs
+// `resolved.deviceIdentityId` (application/PeerPresenceUseCase.js#getSummary())
+// never has to resolve the same connection a second time.
+export function findLiveConnectedDevices(connectedPeerRegistry, resolveSocialIdentity, identityId) {
+    const matches = [];
+    for (const peer of connectedPeerRegistry.list()) {
         if (!peer.remoteIdentity || peer.getLifecycleState() !== PeerLifecycleState.AUTHENTICATED) {
-            return false;
+            continue;
         }
         const resolved = resolveSocialIdentity(peer) || resolveDirectSocialIdentity(peer);
-        return resolved.identityId === identityId;
-    });
+        if (resolved.identityId === identityId) {
+            matches.push({ peer, resolved });
+        }
+    }
+    return matches;
 }
