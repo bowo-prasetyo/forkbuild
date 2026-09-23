@@ -9,8 +9,9 @@ import { createId } from '../../core/createId.js';
 // exactly why it exists alongside PublicationCard rather than
 // replacing it: cards are for visual discovery, this is for scanning
 // a lot of results quickly. Same pure-presentation contract as
-// PublicationCard — every row's description/parent-title/fork-count
-// is resolved by the host and handed down already-computed.
+// PublicationCard — every row's description/parent-title is resolved
+// by the host and handed down already-computed. (Fork counts are a
+// cards-view-only detail; the table has no column for them.)
 //
 // 0.9.561 — Publication List Commentary Parity.
 //
@@ -81,7 +82,10 @@ import { createId } from '../../core/createId.js';
 // default) and `distributionProvider` (the last successful submission's
 // choice, for the honest status line), and `submitCommentary(pub)`
 // forwards that row's own provider verbatim as `discoveryProvider` on
-// the SAME addPublicationCommentaryCommand call. No new command, no new
+// the SAME addPublicationCommentaryCommand call. NOTE: unlike
+// PublicationCard.js (0.9.667), this default is still the hardcoded
+// 'nostr' rather than the injected `defaultAnnouncementDiscoveryProvider`
+// — a known divergence between the two views. No new command, no new
 // distribution class imported here, no cross-row bleed — see this
 // file's own header, "one component, many rows." Status text carries
 // the identical "never a success/receipt claim" restraint
@@ -100,10 +104,9 @@ export default {
         items: { type: Array, required: true },
         descriptions: { type: Object, default: () => ({}) },
         parentTitles: { type: Object, default: () => ({}) },
-        forkCounts: { type: Object, default: () => ({}) },
         // 0.9.539 — see core/PublicationDateAmbiguity.js's own header.
-        // Keyed by publicationId (unlike the three caches above, which
-        // are keyed by documentId) because the collision this guards
+        // Keyed by publicationId (unlike the two maps above, which are
+        // keyed by documentId) because the collision this guards
         // against is between two Publication INSTANCES of the same
         // document, not the document itself.
         preciseDateIds: { type: Set, default: () => new Set() }

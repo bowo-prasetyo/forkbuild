@@ -53,7 +53,6 @@ export default {
         const groupBy = ref(GroupBy.NONE);
         const submittedText = ref('');
         const includeDescriptions = ref(false);
-        const hasSubmittedSearch = ref(false);
         const catalogHasAnyPublications = ref(true);
 
         const pageResult = ref(null);
@@ -149,7 +148,6 @@ export default {
         function onSearch({ text, includeDescriptions: withDescriptions }) {
             submittedText.value = text;
             includeDescriptions.value = withDescriptions;
-            hasSubmittedSearch.value = !!text;
             runQuery(1);
         }
 
@@ -247,7 +245,6 @@ export default {
                         :items="group.items"
                         :descriptions="descriptions"
                         :parent-titles="parentTitles"
-                        :fork-counts="forkCounts"
                         :precise-date-ids="preciseDateIds"
                         @open="openPublication"
                         @fork="forkPublication"

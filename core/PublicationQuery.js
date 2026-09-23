@@ -39,12 +39,4 @@ export class PublicationQuery {
         this.pageSize = Number.isFinite(pageSize) && pageSize >= 1 ? Math.floor(pageSize) : DEFAULT_PAGE_SIZE;
         this.includeDescriptions = !!includeDescriptions;
     }
-
-    // Convenience for "the same query, but page N" — the toolbar/
-    // pagination controls never build a PublicationQuery from scratch,
-    // they derive one from whatever's currently active so text/sort/
-    // scope are never accidentally dropped by a page click.
-    withPage(page) {
-        return new PublicationQuery({ ...this, page });
-    }
 }

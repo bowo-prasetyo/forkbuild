@@ -155,9 +155,9 @@ async function runTests() {
         assert(q.text === '' && q.author === null && q.sort === PublicationSort.RECENTLY_PUBLISHED
             && q.page === 1 && q.pageSize === DEFAULT_PAGE_SIZE && q.includeDescriptions === false,
             '8. PublicationQuery defaults: no text, no author scope, recently-published, page 1, descriptions off');
-        const page2 = q.withPage(3);
-        assert(page2.page === 3 && page2.sort === q.sort,
-            '9. withPage derives a new query preserving every other field');
+        const clamped = new PublicationQuery({ page: 0, pageSize: -5 });
+        assert(clamped.page === 1 && clamped.pageSize === DEFAULT_PAGE_SIZE,
+            '9. PublicationQuery clamps an invalid page/pageSize back to page 1 / the default page size');
     }
 
     // -------------------------------------------------------------

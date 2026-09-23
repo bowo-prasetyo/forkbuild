@@ -87,9 +87,9 @@ import { createId } from '../../core/createId.js';
 // work until it's actually wanted" restraint.
 //
 // AUTHORSHIP IS NEVER UI-SUPPLIED, IDENTICAL TO OwnPublicationPanel's OWN
-// RESTRAINT. `submitCommentary()` (below) sends ONLY
-// `{ publicationId, content }` — no `authorIdentityId` field exists on
-// that call, because AddPublicationCommentaryUseCase's own 0.9.245
+// RESTRAINT. `submitCommentary()` (below) sends
+// `{ publicationId, content, commentaryId, createdAt, discoveryProvider }`
+// — no `authorIdentityId` field exists on that call, because AddPublicationCommentaryUseCase's own 0.9.245
 // boundary never reads one even if a caller tried to supply it.
 //
 // DELIBERATELY EXCLUDED — NOT THIS MILESTONE. A comment COUNT badge
@@ -97,11 +97,9 @@ import { createId } from '../../core/createId.js';
 // docs/Roadmap.md's own 0.9.251 "Publication Commentary Count UI" entry
 // for why a count is its own, separate, deliberate decision, made once
 // already for OwnPublicationPanel and NOT extended here); editing/deleting/replying
-// to a comment; pagination, sorting, or ranking of the comment list;
-// wiring PublicationList.js (the SAME catalog's alternate list view) or
-// any of the other five surfaces 0.9.288 Section E named — see this
-// milestone's own docs/Roadmap.md entry for why exactly one surface,
-// deliberately, this milestone.
+// to a comment; pagination, sorting, or ranking of the comment list.
+// (PublicationList.js, the SAME catalog's alternate list view, was left
+// out here and gained the same Commentary affordance later, in 0.9.561.)
 //
 // 0.9.638 — Publication Commentary Distribution Provider Selector.
 //
@@ -295,8 +293,9 @@ export default {
             }
         },
         // The only call site of addPublicationCommentaryCommand in this
-        // file. Sends ONLY `{ publicationId, content }` — see this file's
-        // own header, "authorship is never UI-supplied." On success,
+        // file. Sends `{ publicationId, content, commentaryId, createdAt,
+        // discoveryProvider }` and never an author — see this file's own
+        // header, "authorship is never UI-supplied." On success,
         // clears the compose draft and RE-QUERIES through
         // refreshCommentaries() rather than appending the returned
         // commentary itself — one source of truth, never a second,
