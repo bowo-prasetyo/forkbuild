@@ -134,14 +134,16 @@ export default {
             }
         }
 
-        function isAccessorySelected(optionId) {
-            const current = appearance.accessories;
+        // For a `multiple` component (accessories in the core library),
+        // whose appearance value is an array of option ids.
+        function isOptionSelected(componentName, optionId) {
+            const current = appearance[componentName];
             return Array.isArray(current) && current.includes(optionId);
         }
 
-        function toggleAccessory(optionId) {
-            const current = Array.isArray(appearance.accessories) ? appearance.accessories : [];
-            appearance.accessories = current.includes(optionId)
+        function toggleOption(componentName, optionId) {
+            const current = Array.isArray(appearance[componentName]) ? appearance[componentName] : [];
+            appearance[componentName] = current.includes(optionId)
                 ? current.filter((id) => id !== optionId)
                 : [...current, optionId];
         }
@@ -225,8 +227,8 @@ export default {
             appearance,
             displayName,
             onTemplateChange,
-            isAccessorySelected,
-            toggleAccessory,
+            isOptionSelected,
+            toggleOption,
             save,
             skinSwatch,
             PresenceVisibility,
@@ -272,8 +274,30 @@ export default {
                         </select>
                     </label>
 
-                    <template v-for="name in ['skin', 'hair', 'shirt', 'pants']" :key="name">
-                        <label v-if="selectedTemplate.hasComponent(name)" class="form-field avatar-component-field">
+                    <template v-for="name in selectedTemplate.componentNames" :key="name">
+                        <div v-if="selectedTemplate.getComponent(name).multiple" class="form-field avatar-component-field">
+                            <span class="form-label">{{ name }}</span>
+                            <span class="avatar-component-controls">
+                                <span class="avatar-accessory-list">
+                                    <label v-for="opt in componentOptions(name)" :key="opt" class="avatar-accessory-option">
+                                        <input
+                                            type="checkbox"
+                                            :checked="isOptionSelected(name, opt)"
+                                            @change="toggleOption(name, opt)"
+                                        />
+                                        {{ opt }}
+                                    </label>
+                                </span>
+                                <input
+                                    v-if="selectedTemplate.getComponent(name).hasColor"
+                                    type="color"
+                                    v-model="appearance[name + 'Color']"
+                                    class="avatar-color-swatch"
+                                    :aria-label="name + ' color'"
+                                />
+                            </span>
+                        </div>
+                        <label v-else class="form-field avatar-component-field">
                             <span class="form-label">{{ name }}</span>
                             <span class="avatar-component-controls">
                                 <select v-model="appearance[name]" class="form-select">
@@ -289,20 +313,6 @@ export default {
                             </span>
                         </label>
                     </template>
-
-                    <div class="form-field" v-if="selectedTemplate.hasComponent('accessories')">
-                        <span class="form-label">Accessories</span>
-                        <div class="avatar-accessory-list">
-                            <label v-for="opt in componentOptions('accessories')" :key="opt" class="avatar-accessory-option">
-                                <input
-                                    type="checkbox"
-                                    :checked="isAccessorySelected(opt)"
-                                    @change="toggleAccessory(opt)"
-                                />
-                                {{ opt }}
-                            </label>
-                        </div>
-                    </div>
 
                     <label class="form-field">
                         <span class="form-label">Display name</span>

@@ -123,8 +123,8 @@ async function run() {
         const avatar = await source('ui/views/AvatarSettingsView.js');
         assert(/sortOptionsByLabel\(wired\.templateRegistry\.getAll\(\), \(t\) => t\.displayLabel\)/.test(avatar),
             'avatar templates are sorted by display label');
-        assert(/v-for="opt in componentOptions\(name\)"/.test(avatar) && /v-for="opt in componentOptions\('accessories'\)"/.test(avatar),
-            'avatar component and accessory choices render through componentOptions()');
+        assert((avatar.match(/v-for="opt in componentOptions\(name\)"/g) || []).length === 2,
+            'avatar single-choice and multi-choice component options both render through componentOptions()');
     }
     console.log('✓ Section B: unordered pickers are alphabetical, underlying lists are untouched');
 
