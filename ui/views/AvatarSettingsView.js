@@ -2,8 +2,8 @@ import { ref, reactive, computed, onMounted, onBeforeUnmount, inject } from 'vue
 import { CreateAvatarProfileUseCase } from '../../application/CreateAvatarProfileUseCase.js';
 import { CreatePresenceVisibilityUseCase } from '../../application/CreatePresenceVisibilityUseCase.js';
 import { CreateAvatarProfileVisibilityUseCase } from '../../application/CreateAvatarProfileVisibilityUseCase.js';
-import { PresenceVisibility } from '../../core/PresenceVisibility.js';
 import { sortOptionsByLabel, sortLabels } from '../../utils/sortOptionsByLabel.js';
+import VisibilityPolicyForm from '../components/VisibilityPolicyForm.js';
 
 // 0.2.34 — the first VISIBLE avatar feature: an editor over the
 // persistent AvatarProfile core/application built in 0.2.33/0.2.34.
@@ -40,6 +40,7 @@ function skinSwatch(skinOptionId) {
 
 export default {
     name: 'AvatarSettingsView',
+    components: { VisibilityPolicyForm },
     setup() {
         const identityUseCase = inject('identityUseCase');
         const user = ref(identityUseCase.currentUser());
@@ -54,28 +55,14 @@ export default {
         const appearance = reactive({});
         const displayName = ref('');
 
-        // 0.2.40 — a genuinely independent form/save action from the
-        // appearance one above: separate underlying use case, separate
-        // storage key (see application/PresenceVisibilityUseCase.js),
-        // so saving one never implicitly saves the other.
+        // 0.2.40 / 0.2.58 — each drives its own VisibilityPolicyForm,
+        // independent of the appearance form above and of each other:
+        // separate use cases, separate storage keys (presence-visibility:
+        // vs profile-visibility:), so saving one never saves another —
+        // see docs/Principles.md, "Profile Visibility Is Never Presence
+        // Visibility."
         const presenceVisibilityUseCase = ref(null);
-        const visibility = ref(PresenceVisibility.PUBLIC);
-        const authorizedPeerIdentitiesText = ref('');
-        const visibilitySaveError = ref(null);
-        const visibilitySaveStatus = ref('idle');
-
-        // 0.2.58 — a genuinely independent form/save action from
-        // Presence Visibility above: separate underlying use case
-        // (application/AvatarProfileVisibilityUseCase.js), separate
-        // storage key (profile-visibility:, never presence-visibility:)
-        // — see docs/Principles.md, "Profile Visibility Is Never
-        // Presence Visibility." Saving Presence never saves Profile,
-        // and vice versa.
         const avatarProfileVisibilityUseCase = ref(null);
-        const profileVisibility = ref(PresenceVisibility.PUBLIC);
-        const profileAuthorizedPeerIdentitiesText = ref('');
-        const profileVisibilitySaveError = ref(null);
-        const profileVisibilitySaveStatus = ref('idle');
 
         const selectedTemplate = computed(() =>
             templates.value.find((t) => t.templateId === selectedTemplateId.value) || null
@@ -109,17 +96,10 @@ export default {
             applyAppearance(effectiveAppearance);
             displayName.value = profile.displayName;
 
-            const visibilityWired = new CreatePresenceVisibilityUseCase().execute(identityUseCase.provider);
-            presenceVisibilityUseCase.value = visibilityWired.presenceVisibilityUseCase;
-            const policy = presenceVisibilityUseCase.value.getPolicy();
-            visibility.value = policy.visibility;
-            authorizedPeerIdentitiesText.value = policy.authorizedPeerIdentities.join('\n');
-
-            const profileVisibilityWired = new CreateAvatarProfileVisibilityUseCase().execute(identityUseCase.provider);
-            avatarProfileVisibilityUseCase.value = profileVisibilityWired.avatarProfileVisibilityUseCase;
-            const profilePolicy = avatarProfileVisibilityUseCase.value.getPolicy();
-            profileVisibility.value = profilePolicy.visibility;
-            profileAuthorizedPeerIdentitiesText.value = profilePolicy.authorizedPeerIdentities.join('\n');
+            presenceVisibilityUseCase.value = new CreatePresenceVisibilityUseCase()
+                .execute(identityUseCase.provider).presenceVisibilityUseCase;
+            avatarProfileVisibilityUseCase.value = new CreateAvatarProfileVisibilityUseCase()
+                .execute(identityUseCase.provider).avatarProfileVisibilityUseCase;
 
             loaded.value = true;
         }
@@ -164,43 +144,6 @@ export default {
             }
         }
 
-        // 0.2.40 — a plain allow-list, not a friend-request system:
-        // one identity per line (commas also accepted for convenience).
-        // Blank lines/whitespace are dropped by
-        // PresenceVisibilityPolicy itself, never here — this view
-        // stays as dumb about validation as the appearance form above.
-        function saveVisibility() {
-            visibilitySaveError.value = null;
-            visibilitySaveStatus.value = 'saving';
-            try {
-                presenceVisibilityUseCase.value.updatePolicy({
-                    visibility: visibility.value,
-                    authorizedPeerIdentities: authorizedPeerIdentitiesText.value.split(/[\n,]+/)
-                });
-                visibilitySaveStatus.value = 'saved';
-            } catch (error) {
-                visibilitySaveStatus.value = 'idle';
-                visibilitySaveError.value = error.message;
-            }
-        }
-
-        // 0.2.58 — mirrors saveVisibility() above exactly, against the
-        // independent profile policy/use case.
-        function saveProfileVisibility() {
-            profileVisibilitySaveError.value = null;
-            profileVisibilitySaveStatus.value = 'saving';
-            try {
-                avatarProfileVisibilityUseCase.value.updatePolicy({
-                    visibility: profileVisibility.value,
-                    authorizedPeerIdentities: profileAuthorizedPeerIdentitiesText.value.split(/[\n,]+/)
-                });
-                profileVisibilitySaveStatus.value = 'saved';
-            } catch (error) {
-                profileVisibilitySaveStatus.value = 'idle';
-                profileVisibilitySaveError.value = error.message;
-            }
-        }
-
         let unsubscribeUser = null;
         onMounted(() => {
             unsubscribeUser = identityUseCase.onUserChanged((u) => {
@@ -231,17 +174,8 @@ export default {
             toggleOption,
             save,
             skinSwatch,
-            PresenceVisibility,
-            visibility,
-            authorizedPeerIdentitiesText,
-            visibilitySaveError,
-            visibilitySaveStatus,
-            saveVisibility,
-            profileVisibility,
-            profileAuthorizedPeerIdentitiesText,
-            profileVisibilitySaveError,
-            profileVisibilitySaveStatus,
-            saveProfileVisibility
+            presenceVisibilityUseCase,
+            avatarProfileVisibilityUseCase
         };
     },
     template: `
@@ -332,80 +266,30 @@ export default {
                  PresenceVisibilityPolicy Are Three Independent
                  Concerns." Never affects how the avatar looks, only
                  whether its live position is ever published at all. -->
-            <div v-if="loaded" class="avatar-settings-form avatar-settings-visibility">
-                <h2>Presence Visibility</h2>
-                <p class="form-hint form-hint--neutral">
-                    Controls who may receive your live position while you're in World View — never your avatar's appearance.
-                </p>
-
-                <label class="form-field">
-                    <span class="form-label">Visibility</span>
-                    <select v-model="visibility" class="form-select">
-                        <option :value="PresenceVisibility.PUBLIC">Public — anyone connected can see you</option>
-                        <option :value="PresenceVisibility.FRIENDS">Friends — your mutual friends, plus any identities you authorize below</option>
-                        <option :value="PresenceVisibility.LOCAL">Local — this session's transport scope only</option>
-                        <option :value="PresenceVisibility.HIDDEN">Hidden — never advertise your presence</option>
-                    </select>
-                </label>
-
-                <label class="form-field" v-if="visibility === PresenceVisibility.FRIENDS">
-                    <span class="form-label">Additional authorized identities</span>
-                    <textarea
-                        v-model="authorizedPeerIdentitiesText"
-                        class="form-input avatar-visibility-peers"
-                        rows="3"
-                        placeholder="One identity per line"
-                    ></textarea>
-                    <span class="form-hint form-hint--neutral">
-                        Optional. A manually-typed allow-list, on top of your real friends — for someone you trust without a mutual friend request. With no mutual friends AND nothing listed here, Friends currently behaves like Hidden.
-                    </span>
-                </label>
-
-                <p v-if="visibilitySaveError" class="form-hint">{{ visibilitySaveError }}</p>
-                <p v-if="visibilitySaveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
-
-                <button class="action-btn action-btn--primary" @click="saveVisibility" :disabled="visibilitySaveStatus === 'saving'">Save Visibility</button>
-            </div>
+            <VisibilityPolicyForm
+                v-if="loaded"
+                :use-case="presenceVisibilityUseCase"
+                title="Presence Visibility"
+                description="Controls who may receive your live position while you're in World View — never your avatar's appearance."
+                public-label="Public — anyone connected can see you"
+                hidden-label="Hidden — never advertise your presence"
+                save-label="Save Visibility"
+            />
 
             <!-- 0.2.58: a deliberately SEPARATE form/save action from
                  Presence Visibility above — see docs/Principles.md,
                  "Profile Visibility Is Never Presence Visibility."
                  Never affects whether your position is published, only
                  whether your appearance is. -->
-            <div v-if="loaded" class="avatar-settings-form avatar-settings-visibility">
-                <h2>Profile Visibility</h2>
-                <p class="form-hint form-hint--neutral">
-                    Your avatar appearance may be shared independently of presence — controls who may receive your template, colors, and display name.
-                </p>
-
-                <label class="form-field">
-                    <span class="form-label">Visibility</span>
-                    <select v-model="profileVisibility" class="form-select">
-                        <option :value="PresenceVisibility.PUBLIC">Public — anyone connected can see your appearance</option>
-                        <option :value="PresenceVisibility.FRIENDS">Friends — your mutual friends, plus any identities you authorize below</option>
-                        <option :value="PresenceVisibility.LOCAL">Local — this session's transport scope only</option>
-                        <option :value="PresenceVisibility.HIDDEN">Hidden — never advertise your appearance</option>
-                    </select>
-                </label>
-
-                <label class="form-field" v-if="profileVisibility === PresenceVisibility.FRIENDS">
-                    <span class="form-label">Additional authorized identities</span>
-                    <textarea
-                        v-model="profileAuthorizedPeerIdentitiesText"
-                        class="form-input avatar-visibility-peers"
-                        rows="3"
-                        placeholder="One identity per line"
-                    ></textarea>
-                    <span class="form-hint form-hint--neutral">
-                        Optional. A manually-typed allow-list, on top of your real friends. With no mutual friends AND nothing listed here, Friends currently behaves like Hidden.
-                    </span>
-                </label>
-
-                <p v-if="profileVisibilitySaveError" class="form-hint">{{ profileVisibilitySaveError }}</p>
-                <p v-if="profileVisibilitySaveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
-
-                <button class="action-btn action-btn--primary" @click="saveProfileVisibility" :disabled="profileVisibilitySaveStatus === 'saving'">Save Profile Visibility</button>
-            </div>
+            <VisibilityPolicyForm
+                v-if="loaded"
+                :use-case="avatarProfileVisibilityUseCase"
+                title="Profile Visibility"
+                description="Your avatar appearance may be shared independently of presence — controls who may receive your template, colors, and display name."
+                public-label="Public — anyone connected can see your appearance"
+                hidden-label="Hidden — never advertise your appearance"
+                save-label="Save Profile Visibility"
+            />
 
             <p v-if="loaded" class="form-hint form-hint--neutral">
                 Friendship and visibility are separate. Being friends does not automatically reveal your avatar — your visibility policies above decide what is shared, and with whom. Withholding a future update is also not the same as remote deletion: a peer who already received your presence or appearance keeps whatever they last received.

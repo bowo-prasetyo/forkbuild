@@ -130,8 +130,9 @@ async function run() {
 
     // Section C
     {
-        const avatar = await source('ui/views/AvatarSettingsView.js');
-        const visibilitySelects = avatar.match(/<select v-model="(?:profileV|v)isibility"[\s\S]*?<\/select>/g);
+        const visibilityForm = await source('ui/components/VisibilityPolicyForm.js');
+        const visibilitySelects = visibilityForm.match(/<select v-model="visibility"[\s\S]*?<\/select>/g) || [];
+        assert(visibilitySelects.length === 1, 'the shared visibility form has its one visibility select');
         for (const select of visibilitySelects) {
             assert(/PUBLIC[\s\S]*FRIENDS[\s\S]*LOCAL[\s\S]*HIDDEN/.test(select), 'presence visibility keeps its Public → Hidden scale');
         }
