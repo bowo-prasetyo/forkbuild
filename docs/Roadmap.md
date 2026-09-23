@@ -443,7 +443,7 @@ With; It Does Not Imply Ownership, Editability, Or Authority,"
 Is Never The Same As Acting On It." Also documents, without
 implementing, an explicit boundary the design doc asked to name now
 rather than later: presence has no privacy guarantee beyond transport
-scope — see docs/Protocol.md and docs/Principles.md, "Avatar Presence
+scope — see docs/ProtocolHistory.md and docs/Principles.md, "Avatar Presence
 Has No Privacy Guarantee Beyond Transport Scope." Deliberately deferred,
 matching the design doc's own list: avatar collision, pushing other
 avatars, gestures/emotes, chat, voice, trading, avatar ownership

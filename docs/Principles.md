@@ -2608,7 +2608,7 @@ say plainly what was always implicitly true since 0.2.37: an
 the same broadcast transport, with no access control, no audience
 scoping, and no notion of "who is allowed to see this" beyond "who is
 listening." This is a deliberate, DOCUMENTED boundary, not an
-oversight — see docs/Protocol.md. A future `PUBLIC`/`FRIENDS`/`LOCAL`/
+oversight — see docs/ProtocolHistory.md. A future `PUBLIC`/`FRIENDS`/`LOCAL`/
 `HIDDEN` presence-visibility model is explicitly left for a later,
 deliberate milestone (see docs/Roadmap.md); 0.2.39 makes presence data
 easier to LOOK AT, but changes nothing about who it's already visible
@@ -2937,7 +2937,8 @@ over data Alice's own replica ALREADY holds — her own current
 position, and the SAME trusted remote-presence list
 `application/RemoteAvatarRegistry.js` already renders from. There is
 no message anywhere in this protocol that means "I am near you," and
-there never will be one — see docs/Protocol.md. This isn't a missing
+there never will be one — see docs/Protocol.md, "Presence, profiles
+and interactions". This isn't a missing
 feature; it's the correct design. A proximity CLAIM sent over the wire
 would be exactly the kind of fact 0.2.18's replication work already
 taught this codebase to be suspicious of: it could be stale, it could

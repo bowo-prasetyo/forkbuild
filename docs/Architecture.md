@@ -522,7 +522,7 @@ authenticated ones.
 **Protocols.** Every application protocol shares each connection through
 peer/PeerMessageBus.js, which routes by a protocol id
 (`forkbuild:chat`, `forkbuild:avatar-presence`, …; the full list is in
-docs/Protocol.md, "Wire Formats Not Yet Described Here") and never
+docs/Protocol.md, "Peer messages") and never
 interprets the payload. Replay and ordering rules belong to each
 protocol, not to the bus.
 
@@ -709,6 +709,18 @@ Several people can edit one World at the same time. The live design
   person is local camera navigation.
 - ui/components/WorldCollaborationRoster.js joins these for
   WorldMembersPanel, WorldPresenceIndicator and WorldCollaboratorIndicator.
+
+The Editor has its own live propagation for the one document it has
+open (0.9.222 onward): DocumentCommandPropagationUseCase sends each local
+command over `forkbuild:document-sync`, and
+RemoteDocumentOperationApplicationUseCase applies authorized remote ones.
+Editor documents have no membership grants, so "authorized" means the
+owner identity, typically across its own authorized devices. Each
+operation names its causal predecessors: a replica that is missing one
+notices the gap (DocumentOperationCausalGapObservationUseCase), asks for
+it over `forkbuild:document-operation-recovery`
+(DocumentOperationRecoveryUseCase), and defers applying later operations
+until it arrives (DocumentOperationDeferralUseCase).
 
 The earlier protocol from Collaboration Protocol Foundation (0.2.7) and
 Multi-client Synchronization (0.2.9) (collaboration/: CollaborationSession,

@@ -374,7 +374,7 @@ since there is only one camera. A targeted or followed avatar whose
 presence expires clears gracefully rather than pointing at nothing.
 Also documents, without implementing, a boundary worth naming now:
 presence has no privacy guarantee beyond transport scope — see
-docs/Protocol.md. The flagship test proves the whole thing end to end
+docs/ProtocolHistory.md. The flagship test proves the whole thing end to end
 over a real `BroadcastChannel`: Bob clicks Alice (avatar target,
 Avatar Info), clicks her building (brick selection), edits it
 (document forks) — Alice's AvatarPresence/AvatarProfile/Publication and
@@ -1400,7 +1400,8 @@ See [docs/Architecture.md](docs/Architecture.md) for the full architectural over
 - [docs/Architecture.md](docs/Architecture.md) — engine architecture and layer rules, as they are now.
 - [docs/ArchitectureHistory.md](docs/ArchitectureHistory.md) — the architecture notes written milestone by milestone (0.1.x–0.3.4).
 - [docs/Roadmap.md](docs/Roadmap.md) — milestone roadmap.
-- [docs/Protocol.md](docs/Protocol.md) — the ForkBuild Protocol.
+- [docs/Protocol.md](docs/Protocol.md) — the ForkBuild Protocol: current serialized and wire formats.
+- [docs/ProtocolHistory.md](docs/ProtocolHistory.md) — the protocol notes written milestone by milestone (0.1.x–0.2.45).
 - [docs/Principles.md](docs/Principles.md) — engineering principles, including "Actions are not commands".
 - [docs/user/README.md](docs/user/README.md) — user guides, including the [Controls Reference](docs/user/ControlsReference.md) (generated from the action registry) and the [Interactive Transform Gizmo guide](docs/user/InteractiveTransformGizmo.md).
 
