@@ -112,10 +112,9 @@ import { NostrDiscoveryQueryService } from './NostrDiscoveryQueryService.js';
 // string equality) are collapsed to their first occurrence, preserving
 // configured order. Per-entry URL SHAPE validation (ws:/wss:) is
 // deliberately NOT this file's job — every entry already reaching this
-// class was validated once already, at `core/
-// NostrPublicationRelaySetConfiguration.js`'s own construction time (or by
-// `NostrPublicationRelaySetConfigurationProvider`'s own one-element
-// default); a malformed string here is simply handed, unmodified, to
+// class was validated once already, at `core/NostrRelayConfiguration.js`'s
+// own construction time (or is ui/main.js's own one-element
+// `DEFAULT_NOSTR_RELAY_URL` fallback); a malformed string here is simply handed, unmodified, to
 // `NostrDiscoveryQueryService`'s own constructor, which performs no URL
 // validation of its own either (see that file's own header — it never
 // validates `relayUrl`'s shape).
@@ -125,16 +124,14 @@ import { NostrDiscoveryQueryService } from './NostrDiscoveryQueryService.js';
 //   0.9.449's own reassessment explicitly named all four as premature; this
 //   class inherits that restraint unchanged. Every configured relay is
 //   queried, every time, with no preference given to any one of them.
-// - **Reading `core/NostrPublicationRelaySetConfiguration.js`,
-//   `storage/NostrPublicationRelaySetConfigurationStore.js`, or
-//   `application/NostrPublicationRelaySetConfigurationProvider.js` itself.**
-//   This class only ever accepts an already-resolved `relayUrls` array —
-//   resolving it from persisted configuration is entirely its caller's own
-//   job (`application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js`,
+// - **Reading `core/NostrRelayConfiguration.js` or
+//   `storage/NostrRelayConfigurationStore.js` itself.** This class only
+//   ever accepts an already-resolved `relayUrls` array — resolving it from
+//   persisted configuration is entirely its caller's own job
+//   (`application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js`,
 //   which itself accepts it as a plain option, and `ui/main.js`, which
-//   resolves it once via the existing provider). See that provider's own
-//   header, "a plain, synchronous, side-effect-free function of its own
-//   argument" — this class never imports it.
+//   resolves `resolvedNostrRelayUrls` once at startup) — this class never
+//   imports either.
 // - **Publishing, tagging, or signing anything.** This class only ever
 //   reads, exactly like the single-relay `NostrDiscoveryQueryService` it
 //   wraps.

@@ -158,7 +158,7 @@ async function run() {
         const store = new ArweaveGatewayConfigurationStore(new InMemoryStorageProvider());
         const setUseCase = new SetArweaveGatewayConfigurationUseCase({ arweaveGatewayConfigurationStore: store });
 
-        const saved = setUseCase.execute({ gatewayUrl: 'https://my-gateway.example' });
+        const saved = setUseCase.execute({ gatewayUrls: ['https://my-gateway.example'] });
         assert(saved instanceof ArweaveGatewayConfiguration && saved.gatewayUrl === 'https://my-gateway.example',
             '15. execute() returns the persisted ArweaveGatewayConfiguration');
         assert(store.get().gatewayUrl === 'https://my-gateway.example',
@@ -175,15 +175,15 @@ async function run() {
         const setUseCase = new SetArweaveGatewayConfigurationUseCase({ arweaveGatewayConfigurationStore: store });
 
         // Nothing on file yet — an invalid save leaves it that way.
-        expectThrows(() => setUseCase.execute({ gatewayUrl: 'not-a-url' }), '17. a malformed URL is refused');
+        expectThrows(() => setUseCase.execute({ gatewayUrls: ['not-a-url'] }), '17. a malformed URL is refused');
         assert(store.get() === null, '18. the rejected save left the store genuinely empty, never a partial or fallback write');
 
         // Something valid already on file — an invalid save leaves it
         // COMPLETELY untouched, never partially overwritten and never
         // cleared.
-        setUseCase.execute({ gatewayUrl: 'https://original-gateway.example' });
-        expectThrows(() => setUseCase.execute({ gatewayUrl: 'ftp://not-http.example' }), '19. a non-http(s) scheme is refused');
-        expectThrows(() => setUseCase.execute({ gatewayUrl: '' }), '20. an empty string is refused');
+        setUseCase.execute({ gatewayUrls: ['https://original-gateway.example'] });
+        expectThrows(() => setUseCase.execute({ gatewayUrls: ['ftp://not-http.example'] }), '19. a non-http(s) scheme is refused');
+        expectThrows(() => setUseCase.execute({ gatewayUrls: [''] }), '20. an empty string is refused');
         expectThrows(() => setUseCase.execute({}), '21. a missing gatewayUrl is refused');
         assert(store.get().gatewayUrl === 'https://original-gateway.example',
             '22. every rejected save left the PREVIOUSLY saved configuration completely untouched');
@@ -199,10 +199,10 @@ async function run() {
         const store = new ArweaveGatewayConfigurationStore(backing);
         const setUseCase = new SetArweaveGatewayConfigurationUseCase({ arweaveGatewayConfigurationStore: store });
 
-        setUseCase.execute({ gatewayUrl: 'https://gateway-a.example' });
+        setUseCase.execute({ gatewayUrls: ['https://gateway-a.example'] });
         assert(store.get().gatewayUrl === 'https://gateway-a.example', '23. gateway-A is on file');
 
-        setUseCase.execute({ gatewayUrl: 'https://gateway-b.example' });
+        setUseCase.execute({ gatewayUrls: ['https://gateway-b.example'] });
         assert(store.get().gatewayUrl === 'https://gateway-b.example', '24. gateway-B replaces gateway-A outright');
         assert(backing.list().filter((key) => key === 'arweave-gateway-configuration').length === 1,
             '25. exactly one storage entry exists after replacement, never two');
@@ -218,11 +218,11 @@ async function run() {
         const store = new ArweaveGatewayConfigurationStore(backing);
         const setUseCase = new SetArweaveGatewayConfigurationUseCase({ arweaveGatewayConfigurationStore: store });
 
-        setUseCase.execute({ gatewayUrl: 'https://my-gateway.example' });
+        setUseCase.execute({ gatewayUrls: ['https://my-gateway.example'] });
         assert(store.get() !== null, '26. a configuration is on file before clearing');
 
         // "Use Deployment Default" — the view calls store.clear() directly,
-        // never setUseCase.execute({ gatewayUrl: DEFAULT_ARWEAVE_GATEWAY_URL }).
+        // never setUseCase.execute({ gatewayUrls: [DEFAULT_ARWEAVE_GATEWAY_URL] }).
         store.clear();
         assert(store.get() === null, '27. clear() restores genuine absence — get() is a real null');
         assert(backing.load('arweave-gateway-configuration') === null, '28. nothing at all remains on file — never a saved copy of the default URL');
@@ -241,7 +241,7 @@ async function run() {
         const store = new ArweaveGatewayConfigurationStore(backing);
         const setUseCase = new SetArweaveGatewayConfigurationUseCase({ arweaveGatewayConfigurationStore: store });
 
-        const saved = setUseCase.execute({ gatewayUrl: DEFAULT_ARWEAVE_GATEWAY_URL });
+        const saved = setUseCase.execute({ gatewayUrls: [DEFAULT_ARWEAVE_GATEWAY_URL] });
         assert(saved.gatewayUrl === DEFAULT_ARWEAVE_GATEWAY_URL, '30. saving the default URL by hand is accepted like any other valid URL');
         assert(store.get() !== null, '31. …and leaves a real, explicit entry on file — never treated as "nothing to persist" merely because it matches the default');
         assert(backing.load('arweave-gateway-configuration') !== null, '32. the underlying storage genuinely holds an entry, distinguishing this from Section D\'s cleared/absent state');
@@ -257,7 +257,7 @@ async function run() {
 
         const storeBeforeRestart = new ArweaveGatewayConfigurationStore(new SharedNamespaceStorageProvider(sharedNamespace));
         const setUseCaseBeforeRestart = new SetArweaveGatewayConfigurationUseCase({ arweaveGatewayConfigurationStore: storeBeforeRestart });
-        setUseCaseBeforeRestart.execute({ gatewayUrl: 'https://my-gateway.example' });
+        setUseCaseBeforeRestart.execute({ gatewayUrls: ['https://my-gateway.example'] });
 
         // restart boundary — genuinely new instances, sharing only the
         // underlying namespace.
@@ -268,7 +268,7 @@ async function run() {
 
         const setUseCaseAfterRestart = new SetArweaveGatewayConfigurationUseCase({ arweaveGatewayConfigurationStore: storeAfterRestart });
         assert(setUseCaseAfterRestart !== setUseCaseBeforeRestart, '35. sanity — this really is a newly constructed use case, not the same instance');
-        setUseCaseAfterRestart.execute({ gatewayUrl: 'https://another-gateway.example' });
+        setUseCaseAfterRestart.execute({ gatewayUrls: ['https://another-gateway.example'] });
         assert(storeBeforeRestart.get().gatewayUrl === 'https://another-gateway.example',
             '36. a write through the newly constructed use case is visible back through the ORIGINAL store instance too — the same underlying storage, never divergent in-memory state');
     }
@@ -284,7 +284,7 @@ async function run() {
         {
             const store = new ArweaveGatewayConfigurationStore(new InMemoryStorageProvider());
             const setUseCase = new SetArweaveGatewayConfigurationUseCase({ arweaveGatewayConfigurationStore: store });
-            setUseCase.execute({ gatewayUrl: 'https://my-material-gateway.example' });
+            setUseCase.execute({ gatewayUrls: ['https://my-material-gateway.example'] });
 
             // "New application composition" — resolve the effective gateway
             // from the store exactly as ui/main.js does, then build the real
@@ -303,7 +303,7 @@ async function run() {
         {
             const store = new ArweaveGatewayConfigurationStore(new InMemoryStorageProvider());
             const setUseCase = new SetArweaveGatewayConfigurationUseCase({ arweaveGatewayConfigurationStore: store });
-            setUseCase.execute({ gatewayUrl: 'https://my-snapshot-gateway.example' });
+            setUseCase.execute({ gatewayUrls: ['https://my-snapshot-gateway.example'] });
 
             const resolvedGatewayUrl = (store.get() || { gatewayUrl: DEFAULT_ARWEAVE_GATEWAY_URL }).gatewayUrl;
             const txId = 'b'.repeat(43);
@@ -324,7 +324,7 @@ async function run() {
         {
             const store = new ArweaveGatewayConfigurationStore(new InMemoryStorageProvider());
             const setUseCase = new SetArweaveGatewayConfigurationUseCase({ arweaveGatewayConfigurationStore: store });
-            setUseCase.execute({ gatewayUrl: 'https://temporary-gateway.example' });
+            setUseCase.execute({ gatewayUrls: ['https://temporary-gateway.example'] });
             store.clear();
 
             const resolvedGatewayUrl = (store.get() || { gatewayUrl: DEFAULT_ARWEAVE_GATEWAY_URL }).gatewayUrl;
@@ -345,7 +345,7 @@ async function run() {
     {
         const store = new ArweaveGatewayConfigurationStore(new InMemoryStorageProvider());
         const setUseCase = new SetArweaveGatewayConfigurationUseCase({ arweaveGatewayConfigurationStore: store });
-        setUseCase.execute({ gatewayUrl: 'https://my-retrieval-only-gateway.example' });
+        setUseCase.execute({ gatewayUrls: ['https://my-retrieval-only-gateway.example'] });
 
         // Snapshot DISTRIBUTION composed exactly as ui/main.js composes it:
         // signer only, no gatewayUrl of any kind — it never reads the
@@ -372,14 +372,18 @@ async function run() {
 
         // Display state.
         assert(/v-if="hasOverride"/.test(viewSource), '46. the template branches on whether an override is on file');
-        assert(/No override configured/.test(viewSource) && /effectiveGatewayUrl/.test(viewSource),
+        assert(/No override configured/.test(viewSource) && /deploymentDefaultGatewayUrl/.test(viewSource),
             '47. the no-override state displays the effective deployment default as informational text');
         assert(/Current override/.test(viewSource), '48. the override state displays the current, actually-saved gatewayUrl');
 
         // Opening the page never writes anything: load() only calls
         // store.get(), never store.save()/setArweaveGatewayConfigurationUseCase.execute()
         // outside of the save() handler.
-        const loadFnMatch = viewSource.match(/function load\(\)\s*\{[\s\S]*?\n\s{8}\}/);
+        // load()/save()/clear() are the shared endpoint-settings form's own
+        // (ui/composables/useEndpointSettingsForm.js); the view wires its
+        // own injected store and use case into it.
+        const formSource = await source('ui/composables/useEndpointSettingsForm.js');
+        const loadFnMatch = formSource.match(/function load\(\)\s*\{[\s\S]*?\n\s{4}\}/);
         assert(loadFnMatch, '49. a load() function exists');
         assert(!/execute\(|\.save\(|\.clear\(/.test(loadFnMatch[0]),
             '50. load() never calls the use case, store.save(), or store.clear() — merely opening the page persists nothing');
@@ -387,15 +391,17 @@ async function run() {
         // Save / Use Deployment Default wiring.
         assert(/@click="save"/.test(viewSource), '51. a Save action is wired');
         assert(/@click="useDeploymentDefault"/.test(viewSource), '52. a Use Deployment Default action is wired');
-        const useDeploymentDefaultFnMatch = viewSource.match(/function useDeploymentDefault\(\)\s*\{[\s\S]*?\n\s{8}\}/);
-        assert(useDeploymentDefaultFnMatch, '53. a useDeploymentDefault() function exists');
+        const useDeploymentDefaultFnMatch = /useDeploymentDefault: form\.clear\b/.test(viewSource)
+            && formSource.match(/function clear\(\)\s*\{[\s\S]*?\n\s{4}\}/);
+        assert(useDeploymentDefaultFnMatch, '53. Use Deployment Default is wired to the shared clear() function');
         assert(/store\.clear\(\)/.test(useDeploymentDefaultFnMatch[0]),
             '54. Use Deployment Default calls store.clear()');
         assert(!/DEFAULT_ARWEAVE_GATEWAY_URL/.test(useDeploymentDefaultFnMatch[0]),
             '55. Use Deployment Default never saves { gatewayUrl: DEFAULT_ARWEAVE_GATEWAY_URL } — it only ever clears');
-        const saveFnMatch = viewSource.match(/function save\(\)\s*\{[\s\S]*?\n\s{8}\}/);
+        const saveFnMatch = /\bsave: form\.save\b/.test(viewSource)
+            && formSource.match(/function save\(\)\s*\{[\s\S]*?\n\s{4}\}/);
         assert(saveFnMatch, '56. a save() function exists');
-        assert(/setArweaveGatewayConfigurationUseCase\.execute\(/.test(saveFnMatch[0]),
+        assert(/useCase\.execute\(/.test(saveFnMatch[0]) && /useCase: setArweaveGatewayConfigurationUseCase\b/.test(viewSource),
             '57. save() goes through the injected use case, never a direct store.save()');
         assert(!/store\.save\(/.test(saveFnMatch[0]),
             '58. save() never calls store.save() directly, bypassing the use case');

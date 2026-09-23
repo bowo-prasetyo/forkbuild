@@ -219,7 +219,7 @@ async function run() {
 
         // A4. Write use case.
         const setUseCase = new SetNostrRelayConfigurationUseCase({ nostrRelayConfigurationStore: store });
-        setUseCase.execute({ relayUrl: 'wss://via-use-case.example' });
+        setUseCase.execute({ relayUrls: ['wss://via-use-case.example'] });
         assert(store.get().relayUrl === 'wss://via-use-case.example', 'A4. SetNostrRelayConfigurationUseCase is the real write seam');
 
         // A5. Settings UI.
@@ -336,7 +336,7 @@ async function run() {
 
         // ---- User opens Settings and saves an alternative relay. ----
         const setUseCase = new SetNostrRelayConfigurationUseCase({ nostrRelayConfigurationStore: storeBefore });
-        setUseCase.execute({ relayUrl: 'wss://my-alternative-relay.example' });
+        setUseCase.execute({ relayUrls: ['wss://my-alternative-relay.example'] });
 
         // ---- Reloads the application — a genuinely new store instance,
         // over the SAME underlying storage, exactly as a fresh page load
@@ -475,7 +475,7 @@ async function run() {
         const { composePlaceNamingPublicationRuntime } = await import('../application/PlaceNamingPublicationRuntimeComposition.js');
 
         const store = new NostrRelayConfigurationStore(new InMemoryStorageProvider());
-        new SetNostrRelayConfigurationUseCase({ nostrRelayConfigurationStore: store }).execute({ relayUrl: 'wss://my-read-only-relay.example' });
+        new SetNostrRelayConfigurationUseCase({ nostrRelayConfigurationStore: store }).execute({ relayUrls: ['wss://my-read-only-relay.example'] });
 
         const snapshotPublishCalls = [];
         const { discoveryPublisher: snapshotDiscoveryPublisher } = composeSnapshotDistributionRuntime({
@@ -653,7 +653,7 @@ async function run() {
         // F4. The default is clearly identified — grounded with the
         // actual concrete URL in effect, exactly the same discipline
         // Arweave Gateway's own settings page holds (0.9.367's own G4).
-        assert(/No override configured\. Currently using the deployment default: \{\{\s*effectiveRelayUrl\s*\}\}/.test(templateText),
+        assert(/No override configured\. Currently using the deployment default: \{\{\s*deploymentDefaultRelayUrl\s*\}\}/.test(templateText),
             'F4. "Use Deployment Default" is grounded by displaying the actual concrete relay in effect, never left as an opaque, unexplained label');
 
         // F5. "Use Deployment Default" itself is an ordinary, self-
@@ -699,7 +699,7 @@ async function run() {
         // G1-G2. Save relay-A -> reload -> relay-A active.
         const sharedNamespace = {};
         const storeBeforeRestart = new NostrRelayConfigurationStore(new SharedNamespaceStorageProvider(sharedNamespace));
-        new SetNostrRelayConfigurationUseCase({ nostrRelayConfigurationStore: storeBeforeRestart }).execute({ relayUrl: 'wss://relay-a.example' });
+        new SetNostrRelayConfigurationUseCase({ nostrRelayConfigurationStore: storeBeforeRestart }).execute({ relayUrls: ['wss://relay-a.example'] });
 
         const storeAfterFirstRestart = new NostrRelayConfigurationStore(new SharedNamespaceStorageProvider(sharedNamespace));
         assert(storeAfterFirstRestart !== storeBeforeRestart, 'G1. sanity — a genuinely new store instance');
@@ -718,9 +718,9 @@ async function run() {
         const profileBNamespace = {};
         const storeForProfileA = new NostrRelayConfigurationStore(new SharedNamespaceStorageProvider(profileANamespace));
         const storeForProfileB = new NostrRelayConfigurationStore(new SharedNamespaceStorageProvider(profileBNamespace));
-        new SetNostrRelayConfigurationUseCase({ nostrRelayConfigurationStore: storeForProfileA }).execute({ relayUrl: 'wss://profile-a-relay.example' });
+        new SetNostrRelayConfigurationUseCase({ nostrRelayConfigurationStore: storeForProfileA }).execute({ relayUrls: ['wss://profile-a-relay.example'] });
         assert(storeForProfileB.get() === null, 'G5. profile B observes no configuration at all after profile A saves one');
-        new SetNostrRelayConfigurationUseCase({ nostrRelayConfigurationStore: storeForProfileB }).execute({ relayUrl: 'wss://profile-b-relay.example' });
+        new SetNostrRelayConfigurationUseCase({ nostrRelayConfigurationStore: storeForProfileB }).execute({ relayUrls: ['wss://profile-b-relay.example'] });
         assert(storeForProfileA.get().relayUrl === 'wss://profile-a-relay.example' && storeForProfileB.get().relayUrl === 'wss://profile-b-relay.example',
             'G5. each profile\'s own configuration is exactly what that profile itself saved, unaffected by the other\'s independent save');
 

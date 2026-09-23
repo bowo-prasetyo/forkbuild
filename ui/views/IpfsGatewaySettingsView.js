@@ -1,4 +1,6 @@
-import { ref, computed, inject, onMounted } from 'vue';
+import { ref, inject } from 'vue';
+import { useEndpointSettingsForm } from '../composables/useEndpointSettingsForm.js';
+import { splitNonEmptyLines } from '../../utils/splitNonEmptyLines.js';
 import { DEFAULT_IPFS_GATEWAY_URL } from '../../core/IpfsGatewayConfiguration.js';
 
 // 0.9.665 — IPFS Gateway Settings UI.
@@ -10,7 +12,8 @@ import { DEFAULT_IPFS_GATEWAY_URL } from '../../core/IpfsGatewayConfiguration.js
 // URL is rejected by that use case's own construction step; this view
 // only ever displays whatever message that throw carries.
 //
-// OPENING THIS PAGE NEVER WRITES ANYTHING — load() only ever reads
+// OPENING THIS PAGE NEVER WRITES ANYTHING — the shared load() (ui/composables/
+// useEndpointSettingsForm.js) only ever reads
 // store.get(). "Use Deployment Default" calls store.clear(), never
 // save({ gatewayUrl: DEFAULT_IPFS_GATEWAY_URL }) — saving the default
 // value would wrongly turn "no preference" into an explicit one that
@@ -35,66 +38,31 @@ export default {
         const store = inject('ipfsGatewayConfigurationStore', null);
         const setIpfsGatewayConfigurationUseCase = inject('setIpfsGatewayConfigurationUseCase', null);
 
-        const configuration = ref(null);
         // One gateway URL per line, in the order they should be tried.
         const gatewayUrlInput = ref('');
-        const saveError = ref(null);
-        const saveStatus = ref('idle'); // 'idle' | 'saving' | 'saved'
-        const clearStatus = ref('idle'); // 'idle' | 'cleared'
 
-        const hasOverride = computed(() => configuration.value !== null);
-        const effectiveGatewayUrl = computed(() => (
-            configuration.value ? configuration.value.gatewayUrl : DEFAULT_IPFS_GATEWAY_URL
-        ));
-
-        function load() {
-            if (!store) return;
-            configuration.value = store.get();
-            gatewayUrlInput.value = configuration.value ? configuration.value.gatewayUrls.join('\n') : '';
-        }
-
-        // Splits the textarea into one trimmed URL per non-empty line —
-        // the ONLY interpretation this view performs; every other rule
-        // (what counts as a valid URL, whether the list is non-empty)
-        // stays inside core/IpfsGatewayConfiguration.js's own constructor,
-        // reached through the use case below.
-        function parseGatewayUrls() {
-            return gatewayUrlInput.value
-                .split('\n')
-                .map((line) => line.trim())
-                .filter((line) => line.length > 0);
-        }
-
-        function save() {
-            if (!setIpfsGatewayConfigurationUseCase || !gatewayUrlInput.value.trim()) return;
-            saveError.value = null;
-            clearStatus.value = 'idle';
-            saveStatus.value = 'saving';
-            try {
-                configuration.value = setIpfsGatewayConfigurationUseCase.execute({ gatewayUrls: parseGatewayUrls() });
-                gatewayUrlInput.value = configuration.value.gatewayUrls.join('\n');
-                saveStatus.value = 'saved';
-            } catch (error) {
-                saveStatus.value = 'idle';
-                saveError.value = error.message;
+        const form = useEndpointSettingsForm({
+            store,
+            useCase: setIpfsGatewayConfigurationUseCase,
+            // Splitting the textarea into lines is the ONLY interpretation
+            // this view performs; URL validity stays inside core/
+            // IpfsGatewayConfiguration.js's own constructor.
+            buildRequest: () => {
+                const gatewayUrls = splitNonEmptyLines(gatewayUrlInput.value);
+                return gatewayUrls.length > 0 ? { gatewayUrls } : null;
+            },
+            fillInputs: (configuration) => {
+                gatewayUrlInput.value = configuration ? configuration.gatewayUrls.join('\n') : '';
             }
-        }
+        });
 
-        function useDeploymentDefault() {
-            if (!store) return;
-            store.clear();
-            configuration.value = null;
-            gatewayUrlInput.value = '';
-            saveError.value = null;
-            saveStatus.value = 'idle';
-            clearStatus.value = 'cleared';
-        }
-
-        onMounted(load);
+        // Shown only when no override is on file.
+        const deploymentDefaultGatewayUrl = DEFAULT_IPFS_GATEWAY_URL;
 
         return {
-            hasOverride, effectiveGatewayUrl, configuration, gatewayUrlInput,
-            saveError, saveStatus, clearStatus, save, useDeploymentDefault
+            hasOverride: form.hasConfiguration, deploymentDefaultGatewayUrl, configuration: form.configuration, gatewayUrlInput,
+            saveError: form.saveError, saveStatus: form.saveStatus, clearStatus: form.clearStatus,
+            save: form.save, useDeploymentDefault: form.clear
         };
     },
     template: `
@@ -115,7 +83,7 @@ export default {
                 Current override(s): {{ configuration.gatewayUrls.join(', ') }}
             </p>
             <p v-else class="form-hint form-hint--neutral">
-                No override configured. Currently using the deployment default: {{ effectiveGatewayUrl }}
+                No override configured. Currently using the deployment default: {{ deploymentDefaultGatewayUrl }}
             </p>
 
             <div class="ipfs-gateway-settings-form">
@@ -123,15 +91,15 @@ export default {
                     v-model="gatewayUrlInput"
                     placeholder="https://gateway.pinata.cloud"
                     rows="4"
-                    class="ipfs-gateway-input"
+                    class="ipfs-gateway-input form-textarea"
                 ></textarea>
 
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
                 <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
                 <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">Cleared — now using the deployment default.</p>
 
-                <button class="action-btn action-btn--primary" @click="save" :disabled="saveStatus === 'saving' || !gatewayUrlInput.trim()">Save</button>
-                <button class="action-btn" @click="useDeploymentDefault" :disabled="saveStatus === 'saving'">Use Deployment Default</button>
+                <button class="action-btn action-btn--primary" @click="save" :disabled="!gatewayUrlInput.trim()">Save</button>
+                <button class="action-btn" @click="useDeploymentDefault">Use Deployment Default</button>
             </div>
         </section>
     `

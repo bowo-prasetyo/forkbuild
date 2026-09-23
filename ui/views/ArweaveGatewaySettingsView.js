@@ -1,4 +1,6 @@
-import { ref, computed, inject, onMounted } from 'vue';
+import { ref, inject } from 'vue';
+import { useEndpointSettingsForm } from '../composables/useEndpointSettingsForm.js';
+import { splitNonEmptyLines } from '../../utils/splitNonEmptyLines.js';
 import { DEFAULT_ARWEAVE_GATEWAY_URL } from '../../core/ArweaveGatewayConfiguration.js';
 
 // 0.9.366 — Arweave Gateway Settings UI.
@@ -40,7 +42,7 @@ import { DEFAULT_ARWEAVE_GATEWAY_URL } from '../../core/ArweaveGatewayConfigurat
 // content/ArweaveContentStore.js OR application/
 // ArweaveWorldEncounterMaterialResolver.js. `DEFAULT_ARWEAVE_GATEWAY_URL`
 // is the one thing imported from core/ArweaveGatewayConfiguration.js — a
-// plain constant, consulted only to LABEL the effective gateway when no
+// plain constant, consulted only to LABEL the deployment default when no
 // override is on file, never to construct anything. A change saved here
 // only reaches those adapters through the existing composition root
 // (ui/main.js resolves `arweaveGatewayConfigurationStore.get()` once at
@@ -48,10 +50,11 @@ import { DEFAULT_ARWEAVE_GATEWAY_URL } from '../../core/ArweaveGatewayConfigurat
 // the setting" contract 0.9.364/0.9.365 already proved, never a live
 // re-composition this view attempts to perform itself.
 //
-// OPENING THIS PAGE NEVER WRITES ANYTHING. `load()` only ever reads
+// OPENING THIS PAGE NEVER WRITES ANYTHING. The shared `load()` (ui/composables/
+// useEndpointSettingsForm.js) only ever reads
 // `store.get()`; when it returns `null`, the input stays empty and the
 // deployment default is shown purely as informational text
-// (`effectiveGatewayUrl`) — merely visiting this page can never turn "no
+// (`deploymentDefaultGatewayUrl`) — merely visiting this page can never turn "no
 // override" into a persisted, explicit default. That is 0.9.364's own
 // "absence stays meaningful" rule, held here at the one place that could
 // otherwise quietly violate it.
@@ -88,79 +91,34 @@ export default {
         const store = inject('arweaveGatewayConfigurationStore', null);
         const setArweaveGatewayConfigurationUseCase = inject('setArweaveGatewayConfigurationUseCase', null);
 
-        // The ArweaveGatewayConfiguration currently on file, or null — read
-        // straight from the injected store, never constructed here.
-        const configuration = ref(null);
         // One gateway URL per line, in the order they should be tried.
         const gatewayUrlInput = ref('');
-        const saveError = ref(null);
-        const saveStatus = ref('idle'); // 'idle' | 'saving' | 'saved'
-        const clearStatus = ref('idle'); // 'idle' | 'cleared'
 
-        const hasOverride = computed(() => configuration.value !== null);
-        // The gateway actually in effect right now when no override is on
-        // file — the deployment default, shown as informational text.
-        // Never a merge with anything, mirroring ui/main.js's own
-        // `resolvedArweaveGatewayUrl` resolution exactly.
-        const effectiveGatewayUrl = computed(() => (
-            configuration.value ? configuration.value.gatewayUrl : DEFAULT_ARWEAVE_GATEWAY_URL
-        ));
-
-        // Re-reads the store fresh on every load — so a newly mounted
-        // instance of this view always observes whatever a prior instance
-        // (or a prior application run) actually persisted, never a value
-        // cached from before. Never writes anything.
-        function load() {
-            if (!store) return;
-            configuration.value = store.get();
-            gatewayUrlInput.value = configuration.value ? configuration.value.gatewayUrls.join('\n') : '';
-        }
-
-        // Splits the textarea into one trimmed URL per non-empty line —
-        // the ONLY interpretation this view performs; every other rule
-        // (what counts as a valid URL, whether the list is non-empty)
-        // stays inside core/ArweaveGatewayConfiguration.js's own
-        // constructor, reached through the use case below.
-        function parseGatewayUrls() {
-            return gatewayUrlInput.value
-                .split('\n')
-                .map((line) => line.trim())
-                .filter((line) => line.length > 0);
-        }
-
-        function save() {
-            if (!setArweaveGatewayConfigurationUseCase || !gatewayUrlInput.value.trim()) return;
-            saveError.value = null;
-            clearStatus.value = 'idle';
-            saveStatus.value = 'saving';
-            try {
-                configuration.value = setArweaveGatewayConfigurationUseCase.execute({ gatewayUrls: parseGatewayUrls() });
-                gatewayUrlInput.value = configuration.value.gatewayUrls.join('\n');
-                saveStatus.value = 'saved';
-            } catch (error) {
-                // The use case's own construction step threw before
-                // anything was persisted — whatever was previously on
-                // file (if anything) remains completely untouched.
-                saveStatus.value = 'idle';
-                saveError.value = error.message;
+        const form = useEndpointSettingsForm({
+            store,
+            useCase: setArweaveGatewayConfigurationUseCase,
+            // Splitting the textarea into lines is the ONLY interpretation
+            // this view performs; every other rule (what counts as a valid
+            // URL) stays inside core/ArweaveGatewayConfiguration.js's own
+            // constructor, reached through the use case.
+            buildRequest: () => {
+                const gatewayUrls = splitNonEmptyLines(gatewayUrlInput.value);
+                return gatewayUrls.length > 0 ? { gatewayUrls } : null;
+            },
+            fillInputs: (configuration) => {
+                gatewayUrlInput.value = configuration ? configuration.gatewayUrls.join('\n') : '';
             }
-        }
+        });
 
-        function useDeploymentDefault() {
-            if (!store) return;
-            store.clear();
-            configuration.value = null;
-            gatewayUrlInput.value = '';
-            saveError.value = null;
-            saveStatus.value = 'idle';
-            clearStatus.value = 'cleared';
-        }
-
-        onMounted(load);
+        // Shown only when no override is on file, as informational text —
+        // so the gateway in effect is always exactly the deployment
+        // default, never a merge with anything.
+        const deploymentDefaultGatewayUrl = DEFAULT_ARWEAVE_GATEWAY_URL;
 
         return {
-            hasOverride, effectiveGatewayUrl, configuration, gatewayUrlInput,
-            saveError, saveStatus, clearStatus, save, useDeploymentDefault
+            hasOverride: form.hasConfiguration, deploymentDefaultGatewayUrl, configuration: form.configuration, gatewayUrlInput,
+            saveError: form.saveError, saveStatus: form.saveStatus, clearStatus: form.clearStatus,
+            save: form.save, useDeploymentDefault: form.clear
         };
     },
     template: `
@@ -174,7 +132,7 @@ export default {
                 Current override(s): {{ configuration.gatewayUrls.join(', ') }}
             </p>
             <p v-else class="form-hint form-hint--neutral">
-                No override configured. Currently using the deployment default: {{ effectiveGatewayUrl }}
+                No override configured. Currently using the deployment default: {{ deploymentDefaultGatewayUrl }}
             </p>
 
             <div class="arweave-gateway-settings-form">
@@ -182,15 +140,15 @@ export default {
                     v-model="gatewayUrlInput"
                     placeholder="https://arweave.net"
                     rows="4"
-                    class="arweave-gateway-input"
+                    class="arweave-gateway-input form-textarea"
                 ></textarea>
 
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
                 <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
                 <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">Cleared — now using the deployment default.</p>
 
-                <button class="action-btn action-btn--primary" @click="save" :disabled="saveStatus === 'saving' || !gatewayUrlInput.trim()">Save</button>
-                <button class="action-btn" @click="useDeploymentDefault" :disabled="saveStatus === 'saving'">Use Deployment Default</button>
+                <button class="action-btn action-btn--primary" @click="save" :disabled="!gatewayUrlInput.trim()">Save</button>
+                <button class="action-btn" @click="useDeploymentDefault">Use Deployment Default</button>
             </div>
         </section>
     `

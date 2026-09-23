@@ -8,19 +8,19 @@ import { NostrRelayConfigurationStore } from '../storage/NostrRelayConfiguration
 // configuration: "a future settings surface — this file builds none." This
 // class is that missing WRITE seam, the direct structural mirror of
 // application/SetArweaveGatewayConfigurationUseCase.js (0.9.366) applied to
-// a relay URL instead of a gateway URL — a settings view hands this class a
-// plain `{ relayUrl }`, never a constructed value object of its own, and
+// a relay URL list instead of a gateway URL list — a settings view hands
+// this class a plain `{ relayUrls }`, never a constructed value object of its own, and
 // this class is the one place that turns it into a real
 // `NostrRelayConfiguration` and persists it.
 //
 //   ui/views/NostrRelaySettingsView.js  (this same milestone)
-//        save({ relayUrl })
+//        save() -> { relayUrls }
 //                    │
 //                    ▼
-//   SetNostrRelayConfigurationUseCase.execute({ relayUrl })   ★ (THIS)
-//        new NostrRelayConfiguration({ relayUrl })   — throws for anything
-//             that isn't a valid absolute ws:/wss: URL; nothing is
-//             persisted when it throws
+//   SetNostrRelayConfigurationUseCase.execute({ relayUrls })   ★ (THIS)
+//        new NostrRelayConfiguration({ relayUrls })   — throws for anything
+//             that isn't a non-empty list of valid absolute ws:/wss: URLs;
+//             nothing is persisted when it throws
 //                    │
 //                    ▼
 //   NostrRelayConfigurationStore.save(configuration)   (0.9.369, unmodified)
@@ -28,7 +28,7 @@ import { NostrRelayConfigurationStore } from '../storage/NostrRelayConfiguration
 // DELIBERATELY THE SMALLEST POSSIBLE APPLICATION CAPABILITY, THE IDENTICAL
 // SHAPE ITS ARWEAVE SIBLING ALREADY HOLDS. `execute()` does two things, in
 // this order, and nothing else: (1) constructs a `NostrRelayConfiguration` —
-// which is itself what validates `relayUrl`, never re-implemented here —
+// which is itself what validates `relayUrls`, never re-implemented here —
 // and (2) saves it. It never opens a WebSocket, never checks the relay
 // actually speaks NIP-01, and never reads the current configuration; and it
 // never exposes a `clear()` of its own — clearing needs no construction or
@@ -56,20 +56,20 @@ export class SetNostrRelayConfigurationUseCase {
         this._store = nostrRelayConfigurationStore;
     }
 
-    // Saves `relayUrl` (a single string) or `relayUrls` (a non-empty array
-    // of fan-out targets — exactly one of the two, never both) as the
-    // user's own Nostr relay override, replacing whatever was previously on
-    // file outright (see NostrRelayConfigurationStore.js's own "a single
-    // configuration, never a history" header for why that replacement is a
-    // structural property of the store itself). Returns the new, persisted
+    // Saves `relayUrls` (a non-empty array of fan-out targets — a single
+    // relay is simply a one-element list) as the user's own Nostr relay
+    // override, replacing whatever was previously on file outright (see
+    // NostrRelayConfigurationStore.js's own "a single configuration, never
+    // a history" header for why that replacement is a structural property
+    // of the store itself). Returns the new, persisted
     // NostrRelayConfiguration.
     //
     // Throws for anything core/NostrRelayConfiguration.js's own constructor
-    // rejects (not a ws:/wss: URL, empty, both fields supplied, ...) —
-    // before this method ever calls `save()`. This method adds no
-    // validation of its own beyond forwarding verbatim.
-    execute({ relayUrl, relayUrls } = {}) {
-        const configuration = new NostrRelayConfiguration({ relayUrl, relayUrls });
+    // rejects (not a ws:/wss: URL, empty, ...) — before this method ever
+    // calls `save()`. This method adds no validation of its own beyond
+    // forwarding verbatim.
+    execute({ relayUrls } = {}) {
+        const configuration = new NostrRelayConfiguration({ relayUrls });
         this._store.save(configuration);
         return configuration;
     }

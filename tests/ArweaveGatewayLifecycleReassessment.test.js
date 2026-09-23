@@ -229,7 +229,7 @@ async function run() {
 
             // User opens Settings and configures an alternative.
             const setUseCase = new SetArweaveGatewayConfigurationUseCase({ arweaveGatewayConfigurationStore: storeBefore });
-            setUseCase.execute({ gatewayUrl: 'https://my-alternative-gateway.example' });
+            setUseCase.execute({ gatewayUrls: ['https://my-alternative-gateway.example'] });
 
             // Restart — a genuinely new store instance, over the SAME
             // underlying storage, exactly as a fresh application load
@@ -263,7 +263,7 @@ async function run() {
             await expectRejects(contentStoreBefore.get(reference), 'B6. BEFORE: Snapshot retrieval against an unreachable default genuinely fails');
 
             const setUseCase = new SetArweaveGatewayConfigurationUseCase({ arweaveGatewayConfigurationStore: storeBefore });
-            setUseCase.execute({ gatewayUrl: 'https://my-snapshot-alternative.example' });
+            setUseCase.execute({ gatewayUrls: ['https://my-snapshot-alternative.example'] });
 
             const storeAfter = new ArweaveGatewayConfigurationStore(new SharedNamespaceStorageProvider(sharedNamespace));
             const resolvedAfter = (storeAfter.get() || { gatewayUrl: DEFAULT_ARWEAVE_GATEWAY_URL }).gatewayUrl;
@@ -287,7 +287,7 @@ async function run() {
         const sharedNamespace = {};
         const storeBeforeRestart = new ArweaveGatewayConfigurationStore(new SharedNamespaceStorageProvider(sharedNamespace));
         const setUseCase = new SetArweaveGatewayConfigurationUseCase({ arweaveGatewayConfigurationStore: storeBeforeRestart });
-        setUseCase.execute({ gatewayUrl: 'https://custom-gateway.example' });
+        setUseCase.execute({ gatewayUrls: ['https://custom-gateway.example'] });
         assert(storeBeforeRestart.get().gatewayUrl === 'https://custom-gateway.example', 'C1. a custom gateway is on file');
 
         // Clear.
@@ -415,12 +415,12 @@ async function run() {
         const storeForProfileB = new ArweaveGatewayConfigurationStore(new SharedNamespaceStorageProvider(profileBNamespace));
 
         new SetArweaveGatewayConfigurationUseCase({ arweaveGatewayConfigurationStore: storeForProfileA })
-            .execute({ gatewayUrl: 'https://profile-a-gateway.example' });
+            .execute({ gatewayUrls: ['https://profile-a-gateway.example'] });
 
         assert(storeForProfileB.get() === null, 'E2. profile B observes no configuration at all after profile A saves one');
 
         new SetArweaveGatewayConfigurationUseCase({ arweaveGatewayConfigurationStore: storeForProfileB })
-            .execute({ gatewayUrl: 'https://profile-b-gateway.example' });
+            .execute({ gatewayUrls: ['https://profile-b-gateway.example'] });
 
         assert(storeForProfileA.get().gatewayUrl === 'https://profile-a-gateway.example', 'E3. profile A\'s own configuration is unaffected by profile B\'s later, independent save');
         assert(storeForProfileB.get().gatewayUrl === 'https://profile-b-gateway.example', 'E3. profile B\'s configuration is exactly what profile B itself saved');
@@ -437,8 +437,8 @@ async function run() {
         // F1. Invalid URL rejected.
         const store = new ArweaveGatewayConfigurationStore(new InMemoryStorageProvider());
         const setUseCase = new SetArweaveGatewayConfigurationUseCase({ arweaveGatewayConfigurationStore: store });
-        expectThrows(() => setUseCase.execute({ gatewayUrl: 'not-a-url' }), 'F1. an invalid URL is rejected');
-        expectThrows(() => setUseCase.execute({ gatewayUrl: 'ftp://not-http.example' }), 'F1. a non-http(s) scheme is rejected');
+        expectThrows(() => setUseCase.execute({ gatewayUrls: ['not-a-url'] }), 'F1. an invalid URL is rejected');
+        expectThrows(() => setUseCase.execute({ gatewayUrls: ['ftp://not-http.example'] }), 'F1. a non-http(s) scheme is rejected');
 
         // F2. Storage failure propagated, never swallowed.
         const brokenStore = new ArweaveGatewayConfigurationStore(new ThrowingStorageProvider());
@@ -500,7 +500,7 @@ async function run() {
         // the no-override state always shows the CONCRETE URL that is
         // actually in effect, so a person never has to guess what
         // "default" currently means.
-        assert(/No override configured\. Currently using the deployment default: \{\{\s*effectiveGatewayUrl\s*\}\}/.test(templateText),
+        assert(/No override configured\. Currently using the deployment default: \{\{\s*deploymentDefaultGatewayUrl\s*\}\}/.test(templateText),
             'G4. "Use Deployment Default" is grounded by displaying the actual concrete URL in effect, never left as an opaque, unexplained label');
 
         // No incidental exposure of unrelated infrastructure — a person

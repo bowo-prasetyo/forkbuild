@@ -7,22 +7,22 @@ import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfi
 // missing between a user's own gateway URL and a durable, validated
 // configuration: "a future settings surface — this file builds none." This
 // class is that missing WRITE seam: a settings view hands this class a
-// plain `{ gatewayUrl }`, never a constructed value object of its own, and
+// plain `{ gatewayUrls }`, never a constructed value object of its own, and
 // this class is the one place that turns it into a real
 // `ArweaveGatewayConfiguration` and persists it — the identical "settings
 // view hands the use case a plain field, the use case alone constructs and
 // validates the value object" shape this codebase's other preference-write
-// use cases already hold one feature over, applied here to a single
-// gateway URL instead of a per-role provider choice.
+// use cases already hold one feature over, applied here to an ordered
+// gateway URL list instead of a per-role provider choice.
 //
 //   ui/views/ArweaveGatewaySettingsView.js  (this same milestone)
-//        save({ gatewayUrl })
+//        save() -> { gatewayUrls }
 //                    │
 //                    ▼
-//   SetArweaveGatewayConfigurationUseCase.execute({ gatewayUrl })   ★ (THIS)
-//        new ArweaveGatewayConfiguration({ gatewayUrl })   — throws for
-//             anything that isn't a valid absolute http(s) URL; nothing is
-//             persisted when it throws
+//   SetArweaveGatewayConfigurationUseCase.execute({ gatewayUrls })   ★ (THIS)
+//        new ArweaveGatewayConfiguration({ gatewayUrls })   — throws for
+//             anything that isn't a non-empty list of valid absolute
+//             http(s) URLs; nothing is persisted when it throws
 //                    │
 //                    ▼
 //   ArweaveGatewayConfigurationStore.save(configuration)   (0.9.364, unmodified)
@@ -30,7 +30,7 @@ import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfi
 // DELIBERATELY THE SMALLEST POSSIBLE APPLICATION CAPABILITY. `execute()`
 // does two things, in this order, and nothing else: (1) constructs an
 // `ArweaveGatewayConfiguration` — which is itself what validates and
-// normalizes `gatewayUrl`, never re-implemented here — and (2) saves it.
+// normalizes `gatewayUrls`, never re-implemented here — and (2) saves it.
 // It never resolves, fetches, or health-checks the gateway; never reads the
 // current configuration; and never exposes a `clear()` of its own —
 // clearing needs no construction or validation of any kind, so a caller
@@ -56,20 +56,20 @@ export class SetArweaveGatewayConfigurationUseCase {
         this._store = arweaveGatewayConfigurationStore;
     }
 
-    // Saves `gatewayUrl` (a single string) or `gatewayUrls` (0.9.440, an
-    // ordered array — exactly one of the two, never both) as the user's own
-    // Arweave gateway override, replacing whatever was previously on file
-    // outright (see ArweaveGatewayConfigurationStore.js's own "A SINGLE
-    // CONFIGURATION, NEVER A HISTORY" header for why that replacement is a
-    // structural property of the store itself). Returns the new, persisted
+    // Saves `gatewayUrls` (0.9.440, an ordered array — a single gateway is
+    // simply a one-element list) as the user's own Arweave gateway
+    // override, replacing whatever was previously on file outright (see
+    // ArweaveGatewayConfigurationStore.js's own "A SINGLE CONFIGURATION,
+    // NEVER A HISTORY" header for why that replacement is a structural
+    // property of the store itself). Returns the new, persisted
     // ArweaveGatewayConfiguration.
     //
     // Throws for anything core/ArweaveGatewayConfiguration.js's own
-    // constructor rejects (not an absolute http(s) URL, empty, both fields
-    // supplied, ...) — before this method ever calls `save()`. This method
-    // adds no validation of its own beyond forwarding verbatim.
-    execute({ gatewayUrl, gatewayUrls } = {}) {
-        const configuration = new ArweaveGatewayConfiguration({ gatewayUrl, gatewayUrls });
+    // constructor rejects (not an absolute http(s) URL, empty, ...) — before
+    // this method ever calls `save()`. This method adds no validation of its
+    // own beyond forwarding verbatim.
+    execute({ gatewayUrls } = {}) {
+        const configuration = new ArweaveGatewayConfiguration({ gatewayUrls });
         this._store.save(configuration);
         return configuration;
     }

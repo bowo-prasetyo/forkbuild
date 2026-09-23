@@ -145,9 +145,7 @@ async function run() {
         // registration order — proving the actual, current defect (and
         // its fix) rather than a synthetic key list.
         const liveOptions = describeRoleProviderPreferenceSettings({
-            role: 'content',
-            availableProviderKeys: ['local', 'ipfs', 'ar'],
-            preference: null
+            availableProviderKeys: ['local', 'ipfs', 'ar']
         }).options;
         check(liveOptions.length === 3, 'B2a. exactly three real CONTENT provider options are offered today: local, ipfs, ar');
         const arOption = liveOptions.find((opt) => opt.providerKey === 'ar');
@@ -346,27 +344,24 @@ async function run() {
         check(before.ar === undefined, 'I1. sanity: the PRE-FIX map (a plain literal, not the real module) had no ar entry at all — confirming the defect this fix closes was real, not hypothetical');
 
         const fixedResult = describeRoleProviderPreferenceSettings({
-            role: 'content',
-            availableProviderKeys: ['local', 'ipfs', 'ar'],
-            preference: { providerKey: 'ar' }
+            availableProviderKeys: ['local', 'ipfs', 'ar']
         });
-        check(fixedResult.selectedProviderKey === 'ar', 'I2. selecting the ar preference is still reported correctly, unaffected by the label fix');
-        check(fixedResult.options.find((o) => o.providerKey === 'ar').selected === true,
-            'I3. the ar option\'s own `selected` flag still computes correctly alongside its new, fixed label');
+        check(fixedResult.options.map((o) => o.providerKey).join() === 'local,ipfs,ar',
+            'I2. every supplied providerKey is still offered, in the order given, unaffected by the label fix');
+        check(fixedResult.options.find((o) => o.providerKey === 'ar').label === 'Arweave',
+            'I3. the ar option carries its fixed label (which option is selected is the settings view\'s own v-model, never this function\'s concern)');
 
         // An unrecognized key still degrades honestly (title-cased),
         // never hidden — the identical restraint this whole codebase's
         // label-map family already holds (STORAGE_TYPE_LABELS,
         // ANCHOR_TYPE_LABELS, humanizeStorageType/humanizeAnchorType).
         const unknownResult = describeRoleProviderPreferenceSettings({
-            role: 'content',
-            availableProviderKeys: ['mystery-provider'],
-            preference: null
+            availableProviderKeys: ['mystery-provider']
         });
         check(unknownResult.options[0].label === 'Mystery-provider',
             `I4. an unrecognized providerKey still renders, title-cased, never hidden or refused — found: "${unknownResult.options[0].label}"`);
 
-        console.log('✓ Section I: the fix is live-exercised — ar renders "Arweave", selection/selected-flag computation is unaffected, and an unrecognized key still degrades honestly rather than hiding or throwing');
+        console.log('✓ Section I: the fix is live-exercised — ar renders "Arweave", every supplied key is still offered in order, and an unrecognized key still degrades honestly rather than hiding or throwing');
     }
 
     // ===============================================================

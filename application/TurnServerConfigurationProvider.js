@@ -10,9 +10,10 @@ import { TurnServerConfigurationStore } from '../storage/TurnServerConfiguration
 // are the same fact, on purpose"). This file is the one seam between
 // "whatever is on file, or nothing" and a future WebRTC composition step
 // (0.9.455, NOT this milestone) — the "provider" box between a future TURN
-// Settings surface and the WebRTC runtime, mirroring the shape
-// application/NostrPublicationRelaySetConfigurationProvider.js's own
-// `resolveNostrPublicationRelayUrls()` already establishes for a sibling
+// Settings surface and the WebRTC runtime, mirroring the shape the
+// (since removed — see core/NostrRelayConfiguration.js's own "unified"
+// header) NostrPublicationRelaySetConfigurationProvider's
+// `resolveNostrPublicationRelayUrls()` established for a sibling
 // configuration family:
 //
 //   TurnServerConfigurationStore.get()   -> configuration | null

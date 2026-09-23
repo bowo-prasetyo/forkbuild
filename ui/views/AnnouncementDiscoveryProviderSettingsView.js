@@ -1,4 +1,5 @@
-import { ref, computed, inject, onMounted } from 'vue';
+import { computed, inject } from 'vue';
+import { useRoleProviderPreferenceForm } from '../composables/useRoleProviderPreferenceForm.js';
 import { RoleProviderRole } from '../../core/RoleProviderRole.js';
 import { describeRoleProviderPreferenceSettings } from '../../application/RoleProviderPreferenceSettingsView.js';
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
@@ -31,8 +32,11 @@ import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 // such registry yet") — 'nostr'/'arweave' are this codebase's only two
 // real Announcement/Discovery substrates today, named here the same way
 // every composition root above already names them as literal strings.
+//
+// Both keys already title-case to "Nostr"/"Arweave" through
+// describeRoleProviderPreferenceSettings()'s own label fallback, so no
+// label map is needed here.
 const AVAILABLE_PROVIDER_KEYS = ['nostr', 'arweave'];
-const PROVIDER_OPTION_LABELS = { nostr: 'Nostr', arweave: 'Arweave' };
 
 export default {
     name: 'AnnouncementDiscoveryProviderSettingsView',
@@ -40,46 +44,20 @@ export default {
         const preferenceStore = inject('roleProviderPreferenceStore', null);
         const setRoleProviderPreferenceUseCase = inject('setRoleProviderPreferenceUseCase', null);
 
-        const preference = ref(null);
-        const selectedProviderKey = ref(null);
-        const saveError = ref(null);
-        const saveStatus = ref('idle'); // 'idle' | 'saving' | 'saved'
+        const form = useRoleProviderPreferenceForm({
+            role: RoleProviderRole.ANNOUNCEMENT_AND_DISCOVERY,
+            preferenceStore,
+            setUseCase: setRoleProviderPreferenceUseCase
+        });
 
         const settings = computed(() => sortOptionsByLabel(describeRoleProviderPreferenceSettings({
-            role: RoleProviderRole.ANNOUNCEMENT_AND_DISCOVERY,
-            availableProviderKeys: AVAILABLE_PROVIDER_KEYS,
-            preference: preference.value
-        }).options.map((option) => ({ ...option, label: PROVIDER_OPTION_LABELS[option.providerKey] || option.label }))));
+            availableProviderKeys: AVAILABLE_PROVIDER_KEYS
+        }).options));
 
-        // Re-reads the store fresh on every load — the identical restraint
-        // ContentProviderSettingsView.js's own `load()` already holds, so a
-        // fresh instance of this view observes whatever a prior instance
-        // (or ui/main.js's own boot-time read) most recently persisted.
-        function load() {
-            if (!preferenceStore) return;
-            preference.value = preferenceStore.get(RoleProviderRole.ANNOUNCEMENT_AND_DISCOVERY);
-            selectedProviderKey.value = preference.value ? preference.value.providerKey : null;
-        }
-
-        function save() {
-            if (!setRoleProviderPreferenceUseCase || !selectedProviderKey.value) return;
-            saveError.value = null;
-            saveStatus.value = 'saving';
-            try {
-                preference.value = setRoleProviderPreferenceUseCase.execute({
-                    role: RoleProviderRole.ANNOUNCEMENT_AND_DISCOVERY,
-                    providerKey: selectedProviderKey.value
-                });
-                saveStatus.value = 'saved';
-            } catch (error) {
-                saveStatus.value = 'idle';
-                saveError.value = error.message;
-            }
-        }
-
-        onMounted(load);
-
-        return { settings, selectedProviderKey, saveError, saveStatus, save };
+        return {
+            settings, selectedProviderKey: form.selectedProviderKey,
+            saveError: form.saveError, saveStatus: form.saveStatus, save: form.save
+        };
     },
     template: `
         <section class="announcement-discovery-provider-settings-view">
@@ -100,7 +78,7 @@ export default {
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
                 <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
 
-                <button class="action-btn action-btn--primary" @click="save" :disabled="saveStatus === 'saving' || !selectedProviderKey">Save</button>
+                <button class="action-btn action-btn--primary" @click="save" :disabled="!selectedProviderKey">Save</button>
             </div>
         </section>
     `

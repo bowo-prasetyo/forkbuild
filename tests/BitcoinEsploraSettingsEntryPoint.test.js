@@ -261,25 +261,31 @@ async function run() {
         const viewSource = await source('ui/views/BitcoinEsploraSettingsView.js');
 
         assert(/v-if="hasOverride"/.test(viewSource), '36. the template branches on whether an override is on file');
-        assert(/No override configured/.test(viewSource) && /effectiveApiUrl/.test(viewSource),
+        assert(/No override configured/.test(viewSource) && /deploymentDefaultApiUrl/.test(viewSource),
             '37. the no-override state displays the effective deployment default as informational text');
         assert(/Current override/.test(viewSource), '38. the override state displays the current, actually-saved apiUrl');
 
-        const loadFnMatch = viewSource.match(/function load\(\)\s*\{[\s\S]*?\n\s{8}\}/);
+        // load()/save()/clear() are the shared endpoint-settings form's own
+        // (ui/composables/useEndpointSettingsForm.js); the view wires its
+        // own injected store and use case into it.
+        const formSource = await source('ui/composables/useEndpointSettingsForm.js');
+        const loadFnMatch = formSource.match(/function load\(\)\s*\{[\s\S]*?\n\s{4}\}/);
         assert(loadFnMatch, '39. a load() function exists');
         assert(!/execute\(|\.save\(|\.clear\(/.test(loadFnMatch[0]),
             '40. load() never calls the use case, store.save(), or store.clear() — merely opening the page persists nothing');
 
         assert(/@click="save"/.test(viewSource), '41. a Save action is wired');
         assert(/@click="useDeploymentDefault"/.test(viewSource), '42. a Use Deployment Default action is wired');
-        const useDeploymentDefaultFnMatch = viewSource.match(/function useDeploymentDefault\(\)\s*\{[\s\S]*?\n\s{8}\}/);
-        assert(useDeploymentDefaultFnMatch, '43. a useDeploymentDefault() function exists');
+        const useDeploymentDefaultFnMatch = /useDeploymentDefault: form\.clear\b/.test(viewSource)
+            && formSource.match(/function clear\(\)\s*\{[\s\S]*?\n\s{4}\}/);
+        assert(useDeploymentDefaultFnMatch, '43. Use Deployment Default is wired to the shared clear() function');
         assert(/store\.clear\(\)/.test(useDeploymentDefaultFnMatch[0]), '44. Use Deployment Default calls store.clear()');
         assert(!/DEFAULT_BITCOIN_ESPLORA_API_URL/.test(useDeploymentDefaultFnMatch[0]),
             '45. Use Deployment Default never saves { apiUrl: DEFAULT_BITCOIN_ESPLORA_API_URL } — it only ever clears');
-        const saveFnMatch = viewSource.match(/function save\(\)\s*\{[\s\S]*?\n\s{8}\}/);
+        const saveFnMatch = /\bsave: form\.save\b/.test(viewSource)
+            && formSource.match(/function save\(\)\s*\{[\s\S]*?\n\s{4}\}/);
         assert(saveFnMatch, '46. a save() function exists');
-        assert(/setBitcoinEsploraConfigurationUseCase\.execute\(/.test(saveFnMatch[0]), '47. save() goes through the injected use case, never a direct store.save()');
+        assert(/useCase\.execute\(/.test(saveFnMatch[0]) && /useCase: setBitcoinEsploraConfigurationUseCase\b/.test(viewSource), '47. save() goes through the injected use case, never a direct store.save()');
         assert(!/store\.save\(/.test(saveFnMatch[0]), '48. save() never calls store.save() directly, bypassing the use case');
 
         console.log('✓ Section G: the view template shows the correct no-override/override states without ever mutating on load, and wires Save/Use Deployment Default correctly');

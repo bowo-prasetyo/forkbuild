@@ -1,4 +1,5 @@
-import { ref, computed, inject, onMounted } from 'vue';
+import { ref, inject } from 'vue';
+import { useEndpointSettingsForm } from '../composables/useEndpointSettingsForm.js';
 import { DEFAULT_BITCOIN_ESPLORA_API_URL } from '../../core/BitcoinEsploraConfiguration.js';
 
 // Bitcoin Esplora Endpoint Settings UI.
@@ -22,7 +23,8 @@ import { DEFAULT_BITCOIN_ESPLORA_API_URL } from '../../core/BitcoinEsploraConfig
 // is rejected by that use case's own construction step; this view only ever
 // displays whatever message that throw carries.
 //
-// OPENING THIS PAGE NEVER WRITES ANYTHING — load() only ever reads
+// OPENING THIS PAGE NEVER WRITES ANYTHING — the shared load() (ui/composables/
+// useEndpointSettingsForm.js) only ever reads
 // store.get(). "Use Deployment Default" calls store.clear(), never
 // save({ apiUrl: DEFAULT_BITCOIN_ESPLORA_API_URL }) — saving the default
 // value would wrongly turn "no preference" into an explicit one that
@@ -37,53 +39,27 @@ export default {
         const store = inject('bitcoinEsploraConfigurationStore', null);
         const setBitcoinEsploraConfigurationUseCase = inject('setBitcoinEsploraConfigurationUseCase', null);
 
-        const configuration = ref(null);
         const apiUrlInput = ref('');
-        const saveError = ref(null);
-        const saveStatus = ref('idle'); // 'idle' | 'saving' | 'saved'
-        const clearStatus = ref('idle'); // 'idle' | 'cleared'
 
-        const hasOverride = computed(() => configuration.value !== null);
-        const effectiveApiUrl = computed(() => (
-            configuration.value ? configuration.value.apiUrl : DEFAULT_BITCOIN_ESPLORA_API_URL
-        ));
-
-        function load() {
-            if (!store) return;
-            configuration.value = store.get();
-            apiUrlInput.value = configuration.value ? configuration.value.apiUrl : '';
-        }
-
-        function save() {
-            if (!setBitcoinEsploraConfigurationUseCase || !apiUrlInput.value.trim()) return;
-            saveError.value = null;
-            clearStatus.value = 'idle';
-            saveStatus.value = 'saving';
-            try {
-                configuration.value = setBitcoinEsploraConfigurationUseCase.execute({ apiUrl: apiUrlInput.value.trim() });
-                apiUrlInput.value = configuration.value.apiUrl;
-                saveStatus.value = 'saved';
-            } catch (error) {
-                saveStatus.value = 'idle';
-                saveError.value = error.message;
+        const form = useEndpointSettingsForm({
+            store,
+            useCase: setBitcoinEsploraConfigurationUseCase,
+            buildRequest: () => {
+                const apiUrl = apiUrlInput.value.trim();
+                return apiUrl ? { apiUrl } : null;
+            },
+            fillInputs: (configuration) => {
+                apiUrlInput.value = configuration ? configuration.apiUrl : '';
             }
-        }
+        });
 
-        function useDeploymentDefault() {
-            if (!store) return;
-            store.clear();
-            configuration.value = null;
-            apiUrlInput.value = '';
-            saveError.value = null;
-            saveStatus.value = 'idle';
-            clearStatus.value = 'cleared';
-        }
-
-        onMounted(load);
+        // Shown only when no override is on file.
+        const deploymentDefaultApiUrl = DEFAULT_BITCOIN_ESPLORA_API_URL;
 
         return {
-            hasOverride, effectiveApiUrl, configuration, apiUrlInput,
-            saveError, saveStatus, clearStatus, save, useDeploymentDefault
+            hasOverride: form.hasConfiguration, deploymentDefaultApiUrl, configuration: form.configuration, apiUrlInput,
+            saveError: form.saveError, saveStatus: form.saveStatus, clearStatus: form.clearStatus,
+            save: form.save, useDeploymentDefault: form.clear
         };
     },
     template: `
@@ -97,7 +73,7 @@ export default {
                 Current override: {{ configuration.apiUrl }}
             </p>
             <p v-else class="form-hint form-hint--neutral">
-                No override configured. Currently using the deployment default: {{ effectiveApiUrl }}
+                No override configured. Currently using the deployment default: {{ deploymentDefaultApiUrl }}
             </p>
 
             <div class="bitcoin-esplora-settings-form">
@@ -112,8 +88,8 @@ export default {
                 <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
                 <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">Cleared — now using the deployment default.</p>
 
-                <button class="action-btn action-btn--primary" @click="save" :disabled="saveStatus === 'saving' || !apiUrlInput.trim()">Save</button>
-                <button class="action-btn" @click="useDeploymentDefault" :disabled="saveStatus === 'saving'">Use Deployment Default</button>
+                <button class="action-btn action-btn--primary" @click="save" :disabled="!apiUrlInput.trim()">Save</button>
+                <button class="action-btn" @click="useDeploymentDefault">Use Deployment Default</button>
             </div>
         </section>
     `

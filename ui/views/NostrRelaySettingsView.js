@@ -1,4 +1,6 @@
-import { ref, computed, inject, onMounted } from 'vue';
+import { ref, inject } from 'vue';
+import { useEndpointSettingsForm } from '../composables/useEndpointSettingsForm.js';
+import { splitNonEmptyLines } from '../../utils/splitNonEmptyLines.js';
 import { DEFAULT_NOSTR_RELAY_URL } from '../../core/NostrRelayConfiguration.js';
 
 // 0.9.371 — Nostr Relay Settings UI.
@@ -31,7 +33,7 @@ import { DEFAULT_NOSTR_RELAY_URL } from '../../core/NostrRelayConfiguration.js';
 // display what is already on file — the identical "read the store directly,
 // no symmetric Get use case" pattern ArweaveGatewaySettingsView.js already
 // holds — and it saves a change by calling
-// `setNostrRelayConfigurationUseCase.execute({ relayUrl })`, never
+// `setNostrRelayConfigurationUseCase.execute({ relayUrls })`, never
 // `new NostrRelayConfiguration(...)` and never
 // `NostrRelayConfigurationStore.save()` directly. An invalid URL is rejected
 // by that use case's own construction step before anything is persisted —
@@ -44,10 +46,10 @@ import { DEFAULT_NOSTR_RELAY_URL } from '../../core/NostrRelayConfiguration.js';
 // NostrPlaceNamingDiscoverySource.js, nostr/NostrRelayQueryClient.js, or any
 // of the three Nostr WRITE-path publishers. `DEFAULT_NOSTR_RELAY_URL` is the
 // one thing imported from core/NostrRelayConfiguration.js — a plain
-// constant, consulted only to LABEL the effective relay when no override is
+// constant, consulted only to LABEL the deployment default when no override is
 // on file, never to construct anything or open a connection. A change saved
-// here only reaches the three read-path consumers through the existing
-// composition root (ui/main.js resolves `nostrRelayConfigurationStore.get()`
+// here only reaches its consumers — every Nostr read and publish path (see
+// "UNIFIED" below) — through the existing composition root (ui/main.js resolves `nostrRelayConfigurationStore.get()`
 // once at startup, exactly as it already does for
 // `arweaveGatewayConfigurationStore`) on the NEXT application load — this
 // view performs no live re-composition of its own.
@@ -73,10 +75,11 @@ import { DEFAULT_NOSTR_RELAY_URL } from '../../core/NostrRelayConfiguration.js';
 // itself a thin, unvalidating forward to core/NostrRelayConfiguration.js's
 // own constructor.
 //
-// OPENING THIS PAGE NEVER WRITES ANYTHING. `load()` only ever reads
+// OPENING THIS PAGE NEVER WRITES ANYTHING. The shared `load()` (ui/composables/
+// useEndpointSettingsForm.js) only ever reads
 // `store.get()`; when it returns `null`, the input stays empty and the
 // deployment default is shown purely as informational text
-// (`effectiveRelayUrl`) — merely visiting this page can never turn "no
+// (`deploymentDefaultRelayUrl`) — merely visiting this page can never turn "no
 // override" into a persisted, explicit default. That is 0.9.369's own
 // "absence stays meaningful" rule, held here at the one place that could
 // otherwise quietly violate it.
@@ -114,79 +117,35 @@ export default {
         const store = inject('nostrRelayConfigurationStore', null);
         const setNostrRelayConfigurationUseCase = inject('setNostrRelayConfigurationUseCase', null);
 
-        // The NostrRelayConfiguration currently on file, or null — read
-        // straight from the injected store, never constructed here.
-        const configuration = ref(null);
         // One relay URL per line — every configured relay is fanned out to.
         const relayUrlInput = ref('');
-        const saveError = ref(null);
-        const saveStatus = ref('idle'); // 'idle' | 'saving' | 'saved'
-        const clearStatus = ref('idle'); // 'idle' | 'cleared'
 
-        const hasOverride = computed(() => configuration.value !== null);
-        // The relay actually in effect right now when no override is on
-        // file — the deployment default, shown as informational text.
-        // Never a merge with anything, mirroring ui/main.js's own
-        // `resolvedNostrRelayUrls` resolution exactly.
-        const effectiveRelayUrl = computed(() => (
-            configuration.value ? configuration.value.relayUrl : DEFAULT_NOSTR_RELAY_URL
-        ));
-
-        // Re-reads the store fresh on every load — so a newly mounted
-        // instance of this view always observes whatever a prior instance
-        // (or a prior application run) actually persisted, never a value
-        // cached from before. Never writes anything.
-        function load() {
-            if (!store) return;
-            configuration.value = store.get();
-            relayUrlInput.value = configuration.value ? configuration.value.relayUrls.join('\n') : '';
-        }
-
-        // Splits the textarea into one trimmed URL per non-empty line —
-        // the ONLY interpretation this view performs; every other rule
-        // (what counts as a valid URL, whether the list is non-empty) stays
-        // inside core/NostrRelayConfiguration.js's own constructor, reached
-        // through the use case below.
-        function parseRelayUrls() {
-            return relayUrlInput.value
-                .split('\n')
-                .map((line) => line.trim())
-                .filter((line) => line.length > 0);
-        }
-
-        function save() {
-            if (!setNostrRelayConfigurationUseCase || !relayUrlInput.value.trim()) return;
-            saveError.value = null;
-            clearStatus.value = 'idle';
-            saveStatus.value = 'saving';
-            try {
-                configuration.value = setNostrRelayConfigurationUseCase.execute({ relayUrls: parseRelayUrls() });
-                relayUrlInput.value = configuration.value.relayUrls.join('\n');
-                saveStatus.value = 'saved';
-            } catch (error) {
-                // The use case's own construction step threw before
-                // anything was persisted — whatever was previously on file
-                // (if anything) remains completely untouched.
-                saveStatus.value = 'idle';
-                saveError.value = error.message;
+        const form = useEndpointSettingsForm({
+            store,
+            useCase: setNostrRelayConfigurationUseCase,
+            // Splitting the textarea into lines is the ONLY interpretation
+            // this view performs; every other rule (what counts as a valid
+            // URL) stays inside core/NostrRelayConfiguration.js's own
+            // constructor, reached through the use case.
+            buildRequest: () => {
+                const relayUrls = splitNonEmptyLines(relayUrlInput.value);
+                return relayUrls.length > 0 ? { relayUrls } : null;
+            },
+            fillInputs: (configuration) => {
+                relayUrlInput.value = configuration ? configuration.relayUrls.join('\n') : '';
             }
-        }
+        });
 
-        function useDeploymentDefault() {
-            if (!store) return;
-            store.clear();
-            configuration.value = null;
-            relayUrlInput.value = '';
-            saveError.value = null;
-            saveStatus.value = 'idle';
-            clearStatus.value = 'cleared';
-        }
-
-        onMounted(load);
+        // Shown only when no override is on file, as informational text —
+        // so the relay in effect is always exactly the deployment default,
+        // never a merge with anything, mirroring ui/main.js's own
+        // `resolvedNostrRelayUrls` fallback.
+        const deploymentDefaultRelayUrl = DEFAULT_NOSTR_RELAY_URL;
 
         return {
-            hasOverride, effectiveRelayUrl, configuration, relayUrlInput,
-            saveError, saveStatus, clearStatus, save, useDeploymentDefault
+            hasOverride: form.hasConfiguration, deploymentDefaultRelayUrl, configuration: form.configuration, relayUrlInput,
+            saveError: form.saveError, saveStatus: form.saveStatus, clearStatus: form.clearStatus,
+            save: form.save, useDeploymentDefault: form.clear
         };
     },
     template: `
@@ -200,7 +159,7 @@ export default {
                 Current override(s): {{ configuration.relayUrls.join(', ') }}
             </p>
             <p v-else class="form-hint form-hint--neutral">
-                No override configured. Currently using the deployment default: {{ effectiveRelayUrl }}
+                No override configured. Currently using the deployment default: {{ deploymentDefaultRelayUrl }}
             </p>
 
             <div class="nostr-relay-settings-form">
@@ -208,15 +167,15 @@ export default {
                     v-model="relayUrlInput"
                     placeholder="wss://relay.damus.io"
                     rows="4"
-                    class="nostr-relay-input"
+                    class="nostr-relay-input form-textarea"
                 ></textarea>
 
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
                 <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
                 <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">Cleared — now using the deployment default.</p>
 
-                <button class="action-btn action-btn--primary" @click="save" :disabled="saveStatus === 'saving' || !relayUrlInput.trim()">Save</button>
-                <button class="action-btn" @click="useDeploymentDefault" :disabled="saveStatus === 'saving'">Use Deployment Default</button>
+                <button class="action-btn action-btn--primary" @click="save" :disabled="!relayUrlInput.trim()">Save</button>
+                <button class="action-btn" @click="useDeploymentDefault">Use Deployment Default</button>
             </div>
         </section>
     `

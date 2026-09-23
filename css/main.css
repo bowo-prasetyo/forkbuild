@@ -3783,8 +3783,8 @@ html, body {
     font-family: inherit;
 }
 
-/* Network Settings hub — the single top-nav entry point linking to the
-   endpoint-server settings pages below. Same card language as
+/* Network Settings hub — the single top-nav entry point linking to every
+   /settings/* page below. Same card language as
    .content-provider-settings-view, .identity-list-item for each link row. */
 .network-settings-view {
     padding: 2rem 2.5rem 3rem;
@@ -3881,9 +3881,9 @@ html, body {
 }
 
 /* Announcement / Discovery Provider / Proof / Anchoring Provider / Arweave
-   Gateway / IPFS Gateway / Nostr Relays / STUN Servers / TURN Server /
-   Rendezvous Servers — the other Network Settings pages, same card
-   language as .content-provider-settings-view above. */
+   Gateway / IPFS Gateway / Bitcoin Endpoint / Nostr Relays / STUN Servers /
+   TURN Server / Rendezvous Servers — the other Network Settings pages, same
+   card language as .content-provider-settings-view above. */
 .announcement-discovery-provider-settings-view,
 .anchor-provider-settings-view,
 .arweave-gateway-settings-view,
@@ -3907,8 +3907,24 @@ html, body {
 .nostr-relay-settings-form,
 .stun-settings-form,
 .turn-server-settings-form,
-.rendezvous-settings-form {
+.rendezvous-settings-form,
+.ipfs-node-settings-form {
     margin-top: 1.5rem;
+}
+
+/* The shared .form-input/.form-textarea controls on those same pages carry
+   no margin of their own; give each one room before the next control or
+   the .form-hint that follows it (whose own -0.4rem top margin assumes a
+   .form-field wrapper these pages don't use). */
+.arweave-gateway-settings-form :is(.form-input, .form-textarea),
+.ipfs-gateway-settings-form :is(.form-input, .form-textarea),
+.bitcoin-esplora-settings-form :is(.form-input, .form-textarea),
+.nostr-relay-settings-form :is(.form-input, .form-textarea),
+.stun-settings-form :is(.form-input, .form-textarea),
+.turn-server-settings-form :is(.form-input, .form-textarea),
+.rendezvous-settings-form :is(.form-input, .form-textarea),
+.ipfs-node-settings-form :is(.form-input, .form-textarea) {
+    margin-bottom: 0.85rem;
 }
 
 .content-provider-option,

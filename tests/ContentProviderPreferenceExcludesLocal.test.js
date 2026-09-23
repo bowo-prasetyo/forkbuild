@@ -105,7 +105,7 @@ async function run() {
             'the settings view lists preferableStorageTypes()');
         assert(!/availableStorageTypes\(\)\s*:\s*\[\]/.test(source),
             'the settings view no longer builds its option list from availableStorageTypes()');
-        assert(/hasUnofferedPreference\.value \? null : preference\.value/.test(source),
+        assert(/isSelectable: \(key\) => !isUnofferedProviderKey\(key\)/.test(source),
             "a saved 'local' preference is displayed as nothing selected");
         assert(/previously saved "Local" preference no longer applies/.test(source),
             'the view explains why a legacy Local preference is no longer selected');

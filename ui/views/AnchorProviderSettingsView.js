@@ -1,4 +1,5 @@
-import { ref, computed, inject, onMounted } from 'vue';
+import { computed, inject } from 'vue';
+import { useRoleProviderPreferenceForm } from '../composables/useRoleProviderPreferenceForm.js';
 import { RoleProviderRole } from '../../core/RoleProviderRole.js';
 import { describeRoleProviderPreferenceSettings } from '../../application/RoleProviderPreferenceSettingsView.js';
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
@@ -40,10 +41,12 @@ import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 //
 // ONLY PROOF_AND_ANCHORING. This view hardcodes `RoleProviderRole.PROOF_AND_ANCHORING`
 // — there is no role selector, and no Content or Discovery section here.
+//
+// Only `bitcoin-op-return` needs a friendly name here: `arweave` already
+// title-cases to "Arweave" through describeRoleProviderPreferenceSettings()'s
+// own fallback, and `base` is never offered (see above).
 const ANCHOR_PROVIDER_OPTION_LABELS = {
-    'bitcoin-op-return': 'Bitcoin',
-    base: 'Base',
-    arweave: 'Arweave'
+    'bitcoin-op-return': 'Bitcoin'
 };
 
 export default {
@@ -53,50 +56,24 @@ export default {
         const setRoleProviderPreferenceUseCase = inject('setRoleProviderPreferenceUseCase', null);
         const preferredAnchorCreationCoordinator = inject('preferredPublicationAnchorCreationCoordinator', null);
 
-        const preference = ref(null);
-        const selectedProviderKey = ref(null);
-        const saveError = ref(null);
-        const saveStatus = ref('idle'); // 'idle' | 'saving' | 'saved'
+        const form = useRoleProviderPreferenceForm({
+            role: RoleProviderRole.PROOF_AND_ANCHORING,
+            preferenceStore,
+            setUseCase: setRoleProviderPreferenceUseCase
+        });
 
         const availableProviderKeys = computed(() =>
             preferredAnchorCreationCoordinator ? preferredAnchorCreationCoordinator.availableAnchorTypes() : []
         );
 
         const settings = computed(() => sortOptionsByLabel(describeRoleProviderPreferenceSettings({
-            role: RoleProviderRole.PROOF_AND_ANCHORING,
-            availableProviderKeys: availableProviderKeys.value,
-            preference: preference.value
+            availableProviderKeys: availableProviderKeys.value
         }).options.map((option) => ({ ...option, label: ANCHOR_PROVIDER_OPTION_LABELS[option.providerKey] || option.label }))));
 
-        // Re-reads the store fresh on every load — the identical restraint
-        // ContentProviderSettingsView.js's own `load()` already holds, so a
-        // fresh instance of this view observes whatever a prior instance
-        // (or ui/main.js's own boot-time read) most recently persisted.
-        function load() {
-            if (!preferenceStore) return;
-            preference.value = preferenceStore.get(RoleProviderRole.PROOF_AND_ANCHORING);
-            selectedProviderKey.value = preference.value ? preference.value.providerKey : null;
-        }
-
-        function save() {
-            if (!setRoleProviderPreferenceUseCase || !selectedProviderKey.value) return;
-            saveError.value = null;
-            saveStatus.value = 'saving';
-            try {
-                preference.value = setRoleProviderPreferenceUseCase.execute({
-                    role: RoleProviderRole.PROOF_AND_ANCHORING,
-                    providerKey: selectedProviderKey.value
-                });
-                saveStatus.value = 'saved';
-            } catch (error) {
-                saveStatus.value = 'idle';
-                saveError.value = error.message;
-            }
-        }
-
-        onMounted(load);
-
-        return { settings, selectedProviderKey, saveError, saveStatus, save };
+        return {
+            settings, selectedProviderKey: form.selectedProviderKey,
+            saveError: form.saveError, saveStatus: form.saveStatus, save: form.save
+        };
     },
     template: `
         <section class="anchor-provider-settings-view">
@@ -117,7 +94,7 @@ export default {
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
                 <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
 
-                <button class="action-btn action-btn--primary" @click="save" :disabled="saveStatus === 'saving' || !selectedProviderKey">Save</button>
+                <button class="action-btn action-btn--primary" @click="save" :disabled="!selectedProviderKey">Save</button>
             </div>
             <p v-else class="form-hint form-hint--neutral">
                 No Proof/Anchoring providers are currently registered on this replica.
