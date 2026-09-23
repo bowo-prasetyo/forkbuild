@@ -40,10 +40,12 @@ import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 //
 // ONLY PROOF_AND_ANCHORING. This view hardcodes `RoleProviderRole.PROOF_AND_ANCHORING`
 // — there is no role selector, and no Content or Discovery section here.
+//
+// Only `bitcoin-op-return` needs a friendly name here: `arweave` already
+// title-cases to "Arweave" through describeRoleProviderPreferenceSettings()'s
+// own fallback, and `base` is never offered (see above).
 const ANCHOR_PROVIDER_OPTION_LABELS = {
-    'bitcoin-op-return': 'Bitcoin',
-    base: 'Base',
-    arweave: 'Arweave'
+    'bitcoin-op-return': 'Bitcoin'
 };
 
 export default {
@@ -56,7 +58,7 @@ export default {
         const preference = ref(null);
         const selectedProviderKey = ref(null);
         const saveError = ref(null);
-        const saveStatus = ref('idle'); // 'idle' | 'saving' | 'saved'
+        const saveStatus = ref('idle'); // 'idle' | 'saved'
 
         const availableProviderKeys = computed(() =>
             preferredAnchorCreationCoordinator ? preferredAnchorCreationCoordinator.availableAnchorTypes() : []
@@ -81,7 +83,6 @@ export default {
         function save() {
             if (!setRoleProviderPreferenceUseCase || !selectedProviderKey.value) return;
             saveError.value = null;
-            saveStatus.value = 'saving';
             try {
                 preference.value = setRoleProviderPreferenceUseCase.execute({
                     role: RoleProviderRole.PROOF_AND_ANCHORING,
@@ -117,7 +118,7 @@ export default {
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
                 <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
 
-                <button class="action-btn action-btn--primary" @click="save" :disabled="saveStatus === 'saving' || !selectedProviderKey">Save</button>
+                <button class="action-btn action-btn--primary" @click="save" :disabled="!selectedProviderKey">Save</button>
             </div>
             <p v-else class="form-hint form-hint--neutral">
                 No Proof/Anchoring providers are currently registered on this replica.

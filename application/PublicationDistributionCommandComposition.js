@@ -130,9 +130,9 @@ export function composePublicationDistributionCommand({ lifecycleStore, arweaveU
 // publication relay set existed to pre-bind: this composition root already
 // pre-binds `arweaveUploaderOptions`/`nostrPublisherOptions`/
 // `arweaveAnnouncementPublisherOptions`/`lifecycleStore` for the single-
-// relay command; `nostrRelayUrls` (resolved by
-// `application/NostrPublicationRelaySetConfigurationProvider.js`, this same
-// milestone) joins that same pre-bound set here, for the multi-relay
+// relay command; `nostrRelayUrls` (ui/main.js's own
+// `resolvedNostrRelayUrls`, read once from the unified
+// `nostrRelayConfigurationStore`) joins that same pre-bound set here, for the multi-relay
 // command specifically.
 //
 // THE FOUR COMPOSITION-ROOT COLLABORATORS ALWAYS WIN OVER ANYTHING A
@@ -148,8 +148,8 @@ export function composePublicationDistributionCommand({ lifecycleStore, arweaveU
 // relay-set resolution of any kind — `nostrRelayUrls` arrives already
 // resolved, exactly as `arweaveUploaderOptions`/`nostrPublisherOptions`
 // already do for the single-relay composer above. Resolving it is entirely
-// `application/NostrPublicationRelaySetConfigurationProvider.js`'s own job,
-// called once, by this function's own caller (`ui/main.js`), before this
+// this function's own caller's job (`ui/main.js`'s `resolvedNostrRelayUrls`,
+// read once from `nostrRelayConfigurationStore` at startup), before this
 // function is ever invoked.
 //
 // composeMultiRelayNostrPublicationDistributionCommand({ lifecycleStore,

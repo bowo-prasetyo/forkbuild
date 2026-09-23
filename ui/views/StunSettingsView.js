@@ -57,8 +57,7 @@ import { DEFAULT_ICE_SERVERS } from '../../peer/IceServerConfig.js';
 // existing `peer/WebRtcPeerConnection.js` ICE-gathering timeout to handle,
 // never something this view predicts or falls back away from.
 //
-// ONE STUN URL PER LINE, IN A TEXTAREA — the one visible difference from
-// its two single-URL sibling views, reflecting `core/
+// ONE STUN URL PER LINE, IN A TEXTAREA, reflecting `core/
 // IceServerConfiguration.js`'s own list-shaped `servers` field. Blank
 // lines are ignored; order is preserved exactly as typed.
 //
@@ -95,7 +94,7 @@ export default {
         const configuration = ref(null);
         const serversInput = ref('');
         const saveError = ref(null);
-        const saveStatus = ref('idle'); // 'idle' | 'saving' | 'saved'
+        const saveStatus = ref('idle'); // 'idle' | 'saved'
         const clearStatus = ref('idle'); // 'idle' | 'cleared'
 
         const hasOverride = computed(() => configuration.value !== null);
@@ -133,7 +132,6 @@ export default {
             if (!setIceServerConfigurationUseCase || servers.length === 0) return;
             saveError.value = null;
             clearStatus.value = 'idle';
-            saveStatus.value = 'saving';
             try {
                 configuration.value = setIceServerConfigurationUseCase.execute({ servers });
                 serversInput.value = configuration.value.servers.map((server) => server.urls).join('\n');
@@ -160,7 +158,7 @@ export default {
         onMounted(load);
 
         return {
-            hasOverride, effectiveServers, configuration, serversInput,
+            hasOverride, effectiveServers, serversInput,
             saveError, saveStatus, clearStatus, save, resetToDefaults
         };
     },
@@ -186,7 +184,7 @@ export default {
                     v-model="serversInput"
                     placeholder="stun:stun.l.google.com:19302"
                     rows="5"
-                    class="stun-settings-input"
+                    class="stun-settings-input form-textarea"
                 ></textarea>
                 <p class="form-hint form-hint--neutral">One STUN server URL per line (e.g. stun:stun.l.google.com:19302).</p>
 
@@ -194,8 +192,8 @@ export default {
                 <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
                 <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">Cleared — now using the deployment defaults.</p>
 
-                <button class="action-btn action-btn--primary" @click="save" :disabled="saveStatus === 'saving' || !serversInput.trim()">Save</button>
-                <button class="action-btn" @click="resetToDefaults" :disabled="saveStatus === 'saving'">Reset to Defaults</button>
+                <button class="action-btn action-btn--primary" @click="save" :disabled="!serversInput.trim()">Save</button>
+                <button class="action-btn" @click="resetToDefaults">Reset to Defaults</button>
             </div>
         </section>
     `

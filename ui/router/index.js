@@ -79,9 +79,9 @@ const routes = [
     // DecentralizedPublication envelopes (0.7.0) this replica has
     // cataloged (0.7.2), regardless of whether their content resolves.
     { path: '/publications', name: 'publications', component: DecentralizedPublicationsView },
-    // Network Settings hub — one top-nav entry point linking to the
-    // endpoint-server settings pages below (content-provider, arweave-gateway,
-    // nostr-relay, stun, rendezvous), each still its own route and component.
+    // Network Settings hub — one top-nav entry point linking to every
+    // /settings/* page below, each still its own route and component — see
+    // ui/views/NetworkSettingsView.js's own header.
     { path: '/settings', name: 'network-settings', component: NetworkSettingsView },
     // 0.9.302 — Content Provider Preference Settings Entry Point. The one
     // ordinary product path to create/change the persisted CONTENT role

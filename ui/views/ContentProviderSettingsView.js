@@ -103,12 +103,12 @@ export default {
         const preference = ref(null);
         const selectedProviderKey = ref(null);
         const saveError = ref(null);
-        const saveStatus = ref('idle'); // 'idle' | 'saving' | 'saved'
+        const saveStatus = ref('idle'); // 'idle' | 'saved'
 
         const ipfsNodeConfiguration = ref(null);
         const ipfsNodeApiUrlInput = ref('');
         const ipfsNodeSaveError = ref(null);
-        const ipfsNodeSaveStatus = ref('idle'); // 'idle' | 'saving' | 'saved'
+        const ipfsNodeSaveStatus = ref('idle'); // 'idle' | 'saved'
         const ipfsNodeClearStatus = ref('idle'); // 'idle' | 'cleared'
 
         const hasIpfsNodeOverride = computed(() => ipfsNodeConfiguration.value !== null);
@@ -155,7 +155,6 @@ export default {
         function save() {
             if (!setRoleProviderPreferenceUseCase || !selectedProviderKey.value) return;
             saveError.value = null;
-            saveStatus.value = 'saving';
             try {
                 preference.value = setRoleProviderPreferenceUseCase.execute({
                     role: RoleProviderRole.CONTENT,
@@ -180,7 +179,6 @@ export default {
             if (!setIpfsNodeConfigurationUseCase || !ipfsNodeApiUrlInput.value.trim()) return;
             ipfsNodeSaveError.value = null;
             ipfsNodeClearStatus.value = 'idle';
-            ipfsNodeSaveStatus.value = 'saving';
             try {
                 ipfsNodeConfiguration.value = setIpfsNodeConfigurationUseCase.execute({ apiUrl: ipfsNodeApiUrlInput.value.trim() });
                 ipfsNodeApiUrlInput.value = ipfsNodeConfiguration.value.apiUrl;
@@ -237,7 +235,7 @@ export default {
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
                 <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
 
-                <button class="action-btn action-btn--primary" @click="save" :disabled="saveStatus === 'saving' || !selectedProviderKey">Save</button>
+                <button class="action-btn action-btn--primary" @click="save" :disabled="!selectedProviderKey">Save</button>
             </div>
             <p v-else class="form-hint form-hint--neutral">
                 No content providers are currently registered on this replica.
@@ -262,15 +260,15 @@ export default {
                     type="text"
                     v-model="ipfsNodeApiUrlInput"
                     placeholder="http://127.0.0.1:5001"
-                    class="ipfs-node-api-url-input"
+                    class="ipfs-node-api-url-input form-input"
                 />
 
                 <p v-if="ipfsNodeSaveError" class="form-hint">{{ ipfsNodeSaveError }}</p>
                 <p v-if="ipfsNodeSaveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
                 <p v-if="ipfsNodeClearStatus === 'cleared'" class="form-hint form-hint--neutral">Cleared — now using the deployment default.</p>
 
-                <button class="action-btn action-btn--primary" @click="saveIpfsNodeConfiguration" :disabled="ipfsNodeSaveStatus === 'saving' || !ipfsNodeApiUrlInput.trim()">Save</button>
-                <button class="action-btn" @click="useIpfsNodeDeploymentDefault" :disabled="ipfsNodeSaveStatus === 'saving'">Use Deployment Default</button>
+                <button class="action-btn action-btn--primary" @click="saveIpfsNodeConfiguration" :disabled="!ipfsNodeApiUrlInput.trim()">Save</button>
+                <button class="action-btn" @click="useIpfsNodeDeploymentDefault">Use Deployment Default</button>
             </div>
         </section>
     `

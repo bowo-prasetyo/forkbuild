@@ -40,7 +40,7 @@ export default {
         const configuration = ref(null);
         const apiUrlInput = ref('');
         const saveError = ref(null);
-        const saveStatus = ref('idle'); // 'idle' | 'saving' | 'saved'
+        const saveStatus = ref('idle'); // 'idle' | 'saved'
         const clearStatus = ref('idle'); // 'idle' | 'cleared'
 
         const hasOverride = computed(() => configuration.value !== null);
@@ -58,7 +58,6 @@ export default {
             if (!setBitcoinEsploraConfigurationUseCase || !apiUrlInput.value.trim()) return;
             saveError.value = null;
             clearStatus.value = 'idle';
-            saveStatus.value = 'saving';
             try {
                 configuration.value = setBitcoinEsploraConfigurationUseCase.execute({ apiUrl: apiUrlInput.value.trim() });
                 apiUrlInput.value = configuration.value.apiUrl;
@@ -112,8 +111,8 @@ export default {
                 <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
                 <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">Cleared — now using the deployment default.</p>
 
-                <button class="action-btn action-btn--primary" @click="save" :disabled="saveStatus === 'saving' || !apiUrlInput.trim()">Save</button>
-                <button class="action-btn" @click="useDeploymentDefault" :disabled="saveStatus === 'saving'">Use Deployment Default</button>
+                <button class="action-btn action-btn--primary" @click="save" :disabled="!apiUrlInput.trim()">Save</button>
+                <button class="action-btn" @click="useDeploymentDefault">Use Deployment Default</button>
             </div>
         </section>
     `

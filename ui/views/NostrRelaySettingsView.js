@@ -31,7 +31,7 @@ import { DEFAULT_NOSTR_RELAY_URL } from '../../core/NostrRelayConfiguration.js';
 // display what is already on file — the identical "read the store directly,
 // no symmetric Get use case" pattern ArweaveGatewaySettingsView.js already
 // holds — and it saves a change by calling
-// `setNostrRelayConfigurationUseCase.execute({ relayUrl })`, never
+// `setNostrRelayConfigurationUseCase.execute({ relayUrls })`, never
 // `new NostrRelayConfiguration(...)` and never
 // `NostrRelayConfigurationStore.save()` directly. An invalid URL is rejected
 // by that use case's own construction step before anything is persisted —
@@ -46,8 +46,8 @@ import { DEFAULT_NOSTR_RELAY_URL } from '../../core/NostrRelayConfiguration.js';
 // one thing imported from core/NostrRelayConfiguration.js — a plain
 // constant, consulted only to LABEL the effective relay when no override is
 // on file, never to construct anything or open a connection. A change saved
-// here only reaches the three read-path consumers through the existing
-// composition root (ui/main.js resolves `nostrRelayConfigurationStore.get()`
+// here only reaches its consumers — every Nostr read and publish path (see
+// "UNIFIED" below) — through the existing composition root (ui/main.js resolves `nostrRelayConfigurationStore.get()`
 // once at startup, exactly as it already does for
 // `arweaveGatewayConfigurationStore`) on the NEXT application load — this
 // view performs no live re-composition of its own.
@@ -120,7 +120,7 @@ export default {
         // One relay URL per line — every configured relay is fanned out to.
         const relayUrlInput = ref('');
         const saveError = ref(null);
-        const saveStatus = ref('idle'); // 'idle' | 'saving' | 'saved'
+        const saveStatus = ref('idle'); // 'idle' | 'saved'
         const clearStatus = ref('idle'); // 'idle' | 'cleared'
 
         const hasOverride = computed(() => configuration.value !== null);
@@ -158,7 +158,6 @@ export default {
             if (!setNostrRelayConfigurationUseCase || !relayUrlInput.value.trim()) return;
             saveError.value = null;
             clearStatus.value = 'idle';
-            saveStatus.value = 'saving';
             try {
                 configuration.value = setNostrRelayConfigurationUseCase.execute({ relayUrls: parseRelayUrls() });
                 relayUrlInput.value = configuration.value.relayUrls.join('\n');
@@ -208,15 +207,15 @@ export default {
                     v-model="relayUrlInput"
                     placeholder="wss://relay.damus.io"
                     rows="4"
-                    class="nostr-relay-input"
+                    class="nostr-relay-input form-textarea"
                 ></textarea>
 
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
                 <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
                 <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">Cleared — now using the deployment default.</p>
 
-                <button class="action-btn action-btn--primary" @click="save" :disabled="saveStatus === 'saving' || !relayUrlInput.trim()">Save</button>
-                <button class="action-btn" @click="useDeploymentDefault" :disabled="saveStatus === 'saving'">Use Deployment Default</button>
+                <button class="action-btn action-btn--primary" @click="save" :disabled="!relayUrlInput.trim()">Save</button>
+                <button class="action-btn" @click="useDeploymentDefault">Use Deployment Default</button>
             </div>
         </section>
     `

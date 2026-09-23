@@ -1,6 +1,8 @@
-// Hub page linking to the individual endpoint-server settings pages
-// (Content Provider, Arweave Gateway, Nostr Relay, STUN, Rendezvous) so the
-// top nav only needs one "Network Settings" entry instead of five. Each
+// Hub page linking to the individual network settings pages — the three
+// role provider preferences (Content, Announcement / Discovery, Proof /
+// Anchoring) and the seven endpoint-server pages (Arweave Gateway, IPFS
+// Gateway, Bitcoin Endpoint, Nostr Relays, STUN, TURN, Rendezvous) — so the
+// top nav only needs one "Network Settings" entry instead of ten. Each
 // linked page keeps its own route, component, and Save logic unchanged.
 export default {
     name: 'NetworkSettingsView',

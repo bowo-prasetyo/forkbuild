@@ -119,7 +119,7 @@ export default {
         const usernameInput = ref('');
         const credentialInput = ref('');
         const saveError = ref(null);
-        const saveStatus = ref('idle'); // 'idle' | 'saving' | 'saved'
+        const saveStatus = ref('idle'); // 'idle' | 'saved'
         const clearStatus = ref('idle'); // 'idle' | 'cleared'
 
         const hasConfiguration = computed(() => configuration.value !== null);
@@ -155,7 +155,6 @@ export default {
             if (!setTurnServerConfigurationUseCase) return;
             saveError.value = null;
             clearStatus.value = 'idle';
-            saveStatus.value = 'saving';
             try {
                 configuration.value = setTurnServerConfigurationUseCase.execute({
                     urls: parseUrlsInput(),
@@ -213,7 +212,7 @@ export default {
                     v-model="urlsInput"
                     placeholder="turn:relay.example:3478&#10;turns:relay.example:5349?transport=tcp"
                     rows="5"
-                    class="turn-server-settings-urls-input"
+                    class="turn-server-settings-urls-input form-textarea"
                 ></textarea>
                 <p class="form-hint form-hint--neutral">One turn:/turns: URL per line (e.g. turn:relay.example:3478).</p>
 
@@ -221,22 +220,22 @@ export default {
                     v-model="usernameInput"
                     type="text"
                     placeholder="Username"
-                    class="turn-server-settings-username-input"
+                    class="turn-server-settings-username-input form-input"
                 />
 
                 <input
                     v-model="credentialInput"
                     type="password"
                     placeholder="Credential"
-                    class="turn-server-settings-credential-input"
+                    class="turn-server-settings-credential-input form-input"
                 />
 
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
                 <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
                 <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">Cleared — no TURN server configured.</p>
 
-                <button class="action-btn action-btn--primary" @click="save" :disabled="saveStatus === 'saving' || !urlsInput.trim() || !usernameInput.trim() || !credentialInput.trim()">Save</button>
-                <button class="action-btn" @click="clear" :disabled="saveStatus === 'saving'">Clear</button>
+                <button class="action-btn action-btn--primary" @click="save" :disabled="!urlsInput.trim() || !usernameInput.trim() || !credentialInput.trim()">Save</button>
+                <button class="action-btn" @click="clear">Clear</button>
             </div>
         </section>
     `

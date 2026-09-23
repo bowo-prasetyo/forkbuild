@@ -94,7 +94,7 @@ export default {
         // One gateway URL per line, in the order they should be tried.
         const gatewayUrlInput = ref('');
         const saveError = ref(null);
-        const saveStatus = ref('idle'); // 'idle' | 'saving' | 'saved'
+        const saveStatus = ref('idle'); // 'idle' | 'saved'
         const clearStatus = ref('idle'); // 'idle' | 'cleared'
 
         const hasOverride = computed(() => configuration.value !== null);
@@ -132,7 +132,6 @@ export default {
             if (!setArweaveGatewayConfigurationUseCase || !gatewayUrlInput.value.trim()) return;
             saveError.value = null;
             clearStatus.value = 'idle';
-            saveStatus.value = 'saving';
             try {
                 configuration.value = setArweaveGatewayConfigurationUseCase.execute({ gatewayUrls: parseGatewayUrls() });
                 gatewayUrlInput.value = configuration.value.gatewayUrls.join('\n');
@@ -182,15 +181,15 @@ export default {
                     v-model="gatewayUrlInput"
                     placeholder="https://arweave.net"
                     rows="4"
-                    class="arweave-gateway-input"
+                    class="arweave-gateway-input form-textarea"
                 ></textarea>
 
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
                 <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
                 <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">Cleared — now using the deployment default.</p>
 
-                <button class="action-btn action-btn--primary" @click="save" :disabled="saveStatus === 'saving' || !gatewayUrlInput.trim()">Save</button>
-                <button class="action-btn" @click="useDeploymentDefault" :disabled="saveStatus === 'saving'">Use Deployment Default</button>
+                <button class="action-btn action-btn--primary" @click="save" :disabled="!gatewayUrlInput.trim()">Save</button>
+                <button class="action-btn" @click="useDeploymentDefault">Use Deployment Default</button>
             </div>
         </section>
     `

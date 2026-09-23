@@ -31,8 +31,11 @@ import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 // such registry yet") — 'nostr'/'arweave' are this codebase's only two
 // real Announcement/Discovery substrates today, named here the same way
 // every composition root above already names them as literal strings.
+//
+// Both keys already title-case to "Nostr"/"Arweave" through
+// describeRoleProviderPreferenceSettings()'s own label fallback, so no
+// label map is needed here.
 const AVAILABLE_PROVIDER_KEYS = ['nostr', 'arweave'];
-const PROVIDER_OPTION_LABELS = { nostr: 'Nostr', arweave: 'Arweave' };
 
 export default {
     name: 'AnnouncementDiscoveryProviderSettingsView',
@@ -43,13 +46,13 @@ export default {
         const preference = ref(null);
         const selectedProviderKey = ref(null);
         const saveError = ref(null);
-        const saveStatus = ref('idle'); // 'idle' | 'saving' | 'saved'
+        const saveStatus = ref('idle'); // 'idle' | 'saved'
 
         const settings = computed(() => sortOptionsByLabel(describeRoleProviderPreferenceSettings({
             role: RoleProviderRole.ANNOUNCEMENT_AND_DISCOVERY,
             availableProviderKeys: AVAILABLE_PROVIDER_KEYS,
             preference: preference.value
-        }).options.map((option) => ({ ...option, label: PROVIDER_OPTION_LABELS[option.providerKey] || option.label }))));
+        }).options));
 
         // Re-reads the store fresh on every load — the identical restraint
         // ContentProviderSettingsView.js's own `load()` already holds, so a
@@ -64,7 +67,6 @@ export default {
         function save() {
             if (!setRoleProviderPreferenceUseCase || !selectedProviderKey.value) return;
             saveError.value = null;
-            saveStatus.value = 'saving';
             try {
                 preference.value = setRoleProviderPreferenceUseCase.execute({
                     role: RoleProviderRole.ANNOUNCEMENT_AND_DISCOVERY,
@@ -100,7 +102,7 @@ export default {
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
                 <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
 
-                <button class="action-btn action-btn--primary" @click="save" :disabled="saveStatus === 'saving' || !selectedProviderKey">Save</button>
+                <button class="action-btn action-btn--primary" @click="save" :disabled="!selectedProviderKey">Save</button>
             </div>
         </section>
     `
