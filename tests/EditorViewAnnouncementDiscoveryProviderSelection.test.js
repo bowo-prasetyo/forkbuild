@@ -256,10 +256,20 @@ async function run() {
         // wrapping the entire Publication section (Material storage,
         // substrate select, and "Distribute now" button together) rather
         // than the substrate select alone.
+        //
+        // AMENDED — One Shared Distribution Settings Block. The substrate
+        // select now lives in the dialog's single shared settings block,
+        // ABOVE both per-protocol sections, read by both actions. It is
+        // still never rendered unconditionally: the dialog itself only
+        // mounts behind the "Distribute" trigger, which is gated on
+        // canDistributeSnapshot || canDistributePublication.
+        const settingsIndex = dialogSource.indexOf('<div class="editor-distribution-dialog-settings">');
         const selectIndex = dialogSource.indexOf('v-model="discoveryProviderModel"');
-        const sectionOpenIndex = dialogSource.lastIndexOf('<div v-if="canDistributePublication" class="editor-distribution-dialog-section', selectIndex);
-        assert(sectionOpenIndex !== -1 && sectionOpenIndex < selectIndex,
-            n('A6. the substrate control sits inside the SAME section gated on canDistributePublication — the same guard the "Distribute now" button itself now uses, never rendered unconditionally'));
+        const firstSectionIndex = dialogSource.indexOf('class="editor-distribution-dialog-section');
+        assert(settingsIndex !== -1 && settingsIndex < selectIndex && selectIndex < firstSectionIndex
+            && (dialogSource.match(/v-model="discoveryProviderModel"/g) || []).length === 1
+            && /v-if="canDistributeSnapshot \|\| canDistributePublication"[\s\S]{0,200}editor-post-publish-distribute-trigger/.test(editorSource),
+            n('A6. AMENDED — exactly one substrate control, in the shared settings block above both sections, reachable only through the capability-gated Distribute trigger'));
 
         console.log('✓ Section A: EditorView.js\'s own post-publish overlay exposes exactly the two currently supported Announcement/Discovery substrates, Nostr and Arweave, defaulting to Nostr');
     }
@@ -416,7 +426,9 @@ async function run() {
         // same 0.9.668 fact this section exists to protect: `publication`
         // and `this.publicationDiscoveryProvider` are still the first two
         // arguments, in the same order.
-        assert(/publicationDistributionCommand\(\s*publication,\s*this\.publicationDiscoveryProvider/.test(ownPanelSource),
+        // AMENDED — One Shared Distribution Settings Block: now the
+        // panel's one shared `distributionDiscoveryProvider`.
+        assert(/publicationDistributionCommand\(\s*publication,\s*this\.distributionDiscoveryProvider/.test(ownPanelSource),
             n('F1. AMENDED BY 0.9.668 — OwnPublicationPanel.js\'s own distributeOwnPublication() now forwards its own explicit discoveryProvider choice too, unrelated to this milestone\'s own EditorView.js-only scope'));
         console.log('✓ Section F: OwnPublicationPanel.js\'s own, separate distribution action is untouched by THIS (0.9.502) milestone — its later 0.9.668 substrate-choice fix is verified elsewhere');
     }

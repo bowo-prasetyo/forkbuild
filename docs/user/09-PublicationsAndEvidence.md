@@ -2034,7 +2034,7 @@ one. There's no per-relay status shown on this settings page itself, no
 health check, and no way to mark one relay preferred over another; a
 relay that declines or fails never causes a different one to be skipped
 or retried in its place. (Where a distribution result *is* shown — the
-Editor's **Distribute now** notice, World Encounters' and My
+Editor's **Distribute** dialog, World Encounters' and My
 Publication's own Distribute Publication readouts — it still reports one
 combined **Discovery** outcome for the attempt, not a per-relay
 breakdown.)

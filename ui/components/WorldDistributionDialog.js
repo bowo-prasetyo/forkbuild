@@ -64,12 +64,34 @@ import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 // the host's own `v-if` around this component's own tag (mirrors
 // ForkFailureDialog.js exactly); this component has no internal `open`
 // prop of its own to keep in sync with that `v-if`.
+//
+// ONE SHARED SETTINGS BLOCK FOR BOTH PROTOCOLS. The dialog used to render
+// two full Storage/Announcement picker sets (and two Remote Pinning
+// drafts) — one per section — even though both always opened on the same
+// saved preferences and a Wanderer almost never wants them to differ.
+// It now renders exactly one Storage picker, one Remote Pinning draft,
+// and one Announcement/Discovery picker, above both sections; every
+// action (the combined "Distribute" and each per-protocol retry button)
+// reads that one choice. The two protocols still execute, report, and
+// fail independently — only the settings are shared. Storage options are
+// the Snapshot-eligible list (`snapshotDistributionStorageTypes` plus
+// Remote Pinning) whenever Snapshot distribution is available, since a
+// storage choice the Snapshot leg cannot honor would only fail later;
+// a Publication-only dialog offers all three Material storages.
 export default {
     name: 'WorldDistributionDialog',
     props: {
         canDistributePublication: { type: Boolean, default: false },
         canDistributeSnapshot: { type: Boolean, default: false },
         hasSubject: { type: Boolean, default: false },
+
+        storage: { type: String, default: 'ar' },
+        discoveryProvider: { type: String, default: 'nostr' },
+        remotePinningDraft: {
+            type: Object,
+            default: () => ({ endpoint: '', credential: '', requestField: '', responseField: '' })
+        },
+        snapshotDistributionStorageTypes: { type: Array, default: () => ['ar'] },
 
         distributionExecuting: { type: Boolean, default: false },
         distributionError: { type: String, default: null },
@@ -78,57 +100,42 @@ export default {
         distributionDiscoveryState: { type: String, default: null },
         discoveryObservations: { type: Array, default: () => [] },
         distributionResult: { type: Array, default: null },
-        discoveryProvider: { type: String, default: 'nostr' },
-        materialStorage: { type: String, default: 'ar' },
-        materialRemotePinningDraft: {
-            type: Object,
-            default: () => ({ endpoint: '', credential: '', requestField: '', responseField: '' })
-        },
 
         snapshotDistributionExecuting: { type: Boolean, default: false },
         snapshotDistributionError: { type: String, default: null },
-        snapshotDistributionResult: { type: Object, default: null },
-        snapshotDistributionStorageTypes: { type: Array, default: () => ['ar'] },
-        snapshotStorage: { type: String, default: 'ar' },
-        snapshotRemotePinningDraft: {
-            type: Object,
-            default: () => ({ endpoint: '', credential: '', requestField: '', responseField: '' })
-        },
-        snapshotDiscoveryProvider: { type: String, default: 'nostr' }
+        snapshotDistributionResult: { type: Object, default: null }
     },
     emits: [
         'close',
         'distribute-both',
         'distribute-publication',
         'distribute-snapshot',
-        'update:discoveryProvider',
-        'update:materialStorage',
-        'update:snapshotStorage',
-        'update:snapshotDiscoveryProvider'
+        'update:storage',
+        'update:discoveryProvider'
     ],
     computed: {
+        storageModel: {
+            get() { return this.storage; },
+            set(value) { this.$emit('update:storage', value); }
+        },
         discoveryProviderModel: {
             get() { return this.discoveryProvider; },
             set(value) { this.$emit('update:discoveryProvider', value); }
         },
-        materialStorageModel: {
-            get() { return this.materialStorage; },
-            set(value) { this.$emit('update:materialStorage', value); }
-        },
-        snapshotStorageModel: {
-            get() { return this.snapshotStorage; },
-            set(value) { this.$emit('update:snapshotStorage', value); }
-        },
-        snapshotDiscoveryProviderModel: {
-            get() { return this.snapshotDiscoveryProvider; },
-            set(value) { this.$emit('update:snapshotDiscoveryProvider', value); }
+        anyExecuting() {
+            return this.distributionExecuting || this.snapshotDistributionExecuting;
         },
         // Display order only — `snapshotDistributionStorageTypes` itself
         // stays in registry order, since callers fall back to its first
         // entry as a default. See utils/sortOptionsByLabel.js.
-        snapshotStorageOptions() {
+        storageOptions() {
+            // An empty registry list falls back to 'ar', matching the
+            // hosts' own storage default, so the select never shows blank.
+            const registryStorages = !this.canDistributeSnapshot
+                ? ['ar', 'ipfs']
+                : (this.snapshotDistributionStorageTypes.length ? this.snapshotDistributionStorageTypes : ['ar']);
             return sortOptionsByLabel([
-                ...this.snapshotDistributionStorageTypes.map((storage) => ({
+                ...registryStorages.map((storage) => ({
                     value: storage,
                     label: storage === 'ipfs' ? 'IPFS (Local Kubo)' : 'Arweave'
                 })),
@@ -155,18 +162,55 @@ export default {
             <div class="modal-panel world-distribution-dialog">
                 <h3>Distribute</h3>
 
+                <div class="world-distribution-dialog-settings">
+                    <label class="form-field world-distribution-dialog-storage-label">
+                        <span class="form-label">Storage</span>
+                        <select v-model="storageModel" class="form-select world-distribution-dialog-storage-select" :disabled="anyExecuting">
+                            <option v-for="option in storageOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+                        </select>
+                    </label>
+
+                    <div v-if="storage === 'remote-pinning'" class="world-distribution-dialog-remote-pinning-draft">
+                        <label class="form-field">
+                            <span class="form-label">Endpoint</span>
+                            <input type="text" class="form-input" v-model="remotePinningDraft.endpoint" placeholder="https://api.pinata.cloud/pinning/pinFileToIPFS" />
+                        </label>
+                        <label class="form-field">
+                            <span class="form-label">Credential (optional)</span>
+                            <input type="password" class="form-input" v-model="remotePinningDraft.credential" placeholder="Bearer token" />
+                        </label>
+                        <label class="form-field">
+                            <span class="form-label">Request field (optional)</span>
+                            <input type="text" class="form-input" v-model="remotePinningDraft.requestField" placeholder="file" />
+                        </label>
+                        <label class="form-field">
+                            <span class="form-label">Response field (optional)</span>
+                            <input type="text" class="form-input" v-model="remotePinningDraft.responseField" placeholder="cid (Pinata: IpfsHash)" />
+                        </label>
+                        <p class="form-hint form-hint--neutral">Nothing here is saved anywhere — entered fresh each time you distribute.</p>
+                    </div>
+
+                    <label class="form-field world-distribution-dialog-provider-label">
+                        <span class="form-label">Announcement / Discovery substrate</span>
+                        <select v-model="discoveryProviderModel" class="form-select world-distribution-dialog-provider-select" :disabled="anyExecuting">
+                            <option value="arweave">Arweave</option>
+                            <option value="nostr">Nostr</option>
+                        </select>
+                    </label>
+                </div>
+
                 <div v-if="canDistributePublication && canDistributeSnapshot" class="world-distribution-dialog-combined">
                     <button
                         type="button"
                         class="action-btn action-btn--primary world-distribution-dialog-combined-action"
-                        :disabled="!hasSubject || distributionExecuting || snapshotDistributionExecuting"
+                        :disabled="!hasSubject || anyExecuting"
                         @click="$emit('distribute-both')"
-                    >{{ (distributionExecuting || snapshotDistributionExecuting) ? 'Distributing…' : 'Distribute' }}</button>
-                    <p class="world-distribution-dialog-combined-hint form-hint form-hint--neutral">Distributes the Signed Claim and the Snapshot together — each still its own protocol, reported separately below.</p>
+                    >{{ anyExecuting ? 'Distributing…' : 'Distribute' }}</button>
+                    <p class="world-distribution-dialog-combined-hint form-hint form-hint--neutral">Distributes the Signed Claim and the Snapshot together with the settings above — each still its own protocol, reported separately below.</p>
                 </div>
 
                 <div v-if="canDistributePublication" class="world-distribution-dialog-section world-distribution-dialog-publication-section">
-                    <h4 class="world-distribution-dialog-section-title">Distribution</h4>
+                    <h4 class="world-distribution-dialog-section-title">Publication</h4>
 
                     <dl v-if="showDistributionLifecycle" class="world-distribution-dialog-lifecycle-detail">
                         <dt>Material</dt>
@@ -183,49 +227,12 @@ export default {
                         </template>
                     </dl>
 
-                    <label class="form-field world-distribution-dialog-storage-label">
-                        <span class="form-label">Material storage</span>
-                        <select v-model="materialStorageModel" class="form-select world-distribution-dialog-storage-select" :disabled="distributionExecuting">
-                            <option value="ar">Arweave</option>
-                            <option value="ipfs">IPFS (Local Kubo)</option>
-                            <option value="remote-pinning">IPFS (Remote Pinning)</option>
-                        </select>
-                    </label>
-
-                    <div v-if="materialStorage === 'remote-pinning'" class="world-distribution-dialog-remote-pinning-draft">
-                        <label class="form-field">
-                            <span class="form-label">Endpoint</span>
-                            <input type="text" class="form-input" v-model="materialRemotePinningDraft.endpoint" placeholder="https://api.pinata.cloud/pinning/pinFileToIPFS" />
-                        </label>
-                        <label class="form-field">
-                            <span class="form-label">Credential (optional)</span>
-                            <input type="password" class="form-input" v-model="materialRemotePinningDraft.credential" placeholder="Bearer token" />
-                        </label>
-                        <label class="form-field">
-                            <span class="form-label">Request field (optional)</span>
-                            <input type="text" class="form-input" v-model="materialRemotePinningDraft.requestField" placeholder="file" />
-                        </label>
-                        <label class="form-field">
-                            <span class="form-label">Response field (optional)</span>
-                            <input type="text" class="form-input" v-model="materialRemotePinningDraft.responseField" placeholder="cid (Pinata: IpfsHash)" />
-                        </label>
-                        <p class="form-hint form-hint--neutral">Nothing here is saved anywhere — entered fresh each time you click Distribute Publication.</p>
-                    </div>
-
-                    <label class="form-field world-distribution-dialog-provider-label">
-                        <span class="form-label">Announcement / Discovery substrate</span>
-                        <select v-model="discoveryProviderModel" class="form-select world-distribution-dialog-provider-select" :disabled="distributionExecuting">
-                            <option value="arweave">Arweave</option>
-                            <option value="nostr">Nostr</option>
-                        </select>
-                    </label>
-
                     <button
                         type="button"
-                        class="action-btn world-distribution-dialog-publication-action"
-                        :disabled="!hasSubject || distributionExecuting"
+                        :class="['action-btn', canDistributeSnapshot ? 'action-btn--secondary' : 'action-btn--primary', 'world-distribution-dialog-publication-action']"
+                        :disabled="!hasSubject || anyExecuting"
                         @click="$emit('distribute-publication')"
-                    >{{ distributionExecuting ? 'Distributing…' : 'Distribute Publication' }}</button>
+                    >{{ distributionExecuting ? 'Distributing…' : (canDistributeSnapshot ? 'Distribute Publication only' : 'Distribute Publication') }}</button>
 
                     <p v-if="distributionError" class="world-distribution-dialog-publication-error">{{ distributionError }}</p>
                     <dl v-else-if="distributionResult && distributionResult.length" class="world-distribution-dialog-publication-detail">
@@ -241,49 +248,14 @@ export default {
                 </div>
 
                 <div v-if="canDistributeSnapshot" class="world-distribution-dialog-section world-distribution-dialog-snapshot-section">
-                    <h4 class="world-distribution-dialog-section-title">Snapshot Distribution</h4>
-
-                    <label class="form-field world-distribution-dialog-storage-label">
-                        <span class="form-label">Storage</span>
-                        <select v-model="snapshotStorageModel" class="form-select world-distribution-dialog-storage-select" :disabled="snapshotDistributionExecuting">
-                            <option v-for="option in snapshotStorageOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-                        </select>
-                    </label>
-
-                    <div v-if="snapshotStorage === 'remote-pinning'" class="world-distribution-dialog-remote-pinning-draft">
-                        <label class="form-field">
-                            <span class="form-label">Endpoint</span>
-                            <input type="text" class="form-input" v-model="snapshotRemotePinningDraft.endpoint" placeholder="https://api.pinata.cloud/pinning/pinFileToIPFS" />
-                        </label>
-                        <label class="form-field">
-                            <span class="form-label">Credential (optional)</span>
-                            <input type="password" class="form-input" v-model="snapshotRemotePinningDraft.credential" placeholder="Bearer token" />
-                        </label>
-                        <label class="form-field">
-                            <span class="form-label">Request field (optional)</span>
-                            <input type="text" class="form-input" v-model="snapshotRemotePinningDraft.requestField" placeholder="file" />
-                        </label>
-                        <label class="form-field">
-                            <span class="form-label">Response field (optional)</span>
-                            <input type="text" class="form-input" v-model="snapshotRemotePinningDraft.responseField" placeholder="cid (Pinata: IpfsHash)" />
-                        </label>
-                        <p class="form-hint form-hint--neutral">Nothing here is saved anywhere — entered fresh each time you click Distribute Snapshot.</p>
-                    </div>
-
-                    <label class="form-field world-distribution-dialog-provider-label">
-                        <span class="form-label">Announcement / Discovery substrate</span>
-                        <select v-model="snapshotDiscoveryProviderModel" class="form-select world-distribution-dialog-provider-select" :disabled="snapshotDistributionExecuting">
-                            <option value="arweave">Arweave</option>
-                            <option value="nostr">Nostr</option>
-                        </select>
-                    </label>
+                    <h4 class="world-distribution-dialog-section-title">Snapshot</h4>
 
                     <button
                         type="button"
-                        class="action-btn world-distribution-dialog-snapshot-action"
-                        :disabled="!hasSubject || snapshotDistributionExecuting"
+                        :class="['action-btn', canDistributePublication ? 'action-btn--secondary' : 'action-btn--primary', 'world-distribution-dialog-snapshot-action']"
+                        :disabled="!hasSubject || anyExecuting"
                         @click="$emit('distribute-snapshot')"
-                    >{{ snapshotDistributionExecuting ? 'Distributing…' : 'Distribute Snapshot' }}</button>
+                    >{{ snapshotDistributionExecuting ? 'Distributing…' : (canDistributePublication ? 'Distribute Snapshot only' : 'Distribute Snapshot') }}</button>
 
                     <p v-if="snapshotDistributionError" class="world-distribution-dialog-snapshot-error">{{ snapshotDistributionError }}</p>
                     <dl v-else-if="snapshotDistributionResult" class="world-distribution-dialog-snapshot-detail">

@@ -164,41 +164,46 @@ reopening it shows the exact same result, error, or in-flight state you
 left it in — the dialog is pure presentation, nothing about it is tied
 to whether it happens to be open.
 
-If both protocols below are available, a combined **Distribute** button
-sits at the top of the dialog — a one-click convenience that fires
-Distribute Publication and Distribute Snapshot together, for whenever you
-don't want to click twice. It changes nothing about either protocol: each
-still runs independently, each still reports into its own section below,
-and a failure in one is never hidden by, or blocks, the other — it does
-run the two one after another, though, never at the same time, since both
-can end up asking the same connected wallet extension to sign, and two
-signing requests fired at once is a real extension failure mode. The two
-dedicated buttons described next keep working exactly as before —
-useful if you only want one of the two, or want to retry just the half
-that failed.
-
-Below that, a **Distribution** section tracks whether the publication has
-separately been pushed through Arweave/Nostr distribution, reading
-**Absent** for both **Material** and **Discovery** until it has. Pick a
-**Material storage** — **Arweave**, **IPFS (Local Kubo)**, or **IPFS
+The dialog opens with one set of settings, used for everything it
+distributes: a **Storage** — **Arweave**, **IPFS (Local Kubo)**, or **IPFS
 (Remote Pinning)** (the last needs a fresh Endpoint and Credential typed
 in every time; nothing about it is ever saved) — and an **Announcement /
-Discovery substrate** (**Nostr** or **Arweave**), then click **Distribute
-Publication**. Clicking it genuinely attempts a real upload and
-announcement, but on this device today it always ends in "Distribution
-could not be completed," because no wallet or relay connection is
-configured yet; the button and the attempt are real, the missing piece is
-host capability, not app plumbing.
+Discovery substrate** (**Nostr** or **Arweave**). Both open on your saved
+provider preferences. Storage only lists the backends this device can
+actually place a Snapshot on (plus Remote Pinning), so you can't pick one
+that would only fail halfway through.
 
-A separate **Snapshot Distribution** section, right below it in the same
-dialog, offers its own **Storage** and **Announcement / Discovery
-substrate** pickers and its own **Distribute Snapshot** button — same
+If both protocols below are available, a combined **Distribute** button
+sits right under those settings — the main action, which distributes the
+Publication and its Snapshot together with the settings above. It changes
+nothing about either protocol: each still runs independently, each still
+reports into its own section below, and a failure in one is never hidden
+by, or blocks, the other — it does run the two one after another, though,
+never at the same time, since both can end up asking the same connected
+wallet extension to sign, and two signing requests fired at once is a
+real extension failure mode. Each section below also has its own smaller
+**Distribute Publication only** / **Distribute Snapshot only** button,
+using the same settings — useful if you only want one of the two, or want
+to retry just the half that failed. (If only one protocol is available,
+its section's button is simply **Distribute Publication** or **Distribute
+Snapshot**.)
+
+The **Publication** section tracks whether the publication has
+separately been pushed through Arweave/Nostr distribution, reading
+**Absent** for both **Material** and **Discovery** until it has.
+Distributing it genuinely attempts a real upload and announcement, but on
+this device today it always ends in "Distribution could not be
+completed," because no wallet or relay connection is configured yet; the
+button and the attempt are real, the missing piece is host capability,
+not app plumbing.
+
+The **Snapshot** section, right below it in the same dialog, has the same
 eligibility and the same "real attempt, honest failure" behavior, but a
 different protocol: Snapshots (see
 [Publications & External Evidence](09-PublicationsAndEvidence.md#local-snapshot))
 are placed and discovered independently of Signed Claim distribution, so
-this section never shares state, history, or a result with Distribution
-above it. Clicking it shows exactly what came back: a **Content hash**, a
+this section never shares state, history, or a result with the
+Publication section above it — only the settings. Clicking it shows exactly what came back: a **Content hash**, a
 **Locator**, and an **Announcement** id — or "No announcement" if the
 placement succeeded but the Nostr announcement didn't, which is reported
 as a partial result, never an error. A genuine failure instead shows a
@@ -646,16 +651,17 @@ current world's title and author once it's actually published, plus its
 own **Distribute** button, which opens the exact same kind of
 **Distribute** dialog described above for World Encounters — sharing the
 identical component, so everything about its layout, its combined
-**Distribute** button, its **Distribution**/**Snapshot Distribution**
-sections, their storage/substrate pickers, and their "closing never loses
+**Distribute** button, its shared Storage/substrate settings, its
+**Publication**/**Snapshot** sections, and their "closing never loses
 a result" behavior is exactly as described in
 [World Encounters](#world-encounters--publications-and-avatars-your-peers-are-sharing)
 above. The one difference is *what* it distributes: World Encounters'
 dialog always acts on whichever encountered publication you've selected;
 this one always acts on *your own current world*, and neither shares
-state, history, or a result with the other — **Distribute Publication**
-here distributes the Signed Claim behind your world the same way World
-Encounters' own button does; **Distribute Snapshot** distributes it under
+state, history, or a result with the other — **Distribute Publication
+only** here distributes the Signed Claim behind your world the same way
+World Encounters' own button does; **Distribute Snapshot only**
+distributes it under
 the separate Snapshot protocol — see
 [Local Snapshot](09-PublicationsAndEvidence.md#local-snapshot) for what
 that distinction means. Remote IPFS pinning and Bitcoin/Base anchoring stay

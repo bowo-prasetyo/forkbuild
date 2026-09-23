@@ -50,16 +50,13 @@ function canvasCtx(overrides = {}) {
         distributionError: null,
         distributionRequestId: 0,
         selectedDiscoveryProvider: 'nostr',
-        selectedMaterialStorage: 'ar',
-        publicationRemotePinningDraft: { endpoint: '', credential: '', requestField: '', responseField: '' },
+        selectedDistributionStorage: 'ar',
         snapshotDistributionCommand: null,
         snapshotDistributionExecuting: false,
         snapshotDistributionError: null,
         snapshotDistributionResult: null,
         snapshotDistributionRequestId: 0,
-        snapshotDistributionStorage: 'ar',
         remotePinningDraft: { endpoint: '', credential: '', requestField: '', responseField: '' },
-        selectedSnapshotDiscoveryProvider: 'nostr',
         distributeSelectedPublication: WorldEncounterCanvas.methods.distributeSelectedPublication,
         distributeSelectedSnapshot: WorldEncounterCanvas.methods.distributeSelectedSnapshot,
         distributeSelectedPublicationAndSnapshot: WorldEncounterCanvas.methods.distributeSelectedPublicationAndSnapshot,
@@ -79,16 +76,13 @@ function panelCtx(overrides = {}) {
         publicationDistributionError: null,
         publicationDistributionResult: null,
         publicationDistributionRequestId: 0,
-        publicationDiscoveryProvider: 'nostr',
-        publicationMaterialStorage: 'ar',
-        publicationRemotePinningDraft: { endpoint: '', credential: '', requestField: '', responseField: '' },
+        distributionDiscoveryProvider: 'nostr',
+        distributionStorage: 'ar',
         snapshotDistributionCommand: null,
         snapshotDistributionExecuting: false,
         snapshotDistributionError: null,
         snapshotDistributionResult: null,
         snapshotDistributionRequestId: 0,
-        snapshotDistributionStorage: 'ar',
-        snapshotDiscoveryProvider: 'nostr',
         remotePinningDraft: { endpoint: '', credential: '', requestField: '', responseField: '' },
         distributeOwnPublication: OwnPublicationPanel.methods.distributeOwnPublication,
         distributeOwnSnapshot: OwnPublicationPanel.methods.distributeOwnSnapshot,
@@ -141,7 +135,8 @@ function buildEditorViewHarness(editorViewSource, {
     multiRelayNostrPublicationDistributionCommand = null,
     publicationDistributionCommand = null,
     snapshotDistributionCommand = null,
-    publicationContentStore = null
+    publicationContentStore = null,
+    snapshotDistributionAvailableStorageTypes = null
 } = {}) {
     const blockSource = extractRange(
         editorViewSource,
@@ -155,7 +150,8 @@ function buildEditorViewHarness(editorViewSource, {
         multiRelayNostrPublicationDistributionCommand,
         publicationDistributionCommand,
         snapshotDistributionCommand,
-        publicationContentStore
+        publicationContentStore,
+        snapshotDistributionAvailableStorageTypes
     };
     function inject(key, fallback) {
         return Object.prototype.hasOwnProperty.call(injected, key) && injected[key] !== null
@@ -177,7 +173,11 @@ function buildEditorViewHarness(editorViewSource, {
             onDocumentPublished,
             distributePublishedDocument,
             distributePublishedSnapshot,
-            distributePublishedDocumentAndSnapshot
+            distributePublishedDocumentAndSnapshot,
+            selectedDistributionStorage,
+            selectedDiscoveryProvider,
+            remotePinningDraft,
+            snapshotDistributionStorageTypes
         };`
     );
     return factory(inject, ref, sanitizeDistributionErrorMessage);
@@ -364,6 +364,83 @@ async function runTests() {
             '22. EditorView — the Snapshot leg\'s rejection never skips, cancels, or taints the Publication leg that runs after it');
 
         console.log('✓ Section G: EditorView — a failure on the first leg never blocks, skips, or hides the second leg\'s own independent outcome');
+    }
+
+    // ---------------------------------------------------------------
+    // Section H — One Shared Distribution Settings Block. Every surface
+    // now holds ONE Storage choice, ONE Announcement/Discovery choice, and
+    // ONE Remote Pinning draft; both legs of the combined action (and each
+    // leg on its own) read that same choice, never a second, separately-
+    // seeded copy.
+    // ---------------------------------------------------------------
+    {
+        const publication = new Publication({ id: 'pub-unify-h', documentId: 'doc-h', contentReference: { hash: 'pub-unify-h-hash' } });
+        const draft = { endpoint: 'https://pin.example/upload', credential: 'tok', requestField: '', responseField: '' };
+        const calls = {};
+
+        const canvas = canvasCtx({
+            selectedDiscoveryProvider: 'arweave',
+            selectedDistributionStorage: 'remote-pinning',
+            remotePinningDraft: draft,
+            distributionCommand: (pub, discoveryProvider, storage, pinning) => { calls.canvasPublication = { discoveryProvider, storage, pinning }; return Promise.resolve(null); },
+            snapshotDistributionCommand: (pub, storage, pinning, discoveryProvider) => { calls.canvasSnapshot = { discoveryProvider, storage, pinning }; return Promise.resolve({ contentReference: { hash: 'h', uri: 'u' }, announcement: null }); }
+        });
+        canvas.selectedEncounter = { kind: 'PUBLICATION', objectId: publication.id };
+        canvas.materialInspection = { loading: { status: WorldEncounterMaterialLoadStatus.AVAILABLE, material: publication } };
+        await canvas.distributeSelectedPublicationAndSnapshot();
+
+        assert(calls.canvasPublication.discoveryProvider === 'arweave' && calls.canvasSnapshot.discoveryProvider === 'arweave',
+            '25. WorldEncounterCanvas — both legs forward the SAME shared Announcement/Discovery choice');
+        assert(calls.canvasPublication.storage === 'remote-pinning' && calls.canvasSnapshot.storage === 'remote-pinning',
+            '26. WorldEncounterCanvas — both legs forward the SAME shared Storage choice');
+        assert(calls.canvasPublication.pinning.endpoint === draft.endpoint && calls.canvasSnapshot.pinning.endpoint === draft.endpoint,
+            '27. WorldEncounterCanvas — both legs read the SAME Remote Pinning draft, entered once');
+
+        const panel = panelCtx({
+            publication,
+            distributionDiscoveryProvider: 'arweave',
+            distributionStorage: 'ipfs',
+            publicationDistributionCommand: (pub, discoveryProvider, storage) => { calls.panelPublication = { discoveryProvider, storage }; return Promise.resolve(null); },
+            snapshotDistributionCommand: (pub, storage, pinning, discoveryProvider) => { calls.panelSnapshot = { discoveryProvider, storage }; return Promise.resolve({ contentReference: { hash: 'h', uri: 'u' }, announcement: null }); }
+        });
+        await panel.distributeOwnPublicationAndSnapshot();
+
+        assert(calls.panelPublication.discoveryProvider === 'arweave' && calls.panelSnapshot.discoveryProvider === 'arweave'
+            && calls.panelPublication.storage === 'ipfs' && calls.panelSnapshot.storage === 'ipfs',
+            '28. OwnPublicationPanel — both legs forward the SAME shared Storage and Announcement/Discovery choice');
+
+        // The shared Storage default: Snapshot-capable surfaces pick from
+        // the Snapshot registry's own list (plus Remote Pinning), so a
+        // default the Snapshot leg could not honor is never pre-selected;
+        // Publication-only surfaces keep all three Material storages.
+        const storageGetter = OwnPublicationPanel.computed.distributionStorage.get;
+        const panelDefault = (overrides) => storageGetter.call({ distributionStorageChoice: null, snapshotDistributionStorageTypes: ['ar'], defaultContentDistributionProvider: null, snapshotDistributionCommand: () => {}, ...overrides });
+        assert(panelDefault({ defaultContentDistributionProvider: 'ipfs' }) === 'ar',
+            '29. a saved IPFS preference is not pre-selected while the Snapshot registry lacks IPFS — falls back to the registry\'s first storage');
+        assert(panelDefault({ defaultContentDistributionProvider: 'ipfs', snapshotDistributionCommand: null }) === 'ipfs',
+            '30. Publication-only, a saved IPFS preference IS honored — all three Material storages stay eligible');
+        assert(panelDefault({ defaultContentDistributionProvider: 'remote-pinning' }) === 'remote-pinning' && panelDefault({ distributionStorageChoice: 'ar', defaultContentDistributionProvider: 'remote-pinning' }) === 'ar',
+            '31. Remote Pinning stays an eligible saved default, and an explicit pick always wins');
+
+        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const harness = buildEditorViewHarness(editorViewSource, {
+            snapshotDistributionCommand: (bytes, storage, placement, creation, discoveryProvider) => { calls.editorSnapshot = { discoveryProvider, storage }; return Promise.resolve({ contentReference: { hash: 'h5', uri: 'u5' }, announcement: null }); },
+            publicationDistributionCommand: (args) => { calls.editorPublication = { discoveryProvider: args.discoveryProvider, storage: args.materialStorage }; return Promise.resolve(null); },
+            publicationContentStore: { get: () => 'snapshot-bytes' },
+            snapshotDistributionAvailableStorageTypes: () => ['ar', 'ipfs']
+        });
+        assert(harness.selectedDistributionStorage.value === 'ar' && harness.snapshotDistributionStorageTypes.join(',') === 'ar,ipfs',
+            '32. EditorView — one shared Storage choice, defaulting to the Snapshot registry\'s first storage, fed by the SAME injected registry list WorldView reads');
+        harness.selectedDistributionStorage.value = 'ipfs';
+        harness.selectedDiscoveryProvider.value = 'arweave';
+        harness.onDocumentPublished(publication);
+        await harness.distributePublishedDocumentAndSnapshot();
+
+        assert(calls.editorSnapshot.storage === 'ipfs' && calls.editorPublication.storage === 'ipfs'
+            && calls.editorSnapshot.discoveryProvider === 'arweave' && calls.editorPublication.discoveryProvider === 'arweave',
+            '33. EditorView — both legs forward the SAME shared Storage and Announcement/Discovery choice');
+
+        console.log('✓ Section H: one shared Storage / Announcement / Remote Pinning setting feeds both legs, on all three surfaces');
     }
 
     // ---------------------------------------------------------------

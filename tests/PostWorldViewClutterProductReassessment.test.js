@@ -250,7 +250,10 @@ async function run() {
         // longer a SEPARATE, individually-classed panel/button of its own.
         assert(/<button\s+v-if="selectedEncounter[^"]*"[\s\S]{0,260}world-encounter-distribution-trigger-action/.test(canvasSource),
             'C1a. WorldEncounterCanvas\'s Snapshot Distribution copy still gates on a selected PUBLICATION encounter — unchanged (now via the shared Distribute trigger)');
-        assert(/:disabled="!hasSubject \|\| snapshotDistributionExecuting"[\s\S]{0,40}\$emit\('distribute-snapshot'\)/.test(dialogSource),
+        // AMENDED — One Shared Distribution Settings Block: "executing"
+        // now means either protocol mid-call (`anyExecuting`), since both
+        // share one settings block and one signing extension.
+        assert(/:disabled="!hasSubject \|\| anyExecuting"[\s\S]{0,40}\$emit\('distribute-snapshot'\)/.test(dialogSource),
             'C1b. WorldDistributionDialog.js\'s Distribute Snapshot button still has no gate beyond hasSubject/executing — unchanged, one popup over');
         assert(!/v-if="[^"]*"[\s\S]{0,120}@distribute-snapshot="distributeOwnSnapshot"/.test(ownPanelSource),
             'C1b. OwnPublicationPanel.js still forwards distribute-snapshot with no v-if of its own beyond the dialog\'s own open flag');

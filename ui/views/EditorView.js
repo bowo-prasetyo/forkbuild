@@ -160,14 +160,13 @@ export default {
                     :snapshot-distribution-executing="snapshotDistributionExecuting"
                     :snapshot-distribution-error="snapshotDistributionError"
                     :snapshot-distribution-result="snapshotDistributionResult"
-                    v-model:snapshot-storage="selectedSnapshotStorage"
-                    v-model:snapshot-discovery-provider="snapshotDiscoveryProvider"
                     :distribution-executing="distributionExecuting"
                     :distribution-error="distributionError"
                     :distribution-result="distributionResult"
-                    v-model:material-storage="selectedMaterialStorage"
+                    v-model:storage="selectedDistributionStorage"
                     v-model:discovery-provider="selectedDiscoveryProvider"
                     :remote-pinning-draft="remotePinningDraft"
+                    :snapshot-distribution-storage-types="snapshotDistributionStorageTypes"
                     :document-id="publishedPublication ? publishedPublication.documentId : null"
                     @close="distributionDialogOpen = false"
                     @distribute-both="distributePublishedDocumentAndSnapshot"
@@ -1442,7 +1441,8 @@ export default {
         const resolveSnapshotDiscoveryPublisher = inject('resolveSnapshotDiscoveryPublisher', null);
 
         // The Wanderer's own freely editable choice of Announcement/
-        // Discovery substrate for the NEXT "Distribute now" click —
+        // Discovery substrate for the NEXT distribution — shared by
+        // "Distribute Publication" and "Distribute Snapshot" alike —
         // page-local UI state only, mirroring `WorldEncounterCanvas.js`'s
         // own `selectedDiscoveryProvider` (0.9.430) exactly, one caller
         // over: never persisted, never synchronized, never reset on a
@@ -1460,28 +1460,33 @@ export default {
         const defaultAnnouncementDiscoveryProvider = inject('defaultAnnouncementDiscoveryProvider', 'nostr');
         const selectedDiscoveryProvider = ref(defaultAnnouncementDiscoveryProvider);
 
-        // 0.9.670 — Publication Material Storage Selection. The identical
-        // "where the MATERIAL goes is independent of where the ANNOUNCEMENT
-        // goes" choice ui/components/OwnPublicationPanel.js's own
-        // publicationMaterialStorage offers, one caller over — page-local
-        // UI state only, never persisted, never reset on a fresh publish.
-        // Opens on this replica's own saved Content preference
-        // (ui/main.js's own defaultContentDistributionProvider) when it
-        // names 'ar', 'ipfs', or 'remote-pinning', falling back to 'ar'
-        // otherwise. 'remote-pinning' still opens the Endpoint/Credential
-        // fields empty, exactly as a manual pick of that option already
-        // does — this only changes which <option> the select starts on.
+        // One shared Storage choice for BOTH "Distribute Publication" (as
+        // its Material storage) and "Distribute Snapshot" (as its Snapshot
+        // storage), plus the combined action — page-local UI state only,
+        // never persisted, never reset on a fresh publish. The two actions
+        // used to carry separate, always-identically-seeded pickers; see
+        // EditorDistributionDialog.js's own header, "ONE SHARED SETTINGS
+        // BLOCK FOR BOTH PROTOCOLS." `selectedDiscoveryProvider` above is
+        // likewise shared by both actions.
+        //
+        // When Snapshot distribution is available, the eligible storages
+        // are the ones this device's Snapshot placement registry currently
+        // lists (`snapshotDistributionStorageTypes`, the SAME injected
+        // list ui/views/WorldView.js already reads) plus 'remote-pinning';
+        // otherwise all three Material storages. Opens on this replica's
+        // own saved Content preference (ui/main.js's own
+        // defaultContentDistributionProvider) when it names an eligible
+        // storage, falling back to the first eligible registry storage,
+        // then 'ar'. 'remote-pinning' still opens the Endpoint/Credential
+        // fields empty.
         const defaultContentDistributionProvider = inject('defaultContentDistributionProvider', null);
-        const selectedMaterialStorage = ref(
-            ['ar', 'ipfs', 'remote-pinning'].includes(defaultContentDistributionProvider)
-                ? defaultContentDistributionProvider
-                : 'ar'
-        );
-        // 0.9.670 — this view's own Remote Pinning (e.g. Pinata) endpoint/
-        // credential draft for "Distribute now" — mirrors
-        // OwnPublicationPanel.js's own publicationRemotePinningDraft
-        // exactly, one caller over. Never persisted anywhere; discarded on
-        // reload.
+        const snapshotDistributionAvailableStorageTypesCommand = inject('snapshotDistributionAvailableStorageTypes', null);
+        const snapshotDistributionStorageTypes = snapshotDistributionAvailableStorageTypesCommand
+            ? snapshotDistributionAvailableStorageTypesCommand()
+            : ['ar', 'ipfs'];
+        // Shared by both actions — mirrors OwnPublicationPanel.js's own
+        // single remotePinningDraft exactly, one caller over. Never
+        // persisted anywhere; discarded on reload.
         const remotePinningDraft = ref({ endpoint: '', credential: '', requestField: '', responseField: '' });
 
         // Whether ANY distribution capability exists at all — read only to
@@ -1504,23 +1509,14 @@ export default {
             && (snapshotDistributionCommand || (ipfsRemotePublicationCoordinator && resolveSnapshotDiscoveryPublisher))
         );
 
-        // The Wanderer's own Snapshot Storage/Announcement choice for the
-        // NEXT "Distribute Snapshot" click — page-local UI state only,
-        // mirroring OwnPublicationPanel.js's own
-        // snapshotDistributionStorage/snapshotDiscoveryProvider pair
-        // exactly, one caller over. Independent of selectedMaterialStorage/
-        // selectedDiscoveryProvider above: Publication distribution and
-        // Snapshot distribution are two separate actions with two separate
-        // storage/substrate choices — see this file's own new
-        // distributeEditorSnapshot() header. `remotePinningDraft` above is
-        // reused verbatim for this action too, exactly like
-        // OwnPublicationPanel.js's own single, shared draft.
-        const selectedSnapshotStorage = ref(
-            ['ar', 'ipfs', 'remote-pinning'].includes(defaultContentDistributionProvider)
+        const distributionStorageEligible = canDistributeSnapshot
+            ? [...snapshotDistributionStorageTypes, 'remote-pinning']
+            : ['ar', 'ipfs', 'remote-pinning'];
+        const selectedDistributionStorage = ref(
+            distributionStorageEligible.includes(defaultContentDistributionProvider)
                 ? defaultContentDistributionProvider
-                : 'ar'
+                : ((canDistributeSnapshot && snapshotDistributionStorageTypes[0]) || 'ar')
         );
-        const snapshotDiscoveryProvider = ref(defaultAnnouncementDiscoveryProvider);
 
         // The smallest callable contract 0.9.376's own Section A/D
         // identified — identical in shape to WorldView.js's own
@@ -1775,8 +1771,8 @@ export default {
                 .then(() => distributeEditorPublication(
                     publication,
                     selectedDiscoveryProvider.value,
-                    selectedMaterialStorage.value,
-                    selectedMaterialStorage.value === 'remote-pinning' ? remotePinningDraft.value : undefined
+                    selectedDistributionStorage.value,
+                    selectedDistributionStorage.value === 'remote-pinning' ? remotePinningDraft.value : undefined
                 ))
                 .then((result) => {
                     if (requestId === distributionRequestId) {
@@ -1828,9 +1824,9 @@ export default {
             return Promise.resolve()
                 .then(() => distributeEditorSnapshot(
                     publication,
-                    selectedSnapshotStorage.value,
-                    selectedSnapshotStorage.value === 'remote-pinning' ? remotePinningDraft.value : undefined,
-                    snapshotDiscoveryProvider.value
+                    selectedDistributionStorage.value,
+                    selectedDistributionStorage.value === 'remote-pinning' ? remotePinningDraft.value : undefined,
+                    selectedDiscoveryProvider.value
                 ))
                 .then((result) => {
                     if (requestId === snapshotDistributionRequestId) {
@@ -2716,11 +2712,10 @@ export default {
             publicationDistributionCommand,
             canDistributePublication,
             selectedDiscoveryProvider,
-            selectedMaterialStorage,
+            selectedDistributionStorage,
+            snapshotDistributionStorageTypes,
             remotePinningDraft,
             canDistributeSnapshot,
-            selectedSnapshotStorage,
-            snapshotDiscoveryProvider,
             snapshotDistributionExecuting,
             snapshotDistributionError,
             snapshotDistributionResult,
