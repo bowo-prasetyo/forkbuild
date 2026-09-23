@@ -70,9 +70,11 @@ not editor session, not renderer state — the serialized document envelope
 is the single artifact that crosses every boundary: file, publish,
 network. Everything else is a consumer or mechanism around it.
 
-Migration happens before domain entry (0.2.0). Old-format compatibility
-code lives in the schema migrator, never in Brick, Group, World, or any
-editing service. Domain classes only ever see current-schema JSON.
+Migration happens before domain entry (0.2.0, restated 0.2.2).
+Old-format compatibility code lives in the schema migrator, never in
+Brick, Group, World, or any editing service. Domain classes only ever see
+current-schema JSON. This is the cardinal rule that keeps the domain clean
+as the protocol evolves.
 
 Save is not Publish (0.2.0). Saving persists the editable document
 (mutable, overwriteable). Publishing creates an immutable, validated,
@@ -83,11 +85,6 @@ makes mutation isolation impossible.
 Publishing validates before storing (0.2.0). A corrupt document must not
 enter the published corpus. The DocumentValidator runs as part of the
 publish pipeline, and refusal is a hard error, not a warning.
-
-Migration happens before domain entry (0.2.2). Old-format compatibility
-code lives in the schema migrator, never in Brick, Group, World, or any
-editing service. Domain classes only ever see current-schema JSON. This
-is the cardinal rule that keeps the domain clean as the protocol evolves.
 
 Validation is independent of the UI (0.2.2). DocumentValidator is pure:
 no Vue, no Three.js, no session, no browser APIs. Given only a plain
@@ -12650,7 +12647,7 @@ concerned, it did.
 
 See `docs/Roadmap.md`, 0.8.30, for the full milestone entry.
 
-## Replica Knowledge Explains What Is Known And How It Was Acquired; It Does Not Judge What Should Be Trusted (0.8.31)
+### Replica Knowledge Explains What Is Known And How It Was Acquired; It Does Not Judge What Should Be Trusted (0.8.31)
 
 `application/PublicationReplicaKnowledgeDetailView.js` places two facts
 that have existed since 0.8.12/0.8.17/0.8.24/0.8.26 on the same row, for
@@ -12724,7 +12721,7 @@ computed — it only ever places them on the same row for a person to read.
 
 See `docs/Roadmap.md`, 0.8.31, for the full milestone entry.
 
-## Knowledge Of Content Is Not Possession Of Content (0.8.32)
+### Knowledge Of Content Is Not Possession Of Content (0.8.32)
 
 Every milestone since 0.8.28 has drawn a line between what a replica
 KNOWS and what has been externally PROVEN or successfully RETRIEVED — a
@@ -12815,7 +12812,7 @@ has to guess which kind of fact it is holding.
 
 See `docs/Roadmap.md`, 0.8.32, for the full milestone entry.
 
-## Local Content Availability Is An Observation, Not A Verdict (0.8.33)
+### Local Content Availability Is An Observation, Not A Verdict (0.8.33)
 
 `docs/Principles.md`, "Known Is Not Available (0.8.28)," drew a line
 between what a replica knows and what has been externally proven or
@@ -12912,7 +12909,7 @@ adjusting to agree with the other.
 
 See `docs/Roadmap.md`, 0.8.33, for the full milestone entry.
 
-## Snapshot Materialization Is An Explicit User Action, Distinct From Every Other Way A Replica Learns About Content (0.8.34)
+### Snapshot Materialization Is An Explicit User Action, Distinct From Every Other Way A Replica Learns About Content (0.8.34)
 
 `docs/Principles.md`'s own "Knowledge Of Content Is Not Possession Of
 Content (0.8.32)" and "Local Content Availability Is An Observation, Not A
@@ -13001,7 +12998,7 @@ operations, never one that silently implies another.
 
 See `docs/Roadmap.md`, 0.8.34, for the full milestone entry.
 
-## Placement Resolution Observes Present Availability; Materialization Turns It Into Possession (0.8.35)
+### Placement Resolution Observes Present Availability; Materialization Turns It Into Possession (0.8.35)
 
 0.8.20 drew a careful line and held it for fifteen milestones: resolving a
 `PublicationSnapshotPlacement` retrieves bytes into memory long enough to
@@ -13099,7 +13096,7 @@ merging it with the path 0.8.34 already built.
 
 See `docs/Roadmap.md`, 0.8.35, for the full milestone entry.
 
-## A Shared Storage Boundary Does Not Merge The Sources That Feed It (0.8.36)
+### A Shared Storage Boundary Does Not Merge The Sources That Feed It (0.8.36)
 
 0.8.32 and 0.8.35 each built a complete, independent explicit path from
 "bytes exist somewhere" to "this replica possesses them," and each grew
@@ -13188,7 +13185,7 @@ not adding a third.
 
 See `docs/Roadmap.md`, 0.8.36, for the full milestone entry.
 
-## Peer Content Transfer Is Transport; Verification And Storage Stay Centralized (0.8.37)
+### Peer Content Transfer Is Transport; Verification And Storage Stay Centralized (0.8.37)
 
 0.8.36 built one shared boundary — `application/
 StoreSnapshotContentUseCase.js` — for the two explicit sources that
@@ -13297,7 +13294,7 @@ or comparing them remains exactly as premature as it was with two.
 
 See `docs/Roadmap.md`, 0.8.37, for the full milestone entry.
 
-## Materialization History Describes Byte Acquisition, Not Source Trust (0.8.38)
+### Materialization History Describes Byte Acquisition, Not Source Trust (0.8.38)
 
 **A materialization source identifies the mechanism through which bytes
 were supplied to the local content store. It does not establish
@@ -13395,7 +13392,7 @@ outperformed the others.
 
 See `docs/Roadmap.md`, 0.8.38, for the full milestone entry.
 
-## Current Snapshot Possession Is A Local Observation, Not A Distributed Claim (0.8.39)
+### Current Snapshot Possession Is A Local Observation, Not A Distributed Claim (0.8.39)
 
 **A replica can know that it possesses a valid snapshot without that fact
 becoming a publication claim, a placement claim, or a decentralization
@@ -13489,7 +13486,7 @@ something this milestone reaches for just because the shape now exists.
 
 See `docs/Roadmap.md`, 0.8.39, for the full milestone entry.
 
-## Peer Possession Responses Are Observations, Not Placement Claims (0.8.40)
+### Peer Possession Responses Are Observations, Not Placement Claims (0.8.40)
 
 **A replica's statement that it currently possesses snapshot bytes does not
 establish a placement, evidence claim, authority relationship, or
@@ -13579,7 +13576,7 @@ be added to it.
 
 See `docs/Roadmap.md`, 0.8.40, for the full milestone entry.
 
-## Peer Possession Observations Describe What Peers Report; They Do Not Become Placement Claims (0.8.41)
+### Peer Possession Observations Describe What Peers Report; They Do Not Become Placement Claims (0.8.41)
 
 **Collecting several peers' possession observations together — comparing
 them, counting them, keeping every one of them on file — never turns the
@@ -13663,7 +13660,7 @@ of its own on top of that guarantee.
 
 See `docs/Roadmap.md`, 0.8.41, for the full milestone entry.
 
-## A Source Selection Is A Person's Own Action, Never An Application Recommendation (0.8.42)
+### A Source Selection Is A Person's Own Action, Never An Application Recommendation (0.8.42)
 
 **A `SnapshotMaterializationSourceSelection` names a choice already made;
 it never makes one.** `application/
@@ -13702,7 +13699,7 @@ caller contract violation, not a degrade path.
 
 See `docs/Roadmap.md`, 0.8.42, for the full milestone entry.
 
-## An Observation Can Inform A Person's Choice Without Becoming An Application Decision (0.8.42)
+### An Observation Can Inform A Person's Choice Without Becoming An Application Decision (0.8.42)
 
 **A possession observation and a materialization attempt remain two
 independently true (or false) facts, at two independently timestamped
@@ -13745,7 +13742,7 @@ or more likely to succeed than another; each row's own button is offered
 purely because that peer said, at one past moment, that it possessed the
 bytes — nothing more.
 
-## Current Snapshot Possession Is Independent Of How The Snapshot Was Acquired (0.8.43)
+### Current Snapshot Possession Is Independent Of How The Snapshot Was Acquired (0.8.43)
 
 **`application/PublicationSnapshotAcquisitionView.js#describePublicationSnapshotAcquisition()`
 reports `possession.state` exactly as its own `possessionView` parameter
@@ -13786,7 +13783,7 @@ without merging, this milestone's own composed view is a fourth
 combination that still refuses to let any one of its two inputs decide
 the other. See `docs/Roadmap.md`, 0.8.43, for the full milestone entry.
 
-## Acquisition History Explains Past Attempts; It Does Not Determine Present Possession (0.8.43)
+### Acquisition History Explains Past Attempts; It Does Not Determine Present Possession (0.8.43)
 
 **`application/PublicationSnapshotAcquisitionView.js`'s own `acquisition`
 field is a plain, non-judgmental tally — `attemptCount`, `storedCount`,
@@ -13839,7 +13836,7 @@ snapshot. See `docs/Roadmap.md`, 0.8.43, for the full milestone entry.
 
 See `docs/Roadmap.md`, 0.8.42, for the full milestone entry.
 
-## History Records What Happened During An Explicit Acquisition Attempt; Inspection Must Not Reinterpret Why It Happened (0.8.44)
+### History Records What Happened During An Explicit Acquisition Attempt; Inspection Must Not Reinterpret Why It Happened (0.8.44)
 
 **`application/SnapshotMaterializationHistoryDetailView.js`'s two functions
 — `describeSnapshotMaterializationHistoryEntry(attempt)` and
@@ -13894,7 +13891,7 @@ milestone refuses to let a PER-ATTEMPT narration do either — inspecting a
 history in detail is still just reading it, never re-judging it. See
 `docs/Roadmap.md`, 0.8.44, for the full milestone entry.
 
-## A Peer Possession Observation Records What A Peer Reported At A Particular Time; Inspection Must Not Turn It Into A Current Claim About The Peer (0.8.45)
+### A Peer Possession Observation Records What A Peer Reported At A Particular Time; Inspection Must Not Turn It Into A Current Claim About The Peer (0.8.45)
 
 **`application/SnapshotPeerPossessionObservationDetailView.js`'s two
 functions — `describeSnapshotPeerPossessionObservationDetail(observation)`
@@ -13972,7 +13969,7 @@ an observation is never itself an acquisition attempt, a placement, or an
 automatic trigger for either. See `docs/Roadmap.md`, 0.8.45, for the full
 milestone entry.
 
-## A Snapshot's Independently Observed Facts Are Exposed Side By Side, Never Collapsed Into One Verdict (0.8.46)
+### A Snapshot's Independently Observed Facts Are Exposed Side By Side, Never Collapsed Into One Verdict (0.8.46)
 
 **`application/SnapshotStateInspectionView.js`'s `describeSnapshotStateInspection()`
 composes FOUR already-independent views — local possession (0.8.39),
@@ -14052,7 +14049,7 @@ four at once, and holds itself to the identical restraint each of them
 already modeled. See `docs/Roadmap.md`, 0.8.46, for the full milestone
 entry.
 
-## A Transaction Plan Is Not A Transaction (0.8.47)
+### A Transaction Plan Is Not A Transaction (0.8.47)
 
 **`anchoring/BitcoinAnchorTransactionBuilder.js#build()` selects
 caller-supplied UTXOs and computes a fee, and stops exactly there.** Its
@@ -14110,7 +14107,7 @@ Section C proves the order-independence directly, feeding the identical
 UTXO set in two different array orders and asserting byte-identical
 selection. See `docs/Roadmap.md`, 0.8.47, for the full milestone entry.
 
-## A PSBT Is A Description, Not A Signature (0.8.48)
+### A PSBT Is A Description, Not A Signature (0.8.48)
 
 **`anchoring/BitcoinAnchorPsbtBuilder.js#build()` turns a real
 `BitcoinAnchorTransactionBuilder` plan, plus the previous-output data a
@@ -14165,7 +14162,7 @@ tampered plan is refused here too, independently, proven directly in
 `tests/BitcoinAnchorPsbtConstruction.test.js`'s own Section E. See
 `docs/Roadmap.md`, 0.8.48, for the full milestone entry.
 
-## Real Bytes Are Still Not A Signature (0.8.49)
+### Real Bytes Are Still Not A Signature (0.8.49)
 
 **`anchoring/BitcoinAnchorPsbtSerializer.js#serialize()` turns a real
 `BitcoinAnchorPsbtBuilder` description into genuine BIP174 wire bytes —
@@ -14223,7 +14220,7 @@ class needs from upstream, it should never need to understand ForkBuild's
 own anchor bookkeeping to produce. See `docs/Roadmap.md`, 0.8.49, for the
 full milestone entry.
 
-## A Wallet's Claim Is Not The Signature (0.8.50)
+### A Wallet's Claim Is Not The Signature (0.8.50)
 
 **`anchoring/BitcoinAnchorWalletSigner.js#requestSignature()` asks an
 injected `wallet` to sign a real unsigned PSBT, and never calls the result
@@ -14288,7 +14285,7 @@ it supplies a fake broadcaster — a real wallet integration is its own,
 separately sized, future concern. See `docs/Roadmap.md`, 0.8.50, for the
 full milestone entry.
 
-## Signing Material Is Not Yet A Signature Until It Verifies (0.8.51)
+### Signing Material Is Not Yet A Signature Until It Verifies (0.8.51)
 
 **`anchoring/BitcoinAnchorSignedPsbtFinalizer.js#finalize()` never calls a
 signed PSBT "finalized" merely because it carries the right SHAPE of
@@ -14342,7 +14339,7 @@ vocabulary named itself as a deliberate, not-yet-taken widening one
 milestone earlier. See `docs/Roadmap.md`, 0.8.51, for the full milestone
 entry.
 
-## Broadcasting Submits; It Does Not Decide (0.8.52)
+### Broadcasting Submits; It Does Not Decide (0.8.52)
 
 **`anchoring/BitcoinAnchorTransactionBroadcaster.js#broadcast()` never
 asks whether a transaction is valid — that question was already closed,
@@ -14387,7 +14384,7 @@ application believed it was anchoring. A rejected broadcast stays
 rejected; the caller decides what happens next, this class never does.
 See `docs/Roadmap.md`, 0.8.52, for the full milestone entry.
 
-## One Explicit Publication Action, Composed From Existing Primitives (0.8.53)
+### One Explicit Publication Action, Composed From Existing Primitives (0.8.53)
 
 **`application/BitcoinAnchorPublicationCoordinator.js` adds no new
 Bitcoin primitive.** Six domain classes (`anchoring/
@@ -14441,7 +14438,7 @@ confirmed state occurs anywhere in this codebase. See `docs/Roadmap.md`,
 0.8.53, for the full milestone entry, and "0.8.54" for the separate,
 explicitly-triggered action confirmation observation belongs to.
 
-## Confirmation Observation Reports What Is; It Does Not Decide What It Means (0.8.54)
+### Confirmation Observation Reports What Is; It Does Not Decide What It Means (0.8.54)
 
 **`anchoring/BitcoinAnchorConfirmationObserver.js#observeConfirmation()`
 never asks whether an anchor is trustworthy — it asks only what the
@@ -14499,7 +14496,7 @@ claimed content hash." See `docs/Principles.md`, "External Anchoring
 Provides Evidence; It Does Not Establish Authority (0.8.0)," and `docs/
 Roadmap.md`, 0.8.54, for the full milestone entry.
 
-## Reconciliation Composes Independent Observations; It Does Not Score Them (0.8.55)
+### Reconciliation Composes Independent Observations; It Does Not Score Them (0.8.55)
 
 **`application/BitcoinAnchorProofReconciliationView.js#reconcile()` never
 asks whether a Bitcoin anchor is trustworthy — it asks only what two
@@ -14556,7 +14553,7 @@ structurally invalid proof was always a `HASH_MISMATCH`
 transaction side had nothing to say. See `docs/Roadmap.md`, 0.8.55, for
 the full milestone entry.
 
-## An Observation Describes The Network At The Time It Was Made, Not The Current State Of The Transaction (0.8.56)
+### An Observation Describes The Network At The Time It Was Made, Not The Current State Of The Transaction (0.8.56)
 
 **A history is APPENDED TO, NEVER OVERWRITTEN, NEVER MUTATED.**
 `anchoring/BitcoinAnchorConfirmationObserver.js#observeConfirmation()`
@@ -14637,7 +14634,7 @@ SnapshotPeerPossessionObservationHistory.js`'s own header already holds
 for peer possession, each one domain over. See `docs/Roadmap.md`, 0.8.56,
 for the full milestone entry.
 
-## The UI Displays Observations; It Does Not Turn Them Into A Verdict (0.8.57)
+### The UI Displays Observations; It Does Not Turn Them Into A Verdict (0.8.57)
 
 The Publication Center's new "Bitcoin Anchor" section is the first screen
 in this entire Bitcoin sequence — 0.8.47 through 0.8.56 built every piece
@@ -14724,7 +14721,7 @@ detail view, so the UI should simply project it."
 
 See `docs/Roadmap.md`, 0.8.57, for the full milestone entry.
 
-## A Connection Grants A Capability; It Does Not Grant Trust (0.8.58)
+### A Connection Grants A Capability; It Does Not Grant Trust (0.8.58)
 
 `anchoring/BitcoinAnchorWalletSigner.js` (0.8.50) drew a line this
 codebase has held ever since: ForkBuild never receives a private key,
@@ -14819,7 +14816,7 @@ standing in for a missing one.
 
 See `docs/Roadmap.md`, 0.8.58, for the full milestone entry.
 
-## A Transaction Is Signed Only If It Is The Transaction That Was Reviewed (0.8.59)
+### A Transaction Is Signed Only If It Is The Transaction That Was Reviewed (0.8.59)
 
 `docs/Principles.md`, "A Connection Grants A Capability; It Does Not Grant
 Trust (0.8.58)," drew one line: a connected wallet is a signing capability,
@@ -14896,7 +14893,7 @@ since 0.8.58.
 
 See `docs/Roadmap.md`, 0.8.59, for the full milestone entry.
 
-## A Funding Observation Is Not A Funding Commitment (0.8.60)
+### A Funding Observation Is Not A Funding Commitment (0.8.60)
 
 `anchoring/BitcoinAnchorTransactionBuilder.js`'s own header (0.8.47) has
 required caller-supplied UTXOs since the day it was built, and this
@@ -14962,7 +14959,7 @@ funding source say is spendable," never "what should be spent."
 
 See `docs/Roadmap.md`, 0.8.60, for the full milestone entry.
 
-## A Transaction Plan Records What Produced It; It Does Not Refresh It (0.8.61)
+### A Transaction Plan Records What Produced It; It Does Not Refresh It (0.8.61)
 
 `docs/Principles.md`, "A Transaction Plan Is Not A Transaction (0.8.47),"
 drew the first line in this pipeline: a plan is inputs, outputs, and a fee
@@ -15051,7 +15048,7 @@ withhold.
 
 See `docs/Roadmap.md`, 0.8.61, for the full milestone entry.
 
-## Review Is An Authorization Boundary; Signing Is An External Capability Invocation (0.8.62)
+### Review Is An Authorization Boundary; Signing Is An External Capability Invocation (0.8.62)
 
 `docs/Principles.md`, "A Connection Grants A Capability; It Does Not Grant
 Trust (0.8.58)," drew a line at the moment a wallet becomes reachable: being
@@ -15123,7 +15120,7 @@ that needs it.
 
 See `docs/Roadmap.md`, 0.8.62, for the full milestone entry.
 
-## Cryptographic Failure Terminates This Signing Attempt (0.8.63)
+### Cryptographic Failure Terminates This Signing Attempt (0.8.63)
 
 `docs/Principles.md`, "Signing Material Is Not Yet A Signature Until It
 Verifies (0.8.51)," and "Review Is An Authorization Boundary; Signing Is An
@@ -15195,7 +15192,7 @@ transaction, the wallet, or the person who signed it.
 
 See `docs/Roadmap.md`, 0.8.63, for the full milestone entry.
 
-## Broadcast Is Bound To Transaction Identity, Not UI Sequence (0.8.64)
+### Broadcast Is Bound To Transaction Identity, Not UI Sequence (0.8.64)
 
 `anchoring/BitcoinAnchorTransactionBroadcaster.js`'s own header (0.8.52)
 named "broadcasting submits; it does not decide" as this codebase's
@@ -15273,7 +15270,7 @@ deterministic.
 
 See `docs/Roadmap.md`, 0.8.64, for the full milestone entry.
 
-## Confirmation Is Bound To Broadcast Identity, Not Whatever Is On Screen (0.8.65)
+### Confirmation Is Bound To Broadcast Identity, Not Whatever Is On Screen (0.8.65)
 
 `application/BitcoinAnchorBroadcastCoordinator.js`'s own header (0.8.64)
 required that its caller prove a `txid`/`rawTransaction` genuinely came
@@ -15340,7 +15337,7 @@ independent axis.
 
 See `docs/Roadmap.md`, 0.8.65, for the full milestone entry.
 
-## A Locator Is Not The Content; A Gateway Is Not A Verdict (0.8.66)
+### A Locator Is Not The Content; A Gateway Is Not A Verdict (0.8.66)
 
 `core/ContentReference.js`'s own header has drawn this line since 0.7.0:
 "The cryptographic hash identifies the content. The URI describes one
@@ -15417,7 +15414,7 @@ Kubo's own publish capability anywhere else in this replica.
 
 See `docs/Roadmap.md`, 0.8.66, for the full milestone entry.
 
-## A Capability Is Exposed Only Where It Exists; A Credential Is Never Owned (0.8.67)
+### A Capability Is Exposed Only Where It Exists; A Credential Is Never Owned (0.8.67)
 
 `content/IpfsGatewayContentStore.js`'s own 0.8.66 header drew a hard line
 between what a public HTTPS gateway genuinely can and cannot do: resolve,
@@ -15486,7 +15483,7 @@ with it.
 
 See `docs/Roadmap.md`, 0.8.67, for the full milestone entry.
 
-## A Configured Credential Lives Only As Long As The Capability It Grants (0.8.68)
+### A Configured Credential Lives Only As Long As The Capability It Grants (0.8.68)
 
 `content/HttpPinningProvider.js`'s own 0.8.67 header already refused to
 own a credential: "the application receives a capability, not custody."
@@ -15558,7 +15555,7 @@ registries, never one silent overwrite" already holds for the read side.
 
 See `docs/Roadmap.md`, 0.8.68, for the full milestone entry.
 
-## A Gateway Moves Bytes; It Never Judges Them (0.8.69)
+### A Gateway Moves Bytes; It Never Judges Them (0.8.69)
 
 `content/IpfsGatewayContentStore.js`'s own 0.8.66 header already drew the
 line: "This class never validates the retrieved bytes against any
@@ -15620,7 +15617,7 @@ work.
 
 See `docs/Roadmap.md`, 0.8.69, for the full milestone entry.
 
-## A Publication Record Is A Historical Fact; A Republish Never Erases It (0.8.71)
+### A Publication Record Is A Historical Fact; A Republish Never Erases It (0.8.71)
 
 **A history is APPENDED TO, NEVER OVERWRITTEN, NEVER MUTATED — the
 identical restraint held one axis over, for a different kind of
@@ -15699,7 +15696,7 @@ BitcoinAnchorConfirmationObservationHistory.js`'s own header already
 holds for a different sequence entirely, each one domain over. See
 `docs/Roadmap.md`, 0.8.71, for the full milestone entry.
 
-## An Observation Remains A Dated Fact; A Later Reading Never Erases An Earlier One (0.8.72)
+### An Observation Remains A Dated Fact; A Later Reading Never Erases An Earlier One (0.8.72)
 
 **A verification history is APPENDED TO, NEVER OVERWRITTEN — the
 identical restraint held twice already, applied here to a third axis.**
@@ -15767,7 +15764,7 @@ milestone that appends to a history on a caller's behalf.
 restraint every history in this codebase already holds. See
 `docs/Roadmap.md`, 0.8.72, for the full milestone entry.
 
-## History Preserves Occurrence Order; A Timeline Is Free To Provide Chronological Presentation (0.8.73)
+### History Preserves Occurrence Order; A Timeline Is Free To Provide Chronological Presentation (0.8.73)
 
 **A history is an append log; a timeline is a read over it.** `entry.
 ipfsPublicationRecordHistory` (0.8.71) and `entry.
@@ -15828,7 +15825,7 @@ held here once more for opening the merged timeline — it only reads
 state already in memory. See `docs/Roadmap.md`, 0.8.73, for the full
 milestone entry.
 
-## Unify The Timeline, Not The Meanings (0.8.74)
+### Unify The Timeline, Not The Meanings (0.8.74)
 
 **Merging two domains' own facts onto one chronological view is
 composition of WHEN, never composition of WHAT.** `application/
@@ -15901,7 +15898,7 @@ Observation Is Not Automatically A Reorganization (0.8.76)" and "An
 Internal Inconsistency Is Not Automatically A Reorganization (0.8.77)"
 below). See `docs/Roadmap.md`, 0.8.74, for the full milestone entry.
 
-## A Capability Can Be Ephemeral Even When The Facts Produced By Using It Are Durable (0.8.75)
+### A Capability Can Be Ephemeral Even When The Facts Produced By Using It Are Durable (0.8.75)
 
 **Persistence is drawn around FACTS, never around the CAPABILITIES that
 produced them.** Every history this codebase has kept since 0.8.56 — an
@@ -15991,7 +15988,7 @@ button already hold, one UI surface over.
 
 See `docs/Roadmap.md`, 0.8.75, for the full milestone entry.
 
-## A Changed Observation Is Not Automatically A Reorganization (0.8.76)
+### A Changed Observation Is Not Automatically A Reorganization (0.8.76)
 
 **A changed `blockHash` is an observed change in placement; it is not,
 by itself, a chain reorganization, an invalidation, a double spend, a
@@ -16087,7 +16084,7 @@ it, unresolved, as `PLACEMENT_CHANGED`; 0.8.77 additionally names it
 
 See `docs/Roadmap.md`, 0.8.76, for the full milestone entry.
 
-## An Internal Inconsistency Is Not Automatically A Reorganization (0.8.77)
+### An Internal Inconsistency Is Not Automatically A Reorganization (0.8.77)
 
 **A decreased `confirmationCount`, a changed `blockHeight` under an
 unchanged `blockHash`, or two different `blockHash` values reported for
@@ -16192,7 +16189,7 @@ this milestone, they are what it is built directly on top of.
 
 See `docs/Roadmap.md`, 0.8.77, for the full milestone entry.
 
-## Correlate Evidence By Explicit Identity, Never By Resemblance (0.8.78)
+### Correlate Evidence By Explicit Identity, Never By Resemblance (0.8.78)
 
 **A shared `contentHash` is never evidence of a shared anchor.** Two
 Bitcoin anchors can easily carry byte-identical `contentHash` values — the
@@ -16262,7 +16259,7 @@ already holds for the identical fact (0.8.74).
 
 See `docs/Roadmap.md`, 0.8.78, for the full milestone entry.
 
-## Derived Evidence Is Reconstructed From Durable Facts; It Is Not Stored As A Second History (0.8.79)
+### Derived Evidence Is Reconstructed From Durable Facts; It Is Not Stored As A Second History (0.8.79)
 
 **A durable archive holds facts; it does not hold conclusions about those
 facts.** `application/PublicationObservationArchive.js` (0.8.75) persists
@@ -16323,7 +16320,7 @@ completely non-overlapping evidence bundles.
 
 See `docs/Roadmap.md`, 0.8.79, for the full milestone entry.
 
-## A Publication Record Establishes Identity; Observations Establish What Was Subsequently Observed About It (0.8.80)
+### A Publication Record Establishes Identity; Observations Establish What Was Subsequently Observed About It (0.8.80)
 
 **Identity and observation are two different kinds of fact, and this
 codebase now names both, separately.** Every stage from `application/
@@ -16401,7 +16398,7 @@ because none of this codebase's own prior principles ever promised one.
 
 See `docs/Roadmap.md`, 0.8.80, for the full milestone entry.
 
-## A Lifecycle Timeline Presents Recorded Facts In Temporal Order; It Does Not Infer Missing Stages Or Interpret Them (0.8.81)
+### A Lifecycle Timeline Presents Recorded Facts In Temporal Order; It Does Not Infer Missing Stages Or Interpret Them (0.8.81)
 
 **A timeline is a re-ordering, never a second analysis.** `application/
 BitcoinAnchorPublicationLifecycleTimelineView.js`'s own
@@ -16471,7 +16468,7 @@ observing it again" restraint (0.8.79) exactly, one presentation layer up.
 
 See `docs/Roadmap.md`, 0.8.81, for the full milestone entry.
 
-## An Archive Export Contains Facts, Not Capabilities Or Conclusions (0.8.82)
+### An Archive Export Contains Facts, Not Capabilities Or Conclusions (0.8.82)
 
 **Exporting is a serialization boundary, not a second storage adapter.**
 `application/PublicationObservationArchiveExport.js`'s own
@@ -16541,7 +16538,7 @@ layer down.
 
 See `docs/Roadmap.md`, 0.8.82, for the full milestone entry.
 
-## Provenance Describes Where A Fact Entered This Archive; It Does Not Establish Whether The Fact Is True (0.8.83)
+### Provenance Describes Where A Fact Entered This Archive; It Does Not Establish Whether The Fact Is True (0.8.83)
 
 **Two values, deliberately, forever.** `application/
 PublicationObservationArchiveProvenance.js`'s own
@@ -16607,7 +16604,7 @@ show."
 
 See `docs/Roadmap.md`, 0.8.83, for the full milestone entry.
 
-## An Archive Fingerprint Identifies Durable Contents; It Does Not Establish Their Truth Or Origin (0.8.84)
+### An Archive Fingerprint Identifies Durable Contents; It Does Not Establish Their Truth Or Origin (0.8.84)
 
 **A matching fingerprint means "byte-identical canonical content" and
 nothing else.** `application/PublicationObservationArchiveFingerprint.js`'s
@@ -16680,7 +16677,7 @@ milestone.
 
 See `docs/Roadmap.md`, 0.8.84, for the full milestone entry.
 
-## A Fingerprint Comparison Establishes Equality Of Digests, Not Which Archive Is Correct (0.8.85)
+### A Fingerprint Comparison Establishes Equality Of Digests, Not Which Archive Is Correct (0.8.85)
 
 **`MATCH` means the two digests are byte-identical; `DIFFERENT` means they
 are not; neither is a verdict.** `application/
@@ -16742,7 +16739,7 @@ no network fingerprint lookup, no peer discovery. A comparison answers
 
 See `docs/Roadmap.md`, 0.8.85, for the full milestone entry.
 
-## Inspecting An External Archive Never Touches The Current One (0.8.86)
+### Inspecting An External Archive Never Touches The Current One (0.8.86)
 
 **INSPECT is not IMPORT.** `application/
 PublicationObservationArchiveInspection.js`'s own
@@ -16807,7 +16804,7 @@ performs no network operation of its own.
 
 See `docs/Roadmap.md`, 0.8.86, for the full milestone entry.
 
-## Archive Differences Describe Durable State Differences Without Selecting A Correct State (0.8.87)
+### Archive Differences Describe Durable State Differences Without Selecting A Correct State (0.8.87)
 
 **An archive difference describes structural differences between two
 durable archive states; it does not determine which state is correct.**
@@ -16881,7 +16878,7 @@ rather than a single value.
 
 See `docs/Roadmap.md`, 0.8.87, for the full milestone entry.
 
-## A Replacement Review Composes Existing Information; It Does Not Authorize Replacement (0.8.88)
+### A Replacement Review Composes Existing Information; It Does Not Authorize Replacement (0.8.88)
 
 **Archive comparison may inform an explicit replacement decision, but it
 must never make that decision automatically.** `application/
@@ -16955,7 +16952,7 @@ itself, decides what they mean.
 
 See `docs/Roadmap.md`, 0.8.88, for the full milestone entry.
 
-## Blockchain Identity Is Explicit; A Shared Reference Is Never Evidence Of A Shared Publication (0.8.89)
+### Blockchain Identity Is Explicit; A Shared Reference Is Never Evidence Of A Shared Publication (0.8.89)
 
 **A publication's identity always names which blockchain recorded it —
 never only what was published or where.** `application/
@@ -17020,7 +17017,7 @@ needed to change to keep passing.
 
 See `docs/Roadmap.md`, 0.8.89, for the full milestone entry.
 
-## Network Observation Does Not Establish Publication Authority (0.8.90)
+### Network Observation Does Not Establish Publication Authority (0.8.90)
 
 **A blockchain capability may observe network and account facts without
 ever acquiring the authority to publish.** `base/BaseNetworkObserver.js`
@@ -17079,7 +17076,7 @@ remembered one.
 
 See `docs/Roadmap.md`, 0.8.90, for the full milestone entry.
 
-## A Transaction Plan Is Not A Publication (0.8.91)
+### A Transaction Plan Is Not A Publication (0.8.91)
 
 **Planning a Base transaction is not publishing anything.**
 `base/BasePublicationTransactionPlanner.js#plan()` and `application/
@@ -17151,7 +17148,7 @@ point in the pipeline from RPC response to the view a person reads.
 
 See `docs/Roadmap.md`, 0.8.91, for the full milestone entry.
 
-## Review Describes The Transaction Plan; It Does Not Commit It (0.8.92)
+### Review Describes The Transaction Plan; It Does Not Commit It (0.8.92)
 
 **A Base transaction plan must be explicitly reviewed before signing, and
 review must never modify, sign, or broadcast the plan.** `application/
@@ -17219,7 +17216,7 @@ to the commitment decoder.
 
 See `docs/Roadmap.md`, 0.8.92, for the full milestone entry.
 
-## Signing Authorizes The Exact Reviewed Plan; It Does Not Reconstruct Or Modify It (0.8.93)
+### Signing Authorizes The Exact Reviewed Plan; It Does Not Reconstruct Or Modify It (0.8.93)
 
 **A Base transaction signer must receive the already-constructed,
 already-reviewed plan — never a bare fact it could use to build a
@@ -17305,7 +17302,7 @@ header already holds, unweakened one chain over.
 
 See `docs/Roadmap.md`, 0.8.93, for the full milestone entry.
 
-## A Signed Transaction Is Untrusted Until Independently, Cryptographically Verified Against The Exact Reviewed Plan (0.8.94)
+### A Signed Transaction Is Untrusted Until Independently, Cryptographically Verified Against The Exact Reviewed Plan (0.8.94)
 
 **A wallet's claimed signature is external, untrusted output — never
 accepted merely because it was returned.** `base/
@@ -17385,7 +17382,7 @@ Modify It (0.8.93)," already extends it one stage earlier.
 
 See `docs/Roadmap.md`, 0.8.94, for the full milestone entry.
 
-## Broadcast Publishes An Already-Finalized Transaction; It Does Not Construct, Sign, Or Re-Verify One (0.8.95)
+### Broadcast Publishes An Already-Finalized Transaction; It Does Not Construct, Sign, Or Re-Verify One (0.8.95)
 
 **`base/BaseTransactionBroadcaster.js#broadcast()` never asks whether a
 transaction is valid — that question was already closed, cryptographically,
@@ -17466,7 +17463,7 @@ one stage earlier.
 
 See `docs/Roadmap.md`, 0.8.95, for the full milestone entry.
 
-## A Durable Archive Entry Requires An Explicit Append; Chain-Specific Observation Models Stay Chain-Specific Even When Made Durable (0.8.97)
+### A Durable Archive Entry Requires An Explicit Append; Chain-Specific Observation Models Stay Chain-Specific Even When Made Durable (0.8.97)
 
 **A Base inclusion observation becomes durable only when explicitly
 appended to the publication observation archive — the identical
@@ -17553,7 +17550,7 @@ Roadmap.md`, 0.8.96, itself already anticipated by naming both 0.8.97 and
 0.8.98 as distinct, future milestones rather than building either
 prematurely.
 
-## Unify The Timeline, Not The Meanings, Holds For A Third Domain Too (0.8.98)
+### Unify The Timeline, Not The Meanings, Holds For A Third Domain Too (0.8.98)
 
 **A cross-domain timeline projects WHEN observations occurred; it never
 translates WHAT they mean into a shared vocabulary — the same rule (0.8.74)
@@ -17623,7 +17620,7 @@ milestone's own UI contribution in full.
 
 See `docs/Roadmap.md`, 0.8.97, for the full milestone entry.
 
-## A Publication Record Establishes Identity; It Never Manufactures, Or Is Manufactured By, An Observation — Held For A Second Chain (0.8.99)
+### A Publication Record Establishes Identity; It Never Manufactures, Or Is Manufactured By, An Observation — Held For A Second Chain (0.8.99)
 
 **Identity generalizes across chains through one projection, never through
 one shared record shape.** `application/BitcoinAnchorPublicationRecord.js`
@@ -17699,7 +17696,7 @@ restraint for a positional, per-identity one.
 
 See `docs/Roadmap.md`, 0.8.99, for the full milestone entry.
 
-## An Achievement Describes An Attributable Fact, Not A Person's Worth (0.8.102)
+### An Achievement Describes An Attributable Fact, Not A Person's Worth (0.8.102)
 
 **An achievement event states that a specific, already-durable record
 caused a specific, named threshold to be crossed — never that a person,
@@ -17762,7 +17759,7 @@ system named and asked to avoid.
 
 See `docs/Roadmap.md`, 0.8.102, for the full milestone entry.
 
-## A Badge Presents An Achievement; It Does Not Redefine It (0.8.103)
+### A Badge Presents An Achievement; It Does Not Redefine It (0.8.103)
 
 **A badge is a human-facing presentation of an achievement event, never a
 second, competing achievement system.** `application/AchievementBadgeView.js`'s
@@ -17820,7 +17817,7 @@ file offers. When no matching record can be found, `sourceAnchorId` is
 
 See `docs/Roadmap.md`, 0.8.103, for the full milestone entry.
 
-## A Reference Is A Fact One Publication States About Another; It Is Never Inferred, And Never A Verdict (0.8.104)
+### A Reference Is A Fact One Publication States About Another; It Is Never Inferred, And Never A Verdict (0.8.104)
 
 **A publication reference exists only when a person explicitly records
 one — never because two publications resemble each other.** This extends
@@ -17888,7 +17885,7 @@ later, separate milestone's decision to make.
 
 See `docs/Roadmap.md`, 0.8.104, for the full milestone entry.
 
-## A Reference Graph Is Grouped From Durable Facts, And Stays As Uninterpreted As They Are (0.8.105)
+### A Reference Graph Is Grouped From Durable Facts, And Stays As Uninterpreted As They Are (0.8.105)
 
 **Grouping is not scoring.** `application/PublicationReferenceGraphView.js`
 takes 0.8.104's own flat, append-only `publicationReferenceRecords` and
@@ -17944,7 +17941,7 @@ answers would use the identical word "distinct."
 
 See `docs/Roadmap.md`, 0.8.105, for the full milestone entry.
 
-## A Reference-Derived Achievement Is Attributed To A Publication, Never To The Archive As A Whole (0.8.106)
+### A Reference-Derived Achievement Is Attributed To A Publication, Never To The Archive As A Whole (0.8.106)
 
 **A reference names two publications, so its achievements are scoped to
 identities, not to the entire archive.** `application/AchievementEvent.js`'s
@@ -18027,7 +18024,7 @@ history — and nothing more.
 
 See `docs/Roadmap.md`, 0.8.106, for the full milestone entry.
 
-## A Publication Profile Names What A Publication Earned, Never Who Earned It (0.8.107)
+### A Publication Profile Names What A Publication Earned, Never Who Earned It (0.8.107)
 
 **A reduction over an existing vocabulary is not license to invent a new
 one.** `application/AchievementProfileView.js`'s own `describeAchievementProfile()`
@@ -18139,7 +18136,7 @@ recording the former never fabricates the latter.
 
 See `docs/Roadmap.md`, 0.8.108, for the full milestone entry.
 
-## A Ranking Is A Policy Output, Not A Discovered Property (0.8.112)
+### A Ranking Is A Policy Output, Not A Discovered Property (0.8.112)
 
 **Every fact this codebase has computed since 0.8.75 answers "what
 happened?" A ranking answers a different question in kind, not merely in
@@ -18210,7 +18207,7 @@ authority's database.
 
 See `docs/Roadmap.md`, 0.8.112, for the full milestone entry.
 
-## A Leaderboard Is A Presentation Of A Ranking, Never A Second Ranking System (0.8.113)
+### A Leaderboard Is A Presentation Of A Ranking, Never A Second Ranking System (0.8.113)
 
 **Ranking answers how publishers are ordered; a leaderboard answers how
 that order is presented — and a presentation layer that quietly re-derives
@@ -18275,7 +18272,7 @@ asserts it directly rather than trusting the temptation never arises.
 
 See `docs/Roadmap.md`, 0.8.113, for the full milestone entry.
 
-## Evidence Is Portable; Achievements Are Derivable; Rankings Are Policy; Leaderboards Are Presentation (0.8.114)
+### Evidence Is Portable; Achievements Are Derivable; Rankings Are Policy; Leaderboards Are Presentation (0.8.114)
 
 **A conclusion that cannot be independently recomputed by the party
 receiving it is not evidence — it is a claim.** Every stage this codebase
@@ -18345,7 +18342,7 @@ is there because some downstream computation actually reads it, and
 nothing in it invites a receiving replica to trust something it was never
 asked to.
 
-## Evidence May Be Merged; Conclusions Must Be Recomputed (0.8.115)
+### Evidence May Be Merged; Conclusions Must Be Recomputed (0.8.115)
 
 **A decentralized network is not one replica importing one dump — it is
 many replicas, each with their own history, continually receiving
@@ -18411,7 +18408,7 @@ archive currently holding the fact.
 
 See `docs/Roadmap.md`, 0.8.114, for the full milestone entry.
 
-## An Evidence Fingerprint Identifies A Replica's Facts; It Never Authenticates Or Concludes Anything About Them (0.8.116)
+### An Evidence Fingerprint Identifies A Replica's Facts; It Never Authenticates Or Concludes Anything About Them (0.8.116)
 
 **A matching evidence fingerprint means "these four evidence collections
 are byte-identical between two replicas" and nothing else.** `application/
@@ -18491,7 +18488,7 @@ this milestone is what makes that agreement checkable.
 
 See `docs/Roadmap.md`, 0.8.116, for the full milestone entry.
 
-## An Evidence Difference Names Missing Facts; It Is Never The Authority On Whether Two Replicas Agree (0.8.117)
+### An Evidence Difference Names Missing Facts; It Is Never The Authority On Whether Two Replicas Agree (0.8.117)
 
 0.8.116 gave two replicas a cheap way to learn THAT their achievement
 evidence differs — compare two fingerprints. It deliberately never
@@ -18552,7 +18549,7 @@ and the identical difference, recomputed afterward, reports none at all.
 
 See `docs/Roadmap.md`, 0.8.117, for the full milestone entry.
 
-## A Synchronization Exchange Transports Evidence; A Fingerprint-Only Request Can Never Transport A Minimal Diff (0.8.118)
+### A Synchronization Exchange Transports Evidence; A Fingerprint-Only Request Can Never Transport A Minimal Diff (0.8.118)
 
 0.8.116 and 0.8.117 both assume a caller already holds BOTH archives being
 compared, side by side, in the same process. That is the natural shape for
@@ -18629,7 +18626,7 @@ the evidence, portably, and this milestone is that way.
 
 See `docs/Roadmap.md`, 0.8.118, for the full milestone entry.
 
-## A Leaderboard Snapshot's Identity Is Its Evidence Fingerprint Plus Its Policy Version — Never A Timestamp, Never A Hash Of Itself (0.8.119)
+### A Leaderboard Snapshot's Identity Is Its Evidence Fingerprint Plus Its Policy Version — Never A Timestamp, Never A Hash Of Itself (0.8.119)
 
 0.8.113 established that a leaderboard is a presentation of a ranking,
 never a second ranking system. 0.8.116 established that an evidence
@@ -18695,7 +18692,7 @@ this milestone is the statement that agreement is sufficient.
 
 See `docs/Roadmap.md`, 0.8.119, for the full milestone entry.
 
-## A Valid Signature Proves Who Signed; It Never Proves The Claim Is True Relative To A Replica's Own Evidence (0.8.121)
+### A Valid Signature Proves Who Signed; It Never Proves The Claim Is True Relative To A Replica's Own Evidence (0.8.121)
 
 0.8.119 proved a leaderboard conclusion is reproducible. 0.8.120 proved
 that reproducibility is independently checkable, without ever trusting a
@@ -18751,7 +18748,7 @@ verdict about which conclusion is "right."
 
 See `docs/Roadmap.md`, 0.8.121, for the full milestone entry.
 
-## A Stored Claim Is A Historical Signed Statement; Its Current Verification Result Is A Derived Observation (0.8.130)
+### A Stored Claim Is A Historical Signed Statement; Its Current Verification Result Is A Derived Observation (0.8.130)
 
 0.8.121-0.8.129 built a complete claim subsystem — signing, exchange,
 receipt, verification, and three read-only projections — entirely over a
@@ -18815,7 +18812,7 @@ header already required.
 
 See `docs/Roadmap.md`, 0.8.130, for the full milestone entry.
 
-## Recording A Decision Does Not Execute, Validate, Or Interpret It (0.8.150)
+### Recording A Decision Does Not Execute, Validate, Or Interpret It (0.8.150)
 
 0.8.145 built the reconciliation decision record on a single restraint:
 "`decided: true` means 'a caller explicitly recorded this disposition
@@ -18878,7 +18875,7 @@ state.
 
 See `docs/Roadmap.md`, 0.8.150, for the full milestone entry.
 
-## Exchange Transports Historical Decisions; It Does Not Make New Ones (0.8.151)
+### Exchange Transports Historical Decisions; It Does Not Make New Ones (0.8.151)
 
 0.8.126 already drew this line once, for signed claims:
 `PublisherLeaderboardClaimHistoryExchange.js` moves receipts, never
@@ -18947,7 +18944,7 @@ after that check as it was before transport.
 
 See `docs/Roadmap.md`, 0.8.151, for the full milestone entry.
 
-## A Historical Decision Is Read By Its Own Embedded Fact, Never Recomputed Against Current State (0.8.153)
+### A Historical Decision Is Read By Its Own Embedded Fact, Never Recomputed Against Current State (0.8.153)
 
 Every projection over `PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory`
 since 0.8.147 has read a decision record's own already-embedded `candidate`
@@ -19012,7 +19009,7 @@ nothing at all.
 
 See `docs/Roadmap.md`, 0.8.153, for the full milestone entry.
 
-## A Candidate's Decision History Is A Narration, Not A State Machine (0.8.154)
+### A Candidate's Decision History Is A Narration, Not A State Machine (0.8.154)
 
 0.8.148 already established, over the whole decision history at once,
 that a timeline is "a narration, never a state machine" — a later
@@ -19493,7 +19490,7 @@ A signature needed one this milestone deliberately declines to build.
 
 See `docs/Roadmap.md`, 0.9.266, for the full milestone entry.
 
-## A NotificationEvent Represents An Awareness-Worthy Fact; It Is Not A Delivery, A Read State, Or A Chat Message (0.9.273)
+### A NotificationEvent Represents An Awareness-Worthy Fact; It Is Not A Delivery, A Read State, Or A Chat Message (0.9.273)
 
 0.9.272's reassessment found several domains capable of producing a meaningful, user-directed event, and one real
 architectural precedent for durable delivery, `application/ChatOutbox.js` — but no domain-neutral representation of
@@ -19526,7 +19523,7 @@ producer is 0.9.274's question, not this milestone's to answer by fiat.
 
 See `docs/Roadmap.md`, 0.9.273, for the full milestone entry.
 
-## A Producer Wraps The Command It Notifies About; It Never Becomes A Fourth Argument To It (0.9.275)
+### A Producer Wraps The Command It Notifies About; It Never Becomes A Fourth Argument To It (0.9.275)
 
 0.9.274 found Publication Commentary ready to become a real `NotificationEvent` producer — a durable, conflict-guarded
 `commentaryId`, a recipient (`Publication.publisherIdentity`) already on file, and a genuine fact timestamp. The
@@ -19562,7 +19559,7 @@ of guess 0.9.272's own reassessment discipline exists to avoid.
 
 See `docs/Roadmap.md`, 0.9.275, for the full milestone entry.
 
-## A Lifecycle Audit Names What It Finds; It Does Not Fix What It Finds (0.9.276)
+### A Lifecycle Audit Names What It Finds; It Does Not Fix What It Finds (0.9.276)
 
 0.9.275 shipped `PublicationCommentaryNotificationProducer.js` and, in the same milestone, its own fourteen-section
 test suite covering the successful lifecycle, exact identity preservation, and both failure directions. 0.9.276
@@ -19596,7 +19593,7 @@ depend on whether the sink path ever ran.
 
 See `docs/Roadmap.md`, 0.9.276, for the full milestone entry.
 
-## Reconstructible, Safe To Regenerate, Deduplicated, And Exactly-Once Are Four Separate Facts (0.9.277)
+### Reconstructible, Safe To Regenerate, Deduplicated, And Exactly-Once Are Four Separate Facts (0.9.277)
 
 0.9.276 found that a caller retry of an already-persisted `commentaryId` produces a second, distinct
 `NotificationEvent` for the same Commentary, and classified the question of whether that should be acceptable as
@@ -19640,7 +19637,7 @@ milestone has an actual durability requirement in hand, not to the audit that me
 
 See `docs/Roadmap.md`, 0.9.277, for the full milestone entry.
 
-## A Dedup Identity Is Chosen From Outside The Fact It Names; The Fact Never Chooses For Itself (0.9.278)
+### A Dedup Identity Is Chosen From Outside The Fact It Names; The Fact Never Chooses For Itself (0.9.278)
 
 0.9.277 left a question open rather than answering it: if `NotificationEvent`s become durable, what exactly is being
 persisted, and what identity would make two representations of it "the same"? 0.9.278 does not answer that question
@@ -19691,7 +19688,7 @@ stays exactly as small as 0.9.273 first made it.
 
 See `docs/Roadmap.md`, 0.9.278, for the full milestone entry.
 
-## A Key Collision Is Necessary, Never Sufficient, Evidence Of Sameness (0.9.279)
+### A Key Collision Is Necessary, Never Sufficient, Evidence Of Sameness (0.9.279)
 
 0.9.278 asked whether two events compute the same dedup key. It never asked what happens once they do. 0.9.279 fixes
 0.9.278's own strongest surviving candidate — `commentaryId + eventType + recipientIdentityId` — as a stable
@@ -19743,7 +19740,7 @@ raises is a question about what happens BETWEEN two of them, asked and answered 
 
 See `docs/Roadmap.md`, 0.9.279, for the full milestone entry.
 
-## Deduplication Identity Is A Decision About A Fact, Never A Capability Of It (0.9.280)
+### Deduplication Identity Is A Decision About A Fact, Never A Capability Of It (0.9.280)
 
 0.9.278 and 0.9.279 were both audits: they characterized candidate identities and collision outcomes but, by their
 own brief, never wrote an adopted answer down anywhere a real caller could use. 0.9.280 does — `core/
@@ -19788,7 +19785,7 @@ extended here to the new file that finally has responsibility to hold.
 
 See `docs/Roadmap.md`, 0.9.280, for the full milestone entry.
 
-## A Persistence Layer Enforces A Policy; It Never Adjudicates What The Policy Leaves Open (0.9.281)
+### A Persistence Layer Enforces A Policy; It Never Adjudicates What The Policy Leaves Open (0.9.281)
 
 0.9.280 gave the Notification arc a decision function, `classifyNotificationCollision()`, but nothing ever called it
 against durable storage. 0.9.281 is the first thing that does — `storage/NotificationEventStore.js` — and its own
@@ -19830,7 +19827,7 @@ different questions, and 0.9.281 only answers the first.
 
 See `docs/Roadmap.md`, 0.9.281, for the full milestone entry.
 
-## Persisted, Delivered, Seen, And Read Are Four Different Claims — This System Makes Only The First One (0.9.286)
+### Persisted, Delivered, Seen, And Read Are Four Different Claims — This System Makes Only The First One (0.9.286)
 
 0.9.273-0.9.285 built and finally wired a complete notification vertical slice: a Publication Commentary produces a
 `NotificationEvent`, `NotificationEventStore` durably persists it, and `GetRecipientNotificationEventsUseCase`/
@@ -19879,7 +19876,7 @@ READ
 
 See `docs/Roadmap.md`, 0.9.286, for the full milestone entry.
 
-## Water Depth Is Still A Rendering-Time Offset (0.9.615, 0.9.634)
+### Water Depth Is Still A Rendering-Time Offset (0.9.615, 0.9.634)
 
 Shallow water follows the same rule as hills (see "Terrain Elevation Is A Rendering-Time Offset, Never A Presence
 Or Placement Fact (0.2.76)"). `AvatarPresence.position.y` never learns about lakes. The lakebed and the lake-surface
@@ -19889,7 +19886,7 @@ movement in only two ways, both stateless and recomputed every tick from `(x, z)
 vehicles. The same holds for a vehicle rider: the vehicle's position already includes terrain height, so render
 code must not add it again.
 
-## An Imported Document Always Gets A Fresh Identity (0.9.642)
+### An Imported Document Always Gets A Fresh Identity (0.9.642)
 
 A document file carries its source's `world.id`, but that id means nothing on the importing device. Worse,
 `documentId` is used directly as a storage key, so reusing it could overwrite an unrelated document or the manifest
@@ -19897,14 +19894,14 @@ itself. Import therefore always goes through `DocumentCloneService`: new documen
 remapped group membership, and `parentDocumentId: null`, because an import is not a fork of anything on this
 device. Export and Import are portability, not publication: no signature, no announcement, no network.
 
-## Local First, Network Second, For Every Distributed Write (0.9.620, 0.9.628, 0.9.631)
+### Local First, Network Second, For Every Distributed Write (0.9.620, 0.9.628, 0.9.631)
 
 A write that can leave the device (a Commentary, a Snapshot announcement after a successful pin) is committed
 locally before any network step, and a network failure never undoes it. The network is an extra delivery path, not
 the source of truth. A best-effort step that fails reports why (sanitized) next to the result that did succeed; it
 never turns the success into a failure.
 
-## Choose One Substrate; Fan Out Only Within It (2026-09-20)
+### Choose One Substrate; Fan Out Only Within It (2026-09-20)
 
 Across substrates, distribution selects: a Publication, Snapshot, Place Naming claim or Commentary is announced on
 Nostr or on Arweave, never both from one action. Within a substrate, the strategy follows what the endpoints are:
@@ -19917,7 +19914,7 @@ Nostr or on Arweave, never both from one action. Within a substrate, the strateg
 One relay set serves every Nostr feature. A separate set for Publications was tried and removed, because the two
 sets never actually differed.
 
-## A Saved Preference Seeds A Choice; It Never Makes One (2026-09-21)
+### A Saved Preference Seeds A Choice; It Never Makes One (2026-09-21)
 
 A saved Content, Announcement/Discovery or Proof/Anchoring preference does two things:
 
@@ -19929,7 +19926,7 @@ It never overrides a value the user already picked, and never triggers a network
 saved value (a legacy `local` Content preference, or a provider with no registered backend) reads as no
 preference, or as an explicit `PROVIDER_NOT_FOUND`, never as a silent substitute.
 
-## One Signer, One Request At A Time (2026-09-21)
+### One Signer, One Request At A Time (2026-09-21)
 
 A combined action whose steps may ask the same wallet extension to sign (Publication and Snapshot distribution both
 announcing over NIP-07, for example) runs those steps one after the other, never concurrently. Wallet extensions
@@ -19937,7 +19934,7 @@ don't reliably handle two approval prompts at once, and the page can't tell when
 reason, every call waiting on a human approval gets the wallet's own bounded timeout (120 seconds), and no shorter
 outer timeout may cut it off first.
 
-## An Animal Has Three Possible Homes, Never Two At Once (0.9.700–0.9.703)
+### An Animal Has Three Possible Homes, Never Two At Once (0.9.700–0.9.703)
 
 - **Deterministic.** Recomputed from `(seed, x, z)` (`core/WildlifeField.js`), with a derived id. It is never
   stored, and a caught one is excluded locally rather than deleted.
@@ -19950,7 +19947,7 @@ Moving between homes always takes an animal out of the old one first: catching e
 decorating discards the runtime animal, and undecorating removes the decoration before releasing a fresh runtime
 animal. The renderer draws each animal from exactly one home, so none is ever drawn twice.
 
-## A Transferred Entry Leaves Its Owner Before The Offer Does (0.9.702)
+### A Transferred Entry Leaves Its Owner Before The Offer Does (0.9.702)
 
 An inventory transfer escrows first: the offered entry is removed from the sender's inventory before OFFER is sent,
 and is put back only on DECLINE or when the recipient's connection goes away. While an offer is open, the entry

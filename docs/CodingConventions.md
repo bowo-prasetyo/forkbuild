@@ -21,3 +21,5 @@ Comments explain why: a constraint, invariant or deliberate omission the code it
 Change history belongs in docs/Roadmap.md and commit messages, not in code comments: no milestone or version tags ("0.8.79 — …"), and no "moved from" or "amended by" notes. Older files still carry them; trim them when you change that code.
 
 HTML comments inside a Vue template are shipped to the browser, so use them sparingly, as brief section labels.
+
+Developer docs each have one job. docs/Roadmap.md is the history log: add a new entry per milestone, and don't rewrite old ones except to correct an error. docs/Architecture.md, docs/Protocol.md and the other reference docs describe the system as it is now: edit the existing section in place when something changes, instead of appending a new milestone section. docs/Principles.md sections are cited by title from code and tests, so don't rename them; when a later milestone changes a principle, add a short "Changed by …" note at the top of the old section.

@@ -51,8 +51,8 @@
 0.1.48 Alignment & Distribution Tools  (done)
 0.1.49 Numeric Transform Input  (done)
 0.1.50 Editing UX Consolidation & Command Surface  (done)
-0.1.51 Stability / Performance / Large-Document Hardening
-0.1.52 Protocol & Persistence Hardening
+0.1.51 Stability / Performance / Large-Document Hardening  (never done as a separate milestone; work moved on to 0.2.0)
+0.1.52 Protocol & Persistence Hardening  (never done as a separate milestone; work moved on to 0.2.0)
 0.2.0   Durable Documents & Publishing Boundary       ✓
 0.2.1   Editor / World Editing Parity                 ✓
 0.2.2   Schema Versioning & Real Migration Fixtures   ✓
@@ -5528,7 +5528,8 @@ Kernel → 0.1.45 Selection/Group Surface → 0.1.46 Pointer Gizmo →
 0.1.49 ended feature construction; 0.1.50 makes the accumulated feature
 set feel like one product. 0.1.51 (Stability / Performance /
 Large-Document Hardening) and 0.1.52 (Protocol & Persistence
-Hardening) follow before 0.2 Publishing & Multiplayer.
+Hardening) follow before 0.2 Publishing & Multiplayer. (Neither ran as a
+separate milestone; work moved straight on to 0.2.0.)
 
 0.2.93 — World View Instance Inspection — is a deliberate change of
 direction rather than another construction feature on top of 0.2.90→
@@ -66391,13 +66392,7 @@ question this milestone exists to ask.
 
 ### Recommendation
 
-```text
-0.9.137  Snapshot Distribution Runtime Composition               ✓
-0.9.138  World View Snapshot Distribution Action                 ✓
-0.9.139  Snapshot Distribution End-to-End Runtime & UI Audit      ✓
-0.9.140  Own Publication Distribution Entry Point                 ✓
-0.9.141  Distribution Entry-Point Convergence Audit                ✓
-```
+*(Arc status table omitted here; the complete, later version is in the 0.9.142 entry below.)*
 
 0.9.140 solved the product problem (distributing your own material no
 longer depends on peer presence); 0.9.141 proves that solution did not
@@ -66797,12 +66792,7 @@ locator == publication.contentReference.hash                          NEVER
 
 ### Recommendation
 
-```text
-0.9.140  Own Publication Distribution Entry Point                 ✓
-0.9.141  Distribution Entry-Point Convergence Audit                ✓
-0.9.142  World View Snapshot Discovery Command                     ✓
-0.9.143  Snapshot–Publication Attribution                          ✓
-```
+*(Arc status table omitted here; the complete, later version is in the 0.9.147 entry below.)*
 
 Attribution is no longer an unbuilt seam — `publication.contentReference.hash`
 and an independently verified Snapshot's own content hash can now be
@@ -66992,13 +66982,7 @@ distributing, exactly as before this milestone.
 
 ### Recommendation
 
-```text
-0.9.140  Own Publication Distribution Entry Point                 ✓
-0.9.141  Distribution Entry-Point Convergence Audit                ✓
-0.9.142  World View Snapshot Discovery Command                     ✓
-0.9.143  Snapshot–Publication Attribution                          ✓
-0.9.144  World View Snapshot Attribution Integration                ✓
-```
+*(Arc status table omitted here; the complete, later version is in the 0.9.147 entry below.)*
 
 A user can now discover a Snapshot for a Publication — their own, or one
 encountered in the World — and see, honestly, whether the independently
@@ -67220,14 +67204,7 @@ going forward, not merely a claim made once in prose.
 
 ### Recommendation
 
-```text
-0.9.140  Own Publication Distribution Entry Point                 ✓
-0.9.141  Distribution Entry-Point Convergence Audit                ✓
-0.9.142  World View Snapshot Discovery Command                     ✓
-0.9.143  Snapshot–Publication Attribution                          ✓
-0.9.144  World View Snapshot Attribution Integration                ✓
-0.9.145  End-to-End Snapshot Attribution Audit                     ✓
-```
+*(Arc status table omitted here; the complete, later version is in the 0.9.147 entry below.)*
 
 This closes a complete, decentralized Snapshot vertical slice — DISCOVERY,
 RESOLUTION/VERIFICATION, ATTRIBUTION, and PRESENTATION now each hold as
@@ -67445,15 +67422,7 @@ use case names it first, not on the strength of it sounding plausible.
 
 ### Recommendation
 
-```text
-0.9.140  Own Publication Distribution Entry Point                 ✓
-0.9.141  Distribution Entry-Point Convergence Audit                ✓
-0.9.142  World View Snapshot Discovery Command                     ✓
-0.9.143  Snapshot–Publication Attribution                          ✓
-0.9.144  World View Snapshot Attribution Integration                ✓
-0.9.145  End-to-End Snapshot Attribution Audit                     ✓
-0.9.146  Snapshot & World Architecture Roadmap Reassessment        ✓
-```
+*(Arc status table omitted here; the complete, later version is in the 0.9.147 entry below.)*
 
 If forced to pick, I would lean toward **Candidate 1** over Candidate 2:
 it is shared infrastructure that unlocks two already-built, currently
@@ -68380,11 +68349,7 @@ automatic attribution: a resolved Snapshot is never compared against
 `discoverOwnSnapshot()`'s own, separate, already-known-contentHash
 question.
 
-```text
-0.9.150  Snapshot Candidate Discovery Command                      ✓
-0.9.151  World View Snapshot Candidate Browser                     ✓
-0.9.152  Selected Snapshot Candidate Resolution                    ✓
-```
+*(Arc status table omitted here; the complete, later version is in the 0.9.163 entry below.)*
 
 ### Recommendation
 
@@ -68478,12 +68443,7 @@ never been added to `tests.html`'s own browser test-runner list — both that
 file and this milestone's own new audit are now listed there, alphabetically
 placed.
 
-```text
-0.9.150  Snapshot Candidate Discovery Command                      ✓
-0.9.151  World View Snapshot Candidate Browser                     ✓
-0.9.152  Selected Snapshot Candidate Resolution                    ✓
-0.9.153  Selected Snapshot Resolution End-to-End Audit              ✓
-```
+*(Arc status table omitted here; the complete, later version is in the 0.9.163 entry below.)*
 
 ### Recommendation
 
@@ -68583,13 +68543,7 @@ trust scores, "best snapshot," provider reputation, ownership/authenticity
 claims, persistence of selection, caching, retry/failover, and any new
 resolution or attribution outcome vocabulary.
 
-```text
-0.9.150  Snapshot Candidate Discovery Command                      ✓
-0.9.151  World View Snapshot Candidate Browser                     ✓
-0.9.152  Selected Snapshot Candidate Resolution                    ✓
-0.9.153  Selected Snapshot Resolution End-to-End Audit              ✓
-0.9.154  Selected Snapshot Attribution                              ✓
-```
+*(Arc status table omitted here; the complete, later version is in the 0.9.163 entry below.)*
 
 ### Recommendation
 
@@ -68732,14 +68686,7 @@ whole family exists to prove, that the user's own explicit selection can
 materially determine the final attribution verdict, holds in both
 directions over an unchanged Publication.
 
-```text
-0.9.150  Snapshot Candidate Discovery Command                      ✓
-0.9.151  World View Snapshot Candidate Browser                     ✓
-0.9.152  Selected Snapshot Candidate Resolution                    ✓
-0.9.153  Selected Snapshot Resolution End-to-End Audit              ✓
-0.9.154  Selected Snapshot Attribution                              ✓
-0.9.155  Selected Snapshot Attribution End-to-End Audit              ✓
-```
+*(Arc status table omitted here; the complete, later version is in the 0.9.163 entry below.)*
 
 ### Recommendation
 
@@ -68933,17 +68880,7 @@ exactly the exclusions its own design named going in:
   explicit source already shares.
 - **Ranking, caching, retry, or automatic materialization of any kind.**
 
-```text
-0.9.150  Snapshot Candidate Discovery Command                      ✓
-0.9.151  World View Snapshot Candidate Browser                     ✓
-0.9.152  Selected Snapshot Candidate Resolution                    ✓
-0.9.153  Selected Snapshot Resolution End-to-End Audit              ✓
-0.9.154  Selected Snapshot Attribution                              ✓
-0.9.155  Selected Snapshot Attribution End-to-End Audit              ✓
-0.9.156  Snapshot Lifecycle & Semantic Boundary Audit                ✓
-0.9.157  Snapshot Candidate Interaction Completion Audit             ✓
-0.9.158  Selected Snapshot Materialization                           ✓
-```
+*(Arc status table omitted here; the complete, later version is in the 0.9.163 entry below.)*
 
 ## 0.9.159 — Selected Snapshot World Placement
 
@@ -69075,18 +69012,7 @@ Deliberately excluded, per this milestone's own narrow scope:
   outcome the materialization result itself already carries, passed
   through unchanged, are ever produced.
 
-```text
-0.9.150  Snapshot Candidate Discovery Command                      ✓
-0.9.151  World View Snapshot Candidate Browser                     ✓
-0.9.152  Selected Snapshot Candidate Resolution                    ✓
-0.9.153  Selected Snapshot Resolution End-to-End Audit              ✓
-0.9.154  Selected Snapshot Attribution                              ✓
-0.9.155  Selected Snapshot Attribution End-to-End Audit              ✓
-0.9.156  Snapshot Lifecycle & Semantic Boundary Audit                ✓
-0.9.157  Snapshot Candidate Interaction Completion Audit             ✓
-0.9.158  Selected Snapshot Materialization                           ✓
-0.9.159  Selected Snapshot World Placement                           ✓
-```
+*(Arc status table omitted here; the complete, later version is in the 0.9.163 entry below.)*
 
 ## 0.9.160 — Selected Snapshot World Runtime Registration
 
@@ -69239,19 +69165,7 @@ Deliberately excluded, per this milestone's own narrow scope:
   registry's own pre-existing "replacement, not accumulation" rule already
   provides for free.**
 
-```text
-0.9.150  Snapshot Candidate Discovery Command                      ✓
-0.9.151  World View Snapshot Candidate Browser                     ✓
-0.9.152  Selected Snapshot Candidate Resolution                    ✓
-0.9.153  Selected Snapshot Resolution End-to-End Audit              ✓
-0.9.154  Selected Snapshot Attribution                              ✓
-0.9.155  Selected Snapshot Attribution End-to-End Audit              ✓
-0.9.156  Snapshot Lifecycle & Semantic Boundary Audit                ✓
-0.9.157  Snapshot Candidate Interaction Completion Audit             ✓
-0.9.158  Selected Snapshot Materialization                           ✓
-0.9.159  Selected Snapshot World Placement                           ✓
-0.9.160  Selected Snapshot World Runtime Registration                ✓
-```
+*(Arc status table omitted here; the complete, later version is in the 0.9.163 entry below.)*
 
 ### Recommendation
 
@@ -69388,20 +69302,7 @@ Deliberately excluded, per this milestone's own narrow scope:
   verified, materialized, placed, registered, AND rendered" as one named
   architectural fact — is 0.9.162's own job, not this one's.
 
-```text
-0.9.150  Snapshot Candidate Discovery Command                      ✓
-0.9.151  World View Snapshot Candidate Browser                     ✓
-0.9.152  Selected Snapshot Candidate Resolution                    ✓
-0.9.153  Selected Snapshot Resolution End-to-End Audit              ✓
-0.9.154  Selected Snapshot Attribution                              ✓
-0.9.155  Selected Snapshot Attribution End-to-End Audit              ✓
-0.9.156  Snapshot Lifecycle & Semantic Boundary Audit                ✓
-0.9.157  Snapshot Candidate Interaction Completion Audit             ✓
-0.9.158  Selected Snapshot Materialization                           ✓
-0.9.159  Selected Snapshot World Placement                           ✓
-0.9.160  Selected Snapshot World Runtime Registration                ✓
-0.9.161  Snapshot World Rendering                                    ✓
-```
+*(Arc status table omitted here; the complete, later version is in the 0.9.163 entry below.)*
 
 ### Recommendation
 
@@ -69545,21 +69446,7 @@ Deliberately excluded, per this milestone's own narrow, audit-only scope:
   unbuilt, later work — this milestone answered a different, more
   foundational question first.
 
-```text
-0.9.150  Snapshot Candidate Discovery Command                      ✓
-0.9.151  World View Snapshot Candidate Browser                     ✓
-0.9.152  Selected Snapshot Candidate Resolution                    ✓
-0.9.153  Selected Snapshot Resolution End-to-End Audit              ✓
-0.9.154  Selected Snapshot Attribution                              ✓
-0.9.155  Selected Snapshot Attribution End-to-End Audit              ✓
-0.9.156  Snapshot Lifecycle & Semantic Boundary Audit                ✓
-0.9.157  Snapshot Candidate Interaction Completion Audit             ✓
-0.9.158  Selected Snapshot Materialization                           ✓
-0.9.159  Selected Snapshot World Placement                           ✓
-0.9.160  Selected Snapshot World Runtime Registration                ✓
-0.9.161  Snapshot World Rendering                                    ✓
-0.9.162  Snapshot World Convergence Audit                            ✓
-```
+*(Arc status table omitted here; the complete, later version is in the 0.9.163 entry below.)*
 
 ### Recommendation
 
@@ -70265,15 +70152,7 @@ Deliberately excluded, per this milestone's own narrow scope:
   `application/WorldEncounterMaterialLoading.js`.** This audit confirms
   their existing behavior; it found no defect to fix.
 
-```text
-0.9.161  Snapshot World Rendering                                    ✓
-0.9.162  Snapshot World Convergence Audit                            ✓
-0.9.163  Snapshot World Origin Collision Fix                         ✓
-0.9.164  Snapshot World Source Identity Audit                        ✓
-0.9.165  World Discovery Participation Audit                         ✓
-0.9.166  Snapshot World Encounter Material Loading                   ✓
-0.9.167  Snapshot World Material Loading E2E Audit                   ✓
-```
+*(Arc status table omitted here; the complete, later version is in the 0.9.168 entry below.)*
 
 ### Recommendation
 
@@ -71701,12 +71580,7 @@ Deliberately excluded, per this milestone's own narrowed brief:
 - **A new World Encounter kind, a new registry identity, or a new
   Snapshot lifecycle state.**
 
-```text
-0.9.174  World Source Lifecycle & Staleness Audit                    ✓
-0.9.175  World Source Selection Consistency Audit                    ✓
-0.9.176  World Snapshot Presentation                                 ✓
-0.9.177  World Snapshot Inspection Detail                            ✓
-```
+*(Arc status table omitted here; the complete, later version is in the 0.9.179 entry below.)*
 
 ### Recommendation
 
@@ -71897,13 +71771,7 @@ Deliberately excluded, per this milestone's own audit-first brief:
   Encounter class.** `WorldEncounterKind` still carries exactly
   `PUBLICATION` and `AVATAR`.
 
-```text
-0.9.174  World Source Lifecycle & Staleness Audit                    ✓
-0.9.175  World Source Selection Consistency Audit                    ✓
-0.9.176  World Snapshot Presentation                                 ✓
-0.9.177  World Snapshot Inspection Detail                            ✓
-0.9.178  World Snapshot Inspection Actionability Audit               ✓
-```
+*(Arc status table omitted here; the complete, later version is in the 0.9.179 entry below.)*
 
 ### Recommendation
 
@@ -73033,13 +72901,7 @@ Deliberately excluded, per this milestone's own audit-first brief:
   vocabulary of any kind.** Inherited unchanged from every file in this
   chain.
 
-```text
-0.9.181  World Snapshot Comparison                                   ✓
-0.9.182  World Snapshot Comparison UI                                ✓
-0.9.183  World Snapshot Content View                                 ✓
-0.9.184  World Snapshot Content Comparison View                      ✓
-0.9.185  World Snapshot Content Actionability Audit                  ✓
-```
+*(Arc status table omitted here; the complete, later version is in the 0.9.186 entry below.)*
 
 ### Recommendation
 
@@ -74158,12 +74020,7 @@ assertions ("exactly one new outcome value") were updated to expect the
 cascade's own now-two values (`INELIGIBLE`, `SUPPRESSED`) — the "no new
 LIFECYCLE enum" invariant itself is unchanged and still holds.
 
-```text
-0.9.190  Automatic Snapshot Encounter Retention Integration          ✓
-0.9.191  Comprehensive Automatic Snapshot Retention Lifecycle Audit  ✓
-0.9.192  Automatic World Observation Cadence Audit                   ✓
-0.9.193  Automatic Snapshot Session-Lifetime Guard                   ✓
-```
+*(Arc status table omitted here; the complete, later version is in the 0.9.194 entry below.)*
 
 ### Recommendation
 
@@ -74841,12 +74698,7 @@ cleanup or reattachment, no publication-state propagation onto placement
 state, and no new UI lifecycle flag for the orphaned case — confirmed
 absent by Section G's own structural sweep, not merely unmentioned.
 
-```text
-0.9.196  Architecture Reassessment / Product Gap Audit               ✓
-0.9.197  World Placement Removal UI Action                          ✓
-0.9.198  Publication Unpublish / Retract UI Action                  ✓
-0.9.199  Removal & Retraction Lifecycle Convergence Audit            ✓
-```
+*(Arc status table omitted here; the complete, later version is in the 0.9.200 entry below.)*
 
 ### Recommendation
 
@@ -75156,12 +75008,7 @@ same real (not mocked) collaborators every other file in this arc uses:
   concept, no Snapshot/Nostr/Arweave collaborator, and introduce no
   orphan-lifecycle vocabulary of any kind.
 
-```text
-0.9.199  Removal & Retraction Lifecycle Convergence Audit            ✓
-0.9.200  Orphaned World Placement Lifecycle Audit                   ✓
-0.9.201  Degraded Orphan Row Handling                               ✓
-0.9.202  Unpublished Placement Physical-Occupancy Audit              ✓
-```
+*(Arc status table omitted here; the complete, later version is in the 0.9.203 entry below.)*
 
 ### Decision
 
@@ -76756,12 +76603,7 @@ the exact value the Editor's own `getUndoLabel()` would surface if
 
 `tests/PostUndoRedoProductReassessment.test.js` is the new flagship.
 
-```text
-0.9.209  Post-History Product Reassessment                           ✓
-0.9.210  World View Undo/Redo UI Integration                         ✓
-0.9.211  World View Undo/Redo Lifecycle Audit                        ✓
-0.9.212  Post-Undo/Redo Product Reassessment                         ✓
-```
+*(Arc status table omitted here; the complete, later version is in the 0.9.215 entry below.)*
 
 ### Recommendation
 
@@ -76922,13 +76764,7 @@ undo/redo label mirrors: `ACTUAL_GAP` → `COMPLETE`), Section K's closing
 note, and the classification summary/capability matrix/candidate-gap
 block at the bottom to record the closure.
 
-```text
-0.9.209  Post-History Product Reassessment                           ✓
-0.9.210  World View Undo/Redo UI Integration                         ✓
-0.9.211  World View Undo/Redo Lifecycle Audit                        ✓
-0.9.212  Post-Undo/Redo Product Reassessment                         ✓
-0.9.213  Editor Undo/Redo Label Mirrors                               ✓
-```
+*(Arc status table omitted here; the complete, later version is in the 0.9.215 entry below.)*
 
 ### Recommendation
 
@@ -77103,14 +76939,7 @@ closure-findings table (Transform gesture feedback overlay: `ACTUAL_GAP`
 → `COMPLETE`), and the classification summary/capability matrix/
 candidate-gap block at the bottom to record the closure.
 
-```text
-0.9.209  Post-History Product Reassessment                           ✓
-0.9.210  World View Undo/Redo UI Integration                         ✓
-0.9.211  World View Undo/Redo Lifecycle Audit                        ✓
-0.9.212  Post-Undo/Redo Product Reassessment                         ✓
-0.9.213  Editor Undo/Redo Label Mirrors                               ✓
-0.9.214  Editor Transform Gesture Feedback                            ✓
-```
+*(Arc status table omitted here; the complete, later version is in the 0.9.215 entry below.)*
 
 ### Recommendation
 
@@ -77585,13 +77414,7 @@ flagship, and updates `tests/PostUndoRedoProductReassessment.test.js`'s
 own Section A6 in place to record this milestone's resolution of that
 section's open boundary note.
 
-```text
-0.9.212  Post-Undo/Redo Product Reassessment                         ✓
-0.9.213  Editor Undo/Redo Label Mirrors                               ✓
-0.9.214  Editor Transform Gesture Feedback                            ✓
-0.9.215  Snapshot Export Capability Integration                      ✓
-0.9.216  Post-Snapshot-Export Product Reassessment                   ✓
-```
+*(Arc status table omitted here; the complete, later version is in the 0.9.217 entry below.)*
 
 ### Recommendation
 
@@ -84773,6 +84596,115 @@ product-design forks those reassessments each declined to resolve by fiat. A fut
 (`0.9.270`) and post-status reassessment (`0.9.271`) would follow the same one-milestone-later shape this arc has
 used throughout, per the sequence 0.9.268 itself proposed.
 
+## 0.9.270 — Place Naming Adoption Status Lifecycle Audit
+
+0.9.269 built `alreadySaved`; this milestone proves it holds under a lifecycle, the same one-milestone-later audit
+shape 0.9.261/0.9.264/0.9.267 already ran for Navigate, adoption, and metadata presentation in turn. This milestone
+adds **no new capability**. It is a **test-only lifecycle audit**.
+
+### What this milestone adds
+
+`tests/PlaceNamingNearbyAdoptionStatusLifecycleAudit.test.js` (new, registered in `tests.html`) — fifteen sections,
+all driving the real `NostrPlaceNamingDiscoverySource`, the real composed discovery runtime, a real
+`PlaceNamingDiscoveryMonitor`, and a real `WorldNavigationSession`: the self-published/adopted semantic identity
+reconfirmed across repeated live observation cycles rather than a single static call (A); the three cases this
+milestone's own brief named — not in store, adopted, self-published — proved side by side in one live pipeline (B);
+exact claim-id matching (different ids, authors, and a colliding id across Worlds) holding across every tick of a
+repeated live sequence, not just once (C); the full discovered -> not saved -> Adopt -> persist -> Already saved
+lifecycle, closed by re-deriving the identical status from a **brand-new session/monitor instance sharing only the
+underlying storage** — proving the status is reconstructed from persistence, never remembered by any in-memory
+UI/session state (D); both a verification failure (tampered signature) and, newly, a genuine **persistence-layer**
+failure (a storage provider that throws on `save()`) each leaving the indicator at `[Adopt]` across every subsequent
+observation cycle, with a later genuine retry still succeeding normally (E); a self-published claim rediscovered
+through a real, live Nostr relay reporting "Already saved" indistinguishably from an imported claim, including the
+idempotent no-op of clicking Adopt on one's own claim (F); competing claims ("Riverside"/Alice, "Old River"/Bob)
+independently, correctly split when only one is persisted and independently "Already saved" once both are, stable
+across repeated ticks (G); atomic discovery-refresh recomputation surviving a full disappear-and-reappear cycle, not
+just a single content swap (H); World switching (A -> B -> A) proven against a claim id **deliberately forced to
+collide** across the two Worlds (I); navigation independence, live and structural, including a row with a corrupted
+`alreadySaved` value (J); persistence independence proved in **both directions** — a claim vanishing from discovery
+never touches its persisted status, and a direct store change (retraction) is correctly picked up on the next
+discovery refresh (K); the manual `PlaceNamingPanel` file-import path converging onto the identical "Already saved"
+status the moment the same claim is subsequently encountered via Nearby discovery (L); two independent replicas
+observing the identical claim with independently correct, differing statuses, because the status is explicitly local
+(M); a FLAGSHIP continuous lifecycle threading self-publishing, a failed adoption attempt, competing claims, and a
+World switch through the full real discover -> present -> adopt -> verify -> persist -> recompute chain (N); and an
+architectural-freeze regression confirming `alreadySaved` is derived from nothing but
+`hasPlaceNamingClaim(worldId, claimId)` — never the current viewer's own identity, discovery source, claim text,
+signature presence, navigation state, or previous button clicks — with no second source of truth introduced anywhere
+since 0.9.269 (O).
+
+The invariant this file exists to freeze, verbatim from this milestone's own brief: **"Already saved" is a read-only
+observation of the current local claim store; it is not an adoption state, ownership state, preference, or authority
+signal.**
+
+### What this milestone deliberately excludes
+
+No new capability, and no production-code change whatsoever — every section either reconfirms 0.9.269's own boundary
+under a lifecycle it had not yet been exercised against, or records (never patches) product-design forks earlier
+reassessments already declined to resolve. Per this milestone's own brief: no `ADOPTED` domain state, no
+`SELF_PUBLISHED`/`IMPORTED` UI distinction, no preference/ranking, no automatic adoption, no synchronization, no
+notifications, no moderation, no claim deletion/retraction semantics, no signature UI, no `WorldRegion` mutation, and
+no changes to adoption semantics.
+
+### What comes after
+
+Per 0.9.269's own "what comes after": `0.9.271 — Post-Adoption-Status Product Reassessment`, which should reassess
+whether Place Naming has reached its natural product boundary rather than automatically adding another UI capability.
+
+## 0.9.271 — Post-Adoption-Status Place Naming Product Reassessment
+
+0.9.269 built `alreadySaved`; 0.9.270 proved it holds under a full lifecycle. This milestone asks the question that
+whole arc — discovery (0.9.253) through adoption-status lifecycle (0.9.270) — was building toward: is there still a
+concrete product gap in Place Naming, or has this product arc reached a natural stopping point? This milestone adds
+**no new capability**. It is a **test-only product reassessment**, the exact recurring shape 0.9.221/0.9.241/0.9.250/
+0.9.252/0.9.259/0.9.262/0.9.265/0.9.268 already established.
+
+### What this milestone adds
+
+`tests/PostAdoptionStatusPlaceNamingProductReassessment.test.js` (new, registered in `tests.html`) — nine sections:
+the complete pipeline (Nostr through World View to persistence) reconfirmed as a single, unambiguous machinery path,
+including the two newest arrows `hasPlaceNamingClaim()`/`retractPlaceNamingClaim()` (A); "Already saved" frozen as
+exactly "claim exists in this local claim store," proven pairwise and live distinct from adopted (no provenance
+field on the stored record), preferred (`LocalNamePreferenceStore` stays untouched, keyed by name rather than
+claimId), verified (the verifier's own `{signed, reason}` detail never survives importClaim()'s own success path),
+and authoritative (a stranger's claim and this replica's own claim read identically) (B); a thirteen-row
+capability/reachability matrix — eleven `COMPLETE`, one `REACHABLE_BUT_INTERNAL` (verification visibility), one
+`MISSING_DOMAIN_CAPABILITY` (non-authored, locally-saved claim removal) — each row backed by a fresh check in this
+file rather than carried over by assumption from 0.9.265/0.9.268's own tables (C); competing names reconfirmed fully
+preserved, with the explicit finding that navigate-and-adopt does not, on its own, create a demonstrated need for
+preferred/primary/official semantics (D); removal/retraction sharpened past 0.9.265's own finding — the authorship
+gate on retraction lives in exactly ONE place, `PlaceNamingClaimUseCase#retract()`, never in storage:
+`LocalPlaceNamingClaimStore#retract()` itself has no authorship opinion at all, and a live proof shows calling it
+directly removes a non-authored, adopted claim; building a "remove my local copy" capability would need one new,
+thin use-case method and zero storage-layer changes — but no evidence anywhere in this codebase demonstrates it is
+actually required yet (E); verification visibility examined in full — the verifier already computes a rich
+`{valid, signed, reason}` result, and a genuine, pre-existing NON-MUTATING verify pathway for a `PlaceNamingClaim`
+already exists (the 0.7.5 Publications-Center display-kind registry, composed with `store` deliberately omitted) —
+but it is reachable only through a completely separate `DecentralizedPublication`/anchor/catalog transport that
+nothing in the real Place Naming feature (publish/Nearby/Adopt) has ever used, so the two pathways are structurally
+disjoint and reaching a Nearby-discovered claim's verification status still means building something new, not
+flipping on an already-reachable switch (F); synchronization reconfirmed local-only and reconfirmed not a new
+asymmetry (G); the final product-gap verdict, classifying all thirteen candidates as `COMPLETE` /
+`REACHABLE_BUT_INTERNAL` / `MISSING_DOMAIN_CAPABILITY` and selecting **zero** next seams (H); and a verdict section (I).
+
+### What this milestone deliberately excludes
+
+No new capability, and no production-code change whatsoever — every section either reconfirms an existing boundary
+under a sharper, fresh examination, or records (never patches) product-design forks earlier reassessments already
+declined to resolve. Per this milestone's own brief: no `ADOPTED`/preferred/primary/official naming semantics, no
+claim removal/dismissal capability for a non-authored claim, no non-mutating verification-inspection surface, no
+synchronization, no moderation, no notifications, no signature UI, no `WorldRegion` mutation.
+
+### What comes after
+
+Not selected here, and per this milestone's own verdict, not automatically another Place Naming feature: the
+capability/reachability matrix closes at eleven of thirteen candidates `COMPLETE`, and the two open candidates
+(non-authored claim removal, non-mutating verification visibility) each lack either a demonstrated product
+requirement or a proportionate existing surface to build from — Place Naming is product-complete under its current
+semantic model. The next product evolution should return to the broader product roadmap, in a domain with an actual
+demonstrated user-facing gap, rather than extending this arc on reflex.
+
 ## 0.9.273 — Notification Event Domain Boundary
 
 0.9.272's own reassessment closed six product arcs and, under a stronger three-condition test than the seven prior
@@ -85312,115 +85244,6 @@ with conflicting facts — using `classifyNotificationCollision()`'s own three o
 read state, expiration, or UI behavior. What corrective action a `CONFLICT` should trigger (reject, flag, log and
 keep both) stays exactly as `OPEN` as 0.9.279 left it; this milestone only guarantees the store will never be handed
 a `CONFLICT` disguised as a `MATCH`.
-
-## 0.9.270 — Place Naming Adoption Status Lifecycle Audit
-
-0.9.269 built `alreadySaved`; this milestone proves it holds under a lifecycle, the same one-milestone-later audit
-shape 0.9.261/0.9.264/0.9.267 already ran for Navigate, adoption, and metadata presentation in turn. This milestone
-adds **no new capability**. It is a **test-only lifecycle audit**.
-
-### What this milestone adds
-
-`tests/PlaceNamingNearbyAdoptionStatusLifecycleAudit.test.js` (new, registered in `tests.html`) — fifteen sections,
-all driving the real `NostrPlaceNamingDiscoverySource`, the real composed discovery runtime, a real
-`PlaceNamingDiscoveryMonitor`, and a real `WorldNavigationSession`: the self-published/adopted semantic identity
-reconfirmed across repeated live observation cycles rather than a single static call (A); the three cases this
-milestone's own brief named — not in store, adopted, self-published — proved side by side in one live pipeline (B);
-exact claim-id matching (different ids, authors, and a colliding id across Worlds) holding across every tick of a
-repeated live sequence, not just once (C); the full discovered -> not saved -> Adopt -> persist -> Already saved
-lifecycle, closed by re-deriving the identical status from a **brand-new session/monitor instance sharing only the
-underlying storage** — proving the status is reconstructed from persistence, never remembered by any in-memory
-UI/session state (D); both a verification failure (tampered signature) and, newly, a genuine **persistence-layer**
-failure (a storage provider that throws on `save()`) each leaving the indicator at `[Adopt]` across every subsequent
-observation cycle, with a later genuine retry still succeeding normally (E); a self-published claim rediscovered
-through a real, live Nostr relay reporting "Already saved" indistinguishably from an imported claim, including the
-idempotent no-op of clicking Adopt on one's own claim (F); competing claims ("Riverside"/Alice, "Old River"/Bob)
-independently, correctly split when only one is persisted and independently "Already saved" once both are, stable
-across repeated ticks (G); atomic discovery-refresh recomputation surviving a full disappear-and-reappear cycle, not
-just a single content swap (H); World switching (A -> B -> A) proven against a claim id **deliberately forced to
-collide** across the two Worlds (I); navigation independence, live and structural, including a row with a corrupted
-`alreadySaved` value (J); persistence independence proved in **both directions** — a claim vanishing from discovery
-never touches its persisted status, and a direct store change (retraction) is correctly picked up on the next
-discovery refresh (K); the manual `PlaceNamingPanel` file-import path converging onto the identical "Already saved"
-status the moment the same claim is subsequently encountered via Nearby discovery (L); two independent replicas
-observing the identical claim with independently correct, differing statuses, because the status is explicitly local
-(M); a FLAGSHIP continuous lifecycle threading self-publishing, a failed adoption attempt, competing claims, and a
-World switch through the full real discover -> present -> adopt -> verify -> persist -> recompute chain (N); and an
-architectural-freeze regression confirming `alreadySaved` is derived from nothing but
-`hasPlaceNamingClaim(worldId, claimId)` — never the current viewer's own identity, discovery source, claim text,
-signature presence, navigation state, or previous button clicks — with no second source of truth introduced anywhere
-since 0.9.269 (O).
-
-The invariant this file exists to freeze, verbatim from this milestone's own brief: **"Already saved" is a read-only
-observation of the current local claim store; it is not an adoption state, ownership state, preference, or authority
-signal.**
-
-### What this milestone deliberately excludes
-
-No new capability, and no production-code change whatsoever — every section either reconfirms 0.9.269's own boundary
-under a lifecycle it had not yet been exercised against, or records (never patches) product-design forks earlier
-reassessments already declined to resolve. Per this milestone's own brief: no `ADOPTED` domain state, no
-`SELF_PUBLISHED`/`IMPORTED` UI distinction, no preference/ranking, no automatic adoption, no synchronization, no
-notifications, no moderation, no claim deletion/retraction semantics, no signature UI, no `WorldRegion` mutation, and
-no changes to adoption semantics.
-
-### What comes after
-
-Per 0.9.269's own "what comes after": `0.9.271 — Post-Adoption-Status Product Reassessment`, which should reassess
-whether Place Naming has reached its natural product boundary rather than automatically adding another UI capability.
-
-## 0.9.271 — Post-Adoption-Status Place Naming Product Reassessment
-
-0.9.269 built `alreadySaved`; 0.9.270 proved it holds under a full lifecycle. This milestone asks the question that
-whole arc — discovery (0.9.253) through adoption-status lifecycle (0.9.270) — was building toward: is there still a
-concrete product gap in Place Naming, or has this product arc reached a natural stopping point? This milestone adds
-**no new capability**. It is a **test-only product reassessment**, the exact recurring shape 0.9.221/0.9.241/0.9.250/
-0.9.252/0.9.259/0.9.262/0.9.265/0.9.268 already established.
-
-### What this milestone adds
-
-`tests/PostAdoptionStatusPlaceNamingProductReassessment.test.js` (new, registered in `tests.html`) — nine sections:
-the complete pipeline (Nostr through World View to persistence) reconfirmed as a single, unambiguous machinery path,
-including the two newest arrows `hasPlaceNamingClaim()`/`retractPlaceNamingClaim()` (A); "Already saved" frozen as
-exactly "claim exists in this local claim store," proven pairwise and live distinct from adopted (no provenance
-field on the stored record), preferred (`LocalNamePreferenceStore` stays untouched, keyed by name rather than
-claimId), verified (the verifier's own `{signed, reason}` detail never survives importClaim()'s own success path),
-and authoritative (a stranger's claim and this replica's own claim read identically) (B); a thirteen-row
-capability/reachability matrix — eleven `COMPLETE`, one `REACHABLE_BUT_INTERNAL` (verification visibility), one
-`MISSING_DOMAIN_CAPABILITY` (non-authored, locally-saved claim removal) — each row backed by a fresh check in this
-file rather than carried over by assumption from 0.9.265/0.9.268's own tables (C); competing names reconfirmed fully
-preserved, with the explicit finding that navigate-and-adopt does not, on its own, create a demonstrated need for
-preferred/primary/official semantics (D); removal/retraction sharpened past 0.9.265's own finding — the authorship
-gate on retraction lives in exactly ONE place, `PlaceNamingClaimUseCase#retract()`, never in storage:
-`LocalPlaceNamingClaimStore#retract()` itself has no authorship opinion at all, and a live proof shows calling it
-directly removes a non-authored, adopted claim; building a "remove my local copy" capability would need one new,
-thin use-case method and zero storage-layer changes — but no evidence anywhere in this codebase demonstrates it is
-actually required yet (E); verification visibility examined in full — the verifier already computes a rich
-`{valid, signed, reason}` result, and a genuine, pre-existing NON-MUTATING verify pathway for a `PlaceNamingClaim`
-already exists (the 0.7.5 Publications-Center display-kind registry, composed with `store` deliberately omitted) —
-but it is reachable only through a completely separate `DecentralizedPublication`/anchor/catalog transport that
-nothing in the real Place Naming feature (publish/Nearby/Adopt) has ever used, so the two pathways are structurally
-disjoint and reaching a Nearby-discovered claim's verification status still means building something new, not
-flipping on an already-reachable switch (F); synchronization reconfirmed local-only and reconfirmed not a new
-asymmetry (G); the final product-gap verdict, classifying all thirteen candidates as `COMPLETE` /
-`REACHABLE_BUT_INTERNAL` / `MISSING_DOMAIN_CAPABILITY` and selecting **zero** next seams (H); and a verdict section (I).
-
-### What this milestone deliberately excludes
-
-No new capability, and no production-code change whatsoever — every section either reconfirms an existing boundary
-under a sharper, fresh examination, or records (never patches) product-design forks earlier reassessments already
-declined to resolve. Per this milestone's own brief: no `ADOPTED`/preferred/primary/official naming semantics, no
-claim removal/dismissal capability for a non-authored claim, no non-mutating verification-inspection surface, no
-synchronization, no moderation, no notifications, no signature UI, no `WorldRegion` mutation.
-
-### What comes after
-
-Not selected here, and per this milestone's own verdict, not automatically another Place Naming feature: the
-capability/reachability matrix closes at eleven of thirteen candidates `COMPLETE`, and the two open candidates
-(non-authored claim removal, non-mutating verification visibility) each lack either a demonstrated product
-requirement or a proportionate existing surface to build from — Place Naming is product-complete under its current
-semantic model. The next product evolution should return to the broader product roadmap, in a domain with an actual
-demonstrated user-facing gap, rather than extending this arc on reflex.
 
 ## 0.9.281 — NotificationEventStore Persistence Boundary
 
