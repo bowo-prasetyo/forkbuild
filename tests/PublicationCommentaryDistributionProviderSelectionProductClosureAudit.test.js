@@ -2,6 +2,7 @@ import { execSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 
 import PublicationCard from '../ui/components/PublicationCard.js';
+import PublicationCommentarySection from '../ui/components/PublicationCommentarySection.js';
 import PublicationList from '../ui/components/PublicationList.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
 import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
@@ -184,31 +185,63 @@ function cardCtx(overrides = {}) {
         commentaryOpen: false,
         commentaries: [],
         newCommentaryText: '',
-        commentarySubmitting: false,
         commentaryError: null,
         pendingCommentaryDraft: null,
         selectedDiscoveryProvider: 'nostr',
         lastCommentaryDistributionProvider: null,
-        toggleCommentary: PublicationCard.methods.toggleCommentary,
-        refreshCommentaries: PublicationCard.methods.refreshCommentaries,
-        submitCommentary: PublicationCard.methods.submitCommentary,
+        // The card's own toggle; opening mounts the shared
+        // PublicationCommentarySection, whose mounted() performs the
+        // first read. Reads/writes are that section's own methods.
+        toggleCommentary() {
+            PublicationCard.methods.toggleCommentary.call(this);
+            if (this.commentaryOpen) {
+                PublicationCommentarySection.mounted.call(this);
+            }
+        },
+        refreshCommentaries: PublicationCommentarySection.methods.refreshCommentaries,
+        submitCommentary: PublicationCommentarySection.methods.submitCommentary,
         ...overrides
     };
 }
 
+// PublicationList.js only tracks which rows are open; each open row
+// mounts its own PublicationCommentarySection. `rowSection(pub)` stands
+// in for that row's own section instance (one per publicationId, never
+// shared); opening runs its mounted() read, closing discards it.
 function listCtx(overrides = {}) {
-    return {
-        getPublicationCommentariesCommand: null,
-        addPublicationCommentaryCommand: null,
-        commentaryState: {},
-        rowCommentaryState: PublicationList.methods.rowCommentaryState,
-        distributionProviderLabel: PublicationList.methods.distributionProviderLabel,
+    const ctx = {
+        getPublicationCommentariesCommand: null, addPublicationCommentaryCommand: null,
+        identityUseCase: null, defaultAnnouncementDiscoveryProvider: null,
+        openCommentaryIds: {},
         isCommentaryOpen: PublicationList.methods.isCommentaryOpen,
-        toggleCommentary: PublicationList.methods.toggleCommentary,
-        refreshCommentaries: PublicationList.methods.refreshCommentaries,
-        submitCommentary: PublicationList.methods.submitCommentary,
         ...overrides
     };
+    const sections = new Map();
+    ctx.rowSection = (pub) => {
+        if (!sections.has(pub.id)) {
+            const section = {
+                publication: pub,
+                getPublicationCommentariesCommand: ctx.getPublicationCommentariesCommand,
+                addPublicationCommentaryCommand: ctx.addPublicationCommentaryCommand,
+                identityUseCase: ctx.identityUseCase,
+                defaultAnnouncementDiscoveryProvider: ctx.defaultAnnouncementDiscoveryProvider,
+                refreshCommentaries: PublicationCommentarySection.methods.refreshCommentaries,
+                submitCommentary: PublicationCommentarySection.methods.submitCommentary
+            };
+            Object.assign(section, PublicationCommentarySection.data.call(section));
+            sections.set(pub.id, section);
+        }
+        return sections.get(pub.id);
+    };
+    ctx.toggleCommentary = (pub) => {
+        PublicationList.methods.toggleCommentary.call(ctx, pub);
+        if (ctx.isCommentaryOpen(pub)) {
+            PublicationCommentarySection.mounted.call(ctx.rowSection(pub));
+        } else {
+            sections.delete(pub.id);
+        }
+    };
+    return ctx;
 }
 
 async function run() {
@@ -219,12 +252,13 @@ async function run() {
     // against current source.
     // ===============================================================
     {
-        const cardCode = await codeOnlySource('ui/components/PublicationCard.js');
-        const listCode = await codeOnlySource('ui/components/PublicationList.js');
+        const cardCode = (await codeOnlySource('ui/components/PublicationCard.js') + await codeOnlySource('ui/components/PublicationCommentarySection.js'));
+        const listCode = (await codeOnlySource('ui/components/PublicationList.js') + await codeOnlySource('ui/components/PublicationCommentarySection.js'));
         assert(/addPublicationCommentaryCommand\(\{ publicationId: this\.publication\.id, content, commentaryId, createdAt, discoveryProvider \}\)/.test(cardCode),
             n('PATH 1 precedent intact: PublicationCard.js\'s own call still forwards discoveryProvider verbatim on the same, unchanged four-field call it always sent'));
-        assert(/addPublicationCommentaryCommand\(\{ publicationId: pub\.id, content, commentaryId, createdAt, discoveryProvider \}\)/.test(listCode),
-            n('PATH 1 precedent intact: PublicationList.js\'s own per-row call carries the identical shape'));
+        assert(listCode.includes('<PublicationCommentarySection :publication="pub" />') &&
+               /addPublicationCommentaryCommand\(\{ publicationId: this\.publication\.id, content, commentaryId, createdAt, discoveryProvider \}\)/.test(listCode),
+            n('PATH 1 precedent intact: PublicationList.js\'s rows submit through the same shared section, with the identical call shape'));
 
         const mainCode = await codeOnlySource('ui/main.js');
         assert(/const discoveryProvider = \(input && input\.discoveryProvider\) \|\| 'nostr';/.test(mainCode),
@@ -300,19 +334,19 @@ async function run() {
             addPublicationCommentaryCommand
         });
 
-        const row = ctx.rowCommentaryState(publication);
-        row.newText = 'User opens Publication -> Commentary composer -> Arweave selected';
-        row.discoveryProvider = 'arweave';
-        ctx.submitCommentary(publication);
+        const row = ctx.rowSection(publication);
+        row.newCommentaryText = 'User opens Publication -> Commentary composer -> Arweave selected';
+        row.selectedDiscoveryProvider = 'arweave';
+        row.submitCommentary();
 
-        assert(row.error === null, n('flagship Arweave journey: submission succeeds with no error'));
+        assert(row.commentaryError === null, n('flagship Arweave journey: submission succeeds with no error'));
         const stored = backend.commentaryStore.getForPublication(publication.id);
         assert(stored.length === 1 && stored[0].content === 'User opens Publication -> Commentary composer -> Arweave selected',
             n('flagship Arweave journey: local Commentary persistence holds the real, submitted content'));
         assert(calls.peer === 1, n('flagship Arweave journey: WebRTC announcement fires'));
         assert(calls.arweave === 1, n('flagship Arweave journey: Arweave asynchronous distribution is invoked'));
         assert(calls.nostr === 0, n('flagship Arweave journey: Nostr is never invoked'));
-        assert(row.distributionProvider === 'arweave', n('flagship Arweave journey: identity continuity — the row\'s own status reports exactly \'arweave\''));
+        assert(row.lastCommentaryDistributionProvider === 'arweave', n('flagship Arweave journey: identity continuity — the row\'s own status reports exactly \'arweave\''));
 
         console.log('✓ C — FLAGSHIP ARWEAVE JOURNEY: PublicationList -> Arweave selected -> addPublicationCommentaryCommand -> local persistence + WebRTC + Arweave, Nostr untouched, identity continuous end to end.');
     }
@@ -387,8 +421,8 @@ async function run() {
     // Section F — UI truthfulness.
     // ===============================================================
     {
-        const cardSource = await rawSource('ui/components/PublicationCard.js');
-        const listSource = await rawSource('ui/components/PublicationList.js');
+        const cardSource = (await rawSource('ui/components/PublicationCard.js') + await rawSource('ui/components/PublicationCommentarySection.js'));
+        const listSource = (await rawSource('ui/components/PublicationList.js') + await rawSource('ui/components/PublicationCommentarySection.js'));
         const forbidden = /reached the (publication )?owner|delivered to|read by|seen by|has been retrieved|durably retrievable|successfully delivered|confirmed received/i;
 
         assert(!forbidden.test(codeOnly(cardSource)), n('PublicationCard.js never claims delivery, receipt, readership, or durable retrievability anywhere in its own code'));
@@ -396,7 +430,7 @@ async function run() {
 
         assert(/Comment saved locally\. Distribution requested via \{\{ lastCommentaryDistributionProviderLabel \}\}\./.test(cardSource),
             n('PublicationCard.js\'s own status line says exactly "requested," distinguishing local success (a fact) from distribution outcome (unknown), never conflating the two'));
-        assert(/Comment saved locally\. Distribution requested via \{\{ distributionProviderLabel\(pub\) \}\}\./.test(listSource),
+        assert(listSource.includes('<PublicationCommentarySection') && /Comment saved locally\. Distribution requested via \{\{ lastCommentaryDistributionProviderLabel \}\}\./.test(listSource),
             n('PublicationList.js\'s own per-row status line carries the identical, honest "requested" vocabulary'));
 
         // The status line is rendered ONLY after a real local success
@@ -428,26 +462,26 @@ async function run() {
         const ctx = listCtx({ getPublicationCommentariesCommand: backend.getPublicationCommentariesCommand, addPublicationCommentaryCommand });
 
         // Publication A -> Arweave, Publication B -> Nostr, Publication C -> Arweave.
-        ctx.rowCommentaryState(pubA).newText = 'row A'; ctx.rowCommentaryState(pubA).discoveryProvider = 'arweave';
-        ctx.submitCommentary(pubA);
-        ctx.rowCommentaryState(pubB).newText = 'row B'; ctx.rowCommentaryState(pubB).discoveryProvider = 'nostr';
-        ctx.submitCommentary(pubB);
-        ctx.rowCommentaryState(pubC).newText = 'row C'; ctx.rowCommentaryState(pubC).discoveryProvider = 'arweave';
-        ctx.submitCommentary(pubC);
+        ctx.rowSection(pubA).newCommentaryText = 'row A'; ctx.rowSection(pubA).selectedDiscoveryProvider = 'arweave';
+        ctx.rowSection(pubA).submitCommentary();
+        ctx.rowSection(pubB).newCommentaryText = 'row B'; ctx.rowSection(pubB).selectedDiscoveryProvider = 'nostr';
+        ctx.rowSection(pubB).submitCommentary();
+        ctx.rowSection(pubC).newCommentaryText = 'row C'; ctx.rowSection(pubC).selectedDiscoveryProvider = 'arweave';
+        ctx.rowSection(pubC).submitCommentary();
 
-        assert(ctx.rowCommentaryState(pubA).distributionProvider === 'arweave', n('row A\'s own status reflects \'arweave\''));
-        assert(ctx.rowCommentaryState(pubB).distributionProvider === 'nostr', n('row B\'s own status reflects \'nostr\', unaffected by A or C'));
-        assert(ctx.rowCommentaryState(pubC).distributionProvider === 'arweave', n('row C\'s own status reflects \'arweave\', independent of A'));
+        assert(ctx.rowSection(pubA).lastCommentaryDistributionProvider === 'arweave', n('row A\'s own status reflects \'arweave\''));
+        assert(ctx.rowSection(pubB).lastCommentaryDistributionProvider === 'nostr', n('row B\'s own status reflects \'nostr\', unaffected by A or C'));
+        assert(ctx.rowSection(pubC).lastCommentaryDistributionProvider === 'arweave', n('row C\'s own status reflects \'arweave\', independent of A'));
         assert(calls.arweave === 2 && calls.nostr === 1 && calls.peer === 3,
             n('exactly the declared per-row substrate mix is reached in total: two Arweave, one Nostr, three WebRTC announces'));
 
         // Changing A afterward never changes B or C.
-        ctx.rowCommentaryState(pubA).newText = 'row A, second comment';
-        ctx.rowCommentaryState(pubA).discoveryProvider = 'nostr';
-        ctx.submitCommentary(pubA);
-        assert(ctx.rowCommentaryState(pubA).distributionProvider === 'nostr', n('row A\'s own status updates to reflect its OWN new selection'));
-        assert(ctx.rowCommentaryState(pubB).distributionProvider === 'nostr', n('row B\'s own status is untouched by row A\'s second, different submission'));
-        assert(ctx.rowCommentaryState(pubC).distributionProvider === 'arweave', n('row C\'s own status is untouched by row A\'s second, different submission'));
+        ctx.rowSection(pubA).newCommentaryText = 'row A, second comment';
+        ctx.rowSection(pubA).selectedDiscoveryProvider = 'nostr';
+        ctx.rowSection(pubA).submitCommentary();
+        assert(ctx.rowSection(pubA).lastCommentaryDistributionProvider === 'nostr', n('row A\'s own status updates to reflect its OWN new selection'));
+        assert(ctx.rowSection(pubB).lastCommentaryDistributionProvider === 'nostr', n('row B\'s own status is untouched by row A\'s second, different submission'));
+        assert(ctx.rowSection(pubC).lastCommentaryDistributionProvider === 'arweave', n('row C\'s own status is untouched by row A\'s second, different submission'));
 
         // The "last-submission display" is never shared component state:
         // two entirely separate PublicationCard instances (ctx objects)
@@ -500,8 +534,8 @@ async function run() {
         // Nostr and Arweave backend adapters are untouched — neither is
         // imported by either PATH 1 component; the classes themselves are
         // referenced only inside ui/main.js's own pre-existing wiring.
-        const cardCode = await codeOnlySource('ui/components/PublicationCard.js');
-        const listCode = await codeOnlySource('ui/components/PublicationList.js');
+        const cardCode = (await codeOnlySource('ui/components/PublicationCard.js') + await codeOnlySource('ui/components/PublicationCommentarySection.js'));
+        const listCode = (await codeOnlySource('ui/components/PublicationList.js') + await codeOnlySource('ui/components/PublicationCommentarySection.js'));
         assert(!/PublicationCommentaryNostrDistribution|PublicationCommentaryArweaveDistribution/.test(cardCode) && !/PublicationCommentaryNostrDistribution|PublicationCommentaryArweaveDistribution/.test(listCode),
             n('Nostr and Arweave Commentary distribution adapters are untouched by this arc — neither PATH 1 component imports or names either class'));
 
@@ -513,8 +547,8 @@ async function run() {
     // ===============================================================
     {
         // PATH 1: provider selectable — reconfirmed.
-        const cardSource = await rawSource('ui/components/PublicationCard.js');
-        const listSource = await rawSource('ui/components/PublicationList.js');
+        const cardSource = (await rawSource('ui/components/PublicationCard.js') + await rawSource('ui/components/PublicationCommentarySection.js'));
+        const listSource = (await rawSource('ui/components/PublicationList.js') + await rawSource('ui/components/PublicationCommentarySection.js'));
         assert(/<option value="nostr">Nostr<\/option>/.test(cardSource) && /<option value="arweave">Arweave<\/option>/.test(cardSource),
             n('PATH 1 (PublicationCard.js): provider selectable, confirmed'));
         assert(/<option value="nostr">Nostr<\/option>/.test(listSource) && /<option value="arweave">Arweave<\/option>/.test(listSource),

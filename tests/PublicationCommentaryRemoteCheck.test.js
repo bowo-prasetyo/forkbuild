@@ -336,8 +336,9 @@ async function run() {
         assert(mainSource.includes("app.provide('refreshPublicationCommentaryCommand', refreshPublicationCommentaryCommand);"), '38. main.js provides it app-wide');
 
         const sections = [
-            ['ui/components/PublicationCard.js', ':publication-id="publication.id" @refreshed="refreshCommentaries"'],
-            ['ui/components/PublicationList.js', ':publication-id="pub.id" @refreshed="refreshCommentaries(pub)"'],
+            // The Repository card and list views both mount this through
+            // their one shared PublicationCommentarySection.js.
+            ['ui/components/PublicationCommentarySection.js', ':publication-id="publication.id" @refreshed="refreshCommentaries"'],
             ['ui/components/OwnPublicationPanel.js', ':publication-id="publication.id"\n                    @refreshed="refreshPublicationCommentaries"'],
             ['ui/components/WorldEncounterCanvas.js', ':publication-id="encounterCommentaryPublicationId" @refreshed="refreshEncounterCommentaries"'],
             ['ui/components/WorldEncounterCanvas.js', ':publication-id="observerLocalEncounterCommentaryPublicationId" @refreshed="refreshObserverLocalEncounterCommentaries"']

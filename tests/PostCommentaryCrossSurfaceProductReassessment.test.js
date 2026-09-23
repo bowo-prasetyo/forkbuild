@@ -162,7 +162,10 @@ async function runTests() {
 
         const expectedBearers = [
             'ui/components/OwnPublicationPanel.js',
-            'ui/components/PublicationCard.js',
+            // PublicationCard.js now hands its whole `publication` to the
+            // shared PublicationCommentarySection.js, which is where the
+            // card view's `publication.id` reads live.
+            'ui/components/PublicationCommentarySection.js',
             'ui/components/PublicationCatalog.js',
             'ui/components/PublicationList.js',
             'ui/components/WorldEncounterCanvas.js',

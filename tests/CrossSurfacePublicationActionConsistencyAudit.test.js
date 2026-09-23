@@ -442,7 +442,10 @@ async function runTests() {
     // narrow within-surface gap in where it exists at all.
     // ===============================================================
     {
-        const publicationCardSource = await rawSource('ui/components/PublicationCard.js');
+        // The card view's Commentary lives in the shared
+        // PublicationCommentarySection.js it mounts (as does the list
+        // view's), so the card's Commentary source is the two together.
+        const publicationCardSource = await rawSource('ui/components/PublicationCard.js') + await rawSource('ui/components/PublicationCommentarySection.js');
         const publicationListSource = await rawSource('ui/components/PublicationList.js');
         const ownPublicationPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
         const worldEncounterCanvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
@@ -500,7 +503,7 @@ async function runTests() {
         // PublicationCard.js already injects — no new command, no new
         // composition root. Re-checked here fresh against current source
         // rather than left asserting a fact 0.9.561 deliberately made false.
-        assert(/getPublicationCommentariesCommand/.test(publicationListSource) && /addPublicationCommentaryCommand/.test(publicationListSource),
+        assert(/getPublicationCommentariesCommand/.test(publicationListSource) && /<PublicationCommentarySection/.test(publicationListSource),
             'G4. 0.9.561 closed this milestone\'s own named gap: PublicationList.js now carries commentary wiring — switching a Repository/Author page from cards to list view no longer hides Commentary for the same publications.');
 
         console.log('✓ G — Commentary is publicationId-keyed and retry-idempotent, identically, everywhere it exists (proven structurally across all three composing files, and live against the real store\'s own shared contract). The one real, narrow gap this milestone named — PublicationList.js offering no Commentary at all — was CLOSED by 0.9.561 (see Section J for the original classification and this note for its resolution).');

@@ -1,4 +1,5 @@
 import PublicationCard from '../ui/components/PublicationCard.js';
+import PublicationCommentarySection from '../ui/components/PublicationCommentarySection.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
 import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
 import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
@@ -116,6 +117,11 @@ function makeBackend({ notificationSink } = {}) {
     };
 }
 
+// A plain ctx standing in for a PublicationCard together with the
+// PublicationCommentarySection it mounts while open: the card's own
+// toggle, plus the section's own state and methods. Opening runs the
+// section's mounted() hook — its first read — exactly as mounting it
+// does in the real template.
 function cardCtx(overrides = {}) {
     return {
         publication: null,
@@ -124,11 +130,18 @@ function cardCtx(overrides = {}) {
         commentaryOpen: false,
         commentaries: [],
         newCommentaryText: '',
-        commentarySubmitting: false,
         commentaryError: null,
-        toggleCommentary: PublicationCard.methods.toggleCommentary,
-        refreshCommentaries: PublicationCard.methods.refreshCommentaries,
-        submitCommentary: PublicationCard.methods.submitCommentary,
+        pendingCommentaryDraft: null,
+        selectedDiscoveryProvider: 'nostr',
+        lastCommentaryDistributionProvider: null,
+        toggleCommentary() {
+            PublicationCard.methods.toggleCommentary.call(this);
+            if (this.commentaryOpen) {
+                PublicationCommentarySection.mounted.call(this);
+            }
+        },
+        refreshCommentaries: PublicationCommentarySection.methods.refreshCommentaries,
+        submitCommentary: PublicationCommentarySection.methods.submitCommentary,
         ...overrides
     };
 }
@@ -236,7 +249,7 @@ async function runTests() {
             '12. AMENDED BY 0.9.638 — the command receives publicationId, content, commentaryId, createdAt, and (as of 0.9.638) discoveryProvider — never authorIdentityId or any other field');
         assert(!('authorIdentityId' in receivedInput), '12b. authorIdentityId is never among the fields sent');
 
-        const cardCode = await codeOnlySource('ui/components/PublicationCard.js');
+        const cardCode = await codeOnlySource('ui/components/PublicationCard.js') + await codeOnlySource('ui/components/PublicationCommentarySection.js');
         const forbidden = [
             "from '../../core/PublicationCommentary.js'",
             "from '../../storage/PublicationCommentaryStore.js'",
@@ -249,7 +262,7 @@ async function runTests() {
             'OtherPublicationCommentaryUseCase', 'AddCommentToOtherPublicationUseCase'
         ];
         for (const term of forbidden) {
-            assert(!cardCode.includes(term), `13. PublicationCard.js never references '${term}' — it only calls the injected commands`);
+            assert(!cardCode.includes(term), `13. PublicationCard.js/PublicationCommentarySection.js never reference '${term}' — they only call the injected commands`);
         }
         assert((cardCode.match(/this\.addPublicationCommentaryCommand\(/g) || []).length === 1,
             '14. addPublicationCommentaryCommand is called from exactly one place');
@@ -472,8 +485,10 @@ async function runTests() {
     // ---------------------------------------------------------------
     {
         const cardCode = await codeOnlySource('ui/components/PublicationCard.js');
-        assert(cardCode.includes("getPublicationCommentariesCommand: { default: null }") && cardCode.includes("addPublicationCommentaryCommand: { default: null }"),
-            '40. PublicationCard.js injects the two commentary commands as OPTIONAL collaborators — feature hidden when absent');
+        const sectionCode = await codeOnlySource('ui/components/PublicationCommentarySection.js');
+        assert(cardCode.includes("getPublicationCommentariesCommand: { default: null }") &&
+               sectionCode.includes("getPublicationCommentariesCommand: { default: null }") && sectionCode.includes("addPublicationCommentaryCommand: { default: null }"),
+            '40. PublicationCard.js (for its toggle) and the PublicationCommentarySection.js it mounts inject the commentary commands as OPTIONAL collaborators — feature hidden when absent');
 
         const mainCode = await codeOnlySource('ui/main.js');
         assert(mainCode.includes("new CreatePublicationCommentaryUseCase().execute(identityProvider)"),
@@ -499,6 +514,7 @@ async function runTests() {
         for (const file of [
             'application/CreatePublicationCommentaryUseCase.js',
             'ui/components/PublicationCard.js',
+            'ui/components/PublicationCommentarySection.js',
             'ui/main.js'
         ]) {
             const code = await codeOnlySource(file);
@@ -532,8 +548,8 @@ async function runTests() {
         // commentary wiring, checked fresh against current source rather
         // than silently dropped from this file's own sweep.
         const listCode = await codeOnlySource('ui/components/PublicationList.js');
-        assert(listCode.includes('getPublicationCommentariesCommand') && listCode.includes('addPublicationCommentaryCommand'),
-            '48b. ui/components/PublicationList.js now carries commentary wiring — 0.9.561 closed this file\'s own then-deliberate exclusion');
+        assert(listCode.includes('getPublicationCommentariesCommand') && listCode.includes('<PublicationCommentarySection'),
+            '48b. ui/components/PublicationList.js now carries commentary wiring (the shared PublicationCommentarySection) — 0.9.561 closed this file\'s own then-deliberate exclusion');
 
         console.log('✓ Section K: exactly one new UI surface is wired, through a second composition of the identical, unmodified application layer');
     }

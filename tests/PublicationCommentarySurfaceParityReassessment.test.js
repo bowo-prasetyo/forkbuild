@@ -1,6 +1,7 @@
 import { readFile, readdir } from 'node:fs/promises';
 
 import PublicationCard from '../ui/components/PublicationCard.js';
+import PublicationCommentarySection from '../ui/components/PublicationCommentarySection.js';
 import PublicationList from '../ui/components/PublicationList.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
@@ -208,26 +209,61 @@ function publicationRow(publication, overrides = {}) {
 function cardCtx(overrides = {}) {
     return {
         publication: null, getPublicationCommentariesCommand: null, addPublicationCommentaryCommand: null,
-        commentaryOpen: false, commentaries: [], newCommentaryText: '', commentarySubmitting: false,
+        commentaryOpen: false, commentaries: [], newCommentaryText: '',
         commentaryError: null, pendingCommentaryDraft: null,
-        toggleCommentary: PublicationCard.methods.toggleCommentary,
-        refreshCommentaries: PublicationCard.methods.refreshCommentaries,
-        submitCommentary: PublicationCard.methods.submitCommentary,
+        // The card's own toggle; opening mounts the shared
+        // PublicationCommentarySection, whose mounted() performs the
+        // first read. Reads/writes are that section's own methods.
+        toggleCommentary() {
+            PublicationCard.methods.toggleCommentary.call(this);
+            if (this.commentaryOpen) {
+                PublicationCommentarySection.mounted.call(this);
+            }
+        },
+        refreshCommentaries: PublicationCommentarySection.methods.refreshCommentaries,
+        submitCommentary: PublicationCommentarySection.methods.submitCommentary,
         ...overrides
     };
 }
 
+// PublicationList.js only tracks which rows are open; each open row
+// mounts its own PublicationCommentarySection. `rowSection(pub)` stands
+// in for that row's own section instance (one per publicationId, never
+// shared); opening runs its mounted() read, closing discards it.
 function listCtx(overrides = {}) {
-    return {
+    const ctx = {
         getPublicationCommentariesCommand: null, addPublicationCommentaryCommand: null,
-        commentaryState: {},
-        rowCommentaryState: PublicationList.methods.rowCommentaryState,
+        identityUseCase: null, defaultAnnouncementDiscoveryProvider: null,
+        openCommentaryIds: {},
         isCommentaryOpen: PublicationList.methods.isCommentaryOpen,
-        toggleCommentary: PublicationList.methods.toggleCommentary,
-        refreshCommentaries: PublicationList.methods.refreshCommentaries,
-        submitCommentary: PublicationList.methods.submitCommentary,
         ...overrides
     };
+    const sections = new Map();
+    ctx.rowSection = (pub) => {
+        if (!sections.has(pub.id)) {
+            const section = {
+                publication: pub,
+                getPublicationCommentariesCommand: ctx.getPublicationCommentariesCommand,
+                addPublicationCommentaryCommand: ctx.addPublicationCommentaryCommand,
+                identityUseCase: ctx.identityUseCase,
+                defaultAnnouncementDiscoveryProvider: ctx.defaultAnnouncementDiscoveryProvider,
+                refreshCommentaries: PublicationCommentarySection.methods.refreshCommentaries,
+                submitCommentary: PublicationCommentarySection.methods.submitCommentary
+            };
+            Object.assign(section, PublicationCommentarySection.data.call(section));
+            sections.set(pub.id, section);
+        }
+        return sections.get(pub.id);
+    };
+    ctx.toggleCommentary = (pub) => {
+        PublicationList.methods.toggleCommentary.call(ctx, pub);
+        if (ctx.isCommentaryOpen(pub)) {
+            PublicationCommentarySection.mounted.call(ctx.rowSection(pub));
+        } else {
+            sections.delete(pub.id);
+        }
+    };
+    return ctx;
 }
 
 function panelCtx(overrides = {}) {
@@ -315,7 +351,7 @@ function cardAdapter(ctx) {
         name: 'PublicationCard',
         open: () => { if (ctx.commentaryOpen) ctx.refreshCommentaries(); else ctx.toggleCommentary(); },
         isOpen: () => ctx.commentaryOpen,
-        commentaries: () => ctx.commentaries, error: () => ctx.commentaryError, submitting: () => ctx.commentarySubmitting,
+        commentaries: () => ctx.commentaries, error: () => ctx.commentaryError,
         setText: (t) => { ctx.newCommentaryText = t; }, text: () => ctx.newCommentaryText,
         submit: () => ctx.submitCommentary(), publicationId: () => ctx.publication.id
     };
@@ -323,12 +359,11 @@ function cardAdapter(ctx) {
 function listAdapter(ctx, pub) {
     return {
         name: 'PublicationList',
-        open: () => { if (ctx.isCommentaryOpen(pub)) ctx.refreshCommentaries(pub); else ctx.toggleCommentary(pub); },
+        open: () => { if (ctx.isCommentaryOpen(pub)) ctx.rowSection(pub).refreshCommentaries(); else ctx.toggleCommentary(pub); },
         isOpen: () => ctx.isCommentaryOpen(pub),
-        commentaries: () => ctx.rowCommentaryState(pub).commentaries, error: () => ctx.rowCommentaryState(pub).error,
-        submitting: () => ctx.rowCommentaryState(pub).submitting,
-        setText: (t) => { ctx.rowCommentaryState(pub).newText = t; }, text: () => ctx.rowCommentaryState(pub).newText,
-        submit: () => ctx.submitCommentary(pub), publicationId: () => pub.id
+        commentaries: () => ctx.rowSection(pub).commentaries, error: () => ctx.rowSection(pub).commentaryError,
+        setText: (t) => { ctx.rowSection(pub).newCommentaryText = t; }, text: () => ctx.rowSection(pub).newCommentaryText,
+        submit: () => ctx.rowSection(pub).submitCommentary(), publicationId: () => pub.id
     };
 }
 function panelAdapter(ctx) {
@@ -425,9 +460,13 @@ async function runTests() {
         // getPublicationCommentariesCommand()/addPublicationCommentaryCommand()).
         // ui/main.js is a composition root, not a UI component/view, so
         // it is deliberately outside this scan's own two directories.
+        // PublicationCard.js/PublicationList.js keep the command name
+        // only to gate their Comment toggle; their shared
+        // PublicationCommentarySection.js does the reading and writing.
         const expectedWired = new Set([
             'ui/components/PublicationCard.js',
             'ui/components/PublicationList.js',
+            'ui/components/PublicationCommentarySection.js',
             'ui/components/OwnPublicationPanel.js',
             'ui/components/WorldEncounterCanvas.js',
             'ui/views/WorldView.js'
@@ -479,10 +518,11 @@ async function runTests() {
         // Publication/encounter, never `.documentId`/`.contentHash`.
         const cardCode = await codeOnlySource('ui/components/PublicationCard.js');
         const listCode = await codeOnlySource('ui/components/PublicationList.js');
+        const sectionCode = await codeOnlySource('ui/components/PublicationCommentarySection.js');
         const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
         const canvasCode = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
-        assert(cardCode.includes('this.publication.id'), '7. PublicationCard.js reads identity from this.publication.id.');
-        assert(listCode.includes('pub.id'), '8. PublicationList.js reads identity from pub.id, per row.');
+        assert(cardCode.includes(':publication="publication"') && sectionCode.includes('this.publication.id'), '7. PublicationCard.js hands its own publication to the shared section, which reads identity from this.publication.id.');
+        assert(listCode.includes('<PublicationCommentarySection :publication="pub" />') && listCode.includes('openCommentaryIds[pub.id]'), '8. PublicationList.js keys each row by pub.id and hands that row\'s own pub to its section.');
         assert(panelCode.includes('publication.id') || panelCode.includes('this.publication.id'), '9. OwnPublicationPanel.js reads identity from (this.)publication.id.');
         assert(canvasCode.includes('this.selectedEncounter.objectId'), '10. WorldEncounterCanvas.js\'s primary panel reads identity from selectedEncounter.objectId.');
         assert(canvasCode.includes('this.selectedObserverLocalEncounter.publicationId'), '11. WorldEncounterCanvas.js\'s observer-local panel reads identity from selectedObserverLocalEncounter.publicationId.');
@@ -626,7 +666,7 @@ async function runTests() {
     // shape, and authorship is never UI-supplied.
     // ===============================================================
     {
-        const files = ['ui/components/PublicationCard.js', 'ui/components/PublicationList.js', 'ui/components/OwnPublicationPanel.js', 'ui/components/WorldEncounterCanvas.js'];
+        const files = ['ui/components/PublicationCard.js', 'ui/components/PublicationList.js', 'ui/components/PublicationCommentarySection.js', 'ui/components/OwnPublicationPanel.js', 'ui/components/WorldEncounterCanvas.js'];
         for (const file of files) {
             const code = await codeOnlySource(file);
             assert(!/new PublicationCommentaryStore|new AddPublicationCommentaryUseCase|new GetPublicationCommentariesUseCase|new PublicationCommentaryNotificationProducer|new CanCommentOnPublicationUseCase/.test(code),
@@ -641,7 +681,7 @@ async function runTests() {
         // call site sends publicationId + content (+ the 0.9.542
         // commentaryId/createdAt retry pair where the surface carries
         // one) and nothing else identity-bearing.
-        const cardCode = await codeOnlySource('ui/components/PublicationCard.js');
+        const sectionCode = await codeOnlySource('ui/components/PublicationCommentarySection.js');
         const listCode = await codeOnlySource('ui/components/PublicationList.js');
         const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
         const canvasCode = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
@@ -652,8 +692,8 @@ async function runTests() {
         // OwnPublicationPanel.js/WorldEncounterCanvas.js (PATH 2) are
         // deliberately unchanged, per that same audit's own boundary —
         // Sections 27/28, below, stay unmodified.
-        assert(cardCode.includes('this.addPublicationCommentaryCommand({ publicationId: this.publication.id, content, commentaryId, createdAt, discoveryProvider })'), '25. AMENDED BY 0.9.638 — PublicationCard.js\'s own call site is exactly { publicationId, content, commentaryId, createdAt, discoveryProvider }.');
-        assert(listCode.includes("this.addPublicationCommentaryCommand({ publicationId: pub.id, content, commentaryId, createdAt, discoveryProvider })"), '26. AMENDED BY 0.9.638 — PublicationList.js\'s own call site is exactly { publicationId, content, commentaryId, createdAt, discoveryProvider }.');
+        assert(sectionCode.includes('this.addPublicationCommentaryCommand({ publicationId: this.publication.id, content, commentaryId, createdAt, discoveryProvider })'), '25. AMENDED BY 0.9.638 — the card/list views\' shared PublicationCommentarySection.js call site is exactly { publicationId, content, commentaryId, createdAt, discoveryProvider }.');
+        assert(!listCode.includes('addPublicationCommentaryCommand'), '26. PublicationList.js has no call site of its own — its rows submit through the same shared section as the cards.');
         assert(panelCode.includes('this.addPublicationCommentaryCommand({ publicationId: publication.id, content, commentaryId, createdAt })'), '27. OwnPublicationPanel.js\'s own call site is exactly { publicationId, content, commentaryId, createdAt }.');
         assert(canvasCode.includes('this.addPublicationCommentaryCommand({ publicationId, content, commentaryId, createdAt })'), '28. WorldEncounterCanvas.js\'s own call sites (both panels, identical shape) are exactly { publicationId, content, commentaryId, createdAt }.');
 
@@ -723,8 +763,8 @@ async function runTests() {
     }
 
     // ===============================================================
-    // Section F — Concurrent row/state isolation. PublicationList's own
-    // per-row commentaryState (0.9.561) under P1 submitting/P2
+    // Section F — Concurrent row/state isolation. PublicationList's
+    // per-row Commentary sections (0.9.561) under P1 submitting/P2
     // submitting/P3 failed/P4 merely-expanded simultaneously; plus a
     // Card -> List transition never carries a stale draft into a
     // different component instance.
@@ -741,41 +781,36 @@ async function runTests() {
 
         // P1: a clean, successful submit.
         ctx.toggleCommentary(p1);
-        ctx.rowCommentaryState(p1).newText = 'P1 succeeded';
-        ctx.submitCommentary(p1);
+        ctx.rowSection(p1).newCommentaryText = 'P1 succeeded';
+        ctx.rowSection(p1).submitCommentary();
 
-        // P2: a submit that fails, leaving an error and a preserved draft.
-        const ctx2 = listCtx({ getPublicationCommentariesCommand: backend.getPublicationCommentariesCommand, addPublicationCommentaryCommand: () => { throw new Error('P2 write rejected'); } });
-        ctx2.toggleCommentary(p2);
-        ctx2.rowCommentaryState(p2).newText = 'P2 draft, never sent';
-        ctx2.submitCommentary(p2);
-        // Merge ctx2's own row-2 state into the shared ctx, mirroring
-        // what a single real component instance would hold had its own
-        // addPublicationCommentaryCommand been the failing one at that
-        // moment — this file drives the SAME per-row keying
-        // rowCommentaryState() establishes, on one instance below.
-        ctx.commentaryState[p2.id] = ctx2.commentaryState[p2.id];
+        // P2/P3: each row's own section sees a write failure at submit
+        // time (its command rejects), each with its OWN distinct error
+        // and draft — proves P2 and P3's failures don't collide with
+        // each other or with P1, on the ONE list instance.
+        ctx.toggleCommentary(p2);
+        ctx.rowSection(p2).addPublicationCommentaryCommand = () => { throw new Error('P2 write rejected'); };
+        ctx.rowSection(p2).newCommentaryText = 'P2 draft, never sent';
+        ctx.rowSection(p2).submitCommentary();
 
-        // P3: opened, a failed submit with its OWN distinct error/draft —
-        // proves P2 and P3's failures don't collide with each other.
-        const ctx3 = listCtx({ getPublicationCommentariesCommand: backend.getPublicationCommentariesCommand, addPublicationCommentaryCommand: () => { throw new Error('P3 write rejected'); } });
-        ctx3.toggleCommentary(p3);
-        ctx3.rowCommentaryState(p3).newText = 'P3 draft, never sent';
-        ctx3.submitCommentary(p3);
-        ctx.commentaryState[p3.id] = ctx3.commentaryState[p3.id];
+        ctx.toggleCommentary(p3);
+        ctx.rowSection(p3).addPublicationCommentaryCommand = () => { throw new Error('P3 write rejected'); };
+        ctx.rowSection(p3).newCommentaryText = 'P3 draft, never sent';
+        ctx.rowSection(p3).submitCommentary();
 
         // P4: merely expanded, no interaction.
         ctx.toggleCommentary(p4);
 
-        assert(ctx.rowCommentaryState(p1).error === null && ctx.rowCommentaryState(p1).commentaries.some((c) => c.content === 'P1 succeeded'),
+        assert(ctx.rowSection(p1).commentaryError === null && ctx.rowSection(p1).commentaries.some((c) => c.content === 'P1 succeeded'),
             '36. P1\'s own row: succeeded, its own commentary visible, no error.');
-        assert(ctx.rowCommentaryState(p2).error === 'P2 write rejected' && ctx.rowCommentaryState(p2).newText === 'P2 draft, never sent',
+        assert(ctx.rowSection(p2).commentaryError === 'P2 write rejected' && ctx.rowSection(p2).newCommentaryText === 'P2 draft, never sent',
             '37. P2\'s own row: its own failure and its own preserved draft, independent of P1.');
-        assert(ctx.rowCommentaryState(p3).error === 'P3 write rejected' && ctx.rowCommentaryState(p3).newText === 'P3 draft, never sent',
+        assert(ctx.rowSection(p3).commentaryError === 'P3 write rejected' && ctx.rowSection(p3).newCommentaryText === 'P3 draft, never sent',
             '38. P3\'s own row: its own DISTINCT failure and draft, independent of P1 and P2.');
-        assert(ctx.rowCommentaryState(p4).open === true && ctx.rowCommentaryState(p4).commentaries.length === 0 && ctx.rowCommentaryState(p4).error === null,
+        assert(ctx.isCommentaryOpen(p4) === true && ctx.rowSection(p4).commentaries.length === 0 && ctx.rowSection(p4).commentaryError === null,
             '39. P4\'s own row: merely expanded, genuinely untouched by anything that happened to P1/P2/P3.');
-        assert(Object.keys(ctx.commentaryState).length === 4, '40. only the four touched rows ever got a commentaryState entry — lazy per-row creation holds under concurrent use, not just sequential use.');
+        assert(Object.keys(ctx.openCommentaryIds).length === 4 && [p1, p2, p3, p4].every((p) => ctx.isCommentaryOpen(p)),
+            '40. exactly the four touched rows are open — each with its own section instance, under concurrent use, not just sequential use.');
         assert(backend.commentaryStore.getForPublication(p2.id).length === 0 && backend.commentaryStore.getForPublication(p3.id).length === 0,
             '41. P2/P3\'s own failed submissions persisted nothing at all.');
 
@@ -785,10 +820,10 @@ async function runTests() {
         const cardCtxF = cardCtx({ publication: p1, getPublicationCommentariesCommand: backend.getPublicationCommentariesCommand, addPublicationCommentaryCommand: backend.addPublicationCommentaryCommand });
         cardCtxF.newCommentaryText = 'typed in Card, never submitted';
         const freshListCtx = listCtx({ getPublicationCommentariesCommand: backend.getPublicationCommentariesCommand, addPublicationCommentaryCommand: backend.addPublicationCommentaryCommand });
-        assert(freshListCtx.rowCommentaryState(p1).newText === '', '42. a fresh PublicationList instance\'s own row for P1 starts with an empty draft — Card\'s own unsent draft never transferred in.');
+        assert(freshListCtx.rowSection(p1).newCommentaryText === '', '42. a fresh PublicationList instance\'s own row for P1 starts with an empty draft — Card\'s own unsent draft never transferred in.');
         assert(!('_moduleLevelCommentaryDraftCache' in freshListCtx), 'sanity: no such cache concept exists to even check.');
 
-        classification['F — concurrent row/state isolation'] = 'ALREADY_CORRECT: PublicationList\'s own per-row commentaryState keeps P1-P4 fully independent under simultaneous use; Card and List share no module-level draft state across component instances.';
+        classification['F — concurrent row/state isolation'] = 'ALREADY_CORRECT: PublicationList\'s own per-row Commentary sections keep P1-P4 fully independent under simultaneous use; Card and List share no module-level draft state across component instances.';
         console.log('✓ Section F: concurrent per-row state (submitting, failed, expanded) stays independently scoped on PublicationList, and no draft ever leaks from a Card instance into a fresh List instance.');
     }
 
@@ -858,8 +893,8 @@ async function runTests() {
         const ctxH = listCtx({ getPublicationCommentariesCommand: failingRead, addPublicationCommentaryCommand: backend.addPublicationCommentaryCommand });
         ctxH.toggleCommentary(p1);
         ctxH.toggleCommentary(p2);
-        assert(ctxH.rowCommentaryState(p1).error === 'Commentary could not be loaded.', '48. P1\'s own failed read is reported on P1\'s own row.');
-        assert(ctxH.rowCommentaryState(p2).error === null && ctxH.rowCommentaryState(p2).commentaries.length === 1,
+        assert(ctxH.rowSection(p1).commentaryError === 'Commentary could not be loaded.', '48. P1\'s own failed read is reported on P1\'s own row.');
+        assert(ctxH.rowSection(p2).commentaryError === null && ctxH.rowSection(p2).commentaries.length === 1,
             '49. P2\'s own row reads successfully, entirely unaffected by P1\'s own read failure on the SAME list instance.');
 
         // H2 — a failed SUBMIT never alters a neighboring Publication's
@@ -867,8 +902,8 @@ async function runTests() {
         const failingWrite = () => { throw new Error('write rejected'); };
         const ctxH2 = listCtx({ getPublicationCommentariesCommand: backend.getPublicationCommentariesCommand, addPublicationCommentaryCommand: failingWrite });
         ctxH2.toggleCommentary(p1);
-        ctxH2.rowCommentaryState(p1).newText = 'this must never persist';
-        ctxH2.submitCommentary(p1);
+        ctxH2.rowSection(p1).newCommentaryText = 'this must never persist';
+        ctxH2.rowSection(p1).submitCommentary();
         assert(backend.commentaryStore.getForPublication(p1.id).length === 0, '50. P1\'s own failed submit persisted nothing.');
         assert(backend.commentaryStore.getForPublication(p2.id).length === 1, '51. P2\'s own already-persisted commentary is untouched by P1\'s own failed submit.');
 
@@ -905,7 +940,7 @@ async function runTests() {
 
         // H5 — no unmount hook, on any of the four files, ever touches
         // commentary state or the injected commands.
-        for (const file of ['ui/components/PublicationCard.js', 'ui/components/PublicationList.js', 'ui/components/OwnPublicationPanel.js', 'ui/components/WorldEncounterCanvas.js']) {
+        for (const file of ['ui/components/PublicationCard.js', 'ui/components/PublicationList.js', 'ui/components/PublicationCommentarySection.js', 'ui/components/OwnPublicationPanel.js', 'ui/components/WorldEncounterCanvas.js']) {
             const code = await codeOnlySource(file);
             const unmountMatch = code.match(/unmounted\s*\([^)]*\)\s*\{([\s\S]*?)\n\s{4}\},/);
             if (unmountMatch) {
@@ -925,9 +960,13 @@ async function runTests() {
     // Wanderer reads as "Commentary" never shifts in meaning.
     // ===============================================================
     {
+        // The card and list views each own their toggle; the rest of
+        // their Commentary vocabulary lives in the shared section both
+        // mount, so each is read together with it.
+        const sectionSource = await rawSource('ui/components/PublicationCommentarySection.js');
         const files = {
-            'PublicationCard.js': await rawSource('ui/components/PublicationCard.js'),
-            'PublicationList.js': await rawSource('ui/components/PublicationList.js'),
+            'PublicationCard.js': await rawSource('ui/components/PublicationCard.js') + sectionSource,
+            'PublicationList.js': await rawSource('ui/components/PublicationList.js') + sectionSource,
             'OwnPublicationPanel.js': await rawSource('ui/components/OwnPublicationPanel.js'),
             'WorldEncounterCanvas.js': await rawSource('ui/components/WorldEncounterCanvas.js')
         };
@@ -941,7 +980,14 @@ async function runTests() {
             for (const s of sharedStrings) {
                 assert(code.includes(s), `55. ${name} uses the identical, unmodified string "${s}".`);
             }
-            assert(/\{\{\s*\S*[Ss]ubmitting\s*\?\s*'Posting…'\s*:\s*'Post Comment'\s*\}\}/.test(code), `56. ${name}'s own submit button reads exactly "Post Comment"/"Posting…".`);
+            // The shared section's submit is synchronous, so it has no
+            // in-flight state and its button always reads "Post Comment";
+            // the other surfaces still show "Posting…" while submitting.
+            if (name === 'PublicationCard.js' || name === 'PublicationList.js') {
+                assert(/>Post Comment<\/button>/.test(sectionSource), `56. ${name}'s shared section's submit button reads exactly "Post Comment".`);
+            } else {
+                assert(/\{\{\s*\S*[Ss]ubmitting\s*\?\s*'Posting…'\s*:\s*'Post Comment'\s*\}\}/.test(code), `56. ${name}'s own submit button reads exactly "Post Comment"/"Posting…".`);
+            }
             // OwnPublicationPanel.js alone carries no "Comment"/"Hide
             // Comments" toggle — it is eager-loaded, always-open, per its
             // own 0.9.248 header ("EXISTING COMMENTARY IS LOADED ON MOUNT

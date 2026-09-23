@@ -22,6 +22,7 @@ import { groupPublications, GroupBy } from '../core/PublicationGrouping.js';
 
 import PublicationCard from '../ui/components/PublicationCard.js';
 import PublicationList from '../ui/components/PublicationList.js';
+import PublicationCommentarySection from '../ui/components/PublicationCommentarySection.js';
 
 // 0.9.540 — Publication Catalog Action Safety Product Reassessment.
 //
@@ -416,11 +417,11 @@ async function run() {
         // sibling that happens to have (or lack) one.
         const withCapability = {
             getPublicationCommentariesCommand: () => [], publication: { id: 'x' },
-            refreshCommentaries: PublicationCard.methods.refreshCommentaries
+            refreshCommentaries: PublicationCommentarySection.methods.refreshCommentaries
         };
         const withoutCapability = {
             getPublicationCommentariesCommand: null, publication: { id: 'y' },
-            refreshCommentaries: PublicationCard.methods.refreshCommentaries
+            refreshCommentaries: PublicationCommentarySection.methods.refreshCommentaries
         };
         PublicationCard.methods.toggleCommentary.call(withCapability);
         PublicationCard.methods.toggleCommentary.call(withoutCapability);
@@ -432,8 +433,8 @@ async function run() {
 
     // ===============================================================
     // Section G — Failure isolation: LIVE, using the real
-    // PublicationCard.js `methods`, exactly as 0.9.539 exercised its
-    // `computed` directly. Two independent component-instance contexts,
+    // PublicationCommentarySection.js `methods` every card mounts,
+    // exactly as 0.9.539 exercised PublicationCard's `computed` directly. Two independent component-instance contexts,
     // A and B, sharing nothing but the SAME method implementations —
     // the identical way two real mounted PublicationCard instances
     // would share only their class, never their own `data()`.
@@ -444,22 +445,22 @@ async function run() {
                 publication,
                 addPublicationCommentaryCommand: command,
                 getPublicationCommentariesCommand: () => [],
-                commentaries: [], newCommentaryText: 'hello', commentarySubmitting: false, commentaryError: null,
-                refreshCommentaries: PublicationCard.methods.refreshCommentaries
+                commentaries: [], newCommentaryText: 'hello', commentaryError: null,
+                refreshCommentaries: PublicationCommentarySection.methods.refreshCommentaries
             };
         }
 
         const ctxA = makeCardContext({ id: 'pub-g-a' }, () => { throw new Error('relay unreachable'); });
         const ctxB = makeCardContext({ id: 'pub-g-b' }, () => ({ commentaryId: 'c1' }));
 
-        PublicationCard.methods.submitCommentary.call(ctxA);
+        PublicationCommentarySection.methods.submitCommentary.call(ctxA);
         assert(ctxA.commentaryError === 'relay unreachable', '1. LIVE: A\'s own failure sets exactly A\'s own commentaryError.');
         assert(ctxA.newCommentaryText === 'hello', '2. LIVE: A\'s failed submission leaves A\'s own draft text untouched (never silently discarded on failure).');
 
         assert(ctxB.commentaryError === null, '3. LIVE, THE ACTUAL ISOLATION PROOF: B\'s commentaryError is UNCHANGED by A\'s failure — a rejection on one card is never displayed as another card\'s own failure.');
         assert(ctxB.newCommentaryText === 'hello', '4. LIVE: B was never even touched by A\'s call — no shared mutable state exists between the two contexts at all.');
 
-        PublicationCard.methods.submitCommentary.call(ctxB);
+        PublicationCommentarySection.methods.submitCommentary.call(ctxB);
         assert(ctxB.commentaryError === null && ctxB.newCommentaryText === '',
             '5. LIVE: B\'s own successful submission clears exactly B\'s own draft — and A\'s prior error (still set, from step 1) remains exactly as A left it, proven next.');
         assert(ctxA.commentaryError === 'relay unreachable',
@@ -478,7 +479,7 @@ async function run() {
                 '8. STRUCTURAL: no navigation handler writes pageResult.value or any other catalog-wide ref — the catalog\'s own display is structurally incapable of being mutated as a side effect of ANY action, successful or failed.');
         }
     }
-    console.log('✓ Section G: proven live against the real PublicationCard.js methods — one card\'s failure (or success) never touches another\'s own state in either direction; and structurally, no catalog action handler can mutate the page\'s own item list as a side effect, so a failed action can never surface as another card\'s failure or silently reshuffle the catalog.');
+    console.log('✓ Section G: proven live against the real PublicationCommentarySection.js methods each card mounts — one card\'s failure (or success) never touches another\'s own state in either direction; and structurally, no catalog action handler can mutate the page\'s own item list as a side effect, so a failed action can never surface as another card\'s failure or silently reshuffle the catalog.');
 
     // ===============================================================
     // Section H — Navigation: the one existing mechanism, never a new
@@ -505,7 +506,13 @@ async function run() {
     // one.
     // ===============================================================
     {
-        assert(/toggleCommentary\(\) \{[\s\S]*?if \(opening\) \{\s*this\.refreshCommentaries\(\);\s*\}/.test(cardSource),
+        // Opening only flips the card's own flag, which mounts the shared
+        // PublicationCommentarySection.js; that section's mounted() hook
+        // is a single read.
+        const sectionSource = await readSource('ui/components/PublicationCommentarySection.js');
+        assert(/toggleCommentary\(\) \{[\s\S]*?this\.commentaryOpen = !this\.commentaryOpen;\s*\}/.test(cardSource) &&
+               /mounted\(\) \{\s*this\.refreshCommentaries\(\);\s*\}/.test(sectionSource) &&
+               !/addPublicationCommentaryCommand/.test(cardSource),
             '1. STRUCTURAL: merely OPENING the comment section (an observation — "let me look") only ever calls refreshCommentaries(), a read — never addPublicationCommentaryCommand, a write. Viewing never mutates.');
         // 0.9.542 — submitCommentary()'s own call now also passes
         // commentaryId/createdAt (a stable per-draft retry identity — see
@@ -517,9 +524,9 @@ async function run() {
         // own selected value — see PublicationCard.js's own 0.9.638
         // header); still the ONE write, still fired only from this one
         // function.
-        assert(/submitCommentary\(\) \{[\s\S]*?this\.addPublicationCommentaryCommand\(\{ publicationId: this\.publication\.id, content, commentaryId, createdAt, discoveryProvider \}\);/.test(cardSource),
+        assert(/submitCommentary\(\) \{[\s\S]*?this\.addPublicationCommentaryCommand\(\{ publicationId: this\.publication\.id, content, commentaryId, createdAt, discoveryProvider \}\);/.test(sectionSource),
             '2. AMENDED BY 0.9.638 — STRUCTURAL: the ONE write in these surfaces (posting a comment) fires only from submitCommentary(), itself only ever reachable via the form\'s own explicit @submit.prevent — never from render, toggle, or any other action\'s own code path.');
-        assert(!/unpublish|delete|remove/i.test(cardSource + listSource + forkTreeSource + catalogSource),
+        assert(!/unpublish|delete|remove/i.test(cardSource + listSource + sectionSource + forkTreeSource + catalogSource),
             '3. N/A, confirmed rather than assumed: no delete/unpublish/remove action of any kind exists anywhere in the catalog card, list, fork-tree, or host surfaces — that capability lives only in ui/components/OwnPublicationPanel.js (a single-Publication detail panel, already covered by its own 0.9.198 milestone), never in a catalog listing.');
     }
     console.log('✓ Section I: Comment-posting is the one mutating action reachable from the catalog, and it is already deliberate (its own explicit form submit, never a side effect of viewing/toggling); every other catalog action is pure read-only navigation. No destructive catalog action exists to audit further — marked N/A rather than invented.');

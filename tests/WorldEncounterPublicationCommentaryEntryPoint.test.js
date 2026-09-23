@@ -1,5 +1,6 @@
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import PublicationCard from '../ui/components/PublicationCard.js';
+import PublicationCommentarySection from '../ui/components/PublicationCommentarySection.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
 import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
 import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
@@ -234,11 +235,18 @@ function cardCtx(overrides = {}) {
         commentaryOpen: false,
         commentaries: [],
         newCommentaryText: '',
-        commentarySubmitting: false,
         commentaryError: null,
-        toggleCommentary: PublicationCard.methods.toggleCommentary,
-        refreshCommentaries: PublicationCard.methods.refreshCommentaries,
-        submitCommentary: PublicationCard.methods.submitCommentary,
+        // The card's own toggle; opening mounts the shared
+        // PublicationCommentarySection, whose mounted() performs the
+        // first read. Reads/writes are that section's own methods.
+        toggleCommentary() {
+            PublicationCard.methods.toggleCommentary.call(this);
+            if (this.commentaryOpen) {
+                PublicationCommentarySection.mounted.call(this);
+            }
+        },
+        refreshCommentaries: PublicationCommentarySection.methods.refreshCommentaries,
+        submitCommentary: PublicationCommentarySection.methods.submitCommentary,
         ...overrides
     };
 }
@@ -656,8 +664,10 @@ async function runTests() {
             '50. OwnPublicationPanel.js still carries its own original commentary methods, untouched');
 
         const cardCode = await codeOnlySource('ui/components/PublicationCard.js');
-        assert(cardCode.includes('toggleCommentary()') && cardCode.includes('refreshCommentaries()') && cardCode.includes('submitCommentary()'),
-            '51. PublicationCard.js still carries its own original 0.9.289 commentary methods, untouched');
+        const sectionCode = await codeOnlySource('ui/components/PublicationCommentarySection.js');
+        assert(cardCode.includes('toggleCommentary()') && cardCode.includes('<PublicationCommentarySection') &&
+               sectionCode.includes('refreshCommentaries()') && sectionCode.includes('submitCommentary()'),
+            '51. PublicationCard.js still offers its 0.9.289 commentary toggle, with read/submit now in the shared PublicationCommentarySection.js it mounts');
 
         const worldViewSessionCompositionCode = await codeOnlySource('application/CreateWorldViewUseCase.js');
         assert(worldViewSessionCompositionCode.includes('new PublicationCommentaryStore(storageProvider)') &&
@@ -686,7 +696,7 @@ async function runTests() {
         // exactly what THIS milestone (0.9.291) did, not what is true of
         // the codebase today.
         const listCode = await codeOnlySource('ui/components/PublicationList.js');
-        assert(listCode.includes('getPublicationCommentariesCommand') && listCode.includes('addPublicationCommentaryCommand'),
+        assert(listCode.includes('getPublicationCommentariesCommand') && listCode.includes('<PublicationCommentarySection'),
             '54b. ui/components/PublicationList.js now carries commentary wiring — 0.9.561 closed this file\'s own then-still-open surface');
 
         console.log('✓ Section L: OwnPublicationPanel/PublicationCard/both composition roots stay byte-for-byte regression passes; the four remaining 0.9.288 surfaces stay untouched');

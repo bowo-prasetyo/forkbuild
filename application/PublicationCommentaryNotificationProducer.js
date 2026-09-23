@@ -132,7 +132,8 @@ export class PublicationCommentaryNotificationProducer {
     // 0.9.542 — Publication Commentary Submission Experience Product
     // Reassessment confirmed this file needs NO change for the
     // commentaryId-keyed manual-retry case it added (see
-    // ui/components/PublicationCard.js's own 0.9.542 header): a retry
+    // ui/components/PublicationCommentarySection.js's own 0.9.542
+    // submitCommentary() comment): a retry
     // still constructs and sends a NotificationEvent here, unconditionally,
     // exactly as before, but `notificationSink` is `(event) =>
     // notificationEventStore.save(event)` (see

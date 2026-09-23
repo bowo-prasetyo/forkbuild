@@ -120,7 +120,8 @@ export class CreatePublicationCommentaryUseCase {
         // 0.9.542 — forwards `commentaryId`/`createdAt` unchanged when a
         // caller supplies them (a manual submission retry); still no
         // try/catch of its own. See
-        // ui/components/PublicationCard.js's own 0.9.542 header.
+        // ui/components/PublicationCommentarySection.js's own
+        // submitCommentary() comment (0.9.542).
         function addPublicationCommentaryCommand({ publicationId, content, commentaryId, createdAt }) {
             return publicationCommentaryCapability.execute({ publicationId, content, commentaryId, createdAt });
         }
