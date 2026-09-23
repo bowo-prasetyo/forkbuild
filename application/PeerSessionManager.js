@@ -1,6 +1,7 @@
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
 import { LocalPeerDiscoveryProvider } from '../peer/LocalPeerDiscoveryProvider.js';
 import { PeerInvitation } from '../peer/PeerInvitation.js';
+import { PeerConnectionState } from '../peer/PeerConnectionState.js';
 import { ConnectToPeerUseCase } from './ConnectToPeerUseCase.js';
 import { DiscoverPeersUseCase } from './DiscoverPeersUseCase.js';
 
@@ -59,6 +60,10 @@ export class PeerSessionManager {
         this._peerConnectionProvider = peerConnectionProvider;
         this._connectToPeerUseCase = new ConnectToPeerUseCase({ peerConnectionProvider, identityProvider });
         this._discoverPeersUseCase = new DiscoverPeersUseCase(discoveryProvider);
+        // The pending offer behind this session's own last successful
+        // publishSelf() — { connectionId, invitation } — or null. See
+        // isPublishing() below.
+        this._publishedOffer = null;
         // Harmless for peer/WebRtcPeerConnectionProvider.js today (its own
         // onIncomingConnection() never fires — see that file's header) and
         // free forward-compatibility for any future transport that DOES
@@ -69,6 +74,10 @@ export class PeerSessionManager {
     get registry() { return this._connectToPeerUseCase.registry; }
 
     listPeers() { return this.registry.list(); }
+
+    // When `connectionId`'s attempt started on this device — see
+    // application/ConnectedPeerRegistry.js#connectedSince.
+    connectedSince(connectionId) { return this.registry.connectedSince(connectionId); }
 
     // Returns an unsubscribe function. Fires with the full current peer
     // list on every add/lifecycle-change/removal — see application/
@@ -194,8 +203,29 @@ export class PeerSessionManager {
     // can check truthiness either way; one that needs a specific
     // publication's own fields must know which shape it is holding.
     async publishSelf({ ttlMs = DEFAULT_INVITATION_TTL_MS } = {}) {
-        const { invitation } = await this.createInvitation({ ttlMs });
-        return this._discoverPeersUseCase.publish(invitation, { ttlMs });
+        const { invitation, connectedPeer } = await this.createInvitation({ ttlMs });
+        const publication = await this._discoverPeersUseCase.publish(invitation, { ttlMs });
+        this._publishedOffer = publication ? { connectionId: connectedPeer.connectionId, invitation } : null;
+        return publication;
+    }
+
+    // Whether the last publishSelf() can still answer someone: its offer's
+    // connection is still in the registry, still waiting for an answer
+    // (transport CONNECTING — a WebRtcPeerConnection never returns there
+    // once answered), and its invitation has not expired. False as soon as
+    // one inbound connection consumes the offer (see publishSelf() above:
+    // one publication answers at most one), it closes, it expires, or
+    // stopPublishing() withdraws it. Derived on every call, never a
+    // stored flag, so it can never drift from the connection itself.
+    isPublishing() {
+        if (!this._publishedOffer) {
+            return false;
+        }
+        const { connectionId, invitation } = this._publishedOffer;
+        const connectedPeer = this.registry.get(connectionId);
+        return Boolean(connectedPeer)
+            && connectedPeer.connection.transportState === PeerConnectionState.CONNECTING
+            && !invitation.isExpired();
     }
 
     // Withdraws this session's own last publishSelf() — see application/
@@ -204,6 +234,7 @@ export class PeerSessionManager {
     // failing, exactly like discoverCandidates() above tolerates one
     // failing to answer.
     async stopPublishing() {
+        this._publishedOffer = null;
         return this._discoverPeersUseCase.unpublish();
     }
 

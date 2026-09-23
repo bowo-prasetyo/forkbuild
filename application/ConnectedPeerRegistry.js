@@ -32,9 +32,17 @@ import { PeerConnectionState } from '../peer/PeerConnectionState.js';
 // leaves the card in place, exactly like a CONNECTING or CONNECTED one,
 // until the transport itself ends — the user's own explicit Disconnect,
 // same as any other peer, or the connection failing for real.
+//
+// Also records WHEN each peer was added — the moment its connection
+// attempt started on this device — for "connected for …" displays that
+// must not reset whenever a view remounts. Held here rather than on
+// application/ConnectedPeer.js (deliberately timestamp-free) and dropped
+// with the peer itself, so it is exactly as durable as the connection.
 export class ConnectedPeerRegistry {
-    constructor() {
+    constructor({ now = () => new Date() } = {}) {
+        this._now = now;
         this._peers = new Map(); // connectionId -> ConnectedPeer
+        this._addedAt = new Map(); // connectionId -> Date
         this._unsubscribes = new Map(); // connectionId -> unsubscribe function
         this._changeListeners = new Set();
     }
@@ -42,6 +50,7 @@ export class ConnectedPeerRegistry {
     add(connectedPeer) {
         const connectionId = connectedPeer.connectionId;
         this._peers.set(connectionId, connectedPeer);
+        this._addedAt.set(connectionId, this._now());
         this._unsubscribes.set(connectionId, connectedPeer.onStateChange(() => {
             const transportState = connectedPeer.connection.transportState;
             if (transportState === PeerConnectionState.CLOSED || transportState === PeerConnectionState.FAILED) {
@@ -60,6 +69,12 @@ export class ConnectedPeerRegistry {
 
     get(connectionId) {
         return this._peers.get(connectionId) || null;
+    }
+
+    // When `connectionId` was added to this registry, or null once it has
+    // been removed (or was never here).
+    connectedSince(connectionId) {
+        return this._addedAt.get(connectionId) || null;
     }
 
     // Returns an unsubscribe function. Fires with the full current list
@@ -82,6 +97,7 @@ export class ConnectedPeerRegistry {
             return;
         }
         this._peers.delete(connectionId);
+        this._addedAt.delete(connectionId);
         const unsubscribe = this._unsubscribes.get(connectionId);
         if (unsubscribe) {
             unsubscribe();

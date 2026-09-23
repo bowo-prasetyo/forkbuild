@@ -188,7 +188,7 @@ export default {
         }
         refreshLockState();
 
-        const peers = ref([]);
+        const peers = ref(peerSessionManager.listPeers());
         const relationships = ref(peerRelationshipUseCase.getRelationships());
         const relationshipError = ref('');
         const friendships = ref(friendRelationshipUseCase.getRelationships());
@@ -215,26 +215,17 @@ export default {
             void now.value;
             return new Map(identityLifecyclePropagationUseCase.listRemoteLifecycle().map((l) => [l.identityId, l]));
         });
-        // Purely local, view-only bookkeeping for "connected duration" —
-        // application/ConnectedPeer.js itself has no createdAt, on purpose
-        // (see its own header: it is exactly as durable as the connection
-        // it wraps, nothing more). Never read by anything but this display.
-        const firstSeenAt = new Map();
-
         function refreshPeers(list) {
-            const snapshot = list || peerSessionManager.listPeers();
-            for (const peer of snapshot) {
-                if (!firstSeenAt.has(peer.connectionId)) {
-                    firstSeenAt.set(peer.connectionId, Date.now());
-                }
-            }
-            peers.value = snapshot;
+            peers.value = list || peerSessionManager.listPeers();
         }
-        refreshPeers();
 
+        // Time since this connection attempt started on this device, read
+        // from the app-wide registry (application/ConnectedPeerRegistry.js
+        // #connectedSince) — so it keeps counting across leaving and
+        // returning to this page, rather than restarting at 0s.
         function connectedFor(peer) {
-            const since = firstSeenAt.get(peer.connectionId);
-            return since ? formatDuration(now.value - since) : '0s';
+            const since = peerSessionManager.connectedSince(peer.connectionId);
+            return since ? formatDuration(now.value - since.getTime()) : '0s';
         }
 
         // --- Known Peers (0.2.56) ----------------------------------------
@@ -613,17 +604,27 @@ export default {
         // than offering a button that would silently do nothing.
         const publishPending = ref(false);
         const publishError = ref('');
-        const isPublished = ref(false);
+        // Read from the app-wide application/FindPeerUseCase.js#isPublishing
+        // — never a flag of this view's own, which reset on every remount
+        // and never noticed an inbound connection consuming the offer.
+        // Re-read whenever the peer list changes (an offer being answered
+        // or closed is a peer change), on every one-second tick (expiry),
+        // and after this view's own publish/stop (publishRevision).
+        const publishRevision = ref(0);
+        const isPublished = computed(() => {
+            void peers.value;
+            void now.value;
+            void publishRevision.value;
+            return findPeerUseCase.isPublishing();
+        });
         async function togglePublish() {
             publishError.value = '';
             publishPending.value = true;
             try {
                 if (isPublished.value) {
                     await findPeerUseCase.stopPublishing();
-                    isPublished.value = false;
                 } else {
                     const publication = await findPeerUseCase.publishSelf();
-                    isPublished.value = Boolean(publication);
                     if (!publication) {
                         publishError.value = 'No rendezvous network is configured on this device — see peer/RendezvousConfig.js.';
                     }
@@ -631,6 +632,7 @@ export default {
             } catch (e) {
                 publishError.value = stripPrefix(e.message);
             } finally {
+                publishRevision.value++;
                 publishPending.value = false;
             }
         }
