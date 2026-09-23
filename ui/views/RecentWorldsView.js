@@ -1,4 +1,4 @@
-import { ref, onMounted, inject } from 'vue';
+import { inject } from 'vue';
 import { useRouter } from 'vue-router';
 import { LocalStorageProvider } from '../../storage/LocalStorageProvider.js';
 import { LocalWorldExperienceStore } from '../../application/LocalWorldExperienceStore.js';
@@ -52,9 +52,6 @@ export default {
         const decentralizedDiscoveryProvider = inject('decentralizedPublicationDiscoveryProvider', null);
         const { discoveryProvider, loadPublicationDocumentUseCase } = new CreateDiscoveryUseCase().execute({ decentralizedDiscoveryProvider });
 
-        const worlds = ref([]);
-        const loaded = ref(false);
-
         // Resolves ONE LocalWorldExperience record into a display
         // summary. Never throws — a World this replica visited before
         // but can no longer resolve locally (removed, or the id simply
@@ -96,24 +93,23 @@ export default {
             };
         }
 
-        onMounted(() => {
-            const experiences = localWorldExperienceStore.getRecentlyVisited(RECENT_WORLDS_LIMIT);
-            worlds.value = experiences.map(resolveWorldSummary);
-            loaded.value = true;
-        });
+        // Resolved once, before the first render — every read above is
+        // synchronous and local (localStorage plus the in-memory discovery
+        // provider), so there is no loading state to track.
+        const worlds = localWorldExperienceStore.getRecentlyVisited(RECENT_WORLDS_LIMIT).map(resolveWorldSummary);
 
         function enterWorld(documentId) {
             router.push({ path: `/world/${documentId}` });
         }
 
-        return { worlds, loaded, enterWorld };
+        return { worlds, enterWorld };
     },
     template: `
         <section class="recent-worlds-view">
             <h1>My Worlds</h1>
             <p class="recent-worlds-subtitle">Worlds you've visited before, on this device.</p>
 
-            <div v-if="loaded && worlds.length === 0" class="empty-state">
+            <div v-if="worlds.length === 0" class="empty-state">
                 You haven't visited any Worlds yet on this device.
                 <router-link to="/repository">Browse the Repository</router-link> to find one.
             </div>
