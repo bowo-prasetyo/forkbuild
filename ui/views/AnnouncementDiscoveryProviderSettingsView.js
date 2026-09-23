@@ -1,4 +1,5 @@
-import { ref, computed, inject, onMounted } from 'vue';
+import { computed, inject } from 'vue';
+import { useRoleProviderPreferenceForm } from '../composables/useRoleProviderPreferenceForm.js';
 import { RoleProviderRole } from '../../core/RoleProviderRole.js';
 import { describeRoleProviderPreferenceSettings } from '../../application/RoleProviderPreferenceSettingsView.js';
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
@@ -43,42 +44,20 @@ export default {
         const preferenceStore = inject('roleProviderPreferenceStore', null);
         const setRoleProviderPreferenceUseCase = inject('setRoleProviderPreferenceUseCase', null);
 
-        const selectedProviderKey = ref(null);
-        const saveError = ref(null);
-        const saveStatus = ref('idle'); // 'idle' | 'saved'
+        const form = useRoleProviderPreferenceForm({
+            role: RoleProviderRole.ANNOUNCEMENT_AND_DISCOVERY,
+            preferenceStore,
+            setUseCase: setRoleProviderPreferenceUseCase
+        });
 
         const settings = computed(() => sortOptionsByLabel(describeRoleProviderPreferenceSettings({
             availableProviderKeys: AVAILABLE_PROVIDER_KEYS
         }).options));
 
-        // Re-reads the store fresh on every load — the identical restraint
-        // ContentProviderSettingsView.js's own `load()` already holds, so a
-        // fresh instance of this view observes whatever a prior instance
-        // (or ui/main.js's own boot-time read) most recently persisted.
-        function load() {
-            if (!preferenceStore) return;
-            const preference = preferenceStore.get(RoleProviderRole.ANNOUNCEMENT_AND_DISCOVERY);
-            selectedProviderKey.value = preference ? preference.providerKey : null;
-        }
-
-        function save() {
-            if (!setRoleProviderPreferenceUseCase || !selectedProviderKey.value) return;
-            saveError.value = null;
-            try {
-                setRoleProviderPreferenceUseCase.execute({
-                    role: RoleProviderRole.ANNOUNCEMENT_AND_DISCOVERY,
-                    providerKey: selectedProviderKey.value
-                });
-                saveStatus.value = 'saved';
-            } catch (error) {
-                saveStatus.value = 'idle';
-                saveError.value = error.message;
-            }
-        }
-
-        onMounted(load);
-
-        return { settings, selectedProviderKey, saveError, saveStatus, save };
+        return {
+            settings, selectedProviderKey: form.selectedProviderKey,
+            saveError: form.saveError, saveStatus: form.saveStatus, save: form.save
+        };
     },
     template: `
         <section class="announcement-discovery-provider-settings-view">

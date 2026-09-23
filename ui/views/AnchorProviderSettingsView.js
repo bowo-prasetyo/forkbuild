@@ -1,4 +1,5 @@
-import { ref, computed, inject, onMounted } from 'vue';
+import { computed, inject } from 'vue';
+import { useRoleProviderPreferenceForm } from '../composables/useRoleProviderPreferenceForm.js';
 import { RoleProviderRole } from '../../core/RoleProviderRole.js';
 import { describeRoleProviderPreferenceSettings } from '../../application/RoleProviderPreferenceSettingsView.js';
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
@@ -55,9 +56,11 @@ export default {
         const setRoleProviderPreferenceUseCase = inject('setRoleProviderPreferenceUseCase', null);
         const preferredAnchorCreationCoordinator = inject('preferredPublicationAnchorCreationCoordinator', null);
 
-        const selectedProviderKey = ref(null);
-        const saveError = ref(null);
-        const saveStatus = ref('idle'); // 'idle' | 'saved'
+        const form = useRoleProviderPreferenceForm({
+            role: RoleProviderRole.PROOF_AND_ANCHORING,
+            preferenceStore,
+            setUseCase: setRoleProviderPreferenceUseCase
+        });
 
         const availableProviderKeys = computed(() =>
             preferredAnchorCreationCoordinator ? preferredAnchorCreationCoordinator.availableAnchorTypes() : []
@@ -67,34 +70,10 @@ export default {
             availableProviderKeys: availableProviderKeys.value
         }).options.map((option) => ({ ...option, label: ANCHOR_PROVIDER_OPTION_LABELS[option.providerKey] || option.label }))));
 
-        // Re-reads the store fresh on every load — the identical restraint
-        // ContentProviderSettingsView.js's own `load()` already holds, so a
-        // fresh instance of this view observes whatever a prior instance
-        // (or ui/main.js's own boot-time read) most recently persisted.
-        function load() {
-            if (!preferenceStore) return;
-            const preference = preferenceStore.get(RoleProviderRole.PROOF_AND_ANCHORING);
-            selectedProviderKey.value = preference ? preference.providerKey : null;
-        }
-
-        function save() {
-            if (!setRoleProviderPreferenceUseCase || !selectedProviderKey.value) return;
-            saveError.value = null;
-            try {
-                setRoleProviderPreferenceUseCase.execute({
-                    role: RoleProviderRole.PROOF_AND_ANCHORING,
-                    providerKey: selectedProviderKey.value
-                });
-                saveStatus.value = 'saved';
-            } catch (error) {
-                saveStatus.value = 'idle';
-                saveError.value = error.message;
-            }
-        }
-
-        onMounted(load);
-
-        return { settings, selectedProviderKey, saveError, saveStatus, save };
+        return {
+            settings, selectedProviderKey: form.selectedProviderKey,
+            saveError: form.saveError, saveStatus: form.saveStatus, save: form.save
+        };
     },
     template: `
         <section class="anchor-provider-settings-view">

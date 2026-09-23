@@ -293,21 +293,27 @@ async function run() {
             '40. the no-override state displays the effective deployment default as informational text');
         assert(/Current override/.test(viewSource), '41. the override state displays the current, actually-saved gatewayUrl');
 
-        const loadFnMatch = viewSource.match(/function load\(\)\s*\{[\s\S]*?\n\s{8}\}/);
+        // load()/save()/clear() are the shared endpoint-settings form's own
+        // (ui/composables/useEndpointSettingsForm.js); the view wires its
+        // own injected store and use case into it.
+        const formSource = await source('ui/composables/useEndpointSettingsForm.js');
+        const loadFnMatch = formSource.match(/function load\(\)\s*\{[\s\S]*?\n\s{4}\}/);
         assert(loadFnMatch, '42. a load() function exists');
         assert(!/execute\(|\.save\(|\.clear\(/.test(loadFnMatch[0]),
             '43. load() never calls the use case, store.save(), or store.clear() — merely opening the page persists nothing');
 
         assert(/@click="save"/.test(viewSource), '44. a Save action is wired');
         assert(/@click="useDeploymentDefault"/.test(viewSource), '45. a Use Deployment Default action is wired');
-        const useDeploymentDefaultFnMatch = viewSource.match(/function useDeploymentDefault\(\)\s*\{[\s\S]*?\n\s{8}\}/);
-        assert(useDeploymentDefaultFnMatch, '46. a useDeploymentDefault() function exists');
+        const useDeploymentDefaultFnMatch = /useDeploymentDefault: form\.clear\b/.test(viewSource)
+            && formSource.match(/function clear\(\)\s*\{[\s\S]*?\n\s{4}\}/);
+        assert(useDeploymentDefaultFnMatch, '46. Use Deployment Default is wired to the shared clear() function');
         assert(/store\.clear\(\)/.test(useDeploymentDefaultFnMatch[0]), '47. Use Deployment Default calls store.clear()');
         assert(!/DEFAULT_IPFS_GATEWAY_URL/.test(useDeploymentDefaultFnMatch[0]),
             '48. Use Deployment Default never saves { gatewayUrl: DEFAULT_IPFS_GATEWAY_URL } — it only ever clears');
-        const saveFnMatch = viewSource.match(/function save\(\)\s*\{[\s\S]*?\n\s{8}\}/);
+        const saveFnMatch = /\bsave: form\.save\b/.test(viewSource)
+            && formSource.match(/function save\(\)\s*\{[\s\S]*?\n\s{4}\}/);
         assert(saveFnMatch, '49. a save() function exists');
-        assert(/setIpfsGatewayConfigurationUseCase\.execute\(/.test(saveFnMatch[0]), '50. save() goes through the injected use case, never a direct store.save()');
+        assert(/useCase\.execute\(/.test(saveFnMatch[0]) && /useCase: setIpfsGatewayConfigurationUseCase\b/.test(viewSource), '50. save() goes through the injected use case, never a direct store.save()');
         assert(!/store\.save\(/.test(saveFnMatch[0]), '51. save() never calls store.save() directly, bypassing the use case');
 
         console.log('✓ Section I: the view template shows the correct no-override/override states without ever mutating on load, and wires Save through the use case and Use Deployment Default through store.clear() only');

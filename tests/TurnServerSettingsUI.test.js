@@ -340,10 +340,15 @@ async function run() {
 
         // Clear never saves a placeholder/empty configuration — it calls
         // clear() directly, never execute({...}) with empty values.
+        // The view's Clear action is the shared endpoint-settings form's
+        // own clear() (ui/composables/useEndpointSettingsForm.js).
         const viewExecutable = (await source('ui/views/TurnServerSettingsView.js')).replace(/\/\/.*$/gm, '');
-        const clearFnMatch = viewExecutable.match(/function clear\(\) \{([\s\S]*?)\n {8}\}/);
+        assert(/\bclear: form\.clear\b/.test(viewExecutable) && /store,\s*\n\s*useCase: setTurnServerConfigurationUseCase/.test(viewExecutable),
+            n('J6a. the view wires its Clear action to the shared form, over its own injected store and use case'));
+        const formExecutable = (await source('ui/composables/useEndpointSettingsForm.js')).replace(/\/\/.*$/gm, '');
+        const clearFnMatch = formExecutable.match(/function clear\(\) \{([\s\S]*?)\n {4}\}/);
         assert(clearFnMatch, n('J6. the real clear() function is located'));
-        assert(/store\.clear\(\)/.test(clearFnMatch[1]) && !/setTurnServerConfigurationUseCase/.test(clearFnMatch[1]),
+        assert(/store\.clear\(\)/.test(clearFnMatch[1]) && !/useCase/.test(clearFnMatch[1]),
             n('J7. REAL COMPONENT: clear() calls store.clear() directly and never touches the write use case — the one way back to genuine absence, never a saved empty/placeholder value'));
     }
     console.log('✓ Section J: Clear genuinely removes the TURN configuration — store.clear() directly, never a saved placeholder — and the cleared state survives across independent mounts');

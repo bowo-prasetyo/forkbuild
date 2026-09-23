@@ -1,4 +1,6 @@
-import { ref, computed, inject, onMounted } from 'vue';
+import { ref, inject } from 'vue';
+import { useEndpointSettingsForm } from '../composables/useEndpointSettingsForm.js';
+import { splitNonEmptyLines } from '../../utils/splitNonEmptyLines.js';
 
 // 0.9.456 — TURN Server Settings UI.
 //
@@ -80,7 +82,8 @@ import { ref, computed, inject, onMounted } from 'vue';
 // assigned straight into the password input's own model, never interpolated
 // into a template string, logged, or otherwise exposed as text.
 //
-// OPENING THIS PAGE NEVER WRITES ANYTHING. `load()` only ever reads
+// OPENING THIS PAGE NEVER WRITES ANYTHING. The shared `load()` (ui/composables/
+// useEndpointSettingsForm.js) only ever reads
 // `store.get()`; when it returns `null`, every field stays empty — merely
 // visiting this page can never turn "no TURN server" into a persisted,
 // explicit configuration.
@@ -112,85 +115,39 @@ export default {
         const store = inject('turnServerConfigurationStore', null);
         const setTurnServerConfigurationUseCase = inject('setTurnServerConfigurationUseCase', null);
 
-        // The TurnServerConfiguration currently on file, or null — read
-        // straight from the injected store, never constructed here.
-        const configuration = ref(null);
         const urlsInput = ref('');
         const usernameInput = ref('');
         const credentialInput = ref('');
-        const saveError = ref(null);
-        const saveStatus = ref('idle'); // 'idle' | 'saved'
-        const clearStatus = ref('idle'); // 'idle' | 'cleared'
 
-        const hasConfiguration = computed(() => configuration.value !== null);
-
-        // One turn:/turns: URL per line; blank lines ignored, order
-        // preserved. `TurnServerConfiguration`'s own constructor is the one
-        // place that validates each entry — this view performs no
-        // validation of its own.
-        function parseUrlsInput() {
-            return urlsInput.value
-                .split('\n')
-                .map((line) => line.trim())
-                .filter((line) => line.length > 0);
-        }
-
-        // Re-reads the store fresh on every load — so a newly mounted
-        // instance of this view always observes whatever a prior instance
-        // (or a prior application run) actually persisted, never a value
-        // cached from before. Never writes anything.
-        function load() {
-            if (!store) return;
-            configuration.value = store.get();
-            urlsInput.value = configuration.value ? configuration.value.urls.join('\n') : '';
-            usernameInput.value = configuration.value ? configuration.value.username : '';
-            // See this file's own header, "the credential is never shown in
-            // diagnostic text" — this is the one, deliberate exception: the
-            // real on-file credential populates the password-style input's
-            // own model directly, never any other field or piece of text.
-            credentialInput.value = configuration.value ? configuration.value.credential : '';
-        }
-
-        function save() {
-            if (!setTurnServerConfigurationUseCase) return;
-            saveError.value = null;
-            clearStatus.value = 'idle';
-            try {
-                configuration.value = setTurnServerConfigurationUseCase.execute({
-                    urls: parseUrlsInput(),
-                    username: usernameInput.value,
-                    credential: credentialInput.value
-                });
-                urlsInput.value = configuration.value.urls.join('\n');
-                usernameInput.value = configuration.value.username;
-                credentialInput.value = configuration.value.credential;
-                saveStatus.value = 'saved';
-            } catch (error) {
-                // The use case's own construction step threw before
-                // anything was persisted — whatever was previously on
-                // file (if anything) remains completely untouched.
-                saveStatus.value = 'idle';
-                saveError.value = error.message;
+        const form = useEndpointSettingsForm({
+            store,
+            useCase: setTurnServerConfigurationUseCase,
+            // One turn:/turns: URL per line; blank lines ignored, order
+            // preserved. `TurnServerConfiguration`'s own constructor is the
+            // one place that validates each entry — this view performs no
+            // validation of its own, so every request goes to the use case.
+            buildRequest: () => ({
+                urls: splitNonEmptyLines(urlsInput.value),
+                username: usernameInput.value,
+                credential: credentialInput.value
+            }),
+            fillInputs: (configuration) => {
+                urlsInput.value = configuration ? configuration.urls.join('\n') : '';
+                usernameInput.value = configuration ? configuration.username : '';
+                // See this file's own header, "the credential is never shown
+                // in diagnostic text" — this is the one, deliberate
+                // exception: the real on-file credential populates the
+                // password-style input's own model directly, never any other
+                // field or piece of text.
+                credentialInput.value = configuration ? configuration.credential : '';
             }
-        }
-
-        function clear() {
-            if (!store) return;
-            store.clear();
-            configuration.value = null;
-            urlsInput.value = '';
-            usernameInput.value = '';
-            credentialInput.value = '';
-            saveError.value = null;
-            saveStatus.value = 'idle';
-            clearStatus.value = 'cleared';
-        }
-
-        onMounted(load);
+        });
 
         return {
-            hasConfiguration, configuration, urlsInput, usernameInput, credentialInput,
-            saveError, saveStatus, clearStatus, save, clear
+            hasConfiguration: form.hasConfiguration, configuration: form.configuration,
+            urlsInput, usernameInput, credentialInput,
+            saveError: form.saveError, saveStatus: form.saveStatus, clearStatus: form.clearStatus,
+            save: form.save, clear: form.clear
         };
     },
     template: `

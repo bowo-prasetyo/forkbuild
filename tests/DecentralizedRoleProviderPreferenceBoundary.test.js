@@ -330,7 +330,12 @@ async function run() {
             // preference.
             'application/PreferredPublicationAnchorCreationCoordinator.js',
             'application/CreatePreferredPublicationAnchorCreationCoordinatorUseCase.js',
-            'ui/views/AnchorProviderSettingsView.js'
+            'ui/views/AnchorProviderSettingsView.js',
+            // The load / Save lifecycle those three settings views share —
+            // it reads each view's role through the injected store and
+            // writes through the injected SetRoleProviderPreferenceUseCase,
+            // exactly as each view did on its own before.
+            'ui/composables/useRoleProviderPreferenceForm.js'
         ]);
         let consumerCount = 0;
         const consumerFiles = [];
@@ -341,7 +346,7 @@ async function run() {
                 consumerFiles.push(file);
             }
         }
-        assert(consumerCount === KNOWN_CONSUMER_FILES.size && consumerFiles.every((f) => KNOWN_CONSUMER_FILES.has(f)), `M1. exactly the 0.9.294 persistence store, the 0.9.295 resolver, the 0.9.297 application boundary, the 0.9.299 Content creation integration (plus its ui/main.js wiring), the 0.9.301 UI-facing view-model, the 0.9.302 settings write use case/view-model/view/route, the Announcement/Discovery settings view and DecentralizedPublicationsView.js, and the Proof/Anchoring creation integration (its wrapped-coordinator pair and settings view) reference RoleProviderPreference or RoleProviderRole (found ${consumerCount}: ${consumerFiles.join(', ')}) — this boundary is consumed ONLY by those ${KNOWN_CONSUMER_FILES.size} named layers; wiring it into any OTHER production composition root is separate, unscheduled future work`);
+        assert(consumerCount === KNOWN_CONSUMER_FILES.size && consumerFiles.every((f) => KNOWN_CONSUMER_FILES.has(f)), `M1. exactly the 0.9.294 persistence store, the 0.9.295 resolver, the 0.9.297 application boundary, the 0.9.299 Content creation integration (plus its ui/main.js wiring), the 0.9.301 UI-facing view-model, the 0.9.302 settings write use case/view-model/view/route, the Announcement/Discovery settings view and DecentralizedPublicationsView.js, the Proof/Anchoring creation integration (its wrapped-coordinator pair and settings view), and the settings views' shared preference form reference RoleProviderPreference or RoleProviderRole (found ${consumerCount}: ${consumerFiles.join(', ')}) — this boundary is consumed ONLY by those ${KNOWN_CONSUMER_FILES.size} named layers; wiring it into any OTHER production composition root is separate, unscheduled future work`);
         for (const file of consumerFiles) {
             assert(KNOWN_CONSUMER_FILES.has(file), `M2. "${file}" is not one of the known legitimate consumers of this boundary`);
         }

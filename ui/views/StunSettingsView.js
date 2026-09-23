@@ -1,4 +1,6 @@
-import { ref, computed, inject, onMounted } from 'vue';
+import { ref, computed, inject } from 'vue';
+import { useEndpointSettingsForm } from '../composables/useEndpointSettingsForm.js';
+import { splitNonEmptyLines } from '../../utils/splitNonEmptyLines.js';
 import { DEFAULT_ICE_SERVERS } from '../../peer/IceServerConfig.js';
 
 // 0.9.386 — STUN Settings UI.
@@ -61,7 +63,8 @@ import { DEFAULT_ICE_SERVERS } from '../../peer/IceServerConfig.js';
 // IceServerConfiguration.js`'s own list-shaped `servers` field. Blank
 // lines are ignored; order is preserved exactly as typed.
 //
-// OPENING THIS PAGE NEVER WRITES ANYTHING. `load()` only ever reads
+// OPENING THIS PAGE NEVER WRITES ANYTHING. The shared `load()` (ui/composables/
+// useEndpointSettingsForm.js) only ever reads
 // `store.get()`; when it returns `null`, the textarea stays empty and the
 // deployment defaults are shown purely as informational text
 // (`effectiveServers`) — merely visiting this page can never turn "no
@@ -89,77 +92,35 @@ export default {
         const store = inject('iceServerConfigurationStore', null);
         const setIceServerConfigurationUseCase = inject('setIceServerConfigurationUseCase', null);
 
-        // The IceServerConfiguration currently on file, or null — read
-        // straight from the injected store, never constructed here.
-        const configuration = ref(null);
+        // One STUN URL per line; blank lines ignored, order preserved.
         const serversInput = ref('');
-        const saveError = ref(null);
-        const saveStatus = ref('idle'); // 'idle' | 'saved'
-        const clearStatus = ref('idle'); // 'idle' | 'cleared'
 
-        const hasOverride = computed(() => configuration.value !== null);
+        const form = useEndpointSettingsForm({
+            store,
+            useCase: setIceServerConfigurationUseCase,
+            buildRequest: () => {
+                const servers = splitNonEmptyLines(serversInput.value).map((urls) => ({ urls }));
+                return servers.length > 0 ? { servers } : null;
+            },
+            fillInputs: (configuration) => {
+                serversInput.value = configuration
+                    ? configuration.servers.map((server) => server.urls).join('\n')
+                    : '';
+            }
+        });
+
         // The STUN servers actually in effect right now: the stored
         // override when one exists, otherwise the deployment defaults —
         // never a merge of the two, mirroring ui/main.js's own
         // `resolvedIceServers` resolution exactly.
         const effectiveServers = computed(() => (
-            configuration.value ? configuration.value.servers : DEFAULT_ICE_SERVERS
+            form.configuration.value ? form.configuration.value.servers : DEFAULT_ICE_SERVERS
         ));
 
-        // Re-reads the store fresh on every load — so a newly mounted
-        // instance of this view always observes whatever a prior instance
-        // (or a prior application run) actually persisted, never a value
-        // cached from before. Never writes anything.
-        function load() {
-            if (!store) return;
-            configuration.value = store.get();
-            serversInput.value = configuration.value
-                ? configuration.value.servers.map((server) => server.urls).join('\n')
-                : '';
-        }
-
-        // One URL per line; blank lines ignored, order preserved.
-        function parseServersInput() {
-            return serversInput.value
-                .split('\n')
-                .map((line) => line.trim())
-                .filter((line) => line.length > 0)
-                .map((urls) => ({ urls }));
-        }
-
-        function save() {
-            const servers = parseServersInput();
-            if (!setIceServerConfigurationUseCase || servers.length === 0) return;
-            saveError.value = null;
-            clearStatus.value = 'idle';
-            try {
-                configuration.value = setIceServerConfigurationUseCase.execute({ servers });
-                serversInput.value = configuration.value.servers.map((server) => server.urls).join('\n');
-                saveStatus.value = 'saved';
-            } catch (error) {
-                // The use case's own construction step threw before
-                // anything was persisted — whatever was previously on
-                // file (if anything) remains completely untouched.
-                saveStatus.value = 'idle';
-                saveError.value = error.message;
-            }
-        }
-
-        function resetToDefaults() {
-            if (!store) return;
-            store.clear();
-            configuration.value = null;
-            serversInput.value = '';
-            saveError.value = null;
-            saveStatus.value = 'idle';
-            clearStatus.value = 'cleared';
-        }
-
-        onMounted(load);
-
         return {
-            hasOverride, effectiveServers, serversInput,
-            saveError, saveStatus, clearStatus, save, resetToDefaults
+            hasOverride: form.hasConfiguration, effectiveServers, serversInput,
+            saveError: form.saveError, saveStatus: form.saveStatus, clearStatus: form.clearStatus,
+            save: form.save, resetToDefaults: form.clear
         };
     },
     template: `

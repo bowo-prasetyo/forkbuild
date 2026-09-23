@@ -1,4 +1,6 @@
-import { ref, computed, inject, onMounted } from 'vue';
+import { ref, computed, inject } from 'vue';
+import { useEndpointSettingsForm } from '../composables/useEndpointSettingsForm.js';
+import { splitNonEmptyLines } from '../../utils/splitNonEmptyLines.js';
 import { DEFAULT_RENDEZVOUS_URLS } from '../../peer/RendezvousConfig.js';
 
 // 0.9.388 — Rendezvous Settings UI.
@@ -65,7 +67,8 @@ import { DEFAULT_RENDEZVOUS_URLS } from '../../peer/RendezvousConfig.js';
 // configuration. Blank lines are ignored; order is preserved exactly as
 // typed.
 //
-// OPENING THIS PAGE NEVER WRITES ANYTHING. `load()` only ever reads
+// OPENING THIS PAGE NEVER WRITES ANYTHING. The shared `load()` (ui/composables/
+// useEndpointSettingsForm.js) only ever reads
 // `store.get()`; when it returns `null`, the textarea stays empty and the
 // deployment defaults are shown purely as informational text
 // (`effectiveUrls`) — merely visiting this page can never turn "no
@@ -93,74 +96,33 @@ export default {
         const store = inject('rendezvousConfigurationStore', null);
         const setRendezvousConfigurationUseCase = inject('setRendezvousConfigurationUseCase', null);
 
-        // The RendezvousConfiguration currently on file, or null — read
-        // straight from the injected store, never constructed here.
-        const configuration = ref(null);
+        // One rendezvous URL per line; blank lines ignored, order preserved.
         const urlsInput = ref('');
-        const saveError = ref(null);
-        const saveStatus = ref('idle'); // 'idle' | 'saved'
-        const clearStatus = ref('idle'); // 'idle' | 'cleared'
 
-        const hasOverride = computed(() => configuration.value !== null);
+        const form = useEndpointSettingsForm({
+            store,
+            useCase: setRendezvousConfigurationUseCase,
+            buildRequest: () => {
+                const urls = splitNonEmptyLines(urlsInput.value);
+                return urls.length > 0 ? { urls } : null;
+            },
+            fillInputs: (configuration) => {
+                urlsInput.value = configuration ? configuration.urls.join('\n') : '';
+            }
+        });
+
         // The rendezvous servers actually in effect right now: the stored
         // override when one exists, otherwise the deployment defaults —
         // never a merge of the two, mirroring ui/main.js's own
         // `resolvedRendezvousUrls` resolution exactly.
         const effectiveUrls = computed(() => (
-            configuration.value ? configuration.value.urls : DEFAULT_RENDEZVOUS_URLS
+            form.configuration.value ? form.configuration.value.urls : DEFAULT_RENDEZVOUS_URLS
         ));
 
-        // Re-reads the store fresh on every load — so a newly mounted
-        // instance of this view always observes whatever a prior instance
-        // (or a prior application run) actually persisted, never a value
-        // cached from before. Never writes anything.
-        function load() {
-            if (!store) return;
-            configuration.value = store.get();
-            urlsInput.value = configuration.value ? configuration.value.urls.join('\n') : '';
-        }
-
-        // One URL per line; blank lines ignored, order preserved.
-        function parseUrlsInput() {
-            return urlsInput.value
-                .split('\n')
-                .map((line) => line.trim())
-                .filter((line) => line.length > 0);
-        }
-
-        function save() {
-            const urls = parseUrlsInput();
-            if (!setRendezvousConfigurationUseCase || urls.length === 0) return;
-            saveError.value = null;
-            clearStatus.value = 'idle';
-            try {
-                configuration.value = setRendezvousConfigurationUseCase.execute({ urls });
-                urlsInput.value = configuration.value.urls.join('\n');
-                saveStatus.value = 'saved';
-            } catch (error) {
-                // The use case's own construction step threw before
-                // anything was persisted — whatever was previously on
-                // file (if anything) remains completely untouched.
-                saveStatus.value = 'idle';
-                saveError.value = error.message;
-            }
-        }
-
-        function resetToDefaults() {
-            if (!store) return;
-            store.clear();
-            configuration.value = null;
-            urlsInput.value = '';
-            saveError.value = null;
-            saveStatus.value = 'idle';
-            clearStatus.value = 'cleared';
-        }
-
-        onMounted(load);
-
         return {
-            hasOverride, effectiveUrls, urlsInput,
-            saveError, saveStatus, clearStatus, save, resetToDefaults
+            hasOverride: form.hasConfiguration, effectiveUrls, urlsInput,
+            saveError: form.saveError, saveStatus: form.saveStatus, clearStatus: form.clearStatus,
+            save: form.save, resetToDefaults: form.clear
         };
     },
     template: `

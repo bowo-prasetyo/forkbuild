@@ -1,4 +1,6 @@
-import { ref, computed, inject, onMounted } from 'vue';
+import { ref, computed, inject } from 'vue';
+import { useRoleProviderPreferenceForm } from '../composables/useRoleProviderPreferenceForm.js';
+import { useEndpointSettingsForm } from '../composables/useEndpointSettingsForm.js';
 import { RoleProviderRole } from '../../core/RoleProviderRole.js';
 import { describeRoleProviderPreferenceSettings } from '../../application/RoleProviderPreferenceSettingsView.js';
 import { DEFAULT_IPFS_NODE_API_URL } from '../../core/IpfsNodeConfiguration.js';
@@ -100,36 +102,30 @@ export default {
         const ipfsNodeConfigurationStore = inject('ipfsNodeConfigurationStore', null);
         const setIpfsNodeConfigurationUseCase = inject('setIpfsNodeConfigurationUseCase', null);
 
-        const preference = ref(null);
-        const selectedProviderKey = ref(null);
-        const saveError = ref(null);
-        const saveStatus = ref('idle'); // 'idle' | 'saved'
+        // A legacy saved `local` preference — registered, but not
+        // preferable — is displayed as "nothing selected," never as a radio
+        // button that no longer exists. Derived from the coordinator's own
+        // two lists, never a hardcoded 'local' check here.
+        function isUnofferedProviderKey(key) {
+            if (!preferredPlacementCreationCoordinator) return false;
+            return preferredPlacementCreationCoordinator.availableStorageTypes().includes(key)
+                && !preferredPlacementCreationCoordinator.preferableStorageTypes().includes(key);
+        }
 
-        const ipfsNodeConfiguration = ref(null);
-        const ipfsNodeApiUrlInput = ref('');
-        const ipfsNodeSaveError = ref(null);
-        const ipfsNodeSaveStatus = ref('idle'); // 'idle' | 'saved'
-        const ipfsNodeClearStatus = ref('idle'); // 'idle' | 'cleared'
+        const preferenceForm = useRoleProviderPreferenceForm({
+            role: RoleProviderRole.CONTENT,
+            preferenceStore,
+            setUseCase: setRoleProviderPreferenceUseCase,
+            isSelectable: (key) => !isUnofferedProviderKey(key)
+        });
 
-        const hasIpfsNodeOverride = computed(() => ipfsNodeConfiguration.value !== null);
-        const effectiveIpfsNodeApiUrl = computed(() => (
-            ipfsNodeConfiguration.value ? ipfsNodeConfiguration.value.apiUrl : DEFAULT_IPFS_NODE_API_URL
+        const hasUnofferedPreference = computed(() => (
+            preferenceForm.preference.value !== null && isUnofferedProviderKey(preferenceForm.preference.value.providerKey)
         ));
 
         const availableProviderKeys = computed(() => {
             const registered = preferredPlacementCreationCoordinator ? preferredPlacementCreationCoordinator.preferableStorageTypes() : [];
             return registered.includes('remote-pinning') ? registered : [...registered, 'remote-pinning'];
-        });
-
-        // A legacy saved `local` preference — registered, but not
-        // preferable — displayed as "nothing selected," never as a radio
-        // button that no longer exists. Derived from the coordinator's own
-        // two lists, never a hardcoded 'local' check here.
-        const hasUnofferedPreference = computed(() => {
-            if (!preference.value || !preferredPlacementCreationCoordinator) return false;
-            const key = preference.value.providerKey;
-            return preferredPlacementCreationCoordinator.availableStorageTypes().includes(key)
-                && !preferredPlacementCreationCoordinator.preferableStorageTypes().includes(key);
         });
 
         const settings = computed(() => {
@@ -139,79 +135,32 @@ export default {
             return { ...described, options: sortOptionsByLabel(described.options) };
         });
 
-        // Re-reads the store fresh on every load — this is what makes a
-        // newly constructed instance of this view (a fresh page load, a
-        // fresh application/RoleProviderPreferenceStore.js in a new test)
-        // observe whatever was persisted by a PRIOR instance, never a
-        // value cached from before.
-        function load() {
-            if (!preferenceStore) return;
-            preference.value = preferenceStore.get(RoleProviderRole.CONTENT);
-            selectedProviderKey.value = preference.value && !hasUnofferedPreference.value ? preference.value.providerKey : null;
-        }
-
-        function save() {
-            if (!setRoleProviderPreferenceUseCase || !selectedProviderKey.value) return;
-            saveError.value = null;
-            try {
-                preference.value = setRoleProviderPreferenceUseCase.execute({
-                    role: RoleProviderRole.CONTENT,
-                    providerKey: selectedProviderKey.value
-                });
-                saveStatus.value = 'saved';
-            } catch (error) {
-                saveStatus.value = 'idle';
-                saveError.value = error.message;
+        // The separate IPFS Node setting — the identical read / Save /
+        // "Use Deployment Default" shape ui/views/IpfsGatewaySettingsView.js
+        // holds for the read-path gateway setting.
+        const ipfsNodeApiUrlInput = ref('');
+        const ipfsNodeForm = useEndpointSettingsForm({
+            store: ipfsNodeConfigurationStore,
+            useCase: setIpfsNodeConfigurationUseCase,
+            buildRequest: () => {
+                const apiUrl = ipfsNodeApiUrlInput.value.trim();
+                return apiUrl ? { apiUrl } : null;
+            },
+            fillInputs: (configuration) => {
+                ipfsNodeApiUrlInput.value = configuration ? configuration.apiUrl : '';
             }
-        }
-
-        // Re-reads the store fresh on every load — the identical restraint
-        // `load()` above already holds for the provider preference itself.
-        function loadIpfsNodeConfiguration() {
-            if (!ipfsNodeConfigurationStore) return;
-            ipfsNodeConfiguration.value = ipfsNodeConfigurationStore.get();
-            ipfsNodeApiUrlInput.value = ipfsNodeConfiguration.value ? ipfsNodeConfiguration.value.apiUrl : '';
-        }
-
-        function saveIpfsNodeConfiguration() {
-            if (!setIpfsNodeConfigurationUseCase || !ipfsNodeApiUrlInput.value.trim()) return;
-            ipfsNodeSaveError.value = null;
-            ipfsNodeClearStatus.value = 'idle';
-            try {
-                ipfsNodeConfiguration.value = setIpfsNodeConfigurationUseCase.execute({ apiUrl: ipfsNodeApiUrlInput.value.trim() });
-                ipfsNodeApiUrlInput.value = ipfsNodeConfiguration.value.apiUrl;
-                ipfsNodeSaveStatus.value = 'saved';
-            } catch (error) {
-                ipfsNodeSaveStatus.value = 'idle';
-                ipfsNodeSaveError.value = error.message;
-            }
-        }
-
-        // The one way back to "no override, use the deployment default" —
-        // mirrors ui/views/IpfsGatewaySettingsView.js's own
-        // useDeploymentDefault() exactly: calls store.clear(), never
-        // save({ apiUrl: DEFAULT_IPFS_NODE_API_URL }), so "no preference" is
-        // never wrongly turned into an explicit one that happens to match it.
-        function useIpfsNodeDeploymentDefault() {
-            if (!ipfsNodeConfigurationStore) return;
-            ipfsNodeConfigurationStore.clear();
-            ipfsNodeConfiguration.value = null;
-            ipfsNodeApiUrlInput.value = '';
-            ipfsNodeSaveError.value = null;
-            ipfsNodeSaveStatus.value = 'idle';
-            ipfsNodeClearStatus.value = 'cleared';
-        }
-
-        onMounted(() => {
-            load();
-            loadIpfsNodeConfiguration();
         });
+        const effectiveIpfsNodeApiUrl = computed(() => (
+            ipfsNodeForm.configuration.value ? ipfsNodeForm.configuration.value.apiUrl : DEFAULT_IPFS_NODE_API_URL
+        ));
 
         return {
-            settings, selectedProviderKey, hasUnofferedPreference, saveError, saveStatus, save,
-            hasIpfsNodeOverride, effectiveIpfsNodeApiUrl, ipfsNodeApiUrlInput,
-            ipfsNodeSaveError, ipfsNodeSaveStatus, ipfsNodeClearStatus,
-            saveIpfsNodeConfiguration, useIpfsNodeDeploymentDefault
+            settings, selectedProviderKey: preferenceForm.selectedProviderKey, hasUnofferedPreference,
+            saveError: preferenceForm.saveError, saveStatus: preferenceForm.saveStatus, save: preferenceForm.save,
+            hasIpfsNodeOverride: ipfsNodeForm.hasConfiguration, effectiveIpfsNodeApiUrl, ipfsNodeApiUrlInput,
+            ipfsNodeSaveError: ipfsNodeForm.saveError, ipfsNodeSaveStatus: ipfsNodeForm.saveStatus,
+            ipfsNodeClearStatus: ipfsNodeForm.clearStatus,
+            saveIpfsNodeConfiguration: ipfsNodeForm.save, useIpfsNodeDeploymentDefault: ipfsNodeForm.clear
         };
     },
     template: `

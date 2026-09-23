@@ -379,7 +379,11 @@ async function run() {
         // Opening the page never writes anything: load() only calls
         // store.get(), never store.save()/setArweaveGatewayConfigurationUseCase.execute()
         // outside of the save() handler.
-        const loadFnMatch = viewSource.match(/function load\(\)\s*\{[\s\S]*?\n\s{8}\}/);
+        // load()/save()/clear() are the shared endpoint-settings form's own
+        // (ui/composables/useEndpointSettingsForm.js); the view wires its
+        // own injected store and use case into it.
+        const formSource = await source('ui/composables/useEndpointSettingsForm.js');
+        const loadFnMatch = formSource.match(/function load\(\)\s*\{[\s\S]*?\n\s{4}\}/);
         assert(loadFnMatch, '49. a load() function exists');
         assert(!/execute\(|\.save\(|\.clear\(/.test(loadFnMatch[0]),
             '50. load() never calls the use case, store.save(), or store.clear() — merely opening the page persists nothing');
@@ -387,15 +391,17 @@ async function run() {
         // Save / Use Deployment Default wiring.
         assert(/@click="save"/.test(viewSource), '51. a Save action is wired');
         assert(/@click="useDeploymentDefault"/.test(viewSource), '52. a Use Deployment Default action is wired');
-        const useDeploymentDefaultFnMatch = viewSource.match(/function useDeploymentDefault\(\)\s*\{[\s\S]*?\n\s{8}\}/);
-        assert(useDeploymentDefaultFnMatch, '53. a useDeploymentDefault() function exists');
+        const useDeploymentDefaultFnMatch = /useDeploymentDefault: form\.clear\b/.test(viewSource)
+            && formSource.match(/function clear\(\)\s*\{[\s\S]*?\n\s{4}\}/);
+        assert(useDeploymentDefaultFnMatch, '53. Use Deployment Default is wired to the shared clear() function');
         assert(/store\.clear\(\)/.test(useDeploymentDefaultFnMatch[0]),
             '54. Use Deployment Default calls store.clear()');
         assert(!/DEFAULT_ARWEAVE_GATEWAY_URL/.test(useDeploymentDefaultFnMatch[0]),
             '55. Use Deployment Default never saves { gatewayUrl: DEFAULT_ARWEAVE_GATEWAY_URL } — it only ever clears');
-        const saveFnMatch = viewSource.match(/function save\(\)\s*\{[\s\S]*?\n\s{8}\}/);
+        const saveFnMatch = /\bsave: form\.save\b/.test(viewSource)
+            && formSource.match(/function save\(\)\s*\{[\s\S]*?\n\s{4}\}/);
         assert(saveFnMatch, '56. a save() function exists');
-        assert(/setArweaveGatewayConfigurationUseCase\.execute\(/.test(saveFnMatch[0]),
+        assert(/useCase\.execute\(/.test(saveFnMatch[0]) && /useCase: setArweaveGatewayConfigurationUseCase\b/.test(viewSource),
             '57. save() goes through the injected use case, never a direct store.save()');
         assert(!/store\.save\(/.test(saveFnMatch[0]),
             '58. save() never calls store.save() directly, bypassing the use case');

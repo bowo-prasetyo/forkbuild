@@ -1,4 +1,5 @@
-import { ref, computed, inject, onMounted } from 'vue';
+import { ref, inject } from 'vue';
+import { useEndpointSettingsForm } from '../composables/useEndpointSettingsForm.js';
 import { DEFAULT_BITCOIN_ESPLORA_API_URL } from '../../core/BitcoinEsploraConfiguration.js';
 
 // Bitcoin Esplora Endpoint Settings UI.
@@ -22,7 +23,8 @@ import { DEFAULT_BITCOIN_ESPLORA_API_URL } from '../../core/BitcoinEsploraConfig
 // is rejected by that use case's own construction step; this view only ever
 // displays whatever message that throw carries.
 //
-// OPENING THIS PAGE NEVER WRITES ANYTHING — load() only ever reads
+// OPENING THIS PAGE NEVER WRITES ANYTHING — the shared load() (ui/composables/
+// useEndpointSettingsForm.js) only ever reads
 // store.get(). "Use Deployment Default" calls store.clear(), never
 // save({ apiUrl: DEFAULT_BITCOIN_ESPLORA_API_URL }) — saving the default
 // value would wrongly turn "no preference" into an explicit one that
@@ -37,51 +39,27 @@ export default {
         const store = inject('bitcoinEsploraConfigurationStore', null);
         const setBitcoinEsploraConfigurationUseCase = inject('setBitcoinEsploraConfigurationUseCase', null);
 
-        const configuration = ref(null);
         const apiUrlInput = ref('');
-        const saveError = ref(null);
-        const saveStatus = ref('idle'); // 'idle' | 'saved'
-        const clearStatus = ref('idle'); // 'idle' | 'cleared'
 
-        const hasOverride = computed(() => configuration.value !== null);
+        const form = useEndpointSettingsForm({
+            store,
+            useCase: setBitcoinEsploraConfigurationUseCase,
+            buildRequest: () => {
+                const apiUrl = apiUrlInput.value.trim();
+                return apiUrl ? { apiUrl } : null;
+            },
+            fillInputs: (configuration) => {
+                apiUrlInput.value = configuration ? configuration.apiUrl : '';
+            }
+        });
+
         // Shown only when no override is on file.
         const deploymentDefaultApiUrl = DEFAULT_BITCOIN_ESPLORA_API_URL;
 
-        function load() {
-            if (!store) return;
-            configuration.value = store.get();
-            apiUrlInput.value = configuration.value ? configuration.value.apiUrl : '';
-        }
-
-        function save() {
-            if (!setBitcoinEsploraConfigurationUseCase || !apiUrlInput.value.trim()) return;
-            saveError.value = null;
-            clearStatus.value = 'idle';
-            try {
-                configuration.value = setBitcoinEsploraConfigurationUseCase.execute({ apiUrl: apiUrlInput.value.trim() });
-                apiUrlInput.value = configuration.value.apiUrl;
-                saveStatus.value = 'saved';
-            } catch (error) {
-                saveStatus.value = 'idle';
-                saveError.value = error.message;
-            }
-        }
-
-        function useDeploymentDefault() {
-            if (!store) return;
-            store.clear();
-            configuration.value = null;
-            apiUrlInput.value = '';
-            saveError.value = null;
-            saveStatus.value = 'idle';
-            clearStatus.value = 'cleared';
-        }
-
-        onMounted(load);
-
         return {
-            hasOverride, deploymentDefaultApiUrl, configuration, apiUrlInput,
-            saveError, saveStatus, clearStatus, save, useDeploymentDefault
+            hasOverride: form.hasConfiguration, deploymentDefaultApiUrl, configuration: form.configuration, apiUrlInput,
+            saveError: form.saveError, saveStatus: form.saveStatus, clearStatus: form.clearStatus,
+            save: form.save, useDeploymentDefault: form.clear
         };
     },
     template: `

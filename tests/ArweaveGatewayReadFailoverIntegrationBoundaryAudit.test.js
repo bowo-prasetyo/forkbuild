@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { register } from 'node:module';
 
 import { ArweaveGatewayConfiguration, DEFAULT_ARWEAVE_GATEWAY_URL } from '../core/ArweaveGatewayConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -78,9 +79,11 @@ import { CreateArweaveAnchorProofVerifierUseCase } from '../application/CreateAr
 //            locator/storage/bytes/hash are exactly what a direct,
 //            single-gateway read against the surviving gateway would have
 //            produced.
-// Section H: Settings/UI integration — the view's real parseGatewayUrls()/
-//            save()/load() functions, extracted from the real source file
-//            and executed (never reimplemented by hand): line order
+// Section H: Settings/UI integration — the REAL ArweaveGatewaySettingsView,
+//            mounted through tests/support/MinimalVueCompositionApiShim.js
+//            and driven through its own save()/load() (never
+//            reimplemented by hand), plus the one line parser it calls,
+//            utils/splitNonEmptyLines.js: line order
 //            preserved, empty lines never become endpoints, a malformed
 //            entry is rejected by the real use case without mutating
 //            storage, one line behaves exactly like the pre-0.9.440 single
@@ -166,16 +169,6 @@ function totalRequests(requestsByOrigin, origin) {
 const SOURCE_ROOT = new URL('../', import.meta.url);
 async function source(relativePath) {
     return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
-// Mirrors tests/ArweaveGatewayLifecycleReassessment.test.js's own
-// useDeploymentDefaultFnMatch extraction technique exactly — the real
-// function body, taken verbatim from the real source file, never
-// reimplemented by hand.
-function extractFunctionBlock(sourceText, functionName) {
-    const pattern = new RegExp(`function ${functionName}\\(\\)\\s*\\{[\\s\\S]*?\\n\\s{8}\\}`);
-    const match = sourceText.match(pattern);
-    return match ? match[0] : null;
 }
 
 async function run() {
@@ -564,74 +557,67 @@ async function run() {
     }
 
     // ===============================================================
-    // Section H — Settings/UI integration: the view's real functions,
-    // extracted from source and executed, never reimplemented by hand.
+    // Section H — Settings/UI integration: the REAL view, mounted and
+    // driven through its own save()/load(), never reimplemented by hand.
     // ===============================================================
     {
+        register(new URL('./support/VueShimLoader.mjs', import.meta.url));
+        const { mountComponent } = await import('./support/MinimalVueCompositionApiShim.js');
+        const ArweaveGatewaySettingsView = (await import('../ui/views/ArweaveGatewaySettingsView.js')).default;
+        const { splitNonEmptyLines } = await import('../utils/splitNonEmptyLines.js');
+
         const viewSource = await source('ui/views/ArweaveGatewaySettingsView.js');
+        assert(/splitNonEmptyLines\(gatewayUrlInput\.value\)/.test(viewSource),
+            'H1. sanity — the view builds its gatewayUrls from splitNonEmptyLines(gatewayUrlInput.value), the one shared line parser exercised below');
 
-        const parseBlock = extractFunctionBlock(viewSource, 'parseGatewayUrls');
-        const loadBlock = extractFunctionBlock(viewSource, 'load');
-        const saveBlock = extractFunctionBlock(viewSource, 'save');
-        assert(parseBlock && loadBlock && saveBlock, 'H1. sanity — parseGatewayUrls()/load()/save() were all located and extracted from the real view source, never re-typed by hand');
-
-        // H2. parseGatewayUrls(): line order preserved, empty lines never
+        // H2. The line parser: line order preserved, empty lines never
         // become endpoints, whitespace is trimmed, and a single line
         // behaves exactly like the pre-0.9.440 single input.
-        const runParse = new Function('gatewayUrlInput', `${parseBlock}\nreturn parseGatewayUrls();`);
-        assert(runParse({ value: `${C}\n${A}\n${B}` }).join(',') === [C, A, B].join(','), 'H2a. line order is preserved exactly, never re-sorted');
-        assert(runParse({ value: `\n${A}\n\n  \n${B}\n\n` }).join(',') === [A, B].join(','), 'H2b. empty and whitespace-only lines are filtered out — they never become endpoints');
-        assert(runParse({ value: `  ${A}  \n  ${B}  ` }).join(',') === [A, B].join(','), 'H2c. leading/trailing whitespace on a real line is trimmed');
-        assert(runParse({ value: A }).length === 1 && runParse({ value: A })[0] === A, 'H2d. a single non-empty line behaves exactly like the pre-0.9.440 single-value input — one element, unchanged');
-        const malformedParsed = runParse({ value: 'not-a-url\nftp://also-not-http' });
-        assert(malformedParsed.length === 2, 'H2e. parseGatewayUrls() itself performs no URL validation — a malformed entry passes through unchanged, exactly as documented (validation lives downstream, in the real value object)');
+        assert(splitNonEmptyLines(`${C}\n${A}\n${B}`).join(',') === [C, A, B].join(','), 'H2a. line order is preserved exactly, never re-sorted');
+        assert(splitNonEmptyLines(`\n${A}\n\n  \n${B}\n\n`).join(',') === [A, B].join(','), 'H2b. empty and whitespace-only lines are filtered out — they never become endpoints');
+        assert(splitNonEmptyLines(`  ${A}  \n  ${B}  `).join(',') === [A, B].join(','), 'H2c. leading/trailing whitespace on a real line is trimmed');
+        assert(splitNonEmptyLines(A).length === 1 && splitNonEmptyLines(A)[0] === A, 'H2d. a single non-empty line behaves exactly like the pre-0.9.440 single-value input — one element, unchanged');
+        const malformedParsed = splitNonEmptyLines('not-a-url\nftp://also-not-http');
+        assert(malformedParsed.length === 2, 'H2e. the line parser itself performs no URL validation — a malformed entry passes through unchanged, exactly as documented (validation lives downstream, in the real value object)');
 
         // H3. Save: a malformed entry is rejected by the REAL use case,
         // exactly the existing "invalid input never mutates storage"
-        // degradation semantics — proven by actually calling save(), not
-        // by re-testing the use case in isolation (already covered
-        // elsewhere) — this proves the VIEW's own save() genuinely
+        // degradation semantics — proven by actually calling the mounted
+        // view's own save(), not by re-testing the use case in isolation
+        // (already covered elsewhere) — this proves the VIEW genuinely
         // forwards to it and genuinely surfaces the failure.
         {
             const store = new ArweaveGatewayConfigurationStore(new InMemoryStorageProvider());
             const setUseCase = new SetArweaveGatewayConfigurationUseCase({ arweaveGatewayConfigurationStore: store });
-            const runSave = new Function(
-                'gatewayUrlInput', 'setArweaveGatewayConfigurationUseCase', 'saveError', 'clearStatus', 'saveStatus', 'configuration',
-                `${parseBlock}\n${saveBlock}\nsave();`
-            );
-            const ctx = {
-                gatewayUrlInput: { value: `${A}\nnot-a-url` },
-                setArweaveGatewayConfigurationUseCase: setUseCase,
-                saveError: { value: null }, clearStatus: { value: 'idle' }, saveStatus: { value: 'idle' }, configuration: { value: null }
-            };
-            runSave(ctx.gatewayUrlInput, ctx.setArweaveGatewayConfigurationUseCase, ctx.saveError, ctx.clearStatus, ctx.saveStatus, ctx.configuration);
-            assert(ctx.saveError.value !== null, 'H3a. the real save() function, executed for real, surfaces the real use case\'s rejection as saveError');
+            const view = mountComponent(ArweaveGatewaySettingsView, {
+                arweaveGatewayConfigurationStore: store, setArweaveGatewayConfigurationUseCase: setUseCase
+            });
+            view.gatewayUrlInput.value = `${A}\nnot-a-url`;
+            view.save();
+            assert(view.saveError.value !== null, 'H3a. the real view\'s save(), executed for real, surfaces the real use case\'s rejection as saveError');
             assert(store.get() === null, 'H3b. …and nothing was persisted — a malformed entry among otherwise-valid ones still rejects the WHOLE list, never a partial save');
 
             // A fully valid multi-line save through the same real save().
-            ctx.gatewayUrlInput.value = `${C}\n${A}\n${B}`;
-            ctx.saveError.value = null;
-            runSave(ctx.gatewayUrlInput, ctx.setArweaveGatewayConfigurationUseCase, ctx.saveError, ctx.clearStatus, ctx.saveStatus, ctx.configuration);
-            assert(ctx.saveError.value === null, 'H3c. a fully valid multi-line save reports no error');
-            assert(store.get() && store.get().gatewayUrls.join(',') === [C, A, B].join(','), 'H3d. …and persists the exact configured order, through the real view save() function, the real use case, and the real store');
+            view.gatewayUrlInput.value = `${C}\n${A}\n${B}`;
+            view.save();
+            assert(view.saveError.value === null, 'H3c. a fully valid multi-line save reports no error');
+            assert(store.get() && store.get().gatewayUrls.join(',') === [C, A, B].join(','), 'H3d. …and persists the exact configured order, through the real view save(), the real use case, and the real store');
         }
 
         // H4. Load: a persisted configuration reloads byte-identical,
-        // through the real load() function.
+        // through a real mount of the view over a freshly constructed store.
         {
             const sharedNamespace = {};
             const storeBeforeRestart = new ArweaveGatewayConfigurationStore(new SharedNamespaceStorageProvider(sharedNamespace));
             new SetArweaveGatewayConfigurationUseCase({ arweaveGatewayConfigurationStore: storeBeforeRestart }).execute({ gatewayUrls: [C, A, B] });
 
             const storeAfterRestart = new ArweaveGatewayConfigurationStore(new SharedNamespaceStorageProvider(sharedNamespace));
-            const runLoad = new Function('store', 'configuration', 'gatewayUrlInput', `${loadBlock}\nload();`);
-            const ctx = { configuration: { value: null }, gatewayUrlInput: { value: '' } };
-            runLoad(storeAfterRestart, ctx.configuration, ctx.gatewayUrlInput);
-            assert(ctx.configuration.value instanceof ArweaveGatewayConfiguration, 'H4a. the real load() function populates configuration from a freshly constructed store, across a genuine restart boundary');
-            assert(ctx.gatewayUrlInput.value === [C, A, B].join('\n'), 'H4b. …and the textarea value reconstructs to exactly one gateway per line, in the exact persisted order — a real reload, not a reimplementation, proves the round trip');
+            const view = mountComponent(ArweaveGatewaySettingsView, { arweaveGatewayConfigurationStore: storeAfterRestart });
+            assert(view.configuration.value instanceof ArweaveGatewayConfiguration, 'H4a. mounting the real view populates configuration from a freshly constructed store, across a genuine restart boundary');
+            assert(view.gatewayUrlInput.value === [C, A, B].join('\n'), 'H4b. …and the textarea value reconstructs to exactly one gateway per line, in the exact persisted order — a real reload, not a reimplementation, proves the round trip');
         }
 
-        console.log('✓ Section H: the view\'s real parseGatewayUrls()/save()/load() functions — extracted from the actual source file and executed, never hand-reimplemented — preserve line order, filter blank lines, defer URL validation to the real use case (which rejects a malformed entry without any partial persistence), treat one line exactly like the old single input, and reload a persisted multi-gateway configuration byte-identical');
+        console.log('✓ Section H: the real, mounted Arweave Gateway settings view — driven through its own save()/load(), never hand-reimplemented — preserves line order, filters blank lines, defers URL validation to the real use case (which rejects a malformed entry without any partial persistence), treats one line exactly like the old single input, and reloads a persisted multi-gateway configuration byte-identical');
     }
 
     // ===============================================================

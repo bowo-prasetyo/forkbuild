@@ -1,4 +1,6 @@
-import { ref, computed, inject, onMounted } from 'vue';
+import { ref, inject } from 'vue';
+import { useEndpointSettingsForm } from '../composables/useEndpointSettingsForm.js';
+import { splitNonEmptyLines } from '../../utils/splitNonEmptyLines.js';
 import { DEFAULT_NOSTR_RELAY_URL } from '../../core/NostrRelayConfiguration.js';
 
 // 0.9.371 — Nostr Relay Settings UI.
@@ -73,7 +75,8 @@ import { DEFAULT_NOSTR_RELAY_URL } from '../../core/NostrRelayConfiguration.js';
 // itself a thin, unvalidating forward to core/NostrRelayConfiguration.js's
 // own constructor.
 //
-// OPENING THIS PAGE NEVER WRITES ANYTHING. `load()` only ever reads
+// OPENING THIS PAGE NEVER WRITES ANYTHING. The shared `load()` (ui/composables/
+// useEndpointSettingsForm.js) only ever reads
 // `store.get()`; when it returns `null`, the input stays empty and the
 // deployment default is shown purely as informational text
 // (`deploymentDefaultRelayUrl`) — merely visiting this page can never turn "no
@@ -114,76 +117,35 @@ export default {
         const store = inject('nostrRelayConfigurationStore', null);
         const setNostrRelayConfigurationUseCase = inject('setNostrRelayConfigurationUseCase', null);
 
-        // The NostrRelayConfiguration currently on file, or null — read
-        // straight from the injected store, never constructed here.
-        const configuration = ref(null);
         // One relay URL per line — every configured relay is fanned out to.
         const relayUrlInput = ref('');
-        const saveError = ref(null);
-        const saveStatus = ref('idle'); // 'idle' | 'saved'
-        const clearStatus = ref('idle'); // 'idle' | 'cleared'
 
-        const hasOverride = computed(() => configuration.value !== null);
+        const form = useEndpointSettingsForm({
+            store,
+            useCase: setNostrRelayConfigurationUseCase,
+            // Splitting the textarea into lines is the ONLY interpretation
+            // this view performs; every other rule (what counts as a valid
+            // URL) stays inside core/NostrRelayConfiguration.js's own
+            // constructor, reached through the use case.
+            buildRequest: () => {
+                const relayUrls = splitNonEmptyLines(relayUrlInput.value);
+                return relayUrls.length > 0 ? { relayUrls } : null;
+            },
+            fillInputs: (configuration) => {
+                relayUrlInput.value = configuration ? configuration.relayUrls.join('\n') : '';
+            }
+        });
+
         // Shown only when no override is on file, as informational text —
         // so the relay in effect is always exactly the deployment default,
         // never a merge with anything, mirroring ui/main.js's own
         // `resolvedNostrRelayUrls` fallback.
         const deploymentDefaultRelayUrl = DEFAULT_NOSTR_RELAY_URL;
 
-        // Re-reads the store fresh on every load — so a newly mounted
-        // instance of this view always observes whatever a prior instance
-        // (or a prior application run) actually persisted, never a value
-        // cached from before. Never writes anything.
-        function load() {
-            if (!store) return;
-            configuration.value = store.get();
-            relayUrlInput.value = configuration.value ? configuration.value.relayUrls.join('\n') : '';
-        }
-
-        // Splits the textarea into one trimmed URL per non-empty line —
-        // the ONLY interpretation this view performs; every other rule
-        // (what counts as a valid URL, whether the list is non-empty) stays
-        // inside core/NostrRelayConfiguration.js's own constructor, reached
-        // through the use case below.
-        function parseRelayUrls() {
-            return relayUrlInput.value
-                .split('\n')
-                .map((line) => line.trim())
-                .filter((line) => line.length > 0);
-        }
-
-        function save() {
-            if (!setNostrRelayConfigurationUseCase || !relayUrlInput.value.trim()) return;
-            saveError.value = null;
-            clearStatus.value = 'idle';
-            try {
-                configuration.value = setNostrRelayConfigurationUseCase.execute({ relayUrls: parseRelayUrls() });
-                relayUrlInput.value = configuration.value.relayUrls.join('\n');
-                saveStatus.value = 'saved';
-            } catch (error) {
-                // The use case's own construction step threw before
-                // anything was persisted — whatever was previously on file
-                // (if anything) remains completely untouched.
-                saveStatus.value = 'idle';
-                saveError.value = error.message;
-            }
-        }
-
-        function useDeploymentDefault() {
-            if (!store) return;
-            store.clear();
-            configuration.value = null;
-            relayUrlInput.value = '';
-            saveError.value = null;
-            saveStatus.value = 'idle';
-            clearStatus.value = 'cleared';
-        }
-
-        onMounted(load);
-
         return {
-            hasOverride, deploymentDefaultRelayUrl, configuration, relayUrlInput,
-            saveError, saveStatus, clearStatus, save, useDeploymentDefault
+            hasOverride: form.hasConfiguration, deploymentDefaultRelayUrl, configuration: form.configuration, relayUrlInput,
+            saveError: form.saveError, saveStatus: form.saveStatus, clearStatus: form.clearStatus,
+            save: form.save, useDeploymentDefault: form.clear
         };
     },
     template: `
