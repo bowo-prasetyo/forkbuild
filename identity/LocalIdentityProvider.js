@@ -254,25 +254,11 @@ export class LocalIdentityProvider extends IdentityProvider {
         if (!identity.isProtected) {
             return VaultLock.unlocked(identityId, this._now());
         }
-        if (this._failedUnlocks.isLockedOut(identityId)) {
-            const seconds = Math.ceil(this._failedUnlocks.remainingCooldownMs(identityId) / 1000);
-            throw new Error('LocalIdentityProvider: too many failed unlock attempts, try again in ' + seconds + 's');
-        }
         const stored = this._storageProvider.load(IDENTITY_KEY_PREFIX + identityId);
         if (!stored || !stored.encryption) {
             throw new Error('LocalIdentityProvider: identity is protected but has no encrypted key material');
         }
-        let seedBytes;
-        try {
-            seedBytes = KeyEncryption.decrypt(stored.encryption, passphrase);
-        } catch (e) {
-            const remaining = this._failedUnlocks.recordFailure(identityId);
-            const suffix = remaining > 0
-                ? remaining + ' attempt(s) remaining before a temporary lockout'
-                : 'temporarily locked out after too many failed attempts';
-            throw new Error('LocalIdentityProvider: incorrect passphrase (' + suffix + ')');
-        }
-        this._failedUnlocks.recordSuccess(identityId);
+        const seedBytes = this._decryptWithAttemptLimit(identityId, stored.encryption, passphrase);
         const unlockedAt = this._now();
         this._vaultCache.set(identityId, { seedHex: Ed25519.bytesToHex(seedBytes), unlockedAt });
         return VaultLock.unlocked(identityId, unlockedAt);
@@ -333,6 +319,28 @@ export class LocalIdentityProvider extends IdentityProvider {
         return Array.from(this._vaultCache.keys()).filter((identityId) => !this.vaultLock(identityId).isUnlocked);
     }
 
+    // Decrypts identityId's stored key record under FailedUnlockTracker's
+    // attempt budget, shared by unlock() and exportLocalIdentity(). The
+    // lockout is checked BEFORE the (expensive, on purpose) KDF runs.
+    _decryptWithAttemptLimit(identityId, encryption, passphrase) {
+        if (this._failedUnlocks.isLockedOut(identityId)) {
+            const seconds = Math.ceil(this._failedUnlocks.remainingCooldownMs(identityId) / 1000);
+            throw new Error('LocalIdentityProvider: too many failed unlock attempts, try again in ' + seconds + 's');
+        }
+        let seedBytes;
+        try {
+            seedBytes = KeyEncryption.decrypt(encryption, passphrase);
+        } catch (e) {
+            const remaining = this._failedUnlocks.recordFailure(identityId);
+            const suffix = remaining > 0
+                ? remaining + ' attempt(s) remaining before a temporary lockout'
+                : 'temporarily locked out after too many failed attempts';
+            throw new Error('LocalIdentityProvider: incorrect passphrase (' + suffix + ')');
+        }
+        this._failedUnlocks.recordSuccess(identityId);
+        return seedBytes;
+    }
+
     _storeProtectedKey(identityId, seedBytes, publicKeyHex, createdAt, passphrase) {
         const encryption = KeyEncryption.encrypt(seedBytes, passphrase, { iterations: this._pbkdf2Iterations });
         this._storageProvider.save(IDENTITY_KEY_PREFIX + identityId, {
@@ -371,12 +379,12 @@ export class LocalIdentityProvider extends IdentityProvider {
     //     encryptedPrivateKey a receiving device can only open with the
     //     right passphrase.
     //
-    // Never rate-limited the way unlock() is — a wrong passphrase here
-    // simply fails the export attempt (KeyEncryption.decrypt's own
-    // IncorrectPassphraseError); FailedUnlockTracker guards live
-    // signing/authentication, not this one-shot local operation. A real,
-    // named gap if export were ever exposed to something other than the
-    // identity's own owner acting locally — it isn't, today.
+    // A protected identity's passphrase check here shares unlock()'s
+    // FailedUnlockTracker budget: someone guessing at an unattended
+    // device could otherwise use Export instead of Unlock to try
+    // passphrases without ever hitting the lockout — and a right guess
+    // here yields a portable copy of the key, not just a local unlock.
+    // An unprotected identity decrypts nothing, so it is never counted.
     exportLocalIdentity(identityId, passphrase) {
         if (!passphrase || typeof passphrase !== 'string' || !passphrase.trim()) {
             throw new Error('LocalIdentityProvider: a passphrase is required to export an identity');
@@ -394,7 +402,7 @@ export class LocalIdentityProvider extends IdentityProvider {
             if (!stored.encryption) {
                 throw new Error('LocalIdentityProvider: identity is protected but has no encrypted key material');
             }
-            seedBytes = KeyEncryption.decrypt(stored.encryption, passphrase);
+            seedBytes = this._decryptWithAttemptLimit(identityId, stored.encryption, passphrase);
         } else {
             seedBytes = Ed25519.hexToBytes(stored.seed);
         }
