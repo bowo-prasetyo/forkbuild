@@ -94,14 +94,16 @@ const LIFECYCLE_CLASSES = {
     [PeerLifecycleState.FAILED]: 'peer-badge--failed'
 };
 
-// The five-step progression the design doc asked for. Rendezvous and
-// WebRTC-connecting are folded into "not yet CONNECTED" here, since a
-// real WebRtcPeerConnection has no separately-observable "rendezvous
-// discovered" moment beyond having imported the invitation at all.
+// The five-step progression the design doc asked for, each step read
+// from a peer's getLifecycleState(). The first two are always reached
+// for any card "My Peers" can show: a card only exists once an
+// invitation was imported (rendezvous) and a real WebRtcPeerConnection
+// was created for it (connecting) — neither has a separately-observable
+// "not yet" moment of its own.
 const PROGRESSION_STEPS = [
     { label: 'Rendezvous discovered', reached: () => true },
-    { label: 'WebRTC connecting', reached: (state) => state !== null },
-    { label: 'Peer connected', reached: (state) => state && state !== PeerLifecycleState.CONNECTING && state !== PeerLifecycleState.FAILED },
+    { label: 'WebRTC connecting', reached: () => true },
+    { label: 'Peer connected', reached: (state) => state !== PeerLifecycleState.CONNECTING && state !== PeerLifecycleState.FAILED },
     { label: 'Authenticating identity', reached: (state) => state === PeerLifecycleState.AUTHENTICATING || state === PeerLifecycleState.AUTHENTICATED },
     { label: 'Authenticated', reached: (state) => state === PeerLifecycleState.AUTHENTICATED }
 ];
@@ -151,18 +153,13 @@ export default {
         // a Failed card. This surfaces it up front instead, before either
         // "Invite Someone" or "Connect to Peer" is even attempted.
         const isIdentityLocked = ref(false);
-        function refreshLockState() {
-            if (!identityUseCase.isAuthenticated()) {
-                isIdentityLocked.value = false;
-                return;
-            }
-            const identityId = identityUseCase.currentSession().identityId;
-            isIdentityLocked.value = !identityUseCase.isUnlocked(identityId);
-        }
-        refreshLockState();
-
-        // 0.3.8 — "Your Identity," reactive to the same onSessionChanged()
-        // isAuthenticated already tracks above. Exists because the ONLY
+        // 0.3.8 — "Your Identity": the signed-in identity's FULL
+        // identityId, or null. Refreshed by refreshLockState() below on
+        // every onSessionChanged() — never derived from isAuthenticated
+        // alone, which stays true across a direct switch from one
+        // identity to another (LoginModal's Unlock → Cancel → pick
+        // someone else) and would leave this showing the previous one.
+        // Exists because the ONLY
         // identity string ever shown elsewhere in this app — here, in
         // Known Peers/Friends/Blocked cards, in My Identities — is
         // shortId()'s own truncated LAST 14 CHARACTERS, deliberately
@@ -176,10 +173,20 @@ export default {
         // could only ever hand out the shortened display string, which a
         // real search() — application/DiscoverPeersUseCase.js's own exact
         // string match — will never match.
-        const myIdentityId = computed(() => {
-            if (!isAuthenticated.value) return null;
-            return identityUseCase.currentSession().identityId;
-        });
+        const myIdentityId = ref(null);
+        // Reads the whole session, not only the lock: which identity is
+        // signed in (myIdentityId) and whether it is locked.
+        function refreshLockState() {
+            if (!identityUseCase.isAuthenticated()) {
+                myIdentityId.value = null;
+                isIdentityLocked.value = false;
+                return;
+            }
+            const identityId = identityUseCase.currentSession().identityId;
+            myIdentityId.value = identityId;
+            isIdentityLocked.value = !identityUseCase.isUnlocked(identityId);
+        }
+        refreshLockState();
 
         const peers = ref([]);
         const relationships = ref(peerRelationshipUseCase.getRelationships());
@@ -189,6 +196,25 @@ export default {
         const blocked = ref(peerBlockUseCase.getBlocked());
         const blockError = ref('');
         const now = ref(Date.now());
+
+        // Every per-card lookup below reads these, never storage. The
+        // three lists above are refreshed by their use cases' own change
+        // events (every save publishes one) and by onSessionChanged, so
+        // an index over them is exactly as current as a fresh storage
+        // read — without re-parsing storage for every card on every
+        // one-second `now` tick, which redraws this whole page.
+        const relationshipsById = computed(() => new Map(relationships.value.map((r) => [r.identityId, r])));
+        const friendshipsById = computed(() => new Map(friendships.value.map((f) => [f.identityId, f])));
+        const blockedIds = computed(() => new Set(blocked.value.map((b) => b.identityId)));
+        // application/IdentityLifecyclePropagationUseCase.js publishes no
+        // change event, so a newly received revocation/succession has
+        // only ever appeared on the next one-second redraw. Kept that
+        // way on purpose — `now` is read here so this re-reads storage
+        // once per tick in total, instead of once per call per card.
+        const remoteLifecyclesById = computed(() => {
+            void now.value;
+            return new Map(identityLifecyclePropagationUseCase.listRemoteLifecycle().map((l) => [l.identityId, l]));
+        });
         // Purely local, view-only bookkeeping for "connected duration" —
         // application/ConnectedPeer.js itself has no createdAt, on purpose
         // (see its own header: it is exactly as durable as the connection
@@ -220,7 +246,7 @@ export default {
         // remoteIdentity — see application/PeerRelationshipUseCase.js's
         // own header on why an invitation hint is never eligible here.
         function relationshipFor(peer) {
-            return peer.remoteIdentity ? peerRelationshipUseCase.getRelationship(peer.remoteIdentity.identityId) : null;
+            return peer.remoteIdentity ? relationshipsById.value.get(peer.remoteIdentity.identityId) || null : null;
         }
 
         // "Is this known peer connected right now?" is never stored on
@@ -336,11 +362,11 @@ export default {
         // DISPLAY cross-reference, never a mutation of the Known Peer or
         // Friend record it's shown alongside).
         function remoteLifecycleFor(identityId) {
-            return identityLifecyclePropagationUseCase.getRemoteLifecycle(identityId);
+            return remoteLifecyclesById.value.get(identityId) || null;
         }
 
         function friendshipFor(peer) {
-            return peer.remoteIdentity ? friendRelationshipUseCase.getRelationship(peer.remoteIdentity.identityId) : null;
+            return peer.remoteIdentity ? friendshipsById.value.get(peer.remoteIdentity.identityId) || null : null;
         }
 
         function friendStatus(peer) {
@@ -437,7 +463,7 @@ export default {
         // already renders, falling back to a shortened identityId for a
         // friend this device never separately chose to "Remember."
         function friendDisplayName(identityId) {
-            const relationship = peerRelationshipUseCase.getRelationship(identityId);
+            const relationship = relationshipsById.value.get(identityId);
             return (relationship && relationship.alias) || shortId(identityId);
         }
 
@@ -451,7 +477,7 @@ export default {
         // `identity` is duck-typed (identityId/publicKey[/algorithm]),
         // so all three shapes work unmodified.
         function isBlockedIdentity(identityId) {
-            return peerBlockUseCase.isBlocked(identityId);
+            return blockedIds.value.has(identityId);
         }
 
         function blockIdentity(identity) {
@@ -690,10 +716,6 @@ export default {
             return identityId ? identityId.slice(-14) : '';
         }
 
-        function progressionState(peer) {
-            return peer ? peer.getLifecycleState() : null;
-        }
-
         let unsubscribePeers = null;
         let unsubscribeRelationships = null;
         let unsubscribeFriendships = null;
@@ -759,7 +781,7 @@ export default {
 
         return {
             isAuthenticated, isIdentityLocked, myIdentityId, peers, PeerLifecycleState, LIFECYCLE_LABELS, LIFECYCLE_CLASSES, PROGRESSION_STEPS,
-            connectedFor, shortId, progressionState,
+            connectedFor, shortId,
             invitePending, inviteError, pendingInvitation, startInvite, dismissInvitation,
             showAcceptForm, importText, acceptError, acceptReply, submitAcceptInvitation, closeAcceptForm,
             completingConnectionId, completeReplyText, completeError, startComplete, submitComplete, awaitingReply,
@@ -985,7 +1007,7 @@ export default {
 
                     <ol class="peer-progression" v-if="peer.getLifecycleState() !== PeerLifecycleState.AUTHENTICATED">
                         <li v-for="step in PROGRESSION_STEPS" :key="step.label"
-                            :class="{ 'peer-progression-step--done': step.reached(progressionState(peer)) }">
+                            :class="{ 'peer-progression-step--done': step.reached(peer.getLifecycleState()) }">
                             {{ step.label }}
                         </li>
                     </ol>
