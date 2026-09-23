@@ -503,6 +503,37 @@ async function runTests() {
         console.log('✓ Section J: PublicationList.js gained exactly the missing Commentary affordance — its own emits/props contract, and its host PublicationCatalog.js, are otherwise unchanged');
     }
 
+    // ---------------------------------------------------------------
+    // Section K — each row's Distribution provider opens on the SAME
+    // injected defaultAnnouncementDiscoveryProvider PublicationCard.js
+    // reads, and that choice is what submitCommentary() forwards.
+    // ---------------------------------------------------------------
+    {
+        const pub = { id: 'pub-k', documentId: 'doc-k' };
+
+        const unset = listCtx();
+        assert(unset.rowCommentaryState(pub).discoveryProvider === 'nostr',
+            '49. with no saved preference injected, a row opens on \'nostr\'');
+
+        const sent = [];
+        const saved = listCtx({
+            defaultAnnouncementDiscoveryProvider: 'arweave',
+            addPublicationCommentaryCommand: (input) => { sent.push(input); return { commentary: {}, isNew: true }; }
+        });
+        assert(saved.rowCommentaryState(pub).discoveryProvider === 'arweave',
+            '50. with a saved \'arweave\' preference injected, a row opens on \'arweave\' — matching PublicationCard.js');
+        saved.rowCommentaryState(pub).newText = 'hello';
+        saved.submitCommentary(pub);
+        assert(sent.length === 1 && sent[0].discoveryProvider === 'arweave',
+            '51. submitCommentary() forwards the row\'s saved-preference default as discoveryProvider');
+
+        const listCode = await codeOnlySource('ui/components/PublicationList.js');
+        assert(listCode.includes('defaultAnnouncementDiscoveryProvider: { default: null }'),
+            '52. PublicationList.js injects defaultAnnouncementDiscoveryProvider exactly as PublicationCard.js does');
+
+        console.log('✓ Section K: list rows default to the saved Announcement/Discovery provider, like cards');
+    }
+
     console.log('\n✅ All Publication List Commentary Parity tests passed.');
 }
 

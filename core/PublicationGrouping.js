@@ -1,3 +1,5 @@
+import { License } from './License.js';
+
 // 0.2.31 — grouping is a PRESENTATION feature, never a storage
 // concept: `groupPublications` takes whatever page of already-sorted
 // items the catalog is currently showing and buckets them for
@@ -38,16 +40,11 @@ function dateBucket(publishedAt, now) {
 }
 const DATE_BUCKET_ORDER = ['Today', 'Yesterday', 'This Week', 'Earlier'];
 
-function licenseLabel(publication) {
-    if (!publication.license) return 'Unspecified';
-    return publication.license.id || 'Unspecified';
-}
-
 // How each grouping mode derives a publication's group key.
 const GROUP_KEY = Object.freeze({
     [GroupBy.AUTHOR]: (publication) => publication.author || 'Anonymous',
     [GroupBy.DATE]: (publication, now) => dateBucket(publication.publishedAt, now),
-    [GroupBy.LICENSE]: (publication) => licenseLabel(publication)
+    [GroupBy.LICENSE]: (publication) => License.idOf(publication.license)
 });
 
 // Returns an ordered array of { key, label, items } groups. Group

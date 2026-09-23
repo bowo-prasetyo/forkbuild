@@ -50,6 +50,14 @@ export class License {
         };
     }
 
+    // The license id to display for a possibly-absent License — the one
+    // fallback the Repository catalog's cards, list rows, and license
+    // grouping all share, so the three can never label the same
+    // unlicensed publication differently.
+    static idOf(license) {
+        return (license && license.id) || LicenseId.UNSPECIFIED;
+    }
+
     static fromJSON(json) {
         if (!json) return new License();
         return new License({
