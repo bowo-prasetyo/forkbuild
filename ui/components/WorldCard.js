@@ -54,7 +54,7 @@ export default {
             return formatRelativeVisit(this.world.lastVisitedAt);
         },
         perspectiveLabel() {
-            return this.world.cameraPerspective ? (PERSPECTIVE_LABELS[this.world.cameraPerspective] || null) : null;
+            return PERSPECTIVE_LABELS[this.world.cameraPerspective] || null;
         }
     },
     template: `
