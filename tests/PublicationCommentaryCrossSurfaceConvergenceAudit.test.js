@@ -10,6 +10,7 @@ import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import PublicationCard from '../ui/components/PublicationCard.js';
+import PublicationCommentarySection from '../ui/components/PublicationCommentarySection.js';
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
@@ -197,11 +198,18 @@ function cardCtx(overrides = {}) {
         commentaryOpen: false,
         commentaries: [],
         newCommentaryText: '',
-        commentarySubmitting: false,
         commentaryError: null,
-        toggleCommentary: PublicationCard.methods.toggleCommentary,
-        refreshCommentaries: PublicationCard.methods.refreshCommentaries,
-        submitCommentary: PublicationCard.methods.submitCommentary,
+        // The card's own toggle; opening mounts the shared
+        // PublicationCommentarySection, whose mounted() performs the
+        // first read. Reads/writes are that section's own methods.
+        toggleCommentary() {
+            PublicationCard.methods.toggleCommentary.call(this);
+            if (this.commentaryOpen) {
+                PublicationCommentarySection.mounted.call(this);
+            }
+        },
+        refreshCommentaries: PublicationCommentarySection.methods.refreshCommentaries,
+        submitCommentary: PublicationCommentarySection.methods.submitCommentary,
         ...overrides
     };
 }
@@ -342,6 +350,7 @@ async function runTests() {
             'ui/views/WorldView.js',
             'ui/components/OwnPublicationPanel.js',
             'ui/components/PublicationCard.js',
+            'ui/components/PublicationCommentarySection.js',
             'application/WorldNavigationSession.js',
             'ui/main.js'
         ]) {
@@ -692,8 +701,9 @@ async function runTests() {
         // could compute "is this my Publication" before calling the
         // command — the decision genuinely never reaches the UI layer.
         const cardCode = await codeOnlySource('ui/components/PublicationCard.js');
+        const sectionCode = await codeOnlySource('ui/components/PublicationCommentarySection.js');
         const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
-        for (const [file, code] of [['PublicationCard.js', cardCode], ['OwnPublicationPanel.js', panelCode]]) {
+        for (const [file, code] of [['PublicationCard.js', cardCode], ['PublicationCommentarySection.js', sectionCode], ['OwnPublicationPanel.js', panelCode]]) {
             assert(!/publication\.(author|publisherIdentity)\s*===?\s*(this\.)?viewerIdentityId/.test(code),
                 `45. ${file} never compares the Publication's own author/publisher against the viewer to gate commentary`);
         }
@@ -715,10 +725,17 @@ async function runTests() {
             '46. OwnPublicationPanel eagerly loads commentary on mount — its own existing lifecycle, unchanged');
         assert(/watch\s*:\s*\{/.test(panelCode), '47. OwnPublicationPanel still reacts to a change of the active Publication via a watcher — the eager-reload path this milestone leaves untouched');
 
+        // The card's Commentary lives in the shared
+        // PublicationCommentarySection.js, which reads on mount — but the
+        // card mounts it only behind its own expansion toggle, so the
+        // card is still lazy: nothing loads until someone expands it.
         const cardCode = await codeOnlySource('ui/components/PublicationCard.js');
+        const sectionCode = await codeOnlySource('ui/components/PublicationCommentarySection.js');
         assert(!/mounted\s*\(/.test(cardCode), '48. PublicationCard defines no mounted() hook at all — it never eagerly loads');
-        assert(cardCode.includes('toggleCommentary()') && cardCode.includes('refreshCommentaries()'),
-            '49. PublicationCard\'s only read trigger is the explicit expansion action');
+        assert(cardCode.includes('toggleCommentary()') &&
+               cardCode.includes('v-if="getPublicationCommentariesCommand && commentaryOpen"') &&
+               /mounted\s*\(\s*\)\s*\{\s*this\.refreshCommentaries\(\);\s*\}/.test(sectionCode),
+            '49. PublicationCard\'s only read trigger is the explicit expansion action — it mounts the section (whose mounted() is the first read) only while expanded');
 
         // Prove card-local state is genuinely per-instance, not shared
         // module state: Vue's own data() factory returns a fresh object
@@ -734,9 +751,9 @@ async function runTests() {
         // injected command contract — the domain behavior underneath is
         // identical (already proven functionally in Sections A/B; this
         // reconfirms it structurally, from source).
-        assert(panelCode.includes('this.getPublicationCommentariesCommand(') && cardCode.includes('this.getPublicationCommentariesCommand('),
+        assert(panelCode.includes('this.getPublicationCommentariesCommand(') && sectionCode.includes('this.getPublicationCommentariesCommand('),
             '53. both components call the identical injected getPublicationCommentariesCommand — only WHEN they call it differs');
-        assert(panelCode.includes('this.addPublicationCommentaryCommand(') && cardCode.includes('this.addPublicationCommentaryCommand('),
+        assert(panelCode.includes('this.addPublicationCommentaryCommand(') && sectionCode.includes('this.addPublicationCommentaryCommand('),
             '54. both components call the identical injected addPublicationCommentaryCommand');
 
         console.log('✓ Section H: eager-vs-lazy loading is a real, intentional, source-verified presentation difference — never a domain difference, since both reach the identical command contract');
@@ -893,7 +910,7 @@ async function runTests() {
         // addPublicationCommentaryCommand PublicationCard.js/
         // WorldEncounterCanvas.js already use — no third composition root.
         const listCode = await codeOnlySource('ui/components/PublicationList.js');
-        assert(listCode.includes('getPublicationCommentariesCommand') && listCode.includes('addPublicationCommentaryCommand'),
+        assert(listCode.includes('getPublicationCommentariesCommand') && listCode.includes('<PublicationCommentarySection'),
             '70c. ui/components/PublicationList.js now carries commentary wiring — 0.9.561 closed this Section\'s own named candidate');
 
         console.log('✓ Section K: the three remaining surfaces stay classified and unwired (one host, one preview tile, one unrelated verification surface). The two this Section named as future candidates — WorldEncounterCanvas (0.9.291) and PublicationList (0.9.561) — were both later picked up.');
@@ -905,7 +922,11 @@ async function runTests() {
     // source rather than trusted from that milestone's own header.
     // ---------------------------------------------------------------
     {
-        const cardCode = await codeOnlySource('ui/components/PublicationCard.js');
+        // The card view's Commentary is the card plus the shared
+        // PublicationCommentarySection.js it mounts.
+        const cardOnlyCode = await codeOnlySource('ui/components/PublicationCard.js');
+        const sectionCode = await codeOnlySource('ui/components/PublicationCommentarySection.js');
+        const cardCode = cardOnlyCode + '\n' + sectionCode;
         const compositionCode = await codeOnlySource('application/CreatePublicationCommentaryUseCase.js');
         const mainCode = await codeOnlySource('ui/main.js');
         const combined = cardCode + '\n' + compositionCode;
@@ -929,14 +950,15 @@ async function runTests() {
         // 7. UI-level persistence.
         assert(!/localStorage/.test(cardCode), '78. PublicationCard.js never touches window.localStorage directly');
         // 8. Global Commentary state.
-        assert(!/^\s*(let|const|var)\s+\w*[Cc]ommentar\w*\s*=\s*(\[|\{)/m.test(cardCode.replace(/export default[\s\S]*/, '')),
+        assert(![cardOnlyCode, sectionCode].some((code) => /^\s*(let|const|var)\s+\w*[Cc]ommentar\w*\s*=\s*(\[|\{)/m.test(code.replace(/export default[\s\S]*/, ''))),
             '79. no module-level (global) commentary state exists outside the component instance');
         // 9. Eager loading on paginated cards.
-        assert(!/mounted\s*\(/.test(cardCode), '80. PublicationCard.js still defines no mounted() hook — no eager load was introduced');
+        assert(!/mounted\s*\(/.test(cardOnlyCode) && cardOnlyCode.includes('v-if="getPublicationCommentariesCommand && commentaryOpen"'),
+            '80. PublicationCard.js still defines no mounted() hook, and mounts the reading section only once expanded — no eager load was introduced');
         // 10. Lifecycle coupling between cards.
-        assert(typeof PublicationCard.data === 'function', '81. commentary state is still declared through Vue\'s own per-instance data() factory, never a shared object literal');
+        assert(typeof PublicationCard.data === 'function' && typeof PublicationCommentarySection.data === 'function', '81. commentary state is still declared through Vue\'s own per-instance data() factory, never a shared object literal');
         // 11. New Commentary vocabulary (forbidden class names from 0.9.289's own brief).
-        for (const file of ['application/CreatePublicationCommentaryUseCase.js', 'ui/components/PublicationCard.js', 'ui/main.js']) {
+        for (const file of ['application/CreatePublicationCommentaryUseCase.js', 'ui/components/PublicationCard.js', 'ui/components/PublicationCommentarySection.js', 'ui/main.js']) {
             const code = await codeOnlySource(file);
             assert(!code.includes('OtherPublicationCommentaryUseCase') && !code.includes('AddCommentToOtherPublicationUseCase'),
                 `82. ${file} introduces neither forbidden Commentary use case name`);
@@ -954,7 +976,7 @@ async function runTests() {
         }
         {
             const code = await codeOnlySource('ui/components/PublicationList.js');
-            assert(code.includes('getPublicationCommentariesCommand') && code.includes('addPublicationCommentaryCommand'),
+            assert(code.includes('getPublicationCommentariesCommand') && code.includes('<PublicationCommentarySection'),
                 '83b. ui/components/PublicationList.js now carries commentary wiring — 0.9.561, one of the exactly three deliberate, named surfaces');
         }
         assert(mainCode.includes("new CreatePublicationCommentaryUseCase().execute(identityProvider)"),

@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import PublicationCard from '../ui/components/PublicationCard.js';
+import PublicationCommentarySection from '../ui/components/PublicationCommentarySection.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
@@ -197,12 +198,19 @@ function cardCtx(overrides = {}) {
         commentaryOpen: false,
         commentaries: [],
         newCommentaryText: '',
-        commentarySubmitting: false,
         commentaryError: null,
         pendingCommentaryDraft: null,
-        toggleCommentary: PublicationCard.methods.toggleCommentary,
-        refreshCommentaries: PublicationCard.methods.refreshCommentaries,
-        submitCommentary: PublicationCard.methods.submitCommentary,
+        // The card's own toggle; opening mounts the shared
+        // PublicationCommentarySection, whose mounted() performs the
+        // first read. Reads/writes are that section's own methods.
+        toggleCommentary() {
+            PublicationCard.methods.toggleCommentary.call(this);
+            if (this.commentaryOpen) {
+                PublicationCommentarySection.mounted.call(this);
+            }
+        },
+        refreshCommentaries: PublicationCommentarySection.methods.refreshCommentaries,
+        submitCommentary: PublicationCommentarySection.methods.submitCommentary,
         ...overrides
     };
 }
@@ -303,12 +311,14 @@ async function run() {
     let panelSource, cardSource, canvasSource;
     {
         panelSource = await readSource('ui/components/OwnPublicationPanel.js');
-        cardSource = await readSource('ui/components/PublicationCard.js');
+        // The card view's submit path now lives in the shared
+        // PublicationCommentarySection.js the card mounts.
+        cardSource = await readSource('ui/components/PublicationCard.js') + await readSource('ui/components/PublicationCommentarySection.js');
         canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
         assert(/submitPublicationCommentary\(\)\s*\{/.test(panelSource)
             && /submitCommentary\(\)\s*\{/.test(cardSource)
             && /submitEncounterCommentary\(\)\s*\{/.test(canvasSource),
-            '1. FRESH INVENTORY: the three real commentary submit paths — OwnPublicationPanel.submitPublicationCommentary(), PublicationCard.submitCommentary(), WorldEncounterCanvas.submitEncounterCommentary() — still exist, unrenamed, and are the only ones this milestone touches.');
+            '1. FRESH INVENTORY: the three real commentary submit paths — OwnPublicationPanel.submitPublicationCommentary(), PublicationCard\'s submitCommentary() (now in the shared PublicationCommentarySection.js it mounts), WorldEncounterCanvas.submitEncounterCommentary() — still exist, unrenamed, and are the only ones this milestone touches.');
         assert((cardSource.match(/submitCommentary\(\)\s*\{/g) || []).length === 1
             && (panelSource.match(/submitPublicationCommentary\(\)\s*\{/g) || []).length === 1
             && (canvasSource.match(/submitEncounterCommentary\(\)\s*\{/g) || []).length === 1,
@@ -356,7 +366,7 @@ async function run() {
         const ctxBlank = cardCtx({ publication, getPublicationCommentariesCommand, addPublicationCommentaryCommand });
         ctxBlank.newCommentaryText = '   ';
         ctxBlank.submitCommentary();
-        assert(ctxBlank.commentaryError === null && ctxBlank.commentarySubmitting === false && commentaryStore.getForPublication(publication.id).length === 0,
+        assert(ctxBlank.commentaryError === null && !ctxBlank.pendingCommentaryDraft && commentaryStore.getForPublication(publication.id).length === 0,
             '1. C1 VALIDATION: whitespace-only content is refused client-side, before the command is ever called — no error text needed because nothing was attempted.');
 
         // C2 — a genuine storage failure surfaces distinctly, and never
@@ -471,8 +481,7 @@ async function run() {
             '9. D3: editing the draft before retrying mints a fresh commentaryId — the persisted record is the EDITED content, never a phantom of the abandoned, never-persisted first draft, and never blocked by it.');
 
         // D4 — no automatic retry exists anywhere in the pipeline: a
-        // failed submit leaves commentarySubmitting=false and performs
-        // no scheduled re-attempt of its own.
+        // failed submit performs no scheduled re-attempt of its own.
         assert(!/setTimeout|setInterval|requestAnimationFrame/.test(codeOnlyLines(cardSource))
             && !/setTimeout|setInterval|requestAnimationFrame/.test(codeOnlyLines(panelSource))
             && !/setTimeout|setInterval|requestAnimationFrame/.test(codeOnlyLines(canvasSource)),

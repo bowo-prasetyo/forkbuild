@@ -3600,8 +3600,8 @@ export default {
             // below.
             newEncounterCommentaryText: '',
             // 0.9.291 — guards against a second, overlapping submission —
-            // mirrors `publicationCommentarySubmitting`/
-            // `commentarySubmitting` one file over, each.
+            // mirrors OwnPublicationPanel.js's own
+            // `publicationCommentarySubmitting`.
             encounterCommentarySubmitting: false,
             // 0.9.291 — the most recent read OR create failure's own
             // plain-text notice, or `null`. A failed READ leaves

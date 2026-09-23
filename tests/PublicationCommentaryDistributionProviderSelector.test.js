@@ -1,4 +1,5 @@
 import PublicationCard from '../ui/components/PublicationCard.js';
+import PublicationCommentarySection from '../ui/components/PublicationCommentarySection.js';
 import PublicationList from '../ui/components/PublicationList.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
 import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
@@ -168,31 +169,63 @@ function cardCtx(overrides = {}) {
         commentaryOpen: false,
         commentaries: [],
         newCommentaryText: '',
-        commentarySubmitting: false,
         commentaryError: null,
         pendingCommentaryDraft: null,
         selectedDiscoveryProvider: 'nostr',
         lastCommentaryDistributionProvider: null,
-        toggleCommentary: PublicationCard.methods.toggleCommentary,
-        refreshCommentaries: PublicationCard.methods.refreshCommentaries,
-        submitCommentary: PublicationCard.methods.submitCommentary,
+        // The card's own toggle; opening mounts the shared
+        // PublicationCommentarySection, whose mounted() performs the
+        // first read. Reads/writes are that section's own methods.
+        toggleCommentary() {
+            PublicationCard.methods.toggleCommentary.call(this);
+            if (this.commentaryOpen) {
+                PublicationCommentarySection.mounted.call(this);
+            }
+        },
+        refreshCommentaries: PublicationCommentarySection.methods.refreshCommentaries,
+        submitCommentary: PublicationCommentarySection.methods.submitCommentary,
         ...overrides
     };
 }
 
+// PublicationList.js only tracks which rows are open; each open row
+// mounts its own PublicationCommentarySection. `rowSection(pub)` stands
+// in for that row's own section instance (one per publicationId, never
+// shared); opening runs its mounted() read, closing discards it.
 function listCtx(overrides = {}) {
-    return {
-        getPublicationCommentariesCommand: null,
-        addPublicationCommentaryCommand: null,
-        commentaryState: {},
-        rowCommentaryState: PublicationList.methods.rowCommentaryState,
-        distributionProviderLabel: PublicationList.methods.distributionProviderLabel,
+    const ctx = {
+        getPublicationCommentariesCommand: null, addPublicationCommentaryCommand: null,
+        identityUseCase: null, defaultAnnouncementDiscoveryProvider: null,
+        openCommentaryIds: {},
         isCommentaryOpen: PublicationList.methods.isCommentaryOpen,
-        toggleCommentary: PublicationList.methods.toggleCommentary,
-        refreshCommentaries: PublicationList.methods.refreshCommentaries,
-        submitCommentary: PublicationList.methods.submitCommentary,
         ...overrides
     };
+    const sections = new Map();
+    ctx.rowSection = (pub) => {
+        if (!sections.has(pub.id)) {
+            const section = {
+                publication: pub,
+                getPublicationCommentariesCommand: ctx.getPublicationCommentariesCommand,
+                addPublicationCommentaryCommand: ctx.addPublicationCommentaryCommand,
+                identityUseCase: ctx.identityUseCase,
+                defaultAnnouncementDiscoveryProvider: ctx.defaultAnnouncementDiscoveryProvider,
+                refreshCommentaries: PublicationCommentarySection.methods.refreshCommentaries,
+                submitCommentary: PublicationCommentarySection.methods.submitCommentary
+            };
+            Object.assign(section, PublicationCommentarySection.data.call(section));
+            sections.set(pub.id, section);
+        }
+        return sections.get(pub.id);
+    };
+    ctx.toggleCommentary = (pub) => {
+        PublicationList.methods.toggleCommentary.call(ctx, pub);
+        if (ctx.isCommentaryOpen(pub)) {
+            PublicationCommentarySection.mounted.call(ctx.rowSection(pub));
+        } else {
+            sections.delete(pub.id);
+        }
+    };
+    return ctx;
 }
 
 async function runTests() {
@@ -305,17 +338,17 @@ async function runTests() {
             addPublicationCommentaryCommand
         });
 
-        ctx.rowCommentaryState(pubNostrRow).newText = 'row selecting nostr';
-        ctx.rowCommentaryState(pubNostrRow).discoveryProvider = 'nostr';
-        ctx.submitCommentary(pubNostrRow);
+        ctx.rowSection(pubNostrRow).newCommentaryText = 'row selecting nostr';
+        ctx.rowSection(pubNostrRow).selectedDiscoveryProvider = 'nostr';
+        ctx.rowSection(pubNostrRow).submitCommentary();
 
-        ctx.rowCommentaryState(pubArweaveRow).newText = 'row selecting arweave';
-        ctx.rowCommentaryState(pubArweaveRow).discoveryProvider = 'arweave';
-        ctx.submitCommentary(pubArweaveRow);
+        ctx.rowSection(pubArweaveRow).newCommentaryText = 'row selecting arweave';
+        ctx.rowSection(pubArweaveRow).selectedDiscoveryProvider = 'arweave';
+        ctx.rowSection(pubArweaveRow).submitCommentary();
 
         assert(calls.nostr === 1 && calls.arweave === 1, '15. across two rows with different selections, each substrate is reached exactly once in total');
-        assert(ctx.rowCommentaryState(pubNostrRow).distributionProvider === 'nostr', '16. the nostr-selecting row\'s own status reflects \'nostr\', never bleeding the other row\'s choice');
-        assert(ctx.rowCommentaryState(pubArweaveRow).distributionProvider === 'arweave', '17. the arweave-selecting row\'s own status reflects \'arweave\', isolated from the first row');
+        assert(ctx.rowSection(pubNostrRow).lastCommentaryDistributionProvider === 'nostr', '16. the nostr-selecting row\'s own status reflects \'nostr\', never bleeding the other row\'s choice');
+        assert(ctx.rowSection(pubArweaveRow).lastCommentaryDistributionProvider === 'arweave', '17. the arweave-selecting row\'s own status reflects \'arweave\', isolated from the first row');
         assert(calls.peer === 2, '18. WebRTC announce fires once per row submission, independent of the substrate choice');
 
         console.log('✓ D: no fan-out, reconfirmed per-row on PublicationList.js — each row\'s own selection reaches exactly its own chosen substrate, never both, never the other row\'s');
@@ -419,14 +452,14 @@ async function runTests() {
         ctx.submitCommentary();
 
         assert(sentDiscoveryProvider === 'arweave', '24. the exact literal \'arweave\' is sent on the wire — never a presentational value like "Arweave Network"');
-        const label = PublicationCard.computed.lastCommentaryDistributionProviderLabel.call(ctx);
+        const label = PublicationCommentarySection.computed.lastCommentaryDistributionProviderLabel.call(ctx);
         assert(label === 'Arweave', '25. the card\'s own human-friendly label reads "Arweave" for display purposes only');
         assert(ctx.selectedDiscoveryProvider === 'arweave', '26. the selector\'s own bound value stays the literal application string, never translated for display');
 
-        const cardSource = await rawSource('ui/components/PublicationCard.js');
+        const cardSource = (await rawSource('ui/components/PublicationCard.js') + await rawSource('ui/components/PublicationCommentarySection.js'));
         assert(/<option value="nostr">Nostr<\/option>/.test(cardSource) && /<option value="arweave">Arweave<\/option>/.test(cardSource),
             '27. PublicationCard.js\'s own <select> is valued exactly "nostr"/"arweave" — the application-layer vocabulary, human-readable labels only in the visible option TEXT');
-        const listSource = await rawSource('ui/components/PublicationList.js');
+        const listSource = (await rawSource('ui/components/PublicationList.js') + await rawSource('ui/components/PublicationCommentarySection.js'));
         assert(/<option value="nostr">Nostr<\/option>/.test(listSource) && /<option value="arweave">Arweave<\/option>/.test(listSource),
             '28. PublicationList.js\'s own per-row <select> carries the identical value vocabulary');
 
@@ -439,10 +472,10 @@ async function runTests() {
     // modifies the async distribution contract; PATH 2 stays untouched.
     // ===============================================================
     {
-        const cardSource = await rawSource('ui/components/PublicationCard.js');
-        const listSource = await rawSource('ui/components/PublicationList.js');
-        const cardCode = await codeOnlySource('ui/components/PublicationCard.js');
-        const listCode = await codeOnlySource('ui/components/PublicationList.js');
+        const cardSource = (await rawSource('ui/components/PublicationCard.js') + await rawSource('ui/components/PublicationCommentarySection.js'));
+        const listSource = (await rawSource('ui/components/PublicationList.js') + await rawSource('ui/components/PublicationCommentarySection.js'));
+        const cardCode = (await codeOnlySource('ui/components/PublicationCard.js') + await codeOnlySource('ui/components/PublicationCommentarySection.js'));
+        const listCode = (await codeOnlySource('ui/components/PublicationList.js') + await codeOnlySource('ui/components/PublicationCommentarySection.js'));
 
         assert(!/PublicationCommentaryNostrDistribution|PublicationCommentaryArweaveDistribution|PublicationCommentaryDistributionPeerExchange/.test(cardCode),
             '29. PublicationCard.js never imports or names any distribution class directly in CODE — selection stays entirely inside ui/main.js\'s own existing wrapper (the class names appear only in this file\'s own prose comments, explaining that restraint, never in an import or constructor)');

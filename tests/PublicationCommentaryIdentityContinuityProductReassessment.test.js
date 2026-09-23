@@ -21,6 +21,7 @@ import { License, LicenseId } from '../core/License.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 
 import PublicationCard from '../ui/components/PublicationCard.js';
+import PublicationCommentarySection from '../ui/components/PublicationCommentarySection.js';
 
 // 0.9.541 — Publication Commentary Product Reassessment.
 //
@@ -183,13 +184,19 @@ function makeCardContext(publication, commands = {}) {
         commentaryOpen: false,
         commentaries: [],
         newCommentaryText: '',
-        commentarySubmitting: false,
         commentaryError: null,
         getPublicationCommentariesCommand: commands.getPublicationCommentariesCommand ?? null,
         addPublicationCommentaryCommand: commands.addPublicationCommentaryCommand ?? null,
-        toggleCommentary: PublicationCard.methods.toggleCommentary,
-        refreshCommentaries: PublicationCard.methods.refreshCommentaries,
-        submitCommentary: PublicationCard.methods.submitCommentary
+        // The card's own toggle; opening mounts the shared
+        // PublicationCommentarySection, whose mounted() is the first read.
+        toggleCommentary() {
+            PublicationCard.methods.toggleCommentary.call(this);
+            if (this.commentaryOpen) {
+                PublicationCommentarySection.mounted.call(this);
+            }
+        },
+        refreshCommentaries: PublicationCommentarySection.methods.refreshCommentaries,
+        submitCommentary: PublicationCommentarySection.methods.submitCommentary
     };
 }
 
@@ -212,12 +219,14 @@ async function run() {
         const withSubmit = await grepFiles('\\(submitCommentary\\|submitPublicationCommentary\\|submitEncounterCommentary\\)() {', ['ui']);
         assert(withSubmit.length === 3
             && withSubmit.includes('ui/components/OwnPublicationPanel.js')
-            && withSubmit.includes('ui/components/PublicationCard.js')
+            && withSubmit.includes('ui/components/PublicationCommentarySection.js')
             && withSubmit.includes('ui/components/WorldEncounterCanvas.js'),
-            `1. FRESH INVENTORY: exactly three UI files define a real commentary SUBMIT method today (found: ${withSubmit.join(', ')}) — the same three 0.9.248/0.9.289/0.9.291 built and 0.9.305 last confirmed, re-verified now rather than assumed still current. (ui/views/WorldView.js and ui/main.js merely wire the command through; ui/components/NotificationHistoryPanel.js only displays the resulting NotificationEvents — none of the three defines a submit method of its own.)`);
+            `1. FRESH INVENTORY: exactly three UI files define a real commentary SUBMIT method today (found: ${withSubmit.join(', ')}) — the same three 0.9.248/0.9.289/0.9.291 built and 0.9.305 last confirmed (0.9.289's PublicationCard.js submit now lives in the shared PublicationCommentarySection.js that both catalog views mount), re-verified now rather than assumed still current. (ui/views/WorldView.js and ui/main.js merely wire the command through; ui/components/NotificationHistoryPanel.js only displays the resulting NotificationEvents — none of the three defines a submit method of its own.)`);
 
         ownPanelSource = await readSource('ui/components/OwnPublicationPanel.js');
-        cardSource = await readSource('ui/components/PublicationCard.js');
+        // The card view's Commentary is the card plus the shared
+        // PublicationCommentarySection.js it mounts while expanded.
+        cardSource = await readSource('ui/components/PublicationCard.js') + await readSource('ui/components/PublicationCommentarySection.js');
         encounterSource = await readSource('ui/components/WorldEncounterCanvas.js');
 
         for (const [name, source, prefix] of [
@@ -368,8 +377,8 @@ async function run() {
         const ctxEmpty = makeCardContext(pubA, stack);
         ctxEmpty.newCommentaryText = '    ';
         ctxEmpty.submitCommentary.call(ctxEmpty);
-        assert(ctxEmpty.commentaryError === null && ctxEmpty.commentarySubmitting === false,
-            '5. LIVE: whitespace-only content never reaches the command at all — submitCommentary()\'s own guard clause returns before setting commentarySubmitting, exactly matching PublicationCard.js\'s own source.');
+        assert(ctxEmpty.commentaryError === null && !ctxEmpty.pendingCommentaryDraft,
+            '5. LIVE: whitespace-only content never reaches the command at all — submitCommentary()\'s own guard clause returns before minting a draft identity, exactly matching PublicationCommentarySection.js\'s own source.');
         let domainThrew = false;
         try {
             stack.addPublicationCommentaryUseCase.execute({ publicationId: pubA.id, content: '' });
@@ -462,7 +471,7 @@ async function run() {
 
         const cardCtx = makeCardContext({ id: 'pub-e-1' }, {});
         cardCtx.identityUseCase = { provider: identityProvider };
-        const viewerIdentityId = PublicationCard.computed.viewerIdentityId.call(cardCtx);
+        const viewerIdentityId = PublicationCommentarySection.computed.viewerIdentityId.call(cardCtx);
 
         const { commentary } = stack.addPublicationCommentaryUseCase.execute({ publicationId: 'pub-e-1', content: 'attribution check' });
         assert(commentary.authorIdentityId === viewerIdentityId,

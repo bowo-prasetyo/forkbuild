@@ -167,8 +167,9 @@ async function run() {
     {
         const sites = [
             { file: 'ui/components/OwnPublicationPanel.js', fn: 'submitPublicationCommentary' },
-            { file: 'ui/components/PublicationList.js', fn: 'submitCommentary' },
-            { file: 'ui/components/PublicationCard.js', fn: 'submitCommentary' },
+            // PublicationCard.js and PublicationList.js share ONE call
+            // site: the PublicationCommentarySection.js both mount.
+            { file: 'ui/components/PublicationCommentarySection.js', fn: 'submitCommentary' },
             { file: 'ui/components/WorldEncounterCanvas.js', fn: 'submitObserverLocalEncounterCommentary' },
             { file: 'ui/components/WorldEncounterCanvas.js', fn: 'submitEncounterCommentary' }
         ];
@@ -195,7 +196,7 @@ async function run() {
             // (OwnPublicationPanel.js/WorldEncounterCanvas.js) was
             // deliberately left exactly as this audit found it — still
             // omitting the field — per this audit's own explicit boundary.
-            const isPath1 = file === 'ui/components/PublicationCard.js' || file === 'ui/components/PublicationList.js';
+            const isPath1 = file === 'ui/components/PublicationCommentarySection.js';
             if (isPath1) {
                 assert(/discoveryProvider/.test(callMatch[0]),
                     n(`AMENDED BY 0.9.638 — ${file}#${fn}()'s own real, current call — "${callMatch[0]}" — now sends discoveryProvider, forwarded verbatim from a real UI selector, exactly this audit's own Section J recommendation`));
@@ -204,7 +205,7 @@ async function run() {
                     n(`${file}#${fn}()'s own real, current call — "${callMatch[0]}" — sends no discoveryProvider field; PATH 2 is deliberately unchanged by 0.9.638, per this audit's own boundary`));
             }
         }
-        assert(totalCallSites === 5, n('exactly five real Commentary-creation call sites exist in the current codebase, confirmed by direct source inspection rather than assumed from memory'));
+        assert(totalCallSites === 4, n('exactly four real Commentary-creation call sites exist in the current codebase (the card and list views share one, in PublicationCommentarySection.js), confirmed by direct source inspection rather than assumed from memory'));
 
         console.log('✓ B (AMENDED BY 0.9.638): all five real Commentary-creation call sites — OwnPublicationPanel.js, PublicationList.js, PublicationCard.js, and WorldEncounterCanvas.js\'s own two (encounter + observer-local) — call addPublicationCommentaryCommand() with exactly { publicationId, content, commentaryId, createdAt }, PLUS discoveryProvider on the two PATH 1 sites (PublicationCard.js/PublicationList.js), as of 0.9.638. PATH 2 (OwnPublicationPanel.js/WorldEncounterCanvas.js) still omits it, deliberately, live-confirmed rather than assumed.');
     }
@@ -213,8 +214,8 @@ async function run() {
     // Section C — the two-path wiring discovery.
     // ===============================================================
     {
-        const cardSource = await rawSource('ui/components/PublicationCard.js');
-        const listSource = await rawSource('ui/components/PublicationList.js');
+        const cardSource = (await rawSource('ui/components/PublicationCard.js') + await rawSource('ui/components/PublicationCommentarySection.js'));
+        const listSource = (await rawSource('ui/components/PublicationList.js') + await rawSource('ui/components/PublicationCommentarySection.js'));
         const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
         const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
 
@@ -234,11 +235,11 @@ async function run() {
         // "inject" elsewhere in the same file) — a cross-check that no THIRD
         // injector exists beyond the two Section C already named above.
         let trueInjectors = 0;
-        for (const f of ['ui/components/PublicationCard.js', 'ui/components/PublicationList.js', 'ui/components/OwnPublicationPanel.js', 'ui/components/WorldEncounterCanvas.js', 'ui/views/WorldView.js']) {
+        for (const f of ['ui/components/PublicationCard.js', 'ui/components/PublicationList.js', 'ui/components/PublicationCommentarySection.js', 'ui/components/OwnPublicationPanel.js', 'ui/components/WorldEncounterCanvas.js', 'ui/views/WorldView.js']) {
             const src = await rawSource(f);
             if (new RegExp(`addPublicationCommentaryCommand:\\s*\\{\\s*default:\\s*null\\s*\\}`).test(src)) trueInjectors += 1;
         }
-        assert(trueInjectors === 2, n('exactly two components (PublicationCard.js, PublicationList.js) inject the app-wide command — no other file in the codebase does'));
+        assert(trueInjectors === 1, n('exactly one component (PublicationCommentarySection.js, shared by the PublicationCard.js and PublicationList.js views) injects the app-wide command — no other file in the codebase does'));
 
         assert((mainSource.match(/:addPublicationCommentaryCommand="addPublicationCommentaryCommand"/g) || []).length === 0,
             n('ui/main.js itself never explicitly binds this prop anywhere (it only provide()s it) — confirming injection, not prop-threading, is how Path 1 actually receives it'));

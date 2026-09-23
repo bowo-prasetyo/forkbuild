@@ -61,8 +61,8 @@ async function run() {
         const substrateFiles = [
             'ui/components/WorldDistributionDialog.js',
             'ui/components/EditorDistributionDialog.js',
-            'ui/components/PublicationCard.js',
-            'ui/components/PublicationList.js',
+            // The card and list views' Commentary distribution picker.
+            'ui/components/PublicationCommentarySection.js',
             'ui/views/DecentralizedPublicationsView.js'
         ];
         for (const path of substrateFiles) {

@@ -1916,9 +1916,9 @@ export default {
             publicationCommentaryError: null,
             // 0.9.542 — Publication Commentary Submission Experience
             // Product Reassessment. Mirrors
-            // ui/components/PublicationCard.js's own `pendingCommentaryDraft`
-            // exactly — see that file's own 0.9.542 header for the full
-            // rationale. `{ content, commentaryId, createdAt }` for the
+            // ui/components/PublicationCommentarySection.js's own
+            // `pendingCommentaryDraft` exactly — see that file's own
+            // submitCommentary() comment for the full rationale. `{ content, commentaryId, createdAt }` for the
             // CURRENT in-progress compose attempt, or `null`; reused
             // across a manual retry of byte-identical content so the
             // store's own commentaryId-keyed idempotent retry actually
@@ -2771,8 +2771,8 @@ export default {
         // so a denied call leaves no partially-built record behind).
         //
         // 0.9.542 — see `pendingCommentaryDraft`'s own data() header, and
-        // ui/components/PublicationCard.js's own submitCommentary()
-        // header for the full rationale: a manual retry of an unedited
+        // ui/components/PublicationCommentarySection.js's own
+        // submitCommentary() comment for the full rationale: a manual retry of an unedited
         // draft after an error reuses the SAME commentaryId/createdAt, so
         // it lands on the store's own idempotent no-op if the earlier
         // attempt actually persisted (a notificationSink failure after a

@@ -23,6 +23,7 @@ import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 
 import PublicationCard from '../ui/components/PublicationCard.js';
+import PublicationCommentarySection from '../ui/components/PublicationCommentarySection.js';
 import PublicationList from '../ui/components/PublicationList.js';
 
 // 0.9.564 — Repository Discovery Experience Product Reassessment.
@@ -159,23 +160,58 @@ function cardCtx(publication, overrides = {}) {
         getPublicationCommentariesCommand: null, addPublicationCommentaryCommand: null, identityUseCase: null,
         commentaryOpen: false, commentaries: [], newCommentaryText: '', commentarySubmitting: false,
         commentaryError: null, pendingCommentaryDraft: null,
-        toggleCommentary: PublicationCard.methods.toggleCommentary,
-        refreshCommentaries: PublicationCard.methods.refreshCommentaries,
-        submitCommentary: PublicationCard.methods.submitCommentary,
+        // The card's own toggle; opening mounts the shared
+        // PublicationCommentarySection, whose mounted() performs the
+        // first read. Reads/writes are that section's own methods.
+        toggleCommentary() {
+            PublicationCard.methods.toggleCommentary.call(this);
+            if (this.commentaryOpen) {
+                PublicationCommentarySection.mounted.call(this);
+            }
+        },
+        refreshCommentaries: PublicationCommentarySection.methods.refreshCommentaries,
+        submitCommentary: PublicationCommentarySection.methods.submitCommentary,
         ...overrides
     };
 }
+// PublicationList.js only tracks which rows are open; each open row
+// mounts its own PublicationCommentarySection. `rowSection(pub)` stands
+// in for that row's own section instance (one per publicationId, never
+// shared); opening runs its mounted() read, closing discards it.
 function listCtx(overrides = {}) {
-    return {
-        getPublicationCommentariesCommand: null, addPublicationCommentaryCommand: null, identityUseCase: null,
-        commentaryState: {},
-        rowCommentaryState: PublicationList.methods.rowCommentaryState,
+    const ctx = {
+        getPublicationCommentariesCommand: null, addPublicationCommentaryCommand: null,
+        identityUseCase: null, defaultAnnouncementDiscoveryProvider: null,
+        openCommentaryIds: {},
         isCommentaryOpen: PublicationList.methods.isCommentaryOpen,
-        toggleCommentary: PublicationList.methods.toggleCommentary,
-        refreshCommentaries: PublicationList.methods.refreshCommentaries,
-        submitCommentary: PublicationList.methods.submitCommentary,
         ...overrides
     };
+    const sections = new Map();
+    ctx.rowSection = (pub) => {
+        if (!sections.has(pub.id)) {
+            const section = {
+                publication: pub,
+                getPublicationCommentariesCommand: ctx.getPublicationCommentariesCommand,
+                addPublicationCommentaryCommand: ctx.addPublicationCommentaryCommand,
+                identityUseCase: ctx.identityUseCase,
+                defaultAnnouncementDiscoveryProvider: ctx.defaultAnnouncementDiscoveryProvider,
+                refreshCommentaries: PublicationCommentarySection.methods.refreshCommentaries,
+                submitCommentary: PublicationCommentarySection.methods.submitCommentary
+            };
+            Object.assign(section, PublicationCommentarySection.data.call(section));
+            sections.set(pub.id, section);
+        }
+        return sections.get(pub.id);
+    };
+    ctx.toggleCommentary = (pub) => {
+        PublicationList.methods.toggleCommentary.call(ctx, pub);
+        if (ctx.isCommentaryOpen(pub)) {
+            PublicationCommentarySection.mounted.call(ctx.rowSection(pub));
+        } else {
+            sections.delete(pub.id);
+        }
+    };
+    return ctx;
 }
 
 // The exact route shapes ui/components/PublicationCatalog.js's own
@@ -455,7 +491,7 @@ async function main() {
 
         const list = listCtx({ getPublicationCommentariesCommand, addPublicationCommentaryCommand });
         list.toggleCommentary(publication);
-        assert(list.rowCommentaryState(publication).commentaries.length === 1 && list.rowCommentaryState(publication).commentaries[0].content === 'reachable from the card view',
+        assert(list.rowSection(publication).commentaries.length === 1 && list.rowSection(publication).commentaries[0].content === 'reachable from the card view',
             '36. LIVE: a Commentary reachable and posted through the card view is immediately reachable through the list view for the SAME publication — one underlying capability, two equally-reachable entry points.');
 
         // Every event PublicationCatalog.js wires is identical between
@@ -585,9 +621,9 @@ async function main() {
             addPublicationCommentaryCommand: () => { throw new Error('should not be called'); }
         });
         list.toggleCommentary(malformed);
-        assert(list.rowCommentaryState(malformed).error !== null, '49. LIVE: the malformed row\'s own commentary read failure is captured as that row\'s own error.');
+        assert(list.rowSection(malformed).commentaryError !== null, '49. LIVE: the malformed row\'s own commentary read failure is captured as that row\'s own error.');
         list.toggleCommentary(healthy);
-        assert(list.rowCommentaryState(healthy).error === null && Array.isArray(list.rowCommentaryState(healthy).commentaries),
+        assert(list.rowSection(healthy).commentaryError === null && Array.isArray(list.rowSection(healthy).commentaries),
             '50. LIVE: the healthy neighbor\'s own commentary read succeeds, on the SAME list instance, completely unaffected by the malformed row\'s failure.');
 
         results.push(['H', 'Failure isolation (mixed-fixture catalog)', 'ALREADY_CORRECT']);

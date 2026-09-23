@@ -139,8 +139,9 @@ async function runTests() {
         // directly off an in-hand Publication object, never a search —
         // `this.publication.id`, read straight off the prop the card
         // was already given.
-        assert(cardSource.includes('this.publication.id'),
-            'A5. PublicationCard.js\'s own commentary actions (getPublicationCommentariesCommand/addPublicationCommentaryCommand) read publication.id directly off the already-in-hand `publication` prop — a fourth existing continuation surface, and it never goes through Repository search either.');
+        const commentarySectionSource = await rawSource('ui/components/PublicationCommentarySection.js');
+        assert(cardSource.includes('<PublicationCommentarySection') && cardSource.includes(':publication="publication"') && commentarySectionSource.includes('this.publication.id'),
+            'A5. PublicationCard.js\'s own commentary actions (getPublicationCommentariesCommand/addPublicationCommentaryCommand, in the shared PublicationCommentarySection.js it mounts with its own `publication`) read publication.id directly off the already-in-hand `publication` prop — a fourth existing continuation surface, and it never goes through Repository search either.');
 
         // A6. Repository's OWN search entry point — the one thing that
         // actually accepts free text and returns Publication objects a
