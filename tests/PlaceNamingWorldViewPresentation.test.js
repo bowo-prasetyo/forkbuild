@@ -574,7 +574,7 @@ async function runTests() {
         const computedRowsBlock = extractBetween(
             worldViewCode,
             'const nearbyPlaceNamingClaimRows = computed(() => (',
-            'function goToNearbyCollaborator(deviceId) {'
+            'function navigateToNearbyPlaceNamingClaim(row) {'
         );
         const disposalBlock = extractBetween(
             worldViewCode,
@@ -677,8 +677,9 @@ async function runTests() {
         assert(worldViewCode.includes('No nearby place naming claims were discovered.'),
             '40. the empty state reads "no claims were discovered," never "this place has no name" — a decentralized naming system must not conflate the two');
         assert(!worldViewCode.includes('This place has no name'), '41. the forbidden empty-state wording never appears');
-        assert(worldViewCode.includes('nearbyPlaceNamingClaims,') && worldViewCode.includes('placeNamingDiscoveryError,'),
-            '42. both state atoms this milestone\'s own brief names by name are actually exposed from setup()');
+        assert(worldViewCode.includes('nearbyPlaceNamingClaims.value.map((entry) => ({')
+            && worldViewCode.includes('nearbyPlaceNamingClaimRows,') && worldViewCode.includes('placeNamingDiscoveryError,'),
+            '42. both state atoms this milestone\'s own brief names by name reach the template — nearbyPlaceNamingClaims through the nearbyPlaceNamingClaimRows computed exposed from setup(), placeNamingDiscoveryError directly');
 
         console.log('✓ Section Q: ui/main.js and ui/views/WorldView.js genuinely contain the wiring every section above assumes');
     }

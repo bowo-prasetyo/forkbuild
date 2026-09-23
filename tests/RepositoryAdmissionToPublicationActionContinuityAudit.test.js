@@ -679,7 +679,7 @@ async function run() {
     // ===============================================================
     {
         const worldViewSource = await readSource('ui/views/WorldView.js');
-        assert(/ownPublication\.value = \(activeId && typeof session\.getPublicationForDocument === 'function'\)\s*\n\s*\? session\.getPublicationForDocument\(activeId\)\s*\n\s*: null;/.test(worldViewSource),
+        assert(/ownPublication\.value = activeId \? session\.getPublicationForDocument\(activeId\) : null;/.test(worldViewSource),
             'F0. Confirmed against the real, current source: OwnPublicationPanel\'s own `publication` prop is bound EXACTLY to session.getPublicationForDocument(activeId) — nothing else feeds it.');
 
         const publicationId = 'placement-pub-f';

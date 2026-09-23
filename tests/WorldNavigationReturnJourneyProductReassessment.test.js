@@ -618,7 +618,7 @@ async function main() {
         const worldViewSource = codeOnly(await readSource('ui/views/WorldView.js'));
         assert(/<h4>Unavailable \(\{\{ failedWorlds\.length \}\}\)<\/h4>/.test(worldViewSource),
             'H4. WorldView renders a plain "Unavailable (N)" section for failed loads — an honest, bounded surface, never a silently-stuck screen.');
-        assert(/<span class="world-item-title">\{\{ w\.title \}\}<\/span>/.test(worldViewSource) && /title: pub\?\.title \|\| 'Untitled'/.test(worldViewSource),
+        assert(/<span class="world-item-title">\{\{ w\.title \}\}<\/span>/.test(worldViewSource) && /title: doc\?\.metadata\?\.title \|\| pub\?\.title \|\| 'Untitled'/.test(worldViewSource) && /failedWorlds\.value = state\.failed\.map\(\(id\) => worldRow\(id\)\)/.test(worldViewSource),
             'H4b. Each failed entry renders a title (falling back to "Untitled"), never the raw documentId as visible text — confirmed by exact source.');
 
         console.log('✓ Section H: navigating to an unresolvable target produces an immediate, real half-transition (active id changes at once; content streams in later, if ever) — confirmed live (LoadPublicationDocumentUseCase throws) and by source (caught, retried with backoff, surfaced as an honestly-worded, bounded "Unavailable" list, never a raw id and never a stuck screen).');
@@ -732,7 +732,8 @@ async function main() {
         // Nearby Worlds) show a resolved title/author, falling back to
         // honest placeholder words, never a raw documentId as visible
         // text (documentId is used only as Vue's own internal :key).
-        assert(/title: pub\?\.title \|\| 'Untitled'/.test(worldViewSource) && /author: pub\?\.author \|\| 'anonymous'/.test(worldViewSource),
+        assert(/pub\?\.title \|\| 'Untitled'/.test(worldViewSource) && /pub\?\.author \|\| 'anonymous'/.test(worldViewSource)
+            && /nearbyWorlds\.value = [^\n]*\.map\(\(id\) => worldRow\(id\)\)/.test(worldViewSource),
             'L1. Both the failed/unavailable list and the nearby-Worlds list resolve a title/author (or an honest placeholder), never render documentId itself.');
 
         // L2. RECONCILED, not re-derived: the ONE place a raw

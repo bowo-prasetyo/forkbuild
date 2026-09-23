@@ -292,7 +292,7 @@ async function run() {
         // production, from the SAME monitor Sections B-E below drive.
         assert((worldViewSource.match(/new AutomaticSnapshotEncounterCascade\(/g) || []).length === 1,
             '6. ui/views/WorldView.js constructs exactly one AutomaticSnapshotEncounterCascade.');
-        assert(/worldSnapshotDiscoveryMonitor\.observe\(spatialContext\.value\)\.then\(\(\) => \{\s*\n\s*const candidates = worldSnapshotDiscoveryMonitor\.lastResult;\s*\n\s*if \(automaticSnapshotEncounterCascade && Array\.isArray\(candidates\)\) \{\s*\n\s*candidates\.forEach\(\(candidate\) => automaticSnapshotEncounterCascade\.processCandidate\(candidate\)/.test(worldViewSource),
+        assert(/worldSnapshotDiscoveryMonitor\.observe\(spatialContext\.value\)\.then\(\(\) => \{\s*\n\s*const candidates = worldSnapshotDiscoveryMonitor\.lastResult;\s*\n\s*if \(Array\.isArray\(candidates\)\) \{\s*\n\s*candidates\.forEach\(\(candidate\) => automaticSnapshotEncounterCascade\.processCandidate\(candidate\)/.test(worldViewSource),
             '7. the SAME worldSnapshotDiscoveryMonitor observation this file drives is, in real production, fed one candidate at a time straight into automaticSnapshotEncounterCascade.processCandidate() — the closure path this milestone audits is the SAME one running live today, never a hypothetical this file invents.');
 
         console.log('✓ Section A: real production topology confirmed — one Local catalog, one Nostr service, one Arweave service, one composite, one walking monitor, and the real, already-wired AutomaticSnapshotEncounterCascade feeding straight off that monitor\'s own lastResult. No duplicate Arweave service, no alternate discovery path.');

@@ -527,7 +527,7 @@ async function run() {
         const worldViewSource = await readSource('ui/views/WorldView.js');
         assert(worldViewSource.includes('<OwnPublicationPanel') && worldViewSource.includes(':publication="ownPublication"'),
             n('OwnPublicationPanel is mounted inside WorldView.js itself, bound to :publication="ownPublication"'));
-        assert(worldViewSource.includes('ownPublication.value = (activeId && typeof session.getPublicationForDocument'),
+        assert(worldViewSource.includes('ownPublication.value = activeId ? session.getPublicationForDocument(activeId) : null;'),
             n('ownPublication is resolved from session.getPublicationForDocument(activeId) — activeId being the CURRENT route\'s own documentId — so OwnPublicationPanel is already showing the Publication for the world it is already mounted under; a deep-link there is not needed, it is already satisfied'));
         assert(!panelSource.includes('/publications') && !panelSource.includes('router.push') && !/useRouter|useRoute/.test(panelSource),
             n('OwnPublicationPanel.js itself has no router dependency of any kind — consistent with never needing to navigate away from where it already lives'));

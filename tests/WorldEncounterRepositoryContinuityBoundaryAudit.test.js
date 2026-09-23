@@ -536,7 +536,7 @@ async function run() {
             '3. AMENDED BY 0.9.597 — the file now DOES reference a decentralized provider, but only to compose a SEPARATE `publicationActionDiscoveryProvider` (confirmed present); `discoveryProvider` itself — assertion 2, above — is untouched by that composition.');
 
         const worldViewSource = await readSource('ui/views/WorldView.js');
-        assert(/findPublicationById: \(publicationId\) => \(typeof session\.findPublicationById/.test(worldViewSource),
+        assert(/findPublicationById: \(publicationId\) => session\.findPublicationById\(publicationId\)/.test(worldViewSource),
             '4. UNCHANGED BY 0.9.597 — ui/views/WorldView.js still wires the Automatic Snapshot Encounter Cascade’s own findPublicationById collaborator straight through to this same session, unmodified.');
     }
     console.log('✓ Section G: AMENDED BY 0.9.597 — the Automatic Snapshot Encounter Cascade -- the family whose own vocabulary most closely echoes the originating brief’s "automatic encounter... materialized" language -- now resolves a Publication through `_publicationActionDiscoveryProvider` (local + Repository-admitted) rather than a plain, local-only LocalDiscoveryProvider, but only ever AFTER a real, local PlacementRecord already resolved this exact publicationId as PLACED (see this section\'s own amendment note, above) — so it still cannot exhibit the brief’s own symptom (encountering something new with no way back to it, before any placement exists), and is still not this audit’s subject.');

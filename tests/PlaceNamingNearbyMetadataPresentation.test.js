@@ -516,7 +516,7 @@ async function runTests() {
         const computedRowsBlock = extractBetween(
             codeOnlyLines(await rawSource('ui/views/WorldView.js')),
             'const nearbyPlaceNamingClaimRows = computed(() => (',
-            'function goToNearbyCollaborator(deviceId) {'
+            'function navigateToNearbyPlaceNamingClaim(row) {'
         );
         const forbiddenTerms = ['updateRegion(', 'renameRegion(', 'setWorldRegion(', 'createRegionHere(', '.sort(', 'rankClaimsByName'];
         for (const term of forbiddenTerms) {

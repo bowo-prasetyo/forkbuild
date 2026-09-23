@@ -404,7 +404,7 @@ async function run() {
             'A4. exploreEncounteredPublicationCommand(publication) calls focusWorld(publication.documentId) — the SAME navigation focusWorld() already performs for a Locations-panel or Search-result destination, never a bespoke, weaker "preview" of the document.');
         assert(/function focusWorld\(documentId\) \{\s*\n\s*session\.focusDocument\(documentId\);\s*\n\s*router\.replace/.test(worldViewSource),
             'A5. focusWorld() genuinely calls session.focusDocument(documentId) and updates the route — this is real navigation, not a cosmetic highlight.');
-        assert(/ownPublication\.value = \(activeId && typeof session\.getPublicationForDocument === 'function'\)\s*\n\s*\? session\.getPublicationForDocument\(activeId\)\s*\n\s*: null;/.test(worldViewSource),
+        assert(/ownPublication\.value = activeId \? session\.getPublicationForDocument\(activeId\) : null;/.test(worldViewSource),
             'A6. OwnPublicationPanel\'s own `publication` prop is bound exactly to session.getPublicationForDocument(activeId) — the exact method A2\'s wiring now feeds.');
 
         // A7-A11: the full, real DISCOVER -> RESOLVE -> VERIFY -> ADMIT

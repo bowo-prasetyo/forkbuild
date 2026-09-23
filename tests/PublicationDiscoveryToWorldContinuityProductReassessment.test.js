@@ -112,9 +112,7 @@ function makeSession(discoveryProvider) {
 // WorldNavigationSession without the DOM/Vue layer WorldView.js needs.
 function makeViewPublicationCommand(session, onClose = () => {}) {
     return (publicationId) => {
-        const publication = typeof session.findPublicationById === 'function'
-            ? session.findPublicationById(publicationId)
-            : null;
+        const publication = session.findPublicationById(publicationId);
         if (!publication || !publication.documentId) {
             return false;
         }
