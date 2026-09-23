@@ -104,15 +104,15 @@ async function run() {
     // requires; only the wrapper tag changed, never the roles/actions
     // inside it this section's own assertions check below.
     const distributionStart = viewSource.indexOf('<details open class="identity-mgmt-card-details identity-mgmt-distribution">');
-    const distributionEnd = viewSource.indexOf('<!-- Everything below is unchanged functionality', distributionStart);
+    const distributionEnd = viewSource.indexOf('<details class="identity-mgmt-card-details">', distributionStart);
     assert(distributionStart !== -1 && distributionEnd > distributionStart,
-        n('setup. the Distribution section (0.9.436) is located, bounded by its own opening wrapper and the next unrelated comment immediately after it'));
+        n('setup. the Distribution section (0.9.436) is located, bounded by its own opening wrapper and the per-publication details disclosure immediately after it'));
     const distributionSection = viewSource.slice(distributionStart, distributionEnd);
 
     const publicationCardStart = distributionSection.indexOf('<span class="evidence-anchor-type">Publication</span>');
     const snapshotCardStart = distributionSection.indexOf('<span class="evidence-anchor-type">Snapshot</span>', publicationCardStart);
-    const contentRoleStart = distributionSection.indexOf('Content — MOVED VERBATIM from this card\'s own');
-    const proofRoleStart = distributionSection.indexOf('Proof / Anchoring — MOVED VERBATIM from this');
+    const contentRoleStart = distributionSection.indexOf('<div v-if="availableStorageTypes.length > 0" class="identity-mgmt-distribution-role">');
+    const proofRoleStart = distributionSection.indexOf('<div v-if="availableAnchorTypes.length > 0" class="identity-mgmt-distribution-role">');
     assert([publicationCardStart, snapshotCardStart, contentRoleStart, proofRoleStart].every((i) => i !== -1),
         n('setup. all four role/action slices (Publication, Snapshot, Content, Proof/Anchoring) are located inside the Distribution section'));
 

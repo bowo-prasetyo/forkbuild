@@ -32,7 +32,3 @@ export const BaseWalletConnectionState = Object.freeze({
     CONNECTED: 'connected',
     UNAVAILABLE: 'unavailable'
 });
-
-export function isValidBaseWalletConnectionState(value) {
-    return Object.values(BaseWalletConnectionState).includes(value);
-}

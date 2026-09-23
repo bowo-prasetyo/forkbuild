@@ -43,7 +43,3 @@ export const BitcoinAnchorFundingObservationState = Object.freeze({
     UNSUPPORTED: 'unsupported',
     UNAVAILABLE: 'unavailable'
 });
-
-export function isValidBitcoinAnchorFundingObservationState(value) {
-    return Object.values(BitcoinAnchorFundingObservationState).includes(value);
-}

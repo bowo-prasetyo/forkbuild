@@ -50,7 +50,3 @@ export const BitcoinAnchorConfirmationState = Object.freeze({
     NOT_CONFIRMED: 'not-confirmed',
     UNAVAILABLE: 'unavailable'
 });
-
-export function isValidBitcoinAnchorConfirmationState(value) {
-    return Object.values(BitcoinAnchorConfirmationState).includes(value);
-}

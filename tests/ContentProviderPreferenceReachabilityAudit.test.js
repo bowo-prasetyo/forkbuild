@@ -213,10 +213,10 @@ async function run() {
         // locator below follows it to its new home rather than re-quoting
         // stale prose — see ui/views/DecentralizedPublicationsView.js's
         // own 0.9.436 header for the full boundary this milestone holds.
-        const placementSectionStart = viewSource.indexOf('Content — MOVED VERBATIM from this card\'s own');
-        const placementSectionEnd = viewSource.indexOf('Proof / Anchoring — MOVED VERBATIM from this', placementSectionStart);
+        const placementSectionStart = viewSource.indexOf('<div v-if="availableStorageTypes.length > 0" class="identity-mgmt-distribution-role">');
+        const placementSectionEnd = viewSource.indexOf('<div v-if="availableAnchorTypes.length > 0" class="identity-mgmt-distribution-role">', placementSectionStart);
         assert(placementSectionStart !== -1 && placementSectionEnd > placementSectionStart,
-            'B3a. AMENDED BY 0.9.436 — the placement-creation template section is present and located in its new "Distribution > Content" home, bounded by its own leading comment and the next role section\'s own leading comment');
+            'B3a. AMENDED BY 0.9.436 — the placement-creation template section is present and located in its new "Distribution > Content" home, bounded by its own role wrapper and the next role section\'s own wrapper');
         const placementSectionMatch = [viewSource.slice(placementSectionStart, placementSectionEnd)];
         assert(!/<select/.test(placementSectionMatch[0]),
             'B3b. the placement-creation section contains no <select> element — storage is never a dropdown value a person picks and then confirms with a separate, generic button');

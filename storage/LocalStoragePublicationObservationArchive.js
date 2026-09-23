@@ -79,7 +79,7 @@ export class LocalStoragePublicationObservationArchive {
         let raw;
         try {
             raw = this._storageProvider.load(ARCHIVE_KEY);
-        } catch (error) {
+        } catch {
             return PublicationObservationArchive.empty();
         }
         if (raw === null || raw === undefined) return PublicationObservationArchive.empty();
