@@ -1,4 +1,3 @@
-import { EventBus } from '../core/events/EventBus.js';
 import { RemoteIdentityLifecycle } from '../core/RemoteIdentityLifecycle.js';
 import {
     IdentityLifecycleGossipKind,
@@ -10,7 +9,6 @@ import { isValidIdentitySuccessionRecord } from '../core/IdentitySuccessionEnvel
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 
-const LIFECYCLE_CHANGED_EVENT = 'RemoteIdentityLifecycleChanged';
 const STORAGE_KEY_PREFIX = 'remote-identity-lifecycle:';
 
 // 0.2.68 — Identity Lifecycle Propagation.
@@ -100,7 +98,6 @@ export class IdentityLifecyclePropagationUseCase {
         this._verifier = verifier;
         this._protocol = protocol;
         this._knowsIdentity = knowsIdentity;
-        this._eventBus = new EventBus();
 
         for (const peer of this._registry.list()) {
             this._bus.attach(peer);
@@ -149,18 +146,6 @@ export class IdentityLifecyclePropagationUseCase {
             throw new Error('IdentityLifecyclePropagationUseCase: broadcastSuccession requires a signed succession record');
         }
         return this._broadcast(toIdentityLifecycleGossipMessage(IdentityLifecycleGossipKind.SUCCESSION, record));
-    }
-
-    // Returns an unsubscribe function. Fires with the full current list
-    // on every accepted incoming revocation/succession — mirrors
-    // application/FriendRelationshipUseCase.js#onRelationshipsChanged's
-    // own shape exactly.
-    onRemoteLifecycleChanged(callback) {
-        const subscription = this._eventBus.subscribe(
-            LIFECYCLE_CHANGED_EVENT,
-            ({ records }) => callback(records)
-        );
-        return () => subscription.unsubscribe();
     }
 
     dispose() {
@@ -242,7 +227,6 @@ export class IdentityLifecyclePropagationUseCase {
         }
         const next = (existing || new RemoteIdentityLifecycle({ identityId: record.identityId })).withRevocation(record);
         this._saveAll(owner, replaceById(all, next));
-        this._publishChange();
     }
 
     _handleSuccession(record) {
@@ -263,7 +247,6 @@ export class IdentityLifecyclePropagationUseCase {
         }
         const next = (existing || new RemoteIdentityLifecycle({ identityId: record.predecessorIdentityId })).withSuccession(record);
         this._saveAll(owner, replaceById(all, next));
-        this._publishChange();
     }
 
     _loadAll() {
@@ -277,10 +260,6 @@ export class IdentityLifecyclePropagationUseCase {
 
     _saveAll(owner, records) {
         this._storageProvider.save(STORAGE_KEY_PREFIX + owner, records.map((r) => r.toJSON()));
-    }
-
-    _publishChange() {
-        this._eventBus.publish(LIFECYCLE_CHANGED_EVENT, { records: this.listRemoteLifecycle() });
     }
 
     _currentUsernameOrNull() {

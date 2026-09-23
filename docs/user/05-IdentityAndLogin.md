@@ -89,9 +89,10 @@ other protected identity.
 
 ## Wrong passphrase
 
-Five wrong attempts (unlocking or changing a passphrase) trigger a 30-second
-cooldown; the error message counts down remaining attempts, then remaining
-lockout time. The count resets on reload. Exporting is not rate-limited.
+Five wrong attempts (unlocking, exporting, or changing a passphrase — they
+share one count per identity) trigger a 30-second cooldown; the error message
+counts down remaining attempts, then remaining lockout time. The count resets
+on reload.
 
 ## What's next?
 

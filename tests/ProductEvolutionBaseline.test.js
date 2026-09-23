@@ -177,7 +177,7 @@ async function runTests() {
         // _publishChange() and THEN _publishLockChange() in the same
         // synchronous chain.
         const identityUseCase = await rawSource('application/IdentityUseCase.js');
-        const affectedMethods = ['authenticate', 'endSession', 'protectIdentity', 'changePassphrase', 'revokeIdentity'];
+        const affectedMethods = ['authenticate', 'endSession', 'changePassphrase', 'revokeIdentity', 'declareSuccessor'];
         for (const method of affectedMethods) {
             const methodMatch = identityUseCase.match(new RegExp(`\\b${method}\\s*\\([^)]*\\)\\s*\\{([\\s\\S]*?)\\n    \\}`, 'm'));
             assert(methodMatch, `B1a. application/IdentityUseCase.js still defines ${method}().`);

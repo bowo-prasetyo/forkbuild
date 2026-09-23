@@ -123,7 +123,7 @@ function descriptorFor(id) {
     device.authenticate(bob.identityId, 'bobs-secret');
     assert(device.isUnlocked(bob.identityId) === true, 'Bob is unlocked after authenticating');
 
-    assertThrows(() => device.exportLocalIdentity(bob.identityId, 'wrong-pass'), IncorrectPassphraseError,
+    assertThrows(() => device.exportLocalIdentity(bob.identityId, 'wrong-pass'), Error,
         'exporting with the wrong passphrase fails even though the vault is currently unlocked');
     assertThrows(() => device.exportLocalIdentity(bob.identityId, null), Error,
         'exporting with no passphrase at all is refused outright');
@@ -131,6 +131,44 @@ function descriptorFor(id) {
     const pkg = device.exportLocalIdentity(bob.identityId, 'bobs-secret');
     assert(pkg.identityId === bob.identityId, 'the correct passphrase, re-entered, succeeds');
     console.log('✓ export re-demands the passphrase; an unlocked vault grants no shortcut');
+}
+
+// ---------------------------------------------------------------------
+// 2b. Export's passphrase check shares unlock()'s failed-attempt budget,
+//     so Export is never a way around the unlock lockout. Unprotected
+//     identities decrypt nothing and are never counted.
+// ---------------------------------------------------------------------
+{
+    let fakeNow = new Date('2026-01-01T00:00:00Z');
+    const device = new LocalIdentityProvider(new InMemoryStorageProvider(), {
+        pbkdf2Iterations: TEST_ITERATIONS, maxUnlockAttempts: 3, unlockCooldownMs: 5000, now: () => fakeNow
+    });
+    const alice = device.createLocalIdentity('Alice', 'alice-pass');
+    const messageOf = (fn) => { try { fn(); return null; } catch (e) { return e.message; } };
+
+    assert(/incorrect passphrase \(2 attempt\(s\) remaining/.test(messageOf(() => device.exportLocalIdentity(alice.identityId, 'guess-1'))),
+        'a wrong export passphrase is counted and reports the attempts left, like unlock()');
+    assert(/incorrect passphrase \(1 attempt\(s\) remaining/.test(messageOf(() => device.unlock(alice.identityId, 'guess-2'))),
+        'unlock() draws on the same budget export just used');
+    assert(/temporarily locked out/.test(messageOf(() => device.exportLocalIdentity(alice.identityId, 'guess-3'))),
+        'the attempt that exhausts the budget can be an export');
+    assert(/too many failed unlock attempts/.test(messageOf(() => device.exportLocalIdentity(alice.identityId, 'alice-pass'))),
+        'during the cooldown even the correct passphrase cannot export');
+    assert(/too many failed unlock attempts/.test(messageOf(() => device.unlock(alice.identityId, 'alice-pass'))),
+        'and cannot unlock either — one lockout per identity, whichever path triggered it');
+
+    fakeNow = new Date(fakeNow.getTime() + 5001);
+    assert(device.exportLocalIdentity(alice.identityId, 'alice-pass').identityId === alice.identityId,
+        'after the cooldown the correct passphrase exports');
+    assert(/incorrect passphrase \(2 attempt\(s\) remaining/.test(messageOf(() => device.exportLocalIdentity(alice.identityId, 'guess-4'))),
+        'a successful export resets the count, exactly like a successful unlock');
+
+    const bob = device.createLocalIdentity('Bob');
+    for (const exportPassphrase of ['one', 'two', 'three', 'four']) {
+        assert(device.exportLocalIdentity(bob.identityId, exportPassphrase).identityId === bob.identityId,
+            'an unprotected identity exports under any chosen passphrase — nothing is decrypted, so nothing is counted');
+    }
+    console.log('✓ export shares the unlock attempt budget and cooldown; unprotected exports are never counted');
 }
 
 // ---------------------------------------------------------------------
