@@ -825,7 +825,9 @@ async function run() {
         assert(/class="toolbar-export"/.test(toolbarSource) && /@click="\$emit\('export-document'\)"/.test(toolbarSource),
             n('Toolbar.js renders a real Export button wired to emit \'export-document\' on click'));
         const exportHandlerMatch = editorViewSource.match(/function exportDocument\(\)\s*\{[\s\S]*?\n\t\t\}/);
-        assert(/link\.download\s*=\s*`forkbuild-document-/.test(exportHandlerMatch[0]) && /link\.click\(\)/.test(exportHandlerMatch[0]),
+        const downloadHelperMatch = editorViewSource.match(/function downloadJson\(filename, data\) \{[\s\S]*?\n\}/);
+        assert(/downloadJson\(`forkbuild-document-/.test(exportHandlerMatch[0])
+            && /link\.download = filename;/.test(downloadHelperMatch[0]) && /link\.click\(\)/.test(downloadHelperMatch[0]),
             n('...and the real handler it triggers actually creates and clicks a download link named forkbuild-document-<slug>.json — a real browser download, not merely an in-memory object'));
 
         // Import opens the native file picker.

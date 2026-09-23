@@ -321,8 +321,6 @@ async function runTests() {
     {
         const editorViewSource = await rawSource('ui/views/EditorView.js');
         const directlyCalledUseCases = [
-            ['ForkStructureUseCase', 'forkStructureUseCase'],
-            ['CopyStructureIntoDocumentUseCase', 'copyStructureIntoDocumentUseCase'],
             ['CopySelectionUseCase', 'copySelectionUseCase'],
             ['RepeatSelectionUseCase', 'repeatSelectionUseCase'],
             ['PasteClipboardUseCase', 'pasteClipboardUseCase'],
@@ -336,6 +334,12 @@ async function runTests() {
         }
 
         const editorSessionSource = await rawSource('application/EditorSession.js');
+        // ForkStructureUseCase/CopyStructureIntoDocumentUseCase are
+        // EditorSession's own constructor defaults (EditorView no longer
+        // builds duplicate instances to pass in).
+        assert(/forkStructureUseCase = new ForkStructureUseCase\(\)/.test(editorSessionSource)
+            && /copyStructureIntoDocumentUseCase = new CopyStructureIntoDocumentUseCase\(\)/.test(editorSessionSource),
+            'E2e. EditorSession.js composes ForkStructureUseCase and CopyStructureIntoDocumentUseCase by default');
         assert(/new ExportBlueprintUseCase\(/.test(editorSessionSource), 'E2a. EditorSession.js still composes ExportBlueprintUseCase');
         assert(/new ImportBlueprintUseCase\(/.test(editorSessionSource), 'E2b. EditorSession.js still composes ImportBlueprintUseCase');
         assert(/editorSession\.exportBlueprint\(/.test(editorViewSource), 'E2c. EditorView.js still calls editorSession.exportBlueprint()');

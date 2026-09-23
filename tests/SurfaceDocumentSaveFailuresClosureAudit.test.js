@@ -178,7 +178,11 @@ async function run() {
     const toolbarSource = await rawSource('ui/components/Toolbar.js');
     const editorViewSource = await rawSource('ui/views/EditorView.js');
     const toolbarMessage = extractModuleConstString(toolbarSource, 'SAVE_FAILURE_MESSAGE');
-    const editorViewMessage = extractModuleConstString(editorViewSource, 'SAVE_FAILURE_MESSAGE');
+    // EditorView.js imports Toolbar.js's own exported constant rather than
+    // declaring a second copy.
+    assert(/import Toolbar, \{ SAVE_FAILURE_MESSAGE \} from '\.\.\/components\/Toolbar\.js';/.test(editorViewSource),
+        'EditorView.js imports SAVE_FAILURE_MESSAGE from Toolbar.js');
+    const editorViewMessage = toolbarMessage;
 
     // ===============================================================
     // Section A — Toolbar Save failure.

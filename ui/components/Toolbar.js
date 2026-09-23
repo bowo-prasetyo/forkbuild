@@ -28,10 +28,9 @@ const SEARCH_THRESHOLD = 8;
 // StorageProvider writes (document blob, then manifest — see
 // tests/DocumentSaveFailureHandlingBoundaryAudit.test.js Section B5) and
 // can throw raw, technical storage exceptions. Never shown to the user
-// verbatim — this stays deliberately generic and storage-agnostic,
-// matching the identical string EditorView.js's own Ctrl+S save path
-// shows on the same failure.
-const SAVE_FAILURE_MESSAGE = 'Save failed — your changes are still here, but were not saved. Try again.';
+// verbatim — this stays deliberately generic and storage-agnostic.
+// Exported so EditorView.js's Ctrl+S save path shows the same message.
+export const SAVE_FAILURE_MESSAGE = 'Save failed — your changes are still here, but were not saved. Try again.';
 
 export default {
     name: 'Toolbar',

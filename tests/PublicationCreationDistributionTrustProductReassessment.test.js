@@ -466,7 +466,10 @@ async function run() {
         // overwriting or masking the other.
         assert(editorViewCode.includes('distributionError.value') && !editorViewCode.includes('publishError'),
             n('D5. EditorView.js carries exactly one distribution-failure ref (distributionError) and surfaces PublishDocumentUseCase\'s own creation failure through Toolbar\'s pre-existing, entirely separate feedback path — never a shared error slot the two could clobber each other through'));
-        const distributionErrorWrites = (editorViewCode.match(/distributionError\.value\s*=/g) || []).length;
+        // Cleared in resetDistributionState(); set/cleared inside
+        // runDistribution() through its `state.error` handle.
+        const distributionErrorWrites = (editorViewCode.match(/distributionError\.value\s*=/g) || []).length
+            + (editorViewCode.match(/state\.error\.value\s*=/g) || []).length;
         assert(distributionErrorWrites >= 2,
             n('D6. distributionError is written from more than one place (set, and cleared) — all of them inside the distribution action itself, never from the publish/creation path'));
 
