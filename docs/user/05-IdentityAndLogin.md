@@ -53,12 +53,23 @@ logged in as. From here you can:
 
 - **Create** a new identity (same as the login dialog).
 - **Lock / Unlock** any identity individually.
-- **Change passphrase** — turns an unprotected identity into a protected
-  one, or replaces an existing passphrase.
+- **Change passphrase** — replaces the passphrase of a protected identity
+  (only protected identities offer it). The identity itself — its ID,
+  public key, and every signature it has made — never changes.
 - **Export** — back it up.
 - **Import** — restore or copy one from a backup file.
 - **Declare a successor / Revoke** — mark an identity as retired in favor of
-  another, or revoke it outright.
+  another (paste the successor's `did:key:z…` ID), or revoke it outright,
+  permanently. Declaring a successor doesn't revoke anything by itself —
+  revoke separately when the switch should take effect. For a locked,
+  protected identity both ask for its passphrase, and signing with it
+  unlocks it, exactly as unlocking it yourself would.
+
+Only one of these forms (Unlock, Export, Change Passphrase, Declare
+Successor, Revoke) is open at a time, on one identity card. Opening
+another, pressing **Cancel**, or finishing the action closes it and clears
+every field in it, so a passphrase you typed never lingers on the page.
+Browser password managers are told not to autofill this page's fields.
 
 There's no rename or delete — identities are meant to persist; if you want
 to stop using one, revoke it instead.
@@ -75,8 +86,10 @@ produces a downloadable file containing your encrypted private key:
 
 **Import** brings an exported identity onto a different device or browser:
 
-1. Choose the exported file. ForkBuild shows a safe preview first — name, ID,
-   and whether you already have it — without decrypting anything.
+1. Click **Import Identity**, then choose the exported file (or paste its
+   JSON into the box below). ForkBuild shows a safe preview first — name,
+   ID, algorithm, and whether you already have it — without decrypting
+   anything.
 2. Enter the export's passphrase to actually import it.
 
 An imported identity always lands **locked**, and you are not automatically

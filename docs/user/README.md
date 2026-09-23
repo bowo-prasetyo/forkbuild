@@ -10,7 +10,8 @@ top-level [docs/](..) folder.
 1. **[Getting Started](01-GettingStarted.md)** — open the app, log in,
    and place your first brick.
 2. **[The Editor](02-TheEditor.md)** — the building toolkit: tools,
-   selection, transforms, groups, composing and forking ready-made
+   selection, transforms, choosing brick colors (before placing, or
+   recoloring placed bricks), groups, composing and forking ready-made
    structures from the Build Library, saving your own builds to a
    personal blueprint library and sharing them as files, placing
    reusable structure instances, and a creation's title/description/
@@ -76,7 +77,8 @@ top-level [docs/](..) folder.
    link straight back to it once distributed.
 5. **[Identity & Login](05-IdentityAndLogin.md)** — your cryptographic
    identity, the vault (locking/unlocking), and backing it up with
-   export/import.
+   export/import, and managing every identity on the device from **My
+   Identities**.
 6. **[Avatars & Presence](06-AvatarsAndPresence.md)** — customizing how
    you look, controlling who can see you, seeing (and walking among,
    including a hands-free continuous-movement mode, and around trees the
@@ -84,7 +86,10 @@ top-level [docs/](..) folder.
    someone else appears at all tracks where your camera is looking, not
    which way you're walking, so a camera left pointed elsewhere can hide
    someone standing right in your path — mounting and riding a vehicle
-   instead of walking, a locked **Camera Perspective** (Free/First
+   (bicycle, motorcycle, car, or drone) instead of walking, carrying
+   vehicles and caught animals in an inventory that survives a reload,
+   baking a released animal into a World as a lasting decoration with
+   **G** (and undoing it the same way), a locked **Camera Perspective** (Free/First
    Person/Third Person/Bird's-Eye, purely local, sitting right beside
    Follow Avatar) for seeing through your own avatar's eyes instead of
    flying the camera yourself, coherent with your avatar's own heading
@@ -119,11 +124,13 @@ top-level [docs/](..) folder.
    (Remote Pinning)** as a savable Content default even on a replica with
    no content backend registered at all, so the Editor's, World View's,
    and My Publication's own Distribute dialogs open pre-selected on it too
-   without you having to run a Kubo node, local or remote — three further standing
-   overrides — **Arweave Gateway**, **IPFS Gateway**, and **Nostr
-   Relay**, each its own settings page — for replacing which endpoint
-   every Arweave retrieval, IPFS gateway retrieval, and Nostr discovery
-   on this device goes through, an **IPFS
+   without you having to run a Kubo node, local or remote — a matching
+   **Proof / Anchoring Provider** preference for a one-click anchoring
+   **Use Preferred Provider** button, an **Announcement / Discovery
+   Provider** default (Nostr or Arweave), and standing endpoint overrides
+   — **Arweave Gateway**, **IPFS Gateway**, **Bitcoin Endpoint**, and one
+   **Nostr Relays** list used everywhere Nostr is — all gathered on one
+   **Network Settings** hub, an **IPFS
    Publishing** section for explicitly publishing content to a
    configured remote pinning provider — a successful publish there now
    also announces itself for Nostr Snapshot discovery, the same way a
@@ -135,11 +142,7 @@ top-level [docs/](..) folder.
    the actual bytes this device holds (from a placement, a peer, or an
    offline file), a **Decentralization** overview comparing your
    evidence and placements, synchronizing knowledge with peers, and
-   seeing how each claim was learned, a fourth standing override — **Nostr
-   Publication Relays** — configuring the whole *set* of relays a
-   Publication announcement fans out to and Publication discovery queries
-   (kept genuinely separate from the plain **Nostr Relay** override above
-   it, which now covers only Snapshot and Place Naming discovery), two
+   seeing how each claim was learned, two
    independent, mirrored **Anchor Pipelines** — one for **Bitcoin**, one
    for **Base** — each connecting a real browser wallet and walking a real
    transaction through funding/observation, construction, review, signing,
@@ -183,7 +186,8 @@ top-level [docs/](..) folder.
    exploration for the rest of that browser session, and, orthogonal to
    all of it, an open **[Commentary](09-PublicationsAndEvidence.md#commentary)**
    system letting any signed-in identity comment on any publication —
-   reached from World View's own **My Publication** panel — which
+   reached from the Repository's cards and list rows, World Encounters,
+   and World View's own **My Publication** panel — which
    notifies that publication's publisher through a durable **Notification
    History**.
 
