@@ -3106,6 +3106,21 @@ html, body {
     color: #909090;
 }
 
+/* ui/components/PublicationCommentaryRemoteCheck.js — the "Check for new
+   comments" row inside every Commentary section. */
+.commentary-remote-check {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.25rem 0 0.5rem;
+}
+
+.commentary-remote-check-status {
+    font-size: 0.8rem;
+    color: #909090;
+}
+
 /* 0.2.23: Placement Info panel — same card language as
    .document-info-panel (WHAT the document is), a deliberately
    separate panel for WHERE it is. */

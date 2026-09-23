@@ -1,4 +1,5 @@
 import PublicationPreview from './PublicationPreview.js';
+import PublicationCommentaryRemoteCheck from './PublicationCommentaryRemoteCheck.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { formatPublicationDate } from '../../core/PublicationDateAmbiguity.js';
 import { createId } from '../../core/createId.js';
@@ -143,7 +144,7 @@ import { createId } from '../../core/createId.js';
 // own distribution status vocabulary.
 export default {
     name: 'PublicationCard',
-    components: { PublicationPreview },
+    components: { PublicationPreview, PublicationCommentaryRemoteCheck },
     inject: {
         getPublicationCommentariesCommand: { default: null },
         addPublicationCommentaryCommand: { default: null },
@@ -395,6 +396,8 @@ export default {
                  own header, "never gated on ownership"). -->
             <div v-if="getPublicationCommentariesCommand && commentaryOpen" class="publication-card-commentary">
                 <p v-if="commentaryError" class="publication-card-commentary-error">{{ commentaryError }}</p>
+
+                <PublicationCommentaryRemoteCheck :publication-id="publication.id" @refreshed="refreshCommentaries" />
 
                 <p v-if="!commentaries.length" class="publication-card-commentary-empty">No commentary yet.</p>
                 <ul v-else class="publication-card-commentary-list">

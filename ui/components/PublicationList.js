@@ -1,4 +1,5 @@
 import PublicationPreview from './PublicationPreview.js';
+import PublicationCommentaryRemoteCheck from './PublicationCommentaryRemoteCheck.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { formatPublicationDate } from '../../core/PublicationDateAmbiguity.js';
 import { createId } from '../../core/createId.js';
@@ -89,7 +90,7 @@ import { createId } from '../../core/createId.js';
 // never returns a result to either surface.
 export default {
     name: 'PublicationList',
-    components: { PublicationPreview },
+    components: { PublicationPreview, PublicationCommentaryRemoteCheck },
     inject: {
         getPublicationCommentariesCommand: { default: null },
         addPublicationCommentaryCommand: { default: null },
@@ -310,6 +311,8 @@ export default {
                             <td colspan="6" class="publication-table-commentary-cell">
                                 <div class="publication-table-commentary">
                                     <p v-if="rowCommentaryState(pub).error" class="publication-table-commentary-error">{{ rowCommentaryState(pub).error }}</p>
+
+                                    <PublicationCommentaryRemoteCheck :publication-id="pub.id" @refreshed="refreshCommentaries(pub)" />
 
                                     <p v-if="!rowCommentaryState(pub).commentaries.length" class="publication-table-commentary-empty">No commentary yet.</p>
                                     <ul v-else class="publication-table-commentary-list">

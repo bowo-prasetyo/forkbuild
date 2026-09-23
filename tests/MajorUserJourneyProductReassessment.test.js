@@ -341,18 +341,23 @@ async function run() {
         const commentaryStoreSource = codeOnly(await rawSource('storage/PublicationCommentaryStore.js'));
         assert(commentaryStoreSource.includes('PublicationCommentaryConflictError'), 'D1b. storage/PublicationCommentaryStore.js has a real conflict type — writes are not blind overwrites.');
 
-        // D2. THE SECOND FINDING: ui/main.js provides Nostr/Arweave
-        // remote-Commentary-discovery commands, but no UI component
-        // ever injects either one — confirmed by direct grep across the
-        // entire ui/ tree, not merely inferred from main.js's own
-        // header comments.
+        // D2. THE SECOND FINDING (at the time): ui/main.js provided
+        // Nostr/Arweave remote-Commentary-discovery commands, but nothing
+        // in the UI ever invoked either one, so only WebRTC ever delivered
+        // a remote Commentary. AMENDED — the deferred product decision
+        // (application/DiscoverPublicationCommentaryFromNostrUseCase.js,
+        // "deciding WHEN this runs... is a separate, later product
+        // decision") has since been made: fetch when a Publication's
+        // Commentary is opened, plus an explicit "Check for new comments".
+        // Both commands are now reached through one composed
+        // refreshPublicationCommentaryCommand, never injected directly.
         assert(mainSource.includes("app.provide('discoverPublicationCommentaryFromNostrCommand'") && mainSource.includes("app.provide('discoverPublicationCommentaryFromArweaveCommand'"),
-            n('D2a. both commands are genuinely provided at the composition root — this finding is about reachability, not existence'));
-        const injectHits = grepFiles("inject\\('discoverPublicationCommentaryFrom(Nostr|Arweave)Command'\\)", ['ui']);
-        assert(injectHits.length === 0,
-            n(`D2b. *** THE FINDING *** zero UI components inject() either provided command — found: ${injectHits.join(', ') || 'none'}. Both commands are exercised only by dedicated test files today, never by a live user session.`));
-        assert(/AN EXPLICIT, CALLER-INVOKED BOUNDARY/.test(nostrDiscoverSource) || /separate, later product decision/.test(nostrDiscoverSource),
-            n('D2c. the capability\'s own header already names this as a deliberately deferred decision ("deciding WHEN this runs... is a separate, later product decision this milestone does not make"), so this is classified DEFERRED_PRODUCT_DECISION, not an accidental oversight — but it is still true, today, that a Wanderer who receives a Commentary distributed only via Nostr or Arweave (never WebRTC) will never see it or be notified of it in the shipped application'));
+            n('D2a. both commands are genuinely provided at the composition root'));
+        assert(/composeRefreshPublicationCommentaryCommand\(\{\s*sources: \[\s*\{ name: 'Nostr', discover: discoverPublicationCommentaryFromNostrCommand \},\s*\{ name: 'Arweave', discover: discoverPublicationCommentaryFromArweaveCommand \}/.test(mainSource),
+            n('D2b. RESOLVED — both commands are composed into refreshPublicationCommentaryCommand, so a live session now reaches them'));
+        const remoteCheckMounts = grepFiles('<PublicationCommentaryRemoteCheck', ['ui']);
+        assert(remoteCheckMounts.length === 4,
+            n(`D2c. RESOLVED — the fetch-on-open / "Check for new comments" component is mounted in every Commentary surface (Repository card and list, My Publication, World Encounters) — found: ${remoteCheckMounts.join(', ') || 'none'}. A Commentary distributed only via Nostr or Arweave now reaches a Wanderer who opens that Publication's Commentary.`));
 
         // D3. The 0.9.623 notification bridge IS wired into all three
         // substrates' own receive paths at the code level — the
@@ -366,7 +371,7 @@ async function run() {
         assert(webrtcSiteIndex !== -1 && nostrSiteIndex !== -1 && arweaveSiteIndex !== -1,
             'D3b. all three substrate wiring sites exist in ui/main.js — this is not a WebRTC-only implementation, it is a WebRTC-only REACHED implementation.');
 
-        console.log('✓ D — Commentary: local authoring/distribution and WebRTC remote receipt are real, wired, and complete end to end, including publisher-only notification gating. SECOND FINDING: the notification bridge is wired for all three substrates, but only WebRTC ever actually delivers a remote Commentary in the shipped app today, because nothing injects the Nostr/Arweave discovery commands main.js provides — a real, already-self-documented DEFERRED_PRODUCT_DECISION, not a silent regression.');
+        console.log('✓ D — Commentary: local authoring/distribution and WebRTC remote receipt are real, wired, and complete end to end, including publisher-only notification gating. SECOND FINDING, since RESOLVED: the notification bridge is wired for all three substrates, and Nostr/Arweave Commentary is now fetched when a Publication\'s Commentary is opened (and on "Check for new comments"), not only delivered live over WebRTC.');
     }
 
     // ===============================================================

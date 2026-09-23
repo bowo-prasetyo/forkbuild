@@ -1,4 +1,5 @@
 import WorldDistributionDialog from './WorldDistributionDialog.js';
+import PublicationCommentaryRemoteCheck from './PublicationCommentaryRemoteCheck.js';
 import { resolveSnapshotPublicationAttribution } from '../../application/SnapshotPublicationAttribution.js';
 import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../../application/SnapshotOutcomeInspectionView.js';
 import { resolveSnapshotWorldPlacement } from '../../application/SnapshotWorldPlacement.js';
@@ -1489,7 +1490,7 @@ function normalizeDistributionResultForDisplay(result) {
 
 export default {
     name: 'OwnPublicationPanel',
-    components: { WorldDistributionDialog },
+    components: { WorldDistributionDialog, PublicationCommentaryRemoteCheck },
     props: {
         // The local user's own current Publication (`publisher/
         // Publication.js`), or `null` when the currently active document
@@ -3450,6 +3451,12 @@ export default {
                 <h5 class="own-publication-commentary-title">Commentary ({{ publicationCommentaries.length }})</h5>
 
                 <p v-if="publicationCommentaryError" class="own-publication-commentary-error">{{ publicationCommentaryError }}</p>
+
+                <PublicationCommentaryRemoteCheck
+                    v-if="publication"
+                    :publication-id="publication.id"
+                    @refreshed="refreshPublicationCommentaries"
+                />
 
                 <!-- H — Empty state: an intentional message, never an
                      error, never indistinguishable from a genuine read

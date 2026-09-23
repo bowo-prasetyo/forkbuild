@@ -223,14 +223,51 @@ peer-connection requirement, and no moderation: if a publication resolves
 at all (see [Where a publication comes from](#where-a-publication-comes-from)),
 you can comment on it.
 
-Today, Commentary is reachable from one place: World View's
-[**My Publication**](03-WorldView.md#my-publication--distributing-your-own-snapshot-no-peers-required)
-panel, always about *your own* currently open, published world. Scroll
-below the Distribute Snapshot button and you'll find a **Commentary**
-section with a running count, the existing comments (each showing its
-author's identity and text, oldest first, never re-sorted or ranked), and
-— once you're signed in — a text box and **Post Comment** button. Not
-signed in? The box is replaced with a note to sign in first.
+Commentary is reachable wherever a publication is shown:
+
+- **Repository** (and an author's page) — every publication card, and every
+  row of the list view, has a **Comment** button that opens its comments.
+- **World View's**
+  [**My Publication**](03-WorldView.md#my-publication--distributing-your-own-snapshot-no-peers-required)
+  panel — your own currently open, published world. Scroll below the
+  Distribute Snapshot button to its **Commentary** section.
+- **World Encounters** — a selected encounter's panel has its own
+  **Comment** button.
+
+Each shows the existing comments (their author's identity and text, oldest
+first, never re-sorted or ranked) and — once you're signed in — a text box
+and **Post Comment** button. Not signed in? The box is replaced with a note
+to sign in first.
+
+### How comments reach you
+
+When you post a comment from the **Repository** (a card or a list row),
+it's saved on your device, sent straight to any peer you're currently
+connected to, and published to Nostr (or Arweave, if you pick it next to
+**Post Comment**) so people who weren't connected can still find it.
+Comments posted from World View's **My Publication** or **World
+Encounters** panels are, for now, only saved on your device.
+
+Comments other people posted reach you the same two ways:
+
+- **Live, from connected peers** — they appear on their own.
+- **From Nostr and Arweave** — fetched when you open a publication's
+  comments, and again whenever you press **Check for new comments** at the
+  top of the section. That's how you see comments posted while you were
+  offline, or from someone's other device.
+
+The line next to the button says what the last check found — for example
+*Found 2 new comments*, or *No new comments found*. "No new comments found"
+only means none turned up on the networks that answered, not that none
+exist anywhere. If a network can't be reached it's named (*Arweave
+unavailable*), and if neither answers you'll see *Couldn't reach Nostr or
+Arweave — showing comments stored on this device*. The comments already on
+your device always stay visible.
+
+Only the publications whose comments you actually open are checked, so
+browsing the Repository never floods the network. Every fetched comment is
+signature-checked before it's kept, and one you already have is never
+counted twice.
 
 A comment is permanent once posted: there's no edit or delete, and no
 replies or threading — just a flat, append-only list of what people said,
