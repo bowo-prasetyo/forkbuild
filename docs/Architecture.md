@@ -432,6 +432,112 @@ The world command protocol (0.2.96–0.2.97) has its own ordering in
 replication/WorldOperationOrdering.js and WorldConflictResolver.js; see
 "Collaboration".
 
+## Identity
+
+An identity is an Ed25519 key pair held on this device
+(identity/LocalIdentity.js). Its id is the did:key derived from the
+public key, and the constructor checks that derivation; the `label` is a
+local display name, never part of the identity. identity/Identity.js is
+only the "which account is the app showing" label, and
+identity/SigningIdentity.js is the public half other replicas verify
+against. identity/LocalIdentityProvider.js owns every identity on the
+device, and IdentityUseCase and the Identity page (`/identity`) sit on
+top of it.
+
+- **Sessions and the vault.** Whether an identity exists, whether its
+  key is unlocked, and whether the session is authenticated are three
+  separate facts: identity/AuthenticationSession.js
+  (ANONYMOUS/AUTHENTICATED) and identity/VaultLock.js (LOCKED/UNLOCKED,
+  never serialized). A protected private key is stored encrypted by
+  identity/KeyEncryption.js: PBKDF2-HMAC-SHA512 for the key, a
+  SHA-512 counter-mode keystream, and an HMAC tag checked in constant
+  time before decrypting, so a wrong passphrase and a tampered record
+  fail the same way. VaultTimeoutPolicy bounds how long a vault stays
+  unlocked; FailedUnlockTracker adds a time-based lockout after failed
+  unlocks (in memory only). Wrong export passphrases count against the
+  same lockout.
+- **Export, import and recovery.** identity/IdentityExport.js builds a
+  JSON package with the encrypted private key; IdentityImport.js
+  validates it (including the did:key derivation) before anything is
+  decrypted; IdentityRecovery.js runs validate → duplicate check →
+  decrypt → verify, and importing an identity the device already has is
+  a no-op, never an overwrite.
+- **Lifecycle.** An identity can declare a successor
+  (core/IdentitySuccessionEnvelope.js, signed by the predecessor) and can
+  be revoked permanently (core/IdentityRevocationEnvelope.js,
+  self-signed). Revocation stops new signing; it doesn't undo old
+  signatures. IdentityLifecyclePropagationUseCase relays these records to
+  connected peers over `forkbuild:identity-lifecycle`; a receiver trusts
+  a record by its own signature, and only for identities it already
+  knows.
+- **Devices.** A second device is its own LocalIdentity that the parent
+  identity authorizes with a signed grant (and can later revoke).
+  DeviceAuthorizationPropagationUseCase relays grants over
+  `forkbuild:device-authorization`. Its resolvePeerAuthority() and
+  resolveConnectionIdentity() let the social protocols treat a
+  connection as the parent identity, either directly or through one
+  verified grant, and only after the connection has authenticated its
+  own key.
+
+## Peers, friends, chat and voice
+
+**Connections.** A peer connection authenticates a key, not an account.
+peer/WebRtcPeerConnectionProvider.js makes real WebRTC connections using
+the ICE servers from the STUN and TURN settings (peer/IceServerConfig.js).
+Peers find each other through rendezvous (peer/RendezvousDiscoveryProvider.js
+over peer/WebSocketRendezvousTransport.js, one per configured rendezvous
+URL; the reference server is server/rendezvous-worker/) or through a
+manual invitation (peer/PeerInvitation.js with an offer and answer). A
+discovered candidate is only a hint; peer/PeerAuthenticationSession.js
+runs a challenge–response over the new connection, and a signature is
+bound to that one connection. application/PeerSessionManager.js is the
+one app-wide owner of connections (listPeers(), importCandidate(),
+disconnect(), onIdentityMismatch()), and ConnectedPeerRegistry lists the
+authenticated ones.
+
+**Protocols.** Every application protocol shares each connection through
+peer/PeerMessageBus.js, which routes by a protocol id
+(`forkbuild:chat`, `forkbuild:avatar-presence`, …; the full list is in
+docs/Protocol.md, "Wire Formats Not Yet Described Here") and never
+interprets the payload. Replay and ordering rules belong to each
+protocol, not to the bus.
+
+**Relationships.** Three separate kinds of local state:
+
+- PeerRelationshipUseCase: peers this device chose to remember, by
+  identity, with a local alias. Forgetting deletes only the local record.
+- FriendRelationshipUseCase: mutual friendship through signed
+  REQUEST/ACCEPT/REJECT/CANCEL/UNFRIEND advertisements
+  (`forkbuild:friendship`). Friendship needs both sides' consent.
+- PeerBlockUseCase: a one-sided, silent block, enforced in both
+  directions by this device.
+
+Presence and profile visibility (PUBLIC/FRIENDS/…) is decided by a
+visibility policy that reads these facts; see "Avatars and presence".
+
+**Chat.** ChatUseCase runs over `forkbuild:chat` between authenticated
+friends who haven't blocked each other. sendMessage() is live delivery;
+sendOrQueue() adds the message to ChatOutbox, a durable queue addressed
+to an identity (not a connection) that flushes on reconnect, is pruned
+by expiry, and can be cancelled. Delivery acknowledgements
+(`forkbuild:chat-delivery-ack`) mark messages delivered. ConversationStore
+keeps the durable history per identity, so a reload continues a
+conversation. ConversationReadTracker keeps this device's own read
+marker; read receipts to the other side go through ConversationReadOutbox
+(`forkbuild:chat-read`, coalesced to the latest value).
+DeviceConversationSyncUseCase copies history and read state between
+devices of the same identity (`forkbuild:device-conversation-sync`).
+PeerPresenceUseCase summarizes each peer's online state for the Peers
+and Conversations pages.
+
+**Voice.** VoiceUseCase sets up calls over `forkbuild:voice-call` and
+carries audio on the same WebRTC connection (`forkbuild:voice-media`),
+renegotiated in-band by one fixed side. Calls use the same authorization
+question as chat. Ringing times out locally (45 s by default), a local
+microphone failure never ends a call by itself, and device selection
+(setMuted(), listInputDevices(), output device) is local state that never
+goes on the wire.
+
 ## Avatar movement constraint pipeline
 
 `application/AvatarMovementController.js` runs the simulated move through up to six optional constraints, in this
@@ -614,8 +720,6 @@ the middle column) and docs/Roadmap.md.
 
 | Area | docs/ArchitectureHistory.md | Also see |
 |------|-----------------------------|----------|
-| Identity | 0.2.46–0.2.48, 0.2.67–0.2.68, 0.2.78, 0.2.82 | |
-| Peers, friends, chat and voice | 0.2.49–0.2.57, 0.2.69–0.2.75, 0.2.83 | docs/Protocol.md, "Wire Formats Not Yet Described Here" |
 | Avatars and presence | 0.2.33–0.2.45, 0.3.2–0.3.4 | "Avatar movement constraint pipeline" above |
 | Collaboration | Collaboration Protocol Foundation (0.2.7); Multi-client Synchronization (0.2.9); 0.3.0–0.3.1 | docs/Roadmap.md, 0.2.95–0.2.99 |
 | Places, landmarks and naming | (none) | docs/Roadmap.md, 0.3.6–0.3.10 and 0.5.x |
