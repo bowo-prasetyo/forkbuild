@@ -32,6 +32,7 @@ import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.148 — End-to-End Decentralized Discovery Runtime Audit.
 //
@@ -846,7 +847,7 @@ async function run() {
     // ui/main.js's own composition, plus a live reproduction.
     // ===============================================================
     {
-        const mainCodeOnly = await codeOnlySource('ui/main.js');
+        const mainCodeOnly = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
 
         const constructionMatches = mainCodeOnly.match(/createNostrRelayQueryClient\(/g) || [];
         assert(constructionMatches.length === 1, 'I1. ui/main.js constructs the relay query client exactly once — never a second instance for either family');

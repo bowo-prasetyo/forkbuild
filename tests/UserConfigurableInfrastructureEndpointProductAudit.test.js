@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { worldViewTemplateFiles } from './support/SourceFileGroups.js';
+import { worldViewTemplateFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.363 — User-Configurable Infrastructure Endpoint Product Audit.
 //
@@ -250,7 +250,7 @@ async function run() {
         // configured gateway (byte-for-byte unchanged) and the new
         // IpfsGatewayFailoverContentStore only once a second gateway is
         // configured.
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         const composeIpfsGatewayContentStoreCallCount = (mainSource.match(/composeIpfsGatewayContentStore\(resolvedIpfsGatewayUrls\)/g) || []).length;
         assert(composeIpfsGatewayContentStoreCallCount === 2, `C3. ui/main.js constructs its IPFS gateway content store through composeIpfsGatewayContentStore(resolvedIpfsGatewayUrls) at both real call sites — AMENDED 0.9.666, see comment above — found ${composeIpfsGatewayContentStoreCallCount}`);
         // AMENDED FURTHER, LATER MILESTONE — core/IpfsNodeConfiguration.js
@@ -399,7 +399,7 @@ async function run() {
         // E1. IPFS local API: the product's OWN composition-root comment
         // already documents this exact availability gap for an ordinary
         // user — direct, on-file evidence, not speculation.
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(mainSource.includes('no local daemon is needed'),
             'E1. ui/main.js documents that ordinary IPFS resolution needs no local daemon (a local Kubo API is ordinarily unreachable)');
         userValue.ipfsApi = 'High for the minority who run a local Kubo node — but the product itself already treats this default as ordinarily unreachable, which is a genuine reason a user-supplied override has real value: recovering IPFS put() capability at all.';
@@ -476,7 +476,7 @@ async function run() {
         // restores capability by supplying an endpoint" is unpopulated.
         const runtimeConfigSource = await rawSource('application/publication/distribution/PublicationDistributionRuntimeConfiguration.js');
         assert(runtimeConfigSource.includes('gatewayUrl'), 'F3. the runtime configuration seam already names gatewayUrl as an accepted field');
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(mainSource.includes('resolvePublicationDistributionRuntimeConfiguration'), 'F3. ui/main.js actually calls the runtime configuration resolver');
 
         console.log('✓ Section F: no existing surface lets an ordinary user restore capability when a default endpoint is down — the closest existing seam (Publication Distribution\'s runtime configuration resolver) already accepts gatewayUrl/relayUrl but is called with nothing real (confirmed still true, 0.9.106 through this milestone)');

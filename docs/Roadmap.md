@@ -98419,3 +98419,18 @@ expanded template (`worldViewSourceWithTemplate()`) is identical before and afte
 remains is refs, injections, composable wiring, `refreshSpatialUI()` and the returned names, and the one cohesive
 block left (the automatic Snapshot cascade, its retention reconciliation and the place-naming monitor) shares two
 `let` flags with `refreshSpatialUI()` and unmount, so extracting it would change code rather than move it.
+
+**Composition root split by subsystem.** `ui/main.js` (1,278 → 453 lines, 198 → 37 imports) calls seven compose
+functions in a new `ui/main/`: identity and peers, content and Snapshots, anchoring, World discovery, injected-wallet
+services, publication distribution, and Snapshot discovery. Each is a contiguous block of the old file moved
+verbatim into a function, called at the same point, taking the earlier bindings it reads and returning the ones later
+code uses, so evaluation order is unchanged. A scope analysis confirmed no block assigns an outer binding or has one
+assigned from outside, and no hoisted function is used before its block. The Publication and Commentary wiring stays
+in `ui/main.js`, because two late-assigned `let` bindings connect it to the injected-wallet services. Every
+`app.provide()` call stays in `ui/main.js`, directly after the compose call that returns its value. Loading the app
+in Chromium before and after gives identical results: all 119 provided values (constructor, member names and
+normalized function source), console output, and the rendered home page and nine routes. Tests read the root with
+its compose functions through `mainFiles()` (267 reads in 168 files); inventories that named `ui/main.js` now name
+the compose function holding the code, and checks that only the composition root may read
+`window.arweaveWallet`/`window.nostr` count `ui/main/` as part of it. Two unused bindings the old file already had
+(`resolvedIpfsGatewayUrl`, `resolvedNostrRelayUrl`) moved unchanged.

@@ -7,6 +7,7 @@ import { SetIceServerConfigurationUseCase } from '../application/settings/SetIce
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
 import { DEFAULT_ICE_SERVERS, fetchIceServers } from '../peer/IceServerConfig.js';
 import { DEFAULT_RENDEZVOUS_URLS } from '../peer/RendezvousConfig.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.386 — User-Configurable STUN Server Configuration.
 //
@@ -144,10 +145,10 @@ async function run() {
     // Section 0 — settings entry point reachability.
     // ===============================================================
     {
-        const mainSource = await source('ui/main.js');
-        assert(mainSource.includes("import { IceServerConfigurationStore } from '../storage/IceServerConfigurationStore.js';"),
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
+        assert(mainSource.includes("import { IceServerConfigurationStore } from '../../storage/IceServerConfigurationStore.js';"),
             '1. ui/main.js imports the new store');
-        assert(mainSource.includes("import { SetIceServerConfigurationUseCase } from '../application/settings/SetIceServerConfigurationUseCase.js';"),
+        assert(mainSource.includes("import { SetIceServerConfigurationUseCase } from '../../application/settings/SetIceServerConfigurationUseCase.js';"),
             '2. ui/main.js imports the new write use case');
         assert(/new IceServerConfigurationStore\(new LocalStorageProvider\(\)\)/.test(mainSource),
             '3. ui/main.js constructs a real IceServerConfigurationStore over LocalStorageProvider');

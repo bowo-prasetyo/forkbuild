@@ -13,6 +13,7 @@ import { PreferredSnapshotPlacementCreationCoordinator } from '../application/sn
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
 import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
 import { describePublicationDistributionResult } from '../application/publication/distribution/PublicationDistributionResult.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.421 — Multi-Substrate Publication Preference Product Direction Audit.
 //
@@ -286,7 +287,7 @@ async function run() {
         // header held against 0.9.296/0.9.298.
         assert(Object.values(RoleProviderRole).length === 3, n('E1. the closed three-role vocabulary is unchanged since 0.9.293'));
 
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         // Same evidence shape 0.9.304's own Section D already used: the
         // real creation-side registry is built from a `stores: [...]`
         // array naming both a local store and an IpfsContentStore — never

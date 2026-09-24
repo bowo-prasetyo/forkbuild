@@ -22,6 +22,7 @@ import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.486 — Wire Snapshot Candidate Discovery Query Service into
 // Walking-Triggered Discovery.
@@ -161,7 +162,7 @@ async function run() {
     // Section A — Production composition.
     // ===============================================================
     {
-        const mainSource = stripLineComments(readSource('ui/main.js'));
+        const mainSource = stripLineComments((await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n'));
 
         assert(/const discoverSnapshotCandidatesCommand = \(\) => executeDiscoverSnapshotCandidatesCommand\(\{\s*\n\s*discoveryTag: 'forkbuild-snapshot',\s*\n\s*discoveryQueryService: snapshotCandidateDiscoveryQueryService/.test(mainSource),
             '1. ui/main.js\'s own production discoverSnapshotCandidatesCommand calls snapshotCandidateDiscoveryQueryService — the real Local+Nostr composite — never the Nostr-only service it called before this milestone.');
@@ -493,7 +494,7 @@ async function run() {
         // ui/main.js never constructs DecentralizedSnapshotResolver
         // directly — application/snapshot/DiscoverSnapshotRuntimeComposition.js
         // does, exactly once, inside composeDiscoverSnapshotRuntime().
-        const mainSource = stripLineComments(readSource('ui/main.js'));
+        const mainSource = stripLineComments((await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n'));
         assert((mainSource.match(/composeDiscoverSnapshotRuntime\(/g) || []).length === 1,
             '3. ui/main.js still calls composeDiscoverSnapshotRuntime() exactly once — this milestone adds no second resolution pipeline of its own.');
         const resolverConstructionSites = execSync('grep -rlE "new DecentralizedSnapshotResolver\\(" application ui --include="*.js" || true', { cwd: SOURCE_ROOT.pathname })
@@ -512,7 +513,7 @@ async function run() {
     // Section L — Peer/World isolation.
     // ===============================================================
     {
-        const mainSource = stripLineComments(readSource('ui/main.js'));
+        const mainSource = stripLineComments((await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n'));
         const monitorSource = stripLineComments(readSource('application/snapshot/WorldSnapshotDiscoveryMonitor.js'));
         const commandSource = stripLineComments(readSource('application/snapshot/DiscoverSnapshotCandidatesCommand.js'));
 

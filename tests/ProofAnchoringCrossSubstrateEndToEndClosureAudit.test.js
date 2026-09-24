@@ -42,7 +42,7 @@ import { ArweaveTransactionDataProofVerifier } from '../anchoring/ArweaveTransac
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.513 — Proof/Anchoring Cross-Substrate End-to-End Closure Audit.
 //
@@ -745,7 +745,7 @@ async function run() {
     // real, located view code.
     // ===============================================================
     {
-        const mainSrc = codeOnly(await source('ui/main.js'));
+        const mainSrc = codeOnly((await Promise.all(mainFiles().map((file) => source(file)))).join('\n'));
         const viewSrc = codeOnly((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n'));
 
         // I1-I2: Bitcoin — the activated 0.9.512 seam.

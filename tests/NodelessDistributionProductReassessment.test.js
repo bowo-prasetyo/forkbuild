@@ -10,7 +10,7 @@ import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/
 import { executeDiscoverSnapshotCommand } from '../application/snapshot/DiscoverSnapshotCommand.js';
 import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.664 — Node-less Distribution Product Reassessment.
 //
@@ -318,7 +318,7 @@ async function run() {
     // =======================================================================
     {
         const registrySource = await source('application/snapshot/placement/SnapshotPlacementStoreRegistry.js');
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
 
         assert(!/class IpfsRemote(Kubo|Fallback|Ranked)ContentStore/.test(await source('content/IpfsRemotePinningContentStore.js')),
             n('D1. no new IPFS provider class was needed to prove Section A\'s retrieval path — content/IpfsRemotePinningContentStore.js is read, never modified, by this reassessment.'));

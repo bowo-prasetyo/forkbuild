@@ -30,7 +30,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PublicationExchange } from '../application/publication/PublicationExchange.js';
 import { PublicationPeerExchange } from '../application/publication/PublicationPeerExchange.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
-import { worldViewFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, editorViewFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.339 — Merge Decentralized Publication Discovery into Repository
 // Discovery.
@@ -224,7 +224,7 @@ async function run() {
     // source rather than assumed from the milestone's own goal.
     // ===============================================================
     {
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(countOccurrences(mainSource, /new DecentralizedPublicationDiscoveryProvider\(\)/g) === 1,
             '1. ui/main.js still constructs exactly one DecentralizedPublicationDiscoveryProvider — this milestone adds a consumer, never a second instance.');
         assert(countOccurrences(mainSource, /app\.provide\('decentralizedPublicationDiscoveryProvider', decentralizedPublicationDiscoveryProvider\);/g) === 1,

@@ -9,6 +9,7 @@ import { ArweaveWorldEncounterMaterialResolver } from '../application/worldEncou
 import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
 import { composeSnapshotDistributionRuntime } from '../application/snapshot/SnapshotDistributionRuntimeComposition.js';
 import { resolvePublicationDistributionRuntimeConfiguration } from '../application/publication/distribution/PublicationDistributionRuntimeConfiguration.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.365 — Arweave Gateway Configuration Convergence Audit.
 //
@@ -148,7 +149,7 @@ async function run() {
     {
         const configSource = await source('core/ArweaveGatewayConfiguration.js');
         const storeSource = await source('storage/ArweaveGatewayConfigurationStore.js');
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const contentStoreSource = await source('content/ArweaveContentStore.js');
         const resolverSource = await source('application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js');
         const uploaderSource = await source('application/arweave/ArweavePublicationMaterialUploader.js');

@@ -25,7 +25,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.336 — Decentralized Publication Discovery Ingestion Seam Audit.
 //
@@ -537,7 +537,7 @@ async function run() {
         // in ui/main.js and handed to every view via app.provide() — an
         // application-lifetime singleton, confirmed by grep count, not
         // merely read off one call site.
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         const peerExchangeConstructions = (mainSource.match(/new CreatePublicationPeerExchangeUseCase\(\)/g) || []).length;
         assert(peerExchangeConstructions === 1,
             `1. application/publication/CreatePublicationPeerExchangeUseCase.js is constructed exactly once in ui/main.js (found ${peerExchangeConstructions}) — an application-lifetime singleton, its catalog/peerExchange shared app-wide via app.provide().`);

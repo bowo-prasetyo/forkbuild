@@ -19,7 +19,7 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
-import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.378 — Post-Publish Distribution Action Convergence Audit.
 //
@@ -441,7 +441,7 @@ async function run() {
     // Section A — Three-surface command convergence.
     // ---------------------------------------------------------------
     {
-        const mainCode = await codeOnlySource('ui/main.js');
+        const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         const provideMatches = mainCode.match(/app\.provide\('publicationDistributionCommand', publicationDistributionCommand\)/g) || [];
         assert(provideMatches.length === 1,
             n('ui/main.js provides publicationDistributionCommand exactly once, at the app root — a single composition, never one per view'));

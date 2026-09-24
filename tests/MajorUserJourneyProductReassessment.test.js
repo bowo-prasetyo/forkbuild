@@ -25,7 +25,7 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { World } from '../core/World.js';
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.650 — Major User Journey Product Reassessment.
 //
@@ -331,7 +331,7 @@ async function run() {
     // Section D — Commentary journey.
     // ===============================================================
     {
-        const mainSource = codeOnly(await rawSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         const nostrDiscoverSource = await rawSource('application/publication/commentary/DiscoverPublicationCommentaryFromNostrUseCase.js');
 
         // D1. Local authoring/distribution: real UI entry points, real
@@ -367,7 +367,7 @@ async function run() {
         // reachability gap above is Discovery-time, not Notification-time.
         const bridgeCallSites = grepFiles('handleCommentaryReceived\\(', ['ui/main.js']);
         assert(bridgeCallSites.length > 0, 'D3a. ui/main.js calls handleCommentaryReceived() from its own composition root.');
-        const mainSourceRaw = await rawSource('ui/main.js');
+        const mainSourceRaw = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         const webrtcSiteIndex = mainSourceRaw.indexOf('publicationCommentaryDistributionPeerExchange.onCommentaryReceived');
         const nostrSiteIndex = mainSourceRaw.indexOf('discoverPublicationCommentaryFromNostrCommand');
         const arweaveSiteIndex = mainSourceRaw.indexOf('discoverPublicationCommentaryFromArweaveCommand');
@@ -381,7 +381,7 @@ async function run() {
     // Section E — cross-session continuity, exhaustive.
     // ===============================================================
     {
-        const mainSourceRaw = await rawSource('ui/main.js');
+        const mainSourceRaw = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
 
         // E1. Documents — persisted (LocalStorageProvider) and
         // reconstructed on demand (LoadDocumentUseCase.listSavedDocuments()

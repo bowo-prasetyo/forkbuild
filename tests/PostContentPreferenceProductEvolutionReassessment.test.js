@@ -10,7 +10,7 @@ import { SetRoleProviderPreferenceUseCase } from '../application/settings/SetRol
 import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.304 — Post-Content-Preference Product Evolution Reassessment.
 //
@@ -214,7 +214,7 @@ async function run() {
         assert(localDiscoveryProviderFiles.length >= 2, // base + at least LocalDiscoveryProvider
             '7. discovery/ still ships DiscoveryProvider.js plus concrete local/catalog implementations, not a ' +
             'multi-substrate registry');
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const localDiscoveryConstructions = (mainSource.match(/new LocalDiscoveryProvider\(/g) || []).length;
         assert(localDiscoveryConstructions <= 1,
             '8. ui/main.js constructs at most one LocalDiscoveryProvider — this seam is NO_SELECTION (this ' +
@@ -339,7 +339,7 @@ async function run() {
     // ─────────────────────────────────────────────────────────────────
     let contentProviderCount = 0;
     {
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         // Content: the one real, explicit, per-action, multi-provider
         // choice already shipped — the exact evidence 0.9.298 first
         // established (local + ipfs, side by side, real buttons).
@@ -486,7 +486,7 @@ async function run() {
         const compositionUseCaseSource = await source('application/snapshot/placement/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js');
         assert(/preferenceStore = new RoleProviderPreferenceStore\(\)/.test(compositionUseCaseSource),
             '37b. that one site is a default parameter, satisfied only when no caller supplies its own store');
-        const uiMainSource = await source('ui/main.js');
+        const uiMainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         assert(!/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase\(\)\.execute\(\{[^}]*preferenceStore/s.test(uiMainSource)
             && /coordinator:\s*preferredSnapshotPlacementCreationCoordinator,\s*\n\s*preferenceStore:\s*roleProviderPreferenceStore/.test(uiMainSource),
             '37c. ui/main.js never passes its own preferenceStore in — it captures the ONE instance the ' +

@@ -13,6 +13,7 @@ import {
     resolveSnapshotDistributionContentStore
 } from '../application/snapshot/SnapshotDistributionContentBackendSelection.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.506 — Make Snapshot Distribution Content Backend Selectable.
 //
@@ -198,9 +199,9 @@ async function run() {
     // Section A — production topology, structural.
     // ===============================================================
     {
-        const mainSource = await codeOnlySource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
 
-        check(mainSource.includes("import { availableSnapshotDistributionStorageTypes, resolveSnapshotDistributionContentStore } from '../application/snapshot/SnapshotDistributionContentBackendSelection.js';"),
+        check(mainSource.includes("import { availableSnapshotDistributionStorageTypes, resolveSnapshotDistributionContentStore } from '../../application/snapshot/SnapshotDistributionContentBackendSelection.js';"),
             'A. ui/main.js imports the new 0.9.506 selection module');
 
         // AMENDED BY 0.9.669 — `discoveryProvider` joined the parameter

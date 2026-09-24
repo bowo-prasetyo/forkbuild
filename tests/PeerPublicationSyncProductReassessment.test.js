@@ -26,7 +26,7 @@ import { PublicationPeerExchange } from '../application/publication/PublicationP
 import { PublicationPeerConnectionSync } from '../application/publication/PublicationPeerConnectionSync.js';
 import { PeerContentExchange } from '../application/peer/PeerContentExchange.js';
 import { CreatePublicationPeerExchangeUseCase } from '../application/publication/CreatePublicationPeerExchangeUseCase.js';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.343 — Peer Publication Synchronization Product Reassessment.
 //
@@ -626,7 +626,7 @@ async function run() {
         // No app-wide signal exists: confirm no toast/badge/counter is
         // wired to PublicationPeerConnectionSync or to onPublicationReceived
         // anywhere outside the one page that already handles it.
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(!/connectionSync\.on|feedback\.show.*[Pp]ublication.*received|badge.*[Pp]ublication/.test(mainSource),
             '3. no app-wide toast, badge, or counter is wired to connection-time sync anywhere in the composition root.');
 

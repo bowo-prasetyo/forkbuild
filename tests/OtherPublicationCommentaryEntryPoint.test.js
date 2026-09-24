@@ -18,7 +18,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { readFile } from 'node:fs/promises';
-import { worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.289 — Other-Publication Commentary Entry Point.
 //
@@ -491,7 +491,7 @@ async function runTests() {
                sectionCode.includes("getPublicationCommentariesCommand: { default: null }") && sectionCode.includes("addPublicationCommentaryCommand: { default: null }"),
             '40. PublicationCard.js (for its toggle) and the PublicationCommentarySection.js it mounts inject the commentary commands as OPTIONAL collaborators — feature hidden when absent');
 
-        const mainCode = await codeOnlySource('ui/main.js');
+        const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(mainCode.includes("new CreatePublicationCommentaryUseCase().execute(identityProvider)"),
             '41. ui/main.js composes the commentary commands through the new, dedicated composition root, sharing the SAME app-wide identityProvider');
         assert(mainCode.includes("app.provide('getPublicationCommentariesCommand', getPublicationCommentariesCommand)") &&

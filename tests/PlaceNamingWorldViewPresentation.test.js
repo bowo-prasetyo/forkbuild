@@ -4,7 +4,7 @@ import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNam
 import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
 import { composePlaceNamingDiscoveryRuntime } from '../application/placeNaming/PlaceNamingDiscoveryRuntimeComposition.js';
 import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.257 — World View Place Naming Presentation.
 // See docs/Roadmap.md, "0.9.257 — World View Place Naming Presentation."
@@ -661,7 +661,7 @@ async function runTests() {
     // genuinely matches what ui/main.js and ui/views/WorldView.js contain.
     // ---------------------------------------------------------------
     {
-        const mainCode = await codeOnlySource('ui/main.js');
+        const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(mainCode.includes("new NostrPlaceNamingDiscoverySource("), '32. ui/main.js composes a real NostrPlaceNamingDiscoverySource');
         assert(mainCode.includes("composePlaceNamingDiscoveryRuntime("), '33. ui/main.js composes the Place Naming discovery runtime');
         assert(mainCode.includes("app.provide('placeNamingDiscoveryQueryService', placeNamingDiscoveryQueryService);"),

@@ -17,7 +17,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { WorldEncounterMaterialVerificationComposition } from '../application/worldEncounter/WorldEncounterMaterialVerificationComposition.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.524 — Repository Admission Verification Boundary Closure Audit.
 //
@@ -408,7 +408,7 @@ async function run() {
         const compositionUseSource = await readSource('application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js');
         assert(/new WorldEncounterMaterialVerificationComposition\(\{\s*\n\s*verifiers: \[identityVerifier, signatureVerifier\]/.test(compositionUseSource),
             '4. application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js still composes exactly WorldEncounterMaterialIdentityVerifier + WorldEncounterMaterialSignatureVerifier — the same class exercised structurally in D1-D3 above, not a stand-in this milestone invented.');
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(mainSource.includes('composeWorldEncounterMaterialVerifier()') && mainSource.includes("app.provide('worldEncounterMaterialVerifier', worldEncounterMaterialVerifier)"),
             '5. ui/main.js provides that SAME composed verifier app-wide, under the name WorldView.js injects and passes into <WorldEncounterCanvas :materialVerifier>.');
 

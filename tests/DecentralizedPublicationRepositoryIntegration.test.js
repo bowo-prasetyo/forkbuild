@@ -31,7 +31,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND, CURRENT_SCHEMA_VERSION as ATTRIBUTION_SCHEMA_VERSION } from '../core/BlueprintAttribution.js';
 import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
 import { buildPlaceNamingClaimPublication, PLACE_NAMING_CLAIM_PUBLICATION_KIND, CURRENT_SCHEMA_VERSION as NAMING_SCHEMA_VERSION } from '../application/placeNaming/PlaceNamingClaimPublication.js';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.337 — Wire Resolved Decentralized Publications into Repository
 // Discovery.
@@ -173,7 +173,7 @@ async function run() {
         // DecentralizedPublicationDiscoveryProvider — never a per-view or
         // per-call construction, matching the application-lifetime
         // pattern 0.9.336's own Section H proved is the only safe one.
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         const constructions = countOccurrences(mainSource, /new DecentralizedPublicationDiscoveryProvider\(\)/g);
         assert(constructions === 1,
             `1. ui/main.js constructs DecentralizedPublicationDiscoveryProvider exactly once (found ${constructions}).`);

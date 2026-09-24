@@ -7,6 +7,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { TurnServerConfigurationStore } from '../storage/TurnServerConfigurationStore.js';
 import { SetTurnServerConfigurationUseCase } from '../application/settings/SetTurnServerConfigurationUseCase.js';
 import { IceServerConfigurationStore } from '../storage/IceServerConfigurationStore.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.456 — TURN Server Settings UI.
 //
@@ -399,8 +400,8 @@ async function run() {
         const appSource = await source('ui/App.js');
         assert(/router-link to="\/settings"/.test(appSource), n('L4. a real top-nav link reaches the Network Settings hub, the one hop before the TURN settings link above'));
 
-        const mainSource = await source('ui/main.js');
-        assert(mainSource.includes("import { SetTurnServerConfigurationUseCase } from '../application/settings/SetTurnServerConfigurationUseCase.js';"),
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
+        assert(mainSource.includes("import { SetTurnServerConfigurationUseCase } from '../../application/settings/SetTurnServerConfigurationUseCase.js';"),
             n('L5. ui/main.js imports the new write use case'));
         assert(/new SetTurnServerConfigurationUseCase\(\{\s*turnServerConfigurationStore\s*\}\)/.test(mainSource),
             n('L6. ui/main.js wires SetTurnServerConfigurationUseCase against the SAME shared turnServerConfigurationStore already constructed for 0.9.455, never a second disconnected store'));
@@ -454,7 +455,7 @@ async function run() {
         assert(!/toIceServerEntry|resolveTurnServerConfiguration/.test(viewExecutable),
             n('N2. the view never resolves or composes an effective ICE server list itself — that stays entirely ui/main.js\'s own composition-root job (0.9.455)'));
 
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const turnUseCaseConstructions = (mainSource.match(/new SetTurnServerConfigurationUseCase\(/g) || []).length;
         assert(turnUseCaseConstructions === 1, n('N3. ui/main.js constructs exactly one SetTurnServerConfigurationUseCase — no duplicate wiring'));
         assert(mainSource.includes('resolvedTurnServerConfiguration.toIceServerEntry()'),

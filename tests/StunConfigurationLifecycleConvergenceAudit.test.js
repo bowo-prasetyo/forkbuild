@@ -12,6 +12,7 @@ import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvid
 import { WebRtcPeerConnection } from '../peer/WebRtcPeerConnection.js';
 import { DEFAULT_ICE_SERVERS, fetchIceServers } from '../peer/IceServerConfig.js';
 import { DEFAULT_RENDEZVOUS_URLS } from '../peer/RendezvousConfig.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.387 — STUN Configuration Lifecycle & Convergence Audit.
 //
@@ -226,7 +227,7 @@ async function run() {
         const storeSource = await source('storage/IceServerConfigurationStore.js');
         const useCaseSource = await source('application/settings/SetIceServerConfigurationUseCase.js');
         const viewSource = await source('ui/views/StunSettingsView.js');
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
 
         const otherFiles = await Promise.all([
             ['peer/IceServerConfig.js', await source('peer/IceServerConfig.js')],

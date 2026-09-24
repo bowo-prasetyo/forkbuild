@@ -10,6 +10,7 @@ import { PlacePublicationUseCase } from '../application/placement/PlacePublicati
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.651 — Persist World-Encounter Publication Admissions.
 //
@@ -228,7 +229,7 @@ async function run() {
     // Section G — ui/main.js composition wiring.
     // ===============================================================
     {
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
 
         assert(mainSource.includes("import { CreateWorldEncounterPublicationAdmissionLogUseCase } from '../application/worldEncounter/CreateWorldEncounterPublicationAdmissionLogUseCase.js';"),
             '1. ui/main.js imports the composition-root use case.');

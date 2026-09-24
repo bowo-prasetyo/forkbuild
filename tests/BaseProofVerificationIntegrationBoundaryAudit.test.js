@@ -27,7 +27,7 @@ import { ArweaveTransactionDataProofVerifier } from '../anchoring/ArweaveTransac
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.464 — Base Proof Verification Integration Boundary Audit.
 //
@@ -352,7 +352,7 @@ async function run() {
         // reachable from ui/main.js, the one real composition root this
         // application runs? Contrasted directly against Bitcoin's and
         // Arweave's own, real wiring in the SAME file.
-        const mainSrc = await source('ui/main.js');
+        const mainSrc = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const mainCode = codeOnly(mainSrc);
 
         check(/import \{ CreateBitcoinAnchorProofVerifierUseCase \}/.test(mainCode), 'B5a. sanity: ui/main.js really does import CreateBitcoinAnchorProofVerifierUseCase');
@@ -875,7 +875,7 @@ async function run() {
         // reconfirmed here from ui/main.js directly (Section B already
         // established this; restated here as the UI-facing half of the
         // same finding).
-        const mainCode = codeOnly(await source('ui/main.js'));
+        const mainCode = codeOnly((await Promise.all(mainFiles().map((file) => source(file)))).join('\n'));
         check(!/externalAnchorPublisherRegistry\.register\([^)]*[Bb]ase/.test(mainCode), 'K2. the live externalAnchorPublisherRegistry — the one PublicationAnchorCreationCoordinator#availableAnchorTypes() actually reads from in the running application — never has a Base publisher registered into it; a person using this application today would never see "base" offered as a creation option, regardless of how capable the underlying mechanism is');
 
         // K3. reconfirm, from CURRENT source (not merely cited from

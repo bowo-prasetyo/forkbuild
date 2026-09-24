@@ -7,6 +7,7 @@ import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.106 — Publication Distribution Runtime Configuration.
 //
@@ -221,7 +222,7 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const { readFile } = await import('node:fs/promises');
-        const source = await readFile(new URL('../ui/main.js', import.meta.url), 'utf8');
+        const source = (await Promise.all(mainFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         assert(codeOnly.includes("import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js'"),

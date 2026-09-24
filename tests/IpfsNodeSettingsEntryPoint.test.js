@@ -4,6 +4,7 @@ import { IpfsNodeConfiguration, isValidIpfsNodeApiUrl } from '../core/IpfsNodeCo
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { IpfsNodeConfigurationStore } from '../storage/IpfsNodeConfigurationStore.js';
 import { SetIpfsNodeConfigurationUseCase } from '../application/settings/SetIpfsNodeConfigurationUseCase.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // User-Configurable IPFS Node API URL Settings UI.
 //
@@ -43,10 +44,10 @@ async function run() {
     // Section 0 — settings entry point reachability.
     // ===============================================================
     {
-        const mainSource = await source('ui/main.js');
-        assert(mainSource.includes("import { IpfsNodeConfigurationStore } from '../storage/IpfsNodeConfigurationStore.js';"),
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
+        assert(mainSource.includes("import { IpfsNodeConfigurationStore } from '../../storage/IpfsNodeConfigurationStore.js';"),
             '1. ui/main.js imports the new store');
-        assert(mainSource.includes("import { SetIpfsNodeConfigurationUseCase } from '../application/settings/SetIpfsNodeConfigurationUseCase.js';"),
+        assert(mainSource.includes("import { SetIpfsNodeConfigurationUseCase } from '../../application/settings/SetIpfsNodeConfigurationUseCase.js';"),
             '2. ui/main.js imports the new write use case');
         const storeConstructions = (mainSource.match(/new IpfsNodeConfigurationStore\(/g) || []).length;
         assert(storeConstructions === 1, `3. ui/main.js constructs exactly one IpfsNodeConfigurationStore instance — found ${storeConstructions}`);

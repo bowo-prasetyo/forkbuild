@@ -9,7 +9,7 @@ import { World } from '../core/World.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { CreateWorldLandmarkCommand } from '../application/commands/CreateWorldLandmarkCommand.js';
-import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles, worldEncounterCanvasFiles, editorViewFiles, editorSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles, worldEncounterCanvasFiles, editorViewFiles, editorSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.212 — Post-Undo/Redo Product Reassessment.
 //
@@ -285,7 +285,7 @@ async function runTests() {
         const buildUseCaseSource = await rawSource('application/snapshot/BuildPublicationSnapshotTransferPackageUseCase.js');
         assert(/export-side counterpart/i.test(buildUseCaseSource), 'E2a. BuildPublicationSnapshotTransferPackageUseCase.js still documents itself as the export-side counterpart of the Import use case');
         assert(/class BuildPublicationSnapshotTransferPackageUseCase/.test(buildUseCaseSource), 'E2b. BuildPublicationSnapshotTransferPackageUseCase still exists, fully implemented');
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(/new ImportPublicationSnapshotTransferPackageUseCase\(/.test(mainSource), 'E2c. ui/main.js still composes ImportPublicationSnapshotTransferPackageUseCase (the wired half)');
         assert(/new BuildPublicationSnapshotTransferPackageUseCase\(/.test(mainSource), 'E2d. ui/main.js now also composes BuildPublicationSnapshotTransferPackageUseCase — 0.9.215 closes the ACTUAL_GAP this section originally found');
         const coordinatorSource = await rawSource('application/snapshot/materialization/SnapshotContentMaterializationCoordinator.js');
@@ -519,7 +519,7 @@ async function runTests() {
     {
         // I1 — ui/components/GroupsPanel.js (0.9.206's own finding),
         // reconfirmed unchanged.
-        assert(!/GroupsPanel/.test(await rawSource('ui/main.js')), 'I1a. GroupsPanel is not registered in ui/main.js');
+        assert(!/GroupsPanel/.test((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n')), 'I1a. GroupsPanel is not registered in ui/main.js');
         const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/components:\s*\{[^}]*GroupsPanel/.test(editorViewSource), 'I1b. EditorView.js\'s own components: {} does not register GroupsPanel');
         assert(await rawSource('ui/components/GroupsPanel.js').then(() => false, () => true), 'I1c. ui/components/GroupsPanel.js has since been deleted as dead code (the Editor dead-code cleanup)');

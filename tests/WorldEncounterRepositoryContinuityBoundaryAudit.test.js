@@ -17,7 +17,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles, worldNavigationSessionFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.473 — World Encounter -> Repository Continuity Boundary Audit.
 //
@@ -312,7 +312,7 @@ async function run() {
         // decentralizedPublicationDiscoveryProvider) call (one occurrence
         // for the string key, one for the variable) -- never a fourth,
         // which a WorldEncounter-composition call site would require.
-        const mainSourceForB = await readSource('ui/main.js');
+        const mainSourceForB = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         const providerOccurrences = (mainSourceForB.match(/decentralizedPublicationDiscoveryProvider/g) || []).length;
         assert(providerOccurrences === 3,
             `2. ui/main.js references decentralizedPublicationDiscoveryProvider exactly three times -- its own declaration plus its own app.provide() call (key + value) -- never threaded into WorldEncounter composition (found ${providerOccurrences} occurrences).`);
@@ -420,7 +420,7 @@ async function run() {
         // decentralizedPublicationDiscoveryProvider prop (never a second,
         // WorldView.js-local `.add()` call of its own -- WorldView.js
         // itself still never calls `.add()`, confirmed below).
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         const provideMatches = mainSource.match(/app\.provide\('decentralizedPublicationDiscoveryProvider'/g) || [];
         assert(provideMatches.length === 1, '1. ui/main.js provides the shared decentralizedPublicationDiscoveryProvider exactly once.');
 

@@ -18,7 +18,7 @@ import { encodeBasePublicationCommitment } from '../application/anchoring/base/B
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { publicationsViewSourceWithTemplate } from './support/SourceFileGroups.js';
+import { publicationsViewSourceWithTemplate, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.511 — Base Anchor Evidence View.
 //
@@ -200,10 +200,9 @@ async function run() {
     // "*UIReachabilityAudit.test.js" file's own identical approach).
     // ---------------------------------------------------------------
     {
-        const mainPath = fileURLToPath(new URL('../ui/main.js', import.meta.url));
-        const mainSrc = await readFile(mainPath, 'utf8');
+        const mainSrc = (await Promise.all(mainFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
 
-        assert(/import\s*\{\s*CreateBaseAnchorEvidenceViewUseCase\s*\}\s*from\s*['"]\.\.\/application\/anchoring\/base\/CreateBaseAnchorEvidenceViewUseCase\.js['"]/.test(mainSrc),
+        assert(/import\s*\{\s*CreateBaseAnchorEvidenceViewUseCase\s*\}\s*from\s*['"](\.\.\/)+application\/anchoring\/base\/CreateBaseAnchorEvidenceViewUseCase\.js['"]/.test(mainSrc),
             '24. ui/main.js imports CreateBaseAnchorEvidenceViewUseCase');
         assert(/new CreateBaseAnchorEvidenceViewUseCase\(\)\.execute\(\)/.test(mainSrc),
             '25. ui/main.js constructs a real baseAnchorEvidenceView, the same bare no-options call its two siblings already use');

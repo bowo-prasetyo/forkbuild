@@ -20,7 +20,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.475 — Wire Peer World Encounter Material Source into Production
 // Composition Root.
@@ -221,7 +221,7 @@ async function run() {
     // Section C — production composition-root inspection.
     // ===============================================================
     {
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         const mainCodeOnly = codeOnly(mainSource);
 
         assert(/import \{ PeerWorldEncounterMaterialSource \} from '\.\.\/application\/worldEncounter\/PeerWorldEncounterMaterialSource\.js';/.test(mainCodeOnly),

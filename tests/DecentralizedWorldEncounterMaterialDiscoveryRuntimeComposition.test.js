@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { worldViewSourceWithTemplate } from './support/SourceFileGroups.js';
+import { worldViewSourceWithTemplate, mainFiles } from './support/SourceFileGroups.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
@@ -345,10 +345,9 @@ async function runTests() {
         assert(!/TRUSTED|UNTRUSTED|\bSAFE\b|UNSAFE|AUTHENTIC|SUSPICIOUS|\bRANK\b|\bSCORE\b|PREFERRED/i.test(compositionCodeOnly),
             '26. the composition introduces no trust/ranking vocabulary of its own');
 
-        const mainUrl = new URL('../ui/main.js', import.meta.url);
-        const mainSource = await readFile(mainUrl, 'utf8');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const mainCodeOnly = mainSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-        assert(/from '\.\.\/application\/worldEncounter\/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition\.js';/.test(mainCodeOnly)
+        assert(/from '(\.\.\/)+application\/worldEncounter\/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition\.js';/.test(mainCodeOnly)
             && mainCodeOnly.includes('composeDecentralizedWorldEncounterMaterialDiscoveryServices(')
             && mainCodeOnly.includes('composeDecentralizedWorldEncounterMaterialDiscoveryRuntime('),
             '27. ui/main.js imports and actually calls the new composition root');

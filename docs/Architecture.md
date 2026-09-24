@@ -68,7 +68,8 @@ there is no render(world) sweep. See "Renderer" below.
 
 **ui/** is Vue 3 with no build step: components are plain objects with a
 template string. ui/main.js is the composition root that constructs and
-wires every adapter.
+wires every adapter; its larger subsystems are built by the compose
+functions in ui/main/, which it calls in order.
 
 **Adapters** sit around the layers: storage/ (StorageProvider and the
 local stores), serializer/, publisher/, discovery/, identity/, peer/,
@@ -87,8 +88,8 @@ reference rendezvous worker).
     renderer -> core (reads domain events and data; never the reverse)
     core never depends on anything above it
 
-ui/main.js, the composition root, is the one ui/ file that wires every
-layer. application -> renderer includes injection: use cases build
+ui/main.js, the composition root (with its compose functions in ui/main/),
+is the one place in ui/ that wires every layer. application -> renderer includes injection: use cases build
 renderer subsystems and hand them collaborators (TransformMath into
 TransformGizmoController, for example), so renderer/ never imports
 application/.
@@ -913,7 +914,11 @@ way, through RenderWorldUseCase and RenderWorldViewUseCase.
 ## UI
 
 ui/main.js builds every store, adapter and use case once, reads the
-saved settings, and provides them to the Vue app. ui/router/index.js
+saved settings, and provides them to the Vue app. The compose functions in
+ui/main/ build the larger subsystems (identity and peers, content and
+Snapshots, anchoring, World discovery, injected-wallet services, publication
+distribution, Snapshot discovery) and return what ui/main.js provides; every
+app.provide() call stays in ui/main.js. ui/router/index.js
 defines the routes: Home, Editor (`/editor`), Repository, Recent Worlds,
 Author, World View (`/world/:documentId`), Live World, Avatar, Identity,
 Peers, Chat and Conversations, Publications (`/publications`), the

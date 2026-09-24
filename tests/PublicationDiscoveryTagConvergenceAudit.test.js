@@ -13,7 +13,7 @@ import {
 import { composeDiscoverWorldEncounterPublicationCommand } from '../application/worldEncounter/DiscoverWorldEncounterPublicationCommandComposition.js';
 import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
 import { resolveNostrPublisherOptions } from '../application/publication/distribution/PublicationDistributionConfigurationProvider.js';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.358 — Publication Discovery Tag Convergence Audit.
 //
@@ -165,7 +165,7 @@ async function run() {
     // ===============================================================
     let canonicalTag;
     {
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         const literalDeclarations = mainSource.match(/const PUBLICATION_DISCOVERY_TAG = '([^']+)';/g) || [];
         assert(literalDeclarations.length === 1,
             `1. exactly one PUBLICATION_DISCOVERY_TAG declaration exists in ui/main.js (found ${literalDeclarations.length}) — one authority, not several.`);
@@ -396,7 +396,7 @@ async function run() {
         // discovery is driven through composeDiscoverWorldEncounterPublicationCommand/
         // executeDiscoverWorldEncounterPublicationCommand — two entirely
         // separate composition/command files, never one merged pipeline.
-        const mainCodeOnly = codeOnly(await readSource('ui/main.js'));
+        const mainCodeOnly = codeOnly((await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n'));
         assert(mainCodeOnly.includes('composePublicationDistributionCommand(') && mainCodeOnly.includes('composeDiscoverWorldEncounterPublicationCommand('),
             '3. ui/main.js composes two independent capabilities from the one shared constant — never a single function serving both.');
         assert(!/composePublicationDistributionCommand\([^)]*discoverWorldEncounterPublicationCommand|composeDiscoverWorldEncounterPublicationCommand\([^)]*publicationDistributionCommand/.test(mainCodeOnly),
@@ -411,7 +411,7 @@ async function run() {
     // lifecycle state introduced anywhere near this change.
     // ===============================================================
     {
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(mainSource.includes("discoveryTag: 'forkbuild-snapshot'"),
             '1. Snapshot retains its own, entirely separate campaign literal (\'forkbuild-snapshot\') — never derived from or replaced by PUBLICATION_DISCOVERY_TAG.');
         // Every occurrence of the PUBLICATION_DISCOVERY_TAG identifier in

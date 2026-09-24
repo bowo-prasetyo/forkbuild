@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.252 — Post-Commentary-UI Product Reassessment.
 //
@@ -163,7 +163,7 @@ async function runTests() {
         const editorView = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const createWorldView = await rawSource('application/world/CreateWorldViewUseCase.js');
-        const mainJs = await rawSource('ui/main.js');
+        const mainJs = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
 
         assert(/new\s+EditorSession\s*\(/.test(editorView), 'B1. Editor still constructs a real EditorSession.');
         capabilityRegister.push(['Editor', 'COMPLETE']);

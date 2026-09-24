@@ -32,6 +32,7 @@ import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.632 — Publication Commentary Cross-Substrate Distribution Closure
 // Audit.
@@ -745,7 +746,7 @@ async function run() {
     // body, executed.
     // ===============================================================
     {
-        const mainSource = codeOnly(await rawSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         const wrapperMatch = mainSource.match(/function addPublicationCommentaryCommand\(input\) \{([\s\S]*?)\n\}/);
         assert(wrapperMatch !== null, n('addPublicationCommentaryCommand is found, source-level, in ui/main.js'));
         const wrapperBody = wrapperMatch[1];

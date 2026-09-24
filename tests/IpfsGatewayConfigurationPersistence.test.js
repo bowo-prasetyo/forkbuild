@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { IpfsGatewayConfiguration, DEFAULT_IPFS_GATEWAY_URL } from '../core/IpfsGatewayConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { IpfsGatewayConfigurationStore } from '../storage/IpfsGatewayConfigurationStore.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.665 — User-Configurable IPFS Gateway Configuration Persistence.
 // Mirrors tests/ArweaveGatewayConfigurationPersistence.test.js's own
@@ -191,7 +192,7 @@ async function run() {
     // 2+" shape Arweave Gateway's own 0.9.440 consumers already hold.
     // ===============================================================
     {
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         assert(mainSource.includes('const ipfsGatewayConfigurationStore = new IpfsGatewayConfigurationStore(new LocalStorageProvider());'),
             'I1. ui/main.js constructs exactly one IpfsGatewayConfigurationStore, over LocalStorageProvider, the same composition-root shape Arweave/Nostr already hold');
         assert(mainSource.includes("const resolvedIpfsGatewayUrl = (ipfsGatewayConfigurationStore.get() || { gatewayUrl: DEFAULT_IPFS_GATEWAY_URL }).gatewayUrl;"),

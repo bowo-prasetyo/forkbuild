@@ -20,6 +20,7 @@ import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.j
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { Publication } from '../publisher/Publication.js';
 import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.619 — Publication Commentary Cross-Device Product Closure Audit.
 //
@@ -269,7 +270,7 @@ async function run() {
         // assembles the running application's app-wide peerMessageBus/
         // registry and wires every sibling capability onto it — now
         // mentions and wires Commentary distribution.
-        const mainSource = codeOnly(await readSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n'));
         assert(/CommentaryDistribution/.test(mainSource),
             n('ui/main.js — the real, single composition root for the running app\'s peer wiring — now imports, constructs, and threads Commentary distribution onto the app-wide peerMessageBus (0.9.620)'));
 

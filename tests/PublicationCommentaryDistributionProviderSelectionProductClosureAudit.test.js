@@ -21,7 +21,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.639 — Publication Commentary Distribution Provider Selection Product
 // Closure Audit.
@@ -154,7 +154,7 @@ function makeBackend() {
 // body out of ui/main.js's own source and execute it against fake WebRTC/
 // Nostr/Arweave collaborators — never a reimplementation that could drift.
 async function extractPath1Wrapper() {
-    const mainSource = await codeOnlySource('ui/main.js');
+    const mainSource = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
     const wrapperMatch = mainSource.match(/function addPublicationCommentaryCommand\(input\) \{([\s\S]*?)\n\}/);
     assert(wrapperMatch !== null, n('sanity: the real addPublicationCommentaryCommand wrapper is found in ui/main.js\'s current source'));
     // eslint-disable-next-line no-new-func
@@ -261,7 +261,7 @@ async function run() {
                /addPublicationCommentaryCommand\(\{ publicationId: this\.publication\.id, content, commentaryId, createdAt, discoveryProvider \}\)/.test(listCode),
             n('PATH 1 precedent intact: PublicationList.js\'s rows submit through the same shared section, with the identical call shape'));
 
-        const mainCode = await codeOnlySource('ui/main.js');
+        const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(/const discoveryProvider = \(input && input\.discoveryProvider\) \|\| 'nostr';/.test(mainCode),
             n('no second source of truth: exactly one place (ui/main.js) still reads input.discoveryProvider, unmodified since before 0.9.637'));
         assert(/const asynchronousDistribution = discoveryProvider === 'arweave'\s*\?\s*publicationCommentaryArweaveDistribution\s*:\s*publicationCommentaryNostrDistribution;/.test(mainCode),

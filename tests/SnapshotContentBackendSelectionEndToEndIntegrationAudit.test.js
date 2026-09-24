@@ -21,7 +21,7 @@ import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/
 import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
 import { executeDiscoverSnapshotCommand } from '../application/snapshot/DiscoverSnapshotCommand.js';
 import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.507 — Snapshot Content Backend Selection End-to-End Integration Audit.
 //
@@ -326,7 +326,7 @@ async function run() {
     // Section A — production topology.
     // ===============================================================
     {
-        const mainSource = await codeOnlySource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
 
         check((mainSource.match(/new IpfsContentStore\(/g) || []).length >= 1, 'A. an IpfsContentStore is constructed for the creation registry');
         check((mainSource.match(/new ArweaveContentStore\(/g) || []).length === 1, 'A. exactly one ArweaveContentStore is constructed in production — 0.9.506 removed Distribution\'s own former duplicate; Placement and Distribution share this one instance');
@@ -846,7 +846,7 @@ async function run() {
             check(!commandSource.includes(term), `N. application/snapshot/SnapshotDistributionCommand.js never mentions "${term}" either — unchanged by 0.9.506, and this audit confirms it stayed that way`);
         }
 
-        const mainSource = await codeOnlySource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         check(!/const snapshotDistributionCommand = \(bytes, storage = 'ar'\) => executeSnapshotDistributionCommand\(\{[\s\S]{0,400}?discoveryDistributionProvider/.test(mainSource),
             'N. the real snapshotDistributionCommand call site never references discoveryDistributionProvider — the Publication family\'s own, entirely separate Announcement/Discovery substrate selection (0.9.502) stays untouched by Content backend selection');
 

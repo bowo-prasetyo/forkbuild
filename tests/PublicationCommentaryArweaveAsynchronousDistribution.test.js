@@ -30,6 +30,7 @@ import {
 // genuinely independent (Section I); never modified, never used to carry a
 // single byte of this file's own Commentary traffic.
 import { PublicationCommentaryNostrDistribution } from '../application/publication/commentary/PublicationCommentaryNostrDistribution.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.631 — Publication Commentary Arweave Asynchronous Distribution.
 //
@@ -670,7 +671,7 @@ async function run() {
     // selection, never fan-out.
     // ===============================================================
     {
-        const mainSource = codeOnly(await rawSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         assert(mainSource.includes("import { PublicationCommentaryArweaveDistribution } from '../application/publication/commentary/PublicationCommentaryArweaveDistribution.js';")
             && mainSource.includes("import { DiscoverPublicationCommentaryFromArweaveUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryFromArweaveUseCase.js';"),
             n('ui/main.js imports both new classes'));

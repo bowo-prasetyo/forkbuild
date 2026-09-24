@@ -9,7 +9,7 @@ import { DiscoverPublicationCommentaryFromNostrUseCase } from '../application/pu
 import { DiscoverPublicationCommentaryFromArweaveUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryFromArweaveUseCase.js';
 import { composeRefreshPublicationCommentaryCommand } from '../application/publication/commentary/RefreshPublicationCommentaryCommandComposition.js';
 import PublicationCommentaryRemoteCheck from '../ui/components/PublicationCommentaryRemoteCheck.js';
-import { ownPublicationPanelSource, worldEncounterCanvasSource } from './support/SourceFileGroups.js';
+import { ownPublicationPanelSource, worldEncounterCanvasSource, mainFiles } from './support/SourceFileGroups.js';
 
 const SPLIT_COMPONENT_SOURCES = {
     'ui/components/OwnPublicationPanel.js': ownPublicationPanelSource,
@@ -336,7 +336,7 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const read = (path) => readFile(new URL('../' + path, import.meta.url), 'utf8');
-        const mainSource = await read('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => read(file)))).join('\n');
         assert(/composeRefreshPublicationCommentaryCommand\(\{\s*sources: \[\s*\{ name: 'Nostr', discover: discoverPublicationCommentaryFromNostrCommand \},\s*\{ name: 'Arweave', discover: discoverPublicationCommentaryFromArweaveCommand \}\s*\]\s*\}\)/.test(mainSource),
             '37. main.js composes the refresh command from BOTH existing discovery commands — they are no longer unreached');
         assert(mainSource.includes("app.provide('refreshPublicationCommentaryCommand', refreshPublicationCommentaryCommand);"), '38. main.js provides it app-wide');

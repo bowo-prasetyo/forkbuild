@@ -21,6 +21,7 @@ import { composeWorldEncounterMaterialVerifier } from '../application/worldEncou
 import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.491 — Arweave Announcement/Discovery Production Integration Audit.
 //
@@ -344,10 +345,10 @@ async function run() {
     // NOW CLOSED. See this file's own header amendment.
     // ===============================================================
     {
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const mainCodeOnly = codeOnlyOf(mainSource);
 
-        check(/from ['"]\.\.\/application\/arweave\/ArweaveTaggedTransactionUpload\.js['"]/.test(mainCodeOnly),
+        check(/from ['"](\.\.\/)+application\/arweave\/ArweaveTaggedTransactionUpload\.js['"]/.test(mainCodeOnly),
             'A1. ui/main.js now imports application/arweave/ArweaveTaggedTransactionUpload.js — the 0.9.490 adapter is referenced from the production composition root');
         check(/createArweaveTaggedTransactionUpload\(/.test(mainCodeOnly),
             'A2. ...and calls createArweaveTaggedTransactionUpload() — CONSTRUCTED? YES');
@@ -481,7 +482,7 @@ async function run() {
         check(/const arweave = new ArweaveGraphqlDiscoveryQueryService\(/.test(codeOnlyOf(compositionSource)),
             'D1. the real production discovery-services composition unconditionally constructs a real ArweaveGraphqlDiscoveryQueryService — no host-capability gate of any kind, matching this file\'s own header, "Arweave\'s own discovery query... already works with no host capability at all"');
 
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         check(mainSource.includes('composeDecentralizedWorldEncounterMaterialDiscoveryServices(') && mainSource.includes('composeDecentralizedWorldEncounterMaterialDiscoveryRuntime('),
             'D2. ui/main.js genuinely calls both real composition functions — the read/discovery side of this whole loop, unlike the write/announce side (Section A), IS wired into the production composition root');
 

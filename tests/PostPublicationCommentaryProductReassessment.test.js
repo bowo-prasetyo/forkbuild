@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.250 — Post-Publication-Commentary Product Reassessment.
 //
@@ -323,7 +323,7 @@ async function runTests() {
 
         // C9. Discovery — PublicationCatalogDiscoveryProvider constructed
         // live in ui/main.js.
-        const mainJs = await rawSource('ui/main.js');
+        const mainJs = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(mainJs.includes('new PublicationCatalogDiscoveryProvider('),
             'C9. ui/main.js still constructs a real PublicationCatalogDiscoveryProvider.');
         capabilityRegister.push(['Discovery', 'COMPLETE']);

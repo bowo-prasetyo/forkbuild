@@ -11,7 +11,7 @@ import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
-import { worldViewFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldEncounterCanvasFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.138 — World View Snapshot Distribution Action.
 //
@@ -507,7 +507,7 @@ async function runTests() {
     {
         const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
         const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
-        const mainCode = await codeOnlySource('ui/main.js');
+        const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
 
         const forbiddenInUi = [
             'window.arweaveWallet', 'window.nostr', 'WebSocket',

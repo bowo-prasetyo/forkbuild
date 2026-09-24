@@ -21,7 +21,7 @@ import { PlacePublicationUseCase } from '../application/placement/PlacePublicati
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.609 — Publication Discovery Reconstruction Lifecycle Closure Audit.
 //
@@ -430,7 +430,7 @@ async function run() {
     // Section G — Startup ordering (ui/main.js composition root).
     // ===============================================================
     {
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
 
         const constructionIndex = mainSource.indexOf('const decentralizedPublicationDiscoveryProvider = new DecentralizedPublicationDiscoveryProvider();');
         assert(constructionIndex !== -1, '1. the discovery provider is still constructed at exactly the site 0.9.607/0.9.608 identified.');

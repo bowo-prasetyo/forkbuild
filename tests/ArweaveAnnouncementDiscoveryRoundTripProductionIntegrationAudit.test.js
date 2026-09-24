@@ -16,6 +16,7 @@ import { composeWorldEncounterMaterialVerifier } from '../application/worldEncou
 import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.495 — Arweave Announcement/Discovery Round-Trip Production
 // Integration Audit.
@@ -257,7 +258,7 @@ async function run() {
     // source.
     // ===============================================================
     {
-        const mainCodeOnly = codeOnlyOf(await source('ui/main.js'));
+        const mainCodeOnly = codeOnlyOf((await Promise.all(mainFiles().map((file) => source(file)))).join('\n'));
         check(/createArweaveTaggedTransactionUpload\(/.test(mainCodeOnly),
             'A1. ui/main.js still constructs the real uploadTaggedTransaction adapter (0.9.492) — the write-side wire has not regressed');
         const providerCallMatch = mainCodeOnly.match(/createPublicationDistributionRuntimeProvider\(\{[\s\S]{0,400}?\}\)/);

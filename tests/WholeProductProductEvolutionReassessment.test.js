@@ -17,7 +17,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { worldViewFiles, publicationsPageFiles, editorViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, publicationsPageFiles, editorViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.383 — Whole-Product Product Evolution Reassessment.
 //
@@ -344,7 +344,7 @@ async function run() {
             n('Discover -> Adopt: ui/views/WorldView.js carries a real, literally-named adoptNearbyPlaceNamingClaim() action — "adopt" is not this audit\'s own paraphrase, it is the production function name'));
 
         // B7. Peer -> Sync -> Repository -> Explore -> Fork.
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(mainSource.includes('AutoConnectKnownPeersUseCase'),
             n('Peer -> Sync: ui/main.js composes AutoConnectKnownPeersUseCase, not merely importing an unused class'));
         assert(await sourceExists('application/publication/ResolvePublicationUseCase.js'),

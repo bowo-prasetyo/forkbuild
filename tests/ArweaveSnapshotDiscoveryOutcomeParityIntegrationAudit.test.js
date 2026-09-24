@@ -8,7 +8,7 @@ import { SnapshotCandidateDiscoveryOutcome } from '../application/snapshot/Snaps
 import { executeDiscoverSnapshotCandidatesCommandWithOutcome } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
 import { SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.591 — Arweave Snapshot Discovery Outcome Parity.
 //
@@ -406,7 +406,7 @@ async function runTests() {
         assert(!/searchWithOutcome/.test(compositionSource),
             '42. application/snapshot/SnapshotCandidateDiscoveryRuntimeComposition.js (provider selection) needed no change — the composite already duck-types searchWithOutcome() per source');
 
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(/new ArweaveSnapshotDiscoveryQueryService\(\{ gatewayUrl: resolvedArweaveGatewayUrl \}\)/.test(mainSource),
             '43. ui/main.js still constructs exactly one ArweaveSnapshotDiscoveryQueryService the identical way — no new construction site, no gateway retry/failover config added');
 

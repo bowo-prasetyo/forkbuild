@@ -1,5 +1,5 @@
 import { readFile, readdir } from 'node:fs/promises';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.300 — Content Provider Preference Reachability Audit.
 //
@@ -112,7 +112,7 @@ async function run() {
     // Section A — Reachability.
     // ===============================================================
     {
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
 
         // A1. ui/main.js really does build and provide BOTH coordinators
         // side by side — the 0.9.299 composition is real, not aspirational.
@@ -157,7 +157,7 @@ async function run() {
             if (text.includes('preferredSnapshotPlacementCreationCoordinator')) hits.push(file);
         }
         const KNOWN_INJECTION_KEY_FILES = new Set([
-            'ui/main.js', 'ui/views/DecentralizedPublicationsView.js', 'ui/views/ContentProviderSettingsView.js'
+            'ui/main.js', 'ui/main/composeContentAndSnapshots.js', 'ui/views/DecentralizedPublicationsView.js', 'ui/views/ContentProviderSettingsView.js'
         ]);
         assert(hits.length === KNOWN_INJECTION_KEY_FILES.size && hits.every((f) => KNOWN_INJECTION_KEY_FILES.has(f)),
             `A3a. exactly ui/main.js, ui/views/DecentralizedPublicationsView.js, and ui/views/ContentProviderSettingsView.js mention the "preferredSnapshotPlacementCreationCoordinator" identifier anywhere in production source (found ${hits.length}: ${hits.join(', ')}) — ui/main.js defines the binding, and the two views are its only real consumers (0.9.301, 0.9.302)`);

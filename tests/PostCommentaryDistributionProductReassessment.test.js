@@ -17,7 +17,7 @@ import { PublicationCommentaryDistributionPeerExchange } from '../application/pu
 import { CreatePublicationCommentaryUseCase } from '../application/publication/commentary/CreatePublicationCommentaryUseCase.js';
 import { CreatePublicationCommentaryDistributionPeerExchangeUseCase } from '../application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.622 — Post-Commentary-Distribution Product Reassessment.
 //
@@ -394,7 +394,7 @@ async function run() {
     // asymmetry.
     // ===============================================================
     {
-        const mainSource = codeOnly(await rawSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         const peerExchangeSource = codeOnly(await rawSource('application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js'));
         assert(/onCommentaryReceived\(callback\)/.test(peerExchangeSource),
             n('the capability to observe a newly-arrived Commentary locally already exists — application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js#onCommentaryReceived(), built at 0.9.618'));

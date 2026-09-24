@@ -15,7 +15,7 @@ import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import { ReplayDocumentUseCase } from '../application/document/ReplayDocumentUseCase.js';
 import { RestoreHistoryStateUseCase } from '../application/document/RestoreHistoryStateUseCase.js';
 import { RecoveryObserver } from '../application/document/RecoveryObserver.js';
-import { worldViewFiles, worldNavigationSessionFiles, editorViewFiles, editorSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, editorViewFiles, editorSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.206 — Post-Recovery Product Reassessment.
 //
@@ -377,7 +377,7 @@ async function runTests() {
         // milestone's own brief draws — "implemented + unreachable" that
         // is OBSOLETE, not a candidate gap: the capability it offers is
         // fully covered elsewhere, under a different, newer surface.
-        assert(!/GroupsPanel/.test(await rawSource('ui/main.js')), 'E3a. GroupsPanel is not registered in ui/main.js');
+        assert(!/GroupsPanel/.test((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n')), 'E3a. GroupsPanel is not registered in ui/main.js');
         for (const file of ['ui/views/WorldView.js', 'ui/views/LiveWorldView.js']) {
             const source = await rawSource(file);
             assert(!/import .*GroupsPanel/.test(source), `E3b. ${file} does not import GroupsPanel`);

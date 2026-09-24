@@ -579,7 +579,8 @@ async function run() {
                 if (!entry.name.endsWith('.js')) continue;
                 const source = await readFile(new URL(entry.name, dirUrl), 'utf8');
                 const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-                const isCompositionRoot = entry.name === 'main.js';
+                // The composition root is ui/main.js plus the compose functions in ui/main/.
+                const isCompositionRoot = entry.name === 'main.js' || /(^|\/)main\/$/.test(relativeLabel);
                 if (isCompositionRoot) {
                     // main.js alone is allowed to RESOLVE window.arweaveWallet/window.nostr
                     // (it is the composition root) but never to construct a

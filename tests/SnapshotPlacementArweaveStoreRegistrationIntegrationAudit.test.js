@@ -10,7 +10,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { SnapshotPlacementCreationCoordinator } from '../application/snapshot/placement/SnapshotPlacementCreationCoordinator.js';
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.505 — Register Arweave as Snapshot Content Store.
 //
@@ -172,8 +172,8 @@ async function codeOnlySource(relativePath) {
 }
 
 async function run() {
-    const mainSource = await rawSource('ui/main.js');
-    const mainCodeOnly = await codeOnlySource('ui/main.js');
+    const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
+    const mainCodeOnly = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
 
     // ===============================================================
     // Section A — production construction.
@@ -181,7 +181,7 @@ async function run() {
     {
         const constructionSites = (mainCodeOnly.match(/new ArweaveContentStore\(/g) || []).length;
         check(constructionSites === 1, 'A. ui/main.js constructs exactly one real ArweaveContentStore — never zero, never a second independent one');
-        check(/import \{ ArweaveContentStore \} from '\.\.\/content\/ArweaveContentStore\.js';/.test(mainSource),
+        check(/import \{ ArweaveContentStore \} from '(\.\.\/)+content\/ArweaveContentStore\.js';/.test(mainSource),
             'A. ui/main.js imports the real content/ArweaveContentStore.js, unmodified, rather than a copy or a stand-in');
 
         console.log('✓ A. ui/main.js constructs exactly one real, imported ArweaveContentStore');

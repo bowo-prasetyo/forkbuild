@@ -10,7 +10,7 @@ import {
     executeDiscoverSnapshotCandidatesCommandWithOutcome
 } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.590 — Snapshot Discovery Outcome Presentation Closure Audit.
 //
@@ -205,7 +205,7 @@ async function runTests() {
 
         // ui/main.js still wires the monitor to the LEGACY command, never the
         // outcome-aware one — the monitor never migrated.
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(/new WorldSnapshotDiscoveryMonitor\(\{\s*discoverSnapshotCandidatesCommand\s*\}\)/.test(mainSource),
             '14. WorldSnapshotDiscoveryMonitor is still constructed with the LEGACY discoverSnapshotCandidatesCommand, never the outcome-aware sibling');
 
@@ -581,7 +581,7 @@ async function runTests() {
         // workaround — see tests/ArweaveSnapshotDiscoveryOutcomeParityIntegrationAudit.test.js's
         // own Section E/G for the identical journey run WITH Arweave
         // included, end to end.
-        const mainSourceForFinding = await readSource('ui/main.js');
+        const mainSourceForFinding = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(/arweaveSnapshotDiscoveryQueryService/.test(mainSourceForFinding) && /nostrSnapshotDiscoveryQueryService: snapshotDiscoveryQueryService/.test(mainSourceForFinding),
             '59. production confirmation: the real discoverSnapshotCandidatesWithOutcomeCommand is composed from Nostr + Local + Arweave together — this fix is reachable in production, not only in this test\'s own constructed scenario');
 

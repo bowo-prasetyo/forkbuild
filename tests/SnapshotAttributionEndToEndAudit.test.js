@@ -887,7 +887,8 @@ async function run() {
             await walkJsFiles(new URL('../ui/', import.meta.url), '', new Set(), async (relativePath, codeOnly) => {
                 audited.push(relativePath);
                 assert(!forbidden.test(codeOnly), `I1. ui/${relativePath} never constructs an Arweave/Nostr/resolver collaborator or hashes content directly`);
-                if (relativePath !== 'main.js') {
+                // The composition root is ui/main.js plus the compose functions in ui/main/.
+                if (relativePath !== 'main.js' && !relativePath.startsWith('main/')) {
                     assert(!hostCapabilityRead.test(codeOnly), `I2. ui/${relativePath} never reads window.arweaveWallet/window.nostr directly — only ui/main.js may`);
                     assert(!arweaveStoreConstruction.test(codeOnly), `I2b. ui/${relativePath} never constructs an ArweaveContentStore directly — only ui/main.js, the one composition root, may`);
                 }

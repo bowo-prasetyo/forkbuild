@@ -10,6 +10,7 @@ import { ResolvePreferredRoleProviderUseCase } from '../application/settings/Res
 import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.298 — Role Provider Preference Product Integration Audit.
 //
@@ -213,7 +214,7 @@ async function run() {
         // existed" seam. `ui/main.js` — this codebase's own real, running
         // composition root — ALREADY registers TWO real content stores
         // for BOTH Publication and Snapshot placement creation today.
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         assert(/stores:\s*\[publicationContentStore,\s*composeIpfsGatewayContentStore\(resolvedIpfsGatewayUrls\)\]/.test(mainSource), 'B2c. ui/main.js registers publicationContentStore (\'local\') AND a real IPFS gateway content store (\'ipfs\', now settings-backed per 0.9.665 and failover-capable per 0.9.666) together for Publication placement creation — two genuine, already-available choices, not a capability gap');
         assert(/stores:\s*\[publicationContentStore,\s*new IpfsContentStore\(\)\]/.test(mainSource), 'B2d. ui/main.js registers publicationContentStore (\'local\') AND a real content/IpfsContentStore.js (\'ipfs\') together for Snapshot placement creation — the identical two-real-choices shape');
         contentSeams[contentSeams.length - 1].evidence = 'ui/main.js already registers TWO real, distinct content stores (local + ipfs) for BOTH Publication and Snapshot placement creation — the only seam in this entire audit, across all three roles, where production wiring today offers a person more than one genuinely available provider to choose among';
@@ -252,7 +253,7 @@ async function run() {
 
         // C2b — UNLIKE Content, Proof has NO real registered redundancy
         // in production today: ui/main.js wires exactly ONE publisher.
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         assert(/publishers:\s*\[bitcoinAnchorPublisher\]/.test(mainSource), 'C2b. ui/main.js registers exactly ONE anchor publisher (Bitcoin) — unlike Content creation, there is no second real option for a preference to distinguish between yet');
         proofSeams[proofSeams.length - 1].evidence = 'ui/main.js registers exactly one real anchor publisher (bitcoinAnchorPublisher) — a preference here has nothing to prefer OVER yet, unlike Content creation';
 

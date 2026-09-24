@@ -12,7 +12,7 @@ import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
 import { PlaceBrickCommand } from '../application/commands/PlaceBrickCommand.js';
 import { CreateWorldLandmarkCommand } from '../application/commands/CreateWorldLandmarkCommand.js';
-import { worldViewFiles, worldNavigationSessionFiles, editorViewFiles, editorSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, editorViewFiles, editorSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.209 — Post-History Product Reassessment.
 //
@@ -420,7 +420,7 @@ async function runTests() {
         // still obsolete, still unreferenced, still fully superseded —
         // named again here, once, at the repository level, so a future
         // reassessment does not rediscover it as a "product gap."
-        assert(!/GroupsPanel/.test(await rawSource('ui/main.js')), 'G1a. GroupsPanel is not registered in ui/main.js');
+        assert(!/GroupsPanel/.test((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n')), 'G1a. GroupsPanel is not registered in ui/main.js');
         const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/components:\s*\{[^}]*GroupsPanel/.test(editorViewSource), 'G1b. EditorView.js\'s own components: {} does not register GroupsPanel');
         const editingSidebarSource = await rawSource('ui/components/EditingSidebar.js');

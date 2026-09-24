@@ -21,6 +21,7 @@ import { DecentralizedSnapshotResolver } from '../application/snapshot/Decentral
 import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 import { CreateArweaveAnchorPublisherUseCase } from '../application/anchoring/CreateArweaveAnchorPublisherUseCase.js';
 import { CreateArweaveAnchorProofVerifierUseCase } from '../application/anchoring/CreateArweaveAnchorProofVerifierUseCase.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.441 — Arweave Gateway Read Failover Integration Boundary Audit.
 //
@@ -495,7 +496,7 @@ async function run() {
         // real files, source-level, the one place a behavioral proof isn't
         // practical without reconstructing this codebase's entire
         // distribution runtime provider chain.
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const publicationDistributionConfigIndex = mainSource.indexOf('resolvePublicationDistributionRuntimeConfiguration(');
         assert(publicationDistributionConfigIndex > -1, 'F9. sanity — the Signed Claim distribution configuration call exists');
         const publicationDistributionConfigLine = mainSource.slice(publicationDistributionConfigIndex, mainSource.indexOf('\n', publicationDistributionConfigIndex));

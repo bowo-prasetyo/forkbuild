@@ -6,7 +6,7 @@ import { composeDiscoverSnapshotRuntime } from '../application/snapshot/Discover
 import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.151 — World View Snapshot Candidate Browser.
 //
@@ -434,7 +434,7 @@ async function runTests() {
         assert(/<OwnPublicationPanel[\s\S]{0,600}:discoverSnapshotCandidatesCommand="discoverSnapshotCandidatesCommand"/.test(viewCode),
             '43. OwnPublicationPanel is wired to the injected discoverSnapshotCandidatesCommand, mirroring the existing :discoverSnapshotCommand wiring');
 
-        const mainCode = await codeOnlySource('ui/main.js');
+        const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(mainCode.includes("app.provide('discoverSnapshotCandidatesCommand', discoverSnapshotCandidatesCommand)"),
             '44. ui/main.js provides discoverSnapshotCandidatesCommand app-wide');
         assert((mainCode.match(/composeDiscoverSnapshotRuntime\(/g) || []).length === 1,

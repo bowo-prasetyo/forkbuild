@@ -12,7 +12,7 @@ import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingC
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.320 — Explicit Place Naming Publication Action.
 // See docs/Roadmap.md, "0.9.320 — Explicit Place Naming Publication
@@ -547,7 +547,7 @@ async function run() {
         assert(panelCode.includes("'publish-to-nostr'"), "45. ui/components/PlaceNamingPanel.js declares the publish-to-nostr emit");
         assert(panelCode.includes('onPublishToNostr(claimId)'), '46. ui/components/PlaceNamingPanel.js defines onPublishToNostr(claimId)');
 
-        const mainCode = await codeOnlySource('ui/main.js');
+        const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(mainCode.includes("app.provide('publishPlaceNamingClaimToNostrCommand'"), '47. ui/main.js provides publishPlaceNamingClaimToNostrCommand app-wide');
 
         // The use case this whole family rests on is untouched — publish()

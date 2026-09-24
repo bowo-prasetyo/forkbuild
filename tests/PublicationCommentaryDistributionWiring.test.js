@@ -19,6 +19,7 @@ import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.620 — Wire Publication Commentary Peer Distribution.
 //
@@ -220,7 +221,7 @@ async function run() {
     // Section B — ui/main.js source-level wiring.
     // ===============================================================
     {
-        const mainSource = codeOnly(await rawSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         assert(mainSource.includes("import { CreatePublicationCommentaryDistributionPeerExchangeUseCase } from '../application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js';"),
             n('ui/main.js imports the new composition root'));
         assert(mainSource.includes('new CreatePublicationCommentaryDistributionPeerExchangeUseCase().execute({') &&

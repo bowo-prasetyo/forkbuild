@@ -10,6 +10,7 @@ import { DiscoveryBootstrap } from '../peer/DiscoveryBootstrap.js';
 import { DEFAULT_RENDEZVOUS_URLS } from '../peer/RendezvousConfig.js';
 import { DEFAULT_ICE_SERVERS } from '../peer/IceServerConfig.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.388 — User-Configurable Rendezvous Server Configuration.
 //
@@ -173,10 +174,10 @@ async function run() {
     // Section 0 — settings entry point reachability.
     // ===============================================================
     {
-        const mainSource = await source('ui/main.js');
-        assert(mainSource.includes("import { RendezvousConfigurationStore } from '../storage/RendezvousConfigurationStore.js';"),
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
+        assert(mainSource.includes("import { RendezvousConfigurationStore } from '../../storage/RendezvousConfigurationStore.js';"),
             '1. ui/main.js imports the new store');
-        assert(mainSource.includes("import { SetRendezvousConfigurationUseCase } from '../application/settings/SetRendezvousConfigurationUseCase.js';"),
+        assert(mainSource.includes("import { SetRendezvousConfigurationUseCase } from '../../application/settings/SetRendezvousConfigurationUseCase.js';"),
             '2. ui/main.js imports the new write use case');
         assert(/new RendezvousConfigurationStore\(new LocalStorageProvider\(\)\)/.test(mainSource),
             '3. ui/main.js constructs a real RendezvousConfigurationStore over LocalStorageProvider');

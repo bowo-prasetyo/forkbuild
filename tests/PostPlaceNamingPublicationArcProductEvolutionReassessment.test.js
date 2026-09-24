@@ -15,7 +15,7 @@ import { World } from '../core/World.js';
 import { StructurePlacement } from '../core/StructurePlacement.js';
 import { MoveStructurePlacementCommand } from '../application/commands/MoveStructurePlacementCommand.js';
 import { WorldConflictResolver, WorldOperationOutcome } from '../replication/WorldConflictResolver.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, editorSessionFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, editorSessionFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.323 — Post-Place-Naming-Publication-Arc Product Evolution Reassessment.
 //
@@ -267,7 +267,7 @@ async function runTests() {
         // still present and unchanged, rather than re-running the full
         // live scenario a second time.
         assert(await sourceExists('ui/components/PlaceNamingPanel.js'), 'B3a. PlaceNamingPanel.js still exists — Place Naming -> name/persist.');
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(mainSource.includes('NostrPlaceNamingDiscoveryPublisher') || mainSource.includes('placeNamingPublicationRuntime'),
             'B3b. ui/main.js still composes the Place Naming publication runtime — persist -> explicit publish.');
         assert(await sourceExists('application/placeNaming/PlaceNamingDiscoveryMonitor.js'), 'B3c. PlaceNamingDiscoveryMonitor.js still exists — publish -> stranger discovery.');

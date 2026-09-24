@@ -14,7 +14,7 @@ import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placemen
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
 import { describeSnapshotDiscoveryEnvelope, SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
 import { computeContentHash } from '../serializer/contentHash.js';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.662 — Remote IPFS Distribution Integration Boundary Audit.
 //
@@ -161,7 +161,7 @@ async function run() {
         // A2 — ui/main.js registers a real content/IpfsContentStore.js
         // (Kubo) under 'ipfs' in the SAME registry
         // resolveSnapshotDistributionContentStore() reads from.
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         assert(/stores:\s*\[publicationContentStore,\s*new IpfsContentStore\(\{ apiUrl: resolvedIpfsNodeApiUrl \}\)\]/.test(mainSource),
             n('A2. ui/main.js constructs the CREATION-side SnapshotPlacementStoreRegistry (the same registry resolveSnapshotDistributionContentStore() reads) with a real content/IpfsContentStore.js (Kubo) registered for \'ipfs\', confirmed against current source.'));
         assert(/resolveSnapshotDistributionContentStore\(snapshotPlacementStoreRegistry, storage\)/.test(mainSource),
@@ -357,7 +357,7 @@ async function run() {
         // RESOLUTION, by using TWO SEPARATE REGISTRY INSTANCES (Kubo for
         // creation, Gateway for resolution) rather than a shared key —
         // confirmed against ui/main.js's own real composition.
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         assert(/new CreateSnapshotPlacementResolutionCoordinatorUseCase\(\)\.execute\(\{[\s\S]*?stores:\s*\[publicationContentStore,\s*composeIpfsGatewayContentStore\(resolvedIpfsGatewayUrls\)\]/.test(mainSource),
             n('E4. ui/main.js already keeps a SECOND, independent SnapshotPlacementStoreRegistry for RESOLUTION (backed by an IPFS gateway content store for \'ipfs\', now settings-backed per 0.9.665 and failover-capable per 0.9.666), entirely separate from the CREATION registry Section A/E1-E3 exercised — confirmed against current source, and explicitly justified there as "never silently overwrites or hides Kubo."'));
     }

@@ -20,6 +20,7 @@ import {
 
 import { createNostrInjectedProviderPublisher } from '../nostr/NostrInjectedProviderPublisher.js';
 import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.628 — Publication Commentary Nostr Asynchronous Distribution.
 //
@@ -457,7 +458,7 @@ async function run() {
         // UNIFIED — ui/main.js now imports the fan-out wrapper instead of
         // the single-relay class directly; see this file's own "production
         // wiring census" amendment, above.
-        const mainSource = codeOnly(await rawSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         assert(mainSource.includes("import { NostrMultiRelayPublicationCommentaryDistribution } from '../application/nostr/NostrMultiRelayPublicationCommentaryDistribution.js';")
             && mainSource.includes("import { DiscoverPublicationCommentaryFromNostrUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryFromNostrUseCase.js';"),
             n('ui/main.js imports both new classes'));
@@ -474,7 +475,7 @@ async function run() {
     // announce -> Nostr publish, source order and live instrumentation.
     // ===============================================================
     {
-        const mainSource = codeOnly(await rawSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         const wrapperMatch = mainSource.match(/function addPublicationCommentaryCommand\(input\) \{([\s\S]*?)\n\}/);
         assert(wrapperMatch !== null, n('ui/main.js\'s own addPublicationCommentaryCommand wrapper is found, source-level'));
         const wrapperBody = wrapperMatch[1];
@@ -554,7 +555,7 @@ async function run() {
         assert(!/Nostr/.test(getUseCaseSource) && !/Nostr/.test(createUseCaseSource),
             n('application/publication/commentary/GetPublicationCommentariesUseCase.js and application/publication/commentary/CreatePublicationCommentaryUseCase.js — both unmodified by this milestone — mention nothing Nostr-shaped; the synchronous, storage-only read path is untouched, exactly as this milestone\'s own requesting brief required ("retrieval should remain explicitly separate")'));
 
-        const mainSource = codeOnly(await rawSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         assert(mainSource.includes('function discoverPublicationCommentaryFromNostrCommand(publicationId) {')
             && !/getPublicationCommentariesCommand\s*=.*[Nn]ostr/.test(mainSource),
             n('the Nostr discovery command is its own, separately-named, separately-invoked function — never folded into getPublicationCommentariesCommand, and never invoked automatically inside it'));
@@ -570,7 +571,7 @@ async function run() {
         assert(!/Nostr/.test(bridgeSource),
             n('application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js is unmodified by this milestone — it still mentions nothing Nostr-shaped, because it does not need to: it already accepts the transport-agnostic { commentary, isNew } shape'));
 
-        const mainSource = codeOnly(await rawSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         // AMENDED BY 0.9.631 — Publication Commentary Arweave Asynchronous
         // Distribution added a third call site, `discoverPublicationCommentaryFromArweaveCommand`,
         // mirroring the Nostr one exactly and funneling into the SAME

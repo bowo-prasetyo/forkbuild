@@ -5,6 +5,7 @@ import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
 import { IpfsGatewayFailoverContentStore } from '../content/IpfsGatewayFailoverContentStore.js';
 import { ContentUnavailableError } from '../content/IpfsContentStore.js';
 import { ContentReference } from '../core/ContentReference.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.666 — IPFS Gateway Read Failover.
 //
@@ -241,7 +242,7 @@ async function run() {
         assert(!kuboSource.includes('IpfsGatewayFailoverContentStore'), 'I1. content/IpfsContentStore.js (local Kubo) never references the new failover class');
         assert(!pinningSource.includes('IpfsGatewayFailoverContentStore'), 'I2. content/IpfsRemotePinningContentStore.js (remote pinning) never references the new failover class either');
 
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         // A later, sibling milestone (core/IpfsNodeConfiguration.js) gave
         // this construction site a real apiUrl argument, from its own
         // separate resolvedIpfsNodeApiUrl — never this milestone's own
@@ -274,7 +275,7 @@ async function run() {
     // 2+ entries.
     // ===============================================================
     {
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const helperMatch = mainSource.match(/function composeIpfsGatewayContentStore\(gatewayUrls\)\s*\{[\s\S]*?\n\}/);
         assert(helperMatch, 'K1. ui/main.js defines a composeIpfsGatewayContentStore() helper');
         const helperSource = helperMatch[0];

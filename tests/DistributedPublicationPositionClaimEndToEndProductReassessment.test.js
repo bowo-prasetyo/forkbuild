@@ -35,7 +35,7 @@ import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { computeContentHash } from '../serializer/contentHash.js';
-import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.567 — Distributed Publication Position Claim End-to-End Product
 // Reassessment.
@@ -450,7 +450,7 @@ async function run() {
         const snapshotDistributionCommand = makeRealSnapshotDistributionCommand({ contentStore: host.arweaveStore, discoveryPublisher: host.discoveryPublisher });
         const distributeWorldEncounterSnapshot = makeDistributeWorldEncounterSnapshotAction({ snapshotDistributionCommand, publicationContentStore, session });
 
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         // AMENDED BY 0.9.669 — Per-Click Snapshot Announcement/Discovery
         // Substrate Override. `discoveryProvider` joined the parameter
         // list, and `discoveryPublisher` is now resolved per-call via

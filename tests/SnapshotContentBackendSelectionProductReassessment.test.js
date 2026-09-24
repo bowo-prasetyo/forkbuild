@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.509 — Snapshot Content Backend Selection Product Reassessment.
 //
@@ -68,7 +68,7 @@ async function run() {
     // Not re-proven; the three flagship audits already own that proof.
     // ===============================================================
     {
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
 
         check(mainSource.includes('snapshotPlacementStoreRegistry.register(arweaveSnapshotPlacementContentStore);'),
             'A. 0.9.505 — Arweave remains registered as a real Snapshot Content Store, in production');
@@ -105,7 +105,7 @@ async function run() {
         check(/SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES\s*=\s*Object\.freeze\(\['ipfs',\s*'ar'\]\)/.test(backendSelectionSource),
             "B. the eligible Content backend set is exactly {IPFS, Arweave} — frozen, closed, no third option");
 
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         check(mainSource.includes('stores: [publicationContentStore, new IpfsContentStore({ apiUrl: resolvedIpfsNodeApiUrl })]'),
             'B. production registers a real IPFS store into the same registry Distribution reads from');
         check(mainSource.includes('snapshotPlacementStoreRegistry.register(arweaveSnapshotPlacementContentStore)'),
@@ -243,7 +243,7 @@ async function run() {
         check(!backendSelectionSource.includes("'local'") || /never a legitimate Distribution target|SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES = Object\.freeze\(\['ipfs', 'ar'\]\)/.test(backendSelectionSource),
             "G. 'local' is documented and enforced as excluded from Distribution's own eligible set");
 
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         check(mainSource.includes('stores: [publicationContentStore, new IpfsContentStore({ apiUrl: resolvedIpfsNodeApiUrl })]'),
             "G. 'local' remains a genuinely registered, usable Placement backend (publicationContentStore, storage 'local')");
 
@@ -266,7 +266,7 @@ async function run() {
     // milestone or any prior one in this arc.
     // ===============================================================
     {
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         // AMENDED BY 0.9.669 — `discoveryProvider` joined the parameter
         // list as a new, optional fifth argument — `storage`'s own default
         // is unaffected by that addition.

@@ -5,6 +5,7 @@ import { NostrPlaceNamingDiscoveryPublisher } from '../application/placeNaming/N
 import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
 import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
 import { createNostrInjectedProviderPublisher } from '../nostr/NostrInjectedProviderPublisher.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.320 — Explicit Place Naming Publication Action.
 // See docs/Roadmap.md, "0.9.320 — Explicit Place Naming Publication
@@ -258,7 +259,7 @@ async function run() {
         // Composed into ui/main.js by this same milestone — proving the
         // gap 0.9.318/0.9.319 both recorded ("composition-root-unreachable")
         // no longer holds.
-        const uiMainCode = await codeOnlySource('ui/main.js');
+        const uiMainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(uiMainCode.includes('composePlaceNamingPublicationRuntime('), '23. ui/main.js now calls composePlaceNamingPublicationRuntime(), wired by 0.9.320 — Explicit Place Naming Publication Action');
         assert(uiMainCode.includes("app.provide('publishPlaceNamingClaimToNostrCommand'"), '24. ui/main.js provides the resulting command app-wide, under a dedicated key never shared with Snapshot/Publication distribution');
         assert(!uiMainCode.includes('new NostrPlaceNamingDiscoveryPublisher('), '25. ui/main.js still never constructs the concrete publisher class directly — only the composed function');

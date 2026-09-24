@@ -17,6 +17,7 @@ import { PlacePublicationUseCase } from '../application/placement/PlacePublicati
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.608 — Reconstruct Publication Discovery at Application Composition.
 //
@@ -341,7 +342,7 @@ async function run() {
     // Section G — ui/main.js composition wiring.
     // ===============================================================
     {
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
 
         assert(mainSource.includes("import { ReconstructPublicationDiscoveryUseCase } from '../application/publication/ReconstructPublicationDiscoveryUseCase.js';"),
             '1. ui/main.js imports the production use case.');

@@ -4,7 +4,7 @@ import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { composeDiscoverWorldEncounterPublicationCommand } from '../application/worldEncounter/DiscoverWorldEncounterPublicationCommandComposition.js';
 import { queryDecentralizedWorldDiscovery } from '../application/discovery/DecentralizedWorldDiscoveryQuery.js';
 import { resolveNostrPublisherOptions } from '../application/publication/distribution/PublicationDistributionConfigurationProvider.js';
-import { worldEncounterCanvasFiles, worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.356 — Publication Discovery Tag UX Consistency Audit.
 //
@@ -77,7 +77,7 @@ async function run() {
     // non-empty by the very publisher it configures.
     // ===============================================================
     {
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         // 0.9.357 note: this milestone's own recommendation (hoist the
         // literal to one named constant, reused at both its distribution
         // call site and a new discovery-facing provide() call) has since
@@ -173,7 +173,7 @@ async function run() {
     // source evidence.
     // ===============================================================
     {
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
 
         // Snapshot: the SAME literal ('forkbuild-snapshot') is composed
         // ONCE and reused verbatim at both its publish call site and BOTH
@@ -219,7 +219,7 @@ async function run() {
     // Publication, World, or objectId.
     // ===============================================================
     {
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         // 0.9.357 note: the literal now lives in one hoisted constant
         // declaration rather than inline at its use site — checked there
         // instead, still a bare, non-interpolated string.
@@ -408,7 +408,7 @@ async function run() {
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(canvasSource.includes('discoveryTag: this.defaultDiscoveryTag'),
             '1. as of 0.9.357, WorldEncounterCanvas.js seeds discoveryTag from its own new defaultDiscoveryTag prop rather than an unconditional blank string — the fix this audit recommended.');
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(mainSource.includes("app.provide('publicationDiscoveryTag',") && mainSource.includes("const PUBLICATION_DISCOVERY_TAG = 'forkbuild-publication';"),
             '2. as of 0.9.357, ui/main.js hoists the literal to one named constant and provides it app-wide as publicationDiscoveryTag — never a second, independently-typed literal.');
     }

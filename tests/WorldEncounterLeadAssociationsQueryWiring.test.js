@@ -7,7 +7,7 @@ import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDisc
 import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js';
 import { describeDecentralizedWorldDiscoveryLead } from '../core/DecentralizedWorldDiscoveryLead.js';
 import { composeWorldEncounterLeadAssociationsQuery } from '../application/worldEncounter/WorldEncounterLeadAssociationsQueryComposition.js';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // Connects WorldEncounterCanvas's "Location" / "Choose Location" panel to
 // real association evidence.
@@ -359,7 +359,7 @@ async function run() {
     // Section H — production wiring.
     // ---------------------------------------------------------------
     {
-        const mainSource = await readFile(new URL('../ui/main.js', import.meta.url), 'utf8');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
 

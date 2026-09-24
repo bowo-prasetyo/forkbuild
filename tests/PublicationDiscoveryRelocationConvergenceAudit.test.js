@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { worldEncounterCanvasSource } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasSource, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.361 — Publication Discovery Relocation Convergence Audit.
 //
@@ -171,7 +171,7 @@ async function run() {
     const canvasSource = worldEncounterCanvasSource();
     const canvasCodeOnly = codeOnly(canvasSource);
 
-    const mainSource = await rawSource('ui/main.js');
+    const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
     const canonicalTagMatch = /const PUBLICATION_DISCOVERY_TAG = '([^']+)';/.exec(mainSource);
     assert(canonicalTagMatch, 'sanity: ui/main.js still declares PUBLICATION_DISCOVERY_TAG (0.9.357/0.9.358)');
     const canonicalTag = canonicalTagMatch[1];

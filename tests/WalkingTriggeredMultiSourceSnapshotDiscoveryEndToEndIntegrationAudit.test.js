@@ -35,6 +35,7 @@ import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.487 — Walking-Triggered Multi-Source Snapshot Discovery End-to-End
 // Integration Audit.
@@ -270,7 +271,7 @@ async function run() {
         assert((compositeSource.match(/new LocalSnapshotCandidateDiscoveryQueryService\(/g) || []).length === 1,
             '2. exactly one production construction site exists anywhere for the Local candidate adapter.');
 
-        const mainSource = stripLineComments(readSource('ui/main.js'));
+        const mainSource = stripLineComments((await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n'));
         assert((mainSource.match(/composeSnapshotCandidateDiscoveryRuntime\(/g) || []).length === 1,
             '3. ui/main.js calls composeSnapshotCandidateDiscoveryRuntime() exactly once.');
         assert((mainSource.match(/new WorldSnapshotDiscoveryMonitor\(/g) || []).length === 1,
@@ -708,7 +709,7 @@ async function run() {
     // cascade).
     // ===============================================================
     {
-        const mainSource = stripLineComments(readSource('ui/main.js'));
+        const mainSource = stripLineComments((await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n'));
         const monitorSource = stripLineComments(readSource('application/snapshot/WorldSnapshotDiscoveryMonitor.js'));
         const commandSource = stripLineComments(readSource('application/snapshot/DiscoverSnapshotCandidatesCommand.js'));
         const cascadeSource = stripLineComments(readSource('application/snapshot/AutomaticSnapshotEncounterCascade.js'));

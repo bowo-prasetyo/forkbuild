@@ -21,7 +21,7 @@ import { World } from '../core/World.js';
 import { StructurePlacement } from '../core/StructurePlacement.js';
 import { MoveStructurePlacementCommand } from '../application/commands/MoveStructurePlacementCommand.js';
 import { WorldConflictResolver, WorldOperationOutcome } from '../replication/WorldConflictResolver.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, worldViewFiles, editorSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, worldViewFiles, editorSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.326 — Post-Diagnostic Product Evolution Reassessment.
 //
@@ -356,7 +356,7 @@ async function runTests() {
 
         // B3. Place Naming -> Publish -> Stranger Discovery -> Adoption.
         assert(await sourceExists('ui/components/PlaceNamingPanel.js'), 'B3a. PlaceNamingPanel.js still exists — Place Naming -> name/persist.');
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(mainSource.includes('NostrPlaceNamingDiscoveryPublisher') || mainSource.includes('placeNamingPublicationRuntime'),
             'B3b. ui/main.js still composes the Place Naming publication runtime.');
         assert(await sourceExists('application/placeNaming/PlaceNamingDiscoveryMonitor.js'), 'B3c. PlaceNamingDiscoveryMonitor.js still exists — publish -> stranger discovery.');
@@ -720,7 +720,7 @@ async function runTests() {
         // (which OwnPublicationPanel's manual click uses) the EXACT SAME
         // discoverSnapshotCandidatesCommand reference — one const, two
         // consumers, never two separately-constructed commands.
-        const mainSource = codeOnlyLines(await rawSource('ui/main.js'));
+        const mainSource = codeOnlyLines((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         assert(/const discoverSnapshotCandidatesCommand = \(\) => executeDiscoverSnapshotCandidatesCommand/.test(mainSource),
             'F1a. ui/main.js still defines discoverSnapshotCandidatesCommand as ONE const.');
         assert(mainSource.includes("app.provide('discoverSnapshotCandidatesCommand', discoverSnapshotCandidatesCommand)"),

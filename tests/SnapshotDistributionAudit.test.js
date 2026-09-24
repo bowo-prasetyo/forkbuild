@@ -23,6 +23,7 @@ import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSn
 import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
 import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.135 — End-to-End Decentralized Snapshot Distribution Audit.
 //
@@ -680,7 +681,7 @@ async function run() {
         // 'ArweaveContentStore' is therefore removed from the forbidden list
         // below; the other three collaborators of THIS chain remain unwired
         // into any composition root, unchanged.
-        const uiMainCode = await codeOnlySource('ui/main.js');
+        const uiMainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         const wiringForbidden = [
             'NostrSnapshotDiscoveryPublisher',
             'NostrSnapshotDiscoveryQueryService',

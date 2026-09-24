@@ -17,6 +17,7 @@ import { DiscoveryBootstrap } from '../peer/DiscoveryBootstrap.js';
 import { DEFAULT_RENDEZVOUS_URLS } from '../peer/RendezvousConfig.js';
 import { DEFAULT_ICE_SERVERS } from '../peer/IceServerConfig.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.389 — Rendezvous Configuration Lifecycle & Convergence Audit.
 //
@@ -223,7 +224,7 @@ async function run() {
         const storeSource = await source('storage/RendezvousConfigurationStore.js');
         const useCaseSource = await source('application/settings/SetRendezvousConfigurationUseCase.js');
         const viewSource = await source('ui/views/RendezvousSettingsView.js');
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
 
         const otherFiles = await Promise.all([
             ['peer/RendezvousConfig.js', await source('peer/RendezvousConfig.js')],
@@ -615,7 +616,7 @@ async function run() {
     // startup composition remains authoritative.
     // ===============================================================
     {
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
 
         // Structural proof: resolvedRendezvousUrls is computed exactly
         // once, from exactly one store.get() call, and DiscoveryBootstrap's

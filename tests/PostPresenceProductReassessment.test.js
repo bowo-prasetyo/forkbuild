@@ -25,7 +25,7 @@ import { WorldAuthorizationService } from '../application/identity/WorldAuthoriz
 import { WorldPresenceActivity } from '../core/WorldPresenceActivity.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
-import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.219 — Post-Presence Product Reassessment.
 //
@@ -443,7 +443,7 @@ async function runTests() {
         // mirrors, Snapshot export composition — all 0.9.213-0.9.215).
         const spatialEditingServiceSource = await rawSource('application/editor/SpatialEditingService.js');
         assert(/getGestureFeedback\(\)\s*\{\s*return this\._gestureFeedback;\s*\}/.test(spatialEditingServiceSource), 'B4a. SpatialEditingService still exposes getGestureFeedback()');
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(/new BuildPublicationSnapshotTransferPackageUseCase\(/.test(mainSource), 'B4b. ui/main.js still composes BuildPublicationSnapshotTransferPackageUseCase');
 
         // B5 — Publication lifecycle + distribution. COMPLETE.
@@ -566,7 +566,7 @@ async function runTests() {
     // record found.
     // ---------------------------------------------------------------
     {
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
 
         // D1 — the two confirmed OBSOLETE findings (explicit in-repo
         // supersession record each), reconfirmed unchanged.

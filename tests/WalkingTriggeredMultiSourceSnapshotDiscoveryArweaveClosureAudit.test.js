@@ -27,7 +27,7 @@ import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.501 — Walking-Triggered Multi-Source Snapshot Discovery End-to-End
 // Integration Audit (Arweave Closure).
@@ -272,7 +272,7 @@ async function run() {
     // Section A — Real production topology.
     // ===============================================================
     {
-        const mainSource = stripLineComments(readSource('ui/main.js'));
+        const mainSource = stripLineComments((await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n'));
         const worldViewSource = stripLineComments(worldViewFiles().map((file) => readSource(file)).join('\n'));
 
         const nostrSites = execSync('grep -rlE "new NostrSnapshotDiscoveryQueryService\\(" application ui --include="*.js" || true', { cwd: SOURCE_ROOT.pathname }).toString().trim().split('\n').filter(Boolean);
@@ -648,7 +648,7 @@ async function run() {
         // second, Discovery-specific one; Discovery-side retrieval still
         // goes exclusively through composeDiscoverSnapshotRuntime()'s own
         // construction, untouched by this milestone.
-        const mainSourceForContentStoreCheck = stripLineComments(readSource('ui/main.js'));
+        const mainSourceForContentStoreCheck = stripLineComments((await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n'));
         assert((mainSourceForContentStoreCheck.match(/new ArweaveContentStore\(/g) || []).length === 1,
             '3b. ui/main.js constructs exactly one ArweaveContentStore directly (0.9.505, Snapshot Placement) — never a second, Discovery-specific one alongside composeDiscoverSnapshotRuntime()\'s own retrieval-side construction.');
 

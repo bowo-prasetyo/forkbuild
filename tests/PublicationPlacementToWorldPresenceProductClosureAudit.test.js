@@ -29,7 +29,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { worldEncounterCanvasFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.606 — Publication Placement-to-World Presence Product Closure Audit.
 //
@@ -543,7 +543,7 @@ async function run() {
         const placementSrc = await readSource('core/WorldPlacement.js');
         assert(/does NOT own\s*\n?\/\/ a world\. It points to one via publicationId/.test(placementSrc),
             'F8. Source-confirmed root cause: WorldPlacement\'s own architectural invariant means a documentId can only ever be recovered by asking a discovery provider for the publicationId — there is no second, redundant, already-persisted path this milestone could exploit instead.');
-        const mainSrc = await readSource('ui/main.js');
+        const mainSrc = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(/const decentralizedPublicationDiscoveryProvider = new DecentralizedPublicationDiscoveryProvider\(\);/.test(mainSrc),
             'F9. Source-confirmed: ui/main.js constructs exactly one, never-persisted, module-scope instance — reconfirming Session 2\'s harness faithfully reproduces what a real reload actually does, not a synthetic worst case.');
 

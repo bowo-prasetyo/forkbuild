@@ -13,7 +13,7 @@ import { PublicationDistributionLifecycleMemoryStore } from '../application/publ
 import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
 import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
 import { sanitizeDistributionErrorMessage } from '../application/publication/distribution/DistributionErrorMessageSanitizer.js';
-import { worldViewFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, editorViewFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.503 — Editor Announcement/Discovery Provider Selection Integration
 // Audit.
@@ -308,7 +308,7 @@ async function run() {
     // Section A — Production wiring.
     // ===============================================================
     {
-        const mainSource = codeOnly(await source('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => source(file)))).join('\n'));
 
         assert((mainSource.match(/composePublicationDistributionCommand\(\{/g) || []).length === 1,
             n('A1. ui/main.js calls composePublicationDistributionCommand() exactly once — one single-relay command instance, never a second, EditorView-specific one'));

@@ -23,7 +23,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PublicationExchange } from '../application/publication/PublicationExchange.js';
 import { PublicationPeerExchange } from '../application/publication/PublicationPeerExchange.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
-import { worldViewFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, editorViewFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.340 — Federated Repository Product Reassessment.
 //
@@ -572,7 +572,7 @@ async function run() {
         const providerSource = await readSource('discovery/DecentralizedPublicationDiscoveryProvider.js');
         assert(!/StorageProvider|localStorage|IndexedDB|\.load\(/.test(providerSource),
             '4. discovery/DecentralizedPublicationDiscoveryProvider.js imports no persistence collaborator of any kind.');
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         const constructionLine = mainSource.split('\n').find((line) => line.includes('new DecentralizedPublicationDiscoveryProvider()'));
         assert(constructionLine && !/\.load\(|rehydrate|restore/i.test(constructionLine),
             '5. ui/main.js\'s own construction site is a bare `new DecentralizedPublicationDiscoveryProvider()`, with no rehydration step.');

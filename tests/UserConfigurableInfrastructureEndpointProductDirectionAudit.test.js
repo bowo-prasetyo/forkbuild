@@ -8,6 +8,7 @@ import { WebSocketRendezvousTransport } from '../peer/WebSocketRendezvousTranspo
 import { RendezvousDiscoveryProvider } from '../peer/RendezvousDiscoveryProvider.js';
 import { RendezvousPublication } from '../peer/RendezvousPublication.js';
 import { PeerInvitation } from '../peer/PeerInvitation.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.385 — User-Configurable Infrastructure Endpoint Product Direction
 // Audit.
@@ -269,7 +270,7 @@ async function run() {
         // is new.
         const ipfsGatewaySource = await source('content/IpfsGatewayContentStore.js');
         assert(ipfsGatewaySource.includes("const DEFAULT_GATEWAY_URL = 'https://ipfs.io'"), n('B3. IPFS Gateway — unchanged default, unchanged file'));
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const gatewayConstructionCount = (mainSource.match(/composeIpfsGatewayContentStore\(resolvedIpfsGatewayUrls\)/g) || []).length;
         assert(gatewayConstructionCount === 2, n(`B3. IPFS Gateway — still exactly two construction sites in ui/main.js, now settings-backed rather than opt-in-with-no-override (found ${gatewayConstructionCount}) — see docs/Roadmap.md, "0.9.665"/"0.9.666"`));
         inventory.ipfsGateway = { file: 'content/IpfsGatewayContentStore.js', consumers: gatewayConstructionCount };
@@ -319,7 +320,7 @@ async function run() {
         // WebRtcPeerConnectionProvider, application-wide, with no
         // fallback provider composed alongside it for when ICE
         // connectivity fails.
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const webRtcConstructions = (mainSource.match(/new WebRtcPeerConnectionProvider\(/g) || []).length;
         assert(webRtcConstructions === 1, n(`C2. exactly one WebRtcPeerConnectionProvider is constructed application-wide (found ${webRtcConstructions}) — STUN/TURN are not an optional corner of peer connectivity, they ARE its one default path`));
         // 0.9.386 — this exact single-provider concentration is the gap

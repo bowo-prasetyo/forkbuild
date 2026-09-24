@@ -28,7 +28,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { worldNavigationSessionFiles, worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, worldEncounterCanvasFiles, worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.603 — Publication World Materialization Boundary Audit.
 //
@@ -317,7 +317,7 @@ async function run() {
         // constructs it, which 0.9.602 Section F10 already established
         // for the sibling ResolvePublicationUseCase and is reconfirmed
         // here for this one.)
-        const mainSrc = await readSource('ui/main.js');
+        const mainSrc = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(!/LoadPublishedWorldSessionUseCase/.test(mainSrc),
             'E4. RECONFIRMED: ui/main.js — the app\'s own real composition root — never constructs application/publication/LoadPublishedWorldSessionUseCase.js either. The class exists, is tested (Section D5, and tests/PublishedWorld.test.js/DecentralizedContent.test.js/ForkPublishedWorld.test.js), and needs no new collaborator per Section E1/E2 — it is simply never called from the one composition root that matters.');
 

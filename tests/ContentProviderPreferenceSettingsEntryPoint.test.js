@@ -21,6 +21,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 import { computeContentHash } from '../serializer/contentHash.js';
 import { readFile } from 'node:fs/promises';
 import { register } from 'node:module';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.302 — Content Provider Preference Settings Entry Point.
 //
@@ -189,7 +190,7 @@ async function run() {
     // Section 0 — settings entry point reachability.
     // ===============================================================
     {
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         assert(/preferenceStore:\s*roleProviderPreferenceStore/.test(mainSource),
             '1. ui/main.js shares the SAME RoleProviderPreferenceStore instance the "Use Preferred Provider" wiring already resolves through, never a second disconnected store');
         assert(/new SetRoleProviderPreferenceUseCase\(\{\s*preferenceStore:\s*roleProviderPreferenceStore\s*\}\)/.test(mainSource),

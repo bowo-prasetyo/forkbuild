@@ -21,7 +21,7 @@ import { NostrDiscoveryQueryService } from '../application/nostr/NostrDiscoveryQ
 import { queryDecentralizedWorldDiscovery } from '../application/discovery/DecentralizedWorldDiscoveryQuery.js';
 import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
-import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.351 — Proactive Publication Discovery Product Direction Audit.
 //
@@ -338,7 +338,7 @@ async function run() {
         // reads — confirmed at its one real construction site in
         // ui/main.js, which hands it a FRESH, LOCAL-ONLY LocalDiscoveryProvider
         // instead, never the shared, Repository-visible one.
-        const mainSourceForComposition = await readSource('ui/main.js');
+        const mainSourceForComposition = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         const compositionCallStart = mainSourceForComposition.indexOf('composeDiscoverWorldEncounterPublicationCommand({');
         const compositionCallBlock = mainSourceForComposition.slice(compositionCallStart, mainSourceForComposition.indexOf('});', compositionCallStart));
         // The provider is a named local-only instance, shared with
@@ -427,7 +427,7 @@ async function run() {
         //       discovery provider, never decentralizedPublicationDiscoveryProvider
         //       — reconfirmed here directly against ui/main.js's own
         //       composition call, not merely a name-based sweep.
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         const compositionStart = mainSource.indexOf('composeDiscoverWorldEncounterPublicationCommand({');
         const compositionBlock = mainSource.slice(compositionStart, mainSource.indexOf('});', compositionStart));
         assert(compositionBlock.includes('discoveryProvider: worldEncounterPublicationEvidenceProvider')

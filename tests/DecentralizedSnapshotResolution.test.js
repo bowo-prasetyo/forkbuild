@@ -9,6 +9,7 @@ import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSn
 import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
 import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.134 — Snapshot Retrieval from Decentralized Discovery.
 //
@@ -343,7 +344,7 @@ async function run() {
     // 9 — no composition wiring: nothing outside this milestone's own
     // test file references DecentralizedSnapshotResolver.
     {
-        const uiMain = await codeOnlySource('ui/main.js');
+        const uiMain = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(!uiMain.includes('DecentralizedSnapshotResolver'), '9a. ui/main.js never references DecentralizedSnapshotResolver — this milestone wires no composition root');
         assert(await fileExists('application/snapshot/DecentralizedSnapshotResolver.js'), '9b. sanity: the file itself does exist');
         console.log('✓ 9. no composition wiring — DecentralizedSnapshotResolver is a plain, constructible collaborator, not yet wired into any composition root or UI');

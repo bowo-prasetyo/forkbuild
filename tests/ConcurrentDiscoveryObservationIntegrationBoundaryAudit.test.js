@@ -13,7 +13,7 @@ import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.434 — Concurrent Discovery Observation Integration Boundary Audit.
 //
@@ -343,7 +343,7 @@ async function run() {
             n('A10. ui/views/WorldView.js genuinely still defines distributeWorldEncounterPublication() with exactly the shape this section reproduces'));
         assert(viewSource.includes("serializedMaterial: JSON.stringify(publication.toJSON())") && viewSource.includes('discoveryProvider'),
             n('A11. ...forwarding serializedMaterial and discoveryProvider exactly as this section\'s own wrapper does'));
-        const mainSource = codeOnly(await source('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => source(file)))).join('\n'));
         assert(/composePublicationDistributionCommand\(\{\s*lifecycleStore:\s*publicationDistributionLifecycleStore/.test(mainSource),
             n('A12. ui/main.js genuinely composes the app-wide command with the SAME lifecycleStore instance it provides app-wide — one store, one command, never a second of either'));
 

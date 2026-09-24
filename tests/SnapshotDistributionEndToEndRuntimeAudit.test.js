@@ -11,7 +11,7 @@ import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.139 — Snapshot Distribution End-to-End Runtime & UI Audit.
 //
@@ -708,7 +708,7 @@ async function run() {
         // host capabilities the architecture diagram names — proving G2's
         // exemption is genuinely exercised, not merely vacuous because
         // main.js happens not to contain the pattern at all.
-        const mainCode = await codeOnlySource('ui/main.js');
+        const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(hostCapabilityRead.test(mainCode), 'G6. ui/main.js genuinely does resolve window.arweaveWallet/window.nostr — the one place in this codebase that legitimately does');
         assert(mainCode.includes('composeSnapshotDistributionRuntime(') && mainCode.includes('executeSnapshotDistributionCommand('), 'G7. ui/main.js is genuinely the composition root that turns a host capability into the Snapshot distribution command — the intended boundary this section audits against');
 

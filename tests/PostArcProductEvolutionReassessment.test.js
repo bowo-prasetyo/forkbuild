@@ -6,7 +6,7 @@ import { PlacementRecord } from '../core/PlacementRecord.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { DiscoverPlacementsUseCase } from '../application/placement/DiscoverPlacementsUseCase.js';
-import { worldNavigationSessionFiles, worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, editorSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, editorSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.307 — Post-Arc Product Evolution Reassessment.
 //
@@ -224,7 +224,7 @@ async function runTests() {
         // by another user?" — NO, reconfirmed: the distribution runtime
         // adapters (Nostr/Arweave) are constructed and wired to a real
         // click handler, not merely imported.
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(/createNostrPublicationDistributionRuntimeAdapter/.test(mainSource) && /createArweavePublicationDistributionRuntimeAdapter/.test(mainSource),
             'B6. ui/main.js still constructs both real distribution runtime adapters, not stubs.');
 
@@ -244,7 +244,7 @@ async function runTests() {
         // with one signal per stage rather than the full prior sweep.
         assert(((await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n')).includes('discoverOwnSnapshot') &&
             ((await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n')).includes('armComparisonSelection') &&
-            (await rawSource('ui/main.js')).includes("app.provide('exportSnapshotCommand'"),
+            ((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n')).includes("app.provide('exportSnapshotCommand'"),
             'C1. Snapshot discovery, comparison, and export all still have real UI call sites.');
         classifications.push(['Snapshot discovery/compare/materialize/place/observe', 'REACHABLE_AND_COMPLETE']);
 

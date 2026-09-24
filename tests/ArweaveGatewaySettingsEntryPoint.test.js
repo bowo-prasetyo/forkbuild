@@ -9,6 +9,7 @@ import { ArweaveWorldEncounterMaterialResolver } from '../application/worldEncou
 import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
 import { composeSnapshotDistributionRuntime } from '../application/snapshot/SnapshotDistributionRuntimeComposition.js';
 import { ContentReference } from '../core/ContentReference.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.366 — Arweave Gateway Settings UI.
 //
@@ -109,8 +110,8 @@ async function run() {
     // Section 0 — settings entry point reachability.
     // ===============================================================
     {
-        const mainSource = await source('ui/main.js');
-        assert(mainSource.includes("import { SetArweaveGatewayConfigurationUseCase } from '../application/settings/SetArweaveGatewayConfigurationUseCase.js';"),
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
+        assert(mainSource.includes("import { SetArweaveGatewayConfigurationUseCase } from '../../application/settings/SetArweaveGatewayConfigurationUseCase.js';"),
             '1. ui/main.js imports the new write use case');
         assert(/new SetArweaveGatewayConfigurationUseCase\(\{\s*arweaveGatewayConfigurationStore\s*\}\)/.test(mainSource),
             '2. ui/main.js wires SetArweaveGatewayConfigurationUseCase against the SAME shared arweaveGatewayConfigurationStore the 0.9.364 retrieval composition already resolves through, never a second disconnected store');

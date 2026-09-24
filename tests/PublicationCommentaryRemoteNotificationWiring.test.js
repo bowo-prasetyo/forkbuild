@@ -23,6 +23,7 @@ import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.623 — Wire Remote Commentary Arrival into Local Notifications.
 //
@@ -276,7 +277,7 @@ async function run() {
     // Section B — ui/main.js source-level wiring.
     // ===============================================================
     {
-        const mainSource = codeOnly(await rawSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         assert(mainSource.includes("import { PublicationCommentaryRemoteNotificationBridge } from '../application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js';"),
             n('ui/main.js imports the new bridge'));
         assert(mainSource.includes("import { NotificationEventStore } from '../storage/NotificationEventStore.js';"),

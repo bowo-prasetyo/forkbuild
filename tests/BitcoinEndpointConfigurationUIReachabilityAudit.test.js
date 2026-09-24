@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // Bitcoin Endpoint Configuration UI Reachability Audit — REOPENED.
 //
@@ -96,7 +97,7 @@ async function run() {
     // apiUrl.
     // ===============================================================
     {
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const consumers = [
             'CreateBitcoinAnchorProofVerifierUseCase',
             'CreateBitcoinEsploraTransactionConfirmationObserverUseCase',

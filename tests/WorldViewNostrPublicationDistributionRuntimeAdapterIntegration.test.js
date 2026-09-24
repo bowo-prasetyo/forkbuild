@@ -9,6 +9,7 @@ import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.108 — Nostr Publication Discovery Runtime Adapter.
 //
@@ -227,10 +228,10 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const { readFile } = await import('node:fs/promises');
-        const source = await readFile(new URL('../ui/main.js', import.meta.url), 'utf8');
+        const source = (await Promise.all(mainFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
-        assert(codeOnly.includes("import { createNostrPublicationDistributionRuntimeAdapter } from '../application/nostr/NostrPublicationDistributionRuntimeAdapter.js'"),
+        assert(codeOnly.includes("import { createNostrPublicationDistributionRuntimeAdapter } from '../../application/nostr/NostrPublicationDistributionRuntimeAdapter.js'"),
             '12. ui/main.js imports the real Nostr runtime adapter, never a hand-rolled equivalent');
         assert(codeOnly.includes('createNostrPublicationDistributionRuntimeAdapter({ publish: nostrHostPublisher })'),
             '13. ui/main.js actually calls the new adapter — as of 0.9.121, with a real host capability resolved via createNostrInjectedProviderPublisher(), superseding this test\'s own original 0.9.108-era snapshot ({})');

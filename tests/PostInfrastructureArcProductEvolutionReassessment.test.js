@@ -13,7 +13,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
 import { RendezvousDiscoveryProvider } from '../peer/RendezvousDiscoveryProvider.js';
 import { RendezvousTransport } from '../peer/RendezvousTransport.js';
-import { worldViewFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, editorViewFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.392 — Post-Infrastructure-Arc Product Evolution Reassessment.
 //
@@ -341,7 +341,7 @@ async function run() {
         const navLinkCount = (appSource.match(/router-link/g) || []).length / 2;
         assert(navLinkCount === 11, n(`D2. the nav carries exactly 11 router-link destinations, the five settings destinations now consolidated behind one Network Settings hub link (found ${navLinkCount}) — the corrected counts in tests/PostInfrastructureProductEvolutionReassessment.test.js and tests/WholeProductProductEvolutionReassessment.test.js now match live reality`));
 
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         assert(mainSource.includes('bootstrapProviders: resolvedRendezvousUrls.map((url) => new RendezvousDiscoveryProvider('),
             n('D2. discoveryBootstrap\'s bootstrapProviders is built from resolvedRendezvousUrls, not a bare literal — the corrected assertion in tests/UserConfigurableInfrastructureEndpointProductDirectionAudit.test.js now matches live reality'));
         assert(await sourceExists('core/RendezvousConfiguration.js'),

@@ -33,6 +33,7 @@ import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.483 — Activate Production Snapshot Placement Peer Announcement.
 //
@@ -356,7 +357,7 @@ async function run() {
         assert(/peerExchange\s*=\s*null/.test(orchestratorSource) && /placementCatalog,\s*knowledgeStore,\s*peerExchange/.test(orchestratorSource),
             '1. CreateSnapshotPlacementOrchestratorUseCase.js accepts an optional peerExchange and threads it straight into CreatePublicationSnapshotPlacementUseCase, unchanged in shape.');
 
-        const mainSource = readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         const wiringStart = mainSource.indexOf('new CreateSnapshotPlacementOrchestratorUseCase().execute({');
         const wiringEnd = mainSource.indexOf('});', wiringStart);
         assert(wiringStart !== -1 && wiringEnd !== -1, '1b. ui/main.js still calls CreateSnapshotPlacementOrchestratorUseCase().execute({...}) exactly once, as a single object-literal call.');

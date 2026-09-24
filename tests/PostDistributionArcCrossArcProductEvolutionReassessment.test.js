@@ -8,7 +8,7 @@ import { NotificationEvent } from '../core/NotificationEvent.js';
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
 import { PUBLICATION_COMMENTED_EVENT_TYPE } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
 import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.350 — Cross-Arc Product Evolution Reassessment.
 //
@@ -195,7 +195,7 @@ async function runTests() {
         const syncSource = await rawSource('application/publication/PublicationPeerConnectionSync.js');
         assert(/never\s+["']?download content/.test(syncSource) || /never.*download content/i.test(syncSource),
             'B2c. PublicationPeerConnectionSync.js still documents that it moves the envelope only, never material bytes.');
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(/CreatePublicationPeerExchangeUseCase/.test(mainSource),
             'B2d. ui/main.js still wires the real PublicationPeerConnectionSync-carrying composition at startup.');
         const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => rawSource(file)))).join('\n');

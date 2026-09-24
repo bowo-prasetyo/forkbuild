@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { worldViewSourceWithTemplate } from './support/SourceFileGroups.js';
+import { worldViewSourceWithTemplate, mainFiles } from './support/SourceFileGroups.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
@@ -218,13 +218,12 @@ async function runTests() {
     // Section E — architectural regression: ui/main.js
     // -------------------------------------------------------------
     {
-        const mainSourceUrl = new URL('../ui/main.js', import.meta.url);
-        const mainSource = await readFile(mainSourceUrl, 'utf8');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const mainCodeOnly = mainSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
-        assert(mainCodeOnly.includes("import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';"),
+        assert(mainCodeOnly.includes("import { LocalWorldEncounterMaterialSource } from '../../application/worldEncounter/LocalWorldEncounterMaterialSource.js';"),
             '9. ui/main.js imports the existing, unmodified LocalWorldEncounterMaterialSource — never a second local loader');
-        assert(mainCodeOnly.includes("import { composeWorldEncounterMaterialVerifier } from '../application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js';"),
+        assert(mainCodeOnly.includes("import { composeWorldEncounterMaterialVerifier } from '../../application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js';"),
             '10. ui/main.js imports the existing, unmodified composeWorldEncounterMaterialVerifier() composition root');
         assert(mainCodeOnly.includes('new LocalWorldEncounterMaterialSource(') && mainCodeOnly.includes('composeWorldEncounterMaterialVerifier('),
             '11. ui/main.js actually calls both — not merely importing them unused');

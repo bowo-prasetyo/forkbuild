@@ -11,7 +11,7 @@ import { GetRecipientNotificationEventsUseCase } from '../application/chat/GetRe
 import { NotificationEvent } from '../core/NotificationEvent.js';
 import { NotificationEventStore, NotificationPersistenceOutcome } from '../storage/NotificationEventStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.306 — Notification Awareness Product Reassessment.
 //
@@ -254,7 +254,7 @@ async function runTests() {
         // is constructed only inside CreateWorldViewUseCase.js, itself
         // constructed fresh only inside WorldView.js's own mounted()
         // hook — there is no ui/main.js-level, app-wide instance of it.
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(mainSource.includes('new CreatePublicationCommentaryUseCase().execute(identityProvider)')
             && mainSource.includes("app.provide('addPublicationCommentaryCommand', addPublicationCommentaryCommand)"),
             'C1a. ui/main.js still constructs the write-side commentary/notification path ONCE, app-wide, and provides it globally.');

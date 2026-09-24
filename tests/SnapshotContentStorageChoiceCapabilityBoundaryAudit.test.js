@@ -12,6 +12,7 @@ import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placemen
 import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
 
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.504 — Snapshot Content Storage Choice Capability Boundary Audit.
 //
@@ -528,7 +529,7 @@ async function run() {
     // is never an eligible Distribution target.
     // ===============================================================
     {
-        const mainSource = await codeOnlySource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
 
         const placementSiteMatch = mainSource.match(/stores:\s*\[publicationContentStore,\s*new IpfsContentStore\(\{ apiUrl: resolvedIpfsNodeApiUrl \}\)\]/);
         check(Boolean(placementSiteMatch), 'J. ui/main.js\'s real Placement composition site registers exactly [publicationContentStore (local), new IpfsContentStore({ apiUrl: resolvedIpfsNodeApiUrl })] — Local + IPFS, never Arweave');

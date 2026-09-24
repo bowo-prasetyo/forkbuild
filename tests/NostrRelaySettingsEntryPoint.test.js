@@ -14,6 +14,7 @@ import { composeDiscoverSnapshotRuntime } from '../application/snapshot/Discover
 import { composeSnapshotDistributionRuntime } from '../application/snapshot/SnapshotDistributionRuntimeComposition.js';
 import { composePlaceNamingPublicationRuntime } from '../application/placeNaming/PlaceNamingPublicationRuntimeComposition.js';
 import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.371 — Nostr Relay Settings UI.
 //
@@ -140,8 +141,8 @@ async function run() {
     // Section 0 — settings entry point reachability.
     // ===============================================================
     {
-        const mainSource = await source('ui/main.js');
-        assert(mainSource.includes("import { SetNostrRelayConfigurationUseCase } from '../application/settings/SetNostrRelayConfigurationUseCase.js';"),
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
+        assert(mainSource.includes("import { SetNostrRelayConfigurationUseCase } from '../../application/settings/SetNostrRelayConfigurationUseCase.js';"),
             '1. ui/main.js imports the new write use case');
         assert(/new SetNostrRelayConfigurationUseCase\(\{\s*nostrRelayConfigurationStore\s*\}\)/.test(mainSource),
             '2. ui/main.js wires SetNostrRelayConfigurationUseCase against the SAME shared nostrRelayConfigurationStore the 0.9.369 read-path composition already resolves through, never a second disconnected store');

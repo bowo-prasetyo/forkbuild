@@ -13,6 +13,7 @@ import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapsho
 import { WorldSnapshotDiscoveryMonitor } from '../application/snapshot/WorldSnapshotDiscoveryMonitor.js';
 import { SnapshotPlacementResolver } from '../application/snapshot/placement/SnapshotPlacementResolver.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.500 — Compose Arweave into Snapshot Candidate Discovery.
 //
@@ -137,11 +138,11 @@ async function run() {
     // Section A — Production composition.
     // ===============================================================
     {
-        const mainSource = stripLineComments(readSource('ui/main.js'));
+        const mainSource = stripLineComments((await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n'));
 
         const constructionSites = execSync('grep -rlE "new ArweaveSnapshotDiscoveryQueryService\\(" application ui --include="*.js" || true', { cwd: SOURCE_ROOT.pathname })
             .toString().trim().split('\n').filter(Boolean);
-        assert(constructionSites.length === 1 && constructionSites[0] === 'ui/main.js',
+        assert(constructionSites.length === 1 && constructionSites[0] === 'ui/main/composeSnapshotDiscovery.js',
             `1. exactly one production file constructs an ArweaveSnapshotDiscoveryQueryService (found: ${JSON.stringify(constructionSites)}).`);
         assert((mainSource.match(/new ArweaveSnapshotDiscoveryQueryService\(/g) || []).length === 1,
             '2. ui/main.js constructs exactly one ArweaveSnapshotDiscoveryQueryService instance.');
@@ -393,7 +394,7 @@ async function run() {
         assert(!/WorldSnapshotDiscoveryMonitor|SnapshotPlacementResolver|WorldEncounter/.test(compositionSource),
             '1. the composition file mentions no monitor, resolver, or World Encounter concept — it only ever builds and injects sources.');
 
-        const mainSource = stripLineComments(readSource('ui/main.js'));
+        const mainSource = stripLineComments((await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n'));
         assert(/const discoverSnapshotCandidatesCommand = \(\) => executeDiscoverSnapshotCandidatesCommand\(\{\s*\n\s*discoveryTag: 'forkbuild-snapshot',\s*\n\s*discoveryQueryService: snapshotCandidateDiscoveryQueryService/.test(mainSource),
             '2. ui/main.js\'s own discoverSnapshotCandidatesCommand still calls the SAME snapshotCandidateDiscoveryQueryService binding — this milestone changed what feeds that binding, never the wiring around it.');
         assert(/new WorldSnapshotDiscoveryMonitor\(\{ discoverSnapshotCandidatesCommand \}\)/.test(mainSource),

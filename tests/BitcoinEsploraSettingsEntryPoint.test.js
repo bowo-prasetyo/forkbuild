@@ -5,6 +5,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { BitcoinEsploraConfigurationStore } from '../storage/BitcoinEsploraConfigurationStore.js';
 import { SetBitcoinEsploraConfigurationUseCase } from '../application/settings/SetBitcoinEsploraConfigurationUseCase.js';
 import { CreateBitcoinEsploraTransactionConfirmationObserverUseCase } from '../application/anchoring/bitcoin/CreateBitcoinEsploraTransactionConfirmationObserverUseCase.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // Bitcoin Endpoint Settings UI.
 //
@@ -80,8 +81,8 @@ async function run() {
     // Section 0 — settings entry point reachability.
     // ===============================================================
     {
-        const mainSource = await source('ui/main.js');
-        assert(mainSource.includes("import { SetBitcoinEsploraConfigurationUseCase } from '../application/settings/SetBitcoinEsploraConfigurationUseCase.js';"),
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
+        assert(mainSource.includes("import { SetBitcoinEsploraConfigurationUseCase } from '../../application/settings/SetBitcoinEsploraConfigurationUseCase.js';"),
             '1. ui/main.js imports the new write use case');
         assert(/new SetBitcoinEsploraConfigurationUseCase\(\{\s*bitcoinEsploraConfigurationStore\s*\}\)/.test(mainSource),
             '2. ui/main.js wires SetBitcoinEsploraConfigurationUseCase against the SAME shared bitcoinEsploraConfigurationStore the resolved apiUrl is read from, never a second disconnected store');

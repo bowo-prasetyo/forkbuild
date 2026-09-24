@@ -5,6 +5,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { IpfsGatewayConfigurationStore } from '../storage/IpfsGatewayConfigurationStore.js';
 import { SetIpfsGatewayConfigurationUseCase } from '../application/settings/SetIpfsGatewayConfigurationUseCase.js';
 import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.665 — IPFS Gateway Settings UI.
 //
@@ -73,8 +74,8 @@ async function run() {
     // Section 0 — settings entry point reachability.
     // ===============================================================
     {
-        const mainSource = await source('ui/main.js');
-        assert(mainSource.includes("import { SetIpfsGatewayConfigurationUseCase } from '../application/settings/SetIpfsGatewayConfigurationUseCase.js';"),
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
+        assert(mainSource.includes("import { SetIpfsGatewayConfigurationUseCase } from '../../application/settings/SetIpfsGatewayConfigurationUseCase.js';"),
             '1. ui/main.js imports the new write use case');
         assert(/new SetIpfsGatewayConfigurationUseCase\(\{\s*ipfsGatewayConfigurationStore\s*\}\)/.test(mainSource),
             '2. ui/main.js wires SetIpfsGatewayConfigurationUseCase against the SAME shared ipfsGatewayConfigurationStore both real retrieval call sites already resolve through, never a second disconnected store');
@@ -265,7 +266,7 @@ async function run() {
         assert(!/IpfsGatewayConfiguration|IpfsGatewayConfigurationStore/.test(pinningSource),
             '37. content/IpfsRemotePinningContentStore.js (remote pinning, the OTHER write path) never references the new gateway configuration classes either');
 
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         // core/IpfsNodeConfiguration.js (a later, sibling milestone) gave the
         // CREATION registry's own IpfsContentStore construction a real
         // apiUrl argument — but a SEPARATE resolved value

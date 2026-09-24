@@ -9,7 +9,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
 import { ExternalAnchorPublisherRegistry } from '../application/anchoring/ExternalAnchorPublisherRegistry.js';
 import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
-import { publicationsPageFiles, editorViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, editorViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.422 — Decentralized Substrate Role Choice UI Reachability Audit.
 //
@@ -162,7 +162,7 @@ async function run() {
 
         // Real registered provider counts today, from the one real
         // composition root — never assumed from capability alone.
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         const contentProviderCount = /stores: \[publicationContentStore, new IpfsContentStore\(\{ apiUrl: resolvedIpfsNodeApiUrl \}\)\]/.test(mainSource) ? 2 : 0;
         const proofPublisherCount = /publishers: \[bitcoinAnchorPublisher\]/.test(mainSource) ? 1 : 0;
         assert(contentProviderCount === 2, n(`A8. CONTENT has two real registered providers today (found ${contentProviderCount})`));
@@ -181,7 +181,7 @@ async function run() {
         // amendment already gives, extended to a fourth provider-facing
         // options bag.
         const distributionIsSingleFixedPair = /const publicationDistributionCommand = composePublicationDistributionCommand\(\{/.test(mainSource)
-            && /arweaveUploaderOptions,\s*\n\s*ipfsNodeOptions,\s*\n\s*nostrPublisherOptions,\s*\n\s*arweaveAnnouncementPublisherOptions\s*\n\}\);/.test(mainSource);
+            && /arweaveUploaderOptions,\s*\n\s*ipfsNodeOptions,\s*\n\s*nostrPublisherOptions,\s*\n\s*arweaveAnnouncementPublisherOptions\s*\n\s*\}\);/.test(mainSource);
         assert(distributionIsSingleFixedPair, n('A10. ANNOUNCEMENT_AND_DISCOVERY\'s one real write action is composed exactly once, from exactly one Arweave-uploader/Nostr/Arweave-announcement options set — "how many are registered" is not even a meaningful question for this role\'s own real action, because there is no registry to count entries in'));
 
         console.log('\n=== SECTION A: ROLE / PROVIDER / MECHANISM CENSUS ===');

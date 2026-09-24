@@ -13,6 +13,7 @@ import { ArweaveTransactionDataProofVerifier } from '../anchoring/ArweaveTransac
 import { executePublicationDistribution } from '../application/publication/distribution/PublicationDistributionExecutor.js';
 import { composePublicationDistributionRuntime } from '../application/publication/distribution/PublicationDistributionRuntimeComposition.js';
 import { orchestratePublicationDistribution } from '../application/publication/distribution/PublicationDistributionOrchestrator.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.429 — Arweave Announcement/Discovery Integration Boundary Audit.
 //
@@ -714,13 +715,15 @@ async function run() {
         // shared field name in a different subsystem. The precise claim
         // this section makes is narrower and checked directly against the
         // three real call sites that matter.
-        const uiMainSource = await source('ui/main.js');
+        const uiMainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const providerCallWindow = windowAfter(uiMainSource, 'createPublicationDistributionRuntimeProvider(');
         const configCallWindow = windowAfter(uiMainSource, 'resolvePublicationDistributionRuntimeConfiguration(');
         const commandCallWindow = windowAfter(uiMainSource, 'composePublicationDistributionCommand(');
 
         check(providerCallWindow !== null, 'I4. ui/main.js still calls createPublicationDistributionRuntimeProvider() — the real composition-root seam');
-        check(!/discoveryProvider|arweaveAnnouncementPublisherOptions/.test(providerCallWindow), 'I5. ...and that real call site supplies neither discoveryProvider nor arweaveAnnouncementPublisherOptions');
+        // Only the call's own arguments, up to its closing "});".
+        const providerCallArguments = providerCallWindow ? providerCallWindow.slice(0, providerCallWindow.indexOf('});')) : '';
+        check(providerCallArguments.length > 0 && !/discoveryProvider|arweaveAnnouncementPublisherOptions/.test(providerCallArguments), 'I5. ...and that real call site supplies neither discoveryProvider nor arweaveAnnouncementPublisherOptions');
         // I6 (that call site never resolved arweaveAnnouncementPublisherOptions)
         // stopped being true at 0.9.430/0.9.492.
         check(configCallWindow !== null, 'I6. ui/main.js still calls resolvePublicationDistributionRuntimeConfiguration()');

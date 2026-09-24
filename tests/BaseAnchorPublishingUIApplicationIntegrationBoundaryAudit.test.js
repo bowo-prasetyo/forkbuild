@@ -19,7 +19,7 @@ import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPub
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.472 — Expose Review-Preserving Base Anchor Action.
 //
@@ -222,7 +222,7 @@ function fakeFetch({ broadcastTxid, transactionsByHash = {} } = {}) {
 async function run() {
     console.log('Running Base Anchor Publishing UI/Application Integration Boundary Audit...\n');
 
-    const mainSrc = await source('ui/main.js');
+    const mainSrc = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
     const mainCodeOnly = codeOnly(mainSrc);
     const viewSrc = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
     const viewCodeOnly = codeOnly(viewSrc);
@@ -231,7 +231,7 @@ async function run() {
     // Section A — Composition root wiring.
     // ===============================================================
     {
-        assert(/import \{ CreateBaseAnchorPublisherUseCase \} from '\.\.\/application\/anchoring\/base\/CreateBaseAnchorPublisherUseCase\.js';/.test(mainSrc),
+        assert(/import \{ CreateBaseAnchorPublisherUseCase \} from '(\.\.\/)+application\/anchoring\/base\/CreateBaseAnchorPublisherUseCase\.js';/.test(mainSrc),
             n('A1. ui/main.js now imports application/anchoring/base/CreateBaseAnchorPublisherUseCase.js'));
         assert(/const \{ baseAnchorPublisher \} = new CreateBaseAnchorPublisherUseCase\(\)\.execute\(\{/.test(mainCodeOnly),
             n('A2. ui/main.js constructs a real baseAnchorPublisher via CreateBaseAnchorPublisherUseCase'));

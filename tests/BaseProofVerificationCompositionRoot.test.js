@@ -16,6 +16,7 @@ import { encodeBasePublicationCommitment } from '../application/anchoring/base/B
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.465 — Wire Base Proof Verification into the Production Composition
 // Root.
@@ -161,14 +162,14 @@ function buildSignedBaseAnchor({ identityProvider, publicationId, contentHash, t
 async function run() {
     console.log('Running Base Proof Verification Composition Root...\n');
 
-    const mainSrc = await source('ui/main.js');
+    const mainSrc = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
     const mainCode = codeOnly(mainSrc);
 
     // ===============================================================
     // Section A — production registration.
     // ===============================================================
     {
-        check(/import \{ CreateBaseAnchorProofVerifierUseCase \} from '\.\.\/application\/anchoring\/base\/CreateBaseAnchorProofVerifierUseCase\.js';/.test(mainCode),
+        check(/import \{ CreateBaseAnchorProofVerifierUseCase \} from '(\.\.\/)+application\/anchoring\/base\/CreateBaseAnchorProofVerifierUseCase\.js';/.test(mainCode),
             'A1. ui/main.js imports CreateBaseAnchorProofVerifierUseCase');
         check(/const \{ baseProofVerifier \} = new CreateBaseAnchorProofVerifierUseCase\(\)\.execute\(\);/.test(mainCode),
             'A2. ui/main.js constructs a real baseProofVerifier from it');
@@ -484,7 +485,7 @@ async function run() {
         // and application/anchoring/base/CreateBaseAnchorProofVerifierUseCase.js's own
         // unit tests keep passing unchanged, because those files know
         // nothing about ui/main.js at all.
-        const freshMainCode = codeOnly(await source('ui/main.js'));
+        const freshMainCode = codeOnly((await Promise.all(mainFiles().map((file) => source(file)))).join('\n'));
         const hasImport = /import \{ CreateBaseAnchorProofVerifierUseCase \}/.test(freshMainCode);
         const hasConstruction = /new CreateBaseAnchorProofVerifierUseCase\(\)\.execute\(\)/.test(freshMainCode);
         const hasRegistration = /externalAnchorProofVerifierRegistry\.register\(baseProofVerifier\)/.test(freshMainCode);

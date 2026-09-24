@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.514 — Proof/Anchoring Product Completion Reassessment.
 //
@@ -310,7 +310,7 @@ async function run() {
         // regression-checked directly, not merely asserted in prose.
         check(!/class \w*BitcoinDiscoverability|class \w*AnchorPointer/.test(viewSource),
             'F7. no new coordinator/class was introduced to build this note — it reads existing injected collaborators (bitcoinWalletConnection, baseAnchorPublisher) that every other card on this page already uses');
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         check(!mainSource.includes('0.9.514'),
             'F8. ui/main.js — the composition root — needed no change at all for this fix; the note is presentation-only, reading collaborators this file already provides');
 

@@ -14,7 +14,7 @@ import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingC
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldViewFiles, worldViewTemplateFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldViewTemplateFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.321 — Place Naming Publication Action Convergence Audit.
 // See docs/Roadmap.md, "0.9.321 — Place Naming Publication Action
@@ -388,7 +388,7 @@ async function run() {
     // Section C — No second publication authority.
     // ---------------------------------------------------------------
     {
-        const mainJs = codeOnlyLines(await rawSource('ui/main.js'));
+        const mainJs = codeOnlyLines((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         const worldViewJs = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         const panelJs = codeOnlyLines(await rawSource('ui/components/PlaceNamingPanel.js'));
 
@@ -642,7 +642,7 @@ async function run() {
         // identical shape for a differently-absent host capability. Neither
         // is a defect introduced by 0.9.320; both are the SAME established
         // pattern in this codebase, reconfirmed here rather than assumed.
-        const mainJs = codeOnlyLines(await rawSource('ui/main.js'));
+        const mainJs = codeOnlyLines((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         assert(mainJs.includes("app.provide('publishPlaceNamingClaimToNostrCommand', publishPlaceNamingClaimToNostrCommand);"), '8. ui/main.js provides the command under an unconditional statement, not inside an availability guard');
         assert(!/if\s*\(\s*(placeNamingDiscoveryPublisher|discoveryPublisher)\s*\)\s*\{[^}]*app\.provide\('publishPlaceNamingClaimToNostrCommand'/.test(mainJs), '9. the provide() call is not conditioned on discoveryPublisher being non-null');
         assert(mainJs.includes("if (!placeNamingDiscoveryPublisher) {") && mainJs.includes('Nostr publishing is not available — no compatible browser extension was found'), '10. the exact production source contains the same honest-rejection message this section verified above, character for character');
@@ -825,7 +825,7 @@ async function run() {
         // The composed command's own error message, reconfirmed here from
         // the product-semantics angle: it names an availability fact, never
         // a delivery guarantee.
-        const mainJs = await rawSource('ui/main.js');
+        const mainJs = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(mainJs.includes('Nostr publishing is not available — no compatible browser extension was found'), '5. the one user-facing unavailability message stays scoped to a capability fact, never a delivery promise');
 
         console.log('✓ Section J: the shipped UI copy communicates "sent to the relay" — never "everyone has received it," "globally authoritative," or "guaranteed discoverable"');

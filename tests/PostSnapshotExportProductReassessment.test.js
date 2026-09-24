@@ -22,7 +22,7 @@ import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles, worldEncounterCanvasFiles, editorViewFiles, editorSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles, worldEncounterCanvasFiles, editorViewFiles, editorSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.216 — Post-Snapshot-Export Product Reassessment.
 //
@@ -287,7 +287,7 @@ async function runTests() {
         // unmodified method.
         assert(/@distribute-publication="distributeSelectedPublication"/.test(canvasSource), 'D2c. ...wired to a real event handler — "Distribute Publication" stays reachable');
 
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(/composePublicationDistributionCommand\(/.test(mainSource), 'D2d. ui/main.js still composes publicationDistributionCommand via composePublicationDistributionCommand()');
         assert(/provide\('publicationDistributionCommand'/.test(mainSource), 'D2e. ...and still provides it app-wide');
 
@@ -324,7 +324,7 @@ async function runTests() {
         // E3 — Snapshot export composition (closed by 0.9.215) —
         // reconfirmed at the SOURCE level here; Section G below re-proves
         // it BEHAVIORALLY and audits the symmetry boundary in depth.
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(/new BuildPublicationSnapshotTransferPackageUseCase\(/.test(mainSource), 'E3a. ui/main.js still composes BuildPublicationSnapshotTransferPackageUseCase');
         const coordinatorSource = await rawSource('application/snapshot/materialization/SnapshotContentMaterializationCoordinator.js');
         assert(/async export\(publicationId\)/.test(coordinatorSource), 'E3b. SnapshotContentMaterializationCoordinator still has a matching export(publicationId) method');
@@ -474,7 +474,7 @@ async function runTests() {
     // instead) — it lives on ui/components/WorldEncounterCanvas.js.
     // ---------------------------------------------------------------
     {
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(/composeDecentralizedWorldEncounterMaterialDiscoveryRuntime\(/.test(mainSource), 'H1a. ui/main.js still composes the decentralized World Material discovery runtime (Nostr + Arweave)');
         assert(/provide\('discoverWorldEncounterPublicationCommand'/.test(mainSource) || /discoverWorldEncounterPublicationCommand/.test(mainSource), 'H1b. ...and still exposes a discovery command app-wide');
 
@@ -511,7 +511,7 @@ async function runTests() {
     // row. COMPLETE.
     // ---------------------------------------------------------------
     {
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(/composeWorldEncounterMaterialVerifier\(/.test(mainSource), 'I1a. ui/main.js still composes the material verifier (signature -> identity -> inspection chain)');
         assert(/provide\('worldEncounterMaterialVerifier'/.test(mainSource), 'I1b. ...and provides it app-wide');
 
@@ -698,7 +698,7 @@ async function runTests() {
     // ---------------------------------------------------------------
     {
         // M1 — the two ALREADY-known findings, reconfirmed unchanged.
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/GroupsPanel/.test(mainSource), 'M1a. ui/components/GroupsPanel.js is still not registered in ui/main.js');
         assert(!/CreatePublicationSnapshotPlacementCatalogUseCase/.test(mainSource), 'M1b. application/snapshot/placement/CreatePublicationSnapshotPlacementCatalogUseCase.js is still not composed in ui/main.js');
         assert((await rawSource('application/snapshot/placement/CreatePublicationSnapshotPlacementCatalogUseCase.js')).includes('class CreatePublicationSnapshotPlacementCatalogUseCase'), 'M1c. ...and still exists on disk, unremoved');

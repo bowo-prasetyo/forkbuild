@@ -31,6 +31,7 @@ import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.484 — Passive Peer Snapshot Discovery End-to-End Integration Audit.
 //
@@ -314,7 +315,7 @@ async function run() {
     // everything, across the WHOLE application/ui surface.
     // ===============================================================
     {
-        const mainSource = readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert((mainSource.match(/new PeerMessageBus\(\)/g) || []).length === 1,
             '1. ui/main.js constructs exactly one PeerMessageBus for the whole running app.');
         assert((mainSource.match(/new PeerSessionManager\(/g) || []).length === 1,

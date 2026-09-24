@@ -10,7 +10,7 @@ import { CanCommentOnPublicationUseCase } from '../application/publication/CanCo
 import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
 import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
 import { PublicationCommentaryNotificationProducer } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
-import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.637 — Publication Commentary Distribution Provider Selection UI
 // Boundary Audit.
@@ -229,7 +229,7 @@ async function run() {
         assert(/props:\s*\{[\s\S]*?addPublicationCommentaryCommand:\s*\{\s*type:\s*Function,\s*default:\s*null\s*\}/.test(canvasSource),
             n('WorldEncounterCanvas.js declares the identical PROP shape'));
 
-        const mainSource = codeOnly(await rawSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         assert(/app\.provide\('addPublicationCommentaryCommand', addPublicationCommentaryCommand\);/.test(mainSource),
             n('ui/main.js provides exactly one addPublicationCommentaryCommand app-wide — the WebRTC+Nostr/Arweave-wrapping one (0.9.620/0.9.628/0.9.631)'));
         // Precisely which files actually inject THIS key (not merely mention
@@ -278,7 +278,7 @@ async function run() {
         // Section G technique exactly (that technique, not its conclusion,
         // is what this flagship reuses — the conclusion is reconfirmed
         // independently here).
-        const mainSource = codeOnly(await rawSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         const wrapperMatch = mainSource.match(/function addPublicationCommentaryCommand\(input\) \{([\s\S]*?)\n\}/);
         assert(wrapperMatch !== null, n('PATH 1: the real addPublicationCommentaryCommand wrapper is found in ui/main.js\'s current source'));
         // eslint-disable-next-line no-new-func
@@ -353,7 +353,7 @@ async function run() {
     // Section E — selection identity and no-fan-out, reconfirmed.
     // ===============================================================
     {
-        const mainSource = codeOnly(await rawSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         assert(/const discoveryProvider = \(input && input\.discoveryProvider\) \|\| 'nostr';/.test(mainSource),
             n('the exact selection line is present, unmodified, in current source: input.discoveryProvider, defaulting to the literal string \'nostr\''));
         assert(/const asynchronousDistribution = discoveryProvider === 'arweave'\s*\?\s*publicationCommentaryArweaveDistribution\s*:\s*publicationCommentaryNostrDistribution;/.test(mainSource),
@@ -370,7 +370,7 @@ async function run() {
     {
         const editorSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
-        const mainSource = codeOnly(await rawSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
 
         const uiDefaultsToNostr = /selectedDiscoveryProvider = ref\('nostr'\)/.test(editorSource)
             && /selectedDiscoveryProvider: 'nostr',/.test(canvasSource);

@@ -26,7 +26,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { computeContentHash } from '../serializer/contentHash.js';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.303 — Content Provider Preference Lifecycle Audit.
 //
@@ -295,7 +295,7 @@ async function run() {
         // 0. Re-verified here at the two load-bearing points rather than
         // re-run wholesale, so this suite still fails loudly if either
         // side of the arc's public entry points ever drifts.
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         assert(/preferenceStore:\s*roleProviderPreferenceStore/.test(mainSource) && /new SetRoleProviderPreferenceUseCase\(\{\s*preferenceStore:\s*roleProviderPreferenceStore\s*\}\)/.test(mainSource),
             '1. ui/main.js still wires the Settings-side write use case against the SAME store instance the placement-side read chain resolves through');
         const routerSource = await source('ui/router/index.js');
@@ -585,7 +585,7 @@ async function run() {
         // preferenceStore CreatePreferredSnapshotPlacementCreationCoordinatorUseCase
         // returns is the SAME instance handed to SetRoleProviderPreferenceUseCase.
         const app = composeApplication({ stores: [new LocalContentStore(new InMemoryStorageProvider())] });
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         assert(/const \{\s*coordinator: preferredSnapshotPlacementCreationCoordinator,\s*preferenceStore: roleProviderPreferenceStore\s*\} = new CreatePreferredSnapshotPlacementCreationCoordinatorUseCase\(\)\.execute\(/.test(mainSource),
             '41. ui/main.js still destructures the SAME preferenceStore instance the coordinator wiring itself returns, rather than constructing a second one');
         assert(/preferenceStore:\s*roleProviderPreferenceStore\s*\}\)/.test(mainSource),

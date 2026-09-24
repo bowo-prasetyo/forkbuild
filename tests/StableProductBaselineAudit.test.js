@@ -17,7 +17,7 @@ import { WorldConflictResolver, WorldOperationOutcome } from '../replication/Wor
 
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
 import { RoleProviderRole, isValidRoleProviderRole } from '../core/RoleProviderRole.js';
-import { worldNavigationSessionFiles, worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.313 — Stable Product Baseline Audit.
 //
@@ -243,7 +243,7 @@ async function runTests() {
         const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/publishDocumentUseCase/.test(editorViewSource),
             'B1a. EditorView.js still composes the publish use case — Editor -> Publish.');
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(/createNostrPublicationDistributionRuntimeAdapter/.test(mainSource) && /createArweavePublicationDistributionRuntimeAdapter/.test(mainSource),
             'B1b. ui/main.js still constructs real distribution runtime adapters — Publish -> Distribution.');
         assert(await sourceExists('ui/components/PublicationCatalog.js'),

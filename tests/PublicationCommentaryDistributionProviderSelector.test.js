@@ -19,7 +19,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { readFile } from 'node:fs/promises';
-import { worldEncounterCanvasFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.638 — Publication Commentary Distribution Provider Selector.
 //
@@ -134,7 +134,7 @@ async function codeOnlySource(relativePath) {
 // rather than reimplementing its logic (which could silently drift
 // from production).
 async function extractPath1Wrapper() {
-    const mainSource = await codeOnlySource('ui/main.js');
+    const mainSource = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
     const wrapperMatch = mainSource.match(/function addPublicationCommentaryCommand\(input\) \{([\s\S]*?)\n\}/);
     assert(wrapperMatch !== null, 'sanity: the real addPublicationCommentaryCommand wrapper is found in ui/main.js\'s current source');
     // eslint-disable-next-line no-new-func
@@ -492,7 +492,7 @@ async function runTests() {
         // Selection stays structurally exclusive at the ONE place that
         // matters — ui/main.js's own wrapper, unmodified by this
         // milestone (reconfirmed, not merely inherited from 0.9.637).
-        const mainSource = await codeOnlySource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(/const discoveryProvider = \(input && input\.discoveryProvider\) \|\| 'nostr';/.test(mainSource),
             '33. ui/main.js\'s own selection line is unmodified by this milestone');
         assert(/const asynchronousDistribution = discoveryProvider === 'arweave'\s*\?\s*publicationCommentaryArweaveDistribution\s*:\s*publicationCommentaryNostrDistribution;/.test(mainSource),

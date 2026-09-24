@@ -18,6 +18,7 @@ import { createNostrPublicationDistributionRuntimeAdapter } from '../application
 import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import { DECENTRALIZED_DISCOVERY_ENVELOPE_PROTOCOL, DECENTRALIZED_DISCOVERY_ENVELOPE_VERSION } from '../core/DecentralizedDiscoveryEnvelope.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.370 — Nostr Relay Configuration Convergence Audit.
 //
@@ -202,7 +203,7 @@ async function run() {
     {
         const configSource = await source('core/NostrRelayConfiguration.js');
         const storeSource = await source('storage/NostrRelayConfigurationStore.js');
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
 
         const otherFiles = await Promise.all([
             ['application/nostr/NostrDiscoveryQueryService.js', await source('application/nostr/NostrDiscoveryQueryService.js')],

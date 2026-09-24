@@ -16,7 +16,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { worldViewFiles, editorViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, editorViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.376 — EditorView Distribution Command Channel Audit.
 //
@@ -161,7 +161,7 @@ async function run() {
     // callable contract EditorView could receive.
     // ---------------------------------------------------------------
     {
-        const mainCode = await codeOnlySource('ui/main.js');
+        const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         const provideMatches = mainCode.match(/app\.provide\('publicationDistributionCommand', publicationDistributionCommand\)/g) || [];
         assert(provideMatches.length === 1,
             '1. ui/main.js provides publicationDistributionCommand exactly once, at the APP level (app.provide), not scoped to any route or view');
@@ -458,7 +458,7 @@ async function run() {
     // unaffected by anything EditorView would do.
     // ---------------------------------------------------------------
     {
-        const mainCode = await codeOnlySource('ui/main.js');
+        const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         const provideCount = (mainCode.match(/app\.provide\('publicationDistributionCommand'/g) || []).length;
         assert(provideCount === 1,
             '33. publicationDistributionCommand is provided exactly once, at the app root — a SECOND injector (EditorView) reads the SAME already-constructed instance, it cannot cause a second one to be built or the first to be reconstructed');

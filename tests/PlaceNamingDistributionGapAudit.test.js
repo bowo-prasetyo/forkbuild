@@ -16,7 +16,7 @@ import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNam
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.315 — Place Naming Distribution Gap Audit.
 //
@@ -459,7 +459,7 @@ async function runTests() {
         // Announcement/Discovery role is in scope, and Nostr is already
         // the substrate this codebase chose for exactly that role in this
         // domain — the ONLY discovery source it has ever shipped.
-        const compositionSource = await rawSource('ui/main.js');
+        const compositionSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(compositionSource.includes('NostrPlaceNamingDiscoverySource'),
             'H1. ui/main.js\'s own real composition root already wires Nostr, and only Nostr, as this domain\'s discovery substrate — this audit is not proposing a new provider, only asking whether the existing one\'s read side should gain a write side.');
 

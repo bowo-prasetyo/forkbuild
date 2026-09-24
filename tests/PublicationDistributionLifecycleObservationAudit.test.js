@@ -563,7 +563,7 @@ async function run() {
             'application/publication/distribution/PublicationDistributionLifecyclePersistenceBridge.js',
             'application/publication/distribution/PublicationDistributionLifecycleRestorer.js',
             'ui/components/WorldEncounterCanvas.js',
-            'ui/main.js'
+            'ui/main/composeWorldDiscovery.js'
         ];
         for (const file of lifecycleStoreConsumers) {
             const code = await source(file);

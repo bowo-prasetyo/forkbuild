@@ -25,7 +25,7 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { editorViewFiles } from './support/SourceFileGroups.js';
+import { editorViewFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.338 — Federated Repository Publication User-Journey Audit.
 //
@@ -579,7 +579,7 @@ async function run() {
     // milestone's own findings.
     // ===============================================================
     {
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(countOccurrences(mainSource, /new DecentralizedPublicationDiscoveryProvider\(\)/g) === 1,
             '1. reconfirmed: exactly one application-lifetime instance, built once in ui/main.js (0.9.337 Section A/I).');
 

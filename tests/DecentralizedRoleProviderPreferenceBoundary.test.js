@@ -308,6 +308,8 @@ async function run() {
             'application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js',
             'application/snapshot/placement/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js',
             'ui/main.js',
+            'ui/main/composeContentAndSnapshots.js',
+            'ui/main/composeSnapshotDiscovery.js',
             'application/snapshot/placement/SnapshotPlacementCreationView.js',
             'application/settings/SetRoleProviderPreferenceUseCase.js',
             'application/settings/RoleProviderPreferenceSettingsView.js',

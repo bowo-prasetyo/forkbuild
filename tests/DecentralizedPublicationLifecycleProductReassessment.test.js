@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { describeRoleProviderPreferenceSettings } from '../application/settings/RoleProviderPreferenceSettingsView.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.517 — Decentralized Publication Lifecycle Product Reassessment.
 //
@@ -132,7 +132,7 @@ async function run() {
         // B1. Prove, from real production wiring (never a hand-typed
         // fixture), that 'ar' is a genuine, reachable CONTENT provider
         // key on this settings page — not a hypothetical.
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         check(mainSource.includes("snapshotPlacementStoreRegistry.register(arweaveSnapshotPlacementContentStore);"),
             "B1a. ui/main.js still registers the real Arweave content store into the SAME snapshotPlacementStoreRegistry the Content Provider settings page's own availableProviderKeys is read from");
         check(mainSource.includes("get storage() { return 'ar'; }") || (await source('content/ArweaveContentStore.js')).includes("get storage() { return 'ar'; }"),

@@ -42,7 +42,7 @@ import { Brick } from '../core/Brick.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { worldEncounterCanvasFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.568 — Decentralized Publication Spatial Continuity Product
 // Reassessment.
@@ -991,7 +991,7 @@ async function run() {
         // network (rediscoverable indefinitely by ANY replica), but
         // consuming/registering it locally is NOT itself persisted; see
         // ui/main.js's own construction, verified below.
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(/const worldDiscoveryRuntime\s*=\s*bootstrapWorldDiscoveryRuntime/.test(mainSource) || mainSource.includes('bootstrapWorldDiscoveryRuntime'),
             'I2. sanity — ui/main.js genuinely constructs the World discovery runtime (registry included) once, at startup — confirmed against live source.');
         const bridgeSource = await readSource('application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js');

@@ -29,7 +29,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.602 — Post-Placement World Visibility Product Boundary Audit.
 //
@@ -491,7 +491,7 @@ and materially larger piece of work.
         // as before.
         assert(/this\._loadPublishedWorldSessionUseCase\.execute\(publication, this\._eventBus\)\.getDocument\(\)/.test(sessionSrc),
             'F9. application/world/WorldNavigationSession.js — the class whose _loadWorld()/updateSpatialView() actually drives live World View streaming — now DOES consult LoadPublishedWorldSessionUseCase, as a fallback, exactly the seam this section (F) originally identified as the one remaining piece of real integration work.');
-        const mainSrc = await readSource('ui/main.js');
+        const mainSrc = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(/CreateWorldViewUseCase/.test(mainSrc) && !/CreateWorldViewStreamingUseCase/.test(mainSrc),
             'F10. ui/main.js — the app\'s own real composition root — wires CreateWorldViewUseCase.js (the narrow-discoveryProvider, storage[documentId]-based World View this whole arc has been examining) and never wires application/world/CreateWorldViewStreamingUseCase.js, a SEPARATE, parallel World View streaming subsystem (world/WorldViewStreamingSession.js) that DOES use ResolvePublicationUseCase\'s content-hash-based resolution. That second subsystem exists in this codebase but is orphaned — never reachable from the actual running app.');
 

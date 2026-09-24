@@ -12,7 +12,7 @@ import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.215 — Snapshot Export Capability Integration.
 //
@@ -214,7 +214,7 @@ async function runTests() {
         // threads it (alongside the existing import use case) into
         // SnapshotContentMaterializationCoordinator — never a second,
         // disconnected catalog/store pair.
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(/new BuildPublicationSnapshotTransferPackageUseCase\(\s*\{\s*publicationCatalog,\s*contentStore:\s*publicationContentStore\s*\}\s*\)/.test(codeOnly(mainSource)),
             'A2a. ui/main.js constructs BuildPublicationSnapshotTransferPackageUseCase over the SAME publicationCatalog/publicationContentStore every other Snapshot action already shares');
         assert(/new SnapshotContentMaterializationCoordinator\(\s*importPublicationSnapshotTransferPackageUseCase,\s*buildPublicationSnapshotTransferPackageUseCase\s*\)/.test(codeOnly(mainSource)),
@@ -508,7 +508,7 @@ async function runTests() {
         const { execSync } = await import('node:child_process');
         const grepOutput = execSync("grep -rl 'new BuildPublicationSnapshotTransferPackageUseCase(' ui/ || true", { cwd: new URL('../', import.meta.url), encoding: 'utf8' });
         const constructingFiles = grepOutput.split('\n').map((line) => line.trim()).filter(Boolean);
-        assert(constructingFiles.length === 1 && constructingFiles[0] === 'ui/main.js', `H3. exactly one file under ui/ constructs BuildPublicationSnapshotTransferPackageUseCase — ui/main.js (found: ${constructingFiles.join(', ') || 'none'})`);
+        assert(constructingFiles.length === 1 && constructingFiles[0] === 'ui/main/composeContentAndSnapshots.js', `H3. exactly one file under ui/ constructs BuildPublicationSnapshotTransferPackageUseCase — ui/main/composeContentAndSnapshots.js (found: ${constructingFiles.join(', ') || 'none'})`);
 
         console.log('✓ Section H: structural boundary — OwnPublicationPanel.js and WorldView.js never import the export use case, the coordinator class, or a ContentStore/PublicationCatalog directly; only ui/main.js composes them, exposing a plain injected command function.');
     }

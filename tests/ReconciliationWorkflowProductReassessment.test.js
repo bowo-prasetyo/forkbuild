@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { worldEncounterCanvasFiles, publicationsPageFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.410 — Reconciliation Workflow Product Reassessment.
 //
@@ -271,7 +271,7 @@ async function run() {
             exportCallSites.length === 1 && exportCallSites[0] === 'ui/views/PublisherLeaderboardSnapshotClaimAuthoringView.js',
             n(`E4. exactly the one file 0.9.411 authorized to call exportPublisherLeaderboardSnapshotClaim() does so, never a second, accidental caller (found: ${JSON.stringify(exportCallSites)})`)
         );
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(
             !mainSource.includes('CreatePublisherLeaderboardSnapshotClaimUseCase'),
             n('E5. the app\'s own composition root (ui/main.js) never constructs this use case either — the absence is total, not merely missing from one component')

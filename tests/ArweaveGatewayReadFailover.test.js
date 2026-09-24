@@ -9,6 +9,7 @@ import { ArweaveWorldEncounterMaterialResolver } from '../application/worldEncou
 import { ArweaveGatewayFailoverWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js';
 import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
 import { composeArweaveDecentralizedWorldEncounterMaterialSource } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialRuntimeComposition.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.440 — Arweave Gateway Read Failover.
 //
@@ -359,7 +360,7 @@ async function run() {
         assert(!anchorPublisherSource.includes('ArweaveGatewayFailover'), 'I1. anchoring/ArweaveAnchorPublisher.js never references either new failover class');
         assert(!anchorVerifierSource.includes('ArweaveGatewayFailover'), 'I2. anchoring/ArweaveTransactionDataProofVerifier.js never references either new failover class — Anchor deliberately keeps its single-value gateway, per 0.9.439\'s own Section F3');
 
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const anchorPublisherBlockMatch = mainSource.match(/CreateArweaveAnchorPublisherUseCase\(\)\.execute\(\{[\s\S]{0,150}?\}\);/);
         const anchorVerifierBlockMatch = mainSource.match(/CreateArweaveAnchorProofVerifierUseCase\(\)\.execute\(\{[\s\S]{0,100}?\}\);/);
         assert(anchorPublisherBlockMatch && !anchorPublisherBlockMatch[0].includes('resolvedArweaveGatewayUrls'), 'I3. the Anchor publisher call site never receives the new plural gateway list');

@@ -13,7 +13,7 @@ import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/R
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.152 — Selected Snapshot Candidate Resolution.
 //
@@ -591,7 +591,7 @@ async function run() {
         assert(/<OwnPublicationPanel[\s\S]{0,700}:resolveSelectedSnapshotCommand="resolveSelectedSnapshotCommand"/.test(viewCode),
             '46. OwnPublicationPanel is wired to the injected resolveSelectedSnapshotCommand');
 
-        const mainCode = await codeOnlySource('ui/main.js');
+        const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(mainCode.includes("app.provide('resolveSelectedSnapshotCommand', resolveSelectedSnapshotCommand)"),
             '47. ui/main.js provides resolveSelectedSnapshotCommand app-wide');
         assert((mainCode.match(/composeDiscoverSnapshotRuntime\(/g) || []).length === 1,

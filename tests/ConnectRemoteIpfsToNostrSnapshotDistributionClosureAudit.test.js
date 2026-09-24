@@ -8,7 +8,7 @@ import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSn
 import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
 import { IpfsPublicationRecord, IpfsPublicationMethod } from '../application/ipfs/IpfsPublicationRecord.js';
 import { computeContentHash } from '../serializer/contentHash.js';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.663 — Connect Remote IPFS to Nostr Snapshot Distribution — Closure
 // Audit.
@@ -191,7 +191,7 @@ async function run() {
         assert(/snapshotDiscoveryPublisher\.publish\(\{\s*contentHash: entry\.ipfsRemotePublicationOutcome\.contentHash,\s*locator: entry\.ipfsRemotePublicationOutcome\.locator,\s*storage: 'ipfs'\s*\}\)/.test(publishedBranch),
             n('A3. FLAGSHIP SOURCE PROOF: inside that exact branch, publishToRemoteIpfs() calls snapshotDiscoveryPublisher.publish() with the coordinator\'s OWN contentHash/locator (never re-derived) and a hardcoded storage:\'ipfs\' (Remote Pinning\'s own self-reported name) — never a publicationId with no matching claimedPosition, which core/SnapshotDiscoveryEnvelope.js\'s own describeSnapshotDiscoveryEnvelope() would silently refuse (Section G\'s own G6 reconfirms this live).'));
 
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         assert(/app\.provide\('snapshotDiscoveryPublisher', snapshotDiscoveryPublisher\)/.test(mainSource),
             n('A4. ui/main.js provides that exact `snapshotDiscoveryPublisher` variable under the key `snapshotDiscoveryPublisher` — the SAME variable, one statement above, destructured from composeSnapshotDistributionRuntime() and already used to build `snapshotDistributionCommand` for Kubo/Arweave — never a second construction.'));
 
@@ -282,7 +282,7 @@ async function run() {
     // Section D — Existing Kubo path (regression guard).
     // =======================================================================
     {
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         // AMENDED — a later, separate milestone added relay-resilience
         // fan-out to this exact call site (relayUrls: resolvedNostrRelayUrls),
         // unrelated to Remote IPFS. D1 now checks the invariant THIS
@@ -314,7 +314,7 @@ async function run() {
     // Section E — Existing Arweave path (regression guard).
     // =======================================================================
     {
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         assert(/storage = 'ar'/.test(mainSource), n('E1. snapshotDistributionCommand still defaults storage to \'ar\' — unchanged.'));
 
         // Live regression run: an Arweave-SHAPED content store (never a

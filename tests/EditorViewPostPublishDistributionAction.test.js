@@ -17,7 +17,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { editorViewFiles, worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.377 — EditorView Post-Publish Distribution Action.
 //
@@ -550,7 +550,7 @@ async function run() {
                worldViewCode.includes('serializedMaterial: JSON.stringify(publication.toJSON())'),
             '35. WorldView.js\'s own distributeWorldEncounterPublication() is unchanged except for 0.9.430\'s own discoveryProvider parameter — this milestone\'s EditorView wrapper mirrors its SHAPE, never edits it');
 
-        const mainCode = await codeOnlySource('ui/main.js');
+        const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         const provideMatches = mainCode.match(/app\.provide\('publicationDistributionCommand', publicationDistributionCommand\)/g) || [];
         assert(provideMatches.length === 1,
             '36. ui/main.js still provides publicationDistributionCommand exactly once, at the app root — EditorView reading it a second time cannot cause a second instance to be constructed');

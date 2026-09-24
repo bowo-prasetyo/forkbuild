@@ -7,6 +7,7 @@ import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { ArweaveWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js';
 import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
 import { composeWorldEncounterMaterialSources } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialRuntimeComposition.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.364 — User-Configurable Arweave Gateway Retrieval Integration.
 // See docs/Roadmap.md, "0.9.364 — User-Configurable Arweave Gateway."
@@ -101,7 +102,7 @@ async function run() {
     // never a guess from this file's own prose.
     // ===============================================================
     {
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
 
         assert(mainSource.includes("import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfigurationStore.js';"), 'C1. ui/main.js imports ArweaveGatewayConfigurationStore');
         assert(mainSource.includes("import { DEFAULT_ARWEAVE_GATEWAY_URL } from '../core/ArweaveGatewayConfiguration.js';"), 'C2. ui/main.js imports DEFAULT_ARWEAVE_GATEWAY_URL');

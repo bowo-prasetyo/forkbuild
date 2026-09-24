@@ -19,6 +19,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { readFile } from 'node:fs/promises';
+import { mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.561 — Publication List Commentary Parity.
 //
@@ -402,7 +403,7 @@ async function runTests() {
                sectionCode.includes("getPublicationCommentariesCommand: { default: null }") && sectionCode.includes("addPublicationCommentaryCommand: { default: null }"),
             '30. PublicationList.js (for its toggle) and the shared section inject the SAME optional commands PublicationCard.js relies on — no new provide/inject key');
 
-        const mainCode = await codeOnlySource('ui/main.js');
+        const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert((mainCode.match(/new CreatePublicationCommentaryUseCase\(\)/g) || []).length === 1,
             '31. ui/main.js still composes exactly ONE instance of CreatePublicationCommentaryUseCase — not a second composition root for the list surface');
         assert((mainCode.match(/app\.provide\('getPublicationCommentariesCommand'/g) || []).length === 1 &&

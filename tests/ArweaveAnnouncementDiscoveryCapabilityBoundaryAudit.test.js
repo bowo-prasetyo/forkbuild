@@ -13,7 +13,7 @@ import { ArweaveAnchorPublisher } from '../anchoring/ArweaveAnchorPublisher.js';
 import { executePublicationDistribution } from '../application/publication/distribution/PublicationDistributionExecutor.js';
 import { composePublicationDistributionRuntime } from '../application/publication/distribution/PublicationDistributionRuntimeComposition.js';
 import { resolveArweaveAnnouncementPublisherOptions } from '../application/publication/distribution/PublicationDistributionConfigurationProvider.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.489 — Arweave Announcement/Discovery Capability Boundary Audit.
 //
@@ -255,7 +255,7 @@ async function run() {
     // Section B — Dormant reachability, precisely characterized.
     // ===============================================================
     {
-        const uiMainSource = await source('ui/main.js');
+        const uiMainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         check(/createPublicationDistributionRuntimeProvider\(\{[\s\S]{0,400}?\}\)/.test(uiMainSource), 'B1. sanity: the real composition-root call site is where this section expects it');
         const providerCallMatch = uiMainSource.match(/createPublicationDistributionRuntimeProvider\(\{[\s\S]{0,400}?\}\)/);
         // B2 (the call site never supplied uploadTaggedTransaction) stopped

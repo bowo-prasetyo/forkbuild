@@ -16,7 +16,7 @@ import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingC
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.318 — Post-Place-Naming Distribution Product Reassessment.
 //
@@ -240,7 +240,7 @@ async function runTests() {
         // wired one, reusing the SAME nostrHostPublisher instance already
         // resolved for Publication/Snapshot distribution — never a second
         // read of window.nostr.
-        const mainJs = await rawSource('ui/main.js');
+        const mainJs = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(mainJs.includes('NostrPlaceNamingDiscoverySource') && mainJs.includes('nostrRelayQueryClient'),
             'A4a. ui/main.js still composes a real Nostr QUERY client for Place Naming discovery.');
         assert(mainJs.includes('composePlaceNamingPublicationRuntime(') && mainJs.includes("app.provide('publishPlaceNamingClaimToNostrCommand'"),
@@ -305,7 +305,7 @@ async function runTests() {
         // (publishPlaceNamingClaimToNostrCommand: a thin function, never a
         // bare publisher instance handed to the app), the identical shape
         // every other injected command in ui/main.js already takes.
-        const mainJs = await rawSource('ui/main.js');
+        const mainJs = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(mainJs.includes("app.provide('placeNamingDiscoveryQueryService'"),
             'B2a. A real, live discoveryQueryService is provided from ui/main.js\'s own composition root — reachable by any view that injects it.');
         assert(mainJs.includes("app.provide('publishPlaceNamingClaimToNostrCommand'"),
@@ -522,7 +522,7 @@ async function runTests() {
     // because the three arcs now look structurally similar.
     // ===============================================================
     {
-        const mainJs = await rawSource('ui/main.js');
+        const mainJs = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
 
         // F1. Publication distribution: decentralized publication AND
         // discovery, both live-wired with a real publishImpl.

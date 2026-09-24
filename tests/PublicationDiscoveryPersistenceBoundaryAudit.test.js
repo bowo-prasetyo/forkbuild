@@ -20,7 +20,7 @@ import { PlacePublicationUseCase } from '../application/placement/PlacePublicati
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.607 — Publication Discovery Persistence Boundary Audit.
 //
@@ -693,7 +693,7 @@ async function run() {
     // belongs, decided from existing ownership semantics.
     // ===============================================================
     {
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
 
         // J1. Exactly one ephemeral instance exists today, provided
         // app-wide — reconfirmed unchanged from 0.9.606's own Section F9.

@@ -10,7 +10,7 @@ import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 
 // 0.9.142 — World View Snapshot Discovery Command.
 //
@@ -379,7 +379,7 @@ async function runTests() {
             assert(!panelCode.includes(term), `21. OwnPublicationPanel.js never references '${term}'`);
         }
 
-        const mainCode = await codeOnlySource('ui/main.js');
+        const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(mainCode.includes("composeDiscoverSnapshotRuntime("), '22. ui/main.js composes the discovery runtime');
         assert(mainCode.includes("app.provide('discoverSnapshotCommand', discoverSnapshotCommand)"),
             '23. ui/main.js provides discoverSnapshotCommand app-wide, mirroring snapshotDistributionCommand');
