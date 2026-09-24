@@ -98267,3 +98267,12 @@ the connection timer and the "Be Discoverable" state app-wide instead of per pag
   collapsed into one open form at a time.
 - Peers: `PeerSessionManager#listCandidates()`/`forgetCandidate()`; the `lifecycleState` summary field.
 - Publications page: a third of the file's comments (version history) removed; five unused `isValid*State` exports.
+
+## Code-size cleanup (unnumbered, 2026-09-24)
+
+**Shared SHA-256.** `core/Sha256.js` (`sha256()`, `sha256Hex()`) replaces five identical hand-written copies in
+`application/PublicationObservationArchiveFingerprint.js`, `application/AchievementEvidenceFingerprint.js`,
+`application/PublisherLeaderboardSnapshotFingerprint.js`,
+`application/PublisherLeaderboardClaimSnapshotReconciliationPlanIdentity.js` and
+`anchoring/BitcoinAnchorSignedPsbtFinalizer.js`. It stays synchronous (`crypto.subtle.digest()` is Promise-only) and
+dependency-free. Fingerprints are unchanged; the plan-identity boundary test now allows exactly this one import.

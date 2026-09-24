@@ -21,7 +21,7 @@ import {
 // Section H: determinism — repeat calls on equivalent input agree
 // Section I: known SHA-256 vector — independently computed, proving the
 //            hand-rolled implementation, not merely self-consistency
-// Section J: architectural boundary — no imports, no reconstructXxx(), no
+// Section J: architectural boundary — no imports but core/Sha256.js, no reconstructXxx(), no
 //            candidate-selection/verification/decision/archive vocabulary
 
 function assert(condition, message) {
@@ -272,10 +272,10 @@ async function run() {
         const moduleSource = await fs.readFile(new URL('../application/PublisherLeaderboardClaimSnapshotReconciliationPlanIdentity.js', import.meta.url), 'utf8');
         const codeOnly = moduleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n').toLowerCase();
 
-        // No imports at all — see this file's own header, "Architectural
-        // boundary — no imports at all."
+        // Only the shared SHA-256 primitive — see this file's own header,
+        // "Architectural boundary — no imports but core/Sha256.js."
         const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
-        assert(importLines.length === 0, '39. this file imports nothing');
+        assert(JSON.stringify(importLines) === JSON.stringify(["import { sha256Hex } from '../core/Sha256.js';"]), '39. this file imports only core/Sha256.js');
 
         const forbiddenInCode = [
             'verification', 'verifier', 'trust', 'confidence', 'reputation', 'severity',
@@ -292,7 +292,7 @@ async function run() {
         assert(typeof module.describePublisherLeaderboardClaimSnapshotReconciliationPlanIdentity === 'function', '43. describeXxx() is exported');
         assert(module.reconstructPublisherLeaderboardClaimSnapshotReconciliationPlanIdentity === undefined, '44. no reconstructXxx() is exported — there is no archive-stored plan to reconstruct an identity from');
     }
-    console.log('✓ Section J: no imports at all, no candidate-selection/verification/archive vocabulary, and no reconstructXxx() entry point');
+    console.log('✓ Section J: no imports but core/Sha256.js, no candidate-selection/verification/archive vocabulary, and no reconstructXxx() entry point');
 
     console.log('\nAll PublisherLeaderboardClaimSnapshotReconciliationPlanIdentity tests passed.');
 }

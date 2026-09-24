@@ -507,7 +507,7 @@ older section outright and keeps the history in its own text.
 - [A Lifecycle Timeline Presents Recorded Facts In Temporal Order; It Does Not Infer Missing Stages Or Interpret Them (0.8.81)](#a-lifecycle-timeline-presents-recorded-facts-in-temporal-order-it-does-not-infer-missing-stages-or-interpret-them-0881)
 - [An Archive Export Contains Facts, Not Capabilities Or Conclusions (0.8.82)](#an-archive-export-contains-facts-not-capabilities-or-conclusions-0882)
 - [Provenance Describes Where A Fact Entered This Archive; It Does Not Establish Whether The Fact Is True (0.8.83)](#provenance-describes-where-a-fact-entered-this-archive-it-does-not-establish-whether-the-fact-is-true-0883)
-- [An Archive Fingerprint Identifies Durable Contents; It Does Not Establish Their Truth Or Origin (0.8.84)](#an-archive-fingerprint-identifies-durable-contents-it-does-not-establish-their-truth-or-origin-0884)
+- [An Archive Fingerprint Identifies Durable Contents; It Does Not Establish Their Truth Or Origin (0.8.84)](#an-archive-fingerprint-identifies-durable-contents-it-does-not-establish-their-truth-or-origin-0884) †
 - [A Fingerprint Comparison Establishes Equality Of Digests, Not Which Archive Is Correct (0.8.85)](#a-fingerprint-comparison-establishes-equality-of-digests-not-which-archive-is-correct-0885)
 - [Inspecting An External Archive Never Touches The Current One (0.8.86)](#inspecting-an-external-archive-never-touches-the-current-one-0886)
 - [Archive Differences Describe Durable State Differences Without Selecting A Correct State (0.8.87)](#archive-differences-describe-durable-state-differences-without-selecting-a-correct-state-0887)
@@ -17215,6 +17215,11 @@ show."
 See `docs/Roadmap.md`, 0.8.83, for the full milestone entry.
 
 ### An Archive Fingerprint Identifies Durable Contents; It Does Not Establish Their Truth Or Origin (0.8.84)
+
+*Changed by the code-size cleanup (unnumbered, 2026-09-24):* SHA-256 is no
+longer copied into each fingerprint file. It lives once, still synchronous
+and dependency-free, in `core/Sha256.js`, which every fingerprint file and
+`anchoring/BitcoinAnchorSignedPsbtFinalizer.js` import.
 
 **A matching fingerprint means "byte-identical canonical content" and
 nothing else.** `application/PublicationObservationArchiveFingerprint.js`'s
