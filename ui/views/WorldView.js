@@ -55,33 +55,19 @@ import { PlaceNamingClaim } from '../../core/PlaceNamingClaim.js';
 
 const DRAG_THRESHOLD_PX = 6;
 
-// 0.2.29 — UI-only display defaults for the World Location Browser's
-// initial radius, purely so "Explore Here"/"What's Here?" have a
-// number to show before the user picks their own. These intentionally
-// mirror application/WorldNavigationSession.js's own
-// DEFAULT_EXPLORE_RADIUS/NEARBY_RADIUS constants, but the mirroring is
-// cosmetic, not load-bearing: the actual radius used for every query
-// is whatever session.exploreHere()/whatsHere() decide (or, after a
-// re-query, whatever the browser dialog's own field holds) — this
-// file never computes a distance or decides what counts as "nearby"
-// itself.
+// Display defaults only: the session decides the real radius.
 const DEFAULT_EXPLORE_RADIUS = 25;
 const NEARBY_RADIUS = 5;
 
-// Fallback envelope for a failed/guarded World Location Browser call —
-// same shape exploreLocation always returns, so callers never have to
-// special-case "the call didn't happen" from "it happened and found
-// nothing with no diagnostics available." Its `diagnostics` is also the
-// browser banner's initial/reset value.
+// Same shape exploreLocation returns, so callers never special-case a call
+// that did not happen.
 const EMPTY_DISCOVERY_ENVELOPE = { documents: [], diagnostics: { available: false, fatal: null, complete: false, warnings: [] } };
 
-// 0.5.9 removed brick/structure editing from World View (the
-// EditorActionRegistry, EditingSidebar, CommandPalette, gizmo and
-// placement preview) — see docs/Principles.md, "World View Observes and
-// Navigates; Editor Mutates and Builds". What remains mutation-shaped is
-// document- and World-level only: Save/Publish/Edit Metadata, placement
-// moves, landmarks/regions/place names, and Undo/Redo/History over
-// those same commands.
+// World View observes and navigates; brick editing lives in the Editor (see
+// docs/Principles.md, "World View Observes and Navigates; Editor Mutates and
+// Builds"). What remains mutation-shaped is document- and World-level: Save,
+// Publish, metadata, placement moves, landmarks/regions/place names, and
+// Undo/Redo over those.
 export default {
     name: 'WorldView',
     components: {
@@ -105,137 +91,58 @@ export default {
 
         const title = ref('Loading...');
         const author = ref(null);
-        // 0.2.22: the Document Info shape (see WorldNavigationSession.
-        // getDocumentInfo) for whichever document is CURRENTLY ACTIVE
-        // (session.getActiveDocumentId()), not the selected brick's
-        // document — distinct from `documentInfo` below, which tracks
-        // the inspection panel's selection and can be a different
-        // world entirely. Drives the header's Published/Editing-fork
-        // badge.
+        // Info for the ACTIVE document (drives the header badge), which can differ
+        // from the inspected `documentInfo` below.
         const activeDocumentInfo = ref(null);
-        // 0.2.27: the CAMERA's target — session.getFocusedDocumentId()
-        // — kept as its own field precisely so it can differ from
-        // `title`/`activeDocumentInfo` (the active/editing document).
-        // See docs/Principles.md, "Camera Focus, Active Document, and
-        // Selection Are Three Different Things." Only a title is
-        // needed here (the header context line), not a full
-        // DocumentInfo shape.
+        // The camera's target, which can differ from the active document (see
+        // docs/Principles.md, "Camera Focus, Active Document, and Selection Are Three
+        // Different Things").
         const focusedDocumentTitle = ref(null);
         const loadedWorlds = ref([]);
         const nearbyWorlds = ref([]);
         const failedWorlds = ref([]);
         const spatialHover = ref(null);
         const spatialInspection = ref(null);
-        // The Document Info panel's data for the INSPECTED document (see
-        // activeDocumentInfo above for how that differs); includes the
-        // editabilityNotice the panel renders.
         const documentInfo = ref(null);
         const showMetadataEditor = ref(false);
-        // Which info object (activeDocumentInfo or documentInfo) the
-        // open MetadataEditorDialog is actually editing — see
-        // openMetadataEditor().
         const metadataEditTarget = ref(null);
-        // 0.2.23: WHERE the active/inspected world sits in shared
-        // space — see WorldNavigationSession.getPlacementInfo. Named
-        // "placementInfo"/"activePlacementInfo" to mirror documentInfo/
-        // activeDocumentInfo exactly; unrelated to `spatialPlacement`
-        // below, which is BRICK placement-preview state (0.1.33) — an
-        // unfortunate but pre-existing name collision in the domain
-        // ("placement" means two different things at two different
-        // layers), not a naming choice made for this milestone.
+        // Where the active/inspected world sits in shared space. Unrelated to
+        // `spatialPlacement` (brick placement preview): "placement" means different
+        // things at the two layers.
         const placementInfo = ref(null);
         const activePlacementInfo = ref(null);
-        // 0.9.140 — Own Publication Distribution Entry Point. The actual
-        // Publication (`publisher/Publication.js`) governing the ACTIVE
-        // document — session.getPublicationForDocument(activeId) — when
-        // (and only when) that document is itself a known, published
-        // snapshot. Mirrors activeDocumentInfo/activePlacementInfo's own
-        // "re-read fresh every refreshSpatialUI() tick, never cached"
-        // pattern exactly, one field over. `null` for an unpublished
-        // fork or a document that was never published — OwnPublicationPanel
-        // (below) renders that as "nothing to distribute yet," never a
-        // guess. Deliberately NEVER derived from the spatial selection,
-        // worldDiscoverySourceRegistry, or anything World Encounters
-        // itself produces — see that component's own header for why.
+        // The active document's Publication, re-read every refresh; null when it was
+        // never published. Never derived from World Encounters or the selection.
         const ownPublication = ref(null);
-        // 0.2.39 — the Avatar Info panel's data, mirroring documentInfo/
-        // placementInfo's own shape: read fresh from session.getAvatarInfo()
-        // every refreshSpatialUI(), null whenever there is no current
-        // avatar interaction target (see application/spatial-state/
-        // AvatarInteractionState.js). followedRemoteAvatarId mirrors
-        // session.getFollowedRemoteAvatarId() purely so the panel knows
-        // whether to show "Follow" or "Stop Following".
         const avatarInfo = ref(null);
         const followedRemoteAvatarId = ref(null);
-        // 0.2.43 — "who is near me," read fresh from
-        // session.getNearbyAvatars() every refreshSpatialUI(), each
-        // entry enriched with a resolved displayName (session.
-        // getAvatarDisplayName()) the way loadedWorlds below already
-        // enriches a bare documentId with its own publication's
-        // title/author — a UI-layer presentation concern, not
-        // something the session's own minimal, spec-shaped return
-        // value carries itself.
+        // Enriched with display names here: a presentation concern the session's
+        // return value does not carry.
         const nearbyAvatars = ref([]);
         const showPlacementEditor = ref(false);
         const placementEditTarget = ref(null);
-        // 0.2.25: set only after checkPlacementOverlap() has found an
-        // occupied destination under a policy that requires
-        // confirmation (WARN) — see onMovePlacement(). null the rest of
-        // the time, including while the dialog is open but the user
-        // hasn't attempted a move yet.
+        // Set only when a move hits an occupied destination under a WARN policy.
         const placementOverlapWarning = ref(null);
-        // 0.2.26: World Navigation & Spatial Discovery UX — search
-        // results (populated on submit, not live-as-you-type; see
-        // WorldSearchPanel), and the "Documents Here" dialog opened
-        // from PlacementInfoPanel's overlap notice.
         const searchResults = ref([]);
         const showLocationDocuments = ref(false);
         const locationDocumentsPosition = ref(null);
         const locationDocumentsOccupants = ref([]);
-        // 0.2.29: World Location Browser — camera-driven exploration,
-        // built on top of the SAME searchWorld/exploreLocation results
-        // as the Search panel (see WorldNavigationSession's "World
-        // Location Browser" section). `locationBrowserInspected` mirrors
-        // the shape session.inspectDocument() returns and is cleared on
-        // every open/re-query, since an expansion from a previous query
-        // has nothing guaranteed to still correspond to a row in a new
-        // result set.
+        // Cleared on every open/re-query: an expansion from an earlier query need not
+        // match a row in the new results.
         const showLocationBrowser = ref(false);
         const locationBrowserCenter = ref(null);
         const locationBrowserRadius = ref(DEFAULT_EXPLORE_RADIUS);
         const locationBrowserDocuments = ref([]);
-        // 0.2.30: the diagnostics half of WorldNavigationSession.
-        // exploreLocation's { documents, diagnostics } envelope — see
-        // core/DiscoveryDiagnosticsSummary.js. Defaults to the
-        // "unavailable" shape (no trust-capable provider consulted)
-        // rather than null, so WorldLocationBrowser's banner always has
-        // something well-formed to render.
+        // Defaults to the "unavailable" shape so the banner always has well-formed
+        // data.
         const locationBrowserDiagnostics = ref(EMPTY_DISCOVERY_ENVELOPE.diagnostics);
         const locationBrowserInspected = ref(null);
         const cameraPosition = ref(null);
-        // 0.2.94 — World View Location & Navigation. `compassHeading`
-        // mirrors `cameraPosition`'s own refresh cadence exactly (both
-        // set inside refreshSpatialUI() below) — a pure, derived
-        // orientation readout for CompassIndicator, never polled or
-        // computed independently. `showLocationsPanel`/`worldLocations`
-        // back the Locations dialog: the location LIST is re-read fresh
-        // every time the panel opens (session.getWorldLocations() is a
-        // cheap, always-current query — see WorldLocationDirectory's
-        // own header), never cached across opens.
+        // The location list is re-read each time the panel opens, never cached.
         const compassHeading = ref(null);
-        // 0.3.6 — World Discovery & Exploration. Spatial context for
-        // current location (terrain zone, hydrology feature, nearby structures,
-        // nearby collaborators) derived deterministically from position + world.
         const spatialContext = ref(null);
-        // 0.3.6 — the compass's own contextual markers (design conversation:
-        // "extending the compass from merely N/E/S/W to contextual
-        // markers... but only for nearby meaningful locations"). A pure
-        // read/reshape of spatialContext.value — never a second query —
-        // capped at 5 total so the tiny dial never turns into a minimap
-        // (explicitly out of scope for 0.3.6). CompassIndicator only
-        // needs an id/direction/kind/label per marker; it never sees
-        // core/WorldSpatialContext.js's richer shape directly, keeping
-        // the component's own presentation-only contract unchanged.
+        // A reshape of spatialContext (never a second query), capped at 5 so the
+        // compass never becomes a minimap.
         const compassMarkers = computed(() => {
             if (!spatialContext.value) return [];
             const structures = (spatialContext.value.nearbyStructures || []).map((s) => (
@@ -244,21 +151,11 @@ export default {
             const collaborators = (spatialContext.value.nearbyCollaborators || []).map((c) => (
                 { id: `collaborator:${c.identityId}`, direction: c.direction, kind: 'collaborator', label: c.displayName }
             ));
-            // 0.3.7 — landmarks join the same contextual-marker mix,
-            // reusing every bit of 0.3.6's compass work (CompassIndicator
-            // already renders any `kind` generically via a CSS class —
-            // see that component's own header).
             const landmarks = (spatialContext.value.nearbyLandmarks || []).map((l) => (
                 { id: `landmark:${l.id}`, direction: l.direction, kind: 'landmark', label: l.title }
             ));
-            // 0.5.6 — Geographic Place Navigation & Arrival. A derived
-            // marker per nearby geographic place candidate, read off
-            // `nearbyGeographicPlaces` (its OWN much-larger radius —
-            // see core/GeographicPlaceNavigation.js#
-            // DEFAULT_NEARBY_GEOGRAPHIC_PLACE_RADIUS — not
-            // spatialContext's own ~100m proximity window), appended
-            // last so existing structure/collaborator/landmark markers
-            // keep priority under the same 5-marker cap below.
+            // Nearby geographic places use their own, much larger radius; appended last so
+            // the other markers keep priority under the cap.
             const places = (nearbyGeographicPlaces.value || []).map((p) => (
                 { id: `place:${p.fingerprintKey}`, direction: p.direction, kind: 'place', label: p.displayName }
             ));
@@ -266,523 +163,133 @@ export default {
         });
         const showLocationsPanel = ref(false);
         const worldLocations = ref([]);
-        // 0.3.9 — World Welcome & Guided Exploration. `welcomeContext`
-        // is session.getWelcomeContext(...)'s own toJSON() — re-read
-        // fresh on open and again on every live spatial-presence update
-        // (see _syncWorldSpatialPresence() below), never cached beyond
-        // that. `showWelcomePanel` opens automatically the first time
-        // this session enters a World's spatial presence (one showing
-        // per World per session — see `_welcomeShownForDocumentId`
-        // below, a plain non-reactive Set since it's bookkeeping, not
-        // something the template ever reads) and can be reopened any
-        // time through the "Explore" toolbar button —
-        // `welcomeIsArrival` only changes which framing/dismiss label
-        // WorldWelcomePanel shows, never the content.
+        // Re-read on open and on every spatial-presence update. Opens automatically once
+        // per World per session; `welcomeIsArrival` only changes the framing.
         const showWelcomePanel = ref(false);
         const welcomeContext = ref(null);
         const welcomeIsArrival = ref(true);
-        // 0.3.10 — World Persistence & Return Experience. `worldReturnInfo`
-        // is null for a World this replica has never visited before (a
-        // first-timer), or `{ lastVisitedAt }` when it has — taken in
-        // _syncWorldExperience() below from the record that tick's
-        // restoreWorldExperience() call returns (read before this visit
-        // is ever saved), so it always reflects the PRIOR visit, never
-        // the one currently in progress. Purely
-        // presentational — WorldWelcomePanel uses it only to swap
-        // "Welcome to X" for "Welcome back to X" / "Continue Exploring",
-        // never to decide anything this view or the session doesn't
-        // already independently decide.
+        // Null on a first visit, else the PRIOR visit's time (read before this visit is
+        // saved). Presentational only.
         const worldReturnInfo = ref(null);
-        // 0.3.7 — World Landmarks & Personal Waypoints. `canEditActiveWorld`
-        // mirrors isActiveWorldOwner's own refresh cadence exactly (both
-        // set inside refreshSpatialUI() below) — a pure reflect of
-        // session.canEditDocument(activeDocumentId), gating the Add/Edit/
-        // Remove landmark affordances the same "reflect, never decide"
-        // way isActiveWorldOwner already gates the Members panel's
-        // owner-only actions. `showLandmarkForm`/`landmarkFormTarget`
-        // back the Add/Edit Landmark dialog: `landmarkFormTarget` is
-        // null for Add, or { id, title, description } for Edit — see
-        // LandmarkFormModal's own header.
+        // Mirrors session.canEditDocument(); gates the landmark affordances.
         const canEditActiveWorld = ref(false);
         const showLandmarkForm = ref(false);
         const landmarkFormTarget = ref(null);
-        // 0.5.0 — World Regions & Decentralized Place Naming. Same
-        // shape/gating as showLandmarkForm/landmarkFormTarget above —
-        // `regionFormTarget` is null for Add, or
-        // { id, name, description, kind, radius } for Edit — see
-        // RegionFormModal's own header.
         const showRegionForm = ref(false);
         const regionFormTarget = ref(null);
-        // 0.5.2 — Place Naming & Naming Claims. `namingPanelRegionId` is
-        // the region this panel currently reads/writes claims for; the
-        // panel's actual props (claims/namingView/preferredName) are
-        // re-derived fresh from the session on open AND after every
-        // publish/retract/set-preferred action below, never cached
-        // independently — see openNamingPanel()/refreshNamingPanel().
+        // The panel's data is re-derived from the session on open and after every
+        // action, never cached.
         const showNamingPanel = ref(false);
         const namingPanelRegionId = ref(null);
         const namingPanelClaims = ref([]);
         const namingPanelView = ref([]);
         const namingPanelPreferredName = ref(null);
-        // 0.5.4 — Place Identity & Geographic Claim Resolution.
-        // `namingPanelGeographicRegions`/`namingPanelGeographicView` are
-        // session.getGeographicNamingView()'s own output — every region
-        // this replica currently knows about that CANDIDATE-matches
-        // namingPanelRegionId's own geometry (core/PlaceIdentity.js),
-        // and the combined naming view across every one of them. Purely
-        // additive alongside namingPanelClaims/namingPanelView above,
-        // which stay scoped to exactly this one region, unchanged.
+        // Every known region that candidate-matches this region's geometry, and their
+        // combined naming view.
         const namingPanelGeographicRegions = ref([]);
         const namingPanelGeographicView = ref([]);
-        // 0.9.320 — Explicit Place Naming Publication Action. Ephemeral,
-        // per-open-panel UI state for "announce this already-signed claim
-        // to Nostr" — mirroring `ui/components/OwnPublicationPanel.js`'s own
-        // executing/error/result/requestId shape for its "Distribute
-        // Snapshot" action, one domain over. `namingPanelPublishToNostrClaimId`
-        // is the claim the LAST click targeted — since "All Claims" can list
-        // several claims, this is what lets the panel show a result/error
-        // beside the specific row it describes, rather than ambiguously
-        // beside every row. Reset (and any in-flight call invalidated via
-        // the requestId guard) in openNamingPanel()/closeNamingPanel() below
-        // — the identical "a changed target invalidates whatever the prior
-        // target's own state described" restraint that family already
-        // holds, applied here to "which region's panel is open" instead of
-        // "which Publication is active."
+        // Per-panel state for announcing a claim to Nostr. The claim id lets the result
+        // show beside the right row. Reset (and in-flight calls invalidated) when the
+        // panel opens or closes.
         const namingPanelPublishToNostrClaimId = ref(null);
         const namingPanelPublishToNostrExecuting = ref(false);
         const namingPanelPublishToNostrError = ref(null);
         const namingPanelPublishToNostrResult = ref(null);
         const namingPanelPublishToNostrRequestId = ref(0);
         const myIdentityId = computed(() => session.getMyIdentityId());
-        // 0.5.1 — World Maps & Geographic Navigation. `mapContent` is
-        // session.getMapContent()'s own shape — re-read on open, then on
-        // the SAME cadence as spatialContext/cameraPosition below (every
-        // refreshSpatialUI() tick while the map is open) so a
-        // collaborator's dot keeps moving while the map stays open, the same "always
-        // current, never a second source of truth" posture spatialContext
-        // itself already has. See ui/components/WorldMapPanel.js's own
-        // header for why panning/zooming that view is deliberately NOT
-        // reset by this refresh.
+        // Refreshed every tick while open, so collaborators keep moving on the map.
+        // Pan/zoom are not reset by the refresh.
         const showMapPanel = ref(false);
         const mapContent = ref({ regions: [], landmarks: [], structures: [], collaborators: [], viewerPosition: null });
-        // 0.5.5 — Geographic Place Directory & Identity UX.
-        // `geographicPlaces` is session.getGeographicPlaceDirectory()'s
-        // own array of GeographicPlaceView#toJSON() rows — re-read fresh
-        // every time the directory opens, the same "cheap, never cached"
-        // posture worldLocations already keeps. `geographicPlace` is
-        // whichever ONE row is currently open in GeographicPlacePanel,
-        // or null; `mapHighlightRegionKeys` is purely additive state for
-        // WorldMapPanel — a "Show on Map" click never changes what the
-        // map itself contains, only which of its ALREADY-drawn regions
-        // get an extra highlight (see WorldMapPanel's own header).
+        // Re-read each time the directory opens. "Show on Map" only highlights regions
+        // already drawn.
         const showGeographicPlaceDirectory = ref(false);
         const geographicPlaces = ref([]);
         const showGeographicPlacePanel = ref(false);
         const geographicPlace = ref(null);
         const mapHighlightRegionKeys = ref([]);
-        // 0.5.6 — Geographic Place Navigation & Arrival.
-        // `nearbyGeographicPlaces` is session.getNearbyGeographicPlaces()'s
-        // own already-sorted/distance/direction-labeled rows, refreshed
-        // on the SAME cadence as spatialContext/mapContent above (every
-        // refreshSpatialUI() tick) — the compass and the nav HUD legend
-        // both read this ref directly; the directory panel's own
-        // "Nearby Places" section is populated from it too when the
-        // panel opens (see openGeographicPlaceDirectory() below).
         const nearbyGeographicPlaces = ref([]);
-        // 0.9.257 — World View Place Naming Presentation. The two state
-        // atoms this milestone's own brief names by name: `nearbyPlaceNamingClaims`
-        // is exactly `placeNamingDiscoveryMonitor.lastResult` (see
-        // `refreshSpatialUI()`, below) — one discovery envelope with its own
-        // resolved `.position` attached per entry, UNTOUCHED, never re-ranked,
-        // deduplicated, or reduced to "the" name for a place; two claims
-        // naming the same ground both appear, exactly as `application/
-        // PlaceNamingDiscoveryMonitor.js`'s own `lastResult` already holds
-        // them. `placeNamingDiscoveryError` mirrors the monitor's own
-        // `lastError` — a small, optional, non-authoritative indicator, never
-        // a reason to clear `nearbyPlaceNamingClaims`. Neither ref is ever
-        // written from anywhere but that one `.then()` callback — this view
-        // performs no discovery, position resolution, or proximity filtering
-        // of its own; see `placeNamingDiscoveryMonitor`'s own construction
-        // comment, below, for where those responsibilities actually live.
+        // Exactly placeNamingDiscoveryMonitor's last result: never re-ranked,
+        // deduplicated or reduced to one name per place. Written only from the
+        // monitor's callback; this view does no discovery of its own. The error is a
+        // small indicator and never clears the claims.
         const nearbyPlaceNamingClaims = ref([]);
         const placeNamingDiscoveryError = ref(null);
-        // 0.5.8 — World View Contextual Focus & Information Hierarchy.
-        // `focusContext` is a core/WorldFocusContext.js#WorldFocusContext.toJSON()
-        // shape (or null), rebuilt fresh every time something is
-        // inspected — never cached, mirroring every other "cheap,
-        // rebuilt on demand" derived read in this file. WorldFocusPanel
-        // is its own overlay, independent of primaryMode, so it can be
-        // opened from Explore's own nearby rows OR the Locations panel
-        // without either of them having to leave the surface they were
-        // already on — see openFocusForLocation()/
-        // openFocusForCollaborator() below.
+        // Rebuilt on each inspection. Its own overlay, so it can open from Explore or
+        // Locations without leaving either.
         const showFocusPanel = ref(false);
         const focusContext = ref(null);
-        // 0.5.7 — World View UX & Progressive Exploration.
-        // `worldViewNav` is a plain, non-reactive
-        // WorldViewNavigationState instance — treated exactly like
-        // `session` itself elsewhere in this file: this view calls its
-        // methods, then mirrors whatever changed into these refs so
-        // the template can react to it. See that class's own header,
-        // and setPrimaryMode()/goBackInPlaces() below for the mirroring.
+        // A plain non-reactive object, like `session`: call its methods, then mirror the
+        // changes into refs.
         const worldViewNav = new WorldViewNavigationState();
         const primaryMode = ref(worldViewNav.primaryMode);
-        // 0.2.99 — World Collaboration UX. `worldMembers`/
-        // `worldPresenceRoster` are the RAW facts session.
-        // listWorldMembers()/getWorldPresenceRoster() already return for
-        // whichever document is currently ACTIVE (session.
-        // getActiveDocumentId()) — re-read on every refreshSpatialUI()
-        // tick AND on every live onWorldMembershipChanged/
-        // onWorldPresenceChanged notification (see _syncWorldPresence()
-        // below), never cached across a document switch.
-        // `worldCollaborationRoster` (below, computed) is the ONE place
-        // they're joined into rows a panel can render — see
-        // ui/components/WorldCollaborationRoster.js's own header.
+        // Raw facts for the ACTIVE document, re-read on each refresh and on live
+        // membership/presence changes; joined into rows only by worldCollaborationRoster.
         const showMembersPanel = ref(false);
         const worldMembers = ref([]);
         const worldPresenceRoster = ref([]);
         const isActiveWorldOwner = ref(false);
-        // identityId currently mid-grant/mid-revoke, or null — see
-        // grantWorldMember()/revokeWorldMember() below.
         const collaborationPendingIdentityId = ref(null);
-        // 0.3.0 — Collaborative Spatial Presence. `spatialCollaboratorRows`
-        // is buildSpatialCollaboratorRows()'s own output — ONE row per
-        // identity, resolved through the SAME resolveIdentityDisplayName()
-        // this view already uses for worldCollaborationRoster below.
-        // Refreshed on every live onWorldSpatialPresenceChanged
-        // notification (see _syncWorldSpatialPresence() below), never
-        // polled — spatial presence already updates far more often than
-        // refreshSpatialUI()'s own 3-second cadence would be worth
-        // reading on a timer.
+        // One row per identity, refreshed on each live spatial-presence change (never
+        // polled: it changes far more often than the refresh cadence).
         const spatialCollaboratorRows = ref([]);
         const feedbackMessage = ref('');
         const feedbackVisible = ref(false);
 
-        // 0.2.35: World View needs to know who's logged in to render
-        // that user's own avatar (see WorldNavigationSession's
-        // "Local Avatar" section) — the same identityUseCase.provider
-        // every other publish-capable surface (EditorView) already
-        // reads, just not previously threaded through here since
-        // nothing in World View needed identity before now.
         const identityUseCase = inject('identityUseCase');
-        // 0.2.59 — Peer-Based Avatar Social Transport: the SAME
-        // app-wide PeerSessionManager/PeerMessageBus/FriendRelationshipUseCase
-        // ui/main.js already provides for /peers and the friendship
-        // protocol (0.2.55/0.2.57), handed to CreateWorldViewUseCase so
-        // presence/profile/interaction ride the real authenticated peer
-        // network instead of the local development BroadcastChannel
-        // transport — see application/CreateWorldViewUseCase.js's own
-        // comment.
         const peerSessionManager = inject('peerSessionManager');
         const peerMessageBus = inject('peerMessageBus');
         const friendRelationshipUseCase = inject('friendRelationshipUseCase');
-        // 0.2.60 — the SAME app-wide PeerBlockUseCase ui/main.js already
-        // provides for /peers, handed to CreateWorldViewUseCase so it
-        // can derive the isBlocked predicate both the outbound transport
-        // and the inbound trust boundaries consult — see that use
-        // case's own comment.
         const peerBlockUseCase = inject('peerBlockUseCase');
-        // 0.2.95 — the SAME app-wide DeviceAuthorizationPropagationUseCase
-        // ui/main.js already provides for /peers, handed to
-        // CreateWorldViewUseCase so World View's own editing-authority
-        // check can recognize an authorized device as speaking for its
-        // parent identity — see that use case's own comment.
         const deviceAuthorizationUseCase = inject('deviceAuthorizationUseCase');
-        // 0.2.99 — the SAME app-wide PeerRelationshipUseCase ui/main.js
-        // already provides for /peers and ConversationsView's own alias
-        // resolution, injected here ONLY for display purposes — a known
-        // alias for a World Member's raw identityId, exactly the same
-        // `alias || shortId(identityId)` degradation ConversationsView
-        // already uses. Never consulted for authorization; see
-        // resolveIdentityDisplayName() below.
+        // Display only (aliases), never for authorization.
         const peerRelationshipUseCase = inject('peerRelationshipUseCase');
-        // 0.9.17 — Integrate World Encounters into the Existing World
-        // View. The SAME app-wide `worldDiscoverySourceRegistry`
-        // `ui/main.js` already provides (0.9.14) and
-        // `ui/views/LiveWorldView.js` (0.9.15) already injects, handed
-        // straight through as `WorldEncounterCanvas`'s own `registry`
-        // prop below — never a second registry, never anything this
-        // view derives from it itself. See the "World Encounters"
-        // CollapsibleSection in this file's own template, and its own
-        // header comment there, for why this view still owns no
-        // discovery logic of any kind. Named `worldDiscoverySourceRegistry`
-        // to avoid colliding with the `registry` (BrickRegistry) constant
-        // immediately below — two entirely unrelated concepts that would
-        // otherwise share a name only because of where in this file they
-        // happen to appear.
+        // Named to avoid clashing with the BrickRegistry `registry` below. This view
+        // performs no discovery itself.
         const worldDiscoverySourceRegistry = inject('worldDiscoverySourceRegistry', null);
-        // 0.9.99 — Decentralized Material Verification World View
-        // Integration. The SAME app-wide `worldEncounterMaterialSources`/
-        // `worldEncounterMaterialVerifier` `ui/main.js` now provides,
-        // handed straight through as `WorldEncounterCanvas`'s own already-
-        // existing `materialSources`/`materialVerifier` props below —
-        // never reconstructed, never a second verifier, never a fact this
-        // view derives or judges itself. `WorldEncounterCanvas` already
-        // owns the entire request/response inspection lifecycle
-        // (0.9.39/0.9.40) and already renders its own Material/
-        // Verification panel (`loading.status`/`verification.status`,
-        // unchanged); this view's only job is to stop leaving both props
-        // at their own default of `null`.
         const worldEncounterMaterialSources = inject('worldEncounterMaterialSources', null);
         const worldEncounterMaterialVerifier = inject('worldEncounterMaterialVerifier', null);
-        // 0.9.100 — Publication Distribution World View Integration. The
-        // SAME app-wide `publicationDistributionLifecycleStore` `ui/main.js`
-        // now composes (restored + persistence-bridged from the existing
-        // 0.9.50-through-0.9.57 lifecycle chain), handed straight through as
-        // `WorldEncounterCanvas`'s own new `distributionLifecycleStore`
-        // prop below — never a second store, never a lifecycle this view
-        // derives, transitions, or persists itself. This view's only job is
-        // to stop leaving that prop at its own default of `null`, mirroring
-        // 0.9.99's own restraint immediately above exactly, one collaborator
-        // over.
         const publicationDistributionLifecycleStore = inject('publicationDistributionLifecycleStore', null);
-        // 0.9.104 — World View Publication Distribution Action. The SAME
-        // app-wide `publicationDistributionCommand` `ui/main.js` has
-        // provided since 0.9.103 (a thin closure already bound to the
-        // SAME `publicationDistributionLifecycleStore` injected
-        // immediately above), injected here so `distributeWorldEncounterPublication()`
-        // below can call it — never a second command, never anything this
-        // view constructs, orchestrates, or writes into the lifecycle
-        // store itself.
         const publicationDistributionCommand = inject('publicationDistributionCommand', null);
-        // 0.9.450 — Nostr Multi-Relay Publication Distribution Wiring. The
-        // SAME app-wide `multiRelayNostrPublicationDistributionCommand`
-        // `ui/main.js` has provided since 0.9.447 (composed against the
-        // Wanderer's own persisted Nostr relay set — see core/
-        // NostrRelayConfiguration.js's own "unified" header — bound to the
-        // identical `publicationDistributionLifecycleStore`
-        // injected above) — injected here so `distributeWorldEncounterPublication()`
-        // below can reach it for the Nostr path specifically. This view
-        // still constructs no orchestrator, uploader, or publisher of its
-        // own, and makes no relay-set decision of its own: which relays get
-        // used is entirely `ui/main.js`'s own composition-root decision,
-        // exactly as it already is for `publicationDistributionCommand`.
         const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);
-        // 0.9.138 — World View Snapshot Distribution Action. The SAME
-        // app-wide `snapshotDistributionCommand` `ui/main.js` now composes
-        // (0.9.137's own `composeSnapshotDistributionRuntime()`, sequenced
-        // by 0.9.136's own unmodified `executeSnapshotDistributionCommand()`)
-        // — a thin `(bytes) -> Promise<{ contentReference, announcement }>`
-        // function, injected here so `distributeWorldEncounterSnapshot()`
-        // below can call it.
-        //
-        // Bug fix — `publicationCatalogContentResolver` (resolves by id,
-        // against application/LocalPublicationCatalog.js) used to be
-        // injected here instead of `publicationContentStore` below. That
-        // catalog only ever holds peer-announced DecentralizedPublication
-        // envelopes (see application/CreatePublicationPeerExchangeUseCase.js's
-        // own header, "Deliberately NOT wired into
-        // application/CreateWorldViewUseCase.js") — never a World
-        // Publication created by PublishDocumentUseCase/LocalPublisherProvider,
-        // so it always resolved to nothing for a genuine World Publication,
-        // regardless of wallet/relay configuration. `publicationContentStore`
-        // is the SAME content-addressed store the publish path itself
-        // already wrote bytes into; `distributeWorldEncounterSnapshot()`,
-        // below, reads them back through the Publication's own
-        // `contentReference` — the object it already holds, never a second
-        // id-based lookup.
         const snapshotDistributionCommand = inject('snapshotDistributionCommand', null);
         const publicationContentStore = inject('publicationContentStore', null);
-        // Snapshot Distribution storage backend choice — the SAME
-        // app-wide `snapshotDistributionAvailableStorageTypes` ui/main.js
-        // already provides for ui/views/DecentralizedPublicationsView.js's
-        // own picker (a plain `() -> string[]` read of the eligible-and-
-        // currently-registered content backends, 'ipfs'/'ar'). Called
-        // once, exactly like that page already does — the result is a
-        // plain array, never recomputed reactively, since the underlying
-        // registry is populated once at composition-root startup.
-        // Forwarded to OwnPublicationPanel/WorldEncounterCanvas as a prop
-        // so each can offer the same Arweave/IPFS choice next to its own
-        // "Distribute Snapshot" button, rather than silently defaulting
-        // to Arweave the way this function always used to.
+        // Called once: the registry is populated at startup.
         const snapshotDistributionAvailableStorageTypesCommand = inject('snapshotDistributionAvailableStorageTypes', null);
-        // 0.9.667 — Role Provider Preference As Dropdown Default. The SAME
-        // resolved ANNOUNCEMENT_AND_DISCOVERY/CONTENT preferences ui/main.js
-        // already computes once at boot — forwarded to OwnPublicationPanel/
-        // WorldEncounterCanvas as props, the identical pattern
-        // `snapshotDistributionStorageTypes` immediately below already
-        // establishes, so each can seed its own picker's initial choice
-        // rather than hardcoding 'nostr'/the first eligible backend
-        // unconditionally. See application/SavedProviderDefaultChoice.js's
-        // own header.
+        // Seeds the pickers' initial choices only.
         const defaultAnnouncementDiscoveryProvider = inject('defaultAnnouncementDiscoveryProvider', 'nostr');
         const defaultContentDistributionProvider = inject('defaultContentDistributionProvider', null);
         const snapshotDistributionStorageTypes = snapshotDistributionAvailableStorageTypesCommand
             ? snapshotDistributionAvailableStorageTypesCommand()
             : [];
-        // Remote pinning (e.g. Pinata) — the SAME app-wide, stateless
-        // `ipfsRemotePublicationCoordinator` ui/views/DecentralizedPublicationsView.js's
-        // own "Publish to Remote IPFS" action already calls — exposed
-        // directly here (never a second instance) so
-        // `distributeWorldEncounterSnapshot()` below can offer Remote
-        // Pinning as a THIRD storage choice, alongside the registry-backed
-        // 'ar'/'ipfs' (local Kubo) choices above. Unlike those two, Remote
-        // Pinning needs no pre-registration — it holds no credential of
-        // its own, so it is never listed in `snapshotDistributionStorageTypes`;
-        // a Wanderer configures the endpoint/credential fresh, per attempt,
-        // exactly the way DecentralizedPublicationsView.js's own ephemeral
-        // configuration draft already works (see application/
-        // IpfsRemotePublishingConfiguration.js's own header, "EPHEMERAL BY
-        // CONSTRUCTION").
+        // Remote Pinning needs no registration (it holds no credential), so it is never
+        // in snapshotDistributionStorageTypes; the endpoint and credential are entered
+        // per attempt.
         const ipfsRemotePublicationCoordinator = inject('ipfsRemotePublicationCoordinator', null);
-        // AMENDED BY 0.9.669 — Per-Click Snapshot Announcement/Discovery
-        // Substrate Override. Replaces the single, fixed
-        // `snapshotDiscoveryPublisher` instance this Remote Pinning branch
-        // used to read directly: `resolveSnapshotDiscoveryPublisher(discoveryProvider)`
-        // (ui/main.js's own new resolver, provided alongside the
-        // unmodified `snapshotDistributionCommand` key) picks between the
-        // SAME two already-composed Nostr/Arweave instances
-        // `snapshotDistributionCommand` itself now picks between for the
-        // registry-backed 'ar'/'ipfs' paths — never a second, third
-        // construction of either — so an explicit choice applies
-        // identically regardless of which of the three storage paths a
-        // Wanderer picked.
+        // Picks the Nostr or Arweave publisher for the Remote Pinning path, like
+        // snapshotDistributionCommand does for the other paths.
         const resolveSnapshotDiscoveryPublisher = inject('resolveSnapshotDiscoveryPublisher', null);
-        // 0.9.142 — World View Snapshot Discovery Command. The SAME
-        // app-wide `discoverSnapshotCommand` `ui/main.js` now composes
-        // (0.9.142's own `composeDiscoverSnapshotRuntime()`, sequenced by
-        // `executeDiscoverSnapshotCommand()`) — a thin `(discoveryTag,
-        // contentHash, ...) -> Promise<{ outcome, bytes, candidates,
-        // locator, storage, reason }>` capability, injected here so
-        // `discoverOwnSnapshot()` below can call it. See that function's
-        // own header for how "which publication" becomes "which
-        // contentHash."
         const discoverSnapshotCommand = inject('discoverSnapshotCommand', null);
-        // 0.9.151 — World View Snapshot Candidate Browser. The SAME
-        // app-wide `discoverSnapshotCandidatesCommand` `ui/main.js` now
-        // composes (reusing the SAME `NostrSnapshotDiscoveryQueryService`
-        // instance `discoverSnapshotCommand`'s own resolver already
-        // wraps) — a thin `() -> Promise<[{ contentHash, locator,
-        // storage }, ...]>` capability. Unlike `discoverSnapshotCommand`,
-        // this capability needs no `publication`-derived argument at all
-        // — browsing what has been announced under the campaign
-        // discoveryTag is not "which Publication," so this is handed
-        // straight through to `OwnPublicationPanel`, with no wrapper
-        // function of this view's own.
+        // Takes no publication, so it is passed straight to OwnPublicationPanel.
         const discoverSnapshotCandidatesCommand = inject('discoverSnapshotCandidatesCommand', null);
-        // 0.9.589 — Distinguish Snapshot Discovery Absence from Discovery
-        // Failure. The SAME app-wide `discoverSnapshotCandidatesWithOutcomeCommand`
-        // `ui/main.js` now composes alongside `discoverSnapshotCandidatesCommand`
-        // above — a `() -> Promise<{ outcome, candidates }>` capability, handed
-        // straight through to `OwnPublicationPanel` exactly like its sibling.
-        // `discoverSnapshotCandidatesCommand` above stays wired unchanged, still
-        // the one `worldSnapshotDiscoveryMonitor` below calls.
         const discoverSnapshotCandidatesWithOutcomeCommand = inject('discoverSnapshotCandidatesWithOutcomeCommand', null);
-        // 0.9.186 — World Snapshot Background Discovery. The SAME app-wide
-        // `WorldSnapshotDiscoveryMonitor` instance `ui/main.js` composes
-        // around the exact `discoverSnapshotCandidatesCommand` above —
-        // never a second campaign, never a second query service. See
-        // `refreshSpatialUI()`, below, for the one call site that feeds it
-        // this view's own already-computed `spatialContext`.
         const worldSnapshotDiscoveryMonitor = inject('worldSnapshotDiscoveryMonitor', null);
-        // 0.9.257 — World View Place Naming Presentation. The SAME
-        // app-wide `PlaceNamingDiscoveryQueryService` `ui/main.js` composes
-        // around whatever Nostr transport is available — never a second
-        // relay client, never a second query service. Only the
-        // TRANSPORT-level half; see `placeNamingDiscoveryMonitor`'s own
-        // construction comment, below, for why the command and position
-        // resolver built around it are this view's own to compose, not
-        // `ui/main.js`'s: only this session actually holds the current
-        // World layout `resolveClaimPosition` needs.
+        // Only the transport half: the command and position resolver are composed here
+        // because only this session holds the World layout.
         const placeNamingDiscoveryQueryService = inject('placeNamingDiscoveryQueryService', null);
-        // 0.9.320 — Explicit Place Naming Publication Action. The SAME
-        // app-wide `publishPlaceNamingClaimToNostrCommand` `ui/main.js` now
-        // composes (`application/PlaceNamingPublicationRuntimeComposition.js`'s
-        // own `composePlaceNamingPublicationRuntime()`, wrapping the
-        // already-existing `NostrPlaceNamingDiscoveryPublisher`, 0.9.316) —
-        // a thin `(claim) -> Promise<{ published, relayUrl, id,
-        // discoveryTag }>` capability, injected here so
-        // `publishNamingClaimToNostr()` below can call it. `null` when
-        // `ui/main.js` provides nothing (e.g. in a test harness that never
-        // calls `app.provide` for it) — gated the identical way every other
-        // injected command in this file already is.
         const publishPlaceNamingClaimToNostrCommand = inject('publishPlaceNamingClaimToNostrCommand', null);
-        // 0.9.152 — Selected Snapshot Candidate Resolution. The SAME
-        // app-wide `resolveSelectedSnapshotCommand` `ui/main.js` now
-        // composes (reusing the SAME resolver/content store
-        // `discoverSnapshotCommand` already wraps) — a thin `(candidate)
-        // -> Promise<{ outcome, bytes, candidates, locator, storage,
-        // reason }>` capability. Like `discoverSnapshotCandidatesCommand`,
-        // it is handed straight through to `OwnPublicationPanel`, with no
-        // wrapper function of this view's own — its own `(candidate) ->
-        // Promise<...>` shape already matches that prop exactly.
         const resolveSelectedSnapshotCommand = inject('resolveSelectedSnapshotCommand', null);
-        // 0.9.158 — Selected Snapshot Materialization. The SAME app-wide
-        // `materializeSelectedSnapshotCommand` `ui/main.js` now composes
-        // (reusing the SAME `storeSnapshotContentUseCase` every other
-        // explicit materialization action already shares) — a thin
-        // `(resolution) -> Promise<{ outcome, contentHash, contentReference,
-        // reason, source }>` capability. Like `resolveSelectedSnapshotCommand`,
-        // it is handed straight through to `OwnPublicationPanel`, with no
-        // wrapper function of this view's own — its own `(resolution) ->
-        // Promise<...>` shape already matches that prop exactly.
         const materializeSelectedSnapshotCommand = inject('materializeSelectedSnapshotCommand', null);
-        // 0.9.215 — Snapshot Export Capability Integration. The SAME
-        // app-wide `exportSnapshotCommand` `ui/main.js` now composes
-        // (wrapping `snapshotContentMaterializationCoordinator`'s own new
-        // `export()` method around the SAME `publicationCatalog`/
-        // `publicationContentStore` every other local Snapshot action
-        // already shares) — a thin `(publicationId) -> Promise<Publication
-        // SnapshotTransferPackage>` capability, injected here so
-        // `exportOwnSnapshot()` below can call it. See that function's own
-        // header for how "which publication" becomes "which publicationId."
         const exportSnapshotCommand = inject('exportSnapshotCommand', null);
-        // 0.9.110 — Decentralized Material Retrieval Runtime Composition.
-        // The SAME app-wide `DecentralizedWorldDiscoveryLeadRegistry`
-        // `ui/main.js` now composes, handed straight through as
-        // `WorldEncounterCanvas`'s own already-existing (0.9.40)
-        // `worldDiscoveryLeadRegistry` prop below — that prop, and every
-        // reactive behavior behind it (subscribing, resolving a lead for
-        // the current selection, the Wanderer's own ambiguity choice),
-        // has been real and tested since 0.9.40; only the registry handed
-        // to it was ever missing. `discoverWorldEncounterPublicationCommand`
-        // is the capability that gap left unreachable — a thin, pre-bound
-        // closure (`{ objectId, discoveryTag } -> Promise<{ discovery,
-        // resolution, inspection }>`). 0.9.111 (below) forwards it straight
-        // to `WorldEncounterCanvas`'s own new `discoveryCommand` prop —
-        // never reconstructed and never a second discovery/resolution/
-        // verification algorithm of its own.
         const worldDiscoveryLeadRegistry = inject('worldDiscoveryLeadRegistry', null);
         const discoverWorldEncounterPublicationCommand = inject('discoverWorldEncounterPublicationCommand', null);
-        // Live lead-association evidence for WorldEncounterCanvas's
-        // "Location" / "Choose Location" panel — composed in ui/main.js
-        // from the same runtime and publications the discovery command
-        // above uses. `null` (no provider) keeps the panel hidden, exactly
-        // as before.
+        // null keeps the Location panel hidden.
         const worldEncounterLeadAssociationsQuery = inject('worldEncounterLeadAssociationsQuery', null);
-        // 0.9.357 — the SAME canonical campaign tag ui/main.js already
-        // supplies to Publication distribution's own Nostr publisher,
-        // forwarded verbatim to WorldEncounterCanvas's own new
-        // defaultDiscoveryTag prop below — never re-declared here, never a
-        // second literal. See tests/PublicationDiscoveryTagUXConsistencyAudit.test.js
-        // (0.9.356) for why this is safe: the value only seeds the
-        // Discovery-tag input's own starting value and never touches how
-        // discoverWorldEncounterPublicationCommand itself is called.
+        // Only seeds the Discovery-tag field.
         const publicationDiscoveryTag = inject('publicationDiscoveryTag', '');
-        // 0.9.597 — Publication Action Provider Continuity Fix. The SAME
-        // app-wide discovery/DecentralizedPublicationDiscoveryProvider.js
-        // instance ui/main.js already provides (0.9.337), and this view
-        // already injects, further below, for Repository search
-        // enrichment only (see `decentralizedDiscoveryProviderForEnrichment`'s
-        // own comment) — hoisted up here so the SAME injected value can
-        // also reach CreateWorldViewUseCase.js, which now (0.9.597) uses
-        // it to give WorldNavigationSession#getPublicationForDocument()/
-        // findPublicationById() a route to a Repository-admitted
-        // Publication, without touching World Search's own local-only
-        // discoveryProvider. `inject()` with the same key is idempotent —
-        // this is not a second, competing injection.
+        // Also passed to CreateWorldViewUseCase so publication actions can reach
+        // Repository-admitted Publications, without widening World Search.
         const decentralizedDiscoveryProviderForEnrichment = inject('decentralizedPublicationDiscoveryProvider', null);
-        // 0.9.651 — Persist World-Encounter Publication Admissions. The
-        // SAME app-wide `LocalWorldEncounterPublicationAdmissionLog` ui/main.js
-        // constructs and already reconstructs into
-        // `decentralizedPublicationDiscoveryProvider` at startup — forwarded
-        // to `WorldEncounterCanvas`'s own new `publicationAdmissionLog` prop,
-        // below, so a World Encounter admission this replica verifies right
-        // now survives a restart exactly the way one admitted through
-        // ui/views/DecentralizedPublicationsView.js's own catalog already
-        // does. `null` when nothing provides it — an existing, harmless
-        // no-op for `WorldEncounterCanvas`, matching every other optional
-        // collaborator here.
         const worldEncounterPublicationAdmissionLog = inject('worldEncounterPublicationAdmissionLog', null);
         const registry = new CreateBrickRegistryUseCase().execute();
         const worldViewFactory = new CreateWorldViewUseCase().execute(identityUseCase.provider, {
@@ -794,45 +301,12 @@ export default {
             decentralizedPublicationDiscoveryProvider: decentralizedDiscoveryProviderForEnrichment
         });
         const session = worldViewFactory.createSession(registry);
-        // 0.9.187 — Automatic Snapshot Encounter Cascade. Composes the SAME
-        // `resolveSelectedSnapshotCommand`/`materializeSelectedSnapshotCommand`/
-        // `worldDiscoverySourceRegistry` already injected above (and already
-        // handed to `OwnPublicationPanel`'s own explicit
-        // Resolve/Materialize/Register buttons, untouched by this
-        // milestone) with two small new lookups this SAME `session` now
-        // exposes (`getPlacementInfoForPublication`/`findPublicationById`,
-        // 0.9.187) — never a second resolver, materializer, or registry.
-        // Scoped to this WorldView's own mount, exactly like `session`
-        // itself: a fresh cascade (and therefore a fresh idempotency map,
-        // see that file's own header) accompanies each fresh session,
-        // rather than persisting across an unrelated later visit to a
-        // World route. See `refreshSpatialUI()`, below, for the one call
-        // site that feeds it `worldSnapshotDiscoveryMonitor`'s own
-        // just-produced `lastResult`.
-        //
-        // 0.9.193 — Automatic Snapshot Session-Lifetime Guard.
-        // `automaticCascadeSessionActive` is the ONE piece of new state this
-        // milestone adds: a plain (non-reactive) flag, exactly like
-        // `spatialInterval` above, true for as long as this WorldView mount
-        // is live and flipped to `false` as the very first statement in
-        // `onBeforeUnmount()`, below — BEFORE `session.dispose()` and before
-        // anything else tears down. `isSessionActive` hands the cascade a
-        // closure reading this flag rather than the flag itself, so the
-        // cascade always observes its CURRENT value, synchronously, no
-        // matter how long its own resolve/materialize/place chain has been
-        // running — see application/AutomaticSnapshotEncounterCascade.js's
-        // own "0.9.193" header section for why this is the ONLY new seam
-        // needed: the cascade never learns WHY the flag changed, only THAT
-        // it did.
+        // The automatic Snapshot cascade, scoped to this mount (a fresh idempotency map
+        // per session). `automaticCascadeSessionActive` is set false first thing on
+        // unmount; the cascade reads it through a closure so a long-running chain sees
+        // the current value and stops.
         let automaticCascadeSessionActive = true;
-        // 0.9.552 — Observer-Local Novel Publication Encounter Presentation.
-        // Scoped to this WorldView's own mount, the same "fresh instance
-        // accompanies each fresh session" posture `automaticSnapshotEncounterCascade`
-        // and `session` above already hold — a fresh, empty store
-        // accompanies each fresh session, never surviving a remount or
-        // shared with any other Wanderer's own session. See
-        // application/ObserverLocalEncounterStore.js's own header for why
-        // this is deliberately NOT the shared `worldDiscoverySourceRegistry`.
+        // Scoped to this mount, never shared (see ObserverLocalEncounterStore).
         const observerLocalEncounterStore = new ObserverLocalEncounterStore();
         const automaticSnapshotEncounterCascade = new AutomaticSnapshotEncounterCascade({
             resolveSelectedSnapshotCommand,
@@ -841,64 +315,21 @@ export default {
             resolvePlacementInfo: (publicationId) => session.getPlacementInfoForPublication(publicationId),
             findPublicationById: (publicationId) => session.findPublicationById(publicationId),
             isSessionActive: () => automaticCascadeSessionActive,
-            // 0.9.552 — the SAME `spatialContext.value.position` read
-            // `refreshSpatialUI()` already recomputes on every tick, below —
-            // never a second position source, and never
-            // `candidate.claimedPosition` (this cascade still never reads
-            // that field). `spatialContext` may still be `null` the very
-            // first time a candidate reaches this cascade before this
-            // view's own first `refreshSpatialUI()` tick has run; returning
-            // `null` here degrades to `encounter: null` on that one run,
-            // exactly like every other optional collaborator this cascade
-            // already tolerates.
+            // The viewer's current position (never the candidate's claimed one); null
+            // before the first refresh.
             resolveEncounterPosition: () => (spatialContext.value ? spatialContext.value.position : null)
         });
-        // 0.9.190 — Automatic Snapshot Encounter Retention Integration.
-        // Scoped to this WorldView's own mount, exactly like `session` and
-        // `automaticSnapshotEncounterCascade` immediately above — a fresh
-        // reconciliation instance (and therefore a fresh, empty watch list,
-        // see that file's own header) accompanies each fresh session. Never
-        // imports or modifies the cascade itself; the two are wired
-        // together only through `refreshSpatialUI()`, below — the cascade's
-        // own `SnapshotWorldRegistrationOutcome.REGISTERED` outcomes feed
-        // `noteAutomaticRegistration()`, and this view's own already-
-        // recomputed `spatialContext.value.position` feeds `reconcile()`,
-        // on the SAME observation tick that already drives both
-        // `worldSnapshotDiscoveryMonitor` and the cascade.
+        // Scoped to this mount. Linked to the cascade only through refreshSpatialUI():
+        // registrations feed noteAutomaticRegistration(), the position feeds
+        // reconcile(), on the same tick.
         const automaticSnapshotEncounterRetentionReconciliation = new AutomaticSnapshotEncounterRetentionReconciliation({
             worldDiscoverySourceRegistry
         });
-        // 0.9.257 — World View Place Naming Presentation.
-        //
-        // `application/PlaceNamingDiscoveryMonitor.js` (0.9.256) is the
-        // authority for "which claims are currently nearby" — this view's
-        // whole job is to observe/present its result, never to reproduce
-        // discovery, position resolution, or proximity filtering itself.
-        // Scoped to this WorldView's own mount, the same "fresh instance
-        // accompanies each fresh session" posture `automaticSnapshotEncounterCascade`
-        // above already holds — two mounted WorldViews (or a document
-        // switch mid-session) never share a monitor's own request id or
-        // last-observed position.
-        //
-        // Both closures below exist ONLY because `application/
-        // WorldNavigationSession.js` — the one collaborator that actually
-        // holds the current World layout — lives here, in this view, never
-        // in `ui/main.js`. Neither closure ranks, verifies, or adopts
-        // anything; they answer exactly the two questions the monitor's own
-        // header says only a session can answer ("which regions does this
-        // replica currently know about, so their own discovery tags can be
-        // queried" and "where, in THIS Wanderer's current layout, does a
-        // discovered claim's own regionId sit"), then hand the real answer
-        // straight to the monitor, which does everything else itself.
-        //
-        // `resolveClaimPosition` reads `session.getRegions()` — the SAME
-        // shared-layout-space read `nearbyGeographicPlaces`/`mapContent`
-        // already use every tick — matching a discovered envelope's own
-        // `worldId`/`regionId` against a currently-known region's own
-        // `position`. A region this replica does not (or no longer) know
-        // about resolves to `null`, the monitor's own documented
-        // fail-closed default: an unresolvable claim is excluded by
-        // proximity selection, never guessed at.
+        // PlaceNamingDiscoveryMonitor decides which claims are nearby; this view only
+        // presents its result. Scoped to this mount. The two closures exist because
+        // only this session holds the World layout: which regions to query, and where a
+        // claim's region sits. An unknown region resolves to null and is excluded,
+        // never guessed.
         const placeNamingDiscoveryMonitor = placeNamingDiscoveryQueryService
             ? new PlaceNamingDiscoveryMonitor({
                 discoverPlaceNamingClaimsCommand: () => {
@@ -914,110 +345,35 @@ export default {
                 }
             })
             : null;
-        // 0.9.257 — the identical `automaticCascadeSessionActive` guard
-        // pattern immediately above, its own separate flag: flipped to
-        // `false` as the very first statement in `onBeforeUnmount()`, below,
-        // so a `placeNamingDiscoveryMonitor.observe()` promise still
-        // settling after this view has already torn down never writes to
-        // `nearbyPlaceNamingClaims`/`placeNamingDiscoveryError` — disposing
-        // the monitor itself already stops IT from applying a late result to
-        // its own `lastResult`/`lastError`, but says nothing about whether
-        // this view's own `.then()` callback still runs; this flag is what
-        // stops that callback from touching a torn-down view's own refs.
+        // Set false first thing on unmount, so a late observe() never writes to a
+        // torn-down view.
         let placeNamingDiscoveryPresentationActive = true;
-        // 0.3.6 — World Discovery & Exploration. Spatial context service
-        // derives location descriptions, nearby structures, and collaborator
-        // positions from the viewer's current position and deterministic
-        // world environment (terrain ecology, hydrology, structures).
         const spatialContextService = new WorldSpatialContextService(session);
-        // Purely a client rendering preference (see docs/Principles.md,
-        // "Avatar Visibility Is A Client Rendering Preference, Not
-        // Avatar State") — never persisted, never affects
-        // AvatarProfile/AvatarPresence. Reflects session.isLocalAvatarVisible()
-        // once the session actually starts (a local avatar may not
-        // exist at all if nobody is logged in — see hasLocalAvatar).
+        // A client rendering preference, never avatar state (docs/Principles.md,
+        // "Avatar Visibility Is A Client Rendering Preference, Not Avatar State").
         const showMyAvatar = ref(true);
         const hasLocalAvatar = ref(false);
-        // 0.2.36 — Local Avatar Movement & Animation. Both are pure
-        // client controls, mirrored from session.isAvatarControlModeActive()/
-        // isFollowingAvatar() the same way showMyAvatar mirrors
-        // isLocalAvatarVisible() above: this view never decides
-        // movement/camera-follow behavior itself, it only reflects and
-        // toggles what the session already owns.
-        //
-        // 0.3.1 — default ON (both used to default off): entering
-        // World View with a local avatar overwhelmingly means "I want
-        // to walk around," so the common case now needs zero clicks.
-        // Still just an explicit client preference, not a hidden
-        // behavior change — both checkboxes remain visible, unchecking
-        // either still works exactly as before, and WorldNavigationSession
-        // itself still constructs with both off (see
-        // _avatarControlModeActive/_followAvatarEnabled) until this
-        // view's onMounted actually applies these defaults to the
-        // session below.
+        // Mirrors the session's own state. Both default on: entering World View with an
+        // avatar usually means walking around. The session applies them on mount.
         const avatarControlMode = ref(true);
         const followAvatar = ref(true);
-        // 0.9.98 — Vehicle Mount/Dismount World View Integration. Mirrors
-        // session.avatarVehicleInteractionState() the same way
-        // avatarControlMode/followAvatar above mirror their own session
-        // getters: this view never decides mount/dismount eligibility
-        // itself, only reflects the already-authoritative
-        // { mounted, vehicleType, targetVehicleId } snapshot
-        // application/AvatarVehicleInteractionController.js#vehicleInteractionState()
-        // resolves. Refreshed on its own short interval, alongside
-        // spatialPresenceSyncInterval below — see that interval's own
-        // "why the two cadences must stay independent" precedent; a
-        // mount/dismount affordance needs to track proximity closely
-        // enough to feel responsive, far tighter than refreshSpatialUI's
-        // own 3-second cadence.
+        // Mirrors the session's state, polled on a short interval of its own: the
+        // prompt must track proximity far more closely than the 3-second refresh.
         const vehicleInteractionState = ref(null);
-        // 0.9.670 — Avatar Inventory (store/deploy). Mirrors
-        // vehicleInteractionState's own ref immediately above — see
-        // session.avatarStoreInteractionState()'s own header — polled on
-        // the identical cadence below, since store/deploy needs to feel
-        // exactly as responsive as mount/dismount.
         const storeInteractionState = ref(null);
-        // 0.9.700 — Animal Catching. Mirrors storeInteractionState's own
-        // ref immediately above — see
-        // session.avatarAnimalInteractionState()'s own header — polled
-        // on the identical cadence below.
         const animalInteractionState = ref(null);
-        // 0.3.2 — Camera Perspective. Mirrors session.getCameraPerspective()
-        // exactly the same way avatarControlMode/followAvatar mirror
-        // their own session getters above: this view never decides the
-        // camera's framing itself, only reflects and toggles what the
-        // session already owns. `null` is "Free" — the ordinary orbit
-        // camera every World View has always had.
+        // null means the free orbit camera.
         const cameraPerspective = ref(null);
-        // 0.2.37 — a pure client rendering preference, exactly like
-        // showMyAvatar, but deliberately NOT gated on hasLocalAvatar:
-        // a logged-out viewer can still see other participants' avatars
-        // even though they have none of their own — see
-        // docs/Principles.md, "Watching Presence Never Requires Having
-        // One."
+        // Not gated on having an avatar (docs/Principles.md, "Watching Presence Never
+        // Requires Having One").
         const showOtherAvatars = ref(true);
-        // 0.2.38 — the unobtrusive presence diagnostic surface (see
-        // docs/Principles.md, "Rendering Presence And Trusting
-        // Presence Remain Separate"): trusted/stale/conflicting/
-        // unavailable counts over the SAME known-remote-avatars this
-        // view already renders, refreshed on the same cadence as
-        // everything else in refreshSpatialUI() — never per-frame,
-        // trust diagnostics don't need to be that fresh.
+        // Trust diagnostics over the rendered remote avatars (docs/Principles.md,
+        // "Rendering Presence And Trusting Presence Remain Separate"), refreshed with
+        // everything else, never per frame.
         const remoteAvatarDiagnostics = ref({ total: 0, trusted: 0, stale: 0, conflicting: 0, unavailable: 0 });
-        // 0.9.339 — merges in the shared decentralized provider (see
-        // application/CreateDiscoveryUseCase.js's own 0.9.339 comment)
-        // purely for this view's own title/author ENRICHMENT of loaded/
-        // nearby world markers (refreshSpatialUI/parentTitle/
-        // refreshHoverUI below) and catalogEmpty. World Search itself —
-        // session.searchWorld(), built entirely separately inside
-        // application/CreateWorldViewUseCase.js — is untouched by this
-        // milestone and stays local-only, exactly as
-        // tests/FederatedRepositoryProductGapAudit.test.js already
-        // established; see docs/Principles.md, "Discovery Is One Path,
-        // Not Two." `decentralizedDiscoveryProviderForEnrichment` itself
-        // is now injected earlier, above (0.9.597), so it can also reach
-        // CreateWorldViewUseCase.js — reused here verbatim, never a
-        // second injection.
+        // Merges in decentralized publications only to enrich titles/authors of world
+        // markers. World Search itself stays local-only (docs/Principles.md,
+        // "Discovery Is One Path, Not Two").
         const { listPublicationsUseCase } = new CreateDiscoveryUseCase().execute({
             decentralizedDiscoveryProvider: decentralizedDiscoveryProviderForEnrichment
         });
@@ -1027,47 +383,25 @@ export default {
         let pointerStart = null;
         let isDragging = false;
         let feedbackTimer = null;
-        // 0.2.99 — which documentId, if any, this replica currently
-        // holds World Presence for, and the live subscriptions attached
-        // to it — see _syncWorldPresence() below. Plain (non-reactive)
-        // bookkeeping, mirroring spatialInterval's own pattern above;
-        // nothing in the template ever reads these directly.
+        // Non-reactive bookkeeping; the template never reads these.
         let presentWorldDocumentId = null;
         let unsubscribeWorldPresence = null;
         let unsubscribeWorldMembership = null;
-        // 0.3.0 — the SAME bookkeeping shape, one rung further, for
-        // SPATIAL presence — see _syncWorldSpatialPresence() below.
-        // `spatialPresenceSyncInterval` is a SEPARATE, much faster timer
-        // than `spatialInterval` above: coarse presence/membership only
-        // need to be re-read every few seconds, but a moving camera
-        // needs to be pushed at up to "10-15 updates/second" (see
-        // application/WorldSpatialPresenceUseCase.js's own header) — a
-        // single shared interval would force one cadence on both.
+        // A separate, much faster timer than spatialInterval: a moving camera needs
+        // 10-15 updates per second, while presence and membership only every few
+        // seconds.
         let presentSpatialWorldDocumentId = null;
         let unsubscribeWorldSpatialPresence = null;
-        // 0.3.10 — which documentId, if any, this replica currently has
-        // an active LOCAL World Experience for — see
-        // _syncWorldExperience() below. Its own bookkeeping variable,
-        // deliberately separate from presentWorldDocumentId/
-        // presentSpatialWorldDocumentId above: a session with no
-        // localWorldExperienceStore wired still tracks this (session.
-        // saveWorldExperience()/restoreWorldExperience() are graceful
-        // no-ops either way), so it can't simply reuse either presence
-        // variable's lifecycle.
+        // Separate from the presence ids: tracked even when no experience store is
+        // wired.
         let presentExperienceWorldDocumentId = null;
-        // 0.3.9 — which documentIds have already had their automatic
-        // arrival Welcome shown this session, so re-entering the same
-        // World later (or a spatial-presence refresh that doesn't
-        // actually change the active document) never re-shows it
-        // uninvited — only the toolbar's "Explore" button reopens it
-        // after the first showing.
+        // The automatic Welcome shows once per World per session; only "Explore"
+        // reopens it.
         const welcomeShownForDocumentId = new Set();
         let spatialPresenceSyncInterval = null;
-        // 0.9.98 — its own independent interval; see
-        // vehicleInteractionState's own ref comment above.
         let vehicleInteractionInterval = null;
 
-        // ----------------------------- 0.1.50 action surface -------------
+        // ----------------------------- action surface -------------
 
         const feedback = {
             show(message) {
@@ -1081,18 +415,10 @@ export default {
                 }, 2500);
             }
         };
-        // Guards direct session calls this view makes. A rejected
-        // mutation (e.g. 0.2.20 fork-on-edit refusing to
-        // fork a fork-forbidden published snapshot) becomes a message,
-        // not an uncaught exception breaking the pointer/keyboard
-        // handler it came from.
-        //
-        // 0.2.21: also drains session.consumeForkNotice() after a
-        // successful call — so the moment a mutation crosses the
-        // publication boundary and creates a fork, the user is told
-        // what just happened instead of the document id silently
-        // changing underneath them (the milestone's "avoid silently
-        // making the user wonder why the document ID changed").
+        // Turns a rejected mutation (e.g. fork-on-edit refusing a fork-forbidden
+        // snapshot) into a message instead of an uncaught exception, and after success
+        // reports any fork that just happened, so the document id never changes
+        // silently.
         function guarded(fn) {
             try {
                 const result = fn();
@@ -1107,20 +433,9 @@ export default {
             }
         }
 
-        // 0.2.21: Document Properties editor. Editing metadata on a
-        // published snapshot forks it first — updateDocumentMetadata
-        // routes through the same guard every other mutation does — so
-        // this goes through guarded() exactly like alignSelection etc.,
-        // and a fork-policy denial surfaces the same way.
-        //
-        // Hardening: openable from two places — the selection-scoped
-        // DocumentInfoPanel in the inspection column (whatever brick's
-        // world you're currently looking at) and, so editing the
-        // document you're ACTUALLY working on never requires selecting
-        // a specific brick first, a header button next to Save/Publish
-        // bound to activeDocumentInfo. Both funnel through the same
-        // dialog; metadataEditTarget records which info object opened
-        // it so onSaveMetadata edits the right one.
+        // Editing a published snapshot's metadata forks it first, so this goes through
+        // guarded(). Openable from the inspected document's panel or the header (the
+        // active document); metadataEditTarget records which.
         function openMetadataEditor(info) {
             if (!info) return;
             metadataEditTarget.value = info;
@@ -1136,18 +451,8 @@ export default {
             refreshSpatialUI();
         }
 
-        // Save/Publish for the World View: there was no equivalent of
-        // the Editor's Toolbar until now, even though 0.2.20/0.2.21
-        // gave World View the same edit + fork-on-write + metadata
-        // capability the Editor has always had — WorldNavigationSession.
-        // saveDocument/publishDocument already existed and already
-        // refuse a still-published id, this just gives the UI a way to
-        // call them. Bound to activeDocumentInfo (not the
-        // selection-scoped documentInfo the inspection panel uses),
-        // because "save/publish the document I'm editing" means the
-        // ACTIVE document specifically — the two usually agree, but
-        // aren't the same field, and this is the one that should never
-        // be ambiguous about which document it acts on.
+        // Bound to the ACTIVE document, never the inspected one: save/publish must be
+        // unambiguous about which document it acts on.
         function saveActiveDocument() {
             const info = activeDocumentInfo.value;
             if (!info) return;
@@ -1168,38 +473,17 @@ export default {
             refreshSpatialUI();
         }
 
-        // 0.9.207 — World View History Timeline UI Integration. Connects
-        // CommandHistory's own timeline/replay/restore machinery — correct,
-        // composed, and unreached since 0.1.40/0.1.41 (see 0.9.206's own
-        // finding) — to an actual caller for the first time, exactly the
-        // way saveActiveDocument()/publishActiveDocument() immediately
-        // above already connect saveDocument()/publishDocument(). Nothing
-        // about CommandHistory/ReplayDocumentUseCase/RestoreHistoryStateUseCase
-        // changes: this is only session.getTimeline()/beginHistoryPreview()/
-        // previewHistoryAt()/cancelHistoryPreview()/restoreHistoryAt(),
-        // called in the sequence docs/Principles.md's own 0.5.9 design
-        // record anticipated ("a viewer's landmark edit needs to be
-        // undoable too") — see docs/Roadmap.md's 0.9.207 entry for the
-        // full record.
-        // 0.9.284 — Notification History UI Boundary. Purely local UI
-        // state — which/whether the panel is open. Recipient-scoped, not
-        // document-scoped: unlike showHistoryPanel below, opening this
-        // never depends on an activeDocumentInfo/activePlacementInfo.
+        // Recipient-scoped, unlike the document-scoped History panel.
         const showNotificationHistoryPanel = ref(false);
         const showHistoryPanel = ref(false);
         const historyPanelDocumentId = ref(null);
         const historyTimeline = ref([]);
         const selectedHistoryEntryId = ref(null);
-        // The cursor WorldNavigationSession#getHistoryPreview() reports
-        // while a preview is active, or null — mirrored locally only so
-        // the panel can highlight the previewed row and show/hide "Cancel
-        // Preview"; the session's own _historyPreview stays the single
-        // source of truth for whether a preview is actually active.
+        // Mirrored only for highlighting; the session's own preview state is the source
+        // of truth.
         const historyPreviewCursor = ref(null);
 
-        // 0.9.210 — see undoAction()/redoAction() below. Re-read every
-        // refreshSpatialUI() tick from session.canUndo()/canRedo()/
-        // getUndoLabel()/getRedoLabel() — never computed locally.
+        // Re-read every refresh from the session, never computed here.
         const canUndo = ref(false);
         const canRedo = ref(false);
         const undoLabel = ref(null);
@@ -1216,10 +500,8 @@ export default {
         }
 
         function closeHistoryPanel() {
-            // A preview left running behind a closed panel would keep the
-            // replay world rendered alongside (or instead of) the live one
-            // with no visible way left to end it — always cancel before
-            // the panel itself disappears.
+            // Always cancel a preview before its panel closes, or the replay world would
+            // stay rendered with no way to end it.
             if (historyPreviewCursor.value !== null) {
                 guarded(() => session.cancelHistoryPreview());
             }
@@ -1231,28 +513,13 @@ export default {
         }
 
         function selectHistoryEntry(entryId) {
-            // Selection alone is local UI state — no session call, no
-            // mutation, nothing previewed or restored yet.
             selectedHistoryEntryId.value = entryId;
         }
 
-        // Re-reads the timeline fresh and resolves the selected entry's
-        // OWN id back to a cursor — never a remembered index. A landmark
-        // edit, an undo, or another restore made while this panel sat open
-        // can move or remove entirely what used to sit at that index; if
-        // the selected id is no longer present, the stale selection is
-        // cleared and reported instead of silently acting on whatever now
-        // occupies that slot (see ui/components/HistoryTimelinePanel.js's
-        // own header).
-        //
-        // CommandHistory's own cursor means "this many commands applied"
-        // (see application/CommandHistory.js#getCursor()/replay()'s own
-        // endCursor) — entry.index is 0-based, so "restore/preview to the
-        // state with THIS entry's own effect included" is entry.index + 1,
-        // never entry.index itself (that would land one command short —
-        // the state immediately BEFORE this entry ran). Reusing the exact
-        // cursor tests/HistoryRestore.test.js's own flagship already
-        // exercises, not a new convention invented here.
+        // Re-reads the timeline and resolves the selected entry's id (never a
+        // remembered index): edits made while the panel was open can move or remove
+        // it. A missing entry clears the selection and is reported. The cursor is
+        // entry.index + 1 ("this entry applied").
         function _resolveSelectedHistoryCursor() {
             const docId = historyPanelDocumentId.value;
             if (!docId || !selectedHistoryEntryId.value) return null;
@@ -1293,9 +560,7 @@ export default {
             const docId = historyPanelDocumentId.value;
             const cursor = _resolveSelectedHistoryCursor();
             if (cursor === null) return;
-            // restoreHistoryAt() ends any active preview itself (see its
-            // own header) — this just stops mirroring a cursor the
-            // session no longer has active.
+            // restoreHistoryAt() ends any preview itself.
             const restored = guarded(() => {
                 session.restoreHistoryAt(cursor, docId);
                 return true;
@@ -1306,19 +571,8 @@ export default {
             refreshSpatialUI();
         }
 
-        // 0.9.210 — World View Undo/Redo UI Integration. Thin wrappers
-        // over the SAME WorldNavigationSession.undo()/redo() the History
-        // panel immediately above already shares one CommandHistory with
-        // (both resolve through _getActiveCommandHistory() — see that
-        // method's own header) — no second undo/redo engine, no
-        // duplicated undoStack/redoStack, no new lifecycle vocabulary.
-        // canUndo/canRedo are refreshed on the same refreshSpatialUI()
-        // cadence every other action-bar affordance already uses, and
-        // already read false while a history preview is active (session.
-        // canUndo()/canRedo() mirror undo()/redo()'s own
-        // _historyPreview.active gate) — Preview and Undo/Redo stay two
-        // separate authorities without this view inventing a rule of its
-        // own for the interaction.
+        // Thin wrappers over the session's undo()/redo(), sharing the History panel's
+        // CommandHistory. canUndo/canRedo already read false during a preview.
         function undoAction() {
             const performed = guarded(() => session.undo());
             if (performed) {
@@ -1335,102 +589,14 @@ export default {
             refreshSpatialUI();
         }
 
-        // 0.9.104 — World View Publication Distribution Action. The one
-        // thing standing between `WorldEncounterCanvas`'s own new
-        // `distributionCommand` prop (a plain `(publication) -> Promise`
-        // function, see that file's own header) and the app-wide
-        // `publicationDistributionCommand` injected above: that command's
-        // own full request shape (`{ publication, serializedMaterial,
-        // materialStorage, arweaveUploaderOptions, nostrPublisherOptions }`)
-        // is more than a bare `Publication`. This function supplies exactly
-        // one more field — `serializedMaterial`, this replica's own signed
-        // JSON record of the Publication itself — and forwards everything
-        // else unchanged.
-        //
-        // `arweaveUploaderOptions`/`nostrPublisherOptions` ARE DELIBERATELY
-        // NOT SUPPLIED HERE. Composing either means either genuine wallet/
-        // key management or a live relay choice — both explicitly out of
-        // scope for this milestone (see docs/Roadmap.md's own 0.9.104
-        // entry, "wallet/signer UI... relay selection UI," both excluded).
-        // Calling this function today therefore reaches the REAL command
-        // boundary, the REAL orchestrator, and the REAL lifecycle store —
-        // 0.9.103's own construction validation still throws synchronously
-        // for the still-missing signer/relay configuration, exactly as it
-        // already would calling `publicationDistributionCommand()` directly
-        // with the same incomplete request. `WorldEncounterCanvas`'s own
-        // `distributeSelectedPublication()` catches that throw (and any
-        // other genuine rejection) and surfaces one plain notice — see that
-        // file's own header. Wiring real signer/relay configuration in
-        // remains a separate, later milestone's own decision to make.
-        //
-        // NEVER CONSTRUCTS AN ARWEAVE CLIENT, A NOSTR CLIENT, OR CALLS THE
-        // ORCHESTRATOR DIRECTLY. This function calls exactly one thing:
-        // the already-composed `publicationDistributionCommand` injected
-        // above — the same restraint `WorldEncounterCanvas` itself holds
-        // one layer down.
-        //
-        // AMENDED BY 0.9.430 — Announcement/Discovery Provider Selection
-        // Reachability. `discoveryProvider` is a new, optional second
-        // parameter — the Wanderer's own explicit Nostr/Arweave choice,
-        // made in `WorldEncounterCanvas`'s own new "Announcement/Discovery
-        // substrate" control (see that file's own header) — forwarded
-        // verbatim into `publicationDistributionCommand()`'s own request,
-        // exactly like `serializedMaterial` already is. This function still
-        // interprets nothing: an omitted `discoveryProvider` (every caller
-        // that predates this milestone, unchanged) reaches
-        // `publicationDistributionCommand()` as `undefined` and resolves to
-        // `'nostr'` exactly where it already did, several layers down, in
-        // `PublicationDistributionRuntimeComposition.js` — see that file's
-        // own header, "discoveryProvider itself is the one new option."
-        //
-        // AMENDED BY 0.9.450 — Nostr Multi-Relay Publication Distribution
-        // Wiring. 0.9.449's own product reassessment found this function
-        // was the exact seam that kept the already-built, already-composed
-        // `multiRelayNostrPublicationDistributionCommand` unreachable: every
-        // call, Nostr or Arweave alike, went through the single-relay
-        // command. This function now reads `discoveryProvider` itself for
-        // the first time — the ONE interpretation it did not previously
-        // make — to decide WHICH already-composed command to call, never to
-        // build a request shape either command does not already accept.
-        // `discoveryProvider === 'arweave'` keeps calling the single-relay
-        // `publicationDistributionCommand()` exactly as before, forwarding
-        // `discoveryProvider` verbatim. Every other case (`'nostr'`, or
-        // omitted — the identical default `PublicationDistributionRuntimeComposition.js`
-        // itself already holds) now calls
-        // `multiRelayNostrPublicationDistributionCommand()` instead —
-        // Nostr-specific by construction, so `discoveryProvider` is never
-        // forwarded to it (that command has no such parameter; see
-        // `application/PublicationDistributionCommand.js`'s own 0.9.444
-        // header, "always with discoveryProvider fixed to 'nostr'"). Both
-        // branches resolve to whatever their own already-tested command
-        // resolves to — a single `PublicationDistributionResult` for
-        // Arweave, an array of them (one per configured relay) for Nostr —
-        // never re-shaped or re-described here. `WorldEncounterCanvas`'s
-        // own `distributeSelectedPublication()` never inspects either
-        // shape (see that file's own header, "never inspects a resolved
-        // result") — both branches reach the Wanderer only through
-        // `distributionLifecycleStore`'s own existing subscription,
-        // unaffected by which shape produced the fresh fact.
-        // AMENDED BY 0.9.670 — Publication Material Storage Selection.
-        // `materialStorage` ('ar', the default, preserving every existing
-        // caller's behavior unchanged | 'ipfs' | 'remote-pinning') and
-        // `remotePinningConfiguration` join `discoveryProvider` as new,
-        // optional third/fourth parameters — the identical `{ endpoint,
-        // credential, requestField, responseField }` ephemeral shape
-        // `distributeWorldEncounterSnapshot()`'s own `remotePinningConfiguration`
-        // already uses, above, translated into `remotePinningProviderOptions`
-        // (`fileFieldName`/`cidField`) the identical way
-        // `IpfsRemotePublicationCoordinator#publish()` already translates it,
-        // one substrate over — never persisted, never read from anywhere
-        // else, entered fresh each click. Both are forwarded verbatim into
-        // whichever command this function calls below; a caller that omits
-        // them (every caller predating this milestone) reaches
-        // `application/PublicationMaterialUploaderComposition.js`'s own
-        // 'ar' default exactly as before — see that file's own header, and
-        // `application/PublicationDistributionRuntimeComposition.js`'s own
-        // "AMENDED BY 0.9.670," for why the material-storage choice and the
-        // announcement-substrate choice (`discoveryProvider`, unchanged)
-        // stay two entirely independent decisions.
+        // Adds serializedMaterial (this replica's signed JSON record of the
+        // Publication) to the distribution request; everything else is the injected
+        // commands' business. 'arweave' calls the single-relay command with
+        // `discoveryProvider`; anything else (including omitted) calls the multi-relay
+        // Nostr command, which resolves one result per relay. `materialStorage`
+        // ('ar' default | 'ipfs' | 'remote-pinning') and remotePinningConfiguration
+        // are forwarded as given; storage and announcement substrate are independent
+        // choices. Never builds a client or calls the orchestrator itself.
         function distributeWorldEncounterPublication(publication, discoveryProvider, materialStorage, remotePinningConfiguration) {
             const remotePinningProviderOptions = materialStorage === 'remote-pinning' && remotePinningConfiguration
                 ? {
@@ -1464,100 +630,15 @@ export default {
             });
         }
 
-        // 0.9.138 — World View Snapshot Distribution Action. The one thing
-        // standing between `WorldEncounterCanvas`'s own new
-        // `snapshotDistributionCommand` prop (a plain `(publication) ->
-        // Promise<{ contentReference, announcement }>` function) and the
-        // app-wide `snapshotDistributionCommand` injected above: that
-        // command's own full shape (`executeSnapshotDistributionCommand({
-        // bytes, contentStore, discoveryPublisher })`) takes raw `bytes`,
-        // never a `Publication` domain object — `contentStore`/
-        // `discoveryPublisher` are already bound in by `ui/main.js`'s own
-        // composition, so this function's only job is turning "which
-        // publication" into "which bytes."
-        //
-        // `bytes` COME FROM THE EXISTING SNAPSHOT/MATERIAL BOUNDARY, NEVER
-        // A NEW SERIALIZATION MECHANISM OF THIS VIEW'S OWN. This function
-        // never calls `publication.toJSON()`, never computes a content
-        // hash, and never constructs an Arweave transaction or a Nostr
-        // event — it reads this replica's own already-stored Snapshot bytes
-        // back through `publicationContentStore.get(publication.contentReference)`,
-        // the SAME content-addressed store the publish path itself already
-        // wrote those bytes into (see `publicationContentStore`'s own
-        // injection comment above for why this replaced
-        // `publicationCatalogContentResolver.resolve(publication.id)` —
-        // that resolver's own backing catalog never holds a World
-        // Publication at all, so it could never have resolved this
-        // Publication's own material). The bytes returned are the exact
-        // canonical string `LocalPublisherProvider.publish()` hashed and
-        // stored, passed straight through — never round-tripped through
-        // `JSON.parse`/`JSON.stringify`. `SnapshotDistributionCommand.js`'s
-        // own header is explicit that `contentStore` is the one and only
-        // place a content hash is ever computed — this function computes
-        // none.
-        //
-        // NEVER CONSTRUCTS `ArweaveContentStore`/`NostrSnapshotDiscoveryPublisher`,
-        // AND NEVER CALLS `executeSnapshotDistributionCommand()`/
-        // `composeSnapshotDistributionRuntime()` DIRECTLY. This function
-        // calls exactly one thing: the already-composed
-        // `snapshotDistributionCommand` injected above — the same restraint
-        // `distributeWorldEncounterPublication()` already holds, one family
-        // over.
-        //
-        // 0.9.566 — Distribute Existing Claimed Position Through Snapshot
-        // Distribution. This function now also reads this Publication's own
-        // ALREADY-COMPUTED placement, exactly the same
-        // `session.getPlacementInfoForPublication(publicationId)` lookup
-        // `automaticSnapshotEncounterCascade`'s own `resolvePlacementInfo`
-        // above already calls, and forwards its `publicationId`/`position`
-        // as `claimedPosition` into `snapshotDistributionCommand` unchanged.
-        // NO NEW POSITION SOURCE: when this Publication has no authoritative
-        // `WorldPlacement` (`placementInfo` is `null` — a Publication that
-        // was never placed in THIS Wanderer's own World, not merely "not
-        // currently on screen"), both fields are omitted, exactly as before
-        // 0.9.566 — this function never falls back to the Wanderer's own
-        // current position, the encounter's position, or any other spatial
-        // state as a substitute claim.
-        //
-        // Bug fix — `storage` is now a real second parameter, forwarded
-        // into `snapshotDistributionCommand` unchanged, instead of always
-        // `undefined` (which silently meant Arweave — `executeSnapshotDistributionCommand()`'s
-        // own default). OwnPublicationPanel/WorldEncounterCanvas now offer
-        // an explicit Arweave/IPFS picker next to "Distribute Snapshot"
-        // (see `snapshotDistributionStorageTypes` above) and pass their
-        // own selected value here — never a silent, invisible choice.
-        //
-        // `storage === 'remote-pinning'` is a THIRD, separate path — see
-        // `ipfsRemotePublicationCoordinator`'s own injection comment
-        // above for why it never goes through the registry-backed
-        // `snapshotDistributionCommand` at all. `remotePinningConfiguration`
-        // (a plain `{ endpoint, credential, requestField, responseField }`
-        // object — never a class instance this function would have to
-        // import application/IpfsRemotePublishingConfiguration.js for;
-        // `IpfsRemotePublicationCoordinator#publish()` itself duck-types
-        // it) is this call's own only source of endpoint/credential —
-        // never persisted, never read from anywhere else. Normalizes the
-        // coordinator's own `{ state, contentHash, locator, reason }`
-        // outcome into the IDENTICAL `{ contentReference, announcement }`
-        // shape the 'ar'/'ipfs' path already resolves to, so
-        // OwnPublicationPanel/WorldEncounterCanvas render the result
-        // through their own existing, unmodified display — never a
-        // second result shape or a second error vocabulary. A genuine
-        // Nostr announcement failure here never fails the whole call —
-        // the content is already durably pinned either way, the exact
-        // restraint DecentralizedPublicationsView.js's own identical
-        // Remote-IPFS-then-Nostr sequence already holds.
-        //
-        // AMENDED BY 0.9.669 — `discoveryProvider` joined `publication`/
-        // `storage`/`remotePinningConfiguration` as a new, optional fourth
-        // parameter — 'nostr' | 'arweave' | omitted (the identical
-        // `resolveSnapshotDiscoveryPublisher()`/`snapshotDistributionCommand()`
-        // default, ui/main.js's own persisted ANNOUNCEMENT_AND_DISCOVERY
-        // preference). Forwarded verbatim into both the Remote Pinning
-        // branch's own `resolveSnapshotDiscoveryPublisher(discoveryProvider)`
-        // call and the registry-backed branch's own `snapshotDistributionCommand(
-        // ..., discoveryProvider)` call, below — the SAME explicit choice
-        // applies identically across all three storage paths.
+        // Turns "which publication" into "which bytes": reads the stored snapshot bytes
+        // via publicationContentStore.get(publication.contentReference), exactly as
+        // published (never re-serialized; the content store is the only place a hash
+        // is computed). Forwards the Publication's authoritative placement as
+        // claimedPosition, or nothing if it was never placed (never a substitute
+        // position). `storage` is forwarded explicitly; 'remote-pinning' is a separate
+        // path through ipfsRemotePublicationCoordinator, with a per-attempt
+        // configuration, normalized to the same `{ contentReference, announcement }`
+        // shape. `discoveryProvider` applies to every storage path.
         function distributeWorldEncounterSnapshot(publication, storage, remotePinningConfiguration, discoveryProvider) {
             if (!publicationContentStore || !publication.contentReference) {
                 return Promise.reject(new Error('Snapshot distribution is not available.'));
@@ -1583,19 +664,8 @@ export default {
                         return discoveryPublisher.publish({ contentHash: outcome.contentHash, locator: outcome.locator, storage: 'ipfs' })
                             .then((announcement) => ({ contentReference, announcement }))
                             .catch((error) => {
-                                // Bug fix — a genuine Nostr announcement
-                                // failure (e.g. no NIP-07 extension
-                                // configured) never fails the whole
-                                // attempt — the content is already
-                                // durably pinned regardless, the same
-                                // restraint ui/views/DecentralizedPublicationsView.js's
-                                // own identical Remote-Pinning-then-Nostr
-                                // sequence already holds — but it used to
-                                // be swallowed into a bare "No
-                                // announcement" here, indistinguishable
-                                // from an ordinary relay decline.
-                                // announcementError now carries the real,
-                                // sanitized cause instead.
+                                // An announcement failure never fails the attempt (the content is already
+                                // pinned); announcementError carries the sanitized cause.
                                 console.error('Snapshot Nostr announcement failed:', error);
                                 return {
                                     contentReference,
@@ -1618,50 +688,10 @@ export default {
             );
         }
 
-        // 0.9.142 — World View Snapshot Discovery Command. The one thing
-        // standing between `OwnPublicationPanel`'s own new
-        // `discoverSnapshotCommand` prop (a plain `(publication) ->
-        // Promise<{ outcome, bytes, candidates, locator, storage,
-        // reason }>` function) and the app-wide `discoverSnapshotCommand`
-        // injected above: that command's own full shape
-        // (`executeDiscoverSnapshotCommand({ discoveryTag, contentHash,
-        // resolver, contentStore })`) takes an explicit `contentHash`,
-        // never a `Publication` domain object — `discoveryTag`/`resolver`/
-        // `contentStore` are already bound in by `ui/main.js`'s own
-        // composition, so this function's only job is turning "which
-        // publication" into "which contentHash."
-        //
-        // `contentHash` COMES FROM THE PUBLICATION'S OWN, ALREADY-COMPUTED
-        // `contentReference.hash` — NEVER RE-DERIVED, NEVER GUESSED, AND
-        // NEVER AN OPEN-ENDED SEARCH. This function never calls
-        // `publicationCatalogContentResolver.resolve()`, never computes a
-        // content hash of its own, and never asks the injected command to
-        // search Nostr for "whatever looks relevant" — see `application/
-        // DiscoverSnapshotCommand.js`'s own header, "contentHash is always
-        // an explicit, caller-supplied input." A Publication that has
-        // never been placed (no `contentReference` yet) has nothing to
-        // discover, so this function rejects rather than guessing.
-        //
-        // NEVER CONSTRUCTS `DecentralizedSnapshotResolver`/
-        // `NostrSnapshotDiscoveryQueryService`/`ArweaveContentStore`, AND
-        // NEVER CALLS `executeDiscoverSnapshotCommand()`/
-        // `composeDiscoverSnapshotRuntime()` DIRECTLY. This function calls
-        // exactly one thing: the already-composed `discoverSnapshotCommand`
-        // injected above — the same restraint `distributeWorldEncounterSnapshot()`
-        // already holds, one action over.
-        //
-        // 0.9.144 — REUSED VERBATIM FOR WorldEncounterCanvas'S OWN NEW
-        // `discoverSnapshotCommand` PROP, NEVER FORKED INTO A SECOND
-        // FUNCTION. This function already takes any `Publication` — never
-        // reading `ownPublication` or anything else scoped to "own" — so it
-        // is bound below to BOTH `OwnPublicationPanel`'s own
-        // `discoverSnapshotCommand` prop AND `WorldEncounterCanvas`'s, the
-        // same "same seam, only the source of the Publication object
-        // differs" restraint `distributeWorldEncounterSnapshot()` already
-        // holds for Snapshot distribution's own two entry points. Its name
-        // stays `discoverOwnSnapshot` — unchanged, to avoid disturbing
-        // 0.9.142's own already-passing test suite — despite now serving a
-        // second, non-"own" caller too.
+        // Turns "which publication" into "which contentHash", using the Publication's
+        // own contentReference.hash, never a search. An unplaced Publication rejects.
+        // Also bound to WorldEncounterCanvas: it works for any Publication despite the
+        // name.
         function discoverOwnSnapshot(publication) {
             if (!discoverSnapshotCommand || !publication || !publication.contentReference) {
                 return Promise.reject(new Error('Snapshot discovery is not available.'));
@@ -1669,31 +699,8 @@ export default {
             return discoverSnapshotCommand(publication.contentReference.hash);
         }
 
-        // 0.9.215 — Snapshot Export Capability Integration. Reachable with
-        // zero connected peers and an empty World Encounters panel, the
-        // identical "your own material never depends on World Encounters"
-        // restraint every other action on this SAME `OwnPublicationPanel`
-        // surface already holds (see that component's own 0.9.140 header).
-        // This function turns "which publication" into "which
-        // publicationId" — `publication.id`, the SAME field
-        // `unpublishOwnPublication()` above already reads off the
-        // identical prop — and calls exactly one thing: the already-
-        // composed `exportSnapshotCommand` injected above. It never
-        // constructs a BuildPublicationSnapshotTransferPackageUseCase or a
-        // SnapshotContentMaterializationCoordinator itself, and never
-        // reads `publication.contentReference` — unlike discovery/
-        // distribution, export names WHICH PUBLICATION, never which bytes;
-        // application/BuildPublicationSnapshotTransferPackageUseCase.js
-        // itself resolves the contentReference to export from its own
-        // publicationCatalog lookup.
-        //
-        // Resolves to a Publication Snapshot Transfer Package (application/
-        // PublicationSnapshotTransferPackage.js's own `{ kind,
-        // schemaVersion, publicationId, contentHash, content }` shape) or
-        // rejects — this function never reinterprets either outcome; it is
-        // `OwnPublicationPanel.js`'s own job, as the UI layer, to turn a
-        // rejection into its own display state, exactly as it already does
-        // for `distributeOwnSnapshot()`/`discoverOwnSnapshot()`.
+        // Passes publication.id; the use case resolves what to export. Resolves to a
+        // transfer package or rejects; the panel handles display.
         function exportOwnSnapshot(publication) {
             if (!exportSnapshotCommand || !publication) {
                 return Promise.reject(new Error('Snapshot export is not available.'));
@@ -1701,31 +708,12 @@ export default {
             return exportSnapshotCommand(publication.id);
         }
 
-        // 0.9.111 — World View Decentralized Publication Retrieval.
-        // `discoverWorldEncounterPublicationCommand` (injected above) is
-        // forwarded straight to `WorldEncounterCanvas`'s own new
-        // `discoveryCommand` prop below, verbatim — its `{ objectId,
-        // discoveryTag } -> Promise<{ discovery, resolution, inspection }>`
-        // shape is already exactly what that prop expects, so this view
-        // needs no wrapper function of its own (unlike
-        // `distributeWorldEncounterPublication()` above, which adds
-        // `serializedMaterial`). `WorldEncounterCanvas` now owns the entire
-        // discover/render lifecycle — the input fields, the action, and the
-        // result panel (rendered through the SAME existing Material/
-        // Verification markup 0.9.39's own selection-driven panel already
-        // uses) — this view constructs, calls, and interprets none of it
-        // itself. See that file's own header, "0.9.111 — World View
-        // Decentralized Publication Retrieval."
+        // The discovery command's shape already matches WorldEncounterCanvas's prop, so
+        // it is passed through unwrapped.
 
-        // 0.2.23: Move Placement — deliberately NOT routed through
-        // updateDocumentMetadata/saveDocument/publishDocument's
-        // fork-on-write guard: moving a placement is not a document
-        // mutation (see docs/Principles.md, "Moving A Placement Is
-        // Not Editing A Document") and must work on a still-published,
-        // un-forked world exactly as well as on a fork. guarded() is
-        // still used for its own sake — a denied/failed move (no
-        // placement known, no ownership) becomes a toast, not an
-        // uncaught exception.
+        // Moving a placement is not a document mutation (docs/Principles.md, "Moving A
+        // Placement Is Not Editing A Document"), so it skips fork-on-write; guarded()
+        // only turns failures into messages.
         function openPlacementEditor(info) {
             if (!info) return;
             placementEditTarget.value = info;
@@ -1739,26 +727,15 @@ export default {
             placementOverlapWarning.value = null;
         }
 
-        // 0.2.25: two-step for an occupied destination — check first,
-        // only actually move once either the position is clear or the
-        // warning already shown has been acknowledged by a second
-        // click (see PlacementEditorDialog's `warningIsCurrent`, which
-        // is what makes that second click mean "confirm" rather than
-        // "check again"). checkPlacementOverlap never mutates anything
-        // — see docs/Principles.md, "Overlap Is A Fact; Collision Is A
-        // Policy Decision" — so a REJECT-policy decision surfaces here
-        // as a plain guarded() error, the same as any other refused
-        // mutation.
+        // Two-step for an occupied destination: check first, and move only once clear
+        // or after the warning was confirmed by a second click. The check never
+        // mutates (docs/Principles.md, "Overlap Is A Fact; Collision Is A Policy
+        // Decision").
         function onMovePlacement(position) {
             const info = placementEditTarget.value;
             if (!info) return;
 
-            // The pending warning only counts as "already confirmed" for
-            // the EXACT position it was computed for — if the user
-            // edited/nudged the fields since seeing it (dialog's own
-            // `warningIsCurrent` would already be false in that case,
-            // reverting its button to plain "Move"), this click means
-            // "check this new position," not "proceed anyway."
+            // A warning only confirms the exact position it was computed for.
             const pending = placementOverlapWarning.value;
             const pendingPosition = pending && pending.overlap ? pending.overlap.position : null;
             const warningMatchesRequest = !!pendingPosition
@@ -1785,26 +762,9 @@ export default {
             refreshSpatialUI();
         }
 
-        // 0.9.197 — World Placement Removal UI Action. The mirror of
-        // onMovePlacement above, and just as thin: this view only
-        // resolves WHICH placement the panel was showing (via the
-        // `info` PlacementInfoPanel already emitted 'remove' for) and
-        // hands it to WorldNavigationSession.removePlacement() —
-        // RemoveWorldPlacementUseCase remains the sole authority for
-        // actually removing it. `info.placementId` is passed through as
-        // the compare-and-swap guard (see removePlacement()'s own
-        // header) rather than just `info.documentId`, so a placement
-        // that changed underneath this stale panel since it was
-        // rendered is never silently removed in place of whatever
-        // replaced it.
-        //
-        // No local "it's gone" state to set here: placementInfo is
-        // ENTIRELY derived from session.getPlacementInfo() inside
-        // refreshSpatialUI() (see its own comment there), so once the
-        // placement registry no longer has a record for this document,
-        // the next refresh already makes placementInfo null and the
-        // panel disappears on its own — the same collapse a document
-        // that was never placed at all already produces.
+        // Passes placementId as a compare-and-swap guard, so a placement replaced
+        // since the panel rendered is never removed by mistake. No local state: the
+        // next refresh derives placementInfo as null.
         function removePlacementFromPanel(info) {
             if (!info) return;
             guarded(() => {
@@ -1814,33 +774,8 @@ export default {
             refreshSpatialUI();
         }
 
-        // 0.9.198 — Publication Unpublish/Retract UI Action. The mirror
-        // of removePlacementFromPanel above, one authority up: this view
-        // only resolves WHICH document/publication OwnPublicationPanel
-        // was showing (via the `publication` object it already received
-        // as a prop) and hands it to
-        // WorldNavigationSession.unpublishDocument() —
-        // UnpublishDocumentUseCase remains the sole authority for
-        // actually retracting it. `publication.id` is passed through as
-        // the SAME compare-and-swap guard `info.placementId` already is
-        // above, so a Publication that changed underneath this stale
-        // panel since it was rendered is never silently unpublished in
-        // place of whatever replaced it.
-        //
-        // No local "it's unpublished" state to set here: ownPublication,
-        // like activePlacementInfo, is ENTIRELY derived from
-        // session.getPublicationForDocument() inside refreshSpatialUI()
-        // (see its own comment there), so once the catalog no longer
-        // has a record for this document, the next refresh already
-        // makes ownPublication null and OwnPublicationPanel's own
-        // publication detail collapses on its own — the same "null when
-        // the question doesn't apply" rule activePlacementInfo already
-        // follows. This deliberately never touches activePlacementInfo
-        // or the placement registry itself — see
-        // WorldNavigationSession.unpublishDocument()'s own header for
-        // the documented (not invented) consequence of a placement
-        // becoming unresolvable through the document-keyed path once
-        // its governing Publication is gone.
+        // Passes publication.id as the same compare-and-swap guard. No local state:
+        // the next refresh derives ownPublication as null.
         function unpublishOwnPublication(publication) {
             if (!publication) return;
             guarded(() => {
@@ -1852,24 +787,8 @@ export default {
             refreshSpatialUI();
         }
 
-        // 0.9.600 — Publication First-Placement Action Wiring Fix. Mirrors
-        // unpublishOwnPublication()'s own restraint immediately above:
-        // this view resolves nothing about the Publication itself, and
-        // hands publication.id straight to
-        // WorldNavigationSession.placePublication() —
-        // PlacePublicationUseCase remains the sole authority for
-        // actually constructing the WorldPlacement/PlacementRecord. The
-        // ONE thing this view DOES resolve is WHERE "here" means — the
-        // SAME getAvatarPosition() || getCameraPosition() fallback
-        // WorldNavigationSession itself already uses internally for
-        // createLandmarkHere()/createRegionHere() (see that file's own
-        // header), never a second, view-local notion of "current
-        // position." A world with no live avatar or camera position at
-        // all (this button is only ever rendered once a World is loaded
-        // — see cameraPosition's own v-if gate on OwnPublicationPanel
-        // below) falls back to the World origin, exactly like
-        // PlacePublicationUseCase's own bounds fallback degrades rather
-        // than refusing.
+        // Resolves only where "here" is: avatar position, else camera position, else
+        // the World origin.
         function placeOwnPublication(publication) {
             if (!publication) return;
             guarded(() => {
@@ -1880,62 +799,23 @@ export default {
             refreshSpatialUI();
         }
 
-        // 0.9.248 — Publication Commentary UI Integration. Thin wrappers
-        // around session.getPublicationCommentaries()/
-        // addPublicationCommentary(), mirroring distributeWorldEncounterSnapshot()'s
-        // own restraint above: this view resolves nothing and decides
-        // nothing itself, it only forwards to the session. A thrown
-        // error from addPublicationCommentaryCommand (missing identity,
-        // authorization denial, a storage conflict) is deliberately NOT
-        // caught here or routed through guarded() — OwnPublicationPanel
-        // catches it itself and renders it as its own commentary error
-        // state, never a transient global feedback toast.
-        //
-        // 0.9.291 — these SAME two functions are now ALSO bound to
-        // WorldEncounterCanvas's own identically-named props, below (see
-        // that file's own "0.9.291" header for why reusing this
-        // already-in-scope composition, rather than the app-wide one
-        // ui/main.js composes, was preferred). WorldEncounterCanvas
-        // catches its own thrown errors exactly the same restraint
-        // OwnPublicationPanel already holds — this function still resolves
-        // and decides nothing.
+        // Errors are deliberately not caught here: the panels render them as their
+        // own error state. Also bound to WorldEncounterCanvas.
         function getPublicationCommentariesCommand(publicationId) {
             return session.getPublicationCommentaries(publicationId);
         }
 
-        // 0.9.542 — forwards `commentaryId`/`createdAt` unchanged when a
-        // caller (a manual submission retry) supplies them; still
-        // resolves and decides nothing of its own. See
-        // WorldNavigationSession.addPublicationCommentary()'s own 0.9.542
-        // header.
+        // Forwards commentaryId/createdAt for idempotent retries.
         function addPublicationCommentaryCommand({ publicationId, content, commentaryId, createdAt }) {
             return session.addPublicationCommentary({ publicationId, content, commentaryId, createdAt });
         }
 
-        // 0.9.308 — Publication Multi-Placement Visibility. A thin
-        // wrapper around session.getPlacementsForPublication(), mirroring
-        // getPublicationCommentariesCommand()'s own restraint immediately
-        // above: this view resolves nothing and decides nothing itself,
-        // it only forwards to the session. An exception thrown by the
-        // session (a genuine discovery failure) is deliberately NOT
-        // caught here — OwnPublicationPanel catches it itself and renders
-        // it as its own placement-discovery error state, distinct from a
-        // real, empty `[]` result, never a transient global feedback
-        // toast.
+        // Errors are left for OwnPublicationPanel to show, distinct from an empty [].
         function getPublicationPlacementsCommand(publicationId) {
             return session.getPlacementsForPublication(publicationId);
         }
 
-        // 0.9.284 — Notification History UI Boundary. A thin wrapper
-        // around session.getRecipientNotificationEvents(), mirroring
-        // getPublicationCommentariesCommand()'s own restraint immediately
-        // above: this view resolves nothing and decides nothing itself,
-        // it only forwards to the session. A thrown error (no
-        // authenticated identity, or a genuine storage failure) is
-        // deliberately NOT caught here or routed through guarded() —
-        // NotificationHistoryPanel catches it itself and renders it as
-        // its own notification-history error state, never a transient
-        // global feedback toast.
+        // Errors are left for NotificationHistoryPanel to show.
         function getRecipientNotificationEventsCommand() {
             return session.getRecipientNotificationEvents();
         }
@@ -1948,37 +828,10 @@ export default {
             showNotificationHistoryPanel.value = false;
         }
 
-        // 0.9.530 — Notification → Publication Navigation. Resolves a
-        // NotificationEvent's own `payload.publicationId` to the SAME
-        // Publication object `session.findPublicationById()` already
-        // exposes (0.9.187, built for AutomaticSnapshotEncounterCascade)
-        // and, when found, reuses `focusWorld()` below — the exact "move
-        // camera + make active + sync route" mechanism Search/Nearby
-        // Worlds/Documents-Here already share (see
-        // `focusLocationDocument()`, further down) — never a second
-        // navigation mechanism, never a bare `router.push()` of this
-        // panel's own. This is deliberate: a bare `router.push({ path:
-        // '/world/' + documentId })` — the shape 0.9.381's own Repository
-        // navigation uses from EditorView — would silently do nothing
-        // useful here, because NotificationHistoryPanel is only ever
-        // reachable from INSIDE an already-mounted WorldView, which has
-        // no reactive watcher on `route.params.documentId` (route changes
-        // are a CONSEQUENCE of session state changing here, never the
-        // reverse — see `focusWorld()`'s own body). `focusWorld()` is the
-        // one mechanism in this file that already changes the session's
-        // own active document correctly from inside a live WorldView
-        // mount, so this reuses it verbatim rather than reintroducing the
-        // "navigate to self" gap 0.9.380 Section E already found and
-        // deliberately avoided.
-        //
-        // A stale or unresolvable target (the Publication was
-        // unpublished, or this replica never knew it) returns `false` and
-        // navigates nowhere — mirroring
-        // tests/DistributionResultPublicationCenterDeepLinkAudit.test.js's
-        // own Section F precedent: a missing target degrades silently,
-        // never a thrown error. The NotificationEvent itself is never
-        // read back or touched here beyond the `publicationId` the panel
-        // already handed this function — this stays navigation only.
+        // Navigates via focusWorld(), the one mechanism that changes the active
+        // document inside a live WorldView; a bare router.push() would do nothing here
+        // because route changes follow session state, not the reverse. An unknown
+        // Publication returns false.
         function viewNotificationPublicationCommand(publicationId) {
             const publication = session.findPublicationById(publicationId);
             if (!publication || !publication.documentId) {
@@ -1989,11 +842,6 @@ export default {
             return true;
         }
 
-        // Tool switching (Select/Place) — REMOVED (0.5.9). World View
-        // only ever has one "mode" left: look around and pick/hover for
-        // focus and inspection. See docs/Principles.md, "World View
-        // Observes and Navigates; Editor Mutates and Builds".
-
         // -----------------------------------------------------------------
         // Spatial UI refresh
         // -----------------------------------------------------------------
@@ -2003,9 +851,6 @@ export default {
             const docs = session.getLoadedDocuments();
             const pubMap = new Map(allPublications.value.map((p) => [p.documentId, p]));
 
-            // A loaded document's own metadata wins over its publication's;
-            // nearby/failed ids have no loaded document, so they fall
-            // straight through to the publication.
             const worldRow = (id, doc = null) => {
                 const pub = pubMap.get(id);
                 return {
@@ -2020,73 +865,31 @@ export default {
             failedWorlds.value = state.failed.map((id) => worldRow(id));
 
             cameraPosition.value = state.cameraPosition;
-            // 0.2.94 — re-read alongside cameraPosition on the exact
-            // same cadence; see compassHeading's own ref comment.
             compassHeading.value = session.getCompassHeading();
             
-            // 0.3.6 — World Discovery & Exploration. Derive spatial context
-            // (terrain zone, hydrology feature, nearby structures, collaborators)
-            // from current camera position for contextual location descriptions.
             spatialContext.value = spatialContextService.getCurrentContext();
 
-            // 0.9.186 — World Snapshot Background Discovery. Feeds this
-            // view's own just-recomputed spatialContext to the app-wide
-            // WorldSnapshotDiscoveryMonitor on every refreshSpatialUI()
-            // tick — the SAME cadence (a 3-second interval, plus assorted
-            // movement/session events) every other field on this line
-            // already refreshes on; this milestone adds no polling loop of
-            // its own. The monitor's own shouldRefreshSnapshotDiscovery()
-            // decision boundary silently no-ops most of these calls — only
-            // a meaningful World-area change ever results in an actual
-            // discovery call.
-            //
-            // 0.9.187 — Automatic Snapshot Encounter Cascade. Once that
-            // observation has settled, whatever the monitor's own
-            // `lastResult` now holds (unchanged, `[]`, or a freshly
-            // discovered candidate array — this view never distinguishes
-            // which) is handed, one candidate at a time, IN THE SAME ORDER,
-            // to `automaticSnapshotEncounterCascade.processCandidate()`.
-            // Re-feeding an UNCHANGED `lastResult` on a tick that triggered
-            // no fresh discovery call is harmless and deliberate — the
-            // cascade's own idempotency (keyed on
-            // `publicationId:contentHash`, never on this call site) is what
-            // makes every one of these repeats a no-op past the first, not
-            // any dedup this view performs. This promise, too, is
-            // intentionally never awaited: driving a discovered candidate
-            // to resolution/materialization/placement/registration is a
-            // background concern this tick never blocks on or renders
-            // directly — a successful registration becomes visible only
-            // through the ordinary, unmodified WorldEncounterCanvas
-            // rendering pipeline once it re-reads worldDiscoverySourceRegistry.
+            // Feeds the Snapshot discovery monitor on this same tick (no polling of its
+            // own); the monitor ignores most calls until the viewer moves meaningfully.
+            // Its last result is then handed, in order, to the automatic cascade.
+            // Re-feeding an unchanged result is harmless: the cascade is idempotent per
+            // publicationId:contentHash. Never awaited; a registration becomes visible
+            // through the canvas's normal rendering.
             if (worldSnapshotDiscoveryMonitor && spatialContext.value) {
                 worldSnapshotDiscoveryMonitor.observe(spatialContext.value).then(() => {
                     const candidates = worldSnapshotDiscoveryMonitor.lastResult;
                     if (Array.isArray(candidates)) {
                         candidates.forEach((candidate) => automaticSnapshotEncounterCascade.processCandidate(candidate).then((result) => {
-                            // 0.9.190 — Automatic Snapshot Encounter Retention
-                            // Integration. The ONLY place a subject ever becomes
-                            // watched for retention — see
-                            // AutomaticSnapshotEncounterRetentionReconciliation.js's
-                            // own header, "Provenance, without a new persistent
-                            // flag." A manually-registered Snapshot never passes
-                            // through this callback at all.
+                            // The only place a Snapshot becomes watched for retention; manual
+                            // registrations never pass through here.
                             if (result && result.outcome === SnapshotWorldRegistrationOutcome.REGISTERED) {
                                 automaticSnapshotEncounterRetentionReconciliation.noteAutomaticRegistration({
                                     publicationId: result.publicationId,
                                     contentHash: result.contentHash
                                 });
                             }
-                            // 0.9.552 — Observer-Local Novel Publication
-                            // Encounter Presentation. The ONLY place a
-                            // described encounter is ever recorded — see
-                            // application/AutomaticSnapshotEncounterCascade.js's
-                            // own header, "this file never records an
-                            // encounter anywhere itself." `result.encounter`
-                            // is non-null only when this run's own outcome
-                            // was UNPLACED and `resolveEncounterPosition`
-                            // (above) returned a usable position; every
-                            // other outcome — including REGISTERED, above —
-                            // carries `encounter: null` and is a no-op here.
+                            // The only place an observer-local encounter is recorded; only UNPLACED runs
+                            // with a usable position carry one.
                             if (result && result.encounter) {
                                 observerLocalEncounterStore.record(result.encounter);
                             }
@@ -2095,37 +898,10 @@ export default {
                 });
             }
 
-            // 0.9.257 — World View Place Naming Presentation. The SAME
-            // cadence every other field on this tick already refreshes on —
-            // this milestone adds no polling loop, timer, or subscription of
-            // its own; see `placeNamingDiscoveryMonitor`'s own construction
-            // comment, above. Unlike `worldSnapshotDiscoveryMonitor` above,
-            // `observe()` is handed `spatialContext.value.position` —a raw
-            // `{x,z}` — never the whole spatialContext object:
-            // `application/ShouldRefreshPlaceNamingDiscovery.js` compares
-            // raw positions directly, unlike Snapshot discovery's own
-            // context-shaped threshold.
-            //
-            // Once the observation settles, this view reads EXACTLY
-            // `placeNamingDiscoveryMonitor.lastResult`/`.lastError` into its
-            // own `nearbyPlaceNamingClaims`/`placeNamingDiscoveryError` refs
-            // — no filtering, reordering, deduplication, or "primary name"
-            // selection of any kind happens here. A discovery cycle that
-            // fails leaves `lastResult` (and therefore this view's own
-            // `nearbyPlaceNamingClaims`) exactly as it was — see
-            // `PlaceNamingDiscoveryMonitor`'s own header, "a discovery
-            // failure never mutates lastResult" — so the previously
-            // displayed claims simply remain on screen, with
-            // `placeNamingDiscoveryError` the only thing that changes.
-            //
-            // `placeNamingDiscoveryPresentationActive` (flipped `false` as
-            // the very first statement in `onBeforeUnmount()`, below) guards
-            // against this callback still running after this view has torn
-            // down — a real possibility since `observe()`'s own returned
-            // promise is intentionally never awaited by this tick, the same
-            // "background concern this tick never blocks on" restraint
-            // `worldSnapshotDiscoveryMonitor`'s own call above already
-            // holds.
+            // Place naming discovery on the same tick, given the raw {x,z} position. The
+            // view copies the monitor's lastResult/lastError verbatim; a failed cycle
+            // keeps the previous claims on screen and only changes the error. The active
+            // flag stops a late callback from touching a torn-down view.
             if (placeNamingDiscoveryMonitor && spatialContext.value) {
                 placeNamingDiscoveryMonitor.observe(spatialContext.value.position).then(() => {
                     if (!placeNamingDiscoveryPresentationActive) {
@@ -2136,54 +912,27 @@ export default {
                 });
             }
 
-            // 0.9.190 — Automatic Snapshot Encounter Retention Integration.
-            // Reconciled on the SAME cadence as spatialContext itself, above
-            // — every refreshSpatialUI() tick, not gated behind the
-            // discovery monitor's own refresh threshold, so an already-
-            // watched Snapshot is evaluated against the Wanderer's own
-            // CURRENT position every tick, exactly as
-            // application/AutomaticSnapshotEncounterRetentionPolicy.js's own
-            // header specifies. A no-op when nothing is currently watched.
+            // Reconciled every tick (not gated by the discovery threshold) against the
+            // viewer's current position; a no-op when nothing is watched.
             automaticSnapshotEncounterRetentionReconciliation.reconcile(
                 spatialContext.value ? spatialContext.value.position : null
             );
 
-            // 0.5.1 — World Maps & Geographic Navigation. Re-read on the
-            // exact same cadence as spatialContext above while the map is
-            // open — see `mapContent`'s own ref comment. openMapPanel()
-            // re-reads it on open, so skipping it while closed never
-            // shows stale content.
+            // Kept current while the map is open; openMapPanel() re-reads it on open.
             if (showMapPanel.value) {
                 refreshMapContent();
             }
 
-            // 0.5.6 — Geographic Place Navigation & Arrival. Re-read on
-            // the exact same cadence — see `nearbyGeographicPlaces`'s
-            // own ref comment.
             nearbyGeographicPlaces.value = session.getNearbyGeographicPlaces();
 
-            // 0.2.38 — see the ref's own comment above.
             remoteAvatarDiagnostics.value = session.getRemoteAvatarDiagnostics();
 
             const inspection = session.getSpatialInspection();
             if (inspection && !inspection.isEmpty) {
                 spatialInspection.value = {
                     type: inspection.type,
-                    // Pre-existing bug, found while chasing a missing
-                    // "Edit a Copy" button (0.5.9): SpatialInspectionState
-                    // keeps documentId/buildingId/brickId/placementId as
-                    // its OWN top-level fields, siblings of `data`, not
-                    // inside it (see application/spatial-state/
-                    // SpatialInspectionState.js). Spreading only
-                    // `inspection.data` silently dropped `documentId`
-                    // from this object entirely — every button gated on
-                    // `spatialInspection.documentId` (Focus World, since
-                    // 0.2.93, and now Edit a Copy) has never actually
-                    // been able to render for a brick/ground/placement
-                    // inspection. `data` already carries the identical
-                    // value under `worldId` for every inspection type,
-                    // which is why the surrounding fields (Type, World,
-                    // Author, ...) always rendered fine.
+                    // documentId is a top-level field of the inspection, not inside `data`;
+                    // spreading only `data` dropped it and hid every button gated on it.
                     documentId: inspection.documentId,
                     ...inspection.data
                 };
@@ -2191,59 +940,30 @@ export default {
                 spatialInspection.value = null;
             }
 
-            // 0.2.21: the Document Info panel for whatever the
-            // inspection panel is currently showing — same documentId
-            // 0.2.20's editability notice used, now folded into the
-            // richer shape (title/description/license/status/
-            // editabilityNotice together) getDocumentInfo returns.
             documentInfo.value = (spatialInspection.value && spatialInspection.value.documentId)
                 ? session.getDocumentInfo(spatialInspection.value.documentId)
                 : null;
 
-            // 0.2.23: the placement (WHERE) for the same world
-            // documentInfo (WHAT) just described — kept as a sibling
-            // lookup, not folded into getDocumentInfo's shape, exactly
-            // the "don't blur the concepts" separation the milestone
-            // design asked for. null (not a placement-shaped object
-            // full of nulls) when the world has no known placement yet.
+            // The placement (WHERE) for the same world, kept separate from the document
+            // info (WHAT); null when it has none.
             placementInfo.value = (spatialInspection.value && spatialInspection.value.documentId)
                 ? session.getPlacementInfo(spatialInspection.value.documentId)
                 : null;
 
-            // 0.2.39 — independent of spatialInspection above: an
-            // avatar interaction target and a brick/ground selection
-            // are mutually exclusive (see WorldNavigationSession.pick()),
-            // so at most one of {documentInfo/placementInfo, avatarInfo}
-            // is ever non-null at a time, but they're read from
-            // completely separate session state, never derived from
-            // each other.
+            // Read from separate session state: an avatar target and a brick/ground
+            // selection are mutually exclusive.
             avatarInfo.value = session.getAvatarInfo();
             followedRemoteAvatarId.value = session.getFollowedRemoteAvatarId();
 
-            // 0.2.43 — independent of avatarInfo above:
-            // "who is near me" is a standing fact about the local
-            // avatar's own position, not tied to whatever is currently
-            // selected or targeted.
+            // A standing fact about the avatar's position, independent of selection.
             nearbyAvatars.value = session.getNearbyAvatars().map((entry) => ({
                 ...entry,
                 displayName: session.getAvatarDisplayName(entry.avatarId)
             }));
 
-            // 0.2.22: the header (title/author/status) and the route
-            // always track the ACTIVE document — session.
-            // getActiveDocumentId() — never a route param frozen at
-            // mount time. Before this, forking (0.2.20) changed which
-            // document mutations landed on without the visible title,
-            // URL, or "current world" highlight ever following: the
-            // screen kept saying "Alice's World" while every
-            // subsequent edit was silently going to Bob's fork. This
-            // runs on every refresh — every pointer/keyboard
-            // interaction and the periodic streaming poll both call
-            // refreshSpatialUI() already — so the transition is never
-            // more than one interaction late, and is the SAME
-            // documentId->route mechanism focusWorld() already used
-            // for an explicit "Focus World" click, just applied
-            // automatically instead of only on request.
+            // The header and route always follow the ACTIVE document, never a route param
+            // frozen at mount; otherwise a fork would change where edits land without the
+            // title or URL following.
             const activeId = session.getActiveDocumentId();
             const activeDoc = docs.find((d) => d.world.id === activeId);
             if (activeDoc) {
@@ -2251,47 +971,28 @@ export default {
                 author.value = activeDoc.metadata.author;
             }
             activeDocumentInfo.value = activeId ? session.getDocumentInfo(activeId) : null;
-            // 0.9.210 — World View Undo/Redo UI Integration. Same cadence
-            // as activeDocumentInfo immediately above, since both track
-            // "what can be done to the currently active document."
             canUndo.value = session.canUndo();
             canRedo.value = session.canRedo();
             undoLabel.value = session.getUndoLabel();
             redoLabel.value = session.getRedoLabel();
             activePlacementInfo.value = activeId ? session.getPlacementInfo(activeId) : null;
-            // 0.9.140 — see ownPublication's own ref comment above.
             ownPublication.value = activeId ? session.getPublicationForDocument(activeId) : null;
             if (activeId && activeId !== route.params.documentId) {
                 router.replace({ path: `/world/${activeId}` });
             }
 
-            // 0.2.99 — World Collaboration UX. Presence/membership track
-            // the SAME active document Save/Publish/Edit Metadata above
-            // already operate on — see _syncWorldPresence()'s own
-            // header. A no-op when activeId hasn't actually changed
-            // since the last tick, so this never re-enters presence (or
-            // re-subscribes) on every 3-second poll.
+            // A no-op unless the active document changed.
             _syncWorldPresence(activeId);
-            // 0.3.10 — runs BEFORE _syncWorldSpatialPresence() below on
-            // purpose: it populates worldReturnInfo (and restores this
-            // replica's own last camera framing) for `activeId` before
-            // spatial presence's own arrival check can open the Welcome
-            // panel — see _syncWorldExperience()'s own header.
+            // Runs before spatial presence so worldReturnInfo (and the saved camera) is
+            // ready before the Welcome panel can open.
             _syncWorldExperience(activeId);
-            // 0.3.0 — the SAME active-document tracking, one protocol
-            // further — see _syncWorldSpatialPresence()'s own header.
             _syncWorldSpatialPresence(activeId);
             isActiveWorldOwner.value = activeId ? session.isWorldOwner(activeId) : false;
-            // 0.3.7 — see canEditActiveWorld's own ref comment above.
             canEditActiveWorld.value = activeId ? session.canEditDocument(activeId) : false;
 
-            // 0.2.27: the camera's own target, kept and shown
-            // separately from the active document above — see
-            // docs/Principles.md, "Camera Focus, Active Document, and
-            // Selection Are Three Different Things." Two publications
-            // can share a coordinate; focusing one, then the other,
-            // moves the camera nowhere the second time, but Editing
-            // still needs to say which one is now the mutation target.
+            // The camera's target, shown separately from the active document (docs/
+            // Principles.md, "Camera Focus, Active Document, and Selection Are Three
+            // Different Things"): two publications can share a coordinate.
             const focusedId = session.getFocusedDocumentId();
             if (!focusedId) {
                 focusedDocumentTitle.value = null;
@@ -2303,22 +1004,13 @@ export default {
         }
 
         // -----------------------------------------------------------------
-        // 0.2.99 — World Collaboration UX
+        // World Collaboration
         // -----------------------------------------------------------------
         //
-        // Presence is scoped to the ACTIVE document — the same one
-        // Save/Publish/Edit Metadata already act on — never the merely
-        // FOCUSED (camera) document; see docs/Principles.md, "Camera
-        // Focus, Active Document, and Selection Are Three Different
-        // Things." Entering presence for a World you're only looking at,
-        // without ever making it the active document, would announce
-        // "here" for a document nobody upstream considers current.
-        //
-        // A no-op unless the active document actually changed since the
-        // last call — session.enterWorldPresence()/onWorldPresenceChanged()
-        // etc. are all graceful no-ops with no worldPresenceUseCase
-        // wired anyway, but re-subscribing every 3-second poll tick
-        // would still be wasteful churn even then.
+        // Presence follows the ACTIVE document, never the merely focused one: entering
+        // presence for a world you only look at would announce "here" for a document
+        // nothing considers current. A no-op unless the active document changed, to
+        // avoid re-subscribing every poll.
         function _syncWorldPresence(activeId) {
             if (activeId === presentWorldDocumentId) {
                 return;
@@ -2340,47 +1032,16 @@ export default {
                 return;
             }
             session.enterWorldPresence(presentWorldDocumentId);
-            // Live updates: a GOSSIPED grant/revocation, or another
-            // participant's presence changing, refreshes the roster the
-            // moment it arrives — never only on the next 3-second poll.
-            // See WorldNavigationSession#onWorldMembershipChanged()/
-            // onWorldPresenceChanged()'s own headers.
-            //
-            // 0.9.217 — this is also the exact moment
-            // refreshWorldPresenceActivity()'s own header names as its
-            // trigger: "the call a session makes after a World edit
-            // grant it holds changes (granted or revoked)." A grant or
-            // revocation touching THIS document — self-issued via
-            // grantWorldEdit()/revokeWorldEdit() above, or gossiped in
-            // from the owner — is exactly that event, so this replica's
-            // OWN advertised activity is re-derived and re-broadcast
-            // right here, never waiting on the unrelated 3-second
-            // spatial poll (session.canEditDocument() is already
-            // re-read there for the LOCAL "can I edit" label, but
-            // nothing on that cadence ever told OTHER peers this
-            // replica's activity changed).
-            //
-            // 0.9.218 — refreshWorldPresenceActivity() is wrapped in its
-            // own try/catch, isolated from the pre-existing roster
-            // refresh beside it. onWorldMembershipChanged() is a SHARED
-            // callback invoked SYNCHRONOUSLY from inside
-            // application/WorldMembershipUseCase.js's own
-            // grantEdit()/_applyGrant() — an uncaught throw here does not
-            // merely fail silently in this view, it unwinds back through
-            // that use case's own event publish and skips its OWN
-            // subsequent network broadcast, breaking a grant/revocation
-            // for every peer, not just this replica's presence. See
-            // tests/WorldPresenceMembershipRefreshLifecycleAudit.test.js's
-            // own Section H for the failing case this closes.
+            // Live membership/presence changes refresh the roster immediately. A grant or
+            // revocation also re-derives and re-broadcasts this replica's own advertised
+            // activity right away. That refresh is isolated in its own try/catch: this
+            // callback runs synchronously inside WorldMembershipUseCase, and a throw would
+            // skip its network broadcast for every peer.
             unsubscribeWorldMembership = session.onWorldMembershipChanged(presentWorldDocumentId, () => {
                 worldMembers.value = session.listWorldMembers(presentWorldDocumentId);
                 try {
                     session.refreshWorldPresenceActivity(presentWorldDocumentId);
                 } catch {
-                    // Best-effort, exactly like WorldPresenceUseCase's own
-                    // _broadcast() catch — a failure re-deriving this
-                    // replica's OWN advertised activity is never allowed
-                    // to break the membership event that triggered it.
                 }
             });
             unsubscribeWorldPresence = session.onWorldPresenceChanged(presentWorldDocumentId, (roster) => {
@@ -2388,17 +1049,9 @@ export default {
             });
         }
 
-        // 0.3.10 — World Persistence & Return Experience. Mirrors
-        // _syncWorldPresence() above in SHAPE only (a no-op unless the
-        // active document actually changed, save-then-restore across the
-        // transition) — deliberately NOT the same protocol: this reads
-        // and writes nothing but this replica's OWN local storage (see
-        // session.saveWorldExperience()/restoreWorldExperience()'s own
-        // header), never anything broadcast to a peer. `worldReturnInfo`
-        // is captured from the OUTGOING (prior) experience record before
-        // this tick's own restore/save ever touches it, so it always
-        // describes "how I last left this World," never the visit
-        // currently starting.
+        // Same shape as _syncWorldPresence() but purely local storage, never
+        // broadcast. worldReturnInfo is captured from the prior record before this
+        // visit's restore/save.
         function _syncWorldExperience(activeId) {
             if (activeId === presentExperienceWorldDocumentId) {
                 return;
@@ -2411,9 +1064,7 @@ export default {
                 worldReturnInfo.value = null;
                 return;
             }
-            // restoreWorldExperience() only reads the stored record (never
-            // writes it) and returns it, or null for a first visit — one
-            // lookup serves both the restore and worldReturnInfo.
+            // restoreWorldExperience() only reads, and returns null on a first visit.
             const priorExperience = session.restoreWorldExperience(presentExperienceWorldDocumentId);
             worldReturnInfo.value = priorExperience ? { lastVisitedAt: priorExperience.lastVisitedAt } : null;
         }
@@ -2428,14 +1079,7 @@ export default {
             worldPresenceRoster.value = session.getWorldPresenceRoster(documentId);
         }
 
-        // 0.3.0 — Collaborative Spatial Presence. Mirrors
-        // _syncWorldPresence() above exactly, one protocol further: a
-        // no-op unless the active document actually changed, tears down
-        // the previous World's spatial presence and subscription before
-        // entering the new one. session.enterWorldSpatialPresence()/
-        // leaveWorldSpatialPresence()/onWorldSpatialPresenceChanged()
-        // are all graceful no-ops with no worldSpatialPresenceUseCase
-        // wired — see application/WorldNavigationSession.js's own header.
+        // Same shape as _syncWorldPresence(), for spatial presence.
         function _syncWorldSpatialPresence(activeId) {
             if (activeId === presentSpatialWorldDocumentId) {
                 return;
@@ -2464,82 +1108,43 @@ export default {
                     resolveDisplayName: resolveIdentityDisplayName,
                     resolveSelectionLabel: (selection) => session.resolveSpatialSelectionLabel(selection)
                 });
-                // 0.3.9 — a live presence change (someone joins, starts
-                // building, leaves) refreshes an ALREADY-OPEN welcome/
-                // exploration panel's "What's happening nearby?" and
-                // suggestions in place — see docs/Principles.md,
-                // "Exploration Guides Attention, Never Ownership or
-                // Mutation (0.3.9)": this never reopens a panel the
-                // viewer already dismissed.
+                // Refreshes an already-open Welcome panel in place; never reopens a dismissed
+                // one (docs/Principles.md, "Exploration Guides Attention, Never Ownership or
+                // Mutation").
                 if (showWelcomePanel.value) {
                     refreshWelcomeContext();
                 }
             });
-            // 0.3.9 — the automatic arrival showing: once per World per
-            // session, the moment this session actually enters that
-            // World's spatial presence. See `welcomeShownForDocumentId`'s
-            // own comment above for why a later re-entry (or an
-            // unrelated refreshSpatialUI() tick) never repeats it.
             if (!welcomeShownForDocumentId.has(presentSpatialWorldDocumentId)) {
                 welcomeShownForDocumentId.add(presentSpatialWorldDocumentId);
                 openWelcomePanel(true);
             }
         }
 
-        // 0.3.9 — World Welcome & Guided Exploration. Re-reads
-        // session.getWelcomeContext() fresh (never cached beyond this
-        // call) and stores its plain toJSON() shape — the same "map to
-        // toJSON() before storing in a ref" convention
-        // refreshLocationsPanel() above already uses for
-        // getWorldLocations(). `resolveIdentityDisplayName` is the same
-        // presentation-only resolver every other spatial-presence path
-        // in this file already threads through.
         function refreshWelcomeContext() {
             const context = session.getWelcomeContext((identityId) => resolveIdentityDisplayName(identityId));
             welcomeContext.value = context ? context.toJSON() : null;
         }
 
-        // 0.3.10 — true only for the automatic ARRIVAL showing of a World
-        // this replica has a prior local experience record for — "Welcome
-        // back," never "Welcome," and "Continue Exploring" over "Explore
-        // Freely." Reopening later via the toolbar's "Explore" button
-        // (isArrival: false) always shows the plain, non-returning framing
-        // — returning is specifically about how you ARRIVED, not a
-        // permanent mode for the rest of the visit.
+        // "Welcome back" only for the automatic arrival showing of a world visited
+        // before; reopening via "Explore" always uses the plain framing.
         const welcomeIsReturning = computed(() => welcomeIsArrival.value && Boolean(worldReturnInfo.value));
 
         function openWelcomePanel(isArrival) {
             refreshWelcomeContext();
             welcomeIsArrival.value = Boolean(isArrival);
             showWelcomePanel.value = true;
-            // 0.5.7 — the Welcome panel IS Explore mode's content
-            // (see setPrimaryMode() below), including on the automatic
-            // arrival showing — so primaryMode always agrees with what's
-            // actually on screen, never left pointing at whatever mode
-            // the viewer was in during a PREVIOUS World.
+            // The Welcome panel is Explore mode's content, so primaryMode must agree.
             syncPrimaryMode(WorldViewPrimaryMode.EXPLORE);
         }
 
-        // 0.5.7 — dismissing Explore's own content returns primaryMode
-        // to its resting default rather than leaving the Explore tab
-        // shown "active" with nothing underneath it — Explore already
-        // IS that default (see WorldViewNavigationState's own
-        // constructor), so this is a no-op on primaryMode itself, only
-        // on the panel's visibility.
         function closeWelcomePanel() {
             showWelcomePanel.value = false;
         }
 
-        // WorldWelcomePanel's own `explore` emit carries the raw
-        // WorldExplorationSuggestion#toJSON() shape — this is the ONE
-        // place that decides which existing navigation primitive a
-        // suggestion's `kind` maps to, exactly the mapping the design
-        // calls for: landmark/structure/place all go through
-        // focusLocation()/focusPlace() (camera-only — see 0.3.2's own
-        // "Camera Navigation Is Never Avatar Movement"), a collaborator
-        // suggestion goes through focusCollaborator(), the SAME call
-        // followCollaborator() above already makes. Never teleports the
-        // avatar, never mutates the World.
+        // Maps a suggestion's kind to a navigation primitive: places move the camera
+        // only (never the avatar), collaborators go through focusCollaborator(). Never
+        // mutates the World.
         function exploreWelcomeSuggestion(suggestion) {
             const location = suggestion && suggestion.location;
             if (!location) {
@@ -2557,28 +1162,14 @@ export default {
             refreshSpatialUI();
         }
 
-        // 0.3.1 — Collaborative Spatial Awareness. The host view's own
-        // handler for WorldCollaboratorIndicator's `follow` emit — see
-        // that component's own header, "this component only ever emits
-        // which primaryDeviceId was clicked." session.focusCollaborator()
-        // is the ONE call that actually moves the camera; nothing here
-        // sends anything to anyone.
-        //
-        // Also the one handler for every other "go to this person" entry
-        // point — Nearby People's Go button and WorldMapPanel's
-        // `focus-collaborator` emit.
+        // The one handler for every "go to this person" entry point. Only moves the
+        // camera; sends nothing.
         function followCollaborator(deviceId) {
             session.focusCollaborator(deviceId);
             refreshSpatialUI();
         }
 
-        // Resolves a friendly label for a raw identityId — PRESENTATION
-        // ONLY, exactly ui/views/ConversationsView.js's own
-        // `alias || shortId(identityId)` degradation, reused rather than
-        // reinvented: a known PeerRelationship's alias first, then the
-        // fallback label the caller already has on hand (the World's own
-        // `author` username for the owner row), then a short identityId,
-        // never a thrown error or an empty string.
+        // Presentation only: alias, then the caller's fallback label, then a short id.
         function resolveIdentityDisplayName(identityId, fallbackLabel = null) {
             if (!identityId) {
                 return fallbackLabel || 'Unknown';
@@ -2606,15 +1197,7 @@ export default {
             showMembersPanel.value = false;
         }
 
-        // Grant/Revoke — see ui/components/WorldMembersPanel.js's own
-        // header: this is the "UI affordance -> application
-        // authorization -> signed membership operation -> gossip" chain
-        // the design conversation asked to remain untouched. Feedback is
-        // phased exactly as the design conversation specified: an
-        // immediate "Granting…"/"Revoking…" (collaborationPendingIdentityId,
-        // rendered inline by WorldMembersPanel), then either a success
-        // message or the SAME error a denied mutation anywhere else in
-        // this view already surfaces via feedback.show().
+        // Shows "Granting…"/"Revoking…" inline, then a success message or the error.
         function grantWorldMember(identityId) {
             const documentId = activeDocumentInfo.value ? activeDocumentInfo.value.documentId : null;
             if (!documentId || !identityId) {
@@ -2649,12 +1232,8 @@ export default {
             }
         }
 
-        // Best-effort title for a parentDocumentId shown in the
-        // header's "Forked from" line — the parent is a real
-        // Publication (fork provenance always points at one), so its
-        // title is available from the same publications list the
-        // hover/inspection panels already resolve titles from, even
-        // though the parent itself is no longer loaded in this session.
+        // The parent is a Publication, so its title is available from the publications
+        // list even when not loaded.
         function parentTitle(parentDocumentId) {
             const pub = allPublications.value.find((p) => p.documentId === parentDocumentId);
             return pub ? (pub.title || 'Untitled') : null;
@@ -2685,36 +1264,16 @@ export default {
             refreshSpatialUI();
         }
 
-        // 0.9.558 — Known Publication Encounter Continuation. Reuses the
-        // EXACT SAME `/editor?load=<documentId>` navigation
-        // ui/components/PublicationCatalog.js's own openPublication(pub)
-        // already performs (0.9.557 Section A1) — never a second Open
-        // mechanism. Wired to WorldEncounterCanvas's own new
-        // `openPublicationCommand` prop, below, called with the already-
-        // resolved Publication instance its own observer-local encounter
-        // inspection produced — never a bare id string.
+        // Same /editor?load= navigation as PublicationCatalog's Open.
         function openEncounteredPublicationCommand(publication) {
             router.push({ path: '/editor', query: { load: publication.documentId } });
         }
 
-        // 0.9.558 — mirrors openEncounteredPublicationCommand() exactly,
-        // one action over — the EXACT SAME `/editor?fork=<documentId>&
-        // publication=<id>` navigation PublicationCatalog.js's own
-        // forkPublication(pub) already performs (0.9.557 Section A2).
+        // Same /editor?fork= navigation as PublicationCatalog's Fork.
         function forkEncounteredPublicationCommand(publication) {
             router.push({ path: '/editor', query: { fork: publication.documentId, publication: publication.id } });
         }
 
-        // 0.9.558 — mirrors openEncounteredPublicationCommand() exactly,
-        // one action over — reuses focusWorld(), immediately above,
-        // rather than a bare router.push(): 0.9.557 Section F1/F2 already
-        // established that PublicationCatalog.js's own viewWorld(pub) and
-        // this file's own focusWorld() reach the identical
-        // `/world/<documentId>` destination, and focusWorld() is this
-        // file's own established "move to another place in World"
-        // mechanism — never a second one, just for a Publication reached
-        // through an observer-local encounter rather than a Locations
-        // panel or Search result.
         function exploreEncounteredPublicationCommand(publication) {
             focusWorld(publication.documentId);
         }
@@ -2725,28 +1284,17 @@ export default {
         }
 
         // -----------------------------------------------------------------
-        // 0.2.94 — World View Location & Navigation
+        // Location & Navigation
         // -----------------------------------------------------------------
         //
-        // Deliberately separate from focusWorld() above: Home and
-        // Locations never load a document, never touch the route, and
-        // never change the active/editing document — see
-        // WorldNavigationSession#focusLocation/goHome's own comments.
-        // refreshSpatialUI() still runs after each so the coordinate
-        // readout and compass reflect the destination immediately,
-        // matching every other navigation action in this file, even
-        // though the camera itself keeps gliding for a few more frames.
+        // Unlike focusWorld(), Home and Locations never load a document, touch the
+        // route or change the active document.
         function goHome() {
             session.goHome();
             refreshSpatialUI();
         }
 
-        // 0.5.7 — Locations (World/Structures/Landmarks/Regions) lives
-        // under Explore mode rather than its own always-visible
-        // toolbar button — see setPrimaryMode()'s own header. Opening
-        // it still goes through the same mutual-exclusion helper every
-        // other primary surface uses, so it's never stacked on top of
-        // the Map or Places directory.
+        // Lives under Explore mode, opened through the same mutual-exclusion helper.
         function openLocationsPanel() {
             syncPrimaryMode(WorldViewPrimaryMode.EXPLORE);
             closePrimaryNavigationPanels();
@@ -2754,33 +1302,22 @@ export default {
             showLocationsPanel.value = true;
         }
 
-        // Locations lives under Explore (see openLocationsPanel()'s own
-        // header) — since Explore is already worldViewNav's resting
-        // default, closing it needs no mode reset of its own.
         function closeLocationsPanel() {
             showLocationsPanel.value = false;
         }
 
-        // The one handler for every "go to this location" entry point —
-        // the Locations panel, Nearby Landmarks, WorldMapPanel's
-        // `focus-location` and GeographicPlacePanel's `focus-region`.
+        // The one handler for every "go to this location" entry point.
         function focusLocation(locationId) {
             session.focusLocation(locationId);
             refreshSpatialUI();
         }
 
         // -----------------------------------------------------------------
-        // 0.3.7 — World Landmarks & Personal Waypoints
+        // Landmarks & Waypoints
         // -----------------------------------------------------------------
         //
-        // All three funnel through guarded() exactly like every other
-        // mutation in this file (movePlacement, onSaveMetadata, ...): a
-        // denial (not authorized, no live avatar, fork-policy refusal)
-        // becomes a feedback toast, never an uncaught exception. The
-        // Locations panel's own list is re-read after each so a create/
-        // edit/remove is reflected immediately without waiting for the
-        // panel to be reopened — the same "list() is cheap, never cached"
-        // posture WorldLocationDirectory already documents.
+        // Mutations go through guarded(); the Locations list is re-read after each so
+        // changes show immediately.
         function refreshLocationsPanel() {
             worldLocations.value = session.getWorldLocations().map((loc) => loc.toJSON());
         }
@@ -2831,11 +1368,8 @@ export default {
         }
 
         // -----------------------------------------------------------------
-        // 0.5.0 — World Regions & Decentralized Place Naming
+        // Regions & Place Naming
         // -----------------------------------------------------------------
-        //
-        // Same guarded()/refresh shape as the landmark handlers above —
-        // see that section's own header.
         function openAddRegionForm() {
             regionFormTarget.value = null;
             showRegionForm.value = true;
@@ -2882,23 +1416,18 @@ export default {
         }
 
         // -----------------------------------------------------------------
-        // 0.5.2 — Place Naming & Naming Claims
+        // Place Naming Claims
         // -----------------------------------------------------------------
         //
-        // Deliberately NOT gated by canEditActiveWorld anywhere below —
-        // see core/PlaceNamingClaim.js's own header on why publishing or
-        // retracting a naming claim needs no World edit authority at
-        // all, unlike every landmark/region handler above.
+        // Not gated by canEditActiveWorld: naming claims need no World edit authority
+        // (see core/PlaceNamingClaim.js).
         function refreshNamingPanel() {
             const regionId = namingPanelRegionId.value;
             if (!regionId) return;
             namingPanelClaims.value = session.getPlaceNamingClaims(regionId);
             namingPanelView.value = session.getPlaceNamingView(regionId);
             namingPanelPreferredName.value = session.getPreferredPlaceName(regionId);
-            // 0.5.4 — see this function's own header on why this stays
-            // a separate, additive read: it never changes what
-            // namingPanelClaims/namingPanelView above already show for
-            // THIS region alone.
+            // Additive: never changes what the region-scoped fields show.
             const geographic = session.getGeographicNamingView(regionId);
             namingPanelGeographicRegions.value = geographic.regions;
             namingPanelGeographicView.value = geographic.namingView;
@@ -2917,15 +1446,8 @@ export default {
             resetNamingPanelPublishToNostr();
         }
 
-        // 0.9.320 — Explicit Place Naming Publication Action. Clears
-        // whatever the LAST "Publish to Nostr" click described and bumps
-        // the request id so an already-in-flight call (from the panel that
-        // was just closed, or the region that was just left) can never
-        // write a stale result/error into the panel now open — the
-        // identical staleness guard `distributeWorldEncounterSnapshot()`'s
-        // own caller (`OwnPublicationPanel.js`) already holds for its
-        // `publication`-change watcher, applied here at the two sites a
-        // naming panel's own target region can change.
+        // Clears the last "Publish to Nostr" result and bumps the request id, so an
+        // in-flight call for a previous panel can never write into this one.
         function resetNamingPanelPublishToNostr() {
             namingPanelPublishToNostrRequestId.value += 1;
             namingPanelPublishToNostrClaimId.value = null;
@@ -2964,13 +1486,6 @@ export default {
             refreshNamingPanel();
         }
 
-        // 0.5.3 — Decentralized Place Name Exchange. Builds the portable
-        // package via session.exportPlaceNamingClaim() (pure — see that
-        // method's own header) and triggers an immediate browser
-        // download, the exact same `data:application/json` + <a
-        // download> shape exportPersonalStructure() (ui/views/
-        // EditorView.js) already established for a Blueprint one domain
-        // over — deliberately no intermediate modal here either.
         function exportNamingClaim(claimId) {
             const pkg = guarded(() => session.exportPlaceNamingClaim(namingPanelRegionId.value, claimId));
             if (!pkg) return;
@@ -2983,21 +1498,9 @@ export default {
             feedback.show(`Exported "${pkg.claim.name}"`);
         }
 
-        // `rawText` is whatever PlaceNamingPanel's own hidden file input
-        // read off disk — untrusted input, so JSON.parse and
-        // session.importPlaceNamingClaim() (which runs application/
-        // PlaceNamingClaimPublicationValidator.js and signature
-        // verification before anything is stored — see
-        // application/PlaceNamingClaimExchange.js#importClaim()'s own
-        // header) are each handled separately, mirroring
-        // importBlueprint()'s own two-stage "is this even JSON" / "is
-        // this a valid, verifiable package" error handling.
-        //
-        // A duplicate (a claim this replica already knew about) is NOT
-        // an error — see importClaim()'s own header on why re-receiving
-        // the same signed claim is an entirely ordinary outcome of
-        // exchange — so it gets its own, non-alarming feedback message
-        // rather than looking like a failure.
+        // `rawText` is untrusted; parsing and import (validation plus signature
+        // verification) are reported separately. A duplicate claim is an ordinary
+        // outcome with its own message.
         function importNamingClaim(rawText) {
             let parsed;
             try {
@@ -3021,32 +1524,9 @@ export default {
             }
         }
 
-        // 0.9.320 — Explicit Place Naming Publication Action.
-        //
-        // "Create claim" (publishNamingClaim(), above — session.publishPlaceNamingClaim(),
-        // local and synchronous) and "announce claim" (THIS function) stay
-        // two separate, explicit steps — see docs/Roadmap.md's own 0.9.320
-        // entry. This function does neither: it identifies an EXISTING,
-        // already-signed claim already on file for the open panel's own
-        // region, and hands it to the injected
-        // publishPlaceNamingClaimToNostrCommand — never a second claim
-        // construction, never a mutation of the one handed over.
-        //
-        // READS THE CLAIM BACK THROUGH session.getPlaceNamingClaims() —
-        // NEVER `namingPanelClaims.value` DIRECTLY. Both are the same
-        // underlying data, but `namingPanelClaims` is this view's own
-        // cached copy, refreshed only by refreshNamingPanel(); reading
-        // through the session instead is the identical restraint
-        // `exportNamingClaim()`/`retractNamingClaim()`, immediately above,
-        // already hold for their own claimId-addressed actions — a fresh
-        // read, never a possibly-stale one.
-        //
-        // A DECLINED/FAILED PUBLICATION NEVER RETRACTS, RE-SAVES, OR
-        // OTHERWISE MUTATES THE LOCAL CLAIM. Only `namingPanelPublishToNostrError`/
-        // `namingPanelPublishToNostrResult` change — refreshNamingPanel() is
-        // never called here, because nothing this function does ever
-        // changes what session.getPlaceNamingClaims()/getPlaceNamingView()
-        // would return.
+        // Announces an existing, already-signed claim; creating a claim is a separate
+        // step. Reads the claim through the session, not the panel's cached copy. A
+        // failed announcement never changes the local claim.
         function publishNamingClaimToNostr(claimId) {
             if (!publishPlaceNamingClaimToNostrCommand) return;
             const regionId = namingPanelRegionId.value;
@@ -3076,19 +1556,11 @@ export default {
         }
 
         // -----------------------------------------------------------------
-        // 0.5.1 — World Maps & Geographic Navigation
+        // World Map
         // -----------------------------------------------------------------
         //
-        // openMapPanel() re-reads mapContent immediately (never waits for
-        // the next 3-second refreshSpatialUI() tick) so the map's first
-        // paint is never stale. Once open, refreshSpatialUI() itself keeps
-        // mapContent current — see that ref's own comment. Clicking a
-        // marker on the map routes through the exact SAME
-        // focusLocation()/followCollaborator() every other navigation
-        // entry point in this file already uses (the Locations panel,
-        // Nearby Landmarks/People, the Explore panel's suggestions) —
-        // WorldMapPanel itself never touches the camera or the session
-        // directly.
+        // Re-reads mapContent on open so the first paint is current. Marker clicks use
+        // the same focusLocation()/followCollaborator() as everything else.
         function openMapPanel() {
             refreshMapContent();
             showMapPanel.value = true;
@@ -3100,55 +1572,29 @@ export default {
 
         function closeMapPanel() {
             showMapPanel.value = false;
-            // 0.5.5 — a highlight set by showGeographicPlaceOnMap() above
-            // is a one-shot "look here" for that one visit; closing the
-            // map clears it so the NEXT open (from the plain "Map"
-            // toolbar button, or a different place) never shows a stale
-            // highlight left over from an unrelated place.
+            // A highlight is one-shot: cleared on close.
             mapHighlightRegionKeys.value = [];
-            // 0.5.7 — dismissing Map with nothing to replace it returns
-            // primaryMode to Explore, its resting default, rather than
-            // leaving the Map tab shown "active" over an empty panel.
             syncPrimaryMode(WorldViewPrimaryMode.EXPLORE);
         }
 
         // -----------------------------------------------------------------
-        // 0.5.7 — World View UX & Progressive Exploration
+        // Primary navigation: Explore / Map / Places
         // -----------------------------------------------------------------
         //
-        // Explore / Map / Places are now the three PRIMARY navigation
-        // surfaces (see application/WorldViewNavigationState.js's own
-        // header) — mutually exclusive, replacing the four separate
-        // always-visible buttons (Locations, Map, Geographic Places,
-        // Explore) 0.2.94-0.5.6 accumulated. "Locations" (World/
-        // Structures/Landmarks/Regions) stays reachable from Explore
-        // mode rather than disappearing — see openLocationsPanel()
-        // below, now routed through the same mutual-exclusion helper.
-        //
-        // closePrimaryNavigationPanels() deliberately never touches the
-        // landmark/region CREATE forms, Save/Publish/Edit Metadata, or
-        // Members — those are editing/collaboration surfaces, a
-        // genuinely different concern from BROWSING the World (see
-        // docs/Principles.md's own recurring "Navigate ≠ Modify"), and
-        // the design conversation's own point 4: exploration and
-        // editing should never compete for the same UI space.
+        // The three primary surfaces are mutually exclusive. Closing them never touches
+        // the create forms, Save/Publish/metadata or Members: browsing and editing
+        // never compete for the same space.
         function closePrimaryNavigationPanels() {
             showWelcomePanel.value = false;
             showLocationsPanel.value = false;
             showMapPanel.value = false;
             showGeographicPlaceDirectory.value = false;
             showGeographicPlacePanel.value = false;
-            // 0.5.8 — WorldFocusPanel is its own overlay, but a primary-
-            // mode switch is still "leaving whatever you were looking
-            // at" — the same reasoning that already closes every other
-            // panel in this list.
             showFocusPanel.value = false;
             focusContext.value = null;
         }
 
-        // Records `mode` as current and mirrors it into primaryMode
-        // WITHOUT setPrimaryMode()'s own panel open/close side effects —
-        // for callers that have already arranged the panels themselves.
+        // Records `mode` without setPrimaryMode()'s open/close side effects.
         function syncPrimaryMode(mode) {
             worldViewNav.setPrimaryMode(mode);
             primaryMode.value = worldViewNav.primaryMode;
@@ -3165,10 +1611,6 @@ export default {
             } else if (mode === WorldViewPrimaryMode.MAP) {
                 openMapPanel();
             } else if (mode === WorldViewPrimaryMode.PLACES) {
-                // Restores whichever screen (directory or one place's
-                // detail) the viewer left Places on — see
-                // application/WorldViewNavigationState.js's own
-                // "mode switching preserves appropriate state."
                 const view = worldViewNav.currentPlacesView;
                 if (view.screen === 'detail' && view.fingerprintKey) {
                     restoreGeographicPlaceDetail(view.fingerprintKey);
@@ -3179,34 +1621,18 @@ export default {
         }
 
         // -----------------------------------------------------------------
-        // 0.5.7 — Explore mode: collapsible "Nearby ___" groups
+        // Explore mode: collapsible "Nearby" groups
         // -----------------------------------------------------------------
         //
-        // Point 3 of the design conversation: "the user sees the
-        // CATEGORY, not 20 controls." Each group reuses data this view
-        // already computes on every refreshSpatialUI() tick
-        // (nearbyGeographicPlaces / spatialContext.nearbyLandmarks /
-        // spatialCollaboratorRows) — nothing here queries the session a
-        // second time. Collapsed state is mirrored from worldViewNav
-        // into this one plain ref, the same "pure module, mirrored into
-        // a ref" pattern primaryMode above already uses.
+        // Each group reuses data already computed each tick. Collapsed state lives in
+        // worldViewNav and is mirrored into a ref.
         const NEARBY_PLACES_SECTION = 'explore:nearby-places';
         const NEARBY_LANDMARKS_SECTION = 'explore:nearby-landmarks';
         const NEARBY_PEOPLE_SECTION = 'explore:nearby-people';
-        // 0.9.17 — a fourth Explore-mode CollapsibleSection, the SAME
-        // "pure module, mirrored into a ref" pattern the three Nearby
-        // sections above already use. Defaults expanded (false), the
-        // same default "Nearby Places" already gets, since surfacing
-        // World Encounters inside `/world` — rather than requiring a
-        // separate `/live-world` destination — is this milestone's own
-        // point.
+        // Defaults expanded.
         const WORLD_ENCOUNTERS_SECTION = 'explore:world-encounters';
-        // 0.9.257 — a fifth Explore-mode CollapsibleSection, the SAME
-        // "pure module, mirrored into a ref" pattern every Nearby section
-        // above already uses. Defaults collapsed (true), the same default
-        // "Nearby Landmarks"/"Nearby People" already get: a discovered,
-        // unverified claim is exactly the kind of new, unfamiliar surface
-        // that shouldn't demand attention by default.
+        // Defaults collapsed: an unverified discovered claim should not demand
+        // attention.
         const NEARBY_PLACE_NAMING_SECTION = 'explore:nearby-place-naming';
         const nearbySectionsCollapsed = ref({
             places: worldViewNav.isSectionCollapsed(NEARBY_PLACES_SECTION, false),
@@ -3216,11 +1642,6 @@ export default {
             placeNaming: worldViewNav.isSectionCollapsed(NEARBY_PLACE_NAMING_SECTION, true)
         });
 
-        // CollapsibleSection already computes the intended NEXT
-        // collapsed value and emits it (see that component's own
-        // onToggleClick) — this just records it, both in the pure
-        // module (so it survives a primary-mode switch) and in the ref
-        // the template actually reads.
         function setNearbySectionCollapsed(key, sectionId, collapsed) {
             worldViewNav.setSectionCollapsed(sectionId, collapsed);
             nearbySectionsCollapsed.value = { ...nearbySectionsCollapsed.value, [key]: collapsed };
@@ -3230,13 +1651,8 @@ export default {
             (spatialContext.value && spatialContext.value.nearbyLandmarks) || []
         ));
 
-        // Joins spatialContext's own nearbyCollaborators (distance/
-        // direction, but only identityId) against
-        // spatialCollaboratorRows' own primaryDeviceId — the same
-        // deviceId WorldCollaboratorIndicator's "Follow" button already
-        // uses — so a "Go" action here can call the EXACT SAME
-        // followCollaborator() every other collaborator-focus entry
-        // point in this file already uses, without a new session query.
+        // Joins nearby collaborators with their device ids so "Go" can use
+        // followCollaborator().
         const nearbyPeopleRows = computed(() => {
             const contextCollaborators = (spatialContext.value && spatialContext.value.nearbyCollaborators) || [];
             const deviceByIdentity = new Map(spatialCollaboratorRows.value.map((row) => [row.identityId, row.primaryDeviceId]));
@@ -3249,101 +1665,20 @@ export default {
             }));
         });
 
-        // 0.9.257 — World View Place Naming Presentation. A pure
-        // presentation mapping over `nearbyPlaceNamingClaims` — NOT a second
-        // selection/ranking pass: every entry `placeNamingDiscoveryMonitor.lastResult`
-        // holds is represented here exactly once, in the SAME order, whether
-        // or not two entries happen to name the same place (see this
-        // milestone's own brief, "if two different claims name essentially
-        // the same location, both remain visible"). `authorDisplayName`
-        // reuses the SAME `resolveIdentityDisplayName()` every other
-        // identity-bearing row in this file already calls — never a second,
-        // bespoke truncation. `position` is read straight off the entry the
-        // monitor itself already attached (see that file's own
-        // `_attachPositions()`) — no distance/direction is computed here,
-        // deliberately: this view has no established authority for "how far
-        // is a Place Naming claim," unlike `nearbyGeographicPlaces`'s own
-        // already-established `session.getNearbyGeographicPlaces()` read.
-        // 0.9.260 — Nearby Place Naming Claim Interaction. `regionId`/
-        // `worldId` are added here — both already carried on
-        // `entry.claim` (core/PlaceNamingDiscoveryEnvelope.js's own
-        // required claim fields) but previously dropped by this mapping
-        // — so navigateToNearbyPlaceNamingClaim() below can target the
-        // claim's own region without reconstructing it from `position`.
-        //
-        // 0.9.263 — Nearby Place Naming Claim Adoption UI. The post-
-        // navigation reassessment (0.9.262, Section D4) found this exact
-        // row shape already dropped `authorIdentityId`/`createdAt`/
-        // `signature` — the three fields application/
-        // PlaceNamingClaimPublicationValidator.js requires alongside
-        // `id`/`worldId`/`regionId`/`name` before a publication package
-        // can even be well-formed. All three already exist, untouched,
-        // on `entry.claim` (the discovered envelope's own claim — see
-        // core/PlaceNamingDiscoveryEnvelope.js#describeClaim()); restoring
-        // them here is the ONLY change this mapping needed for
-        // adoptNearbyPlaceNamingClaim() below to build a complete,
-        // valid package straight from a row, exactly as 0.9.260 already
-        // did for regionId/worldId. Still never a second, adoption-shaped
-        // representation of a claim — the row simply stops discarding
-        // fields the claim already carries.
-        // 0.9.266 — Nearby Place Naming Claim Metadata Presentation. Pure
-        // display formatting only, mirroring ui/components/PlaceNamingPanel.js's
-        // own formatWhen() exactly: an unparseable/missing `createdAt`
-        // degrades to '' rather than throwing or rendering "Invalid Date" —
-        // the same graceful-degradation discipline this file already holds
-        // everywhere else a discovered, self-declared value reaches the
-        // UI (see e.g. core/PlaceNamingDiscoveryEnvelope.js's own "degrades
-        // to null, never throws"). Never touches `createdAt` itself, which
-        // the row below still carries raw and unmodified — the exact value
-        // adoptNearbyPlaceNamingClaim() rehydrates into a PlaceNamingClaim.
+        // Presentation only, one row per claim in the monitor's order, duplicates of
+        // the same place included. Position comes from the monitor; no distance is
+        // computed here. An unparseable createdAt formats as ''.
         function formatNearbyPlaceNamingCreatedAt(createdAt) {
             const date = createdAt instanceof Date ? createdAt : new Date(createdAt);
             return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString();
         }
 
-        // 0.9.263 — Nearby Place Naming Claim Adoption UI restored
-        // authorIdentityId/createdAt/signature onto this row so adoption
-        // could build a complete package (see this block's own 0.9.263
-        // comment above). The 0.9.265 reassessment (Section D) found the
-        // one remaining gap in this same row: createdAt and signature
-        // both reach it but neither is ever RENDERED.
-        //
-        // 0.9.266 — Nearby Place Naming Claim Metadata Presentation closes
-        // half of that gap: `createdAtLabel` is a pure presentation field,
-        // added alongside — never in place of — the raw `createdAt` the
-        // row already carried, so adoption keeps reading the exact same
-        // unformatted value it always has. `signature` deliberately gets
-        // NO display counterpart here. The 0.9.265 reassessment (Section
-        // C5) was explicit that a signature reaching a row is not, by
-        // itself, a reason to invent a new "Verified"/"Unverified" UI
-        // state: this codebase's only real verification — identity/
-        // LocalAuthorizationVerifier.js's own place-naming-claim verifier
-        // — runs strictly inside a MUTATING boundary
-        // (PlaceNamingClaimExchange#importClaim(), PlaceNamingClaimUseCase#
-        // publish(), PlaceNamingClaimPublicationKind's own verify) and
-        // exposes no semantic, non-mutating result a NOT-YET-adopted
-        // Nearby row could read and display truthfully. Rendering the raw
-        // signature bytes would only manufacture a false sense of
-        // cryptographic assurance no existing machinery actually backs at
-        // this boundary — so this milestone renders createdAt and leaves
-        // signature/verification exactly as unrendered as 0.9.265 found it.
-        // 0.9.269 — Nearby Place Naming Claim Adoption Status Indicator.
-        // `alreadySaved` is read straight off the existing
-        // session.hasPlaceNamingClaim(worldId, claimId) — see that
-        // method's own header — never a second, UI-maintained
-        // "adoptedClaimIds" list. Deliberately keyed by the claim's own
-        // id alone, exactly like LocalPlaceNamingClaimStore#has()
-        // itself: two claims naming the same place ("Riverside" by
-        // Alice, "Riverside" by Bob) carry distinct ids and are
-        // therefore classified completely independently, and the same
-        // id under two different worldIds (a stale claim from a World
-        // that reused another World's regionId) is likewise never
-        // conflated — has()'s own storage key is already scoped per
-        // worldId. Recomputed as one atomic pass over the whole list
-        // every time this computed re-runs — never an incremental patch
-        // of one row's own flag — see adoptNearbyPlaceNamingClaim()'s own
-        // comment below on what actually triggers that re-run after a
-        // successful adoption.
+        // Carries every field the claim publication validator needs (regionId,
+        // worldId, authorIdentityId, createdAt, signature) so adoption can build a
+        // package from a row. The signature is deliberately not displayed: nothing can
+        // verify a not-yet-adopted claim without importing it, so showing it would
+        // imply assurance nothing backs. `alreadySaved` comes from
+        // session.hasPlaceNamingClaim(), keyed by claim id per world.
         const nearbyPlaceNamingClaimRows = computed(() => (
             nearbyPlaceNamingClaims.value.map((entry) => ({
                 claimId: entry.claim.id,
@@ -3360,24 +1695,9 @@ export default {
             }))
         ));
 
-        // 0.9.260 — Nearby Place Naming Claim Interaction. Navigates the
-        // camera to the EXACT region a nearby claim names, reusing
-        // session.focusLocation() — the SAME navigation machinery
-        // focusLocation()/followCollaborator() above already call —
-        // rather than inventing a Place Naming-specific navigation
-        // system. Navigate is deliberately NOT adopt, verify, trust, or a
-        // preference: this function never touches WorldRegion naming,
-        // LocalPlaceNamingClaimStore, LocalNamePreferenceStore, or
-        // PlaceNamingClaimExchange — see this milestone's own
-        // docs/Roadmap.md entry.
-        //
-        // Cross-checks the claim's own worldId against session.getRegions()
-        // (each entry already carries both `id` and `worldId`) before
-        // navigating, so a stale claim can never be misdirected onto a
-        // different World's region that happens to reuse the same
-        // regionId. Fails gracefully with a feedback message — never a
-        // fallback to another region — when the claimed region no longer
-        // exists in a currently loaded World.
+        // Moves the camera to the claim's region; navigating is not adopting. Checks
+        // the claim's worldId so a stale claim is never sent to another world's region
+        // with the same id; a missing region gives feedback, never a fallback.
         function navigateToNearbyPlaceNamingClaim(row) {
             const regionStillExists = session.getRegions()
                 .some((region) => region.id === row.regionId && region.worldId === row.worldId);
@@ -3390,42 +1710,11 @@ export default {
             return true;
         }
 
-        // 0.9.263 — Nearby Place Naming Claim Adoption UI. Adopt is the
-        // explicit action the 0.9.262 reassessment recommended going
-        // straight to: not a new adoption use case, just the missing
-        // seam between a nearby, DISCOVERED claim and the existing,
-        // unmodified session.importPlaceNamingClaim() — the exact same
-        // validate/construct/verify/persist boundary
-        // application/PlaceNamingClaimExchange.js#importClaim() already
-        // runs for the manual PlaceNamingPanel import path (see
-        // importNamingClaim() above). The row already carries every
-        // field application/PlaceNamingClaimPublicationValidator.js
-        // requires (see nearbyPlaceNamingClaimRows's own comment) — this
-        // function's only job is to rehydrate those fields into a
-        // PlaceNamingClaim and hand it to the SAME
-        // buildPlaceNamingClaimPublication() session.exportPlaceNamingClaim()
-        // already calls for the manual export path, so importClaim() sees
-        // a package indistinguishable from one that actually crossed a
-        // file boundary.
-        //
-        // Deliberately builds `claim` from the row's OWN fields, never
-        // from a freshly-resolved "current identity" — the claim's own
-        // authorIdentityId/createdAt/signature travel unchanged, exactly
-        // like this file already refuses to manufacture authorship
-        // anywhere else (see e.g. publishNamingClaim() below, which
-        // never accepts an authorIdentityId argument either). Adoption
-        // performs no verification of its own here — that stays
-        // entirely inside the existing importClaim() boundary this
-        // function calls into, unmodified.
-        //
-        // Never invoked by discovery, proximity selection, navigation, or
-        // rendering — only ever by this exact user click, mirroring
-        // navigateToNearbyPlaceNamingClaim()'s own "Navigate is
-        // deliberately NOT adopt" restraint in the other direction: this
-        // is adopt, and it is deliberately NOT automatic. A duplicate
-        // (a claim this replica already has) is not an error — see
-        // importNamingClaim()'s own comment on why re-adopting the same
-        // signed claim is an entirely ordinary, non-alarming outcome.
+        // Adopting a nearby claim: rebuilds the claim from the row's own fields (never
+        // the current identity) into the same publication package a manual export
+        // produces, and imports it through session.importPlaceNamingClaim(), which
+        // does all validation and verification. Only ever an explicit click; a
+        // duplicate is an ordinary outcome.
         function adoptNearbyPlaceNamingClaim(row) {
             const rowClaim = PlaceNamingClaim.fromJSON({
                 id: row.claimId,
@@ -3440,22 +1729,8 @@ export default {
             const result = guarded(() => session.importPlaceNamingClaim(pkg));
             if (!result) return;
             const { claim, isNew } = result;
-            // 0.9.269 — Nearby Place Naming Claim Adoption Status
-            // Indicator. Only ever reached once session.importPlaceNamingClaim()
-            // has actually returned — a thrown/refused import (a tampered
-            // or unverifiable package) already short-circuited above via
-            // `if (!result) return;`, so a failed attempt reaches neither
-            // this line nor "Already saved," exactly per this milestone's
-            // own brief ("persistence fails -> still [Adopt]"). Reassigning
-            // `nearbyPlaceNamingClaims.value` to a NEW array (never mutating
-            // the existing one in place) is what actually makes
-            // nearbyPlaceNamingClaimRows above recompute `alreadySaved` for
-            // every row — the same atomic-refresh discipline a genuine
-            // discovery tick already applies, deliberately never an
-            // incremental flip of this one row's own flag. Reached on
-            // BOTH branches below (a brand new adoption and a re-adoption
-            // of something already known) since either way the store now
-            // genuinely holds the claim.
+            // Reached only after a successful import. Assigning a new array makes the rows
+            // recompute alreadySaved all at once.
             nearbyPlaceNamingClaims.value = [...nearbyPlaceNamingClaims.value];
             if (!isNew) {
                 feedback.show(`"${claim.name}" was already known — nothing changed`);
@@ -3465,19 +1740,12 @@ export default {
         }
 
         // -----------------------------------------------------------------
-        // 0.5.8 — World View Contextual Focus & Information Hierarchy
+        // Contextual Focus
         // -----------------------------------------------------------------
         //
-        // openFocusForLocation()/openFocusForCollaborator() are the two
-        // entry points every "Info" button in this file (Explore's own
-        // nearby rows, LocationsPanel's own rows) calls — both simply
-        // read session.getFocusContext*()  and show WorldFocusPanel;
-        // neither ever moves the camera or the map. goFromFocusPanel()/
-        // showFocusOnMap()/openNamesFromFocusPanel() are the panel's own
-        // three possible actions, each reusing the EXACT SAME session
-        // call every other navigation entry point in this file already
-        // uses for that verb — see core/WorldFocusContext.js's own
-        // header on why none of them is a new navigation mechanism.
+        // The "Info" entry points only read the focus context and show the panel; they
+        // never move the camera or map. The panel's actions reuse the same session
+        // calls as every other navigation entry point.
         function openFocusForLocation(locationId) {
             const context = session.getFocusContextForLocation(locationId);
             if (!context) {
@@ -3488,11 +1756,7 @@ export default {
             showFocusPanel.value = true;
         }
 
-        // Explore's own "Nearby Places" row only has a fingerprintKey on
-        // hand, not the full `place:<fingerprintKey>` locationId
-        // openFocusForLocation() expects — this thin wrapper is purely
-        // so the template doesn't need geographicPlaceLocationId()
-        // exposed as its own top-level binding.
+        // The row only has a fingerprintKey; this builds the `place:` location id.
         function openFocusForGeographicPlace(fingerprintKey) {
             openFocusForLocation(geographicPlaceLocationId(fingerprintKey));
         }
@@ -3512,14 +1776,6 @@ export default {
             focusContext.value = null;
         }
 
-        // "Go" — moves the camera to whatever is currently focused,
-        // addressed through the exact same session call every other
-        // destination kind in this file already uses: focusLocation()
-        // for a region/landmark/structure/geographic place (by its own
-        // derived `place:<fingerprintKey>` id), focusCollaborator() for
-        // a person. See core/WorldFocusContext.js#WorldFocusContext's
-        // own `source` field, the only place this reads the underlying
-        // id from.
         function goFromFocusPanel() {
             const context = focusContext.value;
             if (!context || !context.source) {
@@ -3538,16 +1794,8 @@ export default {
             closeFocusPanel();
         }
 
-        // "Show on Map" — switches World View to its Map primary mode,
-        // after first moving the camera the exact same way "Go" above
-        // does, so the map's own initial viewport (which centers on
-        // wherever the viewer currently is — see WorldMapPanel's own
-        // header) opens already looking at what was focused. Only
-        // offered for kinds whose context.availableActions includes
-        // 'map' (region/geographic place — see
-        // core/WorldFocusContext.js#deriveWorldFocusContext()'s own
-        // per-kind action table); WorldFocusPanel itself hides the
-        // button otherwise.
+        // Moves the camera first so the map opens looking at the focused thing. Only
+        // offered for kinds whose availableActions include 'map'.
         function showFocusOnMap() {
             const context = focusContext.value;
             if (!context || !context.source) {
@@ -3560,13 +1808,8 @@ export default {
             setPrimaryMode(WorldViewPrimaryMode.MAP);
         }
 
-        // "Names" — only ever offered for a REGION (see
-        // core/WorldFocusContext.js's own per-kind action table; a
-        // GEOGRAPHIC_PLACE's own community names live one level up, in
-        // ui/components/GeographicPlacePanel.js instead — this button is
-        // never shown there). Opens the EXACT SAME PlaceNamingPanel every
-        // other "Names" entry point in this file already opens, never a
-        // second naming surface.
+        // Only offered for a REGION; opens the same PlaceNamingPanel as everywhere
+        // else.
         function openNamesFromFocusPanel() {
             const context = focusContext.value;
             if (!context || !context.source || context.source.kind !== WorldFocusKind.REGION) {
@@ -3578,22 +1821,9 @@ export default {
             openNamingPanel(regionId);
         }
 
-        // 0.6.1 — World ↔ Editor Continuity & Return Navigation. Which
-        // World the Editor's own "← Back to World" button should
-        // return to, and what to label it — the FOCUSED (camera)
-        // document, exactly the value `focusedDocumentTitle` below
-        // already tracks (session.getFocusedDocumentId(), per
-        // docs/Principles.md "Camera Focus, Active Document, and
-        // Selection Are Three Different Things"), falling back to
-        // whatever World route this WorldView instance is currently on.
-        // Deliberately NOT `context.source.documentId`: for a STRUCTURE
-        // that's the placed structure's own content document (the fork
-        // TARGET), never the World the viewer was standing in — see
-        // core/EditorEntryContext.js's own constructor header on why
-        // `returnWorldId` is its own field. For REGION/LANDMARK the two
-        // already coincide, so reading it here uniformly, regardless of
-        // kind, is always correct, never merely "correct for two out of
-        // three kinds."
+        // Where "Back to World" returns: the FOCUSED (camera) document, else this
+        // route's world. Never context.source.documentId, which for a STRUCTURE is the
+        // fork target, not the world the viewer stood in.
         function currentReturnWorld() {
             const id = session.getFocusedDocumentId()
                 || route.params.documentId
@@ -3601,32 +1831,11 @@ export default {
             return { id, title: (id && focusedDocumentTitle.value) || title.value || '' };
         }
 
-        // "Edit a Copy" (0.5.9) — World View never edits Document
-        // content itself (see docs/Principles.md, "World View Observes
-        // and Navigates; Editor Mutates and Builds"); this is the one
-        // deliberate door out of that boundary. Only ever offered for a
-        // REGION/LANDMARK/STRUCTURE (see core/WorldFocusContext.js's own
-        // per-kind action table) — each already carries the id of the
-        // Document that actually CONTAINS it (`source.documentId`; for a
-        // STRUCTURE that's the placed structure's own content document,
-        // never the World merely positioning it). Reuses the EXACT SAME
-        // `/editor?fork=` navigation ui/components/PublicationCatalog.js#
-        // forkPublication() already uses — never a second fork mechanism,
-        // never a fork performed here in World View itself.
-        //
-        // 0.6.0 — Context-Preserving Fork-to-Edit. `context.editCopyContext`
-        // (core/WorldFocusContext.js's own derived getter) rides along
-        // as extra query params — never a second navigation mechanism,
-        // just more of the SAME `/editor?fork=` hop already carrying
-        // `publication`. EditorView's fork handler decodes it back via
-        // core/EditorEntryContext.js#editorEntryContextFromQuery() and
-        // hands it to EditorSession#openDocument(), the one place it's
-        // ever consumed.
-        //
-        // 0.6.1 — `withReturnWorld()` attaches the return address
-        // `editCopyContext` itself has no way to know (see
-        // currentReturnWorld()'s own header just above) before the
-        // SAME encode step 0.6.0 already established.
+        // "Edit a Copy": the one deliberate way out of World View's no-editing
+        // boundary. Forks the document that contains the focused thing (for a
+        // STRUCTURE, its own content document) via the same /editor?fork= navigation
+        // as PublicationCatalog, carrying the entry context and a return address as
+        // query params.
         function editFocusedCopyFromFocusPanel() {
             const context = focusContext.value;
             if (!context || !context.source || !context.source.documentId) {
@@ -3645,48 +1854,28 @@ export default {
         }
 
         // -----------------------------------------------------------------
-        // 0.5.5 — Geographic Place Directory & Identity UX
+        // Geographic Place Directory
         // -----------------------------------------------------------------
         //
-        // Read-only, exactly like the Locations panel's own Focus button:
-        // nothing below ever calls a mutating session method, publishes
-        // or retracts a claim, or touches a WorldRegion. openNamesFromPlace()
-        // is the one bridge back into EXISTING 0.5.2 machinery — it opens
-        // ui/components/PlaceNamingPanel.js for one region rather than
-        // rebuilding publish/retract here a second time.
-        // 0.5.7 — a fresh directory open always resets Places back to
-        // its list screen (see WorldViewNavigationState#
-        // openPlacesDirectory's own header on the distinction from
-        // merely switching primary mode BACK to Places, which
-        // preserves whatever detail screen was open).
+        // Read-only; openNamesFromPlace() hands off to the existing PlaceNamingPanel.
+        // A fresh open resets Places to its list screen.
         function openGeographicPlaceDirectory() {
             worldViewNav.openPlacesDirectory();
             showGeographicPlaceDirectoryList();
         }
 
-        // Re-reads the directory fresh (never cached across opens) and
-        // shows it — shared by opening Places and going back to it.
         function showGeographicPlaceDirectoryList() {
             geographicPlaces.value = session.getGeographicPlaceDirectory().map((place) => place.toJSON());
             showGeographicPlaceDirectory.value = true;
         }
 
         // -----------------------------------------------------------------
-        // 0.5.6 — Geographic Place Navigation & Arrival
+        // Geographic Place Navigation
         // -----------------------------------------------------------------
         //
-        // The ONE new navigation entry point this milestone adds, reused
-        // from every surface a geographic place can be reached from
-        // (the directory's own "Nearby Places" section, a place panel's
-        // "Go to Place" button, the compass's contextual markers via the
-        // Places directory, and WorldWelcomePanel's own "Nearby Places"
-        // section) — never a `focusGeographicPlace()`, just
-        // session.focusLocation() addressed by this place's own derived
-        // `place:<fingerprintKey>` id (core/GeographicPlaceNavigation.js),
-        // the exact same call/return-value contract every other
-        // destination in this file already uses. `false` (an unknown or
-        // no-longer-resolvable place) surfaces the same feedback message
-        // openGeographicPlace() already shows for a stale directory row.
+        // The one entry point for going to a geographic place, from every surface that
+        // shows one: session.focusLocation() with its `place:` id. false (unknown
+        // place) gives the same feedback as a stale directory row.
         function goToGeographicPlace(fingerprintKey) {
             const moved = session.focusLocation(geographicPlaceLocationId(fingerprintKey));
             if (!moved) {
@@ -3700,31 +1889,17 @@ export default {
             if (showWelcomePanel.value) {
                 closeWelcomePanel();
             }
-            // 0.5.7 — arriving somewhere is naturally followed by
-            // looking around, not by leaving Places on whatever detail
-            // screen sent you there — reset back to Explore, the same
-            // destination every other "you have arrived" path in this
-            // file already lands on.
+            // Arriving resets Places to its list and returns to Explore.
             worldViewNav.openPlacesDirectory();
             syncPrimaryMode(WorldViewPrimaryMode.EXPLORE);
         }
 
-        // 0.5.7 — mirrors closeMapPanel()'s own header: dismissing the
-        // directory with nothing to replace it returns primaryMode to
-        // Explore rather than leaving the Places tab "active" over an
-        // empty panel. Deliberately does NOT reset the Places back-
-        // stack (openGeographicPlaceDirectory()/openPlacesDirectory()
-        // own job) — closing here is not the same as asking for a
-        // fresh list.
+        // Returns primaryMode to Explore but keeps the Places back-stack.
         function closeGeographicPlaceDirectory() {
             showGeographicPlaceDirectory.value = false;
             syncPrimaryMode(WorldViewPrimaryMode.EXPLORE);
         }
 
-        // 0.5.7 — reached only from the directory's own row click (see
-        // GeographicPlacePanel.js's own header), so entering detail
-        // always pushes onto the SAME back-stack goBackInPlaces() below
-        // unwinds.
         function openGeographicPlace(fingerprintKey) {
             const place = session.getGeographicPlace(fingerprintKey);
             if (!place) {
@@ -3737,14 +1912,8 @@ export default {
             showGeographicPlacePanel.value = true;
         }
 
-        // Re-enters an already-open detail screen — used ONLY to
-        // restore Places to where the viewer left it after switching
-        // primary mode away and back (see setPrimaryMode() above), never
-        // to navigate to a NEW place (that's openGeographicPlace()'s
-        // job, which also records the back-stack entry). A place that's
-        // become unresolvable since (the World it lived in unloaded)
-        // falls back to the directory rather than showing a broken
-        // panel.
+        // Only restores a detail screen after switching modes; an unresolvable place
+        // falls back to the directory.
         function restoreGeographicPlaceDetail(fingerprintKey) {
             const place = session.getGeographicPlace(fingerprintKey);
             if (!place) {
@@ -3760,11 +1929,7 @@ export default {
             geographicPlace.value = null;
         }
 
-        // GeographicPlacePanel's own "← Back" / Escape / backdrop-click
-        // — always returns to the directory it was opened from, never
-        // closes Places entirely (there is nowhere else for it to go —
-        // see this class's own header on why the back-stack is exactly
-        // two screens deep).
+        // Back always returns to the directory (the back-stack is two screens deep).
         function goBackInPlaces() {
             worldViewNav.goBackInPlaces();
             showGeographicPlacePanel.value = false;
@@ -3774,22 +1939,14 @@ export default {
 
         function openNamesFromPlace(regionId) {
             closeGeographicPlacePanel();
-            // PlaceNamingPanel's own `region-name` prop is read off
-            // `worldLocations` (see the template below) — refreshed here
-            // in case this replica reached the Names panel without ever
-            // opening the Locations panel first, the only other entry
-            // point that already keeps `worldLocations` current.
+            // The Names panel reads its region name from worldLocations, which may not have
+            // been loaded yet.
             refreshLocationsPanel();
             openNamingPanel(regionId);
         }
 
-        // Highlights every region already IN this place's own group —
-        // never invents new geometry (see WorldMapPanel's own header) —
-        // and centers the camera on the place's representative region
-        // first, the same deterministic pick core/GeographicPlaceView.js
-        // already makes, purely so the map opens looking at ground that
-        // actually matters rather than wherever the camera happened to
-        // already be.
+        // Highlights the place's existing regions and centers on its representative
+        // region so the map opens on relevant ground.
         function showGeographicPlaceOnMap() {
             const place = geographicPlace.value;
             if (!place) return;
@@ -3800,29 +1957,13 @@ export default {
             }
             showGeographicPlacePanel.value = false;
             openMapPanel();
-            // 0.5.7 — "Show on Map" genuinely switches which primary
-            // surface is showing (Places' own detail screen -> Map),
-            // so primaryMode follows it — otherwise the Map tab would
-            // render the map without ever looking "active." Places'
-            // OWN back-stack is deliberately left untouched (still
-            // pointing at this same place's detail) — see
-            // setPrimaryMode()'s own PLACES branch, which is exactly
-            // what lets switching back to the Places tab return here.
+            // The Map tab becomes active; the Places back-stack is left on this place so
+            // switching back returns here.
             syncPrimaryMode(WorldViewPrimaryMode.MAP);
         }
 
-        // 0.2.93 — "Open Source": reuses the EXISTING /editor?load=<id>
-        // route ui/components/PublicationCatalog.js and every forked-
-        // document link already use to open a document in the Editor —
-        // never a second navigation mechanism, and never a mutation
-        // World View performs itself. Editing a placed structure's
-        // bricks always happens by opening its Document in the Editor,
-        // exactly like application/EditorSession.js#
-        // editStructurePlacementSource() already established for the
-        // Editor's own StructureInstancePanel. Unlike "Edit a Copy"
-        // below, this loads the document DIRECTLY — no fork, no
-        // independent copy; every other instance of it, wherever
-        // placed, reflects whatever gets edited there.
+        // "Open Source" loads the structure's document directly in the Editor (no
+        // fork), so edits affect every placed instance. Contrast "Edit a Copy".
         function openStructureSource(documentId) {
             if (!documentId) {
                 return;
@@ -3830,49 +1971,11 @@ export default {
             router.push({ path: '/editor', query: { load: documentId } });
         }
 
-        // 0.5.9 — the direct-click Inspection panel's own "Edit a Copy."
-        // Available for every inspection type (brick, ground, placement):
-        // resolves whichever documentId actually identifies what's
-        // being looked at — `inspection.documentId` (the CONTAINING
-        // World) for brick/ground, `inspection.sourceDocumentId` (the
-        // placed structure's own content, never the World merely
-        // positioning it — same distinction Open Source above already
-        // draws) for a placement. Forks that document instead of
-        // loading it directly (see openStructureSource() above) —
-        // leaving every other instance, and the original, untouched.
-        // Identical logic to editFocusedCopyFromFocusPanel() above
-        // (resolve a publication id if one exists, then the same
-        // `/editor?fork=` navigation ui/components/PublicationCatalog.js#
-        // forkPublication() already uses) — kept as its own function
-        // because it starts from `spatialInspection`, not a
-        // WorldFocusContext.
-        //
-        // 0.6.0 — builds its own EditorEntryContext by hand (there is no
-        // WorldFocusContext here to read `.editCopyContext` off of) —
-        // camera framing off `worldPosition`/`position`, and
-        // `selectAllBricks` ONLY for a 'placement' inspection, the exact
-        // same "only STRUCTURE, because only its document is exclusively
-        // its own content" rule core/WorldFocusContext.js#editCopyContext
-        // applies. A brick/ground inspection's own `documentId` is the
-        // shared containing World, never brick-owned content — camera
-        // framing only, same as a REGION/LANDMARK "Edit a Copy."
-        //
-        // 0.6.1 — `returnWorldId`/`returnWorldTitle` are set directly in
-        // the constructor call here (unlike editFocusedCopyFromFocusPanel()
-        // above, there's no already-built EditorEntryContext to attach
-        // them to after the fact) — see currentReturnWorld()'s own
-        // header for why this is always the FOCUSED document, never
-        // `documentId` above (which, for a placement inspection, is the
-        // placed structure's own content, exactly the fork target, not
-        // a place to return to). `focusLocationId` is deliberately left
-        // unset here, same as before this milestone: a brick/ground
-        // inspection has no WorldFocusPanel-shaped location id to
-        // reopen on return, and a placement inspection's own
-        // `placementId` isn't surfaced onto `spatialInspection` today —
-        // see docs/Roadmap.md, 0.6.1's own "Deliberately excluded" list.
-        // Camera framing on return still works regardless (0.3.10's own
-        // per-World experience store already restores it — see
-        // WorldNavigationSession#restoreWorldExperience()).
+        // "Edit a Copy" from the inspection panel: forks the containing World for a
+        // brick or ground, or the structure's own content document for a placement.
+        // Builds the EditorEntryContext by hand: camera framing always, and
+        // selectAllBricks only for a placement. The return address is the focused
+        // document; no focusLocationId is available here.
         function editInspectedCopy(inspection) {
             if (!inspection) {
                 return;
@@ -3883,9 +1986,6 @@ export default {
                 return;
             }
             const publication = session.getPublicationIdForDocument(documentId);
-            // brick/placement carry `worldPosition`; ground carries
-            // `position` — see the inspection-fields template above for
-            // the per-type shape this mirrors.
             const position = inspection.type === 'ground' ? inspection.position : inspection.worldPosition;
             const title = isPlacement ? inspection.sourceTitle : inspection.worldTitle;
             const returnWorld = currentReturnWorld();
@@ -3910,25 +2010,15 @@ export default {
         }
 
         // -----------------------------------------------------------------
-        // 0.2.26: World Navigation & Spatial Discovery UX
+        // Search & Spatial Discovery
         // -----------------------------------------------------------------
 
-        // Search never mutates or loads anything by itself — only
-        // resolves results for the panel to show. Whether the catalog
-        // is empty at all (vs. just this query matching nothing) comes
-        // from allPublications, already loaded for the Nearby/Loaded
-        // Worlds lists — no separate diagnostic call needed for that
-        // distinction.
+        // Search only resolves results. "Catalog empty" vs. "no match" comes from the
+        // already-loaded publications list.
         const catalogEmpty = computed(() => allPublications.value.length === 0);
 
-        // 0.2.99 — World Collaboration UX. The ONE join point — see
-        // ui/components/WorldCollaborationRoster.js's own header — kept
-        // as a computed() so it's always derived fresh from
-        // worldMembers/worldPresenceRoster/isActiveWorldOwner/
-        // activeDocumentInfo, never a copy that could drift from them.
-        // `displayName` is resolved here, at the VIEW layer, exactly the
-        // same "presentation concern, not the session's own minimal
-        // shape" precedent nearbyAvatars already established (0.2.43).
+        // The one place members and presence are joined into rows; always derived
+        // fresh.
         const worldCollaborationRoster = computed(() => {
             const ownerIdentityId = activeDocumentInfo.value ? activeDocumentInfo.value.authorIdentityId : null;
             const ownerLabel = activeDocumentInfo.value ? activeDocumentInfo.value.author : null;
@@ -3943,35 +2033,18 @@ export default {
             }));
         });
 
-        // "👥 N online" — every OTHER participant currently present
-        // (worldPresenceRoster, one entry per distinct identity — see
-        // application/WorldPresenceUseCase.js#getRoster()'s own device
-        // aggregation) plus the current viewer themself, whenever a
-        // World is actually active — see WorldPresenceIndicator's own
-        // header on why this view computes the count rather than the
-        // indicator counting anything itself.
+        // Other present participants plus the viewer, whenever a world is active.
         const worldOnlineCount = computed(() => worldPresenceRoster.value.length + (activeDocumentInfo.value ? 1 : 0));
 
-        // 0.2.28: `options` is WorldSearchPanel's emitted
-        // { text, center?, radius? } — passed straight through, since
-        // session.searchWorld already accepts that shape (and the
-        // plain string every pre-0.2.28 caller used).
         function performSearch(options) {
             searchResults.value = guarded(() => session.searchWorld(options)) || [];
         }
 
-        // Search's own Focus action is exactly focusWorld — bound straight
-        // to WorldSearchPanel's `focus` emit in the template. Searching for
-        // a document and finding it in "Nearby Worlds" both end at the same
-        // operation, by design (see docs/Principles.md, "Focus Is
+        // Search's Focus is exactly focusWorld (docs/Principles.md, "Focus Is
         // Navigation, Not Discovery").
 
-        // Opened from PlacementInfoPanel's overlap "View" link — turns
-        // 0.2.25's passive "N other documents share this location"
-        // count into an actual, choosable list (docs/Principles.md,
-        // "Overlap Is A Fact; Collision Is A Policy Decision" — this is
-        // the navigation half of making that fact useful, not a new
-        // policy decision).
+        // Turns the overlap count into a choosable list (docs/Principles.md, "Overlap Is
+        // A Fact; Collision Is A Policy Decision").
         function openLocationDocuments(position) {
             if (!position) return;
             locationDocumentsPosition.value = position;
@@ -3991,14 +2064,10 @@ export default {
         }
 
         // -----------------------------------------------------------------
-        // 0.2.29: World Location Browser — "Explore Here" / "What's Here?"
+        // World Location Browser: "Explore Here" / "What's Here?"
         // -----------------------------------------------------------------
 
 
-        // Shared open logic: both entry points differ only in which
-        // session method resolves the initial envelope (and thus the
-        // radius they imply) — everything else about opening the
-        // dialog is identical.
         function openLocationBrowser(radius, envelope) {
             locationBrowserCenter.value = cameraPosition.value;
             locationBrowserRadius.value = radius;
@@ -4008,38 +2077,23 @@ export default {
             showLocationBrowser.value = true;
         }
 
-        // "Explore Here" — center is the CAMERA's current world
-        // position, deliberately NOT the active document's placement
-        // (see docs/Principles.md, "Camera Focus, Active Document, and
-        // Selection Are Three Different Things," 0.2.27): the camera
-        // can be looking at empty space between two documents, with no
-        // active document at all, and exploring there should still
-        // work. session.exploreHere() reads the camera position itself
-        // — cameraPosition.value here is only for the dialog's own
-        // display, already kept in sync by refreshSpatialUI.
+        // Centered on the CAMERA, not the active document's placement: the camera may
+        // look at empty space with no active document.
         function exploreHere() {
             if (!cameraPosition.value) return;
             const envelope = guarded(() => session.exploreHere(DEFAULT_EXPLORE_RADIUS)) || EMPTY_DISCOVERY_ENVELOPE;
             openLocationBrowser(DEFAULT_EXPLORE_RADIUS, envelope);
         }
 
-        // "What's Here?" — same camera-position center, a small
-        // tolerance radius instead of a chosen one. See
-        // WorldNavigationSession.whatsHere's own comment for why this
-        // is a small-radius query rather than getDocumentsAtPosition's
-        // exact-match test: camera coordinates are continuous and
-        // essentially never land exactly on a recorded placement.
+        // A small tolerance radius: camera coordinates almost never land exactly on a
+        // placement.
         function whatsHere() {
             if (!cameraPosition.value) return;
             const envelope = guarded(() => session.whatsHere()) || EMPTY_DISCOVERY_ENVELOPE;
             openLocationBrowser(NEARBY_RADIUS, envelope);
         }
 
-        // The dialog's own "Explore" button — re-query the SAME center
-        // at a newly chosen radius. Any previously expanded Inspect
-        // panel is cleared (openLocationBrowser already does this) —
-        // it belonged to the old result set, not necessarily the new
-        // one.
+        // Clears any expanded Inspect row: it belonged to the old results.
         function reExploreLocationBrowser(radius) {
             if (!locationBrowserCenter.value) return;
             const envelope = guarded(() => session.exploreLocation({
@@ -4057,31 +2111,20 @@ export default {
             locationBrowserInspected.value = null;
         }
 
-        // Focus — existing focusDocument default behavior (moves the
-        // camera, and by default makes the document active too). Closes
-        // the browser: the camera is about to move away from the
-        // location it was showing, same as LocationDocumentsDialog's
-        // own focus-then-close.
+        // Moves the camera (and makes the document active by default), so the browser
+        // closes.
         function focusLocationBrowserResult(documentId) {
             focusWorld(documentId);
             closeLocationBrowser();
         }
 
-        // Select — WorldNavigationSession.setActiveDocument: makes the
-        // result the active/editing-target document per 0.2.27's rules,
-        // WITHOUT moving the camera. The dialog stays open — unlike
-        // Focus, nothing about the current view changes, so there's no
-        // reason to stop browsing the same location.
+        // Makes the result active without moving the camera, so browsing continues.
         function selectLocationBrowserResult(documentId) {
             guarded(() => session.setActiveDocument(documentId));
             refreshSpatialUI();
         }
 
-        // Inspect — toggle: clicking the currently-expanded result's
-        // Inspect/Hide button again collapses it instead of re-fetching.
-        // Never navigates, never loads the document — see
-        // WorldNavigationSession.inspectDocument's own comment for why
-        // documentInfo may come back null here.
+        // Toggles; never navigates or loads.
         function inspectLocationBrowserResult(documentId) {
             if (locationBrowserInspected.value && locationBrowserInspected.value.documentId === documentId) {
                 locationBrowserInspected.value = null;
@@ -4092,8 +2135,7 @@ export default {
         }
 
         // -----------------------------------------------------------------
-        // Pointer interaction (0.5.9 — no gizmo, no placement: pick/hover
-        // only, driving focus and inspection, never mutation)
+        // Pointer interaction: pick/hover for focus and inspection only
         // -----------------------------------------------------------------
 
         function onPointerDown(event) {
@@ -4113,10 +2155,7 @@ export default {
                 session.hover(event.clientX, event.clientY);
                 refreshHoverUI();
             }
-            // Keep the compass turning with the camera while an orbit drag
-            // is in progress (a button is held for the whole drag) —
-            // otherwise it only catches up on the next 3-second
-            // refreshSpatialUI() tick.
+            // Keep the compass turning during an orbit drag.
             if (isDragging && event.buttons !== 0) {
                 compassHeading.value = session.getCompassHeading();
             }
@@ -4130,7 +2169,6 @@ export default {
                 });
                 refreshSpatialUI();
             } else if (isDragging) {
-                // Settle on the final heading once the orbit ends.
                 compassHeading.value = session.getCompassHeading();
             }
             pointerStart = null;
@@ -4138,25 +2176,17 @@ export default {
         }
 
         // -----------------------------------------------------------------
-        // Keyboard interaction (0.5.9 — no registry-driven editing
-        // shortcuts left; only text-input/avatar-control-mode handling
-        // remains)
+        // Keyboard interaction
         // -----------------------------------------------------------------
 
         function onKeyDown(event) {
-            // 1. Text inputs own their keys.
             if (InputRouter.isTextInputTarget(event.target)) {
                 if (event.key === 'Escape') {
                     event.target.blur();
                 }
                 return;
             }
-            // 2. Undo/Redo (0.9.210) — Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z,
-            // the same convention application/EditorActionRegistry.js's
-            // history.undo/history.redo actions already use for the
-            // Editor. This is the one shortcut this handler owns
-            // directly (undoAction()/redoAction() call session.undo()/
-            // redo() — no registry, no second keyboard listener).
+            // 2. Undo/Redo: Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z, as in the Editor.
             if ((event.ctrlKey || event.metaKey) && !event.altKey) {
                 const key = event.key.toLowerCase();
                 if (key === 'z' && !event.shiftKey) {
@@ -4170,9 +2200,7 @@ export default {
                     return;
                 }
             }
-            // 3. Avatar Control Mode (0.2.36) — only ever consumes
-            // W/A/S/D/Shift/Space, and only while explicitly on (see
-            // onAvatarKeyDown above).
+            // 3. Avatar Control Mode consumes W/A/S/D/Shift/Space only while on.
             if (onAvatarKeyDown(event)) {
                 return;
             }
@@ -4182,14 +2210,8 @@ export default {
         // Lifecycle
         // -----------------------------------------------------------------
 
-        // The checkbox itself is an <input> — InputRouter.
-        // isTextInputTarget() (correctly) treats every <input> as
-        // "owns its own keys," so a focused text FIELD can never lose
-        // a keystroke to a shortcut. A checkbox has no text to type,
-        // so it has nothing to lose by giving focus back immediately —
-        // shared by every checkbox in the Avatar panel so checking ANY
-        // of them (in any order) never leaves stray focus that would
-        // silently swallow the very next WASD press.
+        // Checkboxes give focus back immediately, so a focused checkbox never swallows
+        // the next WASD press as a text input would.
         function blurCheckbox(event) {
             if (event && event.target && typeof event.target.blur === 'function') {
                 event.target.blur();
@@ -4202,13 +2224,8 @@ export default {
             blurCheckbox(event);
         }
 
-        // 0.2.36 — an explicit toggle, never implied by clicking into
-        // the viewport or by focus: see the design doc's own concern
-        // ("typing/searching accidentally makes the avatar walk
-        // away") and docs/Principles.md. Turning it off releases any
-        // held movement keys immediately (session.setAvatarControlMode
-        // does this) — exiting always returns keyboard control to the
-        // rest of World View at once.
+        // An explicit toggle, never implied by clicks or focus, so typing never walks
+        // the avatar away. Turning it off releases held keys.
         function toggleAvatarControlMode(event) {
             avatarControlMode.value = !avatarControlMode.value;
             session.setAvatarControlMode(avatarControlMode.value);
@@ -4218,24 +2235,14 @@ export default {
         function toggleFollowAvatar(event) {
             followAvatar.value = !followAvatar.value;
             session.setFollowAvatar(followAvatar.value);
-            // 0.2.39 — following your OWN avatar and a REMOTE one are
-            // mutually exclusive (see WorldNavigationSession.setFollowAvatar's
-            // own comment); reflect that immediately rather than
-            // waiting for the next periodic refreshSpatialUI().
+            // Following your own avatar and a remote one are mutually exclusive.
             if (followAvatar.value) {
                 followedRemoteAvatarId.value = null;
             }
             blurCheckbox(event);
         }
 
-        // 0.3.2 — the Camera Perspective selector. `perspective` is
-        // either one of core/CameraPerspective.js's CameraPerspective
-        // values or `null` ("Free" — clicking the already-active
-        // choice again clears it back to the ordinary orbit camera).
-        // session.setCameraPerspective() is the one place that decides
-        // what actually happens; this handler just reflects whatever
-        // it accepted (it can reject an invalid value, though the
-        // fixed set of buttons below never offers one).
+        // `perspective` is a CameraPerspective or null ("Free"); the session decides.
         function setCameraPerspective(perspective) {
             const next = cameraPerspective.value === perspective ? null : perspective;
             if (session.setCameraPerspective(next)) {
@@ -4243,14 +2250,8 @@ export default {
             }
         }
 
-        // 0.2.39 — "Follow" on the Avatar Info panel. Deliberately
-        // separate from toggleFollowAvatar above: this follows
-        // whichever REMOTE avatar is currently the interaction target,
-        // never the local avatar — see
-        // WorldNavigationSession.followAvatarId's own comment for why
-        // that stays a genuinely different capability rather than a
-        // generalized "follow any avatarId" replacement for the
-        // existing boolean API.
+        // Follows the targeted REMOTE avatar, a separate capability from following your
+        // own.
         function followAvatarFromPanel(avatarId) {
             if (session.followAvatarId(avatarId)) {
                 followedRemoteAvatarId.value = avatarId;
@@ -4263,22 +2264,13 @@ export default {
             followedRemoteAvatarId.value = null;
         }
 
-        // 0.2.44 — Greet/Wave/Point from the Avatar Info panel.
-        // Deliberately thin: WorldNavigationSession.performAvatarInteraction()
-        // owns every real decision (is there a target, is it a cooldown,
-        // is the kind valid) — this handler doesn't second-guess a
-        // false return, it just doesn't refresh anything extra. See
-        // docs/Principles.md, "Observation Does Not Imply Authority, And
-        // Interaction Does Not Imply Control (0.2.44)."
+        // The session owns every decision (docs/Principles.md, "Observation Does Not
+        // Imply Authority, And Interaction Does Not Imply Control").
         function performAvatarInteraction(kind) {
             session.performAvatarInteraction(kind);
         }
 
-        // 0.2.43 — clicking a "Nearby Avatars" row reaches the SAME
-        // avatarId a 3D-viewport click would, through
-        // WorldNavigationSession.targetAvatar() — opens the identical
-        // Avatar Info panel (already wired to followAvatarFromPanel
-        // above), never a second inspection surface.
+        // Opens the same Avatar Info panel as clicking the avatar in the viewport.
         function selectNearbyAvatar(avatarId) {
             session.targetAvatar(avatarId);
             refreshSpatialUI();
@@ -4291,15 +2283,11 @@ export default {
         }
 
         // -----------------------------------------------------------------
-        // Avatar movement keyboard interaction (0.2.36)
+        // Avatar movement keys
         // -----------------------------------------------------------------
         //
-        // Deliberately separate from onKeyDown below: W/A/S/D/Shift/Space
-        // only ever mean anything while Avatar Control Mode is
-        // explicitly on. onAvatarKeyDown is only ever called from
-        // onKeyDown, AFTER onKeyDown has already returned for text
-        // inputs, so search/metadata fields never fight the avatar for
-        // keystrokes.
+        // Only while Avatar Control Mode is on, and only after text inputs have been
+        // excluded, so fields never fight the avatar for keys.
         function onAvatarKeyDown(event) {
             if (!avatarControlMode.value) {
                 return false;
@@ -4312,32 +2300,15 @@ export default {
         }
 
         function onAvatarKeyUp(event) {
-            // Always forwarded (not gated on avatarControlMode/text-input)
-            // so a key that WAS captured while control mode was on
-            // still cleanly releases even if the mode was toggled off,
-            // or focus moved to a text input, before the keyup arrived
-            // — see WorldNavigationSession.avatarKeyUp's own comment.
+            // Always forwarded, so a captured key still releases after the mode changes or
+            // focus moves.
             if (session.avatarKeyUp(event.key)) {
                 event.preventDefault();
             }
         }
 
-        // A window-blur (alt-tab, DevTools breakpoint, another app
-        // stealing focus) can swallow a keyup entirely — releasing
-        // every held key here is what stops that from leaving the
-        // avatar "stuck" walking forever, exactly the scenario the
-        // design doc calls out.
-        //
-        // 0.3.2 — deliberately releases keys ONLY, never the mode
-        // itself. This used to also call session.setAvatarControlMode(false)
-        // (silently unchecking "Control My Avatar"), which was exactly
-        // the kind of hidden state transition docs/Principles.md now
-        // names and forbids: the user explicitly turned control mode
-        // on, and a window losing focus is not the user explicitly
-        // turning it back off. See WorldNavigationSession.releaseAvatarMovementKeys —
-        // the checkbox stays checked, WASD simply resumes working the
-        // instant the window regains focus, with no held-over stuck
-        // key from before the blur.
+        // A blur can swallow a keyup, so release every held key. The mode itself stays
+        // on: losing focus is not the user turning it off.
         function onWindowBlur() {
             session.releaseAvatarMovementKeys();
         }
@@ -4348,23 +2319,9 @@ export default {
             session.navigateToDocument(initialDocumentId);
             refreshSpatialUI();
 
-            // 0.6.1 — World ↔ Editor Continuity & Return Navigation.
-            // The Editor's own "← Back to World" button (ui/components/
-            // Toolbar.js) navigates to `/world/<returnWorldId>?returnLocation=<id>`
-            // — `returnLocation` is exactly the same
-            // WorldRegion/WorldLandmark/StructurePlacement id
-            // core/EditorEntryContext.js#focusLocationId already carried
-            // FOR the Editor's own camera framing on the way in, reused
-            // here for the trip back out. Reopening the SAME WorldFocusPanel
-            // is all this does — the camera itself is already handled,
-            // for free, by 0.3.10's own per-World experience store
-            // (session.navigateToDocument() above already triggered
-            // restoreWorldExperience() via refreshSpatialUI()'s
-            // _syncWorldExperience(), restoring exactly the framing this
-            // replica had when it left for the Editor). A location that
-            // no longer resolves (deleted while the viewer was away)
-            // degrades silently — arriving back in World View is not an
-            // error, even when the one thing being returned to is gone.
+            // Reopens the focus panel for the location the Editor's "Back to World" named;
+            // the camera is restored by the per-World experience store. A location that no
+            // longer exists is silently ignored.
             if (route.query.returnLocation) {
                 const context = session.getFocusContextForLocation(route.query.returnLocation);
                 if (context) {
@@ -4375,13 +2332,8 @@ export default {
             }
 
             hasLocalAvatar.value = session.hasLocalAvatar();
-            // 0.3.1 — apply the two now-default-on avatar toggles to
-            // the session itself once a local avatar actually exists
-            // (matching the checkboxes' own :disabled="!hasLocalAvatar"
-            // gate — nothing to control/follow without one).
-            // session.start() above is what makes hasLocalAvatar true,
-            // so this is the earliest point the session can honor
-            // either preference.
+            // Applies the default-on avatar toggles once session.start() has created a
+            // local avatar.
             if (hasLocalAvatar.value) {
                 session.setAvatarControlMode(avatarControlMode.value);
                 session.setFollowAvatar(followAvatar.value);
@@ -4399,50 +2351,28 @@ export default {
                 refreshSpatialUI();
             }, 3000);
 
-            // 0.3.0 — Collaborative Spatial Presence. A SEPARATE, much
-            // faster interval than spatialInterval above — see
-            // _syncWorldSpatialPresence()'s own header on why the two
-            // cadences must stay independent. session.syncWorldSpatialPresence()
-            // itself does the actual throttling decision (immediate for
-            // selection/activity, at most once per ~90ms for position/
-            // heading — see application/WorldSpatialPresenceUseCase.js's
-            // own header); calling it every 100ms here just guarantees a
-            // fresh read of the camera/selection/gizmo state is always
-            // available to throttle FROM. A no-op whenever no World is
-            // currently spatially present.
+            // A separate, much faster interval than spatialInterval. The session throttles
+            // (selection/activity immediately, position/heading at most every ~90ms); this
+            // only guarantees a fresh read to throttle from. A no-op outside spatial
+            // presence.
             spatialPresenceSyncInterval = setInterval(() => {
                 if (presentSpatialWorldDocumentId) {
                     session.syncWorldSpatialPresence(presentSpatialWorldDocumentId);
                 }
             }, 100);
 
-            // 0.9.98 — Vehicle Mount/Dismount World View Integration. Its
-            // own short interval, deliberately separate from both
-            // spatialInterval (3000ms — far too slow for an affordance
-            // that must appear/disappear as the avatar walks up to or
-            // away from a vehicle) and spatialPresenceSyncInterval above
-            // (a different concern — publishing THIS avatar's own
-            // presence to others, not reading local mount/dismount
-            // state). Only ever reads
-            // session.avatarVehicleInteractionState() — see that
-            // method's own header; this view computes nothing about
-            // proximity or targeting itself. Gated on avatarControlMode:
-            // showing "[E] Mount/Dismount" while the key that would
-            // actually do something is off would be misleading.
+            // Its own short interval: the 3-second refresh is far too slow for a prompt
+            // that must appear as the avatar approaches a vehicle. Only reads session
+            // state. Hidden when Avatar Control Mode is off, since the key would do
+            // nothing.
             vehicleInteractionInterval = setInterval(() => {
                 vehicleInteractionState.value = (hasLocalAvatar.value && avatarControlMode.value)
                     ? session.avatarVehicleInteractionState()
                     : null;
-                // 0.9.670 — Avatar Inventory (store/deploy). Same gating,
-                // same cadence, same interval as vehicleInteractionState
-                // immediately above — a second independent affordance,
-                // never a reason for a second interval.
+                // Same interval and gating as the vehicle prompt.
                 storeInteractionState.value = (hasLocalAvatar.value && avatarControlMode.value)
                     ? session.avatarStoreInteractionState()
                     : null;
-                // 0.9.700 — Animal Catching. Same gating, same cadence,
-                // same interval as the two above — a third independent
-                // affordance, never a reason for a third interval.
                 animalInteractionState.value = (hasLocalAvatar.value && avatarControlMode.value)
                     ? session.avatarAnimalInteractionState()
                     : null;
@@ -4450,18 +2380,9 @@ export default {
         });
 
         onBeforeUnmount(() => {
-            // 0.9.193 — Automatic Snapshot Session-Lifetime Guard. Flipped
-            // FIRST, before anything else tears down: any
-            // automaticSnapshotEncounterCascade run still in flight (its own
-            // resolve/materialize/place chain is never cancelled — see that
-            // file's own header) now sees a dead session the instant it
-            // reaches its own registration checkpoint, however much later
-            // that turns out to be.
+            // Set first, before anything tears down: an in-flight cascade (never cancelled)
+            // sees a dead session at its registration checkpoint.
             automaticCascadeSessionActive = false;
-            // 0.9.257 — World View Place Naming Presentation. Flipped
-            // immediately after the identical Snapshot-cascade guard above,
-            // before `placeNamingDiscoveryMonitor.dispose()` even runs — see
-            // that flag's own declaration comment for why both are needed.
             placeNamingDiscoveryPresentationActive = false;
             if (placeNamingDiscoveryMonitor) {
                 placeNamingDiscoveryMonitor.dispose();
@@ -4478,12 +2399,8 @@ export default {
             viewport.value.removeEventListener('pointerup', onPointerUp);
             viewport.value.removeEventListener('pointermove', onPointerMove);
             viewport.value.removeEventListener('pointerdown', onPointerDown);
-            // 0.2.99/0.3.0 — session.dispose() below already leaves
-            // EVERY World this session holds coarse OR spatial presence
-            // for (it iterates its own _presentWorldDocumentIds AND
-            // _presentSpatialWorldDocumentIds — see
-            // WorldNavigationSession's own dispose()), so only the
-            // view's own live subscriptions need tearing down here.
+            // session.dispose() leaves every world's coarse and spatial presence, so only
+            // the view's own subscriptions are torn down here.
             if (unsubscribeWorldPresence) {
                 unsubscribeWorldPresence();
             }
@@ -4493,20 +2410,12 @@ export default {
             if (unsubscribeWorldSpatialPresence) {
                 unsubscribeWorldSpatialPresence();
             }
-            // 0.3.10 — the FINAL save for whichever World this replica's
-            // local experience is currently tracking, so closing the tab
-            // (or navigating elsewhere) still remembers this camera
-            // framing — _syncWorldExperience() above only ever saves on
-            // the NEXT active-document change, which never comes once
-            // this view is torn down.
+            // Final save of the camera framing: _syncWorldExperience() only saves on the
+            // next active-document change, which never comes after teardown.
             if (presentExperienceWorldDocumentId) {
                 session.saveWorldExperience(presentExperienceWorldDocumentId);
             }
-            // 0.9.207 — defensive only: session.dispose() immediately below
-            // already tears down the whole render session (and, with it,
-            // any lingering preview world), but ending an active history
-            // preview explicitly first keeps _historyPreview from outliving
-            // the view that opened it even for one tick.
+            // Defensive: end any preview before disposing the session.
             if (historyPreviewCursor.value !== null) {
                 guarded(() => session.cancelHistoryPreview());
             }
@@ -4652,7 +2561,6 @@ export default {
             showGeographicPlaceOnMap,
             nearbyGeographicPlaces,
             goToGeographicPlace,
-            // 0.5.7 — World View UX & Progressive Exploration.
             WorldViewPrimaryMode,
             primaryMode,
             setPrimaryMode,
@@ -4663,7 +2571,6 @@ export default {
             NEARBY_LANDMARKS_SECTION,
             NEARBY_PEOPLE_SECTION,
             WORLD_ENCOUNTERS_SECTION,
-            // 0.9.257 — World View Place Naming Presentation.
             NEARBY_PLACE_NAMING_SECTION,
             nearbyPlaceNamingClaimRows,
             placeNamingDiscoveryError,
@@ -4750,18 +2657,9 @@ export default {
             discoverSnapshotCandidatesWithOutcomeCommand,
             resolveSelectedSnapshotCommand,
             materializeSelectedSnapshotCommand,
-            // 0.9.474 — Admit World-Encountered Publications into
-            // App-Wide Discovery. The exact same shared provider this
-            // view already injects, above (0.9.339, for search-result
-            // enrichment only) — exposed to the template so it can also
-            // be handed to WorldEncounterCanvas as its own new
-            // `decentralizedPublicationDiscoveryProvider` prop, below.
-            // No second inject(), no second provider: one dependency,
-            // two consumers.
+            // Also passed to WorldEncounterCanvas so it can admit encountered Publications
+            // into the app-wide catalog.
             decentralizedDiscoveryProviderForEnrichment,
-            // 0.9.651 — exposed to the template so it can be handed to
-            // WorldEncounterCanvas as its own new `publicationAdmissionLog`
-            // prop, below.
             worldEncounterPublicationAdmissionLog
         };
     },
@@ -4780,13 +2678,11 @@ export default {
                     </span>
                     <span v-else>✎ {{ activeDocumentInfo.statusLabel }}</span>
                 </p>
-                <!-- 0.2.27: camera focus and the active (editing) document
-                     are independently tracked — two publications can share
-                     a coordinate, so focusing one after the other never
-                     moves the camera, but Editing still needs to say which
-                     one is now the mutation target. See
-                     docs/Principles.md, "Camera Focus, Active Document,
-                     and Selection Are Three Different Things." -->
+                <!--
+                    Camera focus and the active document are tracked separately (docs/
+                    Principles.md, "Camera Focus, Active Document, and Selection Are Three
+                    Different Things").
+                -->
                 <p class="world-view-context">
                     Camera: {{ focusedDocumentTitle || 'World' }} · Editing: {{ activeDocumentInfo ? title : 'None' }}
                 </p>
@@ -4824,90 +2720,12 @@ export default {
                     >Move Placement</button>
                 </div>
                 <p v-if="author">by {{ author }}</p>
-                <!-- 0.9.140 — Own Publication Distribution Entry Point.
-                     Deliberately mounted here, beside Save/Publish/Move
-                     Placement — never inside the Explore-mode "World
-                     Encounters" section below — so distributing the
-                     local user's own current Snapshot never depends on
-                     primaryMode, on a connected peer, or on World
-                     Encounters having anything to show. Visible whenever
-                     a World is loaded (cameraPosition exists), exactly
-                     like the Home/Locations toolbar immediately below;
-                     ownPublication/distributeWorldEncounterSnapshot are
-                     both described in this file's own setup()-level
-                     comments above. See ui/components/OwnPublicationPanel.js's
-                     own header for why this stays a completely separate
-                     surface from WorldEncounterCanvas's own "Distribute
-                     Snapshot" action.
-
-                     0.9.159 — placementInfo is the SAME activePlacementInfo
-                     (session.getPlacementInfo(activeId), computed in
-                     refreshSpatialUI() above) the Placement Info panel
-                     immediately below already renders — handed straight
-                     through, unchanged, so "Place Materialized Snapshot"
-                     reuses this replica's EXISTING spatial authority for
-                     the active Publication rather than looking one up a
-                     second time.
-
-                     0.9.160 — worldDiscoverySourceRegistry is the SAME
-                     app-wide registry instance injected below and handed
-                     to WorldEncounterCanvas as its own registry prop —
-                     handed to OwnPublicationPanel too, unchanged, so
-                     "Register Placed Snapshot" mutates the EXACT registry
-                     WorldEncounterCanvas is already subscribed to,
-                     never a second, disconnected one.
-
-                     0.9.198 — unpublishCommand is unpublishOwnPublication,
-                     below: a thin wrapper around
-                     session.unpublishDocument(), mirroring
-                     removePlacementFromPanel's own wrap of
-                     session.removePlacement() one authority up.
-
-                     0.9.600 — placePublicationCommand is
-                     placeOwnPublication, above: a thin wrapper around
-                     session.placePublication(), mirroring
-                     unpublishOwnPublication's own restraint immediately
-                     above — see ui/components/OwnPublicationPanel.js's
-                     own header, "0.9.600 — Publication First-Placement
-                     Action Wiring Fix."
-
-                     0.9.215 — exportSnapshotCommand is exportOwnSnapshot,
-                     above: a thin wrapper around the app-wide
-                     exportSnapshotCommand injected above, mirroring
-                     distributeWorldEncounterSnapshot's own wrap one
-                     action over.
-
-                     0.9.308 — getPublicationPlacementsCommand is a thin
-                     wrapper around session.getPlacementsForPublication(),
-                     above — the FULL, unreduced placement list for this
-                     Publication, never just the singular
-                     activePlacementInfo already handed to this same
-                     panel above. See ui/components/OwnPublicationPanel.js's
-                     own header, "0.9.308."
-
-                     0.9.347 — publicationDistributionCommand is
-                     distributeWorldEncounterPublication, above: the SAME
-                     thin wrapper WorldEncounterCanvas's own
-                     "Distribute Publication" action (reachable only
-                     through a selected marker) already calls, handed here
-                     unchanged so this panel's own "Distribute Publication"
-                     button — reachable with zero connected peers and no
-                     selection of any kind — reaches the EXACT SAME command
-                     boundary, never a second implementation. See
-                     ui/components/OwnPublicationPanel.js's own header,
-                     "0.9.347 — Post-Publish Distribution Entry Point."
-
-                     Bug fix — defaultDiscoveryDistributionProvider is
-                     defaultAnnouncementDiscoveryProvider, above: the SAME
-                     resolved preference already handed to
-                     WorldEncounterCanvas below as its own
-                     defaultDiscoveryDistributionProvider prop. Before this
-                     fix, this panel never received it, so its own
-                     "Distribute Publication" button always called
-                     distributeWorldEncounterPublication(publication) with
-                     no discoveryProvider — which that function reads as
-                     "use Nostr" — regardless of what a Wanderer had saved
-                     via /settings/announcement-discovery-provider. -->
+                <!--
+                    Mounted beside Save/Publish rather than inside World Encounters, so
+                    distributing your own Snapshot never depends on primary mode, a peer or
+                    Encounters. The commands are this view's thin wrappers, shared with
+                    WorldEncounterCanvas where they overlap.
+                -->
                 <OwnPublicationPanel
                     v-if="cameraPosition"
                     :publication="ownPublication"
@@ -4931,13 +2749,10 @@ export default {
                     :getPublicationPlacementsCommand="getPublicationPlacementsCommand"
                     :discoverSnapshotCandidatesWithOutcomeCommand="discoverSnapshotCandidatesWithOutcomeCommand"
                 />
-            <!-- 0.5.7 — World View UX & Progressive Exploration. Home
-                 and Locations stay plain navigation utilities; Explore /
-                 Map / Places below are the three PRIMARY, mutually
-                 exclusive modes that replace the separate always-open
-                 Map/"Geographic Places"/"Explore" buttons this toolbar
-                 used to carry — see application/
-                 WorldViewNavigationState.js's own header. -->
+            <!--
+                Home and Locations are plain utilities; Explore / Map / Places are the three
+                mutually exclusive primary modes.
+            -->
             <div v-if="cameraPosition" class="world-view-actions world-view-actions--navigation">
                 <button class="action-btn" @click="goHome">Home</button>
                 <button
@@ -4946,11 +2761,7 @@ export default {
                     title="Landmarks, regions, and every structure this session knows about"
                     @click="openLocationsPanel"
                 >Locations</button>
-                <!-- 0.9.284 — Notification History UI Boundary. Gated on
-                     cameraPosition alone, same as Home immediately above
-                     — never on activeDocumentInfo, since notification
-                     history is scoped to the signed-in identity, not to
-                     whichever document happens to be open for editing. -->
+                <!-- Scoped to the signed-in identity, not the open document. -->
                 <button
                     class="action-btn"
                     title="A durable record of notification facts addressed to you"
@@ -4974,10 +2785,6 @@ export default {
                     @click="setPrimaryMode(WorldViewPrimaryMode.PLACES)"
                 >Places</button>
             </div>
-            <!-- Point 3 of the design conversation: "the user sees the
-                 CATEGORY, not 20 controls." Reuses data this view
-                 already computes every refreshSpatialUI() tick — no new
-                 session query. -->
             <div v-if="cameraPosition && primaryMode === WorldViewPrimaryMode.EXPLORE" class="world-view-section world-view-section--nearby">
                 <h4>Nearby</h4>
                 <CollapsibleSection
@@ -5030,18 +2837,10 @@ export default {
                         >Go</button>
                     </div>
                 </CollapsibleSection>
-                <!-- 0.9.257 — World View Place Naming Presentation. Presents
-                     nearbyPlaceNamingClaimRows — a pure mapping over
-                     placeNamingDiscoveryMonitor.lastResult, see that
-                     computed's own comment — never a "primary"/"official"
-                     name for a place, and never a reason to rename anything
-                     this view actually navigates by. An empty list here
-                     means "no nearby claims were DISCOVERED," never "this
-                     place has no name" — the wording below is deliberate.
-                     placeNamingDiscoveryError is a small, optional,
-                     non-authoritative indicator; it is never a reason to
-                     hide whatever nearbyPlaceNamingClaimRows still holds
-                     from the last successful discovery. -->
+                <!--
+                    An empty list means no claims were discovered nearby, never that the place
+                    has no name. The error never hides the last successful results.
+                -->
                 <CollapsibleSection
                     title="Nearby Place Names"
                     :count="nearbyPlaceNamingClaimRows.length"
@@ -5061,52 +2860,18 @@ export default {
                         <span class="world-view-nearby-row-label">✎ {{ claim.name }}</span>
                         <span class="world-view-nearby-row-distance" v-if="claim.position">at ({{ Math.round(claim.position.x) }}, {{ Math.round(claim.position.z) }})</span>
                         <span class="world-view-place-naming-author">claimed by {{ claim.authorDisplayName }}</span>
-                        <!-- 0.9.266 — Nearby Place Naming Claim Metadata
-                             Presentation. createdAtLabel is a pure display
-                             string (see nearbyPlaceNamingClaimRows's own
-                             0.9.266 comment) — empty for a malformed/missing
-                             createdAt, in which case this line simply does
-                             not render, exactly like claim.position above.
-                             Deliberately no signature/verification
-                             indicator sits beside it — see that same
-                             comment for why this milestone draws that
-                             boundary here. -->
+                        <!-- No signature/verification indicator here (see nearbyPlaceNamingClaimRows). -->
                         <span v-if="claim.createdAtLabel" class="world-view-place-naming-created">Created: {{ claim.createdAtLabel }}</span>
-                        <!-- 0.9.260 — Nearby Place Naming Claim Interaction.
-                             Navigate only ever moves the camera to the
-                             claim's own region via the existing World
-                             navigation machinery — it never adopts,
-                             verifies, or ranks this claim, and never
-                             renames the WorldRegion it points at. -->
+                        <!-- Navigate only moves the camera; it never adopts, verifies or renames. -->
                         <button
                             class="action-btn world-view-nearby-row-go"
                             @click="navigateToNearbyPlaceNamingClaim(claim)"
                         >Navigate</button>
-                        <!-- 0.9.263 — Nearby Place Naming Claim Adoption UI.
-                             Adopt is the one explicit action that reaches
-                             the existing, unmodified
-                             session.importPlaceNamingClaim() boundary —
-                             see adoptNearbyPlaceNamingClaim()'s own
-                             comment. Discovery, proximity, presentation,
-                             and Navigate above never trigger this
-                             themselves; it only ever runs from this
-                             click.
-
-                             0.9.269 — Nearby Place Naming Claim Adoption
-                             Status Indicator. Adopt only renders while
-                             claim.alreadySaved is false; once
-                             session.hasPlaceNamingClaim() reports this
-                             claim is already on file, the button is
-                             replaced by a passive status line rather than
-                             a disabled button — a Wanderer never needs to
-                             click something to learn it would do nothing.
-                             Deliberately worded "Already saved," never
-                             "Already adopted": the underlying store also
-                             holds this identity's OWN published claims,
-                             not only ones reached via Adopt, so "saved"
-                             is the term that matches what has() actually
-                             establishes without overstating it — see this
-                             milestone's own docs/Roadmap.md entry. -->
+                        <!--
+                            Adopt is the only action that imports a claim, and only on this click. Once
+                            saved, a passive "Already saved" line replaces the button ("saved", not
+                            "adopted": the store also holds the viewer's own claims).
+                        -->
                         <button
                             v-if="!claim.alreadySaved"
                             class="action-btn world-view-nearby-row-adopt"
@@ -5115,153 +2880,11 @@ export default {
                         <span v-else class="world-view-nearby-row-status">✓ Already saved</span>
                     </div>
                 </CollapsibleSection>
-                <!-- 0.9.17 — Integrate World Encounters into the Existing
-                     World View. WorldEncounterCanvas (0.9.3 through
-                     0.9.13, unmodified) mounted here exactly the way
-                     ui/views/LiveWorldView.js (0.9.15) already mounts
-                     it — handed worldDiscoverySourceRegistry straight
-                     through as its own registry prop, no view prop,
-                     no count computed by THIS file (the count prop is
-                     left at its own default of null on purpose — see
-                     CollapsibleSection.js's own header for why null
-                     means "no natural count"). Every behavior behind
-                     registry — subscribing, re-projecting, rendering
-                     markers, owning selectedEncounter — stays entirely
-                     WorldEncounterCanvas's own job, exactly as it always
-                     has been; this section changes WHERE it is mounted,
-                     never what it does.
-
-                     0.9.99 — materialSources/materialVerifier, both
-                     already-existing WorldEncounterCanvas props
-                     (0.9.39/0.9.42) that stayed at their own default of
-                     null everywhere in this running app until now, are
-                     handed through the same way: unmodified collaborators,
-                     never anything this file constructs or judges itself.
-                     See this file's own setup()-level comment on
-                     worldEncounterMaterialSources, above.
-
-                     0.9.100 — distributionLifecycleStore, a new
-                     WorldEncounterCanvas prop, handed through the same
-                     way: an already-composed, already-restored
-                     observation store, never anything this file
-                     constructs, persists, or transitions itself. See
-                     this file's own setup()-level comment on
-                     publicationDistributionLifecycleStore, above.
-
-                     0.9.104 — distributionCommand, a new WorldEncounterCanvas
-                     prop, bound to this file's own distributeWorldEncounterPublication()
-                     — a thin wrapper around the injected
-                     publicationDistributionCommand, never a second
-                     command and never anything this file orchestrates or
-                     writes into the lifecycle store itself. See that
-                     function's own comment, above.
-
-                     0.9.110 — worldDiscoveryLeadRegistry, WorldEncounterCanvas's
-                     own already-existing (0.9.40) prop, handed through the
-                     same way: an already-composed registry, never anything
-                     this file constructs, queries, or resolves itself.
-                     Every reactive behavior behind it — subscribing,
-                     resolving a lead for the current selection, the
-                     Wanderer's own ambiguity choice — stays entirely
-                     WorldEncounterCanvas's own job, unmodified; this
-                     section changes only that the registry it was already
-                     built to observe is real.
-
-                     0.9.111 — discoveryCommand, WorldEncounterCanvas's own
-                     new prop, forwarded the app-wide
-                     discoverWorldEncounterPublicationCommand verbatim — no
-                     wrapper, no added field. WorldEncounterCanvas now owns
-                     the entire Discover Publication trigger AND result
-                     panel (rendered through the SAME existing Material/
-                     Verification markup 0.9.39's own selection-driven
-                     panel already uses) — see that file's own header,
-                     "0.9.111 — World View Decentralized Publication
-                     Retrieval."
-
-                     0.9.357 — defaultDiscoveryTag, WorldEncounterCanvas's
-                     own new prop, forwarded the app-wide
-                     publicationDiscoveryTag verbatim (this file's own
-                     ui/main.js-injected copy of the SAME canonical campaign
-                     tag distribution already uses) — seeds ONLY the
-                     Discovery-tag input's own initial value; the field
-                     stays exactly as freely editable as before, and
-                     discoverPublication() itself is entirely unchanged. See
-                     tests/PublicationDiscoveryTagUXConsistencyAudit.test.js
-                     (0.9.356) for why this is safe.
-
-                     0.9.138 — snapshotDistributionCommand, WorldEncounterCanvas's
-                     own new prop, bound to this file's own
-                     distributeWorldEncounterSnapshot() — a thin wrapper
-                     around the injected snapshotDistributionCommand, never
-                     a second command and never anything this file
-                     orchestrates itself. See that function's own comment,
-                     above.
-
-                     0.9.144 — discoverSnapshotCommand, WorldEncounterCanvas's
-                     own new prop, bound to this file's own
-                     discoverOwnSnapshot() — the SAME function already bound
-                     to OwnPublicationPanel's own discoverSnapshotCommand
-                     prop above, reused verbatim rather than forked; see
-                     that function's own comment for why. WorldEncounterCanvas
-                     now owns the entire Snapshot Discovery/Attribution
-                     trigger and result panel for a selected World Encounter,
-                     exactly the way it already owns Snapshot Distribution's
-                     own.
-
-                     0.9.291 — getPublicationCommentariesCommand/
-                     addPublicationCommentaryCommand, two new
-                     WorldEncounterCanvas props, bound to the EXACT SAME
-                     function instances already bound to OwnPublicationPanel's
-                     own identically-named props, immediately below (0.9.248)
-                     — no wrapper, no second composition. See this file's
-                     own setup()-level getPublicationCommentariesCommand()/
-                     addPublicationCommentaryCommand() comment, above, and
-                     WorldEncounterCanvas.js's own "0.9.291" header for why
-                     reusing THESE, rather than the app-wide ones
-                     application/CreatePublicationCommentaryUseCase.js
-                     (0.9.289) composes, was preferred. viewerIdentityId is
-                     the SAME myIdentityId already bound to OwnPublicationPanel's
-                     own identical prop, one section below.
-
-                     0.9.474 — decentralizedPublicationDiscoveryProvider,
-                     a new WorldEncounterCanvas prop, bound to the SAME
-                     decentralizedDiscoveryProviderForEnrichment this view
-                     already injects above (0.9.339) for its own search-
-                     result enrichment — no second inject(), no second
-                     provider. Lets WorldEncounterCanvas admit a resolved
-                     World Encounter Publication into the identical
-                     app-wide catalog ui/views/DecentralizedPublicationsView.js's
-                     own admitToRepositoryDiscovery() (0.9.337) already
-                     writes to, so Repository search can find it afterward.
-
-                     0.9.558 — openPublicationCommand/forkPublicationCommand/
-                     explorePublicationCommand, three new WorldEncounterCanvas
-                     props, bound to this file's own thin
-                     openEncounteredPublicationCommand()/
-                     forkEncounteredPublicationCommand()/
-                     exploreEncounteredPublicationCommand() wrappers,
-                     immediately above focusWorld()'s own definition —
-                     each reusing an EXISTING navigation exactly
-                     (PublicationCatalog.js's own openPublication()/
-                     forkPublication() route shapes, and this file's own
-                     focusWorld() for Explore). Lets WorldEncounterCanvas's
-                     own observer-local encounter inspection panel continue
-                     into Open/Fork/Explore for a Publication it already
-                     fully resolved, without this component ever
-                     performing navigation of its own — see
-                     WorldEncounterCanvas.js's own "0.9.558" header.
-
-                     0.9.651 — publicationAdmissionLog, a new
-                     WorldEncounterCanvas prop, bound to this file's own
-                     setup()-level worldEncounterPublicationAdmissionLog
-                     (injected above) — the SAME app-wide
-                     LocalWorldEncounterPublicationAdmissionLog ui/main.js
-                     already reconstructs into
-                     decentralizedDiscoveryProviderForEnrichment at startup.
-                     Lets a resolved, AVAILABLE+VERIFIED World Encounter
-                     admission durably survive a restart, independent of
-                     decentralizedPublicationDiscoveryProvider above — see
-                     WorldEncounterCanvas.js's own "0.9.651" header. -->
+                <!--
+                    WorldEncounterCanvas mounted inside Explore, with the app-wide collaborators
+                    and this view's thin command wrappers passed straight through. All encounter
+                    behavior stays inside the canvas; this view constructs and decides nothing.
+                -->
                 <CollapsibleSection
                     title="World Encounters"
                     :collapsed="nearbySectionsCollapsed.worldEncounters"
@@ -5294,29 +2917,20 @@ export default {
                     />
                 </CollapsibleSection>
             </div>
-                <!-- 0.2.99 — World Collaboration UX. Deliberately
-                     subtle, exactly like the compass above: the World
-                     itself stays visually dominant. Both the indicator
-                     and the explicit "Members" button open the SAME
-                     panel — see docs/Principles.md, "The UI Displays
-                     Authorization; It Never Decides It (0.2.99)." -->
+                <!--
+                    Subtle, so the World stays dominant (docs/Principles.md, "The UI Displays
+                    Authorization; It Never Decides It").
+                -->
                 <div v-if="activeDocumentInfo" class="world-view-actions world-view-actions--collaboration">
                     <WorldPresenceIndicator :online-count="worldOnlineCount" @open="openMembersPanel" />
                     <button class="action-btn" @click="openMembersPanel">Members</button>
                 </div>
 
-                <!-- 0.3.0 — Collaborative Spatial Presence. The 2D
-                     counterpart to renderer/RemoteSpatialPresenceRenderer.js's
-                     own in-scene markers — see
-                     ui/components/WorldCollaboratorIndicator.js's own
-                     header. -->
                 <WorldCollaboratorIndicator v-if="activeDocumentInfo" :rows="spatialCollaboratorRows" @follow="followCollaborator" />
-                <!-- 0.2.29: browse the world by camera position, without
-                     already knowing a document's name or typing raw
-                     coordinates — see docs/Principles.md, "Exploring A
-                     Location Is Not A Second Search." Explore Here uses
-                     a configurable neighborhood; What's Here? uses a
-                     small fixed tolerance for "essentially right here." -->
+                <!--
+                    Browse by camera position (docs/Principles.md, "Exploring A Location Is Not
+                    A Second Search").
+                -->
                 <div v-if="cameraPosition" class="world-view-actions world-view-actions--explore">
                     <button class="action-btn" @click="exploreHere">Explore Here</button>
                     <button class="action-btn" @click="whatsHere">What's Here?</button>
@@ -5325,20 +2939,10 @@ export default {
                     Drag to orbit • Scroll to zoom • Home to reset • Click to inspect<template v-if="avatarControlMode"> • WASD to walk • Shift to run • Space to jump</template>
                 </p>
 
-                <!-- 0.2.35: a pure client rendering preference — see
-                     docs/Principles.md.
-
-                     0.2.36 adds Control My Avatar / Follow Avatar —
-                     both explicit, off-by-default toggles (never
-                     implied by focus or hovering the viewport), so
-                     nothing here can accidentally hijack keyboard
-                     input the rest of World View still needs.
-
-                     0.2.37 makes "Show Other Avatars" real — a pure
-                     rendering preference exactly like "Show My
-                     Avatar," deliberately NOT disabled by
-                     hasLocalAvatar: seeing other replicas' avatars
-                     never requires having your own. -->
+                <!--
+                    Client rendering preferences. Control/Follow are explicit toggles, never
+                    implied by focus. Show Other Avatars does not require an avatar of your own.
+                -->
                 <div class="world-view-section world-view-section--avatar">
                     <h4>Avatar</h4>
                     <label class="world-view-avatar-toggle">
@@ -5358,22 +2962,17 @@ export default {
                         />
                         Show Other Avatars
                     </label>
-                    <!-- 0.2.38: unobtrusive presence diagnostics —
-                         never rendered ON an avatar itself, only here,
-                         as a summary. Rendering presence and trusting
-                         presence stay visibly separate surfaces. -->
+                    <!--
+                        Diagnostics appear only here, never on an avatar: rendering presence and
+                        trusting it stay separate.
+                    -->
                     <p v-if="showOtherAvatars && remoteAvatarDiagnostics.total > 0" class="world-view-avatar-diagnostics">
                         Other Avatars: {{ remoteAvatarDiagnostics.total }}
                         <span class="world-view-avatar-diagnostics-detail">
                             (<template v-if="remoteAvatarDiagnostics.trusted">{{ remoteAvatarDiagnostics.trusted }} trusted</template><template v-if="remoteAvatarDiagnostics.stale">{{ remoteAvatarDiagnostics.trusted ? ', ' : '' }}{{ remoteAvatarDiagnostics.stale }} stale</template><template v-if="remoteAvatarDiagnostics.conflicting">{{ (remoteAvatarDiagnostics.trusted || remoteAvatarDiagnostics.stale) ? ', ' : '' }}{{ remoteAvatarDiagnostics.conflicting }} conflicting</template><template v-if="remoteAvatarDiagnostics.unavailable">{{ (remoteAvatarDiagnostics.trusted || remoteAvatarDiagnostics.stale || remoteAvatarDiagnostics.conflicting) ? ', ' : '' }}{{ remoteAvatarDiagnostics.unavailable }} unavailable</template>)
                         </span>
                     </p>
-                    <!-- 0.2.43: "who is near me" — a derived, local,
-                         geometric fact, never announced. Shown only
-                         alongside Show Other Avatars, the same gate
-                         the diagnostics summary above already uses —
-                         proximity is a view over the same trusted
-                         remote-presence state, not a separate feed. -->
+                    <!-- A local geometric fact, never announced; shown with Show Other Avatars. -->
                     <NearbyAvatarsPanel
                         v-if="showOtherAvatars"
                         :entries="nearbyAvatars"
@@ -5400,14 +2999,10 @@ export default {
                     <p v-if="!hasLocalAvatar" class="form-hint form-hint--neutral">
                         Log in and create an avatar (My Avatar) to appear here.
                     </p>
-                    <!-- 0.3.2 — Camera Perspective: a fixed offset
-                         around the local avatar (eye height, behind-
-                         and-above, straight overhead), never a second
-                         camera-movement mechanism — see
-                         core/CameraPerspective.js. Clicking the
-                         already-active button clears back to "Free,"
-                         the ordinary orbit camera. Purely local; never
-                         shared with a collaborator. -->
+                    <!--
+                        Fixed offsets around the avatar; clicking the active one returns to Free.
+                        Local only.
+                    -->
                     <div class="world-view-camera-perspective">
                         <span class="world-view-camera-perspective-label">Camera</span>
                         <div class="world-view-camera-perspective-buttons">
@@ -5533,15 +3128,7 @@ export default {
                             <span class="inspection-value">{{ spatialInspection.worldAuthor }}</span>
                         </div>
                     </div>
-                    <!-- 0.2.93 — World View Instance Inspection. Every
-                         field here is read-only display: no input, no
-                         gizmo, no numeric target. The one action is
-                         "Open Source" below, which leaves World View
-                         entirely and opens the Editor's own,
-                         already-established Load path — see
-                         application/SpatialInspectionService.js's own
-                         comment on why this is the ENTIRE World View
-                         surface for a placed instance. -->
+                    <!-- Read-only fields; the one action, "Open Source", leaves for the Editor. -->
                     <div v-if="spatialInspection.type === 'placement'" class="inspection-fields">
                         <div class="inspection-row">
                             <span class="inspection-label">Source</span>
@@ -5678,10 +3265,6 @@ export default {
             </div>
             <div ref="viewport" class="world-viewport"></div>
             <ActionFeedback :message="feedbackMessage" :visible="feedbackVisible" />
-            <!-- 0.9.98 — Vehicle Mount/Dismount World View Integration.
-                 Purely presentational — see VehicleInteractionPrompt.js's
-                 own header for why it never decides mount/dismount
-                 eligibility itself. -->
             <VehicleInteractionPrompt :state="vehicleInteractionState" :store-state="storeInteractionState" />
             <AnimalInteractionPrompt :state="animalInteractionState" />
             <MetadataEditorDialog
@@ -5839,38 +3422,29 @@ export default {
                 :viewPublicationCommand="viewNotificationPublicationCommand"
                 @cancel="closeNotificationHistoryPanel"
             />
-            <!-- 0.2.94/0.3.6 — Navigation HUD: camera coordinates
-                 and compass as a floating overlay on the main
-                 viewport, positioned at top-right below Logout button.
-                 Transparent background ensures the World scenery
-                 remains dominant. Now includes contextual location
-                 description, nearby structures, and collaborator markers. -->
+            <!--
+                Coordinates and compass float over the viewport, transparent so the World
+                stays dominant.
+            -->
             <div v-if="cameraPosition" class="world-view-nav-hud">
                 <p class="world-view-nav-hud-coords">
                     {{ cameraPosition.x.toFixed(1) }}, {{ cameraPosition.y.toFixed(1) }}, {{ cameraPosition.z.toFixed(1) }}
                 </p>
                 <div class="world-view-nav-hud-compass">
-                    <!-- 0.3.6 — contextual markers rendered ON the dial
-                         itself, at each nearby structure's/collaborator's
-                         own compass direction. -->
                     <CompassIndicator :heading="compassHeading" :markers="compassMarkers" />
                 </div>
-                <!-- 0.5.0 — the human-named place breadcrumb, e.g.
-                     "Willow Village · Green Valley", shown ABOVE the
-                     derived terrain description below (never merged
-                     with it — see docs/Principles.md, "Users Name
-                     Places; The World Derives Geography From Names
-                     (0.5.0)"). -->
+                <!--
+                    The human-named place, shown above the derived terrain description and never
+                    merged with it (docs/Principles.md, "Users Name Places; The World Derives
+                    Geography From Names").
+                -->
                 <div v-if="spatialContext && spatialContext.placeName" class="world-view-nav-context world-view-nav-context--place">
                     {{ spatialContext.placeName }}
                 </div>
-                <!-- 0.3.6 — Contextual location description -->
                 <div v-if="spatialContext && spatialContext.description" class="world-view-nav-context">
                     {{ spatialContext.description }}
                 </div>
-                <!-- 0.3.6 — readable legend for the same markers shown on
-                     the compass above (a 36px dial has no room for
-                     labels) -->
+                <!-- Readable legend for the compass markers: the dial has no room for labels. -->
                 <div v-if="spatialContext && spatialContext.nearbyStructures && spatialContext.nearbyStructures.length > 0" class="world-view-nav-markers">
                     <div v-for="structure in spatialContext.nearbyStructures.slice(0, 3)" :key="structure.id" class="world-view-nav-marker">
                         <span class="marker-direction">{{ structure.direction }}</span>
@@ -5883,17 +3457,12 @@ export default {
                         <span class="marker-label">{{ collab.displayName }} ({{ collab.distance }}m)</span>
                     </div>
                 </div>
-                <!-- 0.3.7 — same legend treatment for nearby landmarks. -->
                 <div v-if="spatialContext && spatialContext.nearbyLandmarks && spatialContext.nearbyLandmarks.length > 0" class="world-view-nav-markers">
                     <div v-for="landmark in spatialContext.nearbyLandmarks.slice(0, 3)" :key="landmark.id" class="world-view-nav-marker landmark">
                         <span class="marker-direction">{{ landmark.direction }}</span>
                         <span class="marker-label">★ {{ landmark.title }} ({{ landmark.distance }}m)</span>
                     </div>
                 </div>
-                <!-- 0.5.6 — same legend treatment for nearby geographic
-                     place candidates, its own much larger radius (see
-                     core/GeographicPlaceNavigation.js#
-                     DEFAULT_NEARBY_GEOGRAPHIC_PLACE_RADIUS). -->
                 <div v-if="nearbyGeographicPlaces && nearbyGeographicPlaces.length > 0" class="world-view-nav-markers">
                     <div v-for="place in nearbyGeographicPlaces.slice(0, 3)" :key="place.fingerprintKey" class="world-view-nav-marker place">
                         <span class="marker-direction">{{ place.direction }}</span>
