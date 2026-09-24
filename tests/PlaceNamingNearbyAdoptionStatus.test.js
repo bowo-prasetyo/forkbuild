@@ -722,7 +722,7 @@ async function runTests() {
         const sessionCode = codeOnlyLines(await rawSource('application/world/WorldNavigationSession.js'));
         assert(sessionCode.includes('hasPlaceNamingClaim(worldId, claimId) {'),
             '47. WorldNavigationSession exposes a real hasPlaceNamingClaim(worldId, claimId) method.');
-        const sessionMethodBlock = extractBetween(sessionCode, 'hasPlaceNamingClaim(worldId, claimId) {', '\n\t}');
+        const sessionMethodBlock = extractBetween(sessionCode, 'hasPlaceNamingClaim(worldId, claimId) {', '\n    }');
         assert(sessionMethodBlock.includes('this._placeNamingClaimUseCase.hasClaim(worldId, claimId)'),
             '48. the session method is a thin pass-through to PlaceNamingClaimUseCase#hasClaim() — no independent lookup logic of its own.');
 

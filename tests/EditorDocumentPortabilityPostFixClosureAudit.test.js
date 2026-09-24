@@ -451,8 +451,8 @@ async function run() {
             // standard 0.9.643 Section A/C already established for
             // EditorSession-adjacent code it likewise could not run live.
             const navSource = codeOnly(await rawSource('application/world/WorldNavigationSession.js'));
-            const cloneMethodMatch = navSource.match(/\bcloneDocument\(documentId\)\s*\{[\s\S]*?\n\t\}/);
-            const forkMethodMatch = navSource.match(/\bforkDocument\(documentId\)\s*\{[\s\S]*?\n\t\}/);
+            const cloneMethodMatch = navSource.match(/\bcloneDocument\(documentId\)\s*\{[\s\S]*?\n    \}/);
+            const forkMethodMatch = navSource.match(/\bforkDocument\(documentId\)\s*\{[\s\S]*?\n    \}/);
             assert(cloneMethodMatch !== null && forkMethodMatch !== null, n('G2: both cloneDocument() and forkDocument() are found, in isolation, in real source'));
             assert(/this\._documentCloneService\.execute\(doc,\s*\{\s*eventBus:\s*this\._eventBus\s*\}\)/.test(cloneMethodMatch[0]),
                 n('G2: cloneDocument() (World View "Duplicate") delegates straight to this._documentCloneService.execute() — the exact class/method live-verified in Sections A-F, with no other options object shape that could carry a second identity mechanism'));

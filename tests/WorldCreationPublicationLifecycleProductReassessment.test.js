@@ -564,10 +564,10 @@ async function main() {
         // specific methods its own brief named: focusWorld's real
         // implementation, focusDocument(), and its own verbatim alias
         // navigateToDocument()).
-        const navigateToDocumentMatch = sessionSource.match(/navigateToDocument\(documentId\) \{[\s\S]*?\n\t\}/);
+        const navigateToDocumentMatch = sessionSource.match(/navigateToDocument\(documentId\) \{[\s\S]*?\n    \}/);
         assert(navigateToDocumentMatch !== null && /return this\.focusDocument\(documentId\);/.test(navigateToDocumentMatch[0]),
             'H3a. navigateToDocument() is a verbatim, one-line alias for focusDocument() — exactly one navigation mechanism, not two.');
-        const focusDocumentMatch = sessionSource.match(/focusDocument\(documentId, \{ setActive = true \} = \{\}\) \{[\s\S]*?\n\t\}/);
+        const focusDocumentMatch = sessionSource.match(/focusDocument\(documentId, \{ setActive = true \} = \{\}\) \{[\s\S]*?\n    \}/);
         assert(focusDocumentMatch !== null
             && !/_publishDocumentUseCase|_publisherProvider\.publish|_storageProvider\.save\(\s*['"]forkbuild-publications/.test(focusDocumentMatch[0]),
             'H3b. focusDocument()\'s own real method body — camera/avatar/selection concerns only — never calls into publish or the Repository catalog write; navigation and publication lifecycle are structurally two different concerns at this layer, not merely different by convention.');

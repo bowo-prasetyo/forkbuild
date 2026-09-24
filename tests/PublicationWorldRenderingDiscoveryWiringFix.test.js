@@ -212,7 +212,7 @@ async function run() {
             'A5. WorldNavigationSession accepts loadPublishedWorldSessionUseCase as a new, OPTIONAL constructor parameter — a caller that never wires one (every pre-0.9.605 caller/test) gets no fallback, exactly the same degrade-gracefully posture every other optional collaborator in this class already follows.');
         assert(/_resolveWorldDocument\(documentId\)/.test(sessionSrc) && /_resolvePublicationMaterial\(documentId\)/.test(sessionSrc),
             'A6. _loadWorld() now delegates to _resolveWorldDocument(), which tries the ordinary LOCAL lookup FIRST (loadPublicationDocumentUseCase — unconditional, unchanged) and falls back to the material bridge only when that throws "no document found."');
-        assert(!/this\._findPublications\(documentId\)/.test(sessionSrc.match(/_resolvePublicationMaterial\(documentId\) \{[\s\S]*?\n\t\}/)?.[0] || ''),
+        assert(!/this\._findPublications\(documentId\)/.test(sessionSrc.match(/_resolvePublicationMaterial\(documentId\) \{[\s\S]*?\n    \}/)?.[0] || ''),
             'A7. _resolvePublicationMaterial() never reads _findPublications()/discoveryProvider — it reads ONLY _publicationActionDiscoveryProvider, the same wider capability getPublicationForDocument()/findPublicationById() already use (0.9.597), never fork-policy\'s own narrow choke point.');
 
         console.log('✓ A — both production seams exist verbatim, exactly as recommended, and nothing else in either file was touched to produce them.');

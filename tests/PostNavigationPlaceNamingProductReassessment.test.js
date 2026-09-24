@@ -358,7 +358,7 @@ async function runTests() {
         // parameter of its own at all, relying entirely on the pkg's own
         // signed claim.
         const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
-        assert(sessionSource.includes('Deliberately NOT scoped to `regionId` or to whatever\n\t// World is currently active'),
+        assert(sessionSource.includes('Deliberately NOT scoped to `regionId` or to whatever\n    // World is currently active'),
             'E3. WorldNavigationSession#importPlaceNamingClaim()\'s own header still states it is deliberately not scoped to the currently active World — the pkg\'s own claim.worldId is the only identity that matters.');
 
         // E4. LIVE PROOF — the identical simultaneous-collision shape
