@@ -257,7 +257,9 @@ async function run() {
         const uiMainSource = await source('ui/main.js');
         check(/createPublicationDistributionRuntimeProvider\(\{[\s\S]{0,400}?\}\)/.test(uiMainSource), 'B1. sanity: the real composition-root call site is where this section expects it');
         const providerCallMatch = uiMainSource.match(/createPublicationDistributionRuntimeProvider\(\{[\s\S]{0,400}?\}\)/);
-        check(!/uploadTaggedTransaction/.test(providerCallMatch[0]), 'B2. CONSTRUCTED? — the real ui/main.js call site never supplies uploadTaggedTransaction as an argument; no host capability adapter of any kind exists for it yet (unlike arweaveHostSigner/nostrHostPublisher for the other two substrates)');
+        // B2 (the call site never supplied uploadTaggedTransaction) stopped
+        // being true at 0.9.492; ArweaveAnnouncementDiscoveryProductionIntegrationAudit
+        // A4 now asserts the opposite.
 
         // INJECTED? — trace the exact production resolution current source
         // performs: createPublicationDistributionRuntimeProvider() regroups

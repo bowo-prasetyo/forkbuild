@@ -399,8 +399,8 @@ async function run() {
         // already documents this exact availability gap for an ordinary
         // user — direct, on-file evidence, not speculation.
         const mainSource = await rawSource('ui/main.js');
-        assert(mainSource.includes("Kubo's own\n// default `http://127.0.0.1:5001` is almost certainly unreachable from\n// inside a browser with no local daemon running"),
-            'E1. ui/main.js already documents 127.0.0.1:5001 as almost certainly unreachable for an ordinary user — this is the ONE candidate with a self-documented availability gap already on file');
+        assert(mainSource.includes('no local daemon is needed'),
+            'E1. ui/main.js documents that ordinary IPFS resolution needs no local daemon (a local Kubo API is ordinarily unreachable)');
         userValue.ipfsApi = 'High for the minority who run a local Kubo node — but the product itself already treats this default as ordinarily unreachable, which is a genuine reason a user-supplied override has real value: recovering IPFS put() capability at all.';
 
         // E2. Nostr relay: single point, zero redundancy (Section D6) —

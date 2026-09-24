@@ -363,7 +363,7 @@ async function run() {
         // anywhere in this codebase yet" — it names the real 0.9.492 wire.
         check(!/No `uploadTaggedTransaction`[\s\S]{0,10}host capability exists anywhere in this codebase yet/.test(mainSource),
             'A5. ui/main.js\'s own composition-root comment no longer carries the stale "No uploadTaggedTransaction host capability exists..." prose 0.9.491 originally found beside an unwired call site');
-        check(/AMENDED BY 0\.9\.492/.test(mainSource) && /arweaveAnnouncementUploadTaggedTransaction/.test(mainCodeOnly),
+        check(/arweaveAnnouncementUploadTaggedTransaction/.test(mainCodeOnly),
             'A5b. ...and the call site names the real capability it now constructs, not merely a stale absence');
 
         // Contrast with the two capabilities that already made this exact

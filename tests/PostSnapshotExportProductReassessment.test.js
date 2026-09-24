@@ -705,7 +705,7 @@ async function runTests() {
         // The SAME shape as the already-known finding above, one
         // subsystem over — ui/main.js's own comment names the
         // supersession explicitly.
-        assert(/instead of application\/CreatePublicationAnchorCatalogUseCase\.js/.test(mainSource), 'M2a. ui/main.js\'s own comment still documents that publicationAnchorCatalog comes from CreatePublicationAnchorPeerExchangeUseCase "instead of" CreatePublicationAnchorCatalogUseCase');
+        assert(!/new CreatePublicationAnchorCatalogUseCase\(/.test(mainSource), 'M2a. ui/main.js never composes CreatePublicationAnchorCatalogUseCase');
         assert(/new CreatePublicationAnchorPeerExchangeUseCase\(/.test(mainSource), 'M2b. ...and ui/main.js composes the superseding class instead');
         const anchorCatalogUseCaseSource = await rawSource('application/CreatePublicationAnchorCatalogUseCase.js');
         assert(/class CreatePublicationAnchorCatalogUseCase/.test(anchorCatalogUseCaseSource), 'M2c. CreatePublicationAnchorCatalogUseCase.js still exists, fully implemented');
