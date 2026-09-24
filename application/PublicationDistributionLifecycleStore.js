@@ -1,9 +1,11 @@
 import { isNonEmptyString } from '../utils/typeGuards.js';
 
-// In-memory store of the current distribution lifecycle per publication. It
-// holds a single current value per publication, never a history, and is not a
-// database adapter, event log, cache or sync mechanism: persistence is layered
-// on top by PublicationDistributionLifecyclePersistenceBridge.
+// In-memory store answering one question: what is the most recently
+// remembered lifecycle description for this publication? It holds a single
+// current value per publication, never a history. It is not a database
+// adapter, event log, cache or sync mechanism, and never talks to another
+// process, tab, or machine: persistence is layered on top by
+// PublicationDistributionLifecyclePersistenceBridge.
 //
 // KEYED BY `publication.id` — NEVER BY A DISTRIBUTION-DIMENSION IDENTITY
 // (material uri, discovery uri, relay, tag or event id): those each describe
@@ -18,8 +20,9 @@ import { isNonEmptyString } from '../utils/typeGuards.js';
 // subscribe() notify nobody, and a throwing subscriber never affects the store
 // or other subscribers.
 //
-// Discovery observations are a second, independent map keyed by
-// (publicationId, discoveryProvider, discoveryOrigin). Re-observing the same
+// Discovery observations are a second, independent map, KEYED BY
+// `(publicationId, discoveryProvider)` and additionally by discoveryOrigin
+// when one is supplied. Re-observing the same
 // key replaces; different providers or origins (for example two Nostr relays)
 // coexist. They never notify, and remove()/clear() drop them with the
 // publication.
