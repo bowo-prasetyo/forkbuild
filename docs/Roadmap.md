@@ -98286,15 +98286,15 @@ calls now allow the `utils/` helpers.
 
 **Milestone history out of comments.** Per docs/CodingConventions.md (comments explain why; history lives here),
 the comments in the sixteen most comment-heavy files were rewritten to describe the current design without
-milestone tags, "AMENDED BY" notes or superseded reasoning. Total lines: `ui/components/WorldEncounterCanvas.js`
-6425 → 2466, `application/WorldNavigationSession.js` 8054 → 5575, `ui/views/WorldView.js` 5907 → 3476,
-`ui/main.js` 3597 → 1279, `ui/components/OwnPublicationPanel.js` 3514 → 1129, `ui/views/EditorView.js` 2650 →
-1782, `application/PublicationObservationArchive.js` 2206 → 1160, `application/EditorSession.js` 1964 → 1421,
-`application/VoiceUseCase.js` 1490 → 855, `application/AvatarMovementController.js` 1425 → 407,
-`application/ChatUseCase.js` 1180 → 631, `application/AvatarVehicleInteractionController.js` 1012 → 432,
-`core/AvatarVehicleMovementCapability.js` 855 → 200, `application/CreateWorldViewUseCase.js` 827 → 391,
-`application/PublicationDistributionLifecycleStore.js` 682 → 144 and
-`application/AvatarVehicleMovementController.js` 629 → 220. No code changed. Phrases that source-pinning tests quote
+milestone tags, "AMENDED BY" notes or superseded reasoning. Line counts: `ui/components/WorldEncounterCanvas.js`
+6424 → 2464, `application/WorldNavigationSession.js` 8053 → 5573, `ui/views/WorldView.js` 5906 → 3477,
+`ui/main.js` 3596 → 1278, `ui/components/OwnPublicationPanel.js` 3513 → 1130, `ui/views/EditorView.js` 2649 →
+1781, `application/PublicationObservationArchive.js` 2205 → 1159, `application/EditorSession.js` 1963 → 1420,
+`application/VoiceUseCase.js` 1489 → 854, `application/AvatarMovementController.js` 1424 → 406,
+`application/ChatUseCase.js` 1179 → 630, `application/AvatarVehicleInteractionController.js` 1011 → 432,
+`core/AvatarVehicleMovementCapability.js` 854 → 200, `application/CreateWorldViewUseCase.js` 826 → 390,
+`application/PublicationDistributionLifecycleStore.js` 681 → 145 and
+`application/AvatarVehicleMovementController.js` 628 → 219. No code changed. Phrases that source-pinning tests quote
 were kept. Tests that used a version-tagged comment as an anchor now anchor on code or on the current comment text
 (the `document lifecycle` divider, `4.1. `, the Nearby Place Names `CollapsibleSection`, the Arweave snapshot store
 construction, and the WorldEncounterCanvas observer-local header). Three assertions that only checked that a comment
