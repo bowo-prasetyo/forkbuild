@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.357 — Wire Canonical Publication Discovery Tag into World View.
 //
@@ -93,7 +93,7 @@ async function run() {
     // forwards it, unmodified, to WorldEncounterCanvas's own new prop.
     // ===============================================================
     {
-        const viewSource = await readSource('ui/views/WorldView.js');
+        const viewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(viewSource.includes("inject('publicationDiscoveryTag', '')"),
             '1. WorldView.js injects publicationDiscoveryTag, defaulting to \'\' for any embedding predating this provide() call — the same "optional injection, graceful default" contract discoverWorldEncounterPublicationCommand itself already holds one line above it.');
 

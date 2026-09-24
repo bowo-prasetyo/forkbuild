@@ -15,7 +15,7 @@ import { World } from '../core/World.js';
 import { StructurePlacement } from '../core/StructurePlacement.js';
 import { MoveStructurePlacementCommand } from '../application/commands/MoveStructurePlacementCommand.js';
 import { WorldConflictResolver, WorldOperationOutcome } from '../replication/WorldConflictResolver.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.323 — Post-Place-Naming-Publication-Arc Product Evolution Reassessment.
 //
@@ -244,7 +244,7 @@ async function runTests() {
     // ===============================================================
     {
         // B1. Publication -> Placement -> Discovery -> Inspection.
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/publishDocumentUseCase/.test(editorViewSource), 'B1a. EditorView.js still composes the publish use case.');
         assert(await sourceExists('application/PlacePublicationUseCase.js'), 'B1b. PlacePublicationUseCase.js still exists — Publication -> Placement.');
         assert(await sourceExists('ui/components/PublicationCatalog.js'), 'B1c. PublicationCatalog.js still exists — Placement -> Discovery.');

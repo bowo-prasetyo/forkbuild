@@ -31,7 +31,7 @@ import { ContentReference } from '../core/ContentReference.js';
 import { Position } from '../core/Position.js';
 import { Publication } from '../publisher/Publication.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.195 — Automatic Snapshot Subsystem Boundary & Convergence Audit.
 //
@@ -1052,7 +1052,7 @@ async function runTests() {
     // Snapshot file owns a timer of its own.
     // =================================================================
     {
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const intervalCount = (worldViewSource.match(/setInterval\(/g) || []).length;
         assert(intervalCount === 3, `1. ui/views/WorldView.js still declares exactly three intervals total (spatialInterval, spatialPresenceSyncInterval, vehicleInteractionInterval) — got ${intervalCount}`);
 

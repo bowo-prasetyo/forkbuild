@@ -11,7 +11,7 @@ import { GetRecipientNotificationEventsUseCase } from '../application/GetRecipie
 import { NotificationEvent } from '../core/NotificationEvent.js';
 import { NotificationEventStore, NotificationPersistenceOutcome } from '../storage/NotificationEventStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.306 — Notification Awareness Product Reassessment.
 //
@@ -260,7 +260,7 @@ async function runTests() {
             'C1a. ui/main.js still constructs the write-side commentary/notification path ONCE, app-wide, and provides it globally.');
         assert(!/GetRecipientNotificationEventsUseCase/.test(mainSource),
             'C1b. ui/main.js never constructs or provides GetRecipientNotificationEventsUseCase — the read side has no app-wide counterpart to the write side\'s own C1a wiring.');
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(worldViewSource.includes('new CreateWorldViewUseCase().execute('),
             'C1c. WorldView.js still constructs its own session factory locally, once per mount — the ONE place the read side is reachable at all.');
 
@@ -315,7 +315,7 @@ async function runTests() {
     // merely because another application places a badge there.
     // ===============================================================
     {
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const appSource = await rawSource('ui/App.js');
         const panelSource = await rawSource('ui/components/NotificationHistoryPanel.js');
         const publicationCardSource = await sourceExists('ui/components/PublicationCard.js') ? await rawSource('ui/components/PublicationCard.js') : '';
@@ -455,7 +455,7 @@ async function runTests() {
     // because it exists.
     // ===============================================================
     {
-        const worldViewSource = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
+        const worldViewSource = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         const canvasSource = codeOnlyLines((await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n'));
         const userWidgetSource = codeOnlyLines(await rawSource('ui/components/UserWidget.js'));
 

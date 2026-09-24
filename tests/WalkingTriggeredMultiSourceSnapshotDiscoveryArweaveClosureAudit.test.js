@@ -27,6 +27,7 @@ import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.501 — Walking-Triggered Multi-Source Snapshot Discovery End-to-End
 // Integration Audit (Arweave Closure).
@@ -272,7 +273,7 @@ async function run() {
     // ===============================================================
     {
         const mainSource = stripLineComments(readSource('ui/main.js'));
-        const worldViewSource = stripLineComments(readSource('ui/views/WorldView.js'));
+        const worldViewSource = stripLineComments(worldViewFiles().map((file) => readSource(file)).join('\n'));
 
         const nostrSites = execSync('grep -rlE "new NostrSnapshotDiscoveryQueryService\\(" application ui --include="*.js" || true', { cwd: SOURCE_ROOT.pathname }).toString().trim().split('\n').filter(Boolean);
         const arweaveSites = execSync('grep -rlE "new ArweaveSnapshotDiscoveryQueryService\\(" application ui --include="*.js" || true', { cwd: SOURCE_ROOT.pathname }).toString().trim().split('\n').filter(Boolean);

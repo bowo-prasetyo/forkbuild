@@ -16,6 +16,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { readFile } from 'node:fs/promises';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.248 — Publication Commentary UI Integration.
 //
@@ -431,7 +432,7 @@ async function runTests() {
     // through WorldNavigationSession, never a second, parallel path.
     // ---------------------------------------------------------------
     {
-        const viewCode = await codeOnlySource('ui/views/WorldView.js');
+        const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(viewCode.includes(':getPublicationCommentariesCommand="getPublicationCommentariesCommand"'),
             '40. WorldView.js wires getPublicationCommentariesCommand onto OwnPublicationPanel');
         assert(viewCode.includes(':addPublicationCommentaryCommand="addPublicationCommentaryCommand"'),

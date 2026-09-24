@@ -30,7 +30,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PublicationExchange } from '../application/PublicationExchange.js';
 import { PublicationPeerExchange } from '../application/PublicationPeerExchange.js';
 import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.339 — Merge Decentralized Publication Discovery into Repository
 // Discovery.
@@ -554,7 +554,7 @@ async function run() {
         // decentralized-origin Publication by id as the SAME root cause
         // as Repository's own gap (Section A of this file). Reconfirmed
         // structurally.
-        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         assert(editorViewSource.includes("inject('decentralizedPublicationDiscoveryProvider', null)") &&
             editorViewSource.includes('findPublicationUseCase'),
             '1. EditorView.js\'s fork/load lookup now shares the merged composition — required by 0.9.338\'s own finding, not merely permitted.');

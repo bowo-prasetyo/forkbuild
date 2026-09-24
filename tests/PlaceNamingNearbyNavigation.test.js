@@ -20,6 +20,7 @@ import { executeDiscoverPlaceNamingClaimsCommand } from '../application/Discover
 import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
 import { composePlaceNamingDiscoveryRuntime } from '../application/PlaceNamingDiscoveryRuntimeComposition.js';
 import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.260 — Nearby Place Naming Claim Interaction.
 //
@@ -658,7 +659,7 @@ async function runTests() {
     // genuinely matches ui/views/WorldView.js's own real wiring.
     // -------------------------------------------------------------
     {
-        const worldViewCode = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
+        const worldViewCode = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
 
         assert(worldViewCode.includes('function navigateToNearbyPlaceNamingClaim(row) {'),
             '43. ui/views/WorldView.js defines a real navigateToNearbyPlaceNamingClaim(row) function.');
@@ -667,7 +668,7 @@ async function runTests() {
         assert(worldViewCode.includes('@click="navigateToNearbyPlaceNamingClaim(claim)"'),
             '45. the "Nearby Place Names" row template wires a real click handler to it.');
 
-        const rawWorldViewCode = await rawSource('ui/views/WorldView.js');
+        const rawWorldViewCode = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const functionBlock = extractBetween(
             rawWorldViewCode,
             'function navigateToNearbyPlaceNamingClaim(row) {',

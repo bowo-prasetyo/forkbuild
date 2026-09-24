@@ -40,6 +40,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.601 — Discovered Publication Placement Journey Closure Audit.
 //
@@ -614,7 +615,7 @@ async function run() {
         // And confirm ui/views/WorldView.js's own "here" resolution
         // (getAvatarPosition()||getCameraPosition()) is likewise
         // independent of any Publication-carried position field.
-        const viewSrc = await readSource('ui/views/WorldView.js');
+        const viewSrc = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         const placeWrapper = viewSrc.match(/function placeOwnPublication\(publication\) \{[\s\S]*?\n {8}\}/);
         assert(placeWrapper !== null && /getAvatarPosition\(\) \|\| session\.getCameraPosition\(\)/.test(placeWrapper[0]) && !/claimedPosition|publication\.position/.test(placeWrapper[0]),
             'E5. WorldView.js\'s own placeOwnPublication() resolves "here" purely from the viewer\'s own avatar/camera position — never from anything read off the publication object.');

@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.324 — Diagnostic Tools Surface.
 //
@@ -294,7 +295,7 @@ async function runTests() {
     // completely unchanged.
     // ---------------------------------------------------------------
     {
-        const viewCode = await codeOnlySource('ui/views/WorldView.js');
+        const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         for (const propBinding of [
             ':discoverSnapshotCandidatesCommand="discoverSnapshotCandidatesCommand"',
             ':resolveSelectedSnapshotCommand="resolveSelectedSnapshotCommand"',
@@ -318,10 +319,10 @@ async function runTests() {
         assert(!/[Dd]iagnostic/.test(namingPanelCode),
             'I1. PlaceNamingPanel.js carries no "diagnostic" vocabulary of any kind — its own Publish/Export/Import actions are ordinary workflow, never reorganized into a diagnostic popup');
 
-        const viewCode = await rawSource('ui/views/WorldView.js');
+        const viewCode = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(viewCode.includes('placeNamingDiscoveryMonitor') && viewCode.includes('nearbyPlaceNamingClaimRows'),
             'I2. World View\'s own automatic Place Naming discovery (background monitor, Nearby Place Names section) still exists, unmodified');
-        assert(!/own-publication-diagnostic|diagnosticToolsOpen/.test(await rawSource('ui/views/WorldView.js')),
+        assert(!/own-publication-diagnostic|diagnosticToolsOpen/.test((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n')),
             'I3. no Diagnostic Tools markup or state leaked into WorldView.js\'s own Place Naming presentation');
 
         console.log('✓ Section I: Place Naming\'s own surfaces are completely untouched — this milestone deliberately did not invent a "Place Naming diagnostics" category merely for symmetry with Snapshots, per its own product brief ("don\'t force symmetry")');

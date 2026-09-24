@@ -14,6 +14,7 @@ import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.321 — Place Naming Publication Action Convergence Audit.
 // See docs/Roadmap.md, "0.9.321 — Place Naming Publication Action
@@ -388,7 +389,7 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const mainJs = codeOnlyLines(await rawSource('ui/main.js'));
-        const worldViewJs = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
+        const worldViewJs = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         const panelJs = codeOnlyLines(await rawSource('ui/components/PlaceNamingPanel.js'));
 
         // Neither the composition-root wiring nor the view builds a Nostr
@@ -772,7 +773,7 @@ async function run() {
     {
         const compositionSource = codeOnlyLines(await rawSource('application/PlaceNamingPublicationRuntimeComposition.js'));
         const publisherSource = codeOnlyLines(await rawSource('application/NostrPlaceNamingDiscoveryPublisher.js'));
-        const worldViewJs = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
+        const worldViewJs = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         const panelJs = codeOnlyLines(await rawSource('ui/components/PlaceNamingPanel.js'));
 
         const bannedSubstrateTerms = ['Arweave', 'IPFS', 'Ipfs', 'Bitcoin', 'BasePublication', 'baseWallet', 'roleProviderPreference', 'SnapshotDistribution', 'ArweaveContentStore'];
@@ -803,7 +804,7 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const panelSource = await rawSource('ui/components/PlaceNamingPanel.js');
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
 
         const overclaimingPhrases = [
             'published worldwide', 'now visible to everyone', 'everyone has received',

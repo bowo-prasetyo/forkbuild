@@ -9,6 +9,7 @@ import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRe
 import { registerMaterializedSnapshotWorldSource } from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
 import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
 import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.193 — Automatic Snapshot Session-Lifetime Guard.
 //
@@ -606,7 +607,7 @@ async function runTests() {
     // session.dispose(), and handed to the cascade as isSessionActive.
     // ---------------------------------------------------------------
     {
-        const viewSource = await readFile(new URL('ui/views/WorldView.js', SOURCE_ROOT), 'utf8');
+        const viewSource = (await Promise.all(worldViewFiles().map((file) => readFile(new URL(file, SOURCE_ROOT), 'utf8')))).join('\n');
         assert(/isSessionActive:\s*\(\)\s*=>\s*automaticCascadeSessionActive/.test(viewSource),
             '1. AutomaticSnapshotEncounterCascade is constructed with isSessionActive reading a plain, WorldView-owned flag');
 

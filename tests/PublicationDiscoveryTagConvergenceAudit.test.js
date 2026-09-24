@@ -13,7 +13,7 @@ import {
 import { composeDiscoverWorldEncounterPublicationCommand } from '../application/DiscoverWorldEncounterPublicationCommandComposition.js';
 import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/DecentralizedWorldEncounterLeadResolution.js';
 import { resolveNostrPublisherOptions } from '../application/PublicationDistributionConfigurationProvider.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.358 — Publication Discovery Tag Convergence Audit.
 //
@@ -185,7 +185,7 @@ async function run() {
         // do, extensively — 0.9.357's own headers), but neither may
         // contain it as a live string literal in actual code.
         const canvasCodeOnly = codeOnly((await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n'));
-        const viewCodeOnly = codeOnly(await readSource('ui/views/WorldView.js'));
+        const viewCodeOnly = codeOnly((await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n'));
         assert(!canvasCodeOnly.includes("'forkbuild-publication'"),
             '5. WorldEncounterCanvas.js\'s own non-comment code never re-types the canonical literal — it only ever receives it through defaultDiscoveryTag.');
         assert(!viewCodeOnly.includes("'forkbuild-publication'"),
@@ -530,7 +530,7 @@ async function run() {
         // WorldView.js's own template forwards the value with no wrapper —
         // confirmed again here as the composition-boundary claim (a
         // wrapper would be a second, hidden authority).
-        const viewSource = await readSource('ui/views/WorldView.js');
+        const viewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(viewSource.includes(':defaultDiscoveryTag="publicationDiscoveryTag"'),
             '3. WorldView.js still forwards the injected value with no wrapper function of its own — no hidden second authority introduced at the boundary.');
     }

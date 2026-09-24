@@ -2,7 +2,7 @@ import { readFile, readdir } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles } from './support/SourceFileGroups.js';
 import {
     reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage
 } from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage.js';
@@ -285,7 +285,7 @@ async function run() {
     // No seventh introduced merely for coverage.
     // ===============================================================
     {
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/publishDocumentUseCase/.test(editorViewSource), 'C1. Publication -> Placement -> Discovery -> Inspection: EditorView.js still composes the publish use case.');
         assert(await sourceExists('application/PlacePublicationUseCase.js') && await sourceExists('ui/components/PublicationCatalog.js') && (await rawSource('ui/components/PublicationPreview.js')).length > 0,
             'C1. Every hop in journey 1 still exists.');

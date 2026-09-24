@@ -16,7 +16,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.380 — Publication Result -> Publication Center Deep-Link Audit.
 //
@@ -215,7 +215,7 @@ function buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDi
     const blockSource = extractRange(
         editorViewSource,
         "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
-        '// ------------------------- document lifecycle ------------',
+        '\n    return {',
         '0.9.377/0.9.450 post-publish distribution block'
     );
 
@@ -273,7 +273,7 @@ function publishThroughRealChain(publishSource, editorHarness, { publishDocument
 }
 
 async function run() {
-    const editorViewSource = await readSource('ui/views/EditorView.js');
+    const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
     const editorViewCodeOnly = codeOnlyLines(editorViewSource);
     const toolbarCodeOnly = await codeOnlySource('ui/components/Toolbar.js');
     const publishSource = extractToolbarPublishChain(toolbarCodeOnly);
@@ -525,7 +525,7 @@ async function run() {
         // SAME session-resolved Publication for the CURRENT route's own
         // documentId — a "View in World View" action here would navigate
         // from the destination to itself.
-        const worldViewSource = await readSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(worldViewSource.includes('<OwnPublicationPanel') && worldViewSource.includes(':publication="ownPublication"'),
             n('OwnPublicationPanel is mounted inside WorldView.js itself, bound to :publication="ownPublication"'));
         assert(worldViewSource.includes('ownPublication.value = activeId ? session.getPublicationForDocument(activeId) : null;'),
@@ -717,7 +717,7 @@ async function run() {
         const postPublishDistributionBlock = extractRange(
             editorViewSource,
             "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
-            '// ------------------------- document lifecycle ------------',
+            '\n    return {',
             '0.9.377/0.9.450 post-publish distribution block'
         );
         assert(!postPublishDistributionBlock.includes('publicationCatalog') && !postPublishDistributionBlock.includes('.add('),

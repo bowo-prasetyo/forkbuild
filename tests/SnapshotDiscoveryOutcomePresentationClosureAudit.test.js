@@ -10,7 +10,7 @@ import {
     executeDiscoverSnapshotCandidatesCommandWithOutcome
 } from '../application/DiscoverSnapshotCandidatesCommand.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.590 — Snapshot Discovery Outcome Presentation Closure Audit.
 //
@@ -423,7 +423,7 @@ async function runTests() {
         // carries its OWN separate, honest network-failure indicator
         // (placeNamingDiscoveryError) shown independently of the empty-list
         // copy. Reconfirmed live, not merely by memory of 0.9.589's audit.
-        const worldViewSource = await readSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(/No nearby place naming claims were discovered\./.test(worldViewSource),
             '45. WorldView.js\'s nearby-claims empty copy says "were discovered," not a flat existence claim');
         assert(/Place naming discovery is temporarily unavailable/.test(worldViewSource),

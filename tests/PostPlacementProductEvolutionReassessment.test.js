@@ -10,7 +10,7 @@ import {
 } from '../core/DocumentCollaborationConsistencyPolicy.js';
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
 import { ConflictResolver, ConflictRelation } from '../replication/ConflictResolver.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.311 — Post-Placement Product Evolution Reassessment.
 //
@@ -213,7 +213,7 @@ async function runTests() {
         // the Editor composes both live collaboration and Publish in the
         // same view, and the real distribution runtime adapters are
         // constructed in ui/main.js, not stubbed.
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/documentCommandPropagation/.test(editorViewSource) && /publishDocumentUseCase/.test(editorViewSource),
             'B1a. EditorView.js still composes both live collaboration and the publish use case in the same view.');
         const mainSource = await rawSource('ui/main.js');
@@ -352,7 +352,7 @@ async function runTests() {
         const editorSessionSource = codeOnlyLines(await rawSource('application/EditorSession.js'));
         assert(!/ReplayDocumentUseCase|RestoreHistoryStateUseCase|getTimeline/.test(editorSessionSource),
             'C7a. application/EditorSession.js still has zero references to ReplayDocumentUseCase/RestoreHistoryStateUseCase/getTimeline — unchanged since 0.9.307.');
-        assert(!/[Aa]utosave|[Rr]ecovery/i.test(await rawSource('ui/views/WorldView.js')),
+        assert(!/[Aa]utosave|[Rr]ecovery/i.test((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n')),
             'C7b. ui/views/WorldView.js still carries no Autosave/Recovery vocabulary — unchanged since 0.9.307.');
         classifications.push(['Editor history-timeline parity / World autosave-recovery parity', 'DEFER — real product gaps, LARGE scope (0.9.307\'s own finding: would re-derive a multi-milestone arc, plus a genuine open collaboration-semantics question). Unchanged since 0.9.307; still not selected.']);
 
@@ -492,7 +492,7 @@ async function runTests() {
         // live: WorldPresenceIndicator (online count), WorldCollaboratorIndicator
         // (per-collaborator rows with a real "Follow" action), and
         // WorldCollaborationRoster all compose into WorldView.js today.
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/<WorldPresenceIndicator/.test(worldViewSource) && /<WorldCollaboratorIndicator/.test(worldViewSource) &&
             /buildWorldCollaborationRoster/.test(worldViewSource),
             'G1. ui/views/WorldView.js still renders WorldPresenceIndicator and WorldCollaboratorIndicator, and still composes buildWorldCollaborationRoster — presence is already a live, shipped capability.');

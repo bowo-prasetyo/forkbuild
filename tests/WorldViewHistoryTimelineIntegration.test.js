@@ -20,6 +20,7 @@ import { WorldNavigationSession } from '../application/WorldNavigationSession.js
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.207 — World View History Timeline UI Integration.
 //
@@ -408,7 +409,7 @@ async function run() {
             return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         }
 
-        const worldViewSource = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
+        const worldViewSource = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         assert(worldViewSource.includes("import HistoryTimelinePanel from '../components/HistoryTimelinePanel.js'"),
             'WorldView.js imports the new panel');
         assert(/HistoryTimelinePanel[\s\S]{0,40}\n\s*\}/.test(worldViewSource) || worldViewSource.includes('HistoryTimelinePanel\n'),

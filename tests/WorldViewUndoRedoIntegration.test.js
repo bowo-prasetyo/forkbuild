@@ -21,6 +21,7 @@ import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvid
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
 import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.210 — World View Undo/Redo UI Integration.
 //
@@ -355,7 +356,7 @@ async function run() {
             return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         }
 
-        const worldViewSource = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
+        const worldViewSource = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
 
         // No second history mechanism, no direct CommandHistory access.
         assert(!/from ['"].*\/CommandHistory\.js['"]/.test(worldViewSource), 'WorldView.js does not import CommandHistory directly');
@@ -372,7 +373,7 @@ async function run() {
         // Both the keyboard shortcut and the buttons converge on the same
         // two functions — never a separate keyboard-only or button-only
         // path.
-        const onKeyDownMatch = worldViewSource.match(/function onKeyDown\(event\)[\s\S]*?\n        \}/);
+        const onKeyDownMatch = worldViewSource.match(/function onKeyDown\(event\)[\s\S]*?\n    \}/);
         assert(onKeyDownMatch && onKeyDownMatch[0].includes('undoAction()') && onKeyDownMatch[0].includes('redoAction()'),
             'the existing onKeyDown handler invokes the SAME undoAction()/redoAction() the buttons use');
         assert(onKeyDownMatch[0].includes("key === 'z'") && (onKeyDownMatch[0].includes("key === 'y'") || onKeyDownMatch[0].includes('shiftKey')),

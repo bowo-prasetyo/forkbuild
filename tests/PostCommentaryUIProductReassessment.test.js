@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.252 — Post-Commentary-UI Product Reassessment.
 //
@@ -160,8 +160,8 @@ async function runTests() {
         // changed between 0.9.250 and 0.9.251 (git history, checked by
         // this milestone's author). Re-verified here with one fresh,
         // cheap signal per area rather than a full re-derivation.
-        const editorView = await rawSource('ui/views/EditorView.js');
-        const worldView = await rawSource('ui/views/WorldView.js');
+        const editorView = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const createWorldView = await rawSource('application/CreateWorldViewUseCase.js');
         const mainJs = await rawSource('ui/main.js');
 
@@ -396,7 +396,7 @@ async function runTests() {
         // integrated into the same surface as Commentary/Snapshot.
         assert(await sourceExists('ui/components/PlacementInfoPanel.js'),
             'D4a. ui/components/PlacementInfoPanel.js exists as a real, dedicated placement-detail component.');
-        const worldView = await rawSource('ui/views/WorldView.js');
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(worldView.includes('<PlacementInfoPanel') && worldView.includes('<OwnPublicationPanel'),
             'D4b. ui/views/WorldView.js mounts both PlacementInfoPanel and OwnPublicationPanel — as two separate components, confirmed by the fact that placementInfo is a prop OwnPublicationPanel already receives (D4c) yet never renders directly (D4d).');
         assert(panel.includes('placementInfo:'),

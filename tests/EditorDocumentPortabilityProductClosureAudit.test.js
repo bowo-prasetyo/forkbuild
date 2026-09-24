@@ -29,6 +29,7 @@ import { ImportDocumentUseCase } from '../application/ImportDocumentUseCase.js';
 import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
 import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
+import { editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.643 — Editor Document Portability Product Closure Audit.
 //
@@ -539,8 +540,8 @@ async function run() {
         // is not a test-local reimplementation but an exact, verified
         // match for EditorView.js's own real importDocument(rawText)
         // handler — the actual UI entry point Toolbar's file input feeds.
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
-        const importDocumentFnMatch = editorViewSource.match(/function importDocument\(rawText\)\s*\{[\s\S]*?\n\t\t\}/);
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
+        const importDocumentFnMatch = editorViewSource.match(/function importDocument\(rawText\)\s*\{[\s\S]*?\n    \}/);
         assert(importDocumentFnMatch !== null, n('ui/views/EditorView.js#importDocument(rawText) — the real UI handler Toolbar\'s file input feeds — is found in its own real source'));
         const importDocumentFnBody = importDocumentFnMatch[0];
         assert(/let json;[\s\S]*?try\s*\{[\s\S]*?json = JSON\.parse\(rawText\);/.test(importDocumentFnBody),
@@ -744,8 +745,8 @@ async function run() {
 
         // And the UI handler bodies (already extracted in Section F for
         // importDocument; extracted fresh here for exportDocument).
-        const editorViewSource = codeOnly(await rawSource('ui/views/EditorView.js'));
-        const exportHandlerMatch = editorViewSource.match(/function exportDocument\(\)\s*\{[\s\S]*?\n\t\t\}/);
+        const editorViewSource = codeOnly((await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n'));
+        const exportHandlerMatch = editorViewSource.match(/function exportDocument\(\)\s*\{[\s\S]*?\n    \}/);
         assert(exportHandlerMatch !== null, n('EditorView.js#exportDocument() handler found in real source'));
         for (const [pattern, label] of forbiddenPatterns) {
             assert(!pattern.test(exportHandlerMatch[0]), n(`EditorView.js's exportDocument() UI handler does not: ${label}`));
@@ -819,12 +820,12 @@ async function run() {
     // ===============================================================
     {
         const toolbarSource = await rawSource('ui/components/Toolbar.js');
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
 
         // Export downloads the expected artifact.
         assert(/class="toolbar-export"/.test(toolbarSource) && /@click="\$emit\('export-document'\)"/.test(toolbarSource),
             n('Toolbar.js renders a real Export button wired to emit \'export-document\' on click'));
-        const exportHandlerMatch = editorViewSource.match(/function exportDocument\(\)\s*\{[\s\S]*?\n\t\t\}/);
+        const exportHandlerMatch = editorViewSource.match(/function exportDocument\(\)\s*\{[\s\S]*?\n    \}/);
         const downloadHelperMatch = editorViewSource.match(/function downloadJson\(filename, data\) \{[\s\S]*?\n\}/);
         assert(/downloadJson\(`forkbuild-document-/.test(exportHandlerMatch[0])
             && /link\.download = filename;/.test(downloadHelperMatch[0]) && /link\.click\(\)/.test(downloadHelperMatch[0]),
@@ -839,7 +840,7 @@ async function run() {
             n('the file input Import actually clicks exists in the rendered template'));
 
         // Successful import reaches the Editor: EditorView -> editorSession.importDocument -> openDocument.
-        const importHandlerMatch = editorViewSource.match(/function importDocument\(rawText\)\s*\{[\s\S]*?\n\t\t\}/);
+        const importHandlerMatch = editorViewSource.match(/function importDocument\(rawText\)\s*\{[\s\S]*?\n    \}/);
         assert(/editorSession\.importDocument\(json\)/.test(importHandlerMatch[0]), n('a successful import calls editorSession.importDocument(), which (Section A) opens it into the session'));
 
         // Parse-level vs document-level error distinction: re-confirmed

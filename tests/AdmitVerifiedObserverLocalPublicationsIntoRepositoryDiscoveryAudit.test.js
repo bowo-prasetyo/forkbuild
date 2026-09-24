@@ -31,7 +31,7 @@ import { DocumentCloneService } from '../application/DocumentCloneService.js';
 import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { readFile } from 'node:fs/promises';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.595 — Admit Verified Observer-Local Publications into Repository
 // Discovery — dedicated flagship audit.
@@ -499,7 +499,7 @@ async function run() {
         // in its own 0.9.474 wiring commentary (explaining the shared
         // decentralizedPublicationDiscoveryProvider prop) — never CALLS it.
         // This milestone adds no call there either.
-        const worldViewSrc = await readFile(new URL('../ui/views/WorldView.js', import.meta.url), 'utf8');
+        const worldViewSrc = (await Promise.all(worldViewFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         assert(!/\.admitToRepositoryDiscovery\(/.test(worldViewSrc), 'J1b. ui/views/WorldView.js never CALLS admitToRepositoryDiscovery() — it only ever passes the shared provider through as a prop.');
         assert(/refreshObserverLocalEncounterInspection\(\) \{[\s\S]*?this\.admitToRepositoryDiscovery\(result\.loading, result\.verification\);/.test(canvasSource),
             'J2. The new call is exactly where it should be: inline inside refreshObserverLocalEncounterInspection()\'s own .then() callback.');

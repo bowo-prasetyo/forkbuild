@@ -23,6 +23,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.286 — Notification End-to-End Lifecycle Audit.
 //
@@ -338,11 +339,11 @@ async function runTests() {
         // session.addPublicationCommentary() to a real, rendered
         // OwnPublicationPanel — both already proven by A1-A4 to be backed
         // by the composed capability, never a mock.
-        const worldViewCode = await codeOnlySource('ui/views/WorldView.js');
+        const worldViewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(worldViewCode.includes('function getRecipientNotificationEventsCommand() {') &&
             worldViewCode.includes('return session.getRecipientNotificationEvents();'),
             'A5a. WorldView.js\'s own getRecipientNotificationEventsCommand forwards to the real session, unmodified.');
-        assert(/<NotificationHistoryPanel[\s\S]{0,200}:getRecipientNotificationEventsCommand="getRecipientNotificationEventsCommand"/.test(await rawSource('ui/views/WorldView.js')),
+        assert(/<NotificationHistoryPanel[\s\S]{0,200}:getRecipientNotificationEventsCommand="getRecipientNotificationEventsCommand"/.test((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n')),
             'A5b. NotificationHistoryPanel is actually rendered in WorldView.js\'s own template, wired to the real command.');
         // 0.9.542 — this command's own signature grew commentaryId/createdAt
         // passthrough (see WorldView.js's own 0.9.542 comment); it still

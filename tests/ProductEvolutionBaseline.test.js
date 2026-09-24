@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.221 — Product Evolution Selection / Architecture Baseline.
 //
@@ -82,7 +83,7 @@ async function runTests() {
         // navigation"). WorldView.js still composes HistoryTimelinePanel
         // among its many component families — a representative, still-
         // wired sample rather than a full recount.
-        const worldView = await rawSource('ui/views/WorldView.js');
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(worldView.includes("import HistoryTimelinePanel from '../components/HistoryTimelinePanel.js'"),
             'A1. WorldView.js still imports HistoryTimelinePanel — representative of the composed World interaction/navigation surface (0.9.196 Section A, 0.9.216).');
 
@@ -109,7 +110,7 @@ async function runTests() {
         // dormant; 0.9.204 wired it; 0.9.205/0.9.206/0.9.216 reconfirmed
         // it live). AutosaveScheduler is still actually instantiated by
         // EditorView.js, not merely imported.
-        const editorView = await rawSource('ui/views/EditorView.js');
+        const editorView = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/new\s+AutosaveScheduler\s*\(/.test(editorView),
             'A4. ui/views/EditorView.js still constructs a real AutosaveScheduler — the dormant-pipeline gap 0.9.203 found stays closed (0.9.204).');
 

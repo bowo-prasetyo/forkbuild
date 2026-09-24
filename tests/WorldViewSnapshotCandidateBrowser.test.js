@@ -6,6 +6,7 @@ import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotR
 import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.151 — World View Snapshot Candidate Browser.
 //
@@ -427,7 +428,7 @@ async function runTests() {
         assert(!panelCode.includes('.filter(') && !panelCode.includes('new Set('),
             '41. OwnPublicationPanel.js performs no filtering or deduplication of the discovered candidate collection');
 
-        const viewCode = await codeOnlySource('ui/views/WorldView.js');
+        const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(viewCode.includes("const discoverSnapshotCandidatesCommand = inject('discoverSnapshotCandidatesCommand', null);"),
             '42. WorldView.js injects the app-wide discoverSnapshotCandidatesCommand');
         assert(/<OwnPublicationPanel[\s\S]{0,600}:discoverSnapshotCandidatesCommand="discoverSnapshotCandidatesCommand"/.test(viewCode),

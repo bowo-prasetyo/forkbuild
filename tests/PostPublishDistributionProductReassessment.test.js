@@ -23,7 +23,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.349 — Post-Publish Distribution Product Reassessment.
 //
@@ -347,7 +347,7 @@ async function run() {
         // C2 — structural: two distinct wrappers in WorldView.js, two
         // distinct props on OwnPublicationPanel.js — 0.9.347 added a
         // SECOND action beside the first, never merged the two into one.
-        const viewCode = await codeOnlySource('ui/views/WorldView.js');
+        const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         // AMENDED BY 0.9.430 — Announcement/Discovery Provider Selection
         // Reachability. distributeWorldEncounterPublication gained a new,
         // optional discoveryProvider parameter — still a distinct wrapper
@@ -408,7 +408,7 @@ async function run() {
         // immediate post-publish surface — the deliberate absence 0.9.347/
         // 0.9.348 already established, still true today.
         const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
-        const viewCode = await codeOnlySource('ui/views/WorldView.js');
+        const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         for (const term of ['IpfsRemotePublicationCoordinator', 'PublicationAnchorCreationCoordinator', 'BlockchainKind', 'CreateBaseAnchorPublicationRecordUseCase']) {
             assert(!panelCode.includes(term) && !viewCode.includes(term),
                 `22. '${term}' remains absent from the post-publish surface`);

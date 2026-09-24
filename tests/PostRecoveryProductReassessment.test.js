@@ -15,7 +15,7 @@ import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import { ReplayDocumentUseCase } from '../application/ReplayDocumentUseCase.js';
 import { RestoreHistoryStateUseCase } from '../application/RestoreHistoryStateUseCase.js';
 import { RecoveryObserver } from '../application/RecoveryObserver.js';
-import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.206 — Post-Recovery Product Reassessment.
 //
@@ -163,7 +163,7 @@ async function runTests() {
         // C1 — 0.9.203's own finding stays closed: EditorView.js now
         // destructures and calls the recovery stack, and RecoveryBanner
         // is wired into its template. A straight regression check.
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         const destructureMatch = editorViewSource.match(/const \{([^}]*)\}\s*=\s*new CreatePersistenceUseCase\(\)\.execute\(\)/);
         assert(destructureMatch, 'C1a. EditorView.js still destructures CreatePersistenceUseCase().execute()');
         for (const field of ['autosaveDocumentUseCase', 'recoverDocumentUseCase', 'discardRecoveryUseCase', 'checkRecoveryUseCase']) {
@@ -321,7 +321,7 @@ async function runTests() {
     // directly here rather than merely by name).
     // ---------------------------------------------------------------
     {
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
 
         // E1 — every editor-scoped use case EditorView.js imports is
         // actually called somewhere in the same file, not merely
@@ -410,7 +410,7 @@ async function runTests() {
         // F2 — the matching EditorView.js gap 0.9.205 also closed
         // (discardRecovery() lacked the try/catch recoverDocument() had)
         // stays closed.
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         const recoverBody = editorViewSource.match(/function recoverDocument\(\)\s*\{[\s\S]*?\n\s{8}\}/);
         const discardBody = editorViewSource.match(/function discardRecovery\(\)\s*\{[\s\S]*?\n\s{8}\}/);
         assert(recoverBody && /try\s*\{/.test(recoverBody[0]) && /catch\s*\(e\)/.test(recoverBody[0]), 'F2a. recoverDocument() still wraps RecoverDocumentUseCase.execute() in try/catch');

@@ -6,7 +6,7 @@ import { PlacementRecord } from '../core/PlacementRecord.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { DiscoverPlacementsUseCase } from '../application/DiscoverPlacementsUseCase.js';
-import { worldNavigationSessionFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.307 — Post-Arc Product Evolution Reassessment.
 //
@@ -213,10 +213,10 @@ async function runTests() {
         // getTimeline()/undo()/redo() already operate on.
         const toolbarSource = await rawSource('ui/components/Toolbar.js');
         assert(/class="toolbar-publish"/.test(toolbarSource), 'B5a. Toolbar.js still renders a real Publish action.');
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/documentCommandPropagation/.test(editorViewSource) && /publishDocumentUseCase/.test(editorViewSource),
             'B5b. EditorView.js still composes both live collaboration AND the publish use case in the same view — no route change needed between them.');
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/publishActiveDocument/.test(worldViewSource) && /WorldCommandPropagationUseCase/.test(await rawSource('application/CreateWorldViewUseCase.js')),
             'B5c. WorldView.js still exposes publishActiveDocument() in the same view CreateWorldViewUseCase.js composes live World collaboration for.');
 
@@ -271,7 +271,7 @@ async function runTests() {
         // C4. World-surface Autosave/Recovery — the mirror gap: the
         // generic scheduler exists, is composed for the Editor, but
         // WorldView.js has zero autosave/recovery vocabulary.
-        assert(!/Autosave|Recovery/i.test(await rawSource('ui/views/WorldView.js')),
+        assert(!/Autosave|Recovery/i.test((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n')),
             'C4. ui/views/WorldView.js still carries no Autosave/Recovery vocabulary of any kind.');
         classifications.push(['Autosave/Recovery for World Documents', 'NO_REAL_USER_VALUE-CANDIDATE — never composed']);
 
@@ -339,11 +339,11 @@ async function runTests() {
         // history live on two DIFFERENT, non-overlapping document
         // surfaces (Editor has Recover, not Review history; World View
         // has Review history, not Recover) — reconfirmed fresh here.
-        const hasEditorRecovery = /RecoveryObserver/.test(await rawSource('ui/views/EditorView.js'));
+        const hasEditorRecovery = /RecoveryObserver/.test((await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n'));
         const hasEditorHistory = await sourceExists('application/EditorSession.js') &&
             /getTimeline/.test(codeOnlyLines(await rawSource('application/EditorSession.js')));
-        const hasWorldRecovery = /Recovery/i.test(await rawSource('ui/views/WorldView.js'));
-        const hasWorldHistory = /HistoryTimelinePanel/.test(await rawSource('ui/views/WorldView.js'));
+        const hasWorldRecovery = /Recovery/i.test((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
+        const hasWorldHistory = /HistoryTimelinePanel/.test((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         assert(hasEditorRecovery && !hasEditorHistory, 'D4a. Editor surface: Recover yes, Review-history no.');
         assert(!hasWorldRecovery && hasWorldHistory, 'D4b. World surface: Recover no, Review-history yes.');
 
@@ -477,7 +477,7 @@ async function runTests() {
         const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
         assert(/publication:\s*\{\s*type:\s*Object/.test(codeOnlyLines(panelSource)) && /placementInfo/.test(panelSource),
             'G4. OwnPublicationPanel.js already receives both the full Publication object and a singular placementInfo prop — the exact two inputs an "all placements" section needs, already present.');
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/:placementInfo="activePlacementInfo"/.test(worldViewSource),
             'G4b. WorldView.js still binds the SINGULAR activePlacementInfo (session.getPlacementInfo(activeId)) — never the plural findByPublicationId/findByOwner result — into OwnPublicationPanel.');
 

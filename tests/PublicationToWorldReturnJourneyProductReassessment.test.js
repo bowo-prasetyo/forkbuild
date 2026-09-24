@@ -10,7 +10,7 @@ import { ObserverLocalEncounterStore } from '../application/ObserverLocalEncount
 import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
 import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.556 — Publication-to-World Return Journey Product Reassessment.
 //
@@ -202,7 +202,7 @@ async function runTests() {
     // instance for a different top-level route.
     // ===============================================================
     {
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
 
         // B1. Exactly one construction site for each, and it is inside
         // setup() (this file has no module-level `const session =` or
@@ -392,7 +392,7 @@ async function runTests() {
     // else?
     // ===============================================================
     {
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const catalogSource = await rawSource('ui/components/PublicationCatalog.js');
 
         // E1. focusWorld() itself: session.focusDocument() + router.replace +

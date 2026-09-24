@@ -22,7 +22,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.140 — Own Publication Distribution Entry Point.
 //
@@ -492,7 +492,7 @@ async function runTests() {
         assert(sessionCode.includes('getPublicationForDocument(documentId)'),
             '34. WorldNavigationSession.js exposes getPublicationForDocument()');
 
-        const viewCode = await codeOnlySource('ui/views/WorldView.js');
+        const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(viewCode.includes("import OwnPublicationPanel from '../components/OwnPublicationPanel.js';"),
             '35. WorldView.js imports OwnPublicationPanel');
         assert(viewCode.includes('session.getPublicationForDocument(activeId)'),

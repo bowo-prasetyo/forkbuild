@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.17 — Integrate World Encounters into the Existing World View.
 //
@@ -68,7 +69,7 @@ function assert(condition, message) {
 }
 
 async function run() {
-    const worldViewSource = await readFile(new URL('../ui/views/WorldView.js', import.meta.url), 'utf8');
+    const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
     const worldViewCodeOnly = worldViewSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
     // ---------------------------------------------------------------

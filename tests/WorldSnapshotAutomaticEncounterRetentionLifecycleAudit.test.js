@@ -30,6 +30,7 @@ import { ContentReference } from '../core/ContentReference.js';
 import { Position } from '../core/Position.js';
 import { Publication } from '../publisher/Publication.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.191 — Automatic Snapshot Encounter Retention Lifecycle Audit.
 //
@@ -1123,7 +1124,7 @@ async function runTests() {
         const cascadeSource = await codeOnlySource('application/AutomaticSnapshotEncounterCascade.js');
         assert(!cascadeSource.includes('AutomaticSnapshotEncounterRetentionReconciliation'), '3. the cascade still never imports the reconciliation class — composition happens only at ui/views/WorldView.js\'s own call site, never inside either file');
 
-        const worldViewSource = await codeOnlySource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(worldViewSource.includes('automaticSnapshotEncounterCascade') && worldViewSource.includes('automaticSnapshotEncounterRetentionReconciliation'),
             '4. sanity: WorldView.js genuinely composes both, exactly as this file\'s own makeAutomaticSession() reproduces');
 

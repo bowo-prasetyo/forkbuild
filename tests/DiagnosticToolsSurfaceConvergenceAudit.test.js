@@ -29,6 +29,7 @@ import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.325 — Diagnostic Tools Surface Convergence Audit.
 //
@@ -714,7 +715,7 @@ async function runTests() {
     // Section I — WorldView boundary.
     // ---------------------------------------------------------------
     {
-        const viewCode = await codeOnlySource('ui/views/WorldView.js');
+        const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         for (const propBinding of [
             ':discoverSnapshotCandidatesCommand="discoverSnapshotCandidatesCommand"',
             ':resolveSelectedSnapshotCommand="resolveSelectedSnapshotCommand"',

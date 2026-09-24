@@ -29,7 +29,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PublicationExchange } from '../application/PublicationExchange.js';
 import { PublicationPeerExchange } from '../application/PublicationPeerExchange.js';
 import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { worldViewFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, publicationsPageFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.352 — Remote Publication Fork Journey Product Gap Audit.
 //
@@ -414,7 +414,7 @@ async function run() {
         assert(/path: '\/editor',\n\s+query: \{ fork: documentId, \.\.\.\(publication \? \{ publication \} : \{\}\), \.\.\.entryQuery \}/.test(worldViewSource),
             '2. World View\'s own "Edit a Copy" (editFocusedCopyFromFocusPanel) reuses the SAME /editor?fork= navigation PublicationCatalog.js\'s forkPublication() uses — never a second fork mechanism.');
 
-        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         assert(editorViewSource.includes('if (route.query.fork) {'),
             '3. both entry points converge on the SAME EditorView.js `route.query.fork` handler — one seam, not two.');
 
@@ -547,7 +547,7 @@ async function run() {
         // navigates away UNCONDITIONALLY, whether the fork succeeded or
         // failed — and entryContext/arrivalDocumentId are written to
         // ONLY on the success path, before the point a throw would skip.
-        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         const forkBlockMatch = editorViewSource.match(/if \(route\.query\.fork\) \{[\s\S]*?\n\s{12}\} else if \(route\.query\.load\)/);
         assert(forkBlockMatch, '6. the route.query.fork handler block is located in source.');
         const forkBlock = forkBlockMatch[0];

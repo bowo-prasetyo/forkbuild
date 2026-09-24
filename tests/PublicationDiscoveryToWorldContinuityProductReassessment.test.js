@@ -14,6 +14,7 @@ import {
     WorldEncounterMaterialVerifier
 } from '../application/WorldEncounterMaterialVerification.js';
 import { describeWorldEncounterMaterialVerificationStatusLabel } from '../application/WorldEncounterMaterialInspectionView.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 import {
     PublicationMaterialProvenanceOrigin,
     describePublicationMaterialProvenanceFromInspection
@@ -233,7 +234,7 @@ async function main() {
     // bottoms out on the same session-level primitive.
     // ===============================================================
     {
-        const worldViewSource = await readSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
 
         // C1. focusWorld() itself: unchanged shape — move camera via the
         // session, sync the route, refresh UI. Exactly one such function.
@@ -379,7 +380,7 @@ async function main() {
         // F3. WorldView.js's own local degradation for an unresolvable
         // World target still exists, independent of how the Wanderer
         // arrived.
-        const worldViewSource = await readSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(worldViewSource.includes('<h4>Unavailable ({{ failedWorlds.length }})</h4>'),
             '4. WorldView.js still renders its own "Unavailable" section for a World that fails to load — the SAME destination-side degradation regardless of whether the Wanderer arrived via Repository, Notification, Search, or any other surface.');
     }

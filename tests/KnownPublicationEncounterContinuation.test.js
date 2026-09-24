@@ -5,7 +5,7 @@ import { ContentReference } from '../core/ContentReference.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.558 — Known Publication Encounter Continuation.
 //
@@ -189,7 +189,7 @@ async function runTests() {
     // existing production paths, never parallel implementations.
     // ===============================================================
     {
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const catalogSource = await rawSource('ui/components/PublicationCatalog.js');
 
         assert(worldViewSource.includes("router.push({ path: '/editor', query: { load: publication.documentId } });"), 'C1. openEncounteredPublicationCommand() in WorldView.js builds the IDENTICAL route PublicationCatalog.js\'s own openPublication(pub) builds.');

@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
 import { CreateStructureRegistryUseCase } from '../application/CreateStructureRegistryUseCase.js';
 import { groupStructuresByCategory } from '../core/groupStructuresByCategory.js';
-import { stylesheetFiles } from './support/SourceFileGroups.js';
+import { stylesheetFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.647 — Editor Sidebar Scroll Ownership.
 //
@@ -107,8 +107,8 @@ function remToPx(remValue) {
 
 async function run() {
     const css = (await Promise.all(stylesheetFiles().map((file) => readSource(file)))).join('\n');
-    const editorViewSrc = await readSource('ui/views/EditorView.js');
-    const worldViewSrc = await readSource('ui/views/WorldView.js');
+    const editorViewSrc = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
+    const worldViewSrc = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
     const buildLibraryPanelSrc = await readSource('ui/components/BuildLibraryPanel.js');
     const editingSidebarSrc = await readSource('ui/components/EditingSidebar.js');
     const documentInfoPanelSrc = await readSource('ui/components/DocumentInfoPanel.js');

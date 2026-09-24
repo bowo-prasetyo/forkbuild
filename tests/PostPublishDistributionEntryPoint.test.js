@@ -6,7 +6,7 @@ import { PublicationDistributionLifecycleMemoryStore } from '../application/Publ
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.347 — Post-Publish Distribution Entry Point.
 //
@@ -397,7 +397,7 @@ async function runTests() {
     // never a second implementation; no selectedEncounter dependency.
     // ---------------------------------------------------------------
     {
-        const viewCode = await codeOnlySource('ui/views/WorldView.js');
+        const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
 
         assert(/:distributionCommand="distributeWorldEncounterPublication"/.test(viewCode),
             '30. WorldEncounterCanvas\'s own pre-existing binding is unchanged');
@@ -429,7 +429,7 @@ async function runTests() {
     // ---------------------------------------------------------------
     {
         const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
-        const viewCode = await codeOnlySource('ui/views/WorldView.js');
+        const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         const forbiddenScope = [
             'IpfsRemotePublicationCoordinator', 'HttpPinningProvider', 'IpfsRemotePinningContentStore',
             'PublicationAnchorCreationCoordinator', 'BlockchainKind', 'CreateBaseAnchorPublicationRecordUseCase',

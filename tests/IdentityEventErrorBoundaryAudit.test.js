@@ -4,6 +4,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { IdentityUseCase } from '../application/IdentityUseCase.js';
 import { EventBus } from '../core/events/EventBus.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.220 — Identity Event/Error Boundary Characterization Audit.
 //
@@ -297,7 +298,7 @@ async function runTests() {
         // D1 — the 0.9.218 fix is still local and scoped: a try/catch in
         // WorldView.js around ONE call (refreshWorldPresenceActivity),
         // not a change to EventBus.js or PeerMessageBus.js themselves.
-        const worldViewSource = codeOnlyLines(await rawSource('ui/views/WorldView.js')).join('\n');
+        const worldViewSource = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n')).join('\n');
         assert(/refreshWorldPresenceActivity/.test(worldViewSource), 'D1a. WorldView.js still calls refreshWorldPresenceActivity()');
         const refreshCallIndex = worldViewSource.indexOf('refreshWorldPresenceActivity(');
         const surroundingWindow = worldViewSource.slice(Math.max(0, refreshCallIndex - 200), refreshCallIndex + 50);

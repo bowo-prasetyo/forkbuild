@@ -34,8 +34,6 @@ import ActionFeedback from '../components/ActionFeedback.js';
 import RecoveryBanner from '../components/RecoveryBanner.js';
 import TransformFeedback from '../components/TransformFeedback.js';
 import { CreatePublisherUseCase } from '../../application/CreatePublisherUseCase.js';
-import { sanitizeDistributionErrorMessage } from '../../application/DistributionErrorMessageSanitizer.js';
-import { IpfsRemotePublicationState } from '../../application/IpfsRemotePublicationState.js';
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
 import { CreateBlueprintAttributionUseCase } from '../../application/CreateBlueprintAttributionUseCase.js';
 import { CreateBlueprintLineageUseCase } from '../../application/CreateBlueprintLineageUseCase.js';
@@ -54,10 +52,11 @@ import StructureInfoPanel from '../components/StructureInfoPanel.js';
 import ForkFailureDialog from '../components/ForkFailureDialog.js';
 import EditorDistributionDialog from '../components/EditorDistributionDialog.js';
 import { editorEntryContextFromQuery } from '../../core/EditorEntryContext.js';
-import { deriveBlueprintFingerprint, describeBlueprintFingerprint } from '../../core/BlueprintFingerprint.js';
-import { BLUEPRINT_ATTRIBUTION_KIND } from '../../core/BlueprintAttribution.js';
-import { BLUEPRINT_LINEAGE_CLAIM_KIND } from '../../core/BlueprintLineageClaim.js';
-import { compareBlueprintSimilarity, isPossibleLineageCandidate } from '../../core/BlueprintSimilarity.js';
+import { usePostPublishDistribution } from './editorView/usePostPublishDistribution.js';
+import { useSelectionActions } from './editorView/useSelectionActions.js';
+import { useStructureLibrary } from './editorView/useStructureLibrary.js';
+import { useBlueprintExchange } from './editorView/useBlueprintExchange.js';
+import { useStructureInspection } from './editorView/useStructureInspection.js';
 
 // Editing shortcuts come from EditorActionRegistry, shared with the palette,
 // the sidebar and the controls docs. Escape priority: text input > shortcuts
@@ -65,18 +64,6 @@ import { compareBlueprintSimilarity, isPossibleLineageCandidate } from '../../co
 // (1/2), Ctrl+S and '?' stay view-local: they are not editing actions.
 
 const TOOL_SHORTCUTS = { 1: ToolId.SELECT, 2: ToolId.PLACE };
-
-function slugify(text, fallback) {
-    return (text || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || fallback;
-}
-
-// Downloads `data` as pretty-printed JSON, with no intermediate modal.
-function downloadJson(filename, data) {
-    const link = document.createElement('a');
-    link.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(data, null, 2));
-    link.download = filename;
-    link.click();
-}
 
 export default {
     name: 'EditorView',
@@ -364,455 +351,31 @@ export default {
             })
             : null;
 
-		const copySelectionUseCase = new CopySelectionUseCase(registry);
-		const pasteClipboardUseCase = new PasteClipboardUseCase();
-		const repeatSelectionUseCase = new RepeatSelectionUseCase(registry);
+        const copySelectionUseCase = new CopySelectionUseCase(registry);
+        const pasteClipboardUseCase = new PasteClipboardUseCase();
+        const repeatSelectionUseCase = new RepeatSelectionUseCase(registry);
 
-		const editorSession = new EditorSession({
-		    registry,
-		    editorContext,
-		    toolRegistry,
-		    documentManager,
-		    selectionUseCase,
-		    previewUseCase,
-		    loadDocumentUseCase,
-		    identityProvider,
-		    copySelectionUseCase,
-		    pasteClipboardUseCase,
-		    repeatSelectionUseCase,
-		    structureResolver: structureDocumentResolver,
-		    structurePreviewUseCase,
-		    compositionPreviewUseCase,
-		    personalStructureLibraryStore,
-		    blueprintAttributionExchange,
-		    blueprintLineageExchange,
-		    documentCommandPropagation,
-		    documentOperationRecovery
-		});
-
-		// Built-in structures never change at runtime, so this is read once.
-		const structureGroups = ref(structureRegistry.groupByCategory());
-
-		// Changes at runtime, so it is refreshed after save, rename or remove.
-		const personalStructureGroups = ref(personalStructureLibraryStore.groupByCategory());
-		// Used only by the 'recent' sort; refreshed with the personal library.
-		const personalSavedAtById = ref(personalStructureLibraryStore.getSavedAtById());
-		function refreshPersonalStructureGroups() {
-		    personalStructureGroups.value = personalStructureLibraryStore.groupByCategory();
-		    personalSavedAtById.value = personalStructureLibraryStore.getSavedAtById();
-		}
-
-		// Resolves recent ids against whichever library still has them (renames keep
-		// their id); ids that are gone are dropped. The one place that decides
-		// built-in vs. personal for a recent id.
-		function resolveRecentStructures() {
-		    const ids = libraryUsageHistoryStore.listRecent(5);
-		    const resolved = [];
-		    for (const id of ids) {
-		        const personal = personalStructureLibraryStore.getStructure(id);
-		        if (personal) {
-		            resolved.push({ structure: personal, source: 'personal' });
-		            continue;
-		        }
-		        const builtIn = structureRegistry.get(id);
-		        if (builtIn) {
-		            resolved.push({ structure: builtIn, source: 'built-in' });
-		        }
-		    }
-		    return resolved;
-		}
-		const recentStructures = ref(resolveRecentStructures());
-		function refreshRecentStructures() {
-		    recentStructures.value = resolveRecentStructures();
-		}
-
-		function renamePersonalStructure(structure) {
-		    const name = prompt('Rename structure:', structure.name);
-		    if (name === null || !name.trim()) {
-		        return;
-		    }
-		    personalStructureLibraryStore.updateStructureMetadata(structure.id, { name: name.trim() });
-		    refreshPersonalStructureGroups();
-		    refreshRecentStructures();
-		    feedback.show(`Renamed to "${name.trim()}"`);
-		}
-
-		function removePersonalStructure(structure) {
-		    // Removing from the library never touches documents that already used it.
-		    personalStructureLibraryStore.removeStructure(structure.id);
-		    refreshPersonalStructureGroups();
-		    refreshRecentStructures();
-		    feedback.show(`Removed "${structure.name}" from My Structures`);
-		}
-
-		function forkStructure(structure) {
-		    const forked = editorSession.forkStructure(structure);
-		    if (forked) {
-		        feedback.show(`Forked "${structure.name}" — now editing your own copy`);
-		    }
-		}
-
-		// Forks a built-in Structure into a new personal Structure (forkStructure()
-		// opens a new Document instead).
-		function forkStructureToLibrary(structure) {
-		    const forked = editorSession.forkStructureToPersonalLibrary(structure);
-		    if (forked) {
-		        refreshPersonalStructureGroups();
-		        feedback.show(`"${forked.name}" added to My Structures`);
-		    }
-		}
-
-		// Exports the blueprint as a download, bundling the attributions and lineage
-		// claims this replica has for it. The BuildLibraryPanel event is still named
-		// 'export-personal-structure'.
-		function exportStructure(structure) {
-		    let pkg;
-		    try {
-		        const { attributions } = blueprintAttributionUseCase.summarize(structure);
-		        const lineageClaims = blueprintLineageUseCase.claimsForBlueprint(structure);
-		        pkg = editorSession.exportBlueprint(structure, attributions, lineageClaims);
-		    } catch (e) {
-		        feedback.show(e.message);
-		        return;
-		    }
-		    if (!pkg) {
-		        return;
-		    }
-		    downloadJson(`forkbuild-blueprint-${slugify(structure.name, 'structure')}.json`, pkg);
-		    feedback.show(`Exported "${structure.name}" as a blueprint`);
-		}
-
-		// Filename follows the `forkbuild-<kind>-<slug>.json` convention.
-		function exportDocument() {
-			let json;
-			try {
-				json = editorSession.exportDocument();
-			} catch (e) {
-				feedback.show(e.message);
-				return;
-			}
-			if (!json) {
-				return;
-			}
-			const title = documentManager.document.metadata.title || '';
-			downloadJson(`forkbuild-document-${slugify(title, 'document')}.json`, json);
-			feedback.show(`Exported "${title || 'document'}"`);
-		}
-
-		// `rawText` is untrusted. JSON parse errors and invalid documents are reported
-		// separately; either leaves the open document and storage untouched. On
-		// success the imported document opens like a fork.
-		function importDocument(rawText) {
-			let json;
-			try {
-				json = JSON.parse(rawText);
-			} catch (e) {
-				feedback.show('That is not valid JSON — choose a file exported with "Export."');
-				return;
-			}
-			try {
-				const imported = editorSession.importDocument(json);
-				if (!imported) {
-					return;
-				}
-				feedback.show(`Imported "${imported.metadata.title || 'document'}"`);
-			} catch (e) {
-				feedback.show(e.message.replace(/^DocumentSerializer:\s*/, ''));
-			}
-		}
-
-		// Exports one attribution on its own; only reachable when `attribution.mine`
-		// exists.
-		function exportBlueprintAttribution(attribution) {
-		    let pkg;
-		    try {
-		        pkg = editorSession.exportBlueprintAttribution(attribution);
-		    } catch (e) {
-		        feedback.show(e.message);
-		        return;
-		    }
-		    if (!pkg) {
-		        return;
-		    }
-		    downloadJson(`forkbuild-blueprint-attribution-${slugify(describeBlueprintFingerprint(attribution.fingerprint), 'attribution')}.json`, pkg);
-		    feedback.show('Exported your attribution');
-		}
-
-		// `rawText` is untrusted, parsed and validated in two separate steps. It may be
-		// a blueprint package or a bare attribution or lineage claim; `pkg.kind`
-		// decides which path runs.
-		function importBlueprint(rawText) {
-		    let pkg;
-		    try {
-		        pkg = JSON.parse(rawText);
-		    } catch (e) {
-		        feedback.show('That is not valid JSON — choose a file exported with "Export Blueprint."');
-		        return;
-		    }
-		    if (pkg && pkg.kind === BLUEPRINT_ATTRIBUTION_KIND) {
-		        importBareBlueprintAttribution(pkg);
-		        return;
-		    }
-		    if (pkg && pkg.kind === BLUEPRINT_LINEAGE_CLAIM_KIND) {
-		        importBareBlueprintLineageClaim(pkg);
-		        return;
-		    }
-		    try {
-		        const structure = editorSession.importBlueprint(pkg);
-		        if (structure) {
-		            refreshPersonalStructureGroups();
-		            const attributionSummary = importBundledBlueprintAttributions(pkg, structure);
-		            const lineageSummary = importBundledBlueprintLineageClaims(pkg, structure);
-		            feedback.show(`Imported "${structure.name}" into My Structures${attributionSummary}${lineageSummary}`);
-		        }
-		    } catch (e) {
-		        feedback.show(e.message.replace(/^(BlueprintImport|BlueprintPackage):\s*/, ''));
-		    }
-		}
-
-		// Each bundled attribution is cross-checked against the locally derived
-		// fingerprint, never the one the package claims. A bad attribution never undoes
-		// the successful blueprint import. Returns a feedback suffix or ''.
-		function importBundledBlueprintAttributions(pkg, structure) {
-		    if (!Array.isArray(pkg.attributions) || pkg.attributions.length === 0 || !blueprintAttributionExchange) {
-		        return '';
-		    }
-		    let imported = 0;
-		    for (const attributionJSON of pkg.attributions) {
-		        try {
-		            const result = editorSession.importBlueprintAttribution(attributionJSON, structure);
-		            if (result && result.isNew) {
-		                imported += 1;
-		            }
-		        } catch (e) {
-		            console.warn('Skipped an attribution bundled with this blueprint:', e.message);
-		        }
-		    }
-		    return imported > 0 ? ` with ${imported} attributed ${imported === 1 ? 'author' : 'authors'}` : '';
-		}
-
-		// A bare attribution has no local Structure to cross-check against; it is still
-		// a legitimate, unconfirmed import. It never touches the personal library.
-		function importBareBlueprintAttribution(pkg) {
-		    if (!blueprintAttributionExchange) {
-		        feedback.show('Blueprint attribution exchange is not available');
-		        return;
-		    }
-		    try {
-		        const { attribution, isNew } = editorSession.importBlueprintAttribution(pkg);
-		        if (!isNew) {
-		            feedback.show('That attribution was already known — nothing changed');
-		            return;
-		        }
-		        feedback.show(`Imported an attribution for ${describeBlueprintFingerprint(attribution.fingerprint)}`);
-		    } catch (e) {
-		        feedback.show(e.message.replace(/^BlueprintAttributionExchange:\s*/, ''));
-		    }
-		}
-
-		function exportBlueprintLineageClaim(claim) {
-		    let pkg;
-		    try {
-		        pkg = editorSession.exportBlueprintLineageClaim(claim);
-		    } catch (e) {
-		        feedback.show(e.message);
-		        return;
-		    }
-		    if (!pkg) {
-		        return;
-		    }
-		    const fingerprints = `${describeBlueprintFingerprint(claim.sourceFingerprint)}-to-${describeBlueprintFingerprint(claim.derivedFingerprint)}`;
-		    downloadJson(`forkbuild-blueprint-lineage-${slugify(fingerprints, 'lineage-claim')}.json`, pkg);
-		    feedback.show('Exported your lineage claim');
-		}
-
-		// A bundled claim's structure may be its source or derived design; the matching
-		// fingerprint decides which cross-check runs.
-		function importBundledBlueprintLineageClaims(pkg, structure) {
-		    if (!Array.isArray(pkg.lineageClaims) || pkg.lineageClaims.length === 0 || !blueprintLineageExchange) {
-		        return '';
-		    }
-		    const structureFingerprint = deriveBlueprintFingerprint(structure);
-		    let imported = 0;
-		    for (const claimJSON of pkg.lineageClaims) {
-		        try {
-		            const options = claimJSON.derivedFingerprint === structureFingerprint
-		                ? { derivedStructure: structure }
-		                : { sourceStructure: structure };
-		            const result = editorSession.importBlueprintLineageClaim(claimJSON, options);
-		            if (result && result.isNew) {
-		                imported += 1;
-		            }
-		        } catch (e) {
-		            console.warn('Skipped a lineage claim bundled with this blueprint:', e.message);
-		        }
-		    }
-		    return imported > 0 ? ` with ${imported} lineage ${imported === 1 ? 'claim' : 'claims'}` : '';
-		}
-
-		function importBareBlueprintLineageClaim(pkg) {
-		    if (!blueprintLineageExchange) {
-		        feedback.show('Blueprint lineage exchange is not available');
-		        return;
-		    }
-		    try {
-		        const { claim, isNew } = editorSession.importBlueprintLineageClaim(pkg);
-		        if (!isNew) {
-		            feedback.show('That lineage claim was already known — nothing changed');
-		            return;
-		        }
-		        feedback.show(`Imported a lineage claim: ${describeBlueprintFingerprint(claim.derivedFingerprint)} derived from ${describeBlueprintFingerprint(claim.sourceFingerprint)}`);
-		    } catch (e) {
-		        feedback.show(e.message.replace(/^BlueprintLineageExchange:\s*/, ''));
-		    }
-		}
-
-		// Enters the interactive preview mode; the copy happens when the tool commits.
-		// Also the entry point for a structure card's plain click (docs/Principles.md,
-		// "Buildable Things Share One Placement Experience").
-		function copyStructureIntoDocument(structure) {
-		    const started = editorSession.beginStructureComposition(structure);
-		    if (started) {
-		        feedback.show(`Placing "${structure.name}" — click to place, R to rotate, Esc to cancel`);
-		        // Recorded on place intent, even if later cancelled; a stale entry is harmless.
-		        libraryUsageHistoryStore.recordUse(structure.id);
-		        refreshRecentStructures();
-		    }
-		}
-
-		// The source ('built-in' | 'personal') is derived here, so the panel never
-		// reaches into the libraries.
-		const inspectedStructure = ref(null);
-		const inspectedStructureSource = ref('built-in');
-		// Recomputed each time the panel opens: fingerprints stay valid across new
-		// Structure instances with new ids.
-		const inspectedStructureAttribution = ref(null);
-		const inspectedStructureLineage = ref(null);
-		// Unsigned evidence only, never persisted and never a claim. Most similar first.
-		const inspectedStructureSimilarityCandidates = ref([]);
-		// Built-in plus personal designs, excluding the inspected one and any already
-		// named as a source by a lineage claim.
-		function computeSimilarityCandidates(structure, lineage) {
-		    const alreadyClaimed = new Set((lineage && lineage.derivedFrom || []).map((claim) => claim.sourceFingerprint));
-		    const known = [...structureRegistry.getAll(), ...personalStructureLibraryStore.listStructures()];
-		    const candidates = [];
-		    for (const candidate of known) {
-		        if (candidate.id === structure.id) {
-		            continue;
-		        }
-		        const evidence = compareBlueprintSimilarity(candidate, structure);
-		        if (!isPossibleLineageCandidate(evidence) || alreadyClaimed.has(evidence.sourceFingerprint)) {
-		            continue;
-		        }
-		        candidates.push({ structure: candidate, evidence });
-		    }
-		    candidates.sort((a, b) => b.evidence.similarity - a.evidence.similarity);
-		    return candidates.slice(0, 3);
-		}
-		function inspectStructure(structure) {
-		    inspectedStructure.value = structure;
-		    inspectedStructureSource.value = personalStructureLibraryStore.hasStructure(structure.id) ? 'personal' : 'built-in';
-		    inspectedStructureAttribution.value = blueprintAttributionUseCase.communityView(structure);
-		    inspectedStructureLineage.value = blueprintLineageUseCase.lineageView(structure);
-		    inspectedStructureSimilarityCandidates.value = computeSimilarityCandidates(structure, inspectedStructureLineage.value);
-		}
-		// Inspect only offers another way to reach Place/Export, never another way to
-		// do them.
-		function placeInspectedStructure() {
-		    const structure = inspectedStructure.value;
-		    inspectedStructure.value = null;
-		    copyStructureIntoDocument(structure);
-		}
-		function exportInspectedStructure() {
-		    const structure = inspectedStructure.value;
-		    inspectedStructure.value = null;
-		    exportStructure(structure);
-		}
-		// Refreshes the attribution afterwards so the panel shows "You" immediately.
-		function claimAuthorship() {
-		    const structure = inspectedStructure.value;
-		    if (!structure) {
-		        return;
-		    }
-		    try {
-		        blueprintAttributionUseCase.publish(structure);
-		        inspectedStructureAttribution.value = blueprintAttributionUseCase.communityView(structure);
-		        feedback.show(`You are now credited as an author of "${structure.name}"`);
-		    } catch (e) {
-		        feedback.show(e.message.replace(/^BlueprintAttributionUseCase:\s*/, ''));
-		    }
-		}
-
-		function exportInspectedAttribution() {
-		    const attribution = inspectedStructureAttribution.value && inspectedStructureAttribution.value.mine;
-		    if (!attribution) {
-		        return;
-		    }
-		    exportBlueprintAttribution(attribution);
-		}
-
-		// Wraps the signed attribution in a signed DecentralizedPublication, catalogs
-		// it and announces it to connected peers. No peers is not an error: it stays
-		// cataloged. Announcing again is always a deliberate act.
-		async function publishInspectedAttributionToNetwork() {
-		    const attribution = inspectedStructureAttribution.value && inspectedStructureAttribution.value.mine;
-		    if (!attribution) {
-		        return;
-		    }
-		    try {
-		        const publication = await publicationResolver.publish({
-		            content: attribution,
-		            contentKind: BLUEPRINT_ATTRIBUTION_KIND,
-		            identityProvider
-		        });
-		        publicationCatalog.add(publication);
-		        const peerCount = publicationPeerExchange.announce(publication);
-		        feedback.show(peerCount > 0
-		            ? `Published to the network — announced to ${peerCount} connected ${peerCount === 1 ? 'peer' : 'peers'}.`
-		            : 'Published to the network — cataloged locally; no peers are connected to announce to right now.');
-		    } catch (e) {
-		        feedback.show(e.message.replace(/^PublicationResolver:\s*/, ''));
-		    }
-		}
-
-		// Publishes a lineage claim for a candidate a person chose. The similarity
-		// score is never consulted here: it is evidence for a person, never a
-		// threshold.
-		function claimLineage(sourceStructure) {
-		    const structure = inspectedStructure.value;
-		    if (!structure) {
-		        return;
-		    }
-		    try {
-		        blueprintLineageUseCase.publish(structure, sourceStructure);
-		        inspectedStructureLineage.value = blueprintLineageUseCase.lineageView(structure);
-		        inspectedStructureSimilarityCandidates.value = computeSimilarityCandidates(structure, inspectedStructureLineage.value);
-		        feedback.show(`Recorded "${structure.name}" as derived from "${sourceStructure.name}"`);
-		    } catch (e) {
-		        feedback.show(e.message.replace(/^BlueprintLineageUseCase:\s*/, ''));
-		    }
-		}
-
-		const showCreateBlueprintDialog = ref(false);
-		// Placeholder metadata so the dialog can preview before a name is typed.
-		const createBlueprintPreview = ref(null);
-		function closeCreateBlueprintDialog() {
-		    showCreateBlueprintDialog.value = false;
-		    createBlueprintPreview.value = null;
-		}
-		function onCreateBlueprint({ name, category, description }) {
-		    const structure = editorSession.createStructureFromSelection({ name, category, description });
-		    closeCreateBlueprintDialog();
-		    if (!structure) {
-		        feedback.show('Nothing to create — select bricks first');
-		        return;
-		    }
-		    const saved = editorSession.saveStructureToPersonalLibrary(structure);
-		    if (saved) {
-		        refreshPersonalStructureGroups();
-		    }
-		    feedback.show(saved ? `"${structure.name}" created in My Structures` : `Created "${structure.name}"`);
-		}
+        const editorSession = new EditorSession({
+            registry,
+            editorContext,
+            toolRegistry,
+            documentManager,
+            selectionUseCase,
+            previewUseCase,
+            loadDocumentUseCase,
+            identityProvider,
+            copySelectionUseCase,
+            pasteClipboardUseCase,
+            repeatSelectionUseCase,
+            structureResolver: structureDocumentResolver,
+            structurePreviewUseCase,
+            compositionPreviewUseCase,
+            personalStructureLibraryStore,
+            blueprintAttributionExchange,
+            blueprintLineageExchange,
+            documentCommandPropagation,
+            documentOperationRecovery
+        });
 
         const activeTool = ref(editorContext.tool.activeTool);
         const selectionCount = ref(0);
@@ -847,85 +410,6 @@ export default {
             editorSession.applyNumericTransform(intent, options);
         }
 
-        // ------------------ structure instance manipulation ------
-
-        // Moving or rotating the same selected placement fires no SELECTION_CHANGED,
-        // so every such path calls this to keep the inspector's numbers live.
-        function refreshSelectedPlacementInfo() {
-            if (editorContext.selection.isStructurePlacementSelection) {
-                selectedPlacementInfo.value = editorSession.getSelectedPlacementInfo();
-            }
-        }
-
-        // Same reason, for brick selections.
-        function refreshSelectionSummary() {
-            if (!editorContext.selection.isEmpty && !editorContext.selection.isStructurePlacementSelection) {
-                selectionSummary.value = editorSession.getSelectionSummary();
-            }
-        }
-
-        function repeatSelection(options) {
-            const repeated = editorSession.repeatSelection(options);
-            feedback.show(repeated
-                ? `Repeated ${options.count} ${options.count === 1 ? 'copy' : 'copies'}`
-                : 'Repeat blocked — check the count/offset, or that the copies fit');
-            refreshSelectionSummary();
-        }
-
-        // Group actions read EditorSession's selected group, which only this sets.
-        // selectGroup() runs no command, so documentVersion is bumped to make the
-        // sidebar notice.
-        function selectGroup(groupId) {
-            editorSession.selectGroup(groupId);
-            documentVersion.value++;
-        }
-
-        function rotateSelectedPlacement(deltaRotation) {
-            editorSession.rotateSelection(deltaRotation);
-            refreshSelectedPlacementInfo();
-        }
-
-        function applySelectedPlacementTransform(payload) {
-            const result = editorSession.applyPlacementTransform(payload);
-            refreshSelectedPlacementInfo();
-            if (result.blocked) {
-                feedback.show('That position is occupied — X/Z left unchanged');
-            } else if (result.moved || result.rotated) {
-                feedback.show('Updated instance transform');
-            }
-        }
-
-        function duplicateSelectedPlacement() {
-            const newId = editorSession.duplicateSelection();
-            if (newId) {
-                feedback.show('Copy created — R to rotate, drag to move');
-            }
-        }
-
-        function deleteSelectedPlacement() {
-            if (editorSession.deleteSelection()) {
-                feedback.show('Deleted structure instance');
-            }
-        }
-
-        // Called directly by the color swatch: picking a color is a live widget, not a
-        // no-argument command.
-        function recolorSelection(color) {
-            if (editorSession.recolorSelection(color)) {
-                feedback.show('Recolored selection');
-            }
-        }
-
-        // Opens the referenced Document; never mutates the instance.
-        function editSelectedPlacementSource() {
-            const info = selectedPlacementInfo.value;
-            if (!info) {
-                return;
-            }
-            editorSession.editStructurePlacementSource(info.documentId);
-            feedback.show(`Editing "${info.title}"`);
-        }
-
         // ------------------------- action surface ----------------
 
         const feedbackMessage = ref('');
@@ -944,287 +428,44 @@ export default {
             }
         };
 
-        // ------------------- post-publish distribution ----------
-        // Toolbar forwards the exact just-published Publication; nothing here looks up
-        // "the latest Publication". ActionFeedback stays passive: this view owns the
-        // action.
-        const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);
+        const {
+            canDistributePublication, canDistributeSnapshot, dismissPublishAction, distributePublishedDocument,
+            distributePublishedDocumentAndSnapshot, distributePublishedSnapshot, distributionDialogOpen,
+            distributionError, distributionExecuting, distributionResult, onDocumentPublished, publishedPublication,
+            remotePinningDraft, selectedDiscoveryProvider, selectedDistributionStorage, snapshotDistributionError,
+            snapshotDistributionExecuting, snapshotDistributionResult, snapshotDistributionStorageTypes,
+            viewDistributedPublicationInRepository
+        } = usePostPublishDistribution({
+            router
+        });
 
-        // Nostr goes to the multi-relay command, Arweave to the single-relay one, as in
-        // WorldView.
-        const publicationDistributionCommand = inject('publicationDistributionCommand', null);
+        const {
+            closeCreateBlueprintDialog, copyStructureIntoDocument, createBlueprintPreview, forkStructure,
+            forkStructureToLibrary, onCreateBlueprint, personalSavedAtById, personalStructureGroups, recentStructures,
+            refreshPersonalStructureGroups, removePersonalStructure, renamePersonalStructure,
+            showCreateBlueprintDialog, structureGroups
+        } = useStructureLibrary({
+            editorSession, feedback, libraryUsageHistoryStore, personalStructureLibraryStore, structureRegistry
+        });
 
-        // Snapshot distribution sends the Publication's material bytes, separately
-        // from announcing the Publication. Remote Pinning never goes through
-        // snapshotDistributionCommand.
-        const snapshotDistributionCommand = inject('snapshotDistributionCommand', null);
-        const publicationContentStore = inject('publicationContentStore', null);
-        const ipfsRemotePublicationCoordinator = inject('ipfsRemotePublicationCoordinator', null);
-        const resolveSnapshotDiscoveryPublisher = inject('resolveSnapshotDiscoveryPublisher', null);
+        const {
+            exportBlueprintAttribution, exportBlueprintLineageClaim, exportDocument, exportStructure, importBlueprint,
+            importDocument
+        } = useBlueprintExchange({
+            blueprintAttributionExchange, blueprintAttributionUseCase, blueprintLineageExchange,
+            blueprintLineageUseCase, documentManager, editorSession, feedback, refreshPersonalStructureGroups
+        });
 
-        // Substrate choice shared by both actions: page-local, never persisted.
-        // Opens on the saved preference, else 'nostr'.
-        const defaultAnnouncementDiscoveryProvider = inject('defaultAnnouncementDiscoveryProvider', 'nostr');
-        const selectedDiscoveryProvider = ref(defaultAnnouncementDiscoveryProvider);
-
-        // One Storage choice shared by both actions: page-local, never persisted. When
-        // Snapshot distribution is available the options are the registered storages
-        // plus 'remote-pinning', otherwise the Material storages. Opens on the saved
-        // Content preference when eligible, then the first registered storage, then
-        // 'ar'.
-        const defaultContentDistributionProvider = inject('defaultContentDistributionProvider', null);
-        const snapshotDistributionAvailableStorageTypesCommand = inject('snapshotDistributionAvailableStorageTypes', null);
-        const snapshotDistributionStorageTypes = snapshotDistributionAvailableStorageTypesCommand
-            ? snapshotDistributionAvailableStorageTypesCommand()
-            : ['ar', 'ipfs'];
-        // Never persisted; discarded on reload.
-        const remotePinningDraft = ref({ endpoint: '', credential: '', requestField: '', responseField: '' });
-
-        // A plain boolean: the injected commands never change after mount.
-        const canDistributePublication = Boolean(multiRelayNostrPublicationDistributionCommand || publicationDistributionCommand);
-
-        // publicationContentStore is required either way: it turns "which Publication"
-        // into "which bytes".
-        const canDistributeSnapshot = Boolean(
-            publicationContentStore
-            && (snapshotDistributionCommand || (ipfsRemotePublicationCoordinator && resolveSnapshotDiscoveryPublisher))
-        );
-
-        const distributionStorageEligible = canDistributeSnapshot
-            ? [...snapshotDistributionStorageTypes, 'remote-pinning']
-            : ['ar', 'ipfs', 'remote-pinning'];
-        const selectedDistributionStorage = ref(
-            distributionStorageEligible.includes(defaultContentDistributionProvider)
-                ? defaultContentDistributionProvider
-                : ((canDistributeSnapshot && snapshotDistributionStorageTypes[0]) || 'ar')
-        );
-
-        // (publication, discoveryProvider) -> Promise. Adds serializedMaterial to the
-        // request. 'arweave' uses the single-relay command; anything else the
-        // multi-relay Nostr command, which resolves one result per relay.
-        function distributeEditorPublication(publication, discoveryProvider, materialStorage, remotePinningConfiguration) {
-            const remotePinningProviderOptions = materialStorage === 'remote-pinning' && remotePinningConfiguration
-                ? {
-                    endpoint: remotePinningConfiguration.endpoint,
-                    credential: remotePinningConfiguration.credential || null,
-                    ...(remotePinningConfiguration.requestField ? { fileFieldName: remotePinningConfiguration.requestField } : {}),
-                    ...(remotePinningConfiguration.responseField ? { cidField: remotePinningConfiguration.responseField } : {})
-                }
-                : undefined;
-
-            if (discoveryProvider === 'arweave') {
-                if (!publicationDistributionCommand) {
-                    return Promise.reject(new Error('Publication distribution is not available.'));
-                }
-                return publicationDistributionCommand({
-                    publication,
-                    serializedMaterial: JSON.stringify(publication.toJSON()),
-                    discoveryProvider,
-                    materialStorage,
-                    remotePinningProviderOptions
-                });
-            }
-            if (!multiRelayNostrPublicationDistributionCommand) {
-                return Promise.reject(new Error('Publication distribution is not available.'));
-            }
-            return multiRelayNostrPublicationDistributionCommand({
-                publication,
-                serializedMaterial: JSON.stringify(publication.toJSON()),
-                materialStorage,
-                remotePinningProviderOptions
-            });
-        }
-
-        // Sends the Publication's raw snapshot bytes. Like WorldView's version, but
-        // with no placement here, claimedPosition and publicationId stay undefined.
-        function distributeEditorSnapshot(publication, storage, remotePinningConfiguration, discoveryProvider) {
-            if (!publicationContentStore || !publication.contentReference) {
-                return Promise.reject(new Error('Snapshot distribution is not available.'));
-            }
-            const snapshotBytes = publicationContentStore.get(publication.contentReference);
-            if (snapshotBytes === null || snapshotBytes === undefined) {
-                return Promise.reject(new Error('Snapshot distribution is not available.'));
-            }
-            if (storage === 'remote-pinning') {
-                if (!ipfsRemotePublicationCoordinator) {
-                    return Promise.reject(new Error('Snapshot distribution is not available.'));
-                }
-                return ipfsRemotePublicationCoordinator.publish({ bytes: snapshotBytes, configuration: remotePinningConfiguration })
-                    .then((outcome) => {
-                        if (outcome.state !== IpfsRemotePublicationState.PUBLISHED) {
-                            throw new Error(outcome.reason || 'Remote IPFS publish failed.');
-                        }
-                        const contentReference = { hash: outcome.contentHash, uri: outcome.locator, storage: 'ipfs' };
-                        const discoveryPublisher = resolveSnapshotDiscoveryPublisher ? resolveSnapshotDiscoveryPublisher(discoveryProvider) : null;
-                        if (!discoveryPublisher) {
-                            return { contentReference, announcement: null, announcementError: 'Snapshot distribution is not available.' };
-                        }
-                        return discoveryPublisher.publish({ contentHash: outcome.contentHash, locator: outcome.locator, storage: 'ipfs' })
-                            .then((announcement) => ({ contentReference, announcement }))
-                            .catch((error) => {
-                                // The content is already pinned, so an announcement failure surfaces as
-                                // announcementError rather than failing the whole attempt.
-                                console.error('Snapshot Nostr announcement failed:', error);
-                                return {
-                                    contentReference,
-                                    announcement: null,
-                                    announcementError: sanitizeDistributionErrorMessage(error) || 'Announcement could not be completed.'
-                                };
-                            });
-                    });
-            }
-            if (!snapshotDistributionCommand) {
-                return Promise.reject(new Error('Snapshot distribution is not available.'));
-            }
-            return snapshotDistributionCommand(snapshotBytes, storage, undefined, undefined, discoveryProvider);
-        }
-
-        // Replaced by each successful publish: "Publish A, Publish B, click" must
-        // distribute B.
-        const publishedPublication = ref(null);
-        // Ephemeral only: no persistence, retry queue or history.
-        const distributionExecuting = ref(false);
-        const distributionError = ref(null);
-        const distributionResult = ref(null);
-
-        // Separate state for Snapshot distribution.
-        const snapshotDistributionExecuting = ref(false);
-        const snapshotDistributionError = ref(null);
-        const snapshotDistributionResult = ref(null);
-        const distributionRequestIds = { publication: 0, snapshot: 0 };
-
-        // Reset with the rest of this state so a stale dialog never carries over.
-        const distributionDialogOpen = ref(false);
-
-        // The only writer of publishedPublication. Publishing never distributes on its
-        // own; distribution needs a later explicit click.
-        function onDocumentPublished(publication) {
-            publishedPublication.value = publication;
-            resetDistributionState();
-        }
-
-        function dismissPublishAction() {
-            publishedPublication.value = null;
-            resetDistributionState();
-        }
-
-        // Also bumps both request ids so in-flight attempts cannot write stale results.
-        function resetDistributionState() {
-            distributionExecuting.value = false;
-            distributionError.value = null;
-            distributionResult.value = null;
-            distributionRequestIds.publication += 1;
-            snapshotDistributionExecuting.value = false;
-            snapshotDistributionError.value = null;
-            snapshotDistributionResult.value = null;
-            distributionRequestIds.snapshot += 1;
-            distributionDialogOpen.value = false;
-        }
-
-        // The Arweave branch returns one result, the Nostr branch an array; store both
-        // as arrays for display.
-        function normalizeDistributionResultForDisplay(result) {
-            if (Array.isArray(result)) {
-                return result;
-            }
-            return result ? [result] : null;
-        }
-
-        // Shared executing/error/result state machine. Only the latest attempt of a
-        // `family` may write its outcome. Full errors go to the console; the UI shows
-        // sanitized text or `fallbackMessage`.
-        function runDistribution(family, state, attempt, { logLabel, fallbackMessage, toDisplay = (result) => result }) {
-            state.executing.value = true;
-            state.error.value = null;
-            distributionRequestIds[family] += 1;
-            const requestId = distributionRequestIds[family];
-            const isCurrent = () => requestId === distributionRequestIds[family];
-            return Promise.resolve()
-                .then(attempt)
-                .then((result) => {
-                    if (isCurrent()) {
-                        state.result.value = toDisplay(result);
-                    }
-                })
-                .catch((error) => {
-                    if (isCurrent()) {
-                        console.error(`${logLabel} failed:`, error);
-                        state.error.value = sanitizeDistributionErrorMessage(error) || fallbackMessage;
-                    }
-                })
-                .then(() => {
-                    if (isCurrent()) {
-                        state.executing.value = false;
-                    }
-                });
-        }
-
-        function selectedRemotePinningConfiguration() {
-            return selectedDistributionStorage.value === 'remote-pinning' ? remotePinningDraft.value : undefined;
-        }
-
-        // No-op without a published Publication, a usable command, or while busy.
-        function distributePublishedDocument() {
-            const publication = publishedPublication.value;
-            if (!publication || !canDistributePublication || distributionExecuting.value) {
-                return;
-            }
-            return runDistribution(
-                'publication',
-                { executing: distributionExecuting, error: distributionError, result: distributionResult },
-                () => distributeEditorPublication(
-                    publication,
-                    selectedDiscoveryProvider.value,
-                    selectedDistributionStorage.value,
-                    selectedRemotePinningConfiguration()
-                ),
-                {
-                    logLabel: 'Publication distribution',
-                    fallbackMessage: 'Publication distribution could not be completed.',
-                    toDisplay: normalizeDistributionResultForDisplay
-                }
-            );
-        }
-
-        function distributePublishedSnapshot() {
-            const publication = publishedPublication.value;
-            if (!publication || !canDistributeSnapshot || snapshotDistributionExecuting.value) {
-                return;
-            }
-            return runDistribution(
-                'snapshot',
-                { executing: snapshotDistributionExecuting, error: snapshotDistributionError, result: snapshotDistributionResult },
-                () => distributeEditorSnapshot(
-                    publication,
-                    selectedDistributionStorage.value,
-                    selectedRemotePinningConfiguration(),
-                    selectedDiscoveryProvider.value
-                ),
-                {
-                    logLabel: 'Snapshot distribution',
-                    fallbackMessage: 'Snapshot distribution could not be completed.'
-                }
-            );
-        }
-
-        // Runs both actions from one click, each keeping its own state and result.
-        // Sequential, never concurrent: both may sign through the same extension, and
-        // two simultaneous signing requests can silently hang it. Snapshot first,
-        // matching the template order.
-        function distributePublishedDocumentAndSnapshot() {
-            return Promise.resolve(distributePublishedSnapshot())
-                .then(() => distributePublishedDocument());
-        }
-
-        // Navigates to /world/:documentId using the documentId already held; never a
-        // catalog lookup. Without one it does nothing.
-        function viewDistributedPublicationInRepository() {
-            const publication = publishedPublication.value;
-            if (!publication || !publication.documentId) {
-                return;
-            }
-            router.push({ path: `/world/${publication.documentId}` });
-        }
+        const {
+            claimAuthorship, claimLineage, exportInspectedAttribution, exportInspectedStructure, inspectStructure,
+            inspectedStructure, inspectedStructureAttribution, inspectedStructureLineage,
+            inspectedStructureSimilarityCandidates, inspectedStructureSource, placeInspectedStructure,
+            publishInspectedAttributionToNetwork
+        } = useStructureInspection({
+            blueprintAttributionUseCase, blueprintLineageUseCase, copyStructureIntoDocument,
+            exportBlueprintAttribution, exportStructure, feedback, identityProvider, personalStructureLibraryStore,
+            publicationCatalog, publicationPeerExchange, publicationResolver, structureRegistry
+        });
 
         // ------------------------- document lifecycle ------------
         // The Editor's document is always editable (fork-on-edit is a World View
@@ -1248,6 +489,14 @@ export default {
         // Set only when a fork fails: `{ reason, returnWorldId, focusLocationId }`.
         // Cleared when the dialog closes.
         const forkFailure = ref(null);
+
+        const {
+            applySelectedPlacementTransform, deleteSelectedPlacement, duplicateSelectedPlacement,
+            editSelectedPlacementSource, recolorSelection, refreshSelectedPlacementInfo, refreshSelectionSummary,
+            repeatSelection, rotateSelectedPlacement, selectGroup
+        } = useSelectionActions({
+            documentVersion, editorContext, editorSession, feedback, selectedPlacementInfo, selectionSummary
+        });
 
         function refreshDocumentInfo() {
             documentVersion.value++;

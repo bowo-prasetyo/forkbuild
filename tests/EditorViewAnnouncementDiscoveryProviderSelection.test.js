@@ -8,6 +8,7 @@ import { PublicationDistributionLifecycleMemoryStore } from '../application/Publ
 import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
 import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
 import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
+import { editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.502 — Editor Announcement/Discovery Provider Selection.
 //
@@ -194,7 +195,7 @@ async function run() {
     // Section A — UI choice exists.
     // ===============================================================
     {
-        const editorSource = await source('ui/views/EditorView.js');
+        const editorSource = (await Promise.all(editorViewFiles().map((file) => source(file)))).join('\n');
         // AMENDED BY 0.9.672 — Editor View Distribution Dialog. This
         // <select> now lives in EditorDistributionDialog.js, one popup
         // over from a "Distribute" trigger button (a pure presentation
@@ -392,7 +393,7 @@ async function run() {
     // Section E — option/configuration isolation.
     // ===============================================================
     {
-        const editorCode = codeOnly(await source('ui/views/EditorView.js'));
+        const editorCode = codeOnly((await Promise.all(editorViewFiles().map((file) => source(file)))).join('\n'));
         const forbidden = ['gatewayUrl', 'tagName', 'uploadTaggedTransaction', 'signer', 'publishImpl', 'relayUrl', 'nostrRelayUrls'];
         for (const term of forbidden) {
             assert(!editorCode.includes(term), n(`E1[${term}]. EditorView.js never reads/constructs ${term} — provider-specific construction options stay entirely composition-owned, exactly like WorldView.js/WorldEncounterCanvas.js's own identical restraint`));
@@ -440,7 +441,7 @@ async function run() {
     // this section used to run no longer holds).
     // ===============================================================
     {
-        const editorSource = await source('ui/views/EditorView.js');
+        const editorSource = (await Promise.all(editorViewFiles().map((file) => source(file)))).join('\n');
         const snapshotFamilyPattern = /SnapshotDiscoveryPublisher|SnapshotDistributionCommand|SnapshotDistributionRuntimeComposition/;
         const publicationDistributionFunction = extractFunctionBody(editorSource, 'distributeEditorPublication');
         assert(!snapshotFamilyPattern.test(publicationDistributionFunction),

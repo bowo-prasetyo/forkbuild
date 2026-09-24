@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.587 — World Navigation History Documentation Closure Audit.
 //
@@ -94,7 +94,7 @@ async function main() {
     let worldViewSource, editorViewSource, publicationCatalogSource, routerSource;
     {
         worldViewSource = codeOnly((await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n'));
-        editorViewSource = codeOnly(await readSource('ui/views/EditorView.js'));
+        editorViewSource = codeOnly((await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n'));
         publicationCatalogSource = codeOnly(await readSource('ui/components/PublicationCatalog.js'));
         routerSource = codeOnly(await readSource('ui/router/index.js'));
 

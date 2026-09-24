@@ -14,7 +14,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.569 — Observer-Local to Authoritative Placement Presentation
 // Convergence Boundary Audit.
@@ -680,7 +680,7 @@ async function run() {
             assert(!storeSource.includes(forbidden), `J1. ObserverLocalEncounterStore.js never references '${forbidden}' — it has no way to know whether ANY publicationId it holds is authoritatively placed, and per its own header must stay "a genuinely new, session-scoped surface," never one that reaches back into the primary channel's own vocabulary. It is NOT the right owner for this filter.`);
         }
 
-        const worldViewSource = codeOnly(await readSource('ui/views/WorldView.js'));
+        const worldViewSource = codeOnly((await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n'));
         assert(!/observerLocalEncounterRegistry[\s\S]{0,200}(registry|worldDiscoverySourceRegistry)\.(listSources|list)\(/.test(worldViewSource),
             'J2. WorldView.js never joins `observerLocalEncounterRegistry` state against `registry`/`worldDiscoverySourceRegistry` membership anywhere in its own body — it hands both straight through to `WorldEncounterCanvas` as two of that component\'s own props, exactly as its own header already documents ("registry stays the ONE seam WorldEncounterCanvas reads authoritative World state through," "handed straight through"). It is a composer, never a reconciler, and per that same established convention should not become one merely to host this filter.');
         assert(worldViewSource.includes('observerLocalEncounterRegistry'), 'J2b. Sanity — WorldView.js does genuinely wire the prop through (confirming J2 is a real absence of reconciliation, not merely an absence of the prop itself).');

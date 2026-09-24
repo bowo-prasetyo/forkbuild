@@ -9,7 +9,7 @@ import { PublicationDistributionLifecycleMemoryStore } from '../application/Publ
 import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
 import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
 import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.430 — Announcement/Discovery Provider Selection Reachability.
 //
@@ -277,7 +277,7 @@ async function run() {
         // uses (see e.g. tests/PostPublishDistributionEntryPoint.test.js's
         // own local reproduction) — guarded by a direct source match so
         // this reproduction cannot silently drift from the real function.
-        const worldViewSource = await source('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => source(file)))).join('\n');
         assert(codeOnly(worldViewSource).includes('function distributeWorldEncounterPublication(publication, discoveryProvider)'),
             n('D1. WorldView.js\'s own distributeWorldEncounterPublication(publication, discoveryProvider) exists with exactly this signature — the reproduction below mirrors it'));
 
@@ -372,7 +372,7 @@ async function run() {
     // Section F — option/configuration isolation.
     // ===============================================================
     {
-        const worldViewCode = codeOnly(await source('ui/views/WorldView.js'));
+        const worldViewCode = codeOnly((await Promise.all(worldViewFiles().map((file) => source(file)))).join('\n'));
         const canvasCode = codeOnly((await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n'));
         const forbidden = ['gatewayUrl', 'tagName', 'uploadTaggedTransaction', 'signer', 'publishImpl', 'relayUrl'];
 

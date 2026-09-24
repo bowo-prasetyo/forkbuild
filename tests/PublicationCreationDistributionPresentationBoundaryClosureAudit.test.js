@@ -11,7 +11,7 @@ import { createNostrPublicationDistributionRuntimeAdapter } from '../application
 import { createArweaveTaggedTransactionUpload } from '../application/ArweaveTaggedTransactionUpload.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
 import { sanitizeDistributionErrorMessage } from '../application/DistributionErrorMessageSanitizer.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.527 — Publication Creation & Distribution Presentation Boundary
 // Closure Audit.
@@ -215,7 +215,7 @@ function buildHarness(editorViewSource, { multiRelayNostrPublicationDistribution
     const blockSource = extractRange(
         editorViewSource,
         "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
-        '// ------------------------- document lifecycle ------------',
+        '\n    return {',
         '0.9.377/0.9.450/0.9.502/0.9.526 post-publish distribution block'
     );
 
@@ -293,7 +293,7 @@ function interpretPostPublishOverlay({ publishedPublication, distributionError, 
 
 async function run() {
     console.log('=== 0.9.527 — Publication Creation & Distribution Presentation Boundary Closure Audit ===\n');
-    const editorViewSource = await source('ui/views/EditorView.js');
+    const editorViewSource = (await Promise.all(editorViewFiles().map((file) => source(file)))).join('\n');
     const editorViewCode = codeOnly(editorViewSource);
 
     const lifecycleStore = new PublicationDistributionLifecycleMemoryStore();
@@ -736,7 +736,7 @@ async function run() {
         // AMENDED BY 0.9.670 — Publication Material Storage Selection. The
         // signature grew two more optional parameters (materialStorage,
         // remotePinningConfiguration) — marker updated to match.
-        const distributeEditorPublicationBlock = extractRange(editorViewCode, 'function distributeEditorPublication(publication, discoveryProvider, materialStorage, remotePinningConfiguration) {', '\n        }\n', 'distributeEditorPublication() body');
+        const distributeEditorPublicationBlock = extractRange(editorViewCode, 'function distributeEditorPublication(publication, discoveryProvider, materialStorage, remotePinningConfiguration) {', '\n    }\n', 'distributeEditorPublication() body');
         assert(!distributeEditorPublicationBlock.includes('normalizeDistributionResultForDisplay') && !distributeEditorPublicationBlock.includes('Array.isArray') && !distributeEditorPublicationBlock.includes('[result]'),
             n('H8. distributeEditorPublication() itself contains no array-wrapping, no Array.isArray check, and no reference to the normalization helper — the command contracts remain exactly as provider-specific as they always were'));
 

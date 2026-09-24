@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { editorViewFiles } from './support/SourceFileGroups.js';
 import {
     DOCUMENT_COLLABORATION_CONSISTENCY_POLICY,
     DeliveryOrderGuarantee,
@@ -234,7 +235,7 @@ async function runTests() {
     // BECAUSE this arc superseded it? It finds one real answer.
     // ---------------------------------------------------------------
     {
-        const editorView = await rawSource('ui/views/EditorView.js');
+        const editorView = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
 
         // B1a. ui/views/EditorView.js is the one real product entry
         // point that constructs the shipped chain's own composition

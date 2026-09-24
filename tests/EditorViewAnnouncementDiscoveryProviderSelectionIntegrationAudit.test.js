@@ -13,7 +13,7 @@ import { PublicationDistributionLifecycleMemoryStore } from '../application/Publ
 import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
 import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
 import { sanitizeDistributionErrorMessage } from '../application/DistributionErrorMessageSanitizer.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.503 — Editor Announcement/Discovery Provider Selection Integration
 // Audit.
@@ -263,7 +263,7 @@ function buildHarness(editorViewSource, { multiRelayNostrPublicationDistribution
     const blockSource = extractRange(
         editorViewSource,
         "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
-        '// ------------------------- document lifecycle ------------',
+        '\n    return {',
         '0.9.377/0.9.450/0.9.502 post-publish distribution block'
     );
 
@@ -301,7 +301,7 @@ function buildHarness(editorViewSource, { multiRelayNostrPublicationDistribution
 
 async function run() {
     console.log('=== 0.9.503 — Editor Announcement/Discovery Provider Selection Integration Audit ===\n');
-    const editorViewSource = await source('ui/views/EditorView.js');
+    const editorViewSource = (await Promise.all(editorViewFiles().map((file) => source(file)))).join('\n');
     const editorViewCode = codeOnly(editorViewSource);
 
     // ===============================================================
@@ -550,7 +550,7 @@ async function run() {
         // now legitimately references the Snapshot family — the real,
         // still-true invariant is that THIS milestone's own Publication
         // distribution selector never does.
-        const publicationDistributionFnBody = extractRange(editorViewCode, 'function distributeEditorPublication(publication, discoveryProvider, materialStorage, remotePinningConfiguration) {', '\n        }\n', 'distributeEditorPublication() body');
+        const publicationDistributionFnBody = extractRange(editorViewCode, 'function distributeEditorPublication(publication, discoveryProvider, materialStorage, remotePinningConfiguration) {', '\n    }\n', 'distributeEditorPublication() body');
         assert(!/SnapshotDiscoveryPublisher|SnapshotDistributionCommand|SnapshotDistributionRuntimeComposition|SnapshotCandidateDiscovery/.test(publicationDistributionFnBody),
             n('G1. distributeEditorPublication() references none of the Snapshot-family discovery/distribution classes'));
 
@@ -558,7 +558,7 @@ async function run() {
         // "Explore" action reads ONLY publishedPublication.value.documentId
         // — never the substrate selection — so it cannot regress into a
         // provider-specific navigation target.
-        const navBody = extractRange(editorViewCode, 'function viewDistributedPublicationInRepository() {', '\n        }', 'viewDistributedPublicationInRepository() body');
+        const navBody = extractRange(editorViewCode, 'function viewDistributedPublicationInRepository() {', '\n    }', 'viewDistributedPublicationInRepository() body');
         assert(!/selectedDiscoveryProvider|discoveryProvider/.test(navBody),
             n('G2. viewDistributedPublicationInRepository() reads no substrate/provider state of any kind — Repository navigation is unaffected by which Announcement/Discovery substrate was used'));
         assert(/router\.push\(\{ path: `\/world\/\$\{publication\.documentId\}` \}\)/.test(navBody),
@@ -573,7 +573,7 @@ async function run() {
         // still call the SAME collaborators, unconditioned on
         // selectedDiscoveryProvider.
         for (const fn of ['publishInspectedAttributionToNetwork', 'claimAuthorship', 'claimLineage']) {
-            const body = extractRange(editorViewCode, `function ${fn}(`, '\n\t\t}', `${fn}() body`);
+            const body = extractRange(editorViewCode, `function ${fn}(`, '\n    }', `${fn}() body`);
             assert(!/selectedDiscoveryProvider/.test(body),
                 n(`G4[${fn}]. ${fn}() reads no selectedDiscoveryProvider state — attribution/lineage publishing remains entirely independent of the Announcement/Discovery substrate choice`));
         }
@@ -804,7 +804,7 @@ async function run() {
         // (materialStorage, remotePinningConfiguration) — the markers below
         // are updated to match; the byte-for-byte parity this section
         // exists to protect is otherwise unchanged.
-        const editorFnBody = extractRange(editorViewCode, 'function distributeEditorPublication(publication, discoveryProvider, materialStorage, remotePinningConfiguration) {', '\n        }\n', 'EditorView distribute function');
+        const editorFnBody = extractRange(editorViewCode, 'function distributeEditorPublication(publication, discoveryProvider, materialStorage, remotePinningConfiguration) {', '\n    }\n', 'EditorView distribute function');
         const worldFnBody = extractRange(worldViewCode, 'function distributeWorldEncounterPublication(publication, discoveryProvider, materialStorage, remotePinningConfiguration) {', '\n    }\n', 'WorldView distribute function');
         const normalize = (body) => body
             .replace('distributeEditorPublication', 'DISTRIBUTE_FN')

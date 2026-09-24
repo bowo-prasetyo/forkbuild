@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { stylesheetFiles } from './support/SourceFileGroups.js';
+import { stylesheetFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.658 — Expanded Editor Sidebar Scrollbar Occlusion Boundary Audit.
 //
@@ -213,8 +213,8 @@ function styleProp(objText, prop) {
 
 async function run() {
     const css = (await Promise.all(stylesheetFiles().map((file) => readSource(file)))).join('\n');
-    const editorViewSrc = await readSource('ui/views/EditorView.js');
-    const worldViewSrc = await readSource('ui/views/WorldView.js');
+    const editorViewSrc = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
+    const worldViewSrc = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
     const editingSidebarSrc = await readSource('ui/components/EditingSidebar.js');
     const collapsibleSectionSrc = await readSource('ui/components/CollapsibleSection.js');
     const alignmentPanelSrc = await readSource('ui/components/AlignmentPanel.js');

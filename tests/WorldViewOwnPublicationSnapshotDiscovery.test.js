@@ -10,6 +10,7 @@ import { DecentralizedSnapshotResolutionOutcome } from '../application/Decentral
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.142 — World View Snapshot Discovery Command.
 //
@@ -356,7 +357,7 @@ async function runTests() {
     // Section G — architectural regression.
     // ---------------------------------------------------------------
     {
-        const viewCode = await codeOnlySource('ui/views/WorldView.js');
+        const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(viewCode.includes("const discoverSnapshotCommand = inject('discoverSnapshotCommand', null);"),
             '17. WorldView.js injects the app-wide discoverSnapshotCommand');
         assert(viewCode.includes('function discoverOwnSnapshot(publication)'),

@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.250 — Post-Publication-Commentary Product Reassessment.
 //
@@ -259,7 +259,7 @@ async function runTests() {
         // C1. Editor — ui/views/EditorView.js constructs the real
         // EditorSession composition root (0.9.196 baseline, reconfirmed
         // 0.9.241 Section B1a).
-        const editorView = await rawSource('ui/views/EditorView.js');
+        const editorView = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/new\s+EditorSession\s*\(/.test(editorView),
             'C1. ui/views/EditorView.js still constructs a real EditorSession.');
         capabilityRegister.push(['Editor', 'COMPLETE']);
@@ -267,7 +267,7 @@ async function runTests() {
         // C2. World Navigation — ui/views/WorldView.js reaches
         // CreateWorldViewUseCase, which itself constructs the real
         // WorldNavigationSession composition root.
-        const worldView = await rawSource('ui/views/WorldView.js');
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const createWorldView = await rawSource('application/CreateWorldViewUseCase.js');
         assert(worldView.includes('CreateWorldViewUseCase') && createWorldView.includes('new WorldNavigationSession('),
             'C2. ui/views/WorldView.js still reaches application/CreateWorldViewUseCase.js, which still constructs a real WorldNavigationSession.');

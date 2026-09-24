@@ -17,7 +17,7 @@ import { WorldConflictResolver, WorldOperationOutcome } from '../replication/Wor
 
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
 import { RoleProviderRole, isValidRoleProviderRole } from '../core/RoleProviderRole.js';
-import { worldNavigationSessionFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.313 — Stable Product Baseline Audit.
 //
@@ -240,7 +240,7 @@ async function runTests() {
     // ===============================================================
     {
         // B1. Editor -> Publish -> Distribution -> Discovery -> Inspection.
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/publishDocumentUseCase/.test(editorViewSource),
             'B1a. EditorView.js still composes the publish use case — Editor -> Publish.');
         const mainSource = await rawSource('ui/main.js');
@@ -379,14 +379,14 @@ async function runTests() {
         // registry, world layout, identity, authorization) is built in
         // ONE place — application/CreateWorldViewUseCase.js — never
         // reconstructed piecemeal inside ui/views/WorldView.js itself.
-        const worldViewSource = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
+        const worldViewSource = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         assert(!/new WorldCommandPropagationUseCase\(|new WorldConflictResolver\(/.test(worldViewSource),
             'D1. ui/views/WorldView.js does not construct WorldCommandPropagationUseCase/WorldConflictResolver itself — it receives them from the real composition root (CreateWorldViewUseCase.js), exactly the seam 0.9.312 proved matters.');
 
         // D2. Publish/distribution infrastructure is composed once in
         // ui/main.js; ui/views/EditorView.js consumes the already-built
         // use case, it does not construct its own PublishDocumentUseCase.
-        const editorViewSourceRaw = codeOnlyLines(await rawSource('ui/views/EditorView.js'));
+        const editorViewSourceRaw = codeOnlyLines((await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n'));
         assert(!/new PublishDocumentUseCase\(/.test(editorViewSourceRaw),
             'D2. ui/views/EditorView.js does not construct its own PublishDocumentUseCase — it is composed once (ui/main.js) and provided/injected, not rebuilt per view.');
 

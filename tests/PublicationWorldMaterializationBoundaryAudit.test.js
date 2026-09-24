@@ -28,7 +28,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { worldNavigationSessionFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.603 — Publication World Materialization Boundary Audit.
 //
@@ -239,7 +239,7 @@ async function run() {
         // only ever hand off BACK into the same classic streaming path
         // this audit's Section A already showed fails for this exact
         // Publication family — never hydrate a Document of its own.
-        const worldViewSrc = await readSource('ui/views/WorldView.js');
+        const worldViewSrc = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(/exploreEncounteredPublicationCommand[\s\S]{0,400}?focusWorld\(publication\.documentId\)/.test(worldViewSrc)
             || /focusWorld\(documentId\)/.test(worldViewSrc),
             'C6. ui/views/WorldView.js\'s own "explore" action on an encounter marker hands off via focusWorld(documentId) — the SAME documentId-keyed navigation that ultimately calls session.focusDocument()/_loadWorld(), never a document hydrated directly from the encounter\'s own contentHash/registry entry.');

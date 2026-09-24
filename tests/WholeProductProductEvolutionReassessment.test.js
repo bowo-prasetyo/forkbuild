@@ -17,7 +17,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { worldViewFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, publicationsPageFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.383 — Whole-Product Product Evolution Reassessment.
 //
@@ -167,7 +167,7 @@ function buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDi
     const blockSource = extractRange(
         editorViewSource,
         "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
-        '// ------------------------- document lifecycle ------------',
+        '\n    return {',
         '0.9.377/0.9.381/0.9.450 post-publish distribution + navigation block'
     );
     let pushedRoute = null;
@@ -197,7 +197,7 @@ function buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDi
 }
 
 async function run() {
-    const editorViewSource = await readSource('ui/views/EditorView.js');
+    const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
     const editorViewCodeOnly = codeOnlyLines(editorViewSource);
     const routerCode = await readSource('ui/router/index.js');
     const appCode = await readSource('ui/App.js');
@@ -389,7 +389,7 @@ async function run() {
         const publicationsViewSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         const editorPostPublishBlock = extractRange(editorViewSource,
             "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
-            '// ------------------------- document lifecycle ------------',
+            '\n    return {',
             'post-publish block');
         assert(editorPostPublishBlock.includes('router.push') && editorPostPublishBlock.includes("path: `/world/"),
             n('C2. the local-publish side bridges directly into /world/:documentId (0.9.381), never through LocalPublicationCatalog'));
@@ -477,7 +477,7 @@ async function run() {
     function editorPostPublishRouterPushIsReplace(source) {
         const block = extractRange(source,
             "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
-            '// ------------------------- document lifecycle ------------',
+            '\n    return {',
             'post-publish block');
         return block.includes('router.replace');
     }

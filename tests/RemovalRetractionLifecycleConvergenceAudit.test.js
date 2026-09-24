@@ -26,6 +26,7 @@ import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
 import { RemoveWorldPlacementUseCase } from '../application/RemoveWorldPlacementUseCase.js';
 import { DiscoverWorldsUseCase } from '../application/DiscoverWorldsUseCase.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.199 — Removal & Retraction Lifecycle Convergence Audit.
 //
@@ -421,7 +422,7 @@ async function runTests() {
         // The panels\' own visibility gates are unchanged: both still
         // collapse through the ordinary "read model returned null" path,
         // never a dedicated orphan-branch.
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/<PlacementInfoPanel[\s\S]{0,40}v-if="placementInfo"/.test(worldViewSource), 'G4. PlacementInfoPanel is still gated on plain `v-if="placementInfo"` — no orphan-aware branch');
 
         // Behaviorally: after unpublish, the SAME getPlacementInfo() read
@@ -534,7 +535,7 @@ async function runTests() {
 
         // WorldView.js's own two handlers each call exactly one session
         // method and never the other's.
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const removeHandler = worldViewSource.match(/function removePlacementFromPanel\(info\)\s*\{([\s\S]*?)\n {8}\}/)[1];
         const unpublishHandler = worldViewSource.match(/function unpublishOwnPublication\(publication\)\s*\{([\s\S]*?)\n {8}\}/)[1];
         assert(/session\.removePlacement\(/.test(removeHandler) && !/session\.unpublishDocument\(/.test(removeHandler), 'I8. removePlacementFromPanel() calls session.removePlacement() and never session.unpublishDocument()');

@@ -9,6 +9,7 @@ import { describePublicationDistributionResult } from '../application/Publicatio
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
+import { editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.423 — Announcement/Discovery Provider Expansion Readiness Audit.
 //
@@ -198,7 +199,7 @@ async function run() {
         // reachable from a second real caller — so the assertion below is
         // narrowed to the one fact that still holds unconditionally: the
         // multi-relay command is still injected.
-        const editorSource = await readSource('ui/views/EditorView.js');
+        const editorSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         assert(/inject\('multiRelayNostrPublicationDistributionCommand', null\)/.test(editorSource), n('A3. AMENDED BY 0.9.450 — EditorView.js still injects the app-wide multiRelayNostrPublicationDistributionCommand — since 0.9.502, alongside its own new per-action discoveryProvider choice (see above)'));
         const routerSource = await readSource('ui/router/index.js');
         assert(!/provider-picker|substrate-picker|announcement-provider/i.test(routerSource), n('A4. no announcement/discovery provider-selection route exists anywhere in the real router'));

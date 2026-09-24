@@ -26,6 +26,7 @@ import { computeAmbiguousPublishedDateIds } from '../core/PublicationDateAmbigui
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
 import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.575 — Repository Search & Result Semantics Product Reassessment.
 //
@@ -556,7 +557,7 @@ async function main() {
         // is cited, not re-run, here) — structurally reconfirmed: the
         // same real navigateToDocument(documentId) call this milestone's
         // own H1 exercises directly is WorldView's own real mount path.
-        const worldViewSource = await readSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(/navigateToDocument\(initialDocumentId\)/.test(worldViewSource),
             'H4. WorldView.js\'s own mount still resolves the primary document via session.navigateToDocument(documentId) — the identical documentId-based resolution H1 exercises directly for Open, structurally reconfirmed for Explore and previously proven live by tests/PublicationDiscoveryToWorkContinuityProductReassessment.test.js and tests/WorldEncounterRepositoryContinuityIntegrationBoundaryAudit.test.js, cited rather than re-derived per this file\'s own header constraint.');
 

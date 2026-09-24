@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.414 — Whole-Product Capability Reassessment.
 //
@@ -181,10 +181,10 @@ async function run() {
         // still-on-file proof is cited) with a fresh structural
         // reconfirmation that the exact code path they proved still
         // exists unchanged — never assumed unchanged without re-checking.
-        const editorViewCode = await readSource('ui/views/EditorView.js');
+        const editorViewCode = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         const publicationsViewCode = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         const catalogCode = await readSource('ui/components/PublicationCatalog.js');
-        const worldViewCode = await readSource('ui/views/WorldView.js');
+        const worldViewCode = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         const mainCode = await readSource('ui/main.js');
         const placeNamingClaimCode = await readSource('core/PlaceNamingClaim.js');
         const authoringViewCode = await readSource('ui/views/PublisherLeaderboardSnapshotClaimAuthoringView.js');
@@ -457,7 +457,7 @@ async function run() {
         // own entry surfaces, because no user journey named in Section B
         // ever crosses that boundary.
         const homeSource = await readSource('ui/views/HomeView.js');
-        const worldViewSource = await readSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         // Note: WorldView.js does contain the bare word "Reconciliation" —
         // but only as part of AutomaticSnapshotEncounterRetentionReconciliation,
         // a completely different, unrelated domain concept (snapshot-encounter

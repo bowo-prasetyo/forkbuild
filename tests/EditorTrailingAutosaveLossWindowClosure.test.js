@@ -21,6 +21,7 @@ import { AutosaveDocumentUseCase } from '../application/AutosaveDocumentUseCase.
 import { CheckRecoveryUseCase } from '../application/CheckRecoveryUseCase.js';
 import { RecoverDocumentUseCase } from '../application/RecoverDocumentUseCase.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
+import { editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.580 — Close Editor Trailing-Autosave Loss Window.
 //
@@ -325,7 +326,7 @@ async function run() {
         // never abort the rest of onBeforeUnmount's teardown — quoted
         // verbatim from the real source, the same discipline 0.9.579's
         // own Section C3 used for AutosaveScheduler.js.
-        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         const unmountMatch = editorViewSource.match(/onBeforeUnmount\(\(\) => \{[\s\S]*?\n        \}\);/);
         assert(unmountMatch !== null, 'sanity — onBeforeUnmount() block located.');
         // Comment lines stripped before searching for call-site order —

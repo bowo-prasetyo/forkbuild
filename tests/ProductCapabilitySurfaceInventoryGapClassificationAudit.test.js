@@ -29,7 +29,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalWorldExperienceStore } from '../application/LocalWorldExperienceStore.js';
 import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
 import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.586 — Product Capability Surface Inventory & Gap Classification
 // Audit.
@@ -245,7 +245,7 @@ async function main() {
         // rather than delegating to an application-layer use case (unlike
         // its own sibling concerns in the same file, blueprintAttributionUseCase
         // and blueprintLineageUseCase, which ARE properly delegated).
-        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         assert(/candidates\.sort\(\(a, b\) => b\.evidence\.similarity - a\.evidence\.similarity\)/.test(editorViewSource)
             && /candidates\.slice\(0, 3\)/.test(editorViewSource),
             'C1. ui/views/EditorView.js#computeSimilarityCandidates() genuinely sorts-by-similarity and slices-to-top-3 inside the view layer — a real UI-owned ranking decision, though explicitly scoped as "a SEPARATE, unsigned, evidence-only read — never persisted, never itself a claim" per the same file\'s own comment, and structurally unrelated to the Discovery/Publication ranking the codebase elsewhere refuses (see Section G).');
@@ -653,7 +653,7 @@ async function main() {
         // L7. EXPLORE — the real production call site, source-confirmed
         // (the same regex 0.9.585 Section F/N already established for
         // ui/views/WorldView.js).
-        const worldViewSource = await readSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(/focusWorld\(publication\.documentId\)/.test(worldViewSource),
             'L7. EXPLORE: ui/views/WorldView.js navigates on publication.documentId, the real production call site — the identical documentId L4b confirmed, never a re-derived one.');
 

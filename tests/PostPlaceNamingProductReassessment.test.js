@@ -11,6 +11,7 @@ import { LocalPlaceNamingPublicationLog } from '../application/LocalPlaceNamingP
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.259 — Post-Place-Naming Product Reassessment.
 //
@@ -155,7 +156,7 @@ async function runTests() {
         assert(proximity.includes('export function selectNearbyPlaceNamingClaims'),
             'A2c. core/PlaceNamingProximitySelection.js still exports the same pure spatial filter (0.9.255), unchanged.');
 
-        const worldView = await rawSource('ui/views/WorldView.js');
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(worldView.includes('new PlaceNamingDiscoveryMonitor({') && worldView.includes("title=\"Nearby Place Names\""),
             'A2d. ui/views/WorldView.js still constructs a real PlaceNamingDiscoveryMonitor and renders "Nearby Place Names" (0.9.256/0.9.257), unchanged.');
 
@@ -207,7 +208,7 @@ async function runTests() {
 
         // B5. World View. Both the manual panel and the automatic
         // presentation are mounted and real.
-        const worldView = await rawSource('ui/views/WorldView.js');
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(worldView.includes("import PlaceNamingPanel from '../components/PlaceNamingPanel.js'") && worldView.includes('<PlaceNamingPanel'),
             'B5a. ui/views/WorldView.js mounts a real PlaceNamingPanel (manual, 0.5.2).');
         assert(worldView.includes('nearbyPlaceNamingClaimRows'), 'B5b. ui/views/WorldView.js computes and renders nearbyPlaceNamingClaimRows (automatic, 0.9.257).');
@@ -261,7 +262,7 @@ async function runTests() {
     // ---------------------------------------------------------------
     {
         const panel = await rawSource('ui/components/PlaceNamingPanel.js');
-        const worldView = await rawSource('ui/views/WorldView.js');
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
 
         const manualRow = [
             ['display', true, 'Community Names list + All Claims list'],
@@ -360,7 +361,7 @@ async function runTests() {
         // facts (claim id, region/place id, author id, position) as
         // separate row fields — never a single collapsed "identity"
         // string a reader could mistake for one fact.
-        const worldView = await rawSource('ui/views/WorldView.js');
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const rowMapping = worldView.match(/const nearbyPlaceNamingClaimRows = computed\(\(\) => \([\s\S]*?\)\);/)[0];
         assert(rowMapping.includes('claimId:') && rowMapping.includes('authorDisplayName:') && rowMapping.includes('position:'),
             'D5. nearbyPlaceNamingClaimRows keeps claimId, authorDisplayName, and position as distinct fields — presented identity is never collapsed into a single opaque string.');
@@ -374,7 +375,7 @@ async function runTests() {
     // the one new surface that reaches none of them.
     // ---------------------------------------------------------------
     {
-        const worldView = await rawSource('ui/views/WorldView.js');
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const locationsPanel = await rawSource('ui/components/LocationsPanel.js');
         const geoPlacePanel = await rawSource('ui/components/GeographicPlacePanel.js');
 
@@ -575,7 +576,7 @@ async function runTests() {
         // remains exactly as strictly enforced as before — only the one
         // specific, audited, read-only call this milestone added is
         // exempted by name, never session access in general.
-        const worldView = await rawSource('ui/views/WorldView.js');
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const rowMapping = worldView.match(/const nearbyPlaceNamingClaimRows = computed\(\(\) => \([\s\S]*?\)\);/)[0];
         const rowMappingWithoutStatusCheck = rowMapping.replace(/session\.hasPlaceNamingClaim\(entry\.claim\.worldId,\s*entry\.claim\.id\)/, '');
         assert(!/worldLocations|session\./.test(rowMappingWithoutStatusCheck),

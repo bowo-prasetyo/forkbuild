@@ -21,7 +21,7 @@ import { ContentReference } from '../core/ContentReference.js';
 import { Publication } from '../publisher/Publication.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.555 — Observer-Local Discovery Retention Product Reassessment.
 //
@@ -409,7 +409,7 @@ async function runTests() {
         // (the identical structural check 0.9.553's own Section B7
         // established, re-derived here rather than imported, per this
         // codebase's own "each file owns its own evidence" convention).
-        const worldViewSource = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
+        const worldViewSource = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         assert(worldViewSource.includes('const session = worldViewFactory.createSession(registry)'), 'C1. `session` is constructed once, in this mount\'s own setup().');
         assert(worldViewSource.includes('const observerLocalEncounterStore = new ObserverLocalEncounterStore()'), 'C2. `observerLocalEncounterStore` is constructed once, in the SAME setup() invocation — not lazily, not on first discovery.');
         const onBeforeUnmountIndex = worldViewSource.indexOf('onBeforeUnmount(');
@@ -808,7 +808,7 @@ async function runTests() {
         // the SAME "harmless, invisible completion" 0.9.193's own
         // SUPPRESSED path already established one concept over for the
         // placement-side equivalent.
-        const worldViewSource = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
+        const worldViewSource = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         assert(worldViewSource.indexOf('observerLocalEncounterStore') < worldViewSource.indexOf('onBeforeUnmount(') || !worldViewSource.includes('observerLocalEncounterStore ='), 'J5. Confirmed structurally: onBeforeUnmount() never reassigns or clears observerLocalEncounterStore itself — the variable, and therefore any in-flight write into it, simply stops being reachable through normal Vue lifecycle, rather than being defensively guarded.');
 
         console.log('✓ J — a reload loses the encounter but not the underlying verified material (J1-J2), and an interrupted session lets its own in-flight cascade run complete harmlessly into a store nothing will ever read again (J3-J5) — consistent with, not a new instance of, this codebase\'s existing "acquisition is never rolled back, only presentation is session-sensitive" posture (application/AutomaticSnapshotEncounterCascade.js\'s own 0.9.193 header). Neither case violates an expectation the product has actually set — see Section K.');

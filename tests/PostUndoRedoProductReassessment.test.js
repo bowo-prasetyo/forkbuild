@@ -9,7 +9,7 @@ import { World } from '../core/World.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { CommandHistory } from '../application/CommandHistory.js';
 import { CreateWorldLandmarkCommand } from '../application/commands/CreateWorldLandmarkCommand.js';
-import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles, worldEncounterCanvasFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.212 — Post-Undo/Redo Product Reassessment.
 //
@@ -198,7 +198,7 @@ async function runTests() {
     // lifecycle all remain reachable).
     // ---------------------------------------------------------------
     {
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         const destructureMatch = editorViewSource.match(/const \{([^}]*)\}\s*=\s*new CreatePersistenceUseCase\(\)\.execute\(\)/);
         assert(destructureMatch, 'C1a. EditorView.js still destructures CreatePersistenceUseCase().execute()');
         for (const field of ['autosaveDocumentUseCase', 'recoverDocumentUseCase', 'discardRecoveryUseCase', 'checkRecoveryUseCase']) {
@@ -387,7 +387,7 @@ async function runTests() {
         // all (G1a-G1e above stay true, unchanged). See
         // tests/EditorTransformGestureFeedback.test.js for the full
         // lifecycle proof and docs/Roadmap.md's own 0.9.214 entry.
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/import TransformFeedback from '..\/components\/TransformFeedback\.js';/.test(editorViewSource), 'G1g. (post-0.9.214) EditorView.js now imports TransformFeedback');
         assert(/<TransformFeedback :feedback="transformFeedback" \/>/.test(editorViewSource), '...and mounts it, bound to a local transformFeedback ref');
         const onPointerMoveBody = extractArrowBody(editorViewSource, 'onPointerMove');
@@ -520,7 +520,7 @@ async function runTests() {
         // I1 — ui/components/GroupsPanel.js (0.9.206's own finding),
         // reconfirmed unchanged.
         assert(!/GroupsPanel/.test(await rawSource('ui/main.js')), 'I1a. GroupsPanel is not registered in ui/main.js');
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/components:\s*\{[^}]*GroupsPanel/.test(editorViewSource), 'I1b. EditorView.js\'s own components: {} does not register GroupsPanel');
         assert(await rawSource('ui/components/GroupsPanel.js').then(() => false, () => true), 'I1c. ui/components/GroupsPanel.js has since been deleted as dead code (the Editor dead-code cleanup)');
 

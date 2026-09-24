@@ -27,7 +27,7 @@ import { Publication } from '../publisher/Publication.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { materializedSnapshotWorldOrigin } from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.553 — Observer-Local Encounter Experience Product Reassessment.
 //
@@ -413,7 +413,7 @@ async function runTests() {
         // this component tree today, so a session change and a fresh
         // mount are, in this codebase, the identical event. Confirmed
         // directly against real, unmodified source.
-        const worldViewSource = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
+        const worldViewSource = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         const sessionDeclarationIndex = worldViewSource.indexOf('const session = worldViewFactory.createSession(registry)');
         const storeDeclarationIndex = worldViewSource.indexOf('const observerLocalEncounterStore = new ObserverLocalEncounterStore()');
         const firstOnMountedIndex = worldViewSource.indexOf('onMounted(');
@@ -660,7 +660,7 @@ async function runTests() {
         assert(!/observerLocalEncounter/i.test(methodBody),
             'H1. admitToRepositoryDiscovery() never reads or reasons about an observer-local encounter of any kind — its own gate is entirely `decentralizedPublicationDiscoveryProvider` + a resolved, VERIFIED material loading/verification pair, reachable only through the EXISTING selection/material-inspection path (see Section G: never reachable for an observer-local encounter at all today).');
 
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const storeBindingLine = ':observerLocalEncounterRegistry="observerLocalEncounterStore"';
         assert(worldViewSource.includes(storeBindingLine), 'H2. Sanity: the real composition root binds the observer-local store to its own, dedicated prop.');
         const repositoryBindingLine = ':decentralizedPublicationDiscoveryProvider="decentralizedDiscoveryProviderForEnrichment"';

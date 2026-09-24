@@ -9,6 +9,7 @@ import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { DiscoverPlacementsUseCase } from '../application/DiscoverPlacementsUseCase.js';
 import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.310 — Post-Placement-Visibility Product Evolution Reassessment.
 //
@@ -412,7 +413,7 @@ async function runTests() {
         // already hit the identical architectural boundary; this is a
         // standing property of the navigation model, not a gap unique
         // to placements-visibility.
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const focusLocationDocumentBody = methodBody(codeOnlyLines(worldViewSource), 'function focusLocationDocument\\(documentId\\)', 8);
         assert(focusLocationDocumentBody.includes('focusWorld(documentId)'),
             'D2d. LocationDocumentsDialog\'s own "Focus" action (focusLocationDocument) still resolves through the identical document-keyed focusWorld() — the SAME boundary a placement-navigation feature would need to cross, already observable on a live, older feature.');

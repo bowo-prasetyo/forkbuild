@@ -20,6 +20,7 @@ import { WorldNavigationSession } from '../application/WorldNavigationSession.js
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.208 — World View History Preview/Restore Lifecycle Audit.
 //
@@ -385,7 +386,7 @@ async function run() {
 
         // --- structural: WorldView.js's own panel-close/unmount cleanup ---
         const SOURCE_ROOT = new URL('../', import.meta.url);
-        const worldViewSource = await readFile(new URL('ui/views/WorldView.js', SOURCE_ROOT), 'utf8');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readFile(new URL(file, SOURCE_ROOT), 'utf8')))).join('\n');
         const closePanelFn = worldViewSource.match(/function closeHistoryPanel\(\)[\s\S]*?\n        \}/);
         assert(closePanelFn && closePanelFn[0].includes('session.cancelHistoryPreview()'),
             'closeHistoryPanel() cancels an active preview before the panel disappears');

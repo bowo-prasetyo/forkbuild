@@ -8,7 +8,7 @@ import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDis
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.141 — Distribution Entry-Point Convergence Audit.
 //
@@ -263,7 +263,7 @@ async function run() {
     // Section A — two entry points, one command.
     // ===============================================================
     {
-        const viewCode = await codeOnlySource('ui/views/WorldView.js');
+        const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         const ownBinding = /<OwnPublicationPanel[\s\S]{0,300}:snapshotDistributionCommand="distributeWorldEncounterSnapshot"/;
         const canvasBinding = /<WorldEncounterCanvas[\s\S]{0,3000}:snapshotDistributionCommand="distributeWorldEncounterSnapshot"/;
         assert(ownBinding.test(viewCode), 'A1. WorldView.js binds OwnPublicationPanel\'s snapshotDistributionCommand to distributeWorldEncounterSnapshot');

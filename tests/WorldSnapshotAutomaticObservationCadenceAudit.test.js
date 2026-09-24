@@ -10,6 +10,7 @@ import { registerMaterializedSnapshotWorldSource } from '../application/Material
 import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
 import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
 import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.192 — Automatic World Observation Cadence Audit.
 //
@@ -603,7 +604,7 @@ async function runTests() {
     // Section G — structural sweep: exactly one observation cadence.
     // ---------------------------------------------------------------
     {
-        const worldViewSource = await codeOnlySource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         const setIntervalCalls = worldViewSource.match(/setInterval\(/g) || [];
         assert(setIntervalCalls.length === 3, `1. ui/views/WorldView.js declares exactly three intervals total (spatialInterval, spatialPresenceSyncInterval, vehicleInteractionInterval) — got ${setIntervalCalls.length}; a new one appearing here would be a structural regression worth re-examining, whether or not it touches Snapshot machinery`);
         assert(/spatialInterval\s*=\s*setInterval\(\s*\(\)\s*=>\s*\{[^}]*refreshSpatialUI\(\)/.test(worldViewSource),

@@ -20,6 +20,7 @@ import { WorldAuthorizationService } from '../application/WorldAuthorizationServ
 import { WorldPresenceActivity } from '../core/WorldPresenceActivity.js';
 import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
 import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.218 — World Presence Membership-Refresh Lifecycle Audit.
 //
@@ -601,7 +602,7 @@ async function runTests() {
 // against the CURRENT (0.9.218 try/catch-wrapped) call site.
 // ---------------------------------------------------------------------
 {
-    const worldViewSource = await readFile(new URL('../ui/views/WorldView.js', import.meta.url), 'utf8');
+    const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
     const navigationSessionSource = await readFile(new URL('../application/WorldNavigationSession.js', import.meta.url), 'utf8');
 
     const membershipCallbackMatch = worldViewSource.match(/session\.onWorldMembershipChanged\(presentWorldDocumentId, \(\) => \{([\s\S]*?)\n\s{12}\}\);/);
@@ -627,7 +628,7 @@ async function runTests() {
 // presence activity into cadence-driven polling.
 // ---------------------------------------------------------------------
 {
-    const worldViewSource = await readFile(new URL('../ui/views/WorldView.js', import.meta.url), 'utf8');
+    const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
 
     const spatialIntervalMatch = worldViewSource.match(/spatialInterval = setInterval\(\(\) => \{([\s\S]*?)\}, 3000\);/);
     assert(spatialIntervalMatch, 'G1. the 3-second spatialInterval is still present, unchanged in shape');

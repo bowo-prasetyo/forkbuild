@@ -4,7 +4,7 @@ import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { composeDiscoverWorldEncounterPublicationCommand } from '../application/DiscoverWorldEncounterPublicationCommandComposition.js';
 import { queryDecentralizedWorldDiscovery } from '../application/DecentralizedWorldDiscoveryQuery.js';
 import { resolveNostrPublisherOptions } from '../application/PublicationDistributionConfigurationProvider.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.356 — Publication Discovery Tag UX Consistency Audit.
 //
@@ -334,7 +334,7 @@ async function run() {
         assert(!codeContainsLiteral(canvasSource, 'forkbuild-publication'),
             '1. WorldEncounterCanvas.js contains no \'forkbuild-publication\' literal in its own CODE today (only in documentation prose, 0.9.357) — confirming a same-named default is INJECTED (a new prop, sourced from ui/main.js\'s own existing constant), never hand-typed a second time inside this file.');
 
-        const viewSource = await readSource('ui/views/WorldView.js');
+        const viewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(!codeContainsLiteral(viewSource, 'forkbuild-publication'),
             '2. ui/views/WorldView.js — the one file standing between ui/main.js and WorldEncounterCanvas.js — also contains no such literal in its own CODE today, confirming the ONLY existing definition remains ui/main.js\'s own, and any wiring through WorldView.js forwards an already-resolved value, never re-declares it.');
 

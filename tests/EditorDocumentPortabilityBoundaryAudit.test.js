@@ -25,6 +25,7 @@ import { DocumentManifest } from '../application/DocumentManifest.js';
 import { DocumentCloneService } from '../application/DocumentCloneService.js';
 import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
 import { LoadDocumentUseCase } from '../application/LoadDocumentUseCase.js';
+import { editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.640 — Editor Document Portability Boundary Audit.
 //
@@ -679,7 +680,7 @@ async function run() {
         // full verification. These assertions are updated to match
         // current reality rather than left asserting a fact each
         // milestone deliberately made false.
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/toolbar-export/.test(toolbarSource) && /exportDocument/.test(toolbarSource + editorViewSource),
             n('0.9.641 added a document-content Export action to Toolbar.js/EditorView.js, on this same surface'));
         assert(/toolbar-import/.test(toolbarSource) && /importDocument/.test(toolbarSource + editorViewSource),

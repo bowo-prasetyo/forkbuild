@@ -25,7 +25,7 @@ import WorldMembersPanel from '../ui/components/WorldMembersPanel.js';
 import WorldPresenceIndicator from '../ui/components/WorldPresenceIndicator.js';
 import { buildWorldCollaborationRoster, WorldCollaborationAccess } from '../ui/components/WorldCollaborationRoster.js';
 import { buildSpatialCollaboratorRows } from '../ui/components/WorldCollaboratorIndicator.js';
-import { worldNavigationSessionFiles, stylesheetFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, stylesheetFiles, worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.583 — Wanderer Presence Product Experience Closure Reassessment.
 //
@@ -298,7 +298,7 @@ async function main() {
         // WorldView.js is unimportable live): exactly ONE place adds
         // displayName, keyed off the SAME avatarId this section just
         // proved carries through untouched.
-        const worldViewSource = codeOnly(await readSource('ui/views/WorldView.js'));
+        const worldViewSource = codeOnly((await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n'));
         assert(/nearbyAvatars\.value = session\.getNearbyAvatars\(\)\.map\(\(entry\) => \(\{\s*\n\s*\.\.\.entry,\s*\n\s*displayName: session\.getAvatarDisplayName\(entry\.avatarId\)/.test(worldViewSource),
             'B2. ui/views/WorldView.js enriches every getNearbyAvatars() row with displayName by calling getAvatarDisplayName(entry.avatarId) — the exact avatarId B1 confirmed is never itself a name.');
 
@@ -382,7 +382,7 @@ async function main() {
         // position, not another participant) — out of THIS milestone's
         // scope to fix, named here only so it is never mistaken for a
         // live-presence gap by a future reassessment.
-        const worldViewSrc = codeOnly(await readSource('ui/views/WorldView.js'));
+        const worldViewSrc = codeOnly((await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n'));
         const liveWorldViewSrc = codeOnly(await readSource('ui/views/LiveWorldView.js'));
         assert(!worldViewSrc.includes('avatars:') && !liveWorldViewSrc.includes('avatars:'),
             'C3. DEFERRED (not a live-presence gap): neither production host ever populates WorldEncounterCanvas\'s own `avatars` field — its AVATAR marker kind is real and correctly built, but structurally unreachable in production today. Separate surface, separate arc; not touched by this milestone.');
@@ -460,7 +460,7 @@ async function main() {
     // what a DIFFERENT registry currently shows.
     // ===================================================================
     {
-        const worldViewSrc = codeOnly(await readSource('ui/views/WorldView.js'));
+        const worldViewSrc = codeOnly((await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n'));
         assert(/if \(presentSpatialWorldDocumentId\) \{\s*\n\s*session\.leaveWorldSpatialPresence\(presentSpatialWorldDocumentId\);/.test(worldViewSrc),
             'E1a. _syncWorldSpatialPresence() explicitly leaves the PREVIOUS World\'s spatial presence before doing anything else on a document change.');
         assert(/presentSpatialWorldDocumentId = activeId \|\| null;\s*\n\s*spatialCollaboratorRows\.value = \[\];/.test(worldViewSrc),

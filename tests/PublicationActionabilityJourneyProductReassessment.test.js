@@ -47,7 +47,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.598 — Publication Actionability Journey Product Reassessment.
 //
@@ -383,7 +383,7 @@ async function run() {
     let sectionAEnv;
     let sectionAProvider;
     {
-        const worldViewSource = await readSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
 
         // A1: the SAME identifier feeds both admission and action
         // resolution, in the SAME component scope — never two

@@ -18,7 +18,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { readFile } from 'node:fs/promises';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.290 — Publication Commentary Cross-Surface Convergence Audit.
 //
@@ -814,7 +814,7 @@ async function runTests() {
         assert(panelCode.includes('refreshPublicationCommentaries()') && panelCode.includes('submitPublicationCommentary()'),
             '62. OwnPublicationPanel.js still carries its own original commentary methods');
 
-        const viewCode = await codeOnlySource('ui/views/WorldView.js');
+        const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(viewCode.includes(':getPublicationCommentariesCommand="getPublicationCommentariesCommand"') &&
                viewCode.includes(':addPublicationCommentaryCommand="addPublicationCommentaryCommand"'),
             '63. WorldView.js still wires its own commentary commands onto OwnPublicationPanel, unmodified');

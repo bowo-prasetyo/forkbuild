@@ -29,6 +29,7 @@ import { LocalWorldExperienceStore } from '../application/LocalWorldExperienceSt
 import { LocalWorldExperience } from '../core/LocalWorldExperience.js';
 import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
 import { ObserverLocalEncounterStore } from '../application/ObserverLocalEncounterStore.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.576 — World Lifecycle & Identity Product Reassessment.
 //
@@ -295,7 +296,7 @@ async function main() {
         // session.focusDocument() plus a router.replace(). Confirmed
         // structurally: it exists in WorldView.js and nowhere in core/
         // or application/.
-        const worldViewSource = await readSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(/function focusWorld\(documentId\)/.test(worldViewSource), 'A10a. focusWorld(documentId) is defined exactly once, in ui/views/WorldView.js.');
         assert(/session\.focusDocument\(documentId\)/.test(worldViewSource.slice(worldViewSource.indexOf('function focusWorld'), worldViewSource.indexOf('function focusWorld') + 800)),
             'A10b. focusWorld() itself just calls session.focusDocument(documentId) plus a router update — it introduces no second identity concept of its own.');
@@ -614,7 +615,7 @@ async function main() {
         // location browsing, publication cards, per this milestone's own
         // research) funnels through the identical function body, which
         // itself calls the identical session.focusDocument().
-        const worldViewSource = await readSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         const focusWorldDefCount = (worldViewSource.match(/function focusWorld\(documentId\)/g) || []).length;
         assert(focusWorldDefCount === 1, 'G2. focusWorld() is defined exactly once — every caller (Search -> World, Repository -> Explore, Notification -> World) necessarily converges on this one function, by construction, never a second copy that could drift.');
 

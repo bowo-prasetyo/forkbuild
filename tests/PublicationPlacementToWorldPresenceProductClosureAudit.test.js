@@ -29,7 +29,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.606 — Publication Placement-to-World Presence Product Closure Audit.
 //
@@ -659,7 +659,7 @@ async function run() {
     // family already used for production composition files).
     // ===============================================================
     {
-        const worldViewSrc = await readSource('ui/views/WorldView.js');
+        const worldViewSrc = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         const panelSrc = await readSource('ui/components/OwnPublicationPanel.js');
 
         // Discover / understand.

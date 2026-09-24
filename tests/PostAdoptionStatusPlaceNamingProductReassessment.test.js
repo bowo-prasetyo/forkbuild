@@ -14,7 +14,7 @@ import { LocalNamePreferenceStore } from '../application/LocalNamePreferenceStor
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.271 — Post-Adoption-Status Place Naming Product Reassessment.
 //
@@ -200,7 +200,7 @@ async function runTests() {
             assert(await sourceExists(file), `A1. ${file} still exists as the authoritative record for its own stage of the pipeline.`);
         }
 
-        const worldViewCode = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
+        const worldViewCode = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         const nearbyBlock = worldViewCode.match(/<CollapsibleSection\s+title="Nearby Place Names"[\s\S]*?<\/CollapsibleSection>/)[0];
         assert(/navigateToNearbyPlaceNamingClaim/.test(nearbyBlock) && />\s*Navigate\s*</i.test(nearbyBlock),
             'A2. The Nearby Place Names row still carries a real, wired Navigate button.');

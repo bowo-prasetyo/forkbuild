@@ -171,7 +171,8 @@ async function runTests() {
             'ui/components/PublicationList.js',
             'ui/components/WorldEncounterCanvas.js',
             'ui/views/DecentralizedPublicationsView.js',
-            'ui/views/WorldView.js'
+            // WorldView.js's own encountered-publication hand-off to the Editor.
+            'ui/views/worldView/useEditorHandoff.js'
         ];
         for (const file of expectedBearers) {
             assert(bearerSet.has(file), `B1. ${file} is still a real Publication-bearing surface (found by fresh repo grep).`);

@@ -20,7 +20,7 @@ import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCo
 import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
 import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.559 — Publication Discovery-to-Work Continuity Product Reassessment.
 //
@@ -248,7 +248,7 @@ async function runTests() {
         // openPublication() has always built, for every Open entry point
         // the app has ever had — World's new continuation reuses it
         // exactly, never a narrower or different one.
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const catalogSource = await rawSource('ui/components/PublicationCatalog.js');
         assert(worldViewSource.includes("router.push({ path: '/editor', query: { load: publication.documentId } });"), 'B5a. WorldView.js\'s own Open wrapper.');
         assert(catalogSource.includes("router.push({ path: '/editor', query: { load: pub.documentId } });"), 'B5b. PublicationCatalog.js\'s own pre-existing Open, byte-identical shape.');
@@ -258,7 +258,7 @@ async function runTests() {
         // sibling, Section C) — confirmed structurally, since
         // editorEntryContextFromQuery() is called only inside the
         // `if (route.query.fork)` branch.
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         const loadBranchStart = editorViewSource.indexOf('} else if (route.query.load) {');
         const loadBranchEnd = editorViewSource.indexOf('\n            }', loadBranchStart);
         const loadBranch = editorViewSource.slice(loadBranchStart, loadBranchEnd);
@@ -320,7 +320,7 @@ async function runTests() {
         // (Section B) — because ForkDocumentUseCase's own license/
         // attribution check genuinely needs the resolved Publication
         // object, not merely its documentId.
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(worldViewSource.includes("router.push({ path: '/editor', query: { fork: publication.documentId, publication: publication.id } });"), 'C7. Fork\'s own route genuinely carries a different identity shape than Open\'s — by design, not oversight (ForkDocumentUseCase.execute() takes a sourcePublication parameter Open\'s own LoadDocumentUseCase.execute() has no equivalent of).');
 
         console.log('✓ C — Fork produces a brand-new editable Document, provably never mutating P1\'s own storage record (byte-for-byte, across two separate forks), and correctly attributes lineage to P1 specifically, never to P2, despite a shared documentId AND contentHash.');
@@ -333,7 +333,7 @@ async function runTests() {
     // itself.
     // ===============================================================
     {
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
 
         // D1. exploreEncounteredPublicationCommand() calls ONLY
         // focusWorld() — this file's own pre-existing "move to another
@@ -452,7 +452,7 @@ async function runTests() {
         const storeSource = await rawSource('application/ObserverLocalEncounterStore.js');
         assert(!/\bdispose\s*\(/.test(storeSource) && !/\bdestroy\s*\(/.test(storeSource) && !/\bclear\s*\(/.test(storeSource), 'F1. ObserverLocalEncounterStore still exposes no dispose/destroy/clear method of any kind — its own lifecycle is still "lives and dies with the one instance holding it," unchanged since 0.9.552.');
 
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(worldViewSource.includes('const observerLocalEncounterStore = new ObserverLocalEncounterStore();'), 'F2. WorldView.js still constructs a FRESH store inside its own setup() closure — every mount gets an empty one, exactly as 0.9.555 established.');
 
         const unmountStart = worldViewSource.indexOf('onBeforeUnmount(() => {');
@@ -587,7 +587,7 @@ async function runTests() {
                 'no document found with id "missing-doc-id"',
                 'H3a. A failed Open (missing document) throws a specific, greppable message.'
             );
-            const editorViewSource = await rawSource('ui/views/EditorView.js');
+            const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
             const loadBranchStart = editorViewSource.indexOf('} else if (route.query.load) {');
             const loadBranchEnd = editorViewSource.indexOf('\n            }', loadBranchStart);
             const loadBranch = editorViewSource.slice(loadBranchStart, loadBranchEnd);
@@ -611,7 +611,7 @@ async function runTests() {
                 'not permitted under license',
                 'H4a. A failed Fork (license denial) throws a distinct message, never confused with H3\'s "missing document."'
             );
-            const editorViewSource = await rawSource('ui/views/EditorView.js');
+            const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
             assert(editorViewSource.includes('returnWorldId: (decodedEntryContext && decodedEntryContext.returnWorldId) || sourceDocumentId,'), 'H4b. A failed Fork\'s own catch block still resolves a returnWorldId (falling back to sourceDocumentId itself) — the viewer is never left at an unrecoverable dead end even when the fork throws.');
         }
 
@@ -716,7 +716,7 @@ async function runTests() {
         // ui/views/EditorView.js's own toast branches on it rather than
         // interpolating err.message — this section now reconfirms the
         // FIXED state live rather than re-proving the original leak.
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(!editorViewSource.includes('feedback.show(`Load failed: ${err.message}`);'),
             'I2a. AMENDED BY 0.9.574 — EditorView.js no longer interpolates the raw thrown error message verbatim into the failed-Open toast.');
         let openError = null;

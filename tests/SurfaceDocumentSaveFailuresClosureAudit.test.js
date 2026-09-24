@@ -11,6 +11,7 @@ import { computeContentHash } from '../serializer/contentHash.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { World } from '../core/World.js';
+import { editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.653 — Surface Document Save Failures: closure audit.
 //
@@ -176,7 +177,7 @@ async function run() {
     console.log('=== 0.9.653 Surface Document Save Failures — Closure Audit ===\n');
 
     const toolbarSource = await rawSource('ui/components/Toolbar.js');
-    const editorViewSource = await rawSource('ui/views/EditorView.js');
+    const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
     const toolbarMessage = extractModuleConstString(toolbarSource, 'SAVE_FAILURE_MESSAGE');
     // EditorView.js imports Toolbar.js's own exported constant rather than
     // declaring a second copy.

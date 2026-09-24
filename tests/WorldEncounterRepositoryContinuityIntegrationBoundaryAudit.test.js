@@ -17,7 +17,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.474 — Admit World-Encountered Publications into App-Wide Discovery —
 // Integration Boundary Audit.
@@ -198,7 +198,7 @@ async function run() {
     // Section A — Production wiring.
     // ===============================================================
     {
-        const worldViewSource = await readSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(/const decentralizedDiscoveryProviderForEnrichment = inject\('decentralizedPublicationDiscoveryProvider', null\);/.test(worldViewSource),
             '1. ui/views/WorldView.js still injects the shared provider exactly once, under its own established name.');
         assert(/decentralizedDiscoveryProviderForEnrichment\s*$/m.test(worldViewSource) || /decentralizedDiscoveryProviderForEnrichment\n\s*\};/.test(worldViewSource),

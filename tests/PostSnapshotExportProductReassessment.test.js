@@ -21,7 +21,7 @@ import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles, worldEncounterCanvasFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.216 — Post-Snapshot-Export Product Reassessment.
 //
@@ -207,7 +207,7 @@ async function runTests() {
     // audit in Section J, not folded in here.)
     // ---------------------------------------------------------------
     {
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         const destructureMatch = editorViewSource.match(/const \{([^}]*)\}\s*=\s*new CreatePersistenceUseCase\(\)\.execute\(\)/);
         assert(destructureMatch, 'C1a. EditorView.js still destructures CreatePersistenceUseCase().execute()');
         for (const field of ['autosaveDocumentUseCase', 'recoverDocumentUseCase', 'discardRecoveryUseCase', 'checkRecoveryUseCase']) {
@@ -308,7 +308,7 @@ async function runTests() {
         // E1 — Transform gesture feedback (closed by 0.9.214).
         const spatialEditingServiceSource = await rawSource('application/SpatialEditingService.js');
         assert(/getGestureFeedback\(\)\s*\{\s*return this\._gestureFeedback;\s*\}/.test(spatialEditingServiceSource), 'E1a. SpatialEditingService still exposes getGestureFeedback()');
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/import TransformFeedback from '..\/components\/TransformFeedback\.js';/.test(editorViewSource), 'E1b. EditorView.js still imports TransformFeedback');
         assert(/<TransformFeedback :feedback="transformFeedback" \/>/.test(editorViewSource), 'E1c. ...and still mounts it, bound to a local ref');
         assert(/transformFeedback\.value = result\.feedback \|\| null;/.test(editorViewSource), 'E1d. ...still a bare passthrough of the captured pointer-event result, no reconstruction');
@@ -545,7 +545,7 @@ async function runTests() {
 
         // Autosave never survives a teardown to write into whatever
         // document happens to load next.
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/autosaveScheduler\.stop\(\)/.test(editorViewSource), 'J3. EditorView.js still stops (never merely pauses) the autosave scheduler on teardown — no orphaned cross-document autosave write');
         const autosaveSchedulerSource = await rawSource('application/AutosaveScheduler.js');
         assert(/onStateChanged/.test(autosaveSchedulerSource), 'J4. AutosaveScheduler.js still subscribes to documentManager.onStateChanged — a document switch is observed, not silently ignored');

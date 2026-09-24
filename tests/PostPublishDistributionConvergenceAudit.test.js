@@ -23,7 +23,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.348 — Post-Publish Distribution Convergence Audit.
 //
@@ -728,7 +728,7 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
-        const viewCode = await codeOnlySource('ui/views/WorldView.js');
+        const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
 
         const scopedTerms = [
             'IpfsRemotePublicationCoordinator', 'IpfsRemotePinningContentStore',

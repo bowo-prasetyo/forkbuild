@@ -25,7 +25,7 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.379 — Post-Distribution Product Evolution Reassessment.
 //
@@ -233,7 +233,7 @@ function buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDi
     const blockSource = extractRange(
         editorViewSource,
         "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
-        '// ------------------------- document lifecycle ------------',
+        '\n    return {',
         '0.9.377/0.9.450 post-publish distribution block'
     );
 
@@ -369,7 +369,7 @@ const WORLD_ENCOUNTER_SURFACE = {
 };
 
 async function run() {
-    const editorViewSource = await readSource('ui/views/EditorView.js');
+    const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
     const editorViewCodeOnly = codeOnlyLines(editorViewSource);
     const toolbarCodeOnly = await codeOnlySource('ui/components/Toolbar.js');
     const publishSource = extractToolbarPublishChain(toolbarCodeOnly);
@@ -564,7 +564,7 @@ async function run() {
         const editorPostPublishBlock = extractRange(
             editorViewSource,
             "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
-            '// ------------------------- document lifecycle ------------',
+            '\n    return {',
             '0.9.377/0.9.450 post-publish distribution block'
         );
         assert(!editorPostPublishBlock.includes('/publications'),

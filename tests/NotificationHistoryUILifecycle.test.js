@@ -19,6 +19,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.284 — Notification History UI Boundary.
 //
@@ -519,7 +520,7 @@ async function runTests() {
         // K6. WorldView.js wires the command onto the panel, and its own
         // command forwards to WorldNavigationSession, never a use case
         // directly.
-        const viewCode = await codeOnlySource('ui/views/WorldView.js');
+        const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(viewCode.includes(':getRecipientNotificationEventsCommand="getRecipientNotificationEventsCommand"'),
             '38. WorldView.js wires getRecipientNotificationEventsCommand onto NotificationHistoryPanel.');
         assert(viewCode.includes('session.getRecipientNotificationEvents()'),

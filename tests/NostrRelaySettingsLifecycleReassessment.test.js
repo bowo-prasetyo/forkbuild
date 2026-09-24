@@ -17,6 +17,7 @@ import { composePlaceNamingDiscoveryRuntime } from '../application/PlaceNamingDi
 import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
 import { DECENTRALIZED_DISCOVERY_ENVELOPE_PROTOCOL, DECENTRALIZED_DISCOVERY_ENVELOPE_VERSION } from '../core/DecentralizedDiscoveryEnvelope.js';
 import { SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.372 — Nostr Relay Settings Lifecycle & Product Reassessment.
 //
@@ -581,7 +582,7 @@ async function run() {
         // thrown WorldNavigationSession.getRegions() would still reach
         // it) — but it is never the message a relay outage itself
         // produces.
-        const worldViewSource = await source('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => source(file)))).join('\n');
         assert(worldViewSource.includes('placeNamingDiscoveryError'), 'E3. sanity — the existing UI indicator this finding is about actually exists in source');
         assert(/discoverPlaceNamingClaimsCommand:\s*\(\)\s*=>\s*\{[\s\S]{0,400}?executeDiscoverPlaceNamingClaimsCommand/.test(worldViewSource),
             'E3. sanity — WorldView.js\'s own command closure really does call executeDiscoverPlaceNamingClaimsCommand(), the exact function E2 exercised');

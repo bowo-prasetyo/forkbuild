@@ -10,7 +10,7 @@ import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPubli
 import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
 import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
 import { PublicationCommentaryNotificationProducer } from '../application/PublicationCommentaryNotificationProducer.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.637 — Publication Commentary Distribution Provider Selection UI
 // Boundary Audit.
@@ -129,7 +129,7 @@ async function run() {
     // Section A — existing Publication provider selector census.
     // ===============================================================
     {
-        const editorSource = await rawSource('ui/views/EditorView.js');
+        const editorSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         // AMENDED BY 0.9.672 — World/Editor Distribution Dialog. This
         // <select> now lives in EditorDistributionDialog.js, one popup
         // over from a "Distribute" trigger button (a pure presentation
@@ -244,7 +244,7 @@ async function run() {
 
         assert((mainSource.match(/:addPublicationCommentaryCommand="addPublicationCommentaryCommand"/g) || []).length === 0,
             n('ui/main.js itself never explicitly binds this prop anywhere (it only provide()s it) — confirming injection, not prop-threading, is how Path 1 actually receives it'));
-        const worldViewSource = codeOnly(await rawSource('ui/views/WorldView.js'));
+        const worldViewSource = codeOnly((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         const bindings = worldViewSource.match(/:addPublicationCommentaryCommand="addPublicationCommentaryCommand"/g) || [];
         assert(bindings.length === 2,
             n('WorldView.js is the ONLY file in the codebase that explicitly binds :addPublicationCommentaryCommand — to OwnPublicationPanel and to WorldEncounterCanvas, both times to WorldView\'s own local function, never to ui/main.js\'s injected one'));
@@ -368,7 +368,7 @@ async function run() {
     // Section F — default behavior.
     // ===============================================================
     {
-        const editorSource = await rawSource('ui/views/EditorView.js');
+        const editorSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         const mainSource = codeOnly(await rawSource('ui/main.js'));
 

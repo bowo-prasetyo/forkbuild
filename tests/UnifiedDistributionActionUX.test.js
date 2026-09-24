@@ -5,7 +5,7 @@ import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { Publication } from '../publisher/Publication.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
 import { sanitizeDistributionErrorMessage } from '../application/DistributionErrorMessageSanitizer.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // UX-level distribution unification.
 //
@@ -142,7 +142,7 @@ function buildEditorViewHarness(editorViewSource, {
     const blockSource = extractRange(
         editorViewSource,
         "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
-        '// ------------------------- document lifecycle ------------',
+        '\n    return {',
         '0.9.377/0.9.450/0.9.502/0.9.671 post-publish distribution block'
     );
 
@@ -317,7 +317,7 @@ async function runTests() {
     // OwnPublicationPanel.js's own Section D already holds).
     // ---------------------------------------------------------------
     {
-        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         const publication = new Publication({ id: 'pub-unify-f', documentId: 'doc-f', contentReference: { hash: 'pub-unify-f-hash' } });
         const order = [];
 
@@ -346,7 +346,7 @@ async function runTests() {
     // WorldEncounterCanvas.
     // ---------------------------------------------------------------
     {
-        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         const publication = new Publication({ id: 'pub-unify-g', documentId: 'doc-g', contentReference: { hash: 'pub-unify-g-hash' } });
         let publicationCalls = 0;
 
@@ -423,7 +423,7 @@ async function runTests() {
         assert(panelDefault({ defaultContentDistributionProvider: 'remote-pinning' }) === 'remote-pinning' && panelDefault({ distributionStorageChoice: 'ar', defaultContentDistributionProvider: 'remote-pinning' }) === 'ar',
             '31. Remote Pinning stays an eligible saved default, and an explicit pick always wins');
 
-        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         const harness = buildEditorViewHarness(editorViewSource, {
             snapshotDistributionCommand: (bytes, storage, placement, creation, discoveryProvider) => { calls.editorSnapshot = { discoveryProvider, storage }; return Promise.resolve({ contentReference: { hash: 'h5', uri: 'u5' }, announcement: null }); },
             publicationDistributionCommand: (args) => { calls.editorPublication = { discoveryProvider: args.discoveryProvider, storage: args.materialStorage }; return Promise.resolve(null); },
@@ -451,7 +451,7 @@ async function runTests() {
     {
         const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
         const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
-        const editorCode = await codeOnlySource('ui/views/EditorView.js');
+        const editorCode = (await Promise.all(editorViewFiles().map((file) => codeOnlySource(file)))).join('\n');
 
         assert((canvasCode.match(/this\.distributionCommand\(/g) || []).length === 1,
             '13. WorldEncounterCanvas.js still calls distributionCommand from exactly one place');

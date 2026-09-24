@@ -38,6 +38,7 @@ import { World } from '../core/World.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.596 — Repository Admission to Publication Action Continuity Audit.
 //
@@ -678,7 +679,7 @@ async function run() {
     // Section F — Placement reachability.
     // ===============================================================
     {
-        const worldViewSource = await readSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(/ownPublication\.value = activeId \? session\.getPublicationForDocument\(activeId\) : null;/.test(worldViewSource),
             'F0. Confirmed against the real, current source: OwnPublicationPanel\'s own `publication` prop is bound EXACTLY to session.getPublicationForDocument(activeId) — nothing else feeds it.');
 

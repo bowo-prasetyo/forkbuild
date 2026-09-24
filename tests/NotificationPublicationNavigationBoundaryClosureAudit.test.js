@@ -19,6 +19,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.531 — Notification Publication Navigation Boundary Closure Audit.
 //
@@ -215,7 +216,7 @@ async function runTests() {
     // Section B — Successful navigation.
     // ===============================================================
     {
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const commandMatch = worldViewSource.match(/function viewNotificationPublicationCommand\(publicationId\) \{[\s\S]*?\n {8}\}/);
         assert(commandMatch, 'B0. viewNotificationPublicationCommand() still exists in ui/views/WorldView.js.');
         const commandBody = commandMatch[0];
@@ -426,7 +427,7 @@ async function runTests() {
     // Section F — Existing navigation boundary (no second mechanism).
     // ===============================================================
     {
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const commandMatch = worldViewSource.match(/function viewNotificationPublicationCommand\(publicationId\) \{[\s\S]*?\n {8}\}/);
         const commandBody = commandMatch[0];
 
@@ -493,7 +494,7 @@ async function runTests() {
         // their documented one-line shape: call focusWorld with the
         // given documentId, then close their own dialog — never anything
         // else.
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const shapes = {
             focusLocationDocument: /function focusLocationDocument\(documentId\) \{\s*focusWorld\(documentId\);\s*closeLocationDocuments\(\);\s*\}/,
             focusLocationBrowserResult: /function focusLocationBrowserResult\(documentId\) \{\s*focusWorld\(documentId\);\s*closeLocationBrowser\(\);\s*\}/
@@ -553,7 +554,7 @@ async function runTests() {
         // came from a successfully resolved Publication — the guard
         // clause fully gates it, so a null/undefined publication can
         // never reach focusWorld() with a garbage argument.
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const commandBody = worldViewSource.match(/function viewNotificationPublicationCommand\(publicationId\) \{[\s\S]*?\n {8}\}/)[0];
         const guardBeforeFocus = /if \(!publication \|\| !publication\.documentId\) \{\s*return false;\s*\}\s*focusWorld\(publication\.documentId\);/.test(commandBody);
         assert(guardBeforeFocus, 'H3. focusWorld() is textually unreachable unless the guard clause above it has already confirmed a resolved Publication with a documentId.');

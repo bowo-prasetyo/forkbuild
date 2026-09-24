@@ -9,7 +9,7 @@ import { PublicationQuery } from '../core/PublicationQuery.js';
 import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
 import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.557 — Publication Return-Path Product Boundary Audit.
 //
@@ -317,7 +317,7 @@ async function runTests() {
     // Repository search, even implicitly?
     // ===============================================================
     {
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const catalogSource = await rawSource('ui/components/PublicationCatalog.js');
 
         // F1. 0.9.556 Section E already proved "return to World" is a

@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { shouldRefreshSnapshotDiscovery, DEFAULT_DISCOVERY_REFRESH_RADIUS } from '../application/ShouldRefreshSnapshotDiscovery.js';
 import { WorldSnapshotDiscoveryMonitor } from '../application/WorldSnapshotDiscoveryMonitor.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.186 — World Snapshot Background Discovery.
 //
@@ -332,7 +333,7 @@ async function runTests() {
         assert(mainCode.includes("app.provide('worldSnapshotDiscoveryMonitor', worldSnapshotDiscoveryMonitor)"),
             '29. ui/main.js provides worldSnapshotDiscoveryMonitor app-wide, mirroring every other Snapshot discovery capability');
 
-        const viewCode = await codeOnlySource('ui/views/WorldView.js');
+        const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(viewCode.includes("const worldSnapshotDiscoveryMonitor = inject('worldSnapshotDiscoveryMonitor', null);"),
             '30. WorldView.js injects the app-wide worldSnapshotDiscoveryMonitor');
         assert(/spatialContext\.value = spatialContextService\.getCurrentContext\(\);[\s\S]{0,400}worldSnapshotDiscoveryMonitor\.observe\(spatialContext\.value\)/.test(viewCode),

@@ -29,7 +29,7 @@ import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { ForkPublishedWorldUseCase } from '../application/ForkPublishedWorldUseCase.js';
 import { LifecycleStatus, computeLifecycleStatus, describeLifecycleStatus } from '../application/DocumentLifecycleStatus.js';
-import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.579 — World Editing & Unsaved-State Product Reassessment.
 //
@@ -305,7 +305,7 @@ async function main() {
         // C1. No navigation-blocking guard of any kind exists anywhere
         // in the real Editor surface — confirmed by direct, exhaustive
         // source inspection, not merely "not found by one grep."
-        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         assert(!/beforeRouteLeave|onBeforeRouteLeave/.test(editorViewSource), 'C1a. EditorView.js registers no beforeRouteLeave/onBeforeRouteLeave guard of any kind.');
         assert(!/beforeunload/.test(editorViewSource), 'C1b. EditorView.js never wires window.onbeforeunload/addEventListener("beforeunload", ...) — a hard reload or tab close raises no native "are you sure" prompt.');
         assert(!/window\.confirm/.test(editorViewSource), 'C1c. EditorView.js never calls window.confirm() to gate navigation on unsaved changes.');
@@ -575,7 +575,7 @@ async function main() {
         // 'pagehide'/'visibilitychange'-driven save exists anywhere in
         // the file, confirmed by the same exhaustive read Section C1
         // already performed).
-        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         assert(!/pagehide|visibilitychange/.test(editorViewSource), 'H1. EditorView.js wires no pagehide/visibilitychange-driven save — a hard reload relies on EXACTLY the same two facts Section C already proved: the canonical slot (if Saved) and/or a not-yet-cancelled recovery checkpoint (if the autosave delay had already elapsed).');
 
         // H2. Navigate to another World and back: EditorSession's own
@@ -725,7 +725,7 @@ async function main() {
         // presentation boundary, exercised exactly as the brief asked:
         // as a presentation fact (what does the Editor show?), not as
         // new error infrastructure.
-        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         const loadCatchMatch = editorViewSource.match(/} catch \(err\) \{\s*\/\/[\s\S]*?feedback\.show\(err\.reason === LoadFailureReason\.MATERIAL_UNAVAILABLE[\s\S]*?\);/);
         assert(loadCatchMatch !== null, 'J3a. EditorView.js\'s own route.query.load catch block located.');
         assert(/"This Publication's material is currently unavailable\."/.test(loadCatchMatch[0]),
@@ -811,7 +811,7 @@ async function main() {
         // L3. THE CONCRETE FINDING: the standalone Editor surface's own
         // refreshDocumentInfo() hardcodes isPublished:false, always —
         // quoted verbatim, contrasted directly with L2.
-        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         assert(/const status = computeLifecycleStatus\(\{ hasBeenSaved: !!state\.lastSaved, isPublished: false \}\);/.test(editorViewSource),
             'L3a. EditorView.js\'s own refreshDocumentInfo() hardcodes isPublished:false, UNCONDITIONALLY — quoted verbatim. There is no code path in this function that ever reads publishedPublication.value or any other true "has this content been published" fact.');
         assert(/status only ever distinguishes Draft\/Saved/.test(editorViewSource),

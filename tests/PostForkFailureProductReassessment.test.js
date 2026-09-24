@@ -20,6 +20,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import ForkFailureDialog from '../ui/components/ForkFailureDialog.js';
+import { editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.355 — Post-Fork Failure Product Reassessment.
 //
@@ -183,7 +184,7 @@ async function run() {
             '6. ForkFailureDialog renders a real message for MATERIAL_UNAVAILABLE.');
 
         // 5. return navigation — structural (EditorView.js imports vue).
-        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         assert(editorViewSource.includes('function backFromForkFailure()'), '7. backFromForkFailure() still exists.');
         assert(/router\.push\(\{\s*path: `\/world\/\$\{failure\.returnWorldId\}`/.test(editorViewSource),
             '8. it still navigates to /world/<returnWorldId>.');
@@ -242,7 +243,7 @@ async function run() {
         // navigation — both already reconfirmed live in
         // tests/ForkFailureUXConvergenceAudit.test.js Sections A/B/D;
         // reconfirmed here structurally, fresh, against the current tree.
-        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         const catchBlockMatch = editorViewSource.match(/\} catch \(err\) \{[\s\S]*?forkFailure\.value = \{[\s\S]*?\};[\s\S]*?\n\s{16}\}/);
         assert(catchBlockMatch && !catchBlockMatch[0].includes('editorSession.openDocument('),
             '6. the real fork-failure catch block still never opens a Document — no dead end on either failure path.');
@@ -373,7 +374,7 @@ async function run() {
         // exactly what backFromForkFailure() already offers. No SECOND,
         // narrower "retry" concept is needed beside that already-real
         // navigation.
-        const editorViewSource = await codeOnlySource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(!/retry\(|setInterval|setTimeout.*fork/i.test(editorViewSource),
             '4. EditorView.js contains no retry loop or polling mechanism of any kind for fork failures — the existing "Back to Publication" -> re-click Fork IS the only meaningful re-attempt path, and it already exists.');
 
@@ -522,7 +523,7 @@ async function run() {
 
         // forkFailure itself remains a plain, ephemeral ref — no store,
         // no persistence — reconfirmed fresh.
-        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         assert(/const forkFailure = ref\(null\);/.test(editorViewSource),
             '3. forkFailure is still declared as a plain, ephemeral ref.');
 
@@ -565,7 +566,7 @@ async function run() {
 
         // 3. return navigation remains valid; 4. no blank Editor state —
         // both structural, against the current EditorView.js source.
-        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         const catchBlockMatch = editorViewSource.match(/\} catch \(err\) \{[\s\S]*?forkFailure\.value = \{[\s\S]*?\};[\s\S]*?\n\s{16}\}/);
         assert(catchBlockMatch && !catchBlockMatch[0].includes('editorSession.openDocument('),
             '7. the catch block still never opens a Document on either failure — no blank Editor state.');

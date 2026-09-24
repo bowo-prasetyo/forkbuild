@@ -15,7 +15,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.600 — Publication First-Placement Action Wiring Fix.
 //
@@ -363,7 +363,7 @@ async function run() {
         assert(/@click="placeOwnPublication"/.test(placementsSection),
             'J3. The "Place" button lives inside the EXISTING .own-publication-placements listing — never a new panel.');
 
-        const viewSrc = await readSource('ui/views/WorldView.js');
+        const viewSrc = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(/function placeOwnPublication\(publication\) \{/.test(viewSrc), 'J4. WorldView.js defines placeOwnPublication().');
         assert(/session\.placePublication\(publication\.id, position\)/.test(viewSrc), 'J5. It forwards directly to session.placePublication() — no logic of its own beyond resolving "here."');
         assert(/:placePublicationCommand="placeOwnPublication"/.test(viewSrc), 'J6. WorldView.js binds placePublicationCommand to OwnPublicationPanel.');

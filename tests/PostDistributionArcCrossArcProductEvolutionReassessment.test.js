@@ -8,7 +8,7 @@ import { NotificationEvent } from '../core/NotificationEvent.js';
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
 import { PUBLICATION_COMMENTED_EVENT_TYPE } from '../application/PublicationCommentaryNotificationProducer.js';
 import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.350 — Cross-Arc Product Evolution Reassessment.
 //
@@ -180,7 +180,7 @@ async function runTests() {
             'B1b. PublicationCatalog.js still composes local + decentralized discovery through CreateDiscoveryUseCase.');
         assert(/forkPublication\(pub\)\s*\{\s*router\.push\(\{\s*path:\s*'\/editor',\s*query:\s*\{\s*fork:\s*pub\.documentId,\s*publication:\s*pub\.id\s*\}/.test(codeOnlyLines(catalogSource)),
             'B1c. forkPublication() still navigates to /editor?fork=documentId&publication=id.');
-        const editorSource = await rawSource('ui/views/EditorView.js');
+        const editorSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/forkDocumentUseCase\.execute\(route\.query\.fork/.test(editorSource),
             'B1d. EditorView.js still consumes route.query.fork through ForkDocumentUseCase on load.');
 
@@ -209,7 +209,7 @@ async function runTests() {
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(/addPublicationCommentaryCommand/.test(canvasSource),
             'B3b. WorldEncounterCanvas.js still carries commentary vocabulary — Encounter/Inspect and Comment are the same surface.');
-        const worldViewSourceForNotif = await rawSource('ui/views/WorldView.js');
+        const worldViewSourceForNotif = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/getRecipientNotificationEventsCommand/.test(worldViewSourceForNotif) && /NotificationHistoryPanel/.test(worldViewSourceForNotif),
             'B3c. WorldView.js still wires getRecipientNotificationEventsCommand into a mounted NotificationHistoryPanel.');
 
@@ -427,7 +427,7 @@ async function runTests() {
         // F1. "fork" — PublicationCatalog/Card/List and WorldView's own
         // "Edit a Copy" all converge on the SAME /editor?fork= navigation
         // — never two independent fork mechanisms.
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/query:\s*\{[^}]*fork:/.test(worldViewSource) || /path:\s*['"]\/editor['"][^;]*fork/.test(worldViewSource) || /EDIT_COPY/.test(worldViewSource),
             'F1. WorldView.js\'s own "Edit a Copy" still reaches the same /editor fork navigation family, never a second fork implementation.');
 

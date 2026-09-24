@@ -27,7 +27,7 @@ import { PublicationAnchor } from '../core/PublicationAnchor.js';
 import { BitcoinAnchorEvidenceView } from '../anchoring/BitcoinAnchorEvidenceView.js';
 import { ArweaveAnchorEvidenceView } from '../anchoring/ArweaveAnchorEvidenceView.js';
 import { BaseAnchorEvidenceView } from '../anchoring/BaseAnchorEvidenceView.js';
-import { stylesheetFiles } from './support/SourceFileGroups.js';
+import { stylesheetFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.526 — Publication Creation & Distribution Trust Product
 // Reassessment.
@@ -158,7 +158,7 @@ function buildEditorHarness(editorViewSource, { multiRelayNostrPublicationDistri
     const blockSource = extractRange(
         editorViewSource,
         "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
-        '// ------------------------- document lifecycle ------------',
+        '\n    return {',
         '0.9.377/0.9.450/0.9.502/0.9.526 post-publish distribution block'
     );
     function ref(initial) { return { value: initial }; }
@@ -220,7 +220,7 @@ function makeDocument(title) {
 
 async function run() {
     console.log('=== 0.9.526 — Publication Creation & Distribution Trust Product Reassessment ===\n');
-    const editorViewSource = await source('ui/views/EditorView.js');
+    const editorViewSource = (await Promise.all(editorViewFiles().map((file) => source(file)))).join('\n');
     const editorViewCode = codeOnly(editorViewSource);
 
     // ===============================================================
@@ -256,7 +256,7 @@ async function run() {
         // 0.9.377 invariant, re-confirmed live: onDocumentPublished()
         // only ever WRITES publishedPublication; it never calls
         // distributeEditorPublication() or either injected command.
-        const onPublishedBody = extractRange(editorViewCode, 'function onDocumentPublished(publication) {', '\n        }', 'onDocumentPublished body');
+        const onPublishedBody = extractRange(editorViewCode, 'function onDocumentPublished(publication) {', '\n    }', 'onDocumentPublished body');
         assert(!/distributeEditorPublication|multiRelayNostrPublicationDistributionCommand\(|publicationDistributionCommand\(/.test(onPublishedBody),
             n('A4. onDocumentPublished() calls neither distributeEditorPublication() nor either injected command directly — distribution is reachable only via the SEPARATE, explicit "Distribute now" click'));
 
@@ -429,7 +429,7 @@ async function run() {
         // branch, and never touching either provider's own command.
         assert(editorViewCode.includes('function normalizeDistributionResultForDisplay(result)'),
             n('C10. the fix is one small, named, pure function — normalizeDistributionResultForDisplay() — not an inline ternary duplicated at each call site'));
-        const normalizeBody = extractRange(editorViewCode, 'function normalizeDistributionResultForDisplay(result) {', '\n        }', 'normalizeDistributionResultForDisplay body');
+        const normalizeBody = extractRange(editorViewCode, 'function normalizeDistributionResultForDisplay(result) {', '\n    }', 'normalizeDistributionResultForDisplay body');
         assert(!/multiRelayNostrPublicationDistributionCommand|publicationDistributionCommand/.test(normalizeBody),
             n('C11. the normalization function itself calls neither injected command — a pure display-shape transform over an already-resolved value, nothing else'));
 

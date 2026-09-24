@@ -20,6 +20,7 @@ import { executeDiscoverPlaceNamingClaimsCommand } from '../application/Discover
 import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
 import { composePlaceNamingDiscoveryRuntime } from '../application/PlaceNamingDiscoveryRuntimeComposition.js';
 import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.261 — Nearby Place Naming Navigation Lifecycle Audit.
 //
@@ -877,11 +878,11 @@ async function runTests() {
     // (Publication/Snapshot/Commentary) to the forbidden list.
     // -------------------------------------------------------------
     {
-        const worldViewCode = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
+        const worldViewCode = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         assert(worldViewCode.includes('function navigateToNearbyPlaceNamingClaim(row) {'),
             '51. ui/views/WorldView.js still defines the real navigateToNearbyPlaceNamingClaim(row) function this file\'s own reproduction stands in for.');
 
-        const rawWorldViewCode = await rawSource('ui/views/WorldView.js');
+        const rawWorldViewCode = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const startMarker = 'function navigateToNearbyPlaceNamingClaim(row) {';
         const startIdx = rawWorldViewCode.indexOf(startMarker);
         const endIdx = rawWorldViewCode.indexOf('\n        }', startIdx + startMarker.length);

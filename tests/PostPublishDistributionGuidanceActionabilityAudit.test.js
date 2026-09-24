@@ -20,6 +20,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.375 — Post-Publish Distribution Guidance Actionability Audit.
 //
@@ -240,16 +241,16 @@ async function run() {
         assert(/function report\(message\)/.test(toolbarCode) && toolbarCode.includes('props.feedback.show(message)'),
             '2. Toolbar.js\'s own report() forwards to the injected feedback.show(message) — a single string, nothing else');
 
-        const worldViewCode = await codeOnlySource('ui/views/WorldView.js');
+        const worldViewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(worldViewCode.includes('function publishActiveDocument()') && worldViewCode.includes('feedback.show(`Published "${publication.title}"`)'),
             '3. WorldView.js\'s own publishActiveDocument() — World View\'s own Publish button — reports success via feedback.show(`Published "${publication.title}"`), independently of Toolbar.js');
 
         // Both EditorView.js and WorldView.js independently define the
         // IDENTICAL feedback shape (never a shared module) — confirmed
         // by exact source match, not paraphrase.
-        const editorViewCode = await rawSource('ui/views/EditorView.js');
+        const editorViewCode = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         const editorFeedbackBlock = editorViewCode.match(/const feedback = \{[\s\S]*?\n {8}\};/)[0];
-        const worldViewRawCode = await rawSource('ui/views/WorldView.js');
+        const worldViewRawCode = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const worldFeedbackBlock = worldViewRawCode.match(/const feedback = \{[\s\S]*?\n {8}\};/)[0];
         assert(editorFeedbackBlock.includes('show(message) {') && worldFeedbackBlock.includes('show(message) {'),
             '4. both EditorView.js and WorldView.js define their own show(message) method, independently');
@@ -301,7 +302,7 @@ async function run() {
         const toolbarCode = await codeOnlySource('ui/components/Toolbar.js');
         assert(/function report\(message\)/.test(toolbarCode),
             '9. Toolbar.js\'s report(message) takes exactly one parameter');
-        const editorViewRawForB = await rawSource('ui/views/EditorView.js');
+        const editorViewRawForB = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         const feedbackBlockForB = editorViewRawForB.match(/const feedback = \{[\s\S]*?\n {8}\};/)[0];
         assert(/show\(message\)\s*\{/.test(feedbackBlockForB),
             '10. the shared feedback object\'s own show(message) is declared with exactly one parameter — a second, action-carrying argument has nowhere to go without changing this declaration');
@@ -333,7 +334,7 @@ async function run() {
     // scope to call?
     // ---------------------------------------------------------------
     {
-        const worldViewCode = await codeOnlySource('ui/views/WorldView.js');
+        const worldViewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(worldViewCode.includes(':publicationDistributionCommand="distributeWorldEncounterPublication"'),
             '15. WorldView.js injects the existing distribution command into OwnPublicationPanel today, via distributeWorldEncounterPublication — confirmed still present');
         assert(worldViewCode.includes(':distributionCommand="distributeWorldEncounterPublication"'),
@@ -342,7 +343,7 @@ async function run() {
         // EditorView.js — the OTHER view whose own publish() can show
         // the notification (Section A) — is checked for the identical
         // capability.
-        const editorViewCode = await codeOnlySource('ui/views/EditorView.js');
+        const editorViewCode = (await Promise.all(editorViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(!editorViewCode.includes('OwnPublicationPanel'),
             '17. EditorView.js never imports or mounts OwnPublicationPanel — the one component the existing distribution command is already wired to');
         // AMENDED BY 0.9.450 — Nostr Multi-Relay Publication Distribution
@@ -377,7 +378,7 @@ async function run() {
         // block for the router to hand it anything, confirming the app
         // has no existing channel to deliver a distribution command to
         // it even if one wanted to.
-        const editorViewRaw = await rawSource('ui/views/EditorView.js');
+        const editorViewRaw = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/\n {4}props:\s*\{/.test(editorViewRaw),
             '19. EditorView.js declares no props object — it constructs its own use cases locally and receives nothing from ui/router/index.js\'s own route registration');
         const routerCode = await codeOnlySource('ui/router/index.js');
@@ -393,12 +394,12 @@ async function run() {
     // Publish succeeds?
     // ---------------------------------------------------------------
     {
-        const worldViewRaw = await rawSource('ui/views/WorldView.js');
+        const worldViewRaw = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
 
         // publishActiveDocument() calls session.publishDocument() then
         // refreshSpatialUI() SYNCHRONOUSLY within the same guarded()
         // callback.
-        const publishFn = worldViewRaw.match(/function publishActiveDocument\(\)[\s\S]*?\n {8}\}/)[0];
+        const publishFn = worldViewRaw.match(/function publishActiveDocument\(\)[\s\S]*?\n {4}\}/)[0];
         assert(publishFn.includes('session.publishDocument(info.documentId)') && publishFn.includes('refreshSpatialUI();'),
             '21. WorldView.js\'s own publishActiveDocument() calls session.publishDocument() and refreshSpatialUI() in the same function, not on a later, separate trigger');
 
@@ -574,7 +575,7 @@ async function run() {
         // assertion below is updated in place to check the CORRECTED
         // shape, the same convention this file's own header already
         // establishes for a stale assumption a later milestone corrects.
-        const editorViewCode = await codeOnlySource('ui/views/EditorView.js');
+        const editorViewCode = (await Promise.all(editorViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         // AMENDED BY 0.9.670 — Publication Material Storage Selection. The
         // signature grew two more optional parameters (materialStorage,
         // remotePinningConfiguration) — updated to match.
