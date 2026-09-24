@@ -49,156 +49,47 @@ import { AvatarInventoryPersistenceStore } from '../storage/AvatarInventoryPersi
 import { VehicleRuntimeInstancePersistenceStore } from '../storage/VehicleRuntimeInstancePersistenceStore.js';
 import { AnimalRuntimeInstancePersistenceStore } from '../storage/AnimalRuntimeInstancePersistenceStore.js';
 
-// Builds the world exploration backend and returns a session factory, so
-// ui/ never imports storage/, publisher/, or discovery/ directly.
-//
-// 0.2.14 Update: Wires the LocalContentStore into the LocalPublisherProvider
-// so that published snapshots are stored and retrieved via content-addressed
-// storage rather than simple local storage keys.
-//
-// 0.2.23: wires the placement stack (LocalPlacementRegistry +
-// PlacePublicationUseCase + MoveWorldPlacementUseCase) that had
-// existed since 0.2.10/0.2.15/0.2.16/0.2.18 but was never actually
-// connected to World View — CreatePlacementRegistryUseCase already
-// builds this exact set of collaborators for other surfaces; this
-// wires the same shape directly so WorldNavigationSession can resolve
-// and move a document's placement. LocalPlacementRegistry writes
-// through to the SAME LocalSpatialIndexProvider WorldLayoutProvider
-// already reads, so a placement created/moved here is immediately
-// visible to spatial streaming with no separate sync step.
+// Builds the world exploration backend and returns a session factory, so ui/
+// never imports storage/, publisher/ or discovery/ directly. The placement
+// registry writes through to the same spatial index the layout provider reads,
+// so placement changes are visible to streaming immediately.
+
 export class CreateWorldViewUseCase {
-    // 0.2.59 — Peer-Based Avatar Social Transport. `peerMessageBus` /
-    // `connectedPeerRegistry` are the SAME app-wide peer/PeerMessageBus.js
-    // and application/ConnectedPeerRegistry.js (via PeerSessionManager)
-    // ui/main.js already builds for the friendship protocol (0.2.57) —
-    // shared, injected collaborators this use case never owns or
-    // disposes, exactly the convention presence/
-    // PeerAvatarPresenceBroadcastProvider.js's own header already
-    // documents. `friendRelationshipUseCase` supplies the `isFriend`/
-    // `hasFriend` predicates every visibility policy already knows how
-    // to consult (0.2.58) — this use case never reads a
-    // FriendshipRecord itself, only the predicate.
+    // The peer collaborators (message bus, registry, friendship, blocking, device
+    // authorization) are the app-wide instances from ui/main.js, never owned here.
     //
-    // Whether World View's avatar social layer (presence/profile/
-    // interaction) actually rides authenticated peer connections, or
-    // falls back to the same-origin BroadcastChannel transport 0.2.37
-    // introduced, is decided ONCE, right here, by whether a real peer
-    // transport was actually supplied — never by whether any peer is
-    // CURRENTLY connected. A caller with no authenticated peers right
-    // now still gets the peer transport; it just has nobody to fan out
-    // to yet (see presence/PeerAvatarPresenceBroadcastProvider.js#advertise()
-    // — an empty connectedPeerRegistry.list() is simply a no-op send).
-    // "Nobody sees me right now" and "I have no transport at all" are
-    // different facts — see docs/Principles.md, "No Authenticated
-    // Peers Is A Population Of Zero, Never An Absent Transport"
-    // (0.2.59).
+    // Whether the avatar social layer rides peer connections or falls back to the
+    // same-origin BroadcastChannel is decided once, by whether a peer transport was
+    // supplied, never by whether anyone is connected (see docs/Principles.md, "No
+    // Authenticated Peers Is A Population Of Zero, Never An Absent Transport").
     //
-    // 0.2.60 — `peerBlockUseCase` supplies the SAME kind of `isBlocked`
-    // predicate every visibility policy/trust boundary already knows
-    // how to consult, mirroring `friendRelationshipUseCase`'s own
-    // wiring exactly: this use case never reads a PeerBlockRecord
-    // itself, only the predicate, passed to BOTH the outbound transport
-    // (each PeerAvatarPresenceBroadcastProvider's own `isBlocked`) and
-    // the inbound one (WorldNavigationSession's own `isBlocked`, which
-    // builds each protocol's trust boundary with it) — see docs/
-    // Principles.md, "Blocking Is Wired Twice, Once Per Direction,
-    // Because Neither Side May Trust The Other To Enforce It" (0.2.60).
-    // 0.2.95 — `deviceAuthorizationPropagationUseCase` is the SAME
-    // app-wide DeviceAuthorizationPropagationUseCase ui/main.js already
-    // builds for friendship/chat/voice (0.2.78/0.2.79/0.2.83) —
-    // threaded through only so worldAuthorizationService below can
-    // resolve `resolveOwnSocialIdentity()`, the reflexive query that
-    // makes EDIT authority follow the CURRENTLY-AUTHENTICATED device's
-    // own resolved parent identity rather than its bare, per-device
-    // signing key. Optional: a caller that doesn't wire one (any
-    // pre-0.2.95 test) gets ownership resolved from identityProvider's
-    // own signing identity directly — correct for the common single-
-    // device case, just unaware that a second device could ever speak
-    // for the same identity. See application/WorldAuthorizationService.js's
-    // own header.
-    // 0.9.597 — Publication Action Provider Continuity Fix. `decentralizedPublicationDiscoveryProvider`
-    // is the SAME optional, app-wide discovery/DecentralizedPublicationDiscoveryProvider.js
-    // instance ui/main.js already builds and shares (0.9.337), and that
-    // application/CreateDiscoveryUseCase.js already accepts under this
-    // identical name to build Repository search's own CompositeDiscoveryProvider
-    // (0.9.339) — never a second provider or a new discovery mechanism.
-    // 0.9.596's own audit found that `discoveryProvider` below (the one
-    // WorldNavigationSession has always used for fork-policy/placement/
-    // world-layout) must NOT be widened to include it: `_findPublications()`
-    // is the shared choke point behind `_isKnownPublication()`/
-    // `_checkForkPolicy()`, and merging a decentralized/Repository-admitted
-    // catalog into it would silently extend fork-policy license enforcement
-    // to a plain, never-locally-published document merely because an
-    // unrelated encounter admitted a Publication sharing its documentId.
-    // See application/WorldNavigationSession.js's own constructor comment
-    // on `publicationActionDiscoveryProvider`, below, for the narrow
-    // capability this composes instead.
+    // isBlocked is wired to both the outbound transports and the inbound trust
+    // boundaries (docs/Principles.md, "Blocking Is Wired Twice, Once Per
+    // Direction, Because Neither Side May Trust The Other To Enforce It").
+    // deviceAuthorizationPropagationUseCase lets edit authority follow the device's
+    // parent identity; without it ownership uses the signing identity directly.
     execute(identityProvider = null, { peerMessageBus = null, connectedPeerRegistry = null, friendRelationshipUseCase = null, peerBlockUseCase = null, deviceAuthorizationPropagationUseCase = null, decentralizedPublicationDiscoveryProvider = null } = {}) {
         const storageProvider = new LocalStorageProvider();
         const contentStore = new LocalContentStore(storageProvider);
         const discoveryProvider = new LocalDiscoveryProvider(storageProvider);
-        // 0.9.597 — a SEPARATE discovery capability, consulted only by
-        // WorldNavigationSession#getPublicationForDocument()/findPublicationById()
-        // (never by fork-policy, never by worldLayoutProvider below, both
-        // of which keep reading the plain `discoveryProvider` above,
-        // unchanged). Reuses discovery/CompositeDiscoveryProvider.js
-        // verbatim — the exact same, small, generic merge
-        // CreateDiscoveryUseCase.js already applies for Repository search
-        // — never a new merge mechanism. A caller that doesn't supply
-        // `decentralizedPublicationDiscoveryProvider` (every pre-0.9.597
-        // caller, and every existing test) gets back `discoveryProvider`
-        // itself, unchanged — see CompositeDiscoveryProvider's own "falsy
-        // provider is simply skipped" degradation, mirrored here by never
-        // constructing one at all when there is nothing to merge.
+        // A separate discovery capability that also includes Repository-admitted
+        // publications, used for publication actions and world layout. The plain
+        // discoveryProvider stays narrower on purpose: it backs fork-policy checks, and
+        // widening it would extend license enforcement to unrelated local documents.
+        // Equals discoveryProvider when there is nothing to merge.
         const publicationActionDiscoveryProvider = decentralizedPublicationDiscoveryProvider
             ? new CompositeDiscoveryProvider([discoveryProvider, decentralizedPublicationDiscoveryProvider])
             : discoveryProvider;
 
-        // 0.2.5: Wire the spatial index
         const spatialIndexProvider = new LocalSpatialIndexProvider(storageProvider);
-        // 0.9.605 — Wire Publication Discovery into World Rendering.
-        // worldLayoutProvider now reads `publicationActionDiscoveryProvider`
-        // (above) rather than the plain `discoveryProvider` — the ONE
-        // constructor-argument substitution
-        // tests/PublicationWorldRenderingDiscoveryBoundaryAudit.test.js
-        // (0.9.604, Section D) already proved live is both necessary and
-        // sufficient for a Repository-admitted, explicitly-placed
-        // Publication to become visible/positioned. `discoveryProvider`
-        // itself — what fork-policy/_findPublications() reads — is
-        // untouched (0.9.596), and publicationActionDiscoveryProvider
-        // degrades to exactly `discoveryProvider` whenever no
-        // decentralizedPublicationDiscoveryProvider was supplied, so
-        // every pre-0.9.605 caller/test sees identical behavior.
         const worldLayoutProvider = new LocalWorldLayoutProvider(
             spatialIndexProvider,
             publicationActionDiscoveryProvider
         );
 
-        // 0.2.23: the placement registry (revisioned, signed
-        // PlacementRecords — see core/PlacementRecord.js) — a richer
-        // sibling of the plain WorldPlacement the spatial index stores.
         const placementRegistry = new LocalPlacementRegistry(storageProvider, spatialIndexProvider);
-        // 0.9.600 — Publication First-Placement Action Wiring Fix. Given
-        // `publicationActionDiscoveryProvider` (above) instead of the
-        // plain `discoveryProvider` — the ONE-ARGUMENT change
-        // tests/FirstPublicationPlacementCapabilityBoundaryAudit.test.js
-        // (0.9.599, Section C-Wiring) already proved live is both
-        // necessary and sufficient: PlacePublicationUseCase.execute()
-        // resolves a publicationId through this argument alone, so this
-        // is what lets it place a Repository-admitted-only Publication
-        // (WorldNavigationSession#placePublication(), below) while every
-        // pre-existing caller — PublishDocumentUseCase's own automatic
-        // initial placement, immediately below — keeps working
-        // unchanged: publicationActionDiscoveryProvider degrades to
-        // exactly `discoveryProvider` itself whenever no
-        // decentralizedPublicationDiscoveryProvider was supplied, and
-        // even when one was, it still includes `discoveryProvider` as
-        // its first, narrower member (see CompositeDiscoveryProvider),
-        // so a document this replica just published is resolved exactly
-        // as before. Never widens `discoveryProvider` itself, which
-        // `worldLayoutProvider`/`_findPublications()`/fork-policy above
-        // all keep reading unchanged — see this method's own 0.9.596/
-        // 0.9.597 header comments.
+        // Uses the wider provider so a Repository-admitted publication can be placed;
+        // publishing's automatic initial placement still resolves as before.
         const placePublicationUseCase = new PlacePublicationUseCase(
             spatialIndexProvider,
             publicationActionDiscoveryProvider,
@@ -213,53 +104,23 @@ export class CreateWorldViewUseCase {
             null,
             identityProvider
         );
-        // 0.9.197 — World Placement Removal UI Action. The mirror
-        // capability to moveWorldPlacementUseCase above: takes a
-        // placement OUT of the spatial index and placement registry
-        // without touching the Publication, the Document, or its
-        // material — see RemoveWorldPlacementUseCase's own header.
         const removeWorldPlacementUseCase = new RemoveWorldPlacementUseCase(
             spatialIndexProvider,
             placementRegistry
         );
         const initialPlacementStrategy = new GridPlacementStrategy();
 
-        // 0.2.14: Inject the contentStore into the publisher
         const publisherProvider = new LocalPublisherProvider(storageProvider, contentStore);
-        // 0.9.605 — the read-through material bridge
-        // tests/PublicationWorldMaterializationBoundaryAudit.test.js
-        // (0.9.603) already proved sufficient: given the SAME
-        // contentStore/publisherProvider this method already builds, it
-        // resolves a Publication's verified snapshot without ever
-        // copying content-hash-addressed bytes into storage[documentId].
-        // Consulted only by WorldNavigationSession#_loadWorld()'s own
-        // fallback, when this replica has no LOCAL copy of the
-        // document — never a replacement for loadPublicationDocumentUseCase.
+        // Only a fallback for when this replica has no local copy of the document: it
+        // reads a publication's verified snapshot without copying bytes into
+        // storage[documentId].
         const loadPublishedWorldSessionUseCase = new LoadPublishedWorldSessionUseCase(
             publisherProvider,
             new DocumentSerializer(),
             contentStore
         );
-        // 0.9.198 — Publication Unpublish/Retract UI Action. The mirror
-        // capability to removeWorldPlacementUseCase above, one authority
-        // up: takes a PUBLICATION out of the publication-facing catalog
-        // rather than a placement out of spatial state. Given the SAME
-        // publisherProvider `publishDocumentUseCase` (below) already
-        // writes through, so unpublishing a Publication this replica
-        // just published is immediately observable via the SAME
-        // discoveryProvider `_findPublications`/`_resolvePublicationForPlacement`
-        // already read (see discovery/LocalDiscoveryProvider.js's own
-        // header — it reads the exact storage key LocalPublisherProvider
-        // writes to).
         const unpublishDocumentUseCase = new UnpublishDocumentUseCase(publisherProvider);
 
-        // 0.9.248 — Publication Commentary UI Integration. The SAME
-        // storageProvider/discoveryProvider/identityProvider this method
-        // already builds/receives — no second storage key, no second
-        // discovery or identity mechanism. CanCommentOnPublicationUseCase
-        // (0.9.246) reuses this method's own discoveryProvider exactly
-        // the way placePublicationUseCase already does; the two commentary
-        // use cases below (0.9.244-0.9.247) are otherwise unmodified.
         const publicationCommentaryStore = new PublicationCommentaryStore(storageProvider);
         const canCommentOnPublicationUseCase = new CanCommentOnPublicationUseCase(discoveryProvider);
         const getPublicationCommentariesUseCase = new GetPublicationCommentariesUseCase(publicationCommentaryStore);
@@ -269,70 +130,21 @@ export class CreateWorldViewUseCase {
             canCommentOnPublicationUseCase
         );
 
-        // 0.9.284 — Notification History UI Boundary. The SAME
-        // storageProvider/identityProvider this method already builds/
-        // receives — no second storage key, no second identity
-        // mechanism. GetRecipientNotificationEventsUseCase (0.9.283)
-        // requires a real identityProvider at construction (there is no
-        // anonymous recipient to query for), so — like
-        // placeNamingClaimUseCase below — this is only built when one
-        // was actually supplied; a caller without one (every pre-0.9.284
-        // caller, and every existing test) gets `null`, which
-        // WorldNavigationSession#getRecipientNotificationEvents()
-        // already degrades to reporting no notification history rather
-        // than throwing.
+        // Needs a real identity (there is no anonymous recipient), so it is null
+        // without one; the session then reports no notification history.
         const notificationEventStore = new NotificationEventStore(storageProvider);
         const getRecipientNotificationEventsUseCase = identityProvider
             ? new GetRecipientNotificationEventsUseCase(notificationEventStore, identityProvider)
             : null;
 
-        // 0.9.701 — World View Persistence. The SAME storageProvider
-        // every other local-only store this method already builds
-        // reuses — no second storage key, no second local-storage
-        // mechanism. See application/WorldNavigationSession.js's own
-        // constructor comment on the three parameters these are handed
-        // as, below, and each store's own header for what it persists.
         const avatarInventoryPersistenceStore = new AvatarInventoryPersistenceStore(storageProvider);
         const vehicleRuntimeInstancePersistenceStore = new VehicleRuntimeInstancePersistenceStore(storageProvider);
         const animalRuntimeInstancePersistenceStore = new AnimalRuntimeInstancePersistenceStore(storageProvider);
 
-        // 0.9.285 — Wire Publication Commentary Notification Producer.
-        // PublicationCommentaryNotificationProducer (0.9.275) has existed
-        // since 0.9.275 as a real, tested decorator — 0.9.276/0.9.282's
-        // own audits exercised it against real infrastructure, but always
-        // constructed it themselves, inside a test. This is the first
-        // place production code ever builds one: it wraps the SAME
-        // addPublicationCommentaryUseCase just built above (unmodified —
-        // this file never adds a fourth constructor argument to it),
-        // reuses the SAME discoveryProvider this method already built for
-        // placePublicationUseCase/worldLayoutProvider/searchWorldUseCase
-        // (no second discovery mechanism), and hands it a notificationSink
-        // that does exactly one thing — `notificationEventStore.save()`,
-        // the SAME store getRecipientNotificationEventsUseCase above
-        // already reads back through `loadAll()`.
-        //
-        // ONLY COMPOSITION CHANGES WHICH IMPLEMENTATION IS EXPOSED. Below,
-        // this decorated capability — never the raw addPublicationCommentaryUseCase
-        // — is what gets handed to WorldNavigationSession as its own
-        // `addPublicationCommentaryUseCase` collaborator. WorldNavigationSession
-        // itself is unmodified: it already only ever calls `.execute()` on
-        // whatever it is given, so it has no idea, and no need to know,
-        // that the object it holds now also produces a notification.
-        // AddPublicationCommentaryUseCase.js itself never becomes
-        // notification-aware — this preserves the exact decorator
-        // boundary 0.9.275 established.
-        //
-        // A notificationSink failure (a genuine storage-provider error out
-        // of `notificationEventStore.save()`) propagates unmodified out of
-        // this capability's own `execute()`, exactly as
-        // PublicationCommentaryNotificationProducer's own header documents
-        // — the Commentary itself is already durably persisted by the time
-        // the sink runs, and this composition introduces no transaction or
-        // rollback to undo that write over a notification failure. No
-        // producer-side deduplication is added here either — every retry
-        // still constructs a fresh NotificationEvent, and it is
-        // NotificationEventStore.save() (0.9.281, unmodified) that
-        // collapses it, exactly as 0.9.282 Section F already proved.
+        // Wraps comment creation with a notification producer, so a new comment also
+        // stores a notification event. The session only calls execute() and is
+        // unaware of the decoration. A sink failure propagates after the comment is
+        // already saved (no rollback); the store deduplicates retries.
         const publicationCommentaryCapability = new PublicationCommentaryNotificationProducer(
             addPublicationCommentaryUseCase,
             discoveryProvider,
@@ -343,35 +155,12 @@ export class CreateWorldViewUseCase {
             storageProvider
         );
         const saveDocumentUseCase = new SaveDocumentUseCase(storageProvider);
-        // 0.3.10 — World Persistence & Return Experience. The SAME local
-        // storageProvider every other local-only store this method
-        // builds already reads/writes — a per-user, per-World camera
-        // framing that never becomes World content. See
-        // application/LocalWorldExperienceStore.js and
-        // core/LocalWorldExperience.js.
         const localWorldExperienceStore = new LocalWorldExperienceStore({ storageProvider });
-        // 0.5.2 — Place Naming & Naming Claims. A separate local
-        // backend, never folded into localWorldExperienceStore above —
-        // see application/CreateWorldPlaceNamingUseCase.js's own header.
-        // 0.5.3 — Decentralized Place Name Exchange adds
-        // placeNamingClaimExchange to that same wiring call; nothing
-        // else about this block changed.
         const { placeNamingClaimUseCase, localNamePreferenceStore, placeNamingClaimExchange } = identityProvider
             ? new CreateWorldPlaceNamingUseCase().execute(identityProvider)
             : { placeNamingClaimUseCase: null, localNamePreferenceStore: null, placeNamingClaimExchange: null };
-        // 0.2.93 — World View Instance Inspection. Both read from the
-        // SAME local storageProvider ui/views/EditorView.js's own
-        // CreatePersistenceUseCase already builds its equivalents from
-        // (application/CreatePersistenceUseCase.js) — the local-editing,
-        // same-replica scenario the milestone's flagship exercises.
-        // structureDocumentResolver is what makes World View actually
-        // RENDER (and therefore pick/inspect) a StructurePlacement at
-        // all — see renderer/WorldRenderer.js's own 0.2.90 header;
-        // before this it was always null here. loadDocumentUseCase
-        // resolves a placement's referenced document to a human title
-        // for the inspection panel (WorldNavigationSession#
-        // getSavedDocumentTitle()) — never used to LOAD a document into
-        // this session itself, only to look up its saved title.
+        // structureDocumentResolver lets World View render (and so pick and inspect)
+        // StructurePlacements; loadDocumentUseCase only looks up saved titles.
         const structureDocumentResolver = new StructureDocumentResolver(storageProvider);
         const loadDocumentUseCase = new LoadDocumentUseCase(storageProvider);
         const publishDocumentUseCase = new PublishDocumentUseCase(
@@ -381,52 +170,20 @@ export class CreateWorldViewUseCase {
             initialPlacementStrategy
         );
 
-        // 0.2.97 — shared with the new worldCommandPropagation wiring
-        // below (createSession()): the SAME registry both reconstructs
-        // a replayed command AND reconstructs one received over the
-        // network — one vocabulary, never two independently-maintained
-        // ones.
+        // One registry reconstructs both replayed and network-received commands.
         const commandRegistry = new CreateCommandRegistryUseCase().execute();
         const replayDocumentUseCase = new ReplayDocumentUseCase(commandRegistry);
         const restoreHistoryStateUseCase = new RestoreHistoryStateUseCase(
             replayDocumentUseCase
         );
         const documentCloneService = new DocumentCloneService();
-        // 0.2.26: search runs over the SAME discoveryProvider every
-        // other discovery-driven surface (Repository/Author views,
-        // fork-policy checks) already reads — see
-        // docs/Principles.md, "Discovery Is One Path, Not Two."
+        // See docs/Principles.md, "Discovery Is One Path, Not Two."
         const searchWorldUseCase = new SearchWorldUseCase(discoveryProvider);
 
-        // 0.2.35 — the local user's own AvatarProfile/AvatarPresence
-        // stack, built ONLY when someone is actually logged in.
-        // CreateAvatarPresenceSessionUseCase already wires BOTH
-        // avatarProfileUseCase and presenceSession from the SAME
-        // AvatarProfileUseCase instance (see its own comment) — using
-        // it here, rather than wiring AvatarProfileUseCase separately,
-        // means WorldNavigationSession's onProfileChanged subscription
-        // and the presence session's initial avatarId/ownerIdentity
-        // are guaranteed to agree, not two independently-constructed
-        // views of the same identity's storage.
-        //
-        // Absent (both null) when nobody is logged in — the exact same
-        // "an optional collaborator that simply isn't wired" shape
-        // spatialDiscoveryProvider (0.2.30) already established. World
-        // View works completely normally with no local avatar; see
-        // docs/Principles.md.
-        // 0.2.40: presenceVisibilityUseCase travels alongside the same
-        // avatarWiring — see CreateAvatarPresenceSessionUseCase's own
-        // comment. Absent (null) under the exact same "nobody logged
-        // in" condition as avatarProfileUseCase/avatarPresenceSession
-        // — with no local avatar to publish, there is nothing for a
-        // visibility policy to gate.
-        // 0.2.58: avatarProfileVisibilityUseCase travels alongside the
-        // same avatarWiring, absent under the identical "nobody logged
-        // in" condition — see CreateAvatarPresenceSessionUseCase's own
-        // comment. Profile publishing now gates on ITS OWN policy
-        // rather than borrowing presence's — see docs/Principles.md,
-        // "Profile Gets Its Own Publication Gate, Superseding The
-        // Shared One."
+        // The local avatar stack, built only when someone is logged in; World View
+        // works normally without one. CreateAvatarPresenceSessionUseCase builds the
+        // profile and presence session from one AvatarProfileUseCase so they agree on
+        // identity. Presence and profile each have their own visibility policy.
         let avatarProfileUseCase = null;
         let avatarPresenceSession = null;
         let presenceVisibilityUseCase = null;
@@ -439,39 +196,15 @@ export class CreateWorldViewUseCase {
             avatarProfileVisibilityUseCase = avatarWiring.avatarProfileVisibilityUseCase;
         }
 
-        // 0.2.37 — Decentralized Avatar Presence Synchronization.
-        // Both built UNCONDITIONALLY, regardless of login state — see
-        // docs/Principles.md, "Watching Presence Never Requires Having
-        // One": a logged-out viewer can still see other replicas'
-        // avatars move even though they have none of their own to
-        // publish. `avatarTemplateRegistry` is the SAME shape
-        // CreateAvatarTemplateRegistryUseCase already builds for the
-        // Avatar Creator (0.2.34) — reused here only to resolve a
-        // fixed placeholder appearance for an unknown remote avatar,
-        // never to render the local avatar (that stays
-        // avatarProfileUseCase's job).
-        // 0.2.59 — a real peer transport is preferred whenever the
-        // caller actually wired one; a caller that doesn't (most
-        // existing tests, and any future headless/embedded use of this
-        // use case) gets the exact same LOCAL DEVELOPMENT TRANSPORT
-        // (BroadcastChannel) 0.2.37/0.2.41/0.2.45 always built — see
-        // presence/LocalAvatarPresenceBroadcastProvider.js's own header:
-        // it simulates decentralized presence across same-origin tabs,
-        // useful for local development and testing, but it is not a
-        // real Internet peer network and is no longer the PRIMARY
-        // transport once a real one is available. See
-        // docs/Principles.md, "BroadcastChannel Is A Development
-        // Transport, Never A Production One" (0.2.59).
+        // Remote presence is built regardless of login (docs/Principles.md, "Watching
+        // Presence Never Requires Having One"). The real peer transport is preferred
+        // when wired; otherwise the BroadcastChannel development transport is used
+        // (docs/Principles.md, "BroadcastChannel Is A Development Transport, Never A
+        // Production One").
         const usePeerTransport = Boolean(peerMessageBus && connectedPeerRegistry);
 
-        // `isFriend`/`hasFriend`: 0.2.58 already taught every
-        // visibility policy AND WorldNavigationSession how to consult
-        // these predicates — this is simply the first caller to
-        // actually supply them from a real, live FriendRelationshipUseCase
-        // rather than a test-only closure. Absent (undefined/null) when
-        // no friendRelationshipUseCase is wired, which is the exact
-        // pre-0.2.59 "FRIENDS means only the manual allow-list" fallback
-        // every policy already implements on its own.
+        // Undefined without friendship wiring, where policies fall back to the manual
+        // allow-list.
         const isFriend = friendRelationshipUseCase
             ? (peerIdentityId) => friendRelationshipUseCase.getState(peerIdentityId) === FriendshipState.FRIEND
             : undefined;
@@ -479,34 +212,14 @@ export class CreateWorldViewUseCase {
             ? () => friendRelationshipUseCase.getRelationships().some((relationship) => relationship.isFriend)
             : null;
 
-        // 0.2.60 — see this method's own header above. Absent
-        // (undefined) when no peerBlockUseCase is wired, which is the
-        // exact pre-0.2.60 "nothing is ever blocked" fallback every
-        // transport/trust-boundary already implements on its own.
+        // Undefined without blocking wiring: nothing is blocked.
         const isBlocked = peerBlockUseCase
             ? (peerIdentityId) => peerBlockUseCase.isBlocked(peerIdentityId)
             : undefined;
 
-        // 0.2.95 — World Editing Authorization Foundation. One
-        // app-scoped WorldAuthorizationService, built here (never
-        // per-document, never per-selection) so its decision is
-        // consulted fresh on every mutation attempt rather than
-        // snapshotted at session-construction time — see that class's
-        // own header. `resolveSocialIdentity` reuses the SAME
-        // resolveOwnSocialIdentity() 0.2.83 already built for "who am I,
-        // socially" (never a new device-resolution mechanism);
-        // `isBlocked` reuses the SAME predicate this method already
-        // derives for the avatar trust boundaries above.
-        // 0.2.98 — Shared World Membership & Collaborative Presence.
-        // `worldMembershipUseCaseRef` is a MUTABLE box, assigned once
-        // `createSession()` below actually constructs a real
-        // WorldMembershipUseCase — the identical "assigned after
-        // construction, read later by a closure at call time" pattern
-        // this method's own `sessionRef` (see createSession() below)
-        // already establishes for `resolveWorldDocument`. Needed
-        // because worldMembershipUseCase's OWN `resolveWorldDocument`
-        // needs a session to already exist, while worldAuthorizationService
-        // is built here, once, BEFORE any session does.
+        // One app-scoped authorization service, consulted fresh on every mutation.
+        // worldMembershipUseCaseRef is filled in by createSession(): the membership use
+        // case needs a session, and this service is built before any session exists.
         const worldMembershipUseCaseRef = { current: null };
         const worldAuthorizationService = new WorldAuthorizationService({
             identityProvider,
@@ -519,12 +232,7 @@ export class CreateWorldViewUseCase {
                 : false
         });
 
-        // Presence's own transport. getVisibilityPolicy reads
-        // presenceVisibilityUseCase FRESH on every advertise() (never
-        // cached) once one is wired (logged in); absent (logged out),
-        // PeerAvatarPresenceBroadcastProvider's own default already
-        // matches LocalAvatarPresenceBroadcastProvider's unconditional
-        // "advertise to everyone" behavior, so nothing extra is passed.
+        // Reads the presence visibility policy fresh on every advertise().
         const presenceBroadcastProvider = usePeerTransport
             ? new PeerAvatarPresenceBroadcastProvider({
                 peerMessageBus,
@@ -534,14 +242,8 @@ export class CreateWorldViewUseCase {
                 ...(isBlocked ? { isBlocked } : {})
             })
             : new LocalAvatarPresenceBroadcastProvider();
-        // 0.2.41 — a SEPARATE channel/protocol from presence's own, so a
-        // torrent of movement updates never competes with (or gets
-        // confused for) the rare profile updates on this one — see
-        // application/AvatarProfileSyncService.js's own header. Its own
-        // AvatarProfileVisibilityPolicy is consulted here too — see
-        // core/AvatarProfileVisibilityPolicy.js's own header: "who may
-        // see my presence" and "who may see my appearance" are
-        // different questions, never the same policy instance.
+        // A separate channel from presence, so frequent movement updates never compete
+        // with rare profile updates, and gated by the profile's own visibility policy.
         const avatarProfileBroadcastProvider = usePeerTransport
             ? new PeerAvatarPresenceBroadcastProvider({
                 peerMessageBus,
@@ -554,15 +256,7 @@ export class CreateWorldViewUseCase {
                 ...(isBlocked ? { isBlocked } : {})
             })
             : new LocalAvatarPresenceBroadcastProvider('forkbuild:avatar-profile');
-        // 0.2.45 — Ephemeral Avatar Interaction Synchronization: a
-        // THIRD, separate channel/protocol from presence's and
-        // profile's own — see application/AvatarInteractionSyncService.js's
-        // own header for why interaction traffic is never folded into
-        // either. 0.2.59: reuses presence's OWN visibility policy for
-        // its per-peer gate (never profile's), mirroring
-        // WorldNavigationSession._publishAvatarInteraction()'s own
-        // coarse gate, which has always reused presenceVisibilityUseCase
-        // rather than gaining a fourth, interaction-specific policy.
+        // A third channel for ephemeral interactions, gated by the presence policy.
         const avatarInteractionBroadcastProvider = usePeerTransport
             ? new PeerAvatarPresenceBroadcastProvider({
                 peerMessageBus,
@@ -577,36 +271,10 @@ export class CreateWorldViewUseCase {
 
         return {
             createSession(registry) {
-                // 0.2.97 — Shared World Ordering & Conflict Resolution.
-                // Closes the composition gap 0.2.96 explicitly left
-                // open (see application/WorldCommandPropagationUseCase.js's
-                // own header): every OTHER collaborator this method
-                // builds is created here, before the session exists;
-                // `resolveWorldDocument` cannot be — it needs to ask
-                // the session ITSELF "what do you currently have loaded
-                // for this id," the same live, mutable answer
-                // WorldNavigationSession#getDocument() already gives
-                // every other caller. `sessionRef` is assigned exactly
-                // once, right after construction, below — the resolver
-                // closure is only ever CALLED later, at runtime, by
-                // which point it is already set, the identical
-                // construction-order pattern this file's own
-                // `resolveSocialIdentity` (see this method's own header)
-                // already uses for deviceAuthorizationPropagationUseCase.
-                //
-                // Gated on the SAME `usePeerTransport`-shaped condition
-                // as every other real-peer-transport collaborator above
-                // — a caller that doesn't wire a full peer stack (most
-                // existing tests, and any headless use) gets `null`,
-                // the exact pre-0.2.97 "purely local editing, nothing
-                // ever broadcast" behavior WorldNavigationSession's own
-                // constructor comment documents.
+                // resolveWorldDocument needs the session itself, which does not exist yet:
+                // sessionRef is set right after construction, and the closure only runs later.
+                // Without a full peer stack this is null (purely local editing).
                 let sessionRef = null;
-                // 0.2.98 — same peer-stack gate as worldCommandPropagation
-                // below, and the SAME `resolveWorldDocument` closure
-                // shape (calling back into `sessionRef` at runtime, not
-                // at construction time — see this method's own comment
-                // on worldCommandPropagation).
                 const worldMembershipUseCase = (identityProvider && peerMessageBus && connectedPeerRegistry)
                     ? new WorldMembershipUseCase(new LocalStorageProvider(), identityProvider, {
                         peerMessageBus,
@@ -623,30 +291,16 @@ export class CreateWorldViewUseCase {
                         identityProvider,
                         commandRegistry,
                         resolveWorldDocument: (worldDocumentId) => (sessionRef ? sessionRef.getDocument(worldDocumentId) : null),
-                        // 0.2.60 — the SAME predicate every other trust
-                        // boundary this method builds already consults.
                         isBlocked: isBlocked || null,
-                        // 0.2.98 — see worldAuthorizationService's own
-                        // wiring above: the SAME predicate, so a
-                        // non-owner holding a signed World edit grant
-                        // can propagate operations over the network too.
+                        // Lets a non-owner with a signed edit grant propagate operations too.
                         resolveWorldEditGrant: worldMembershipUseCase
                             ? (worldDocumentId, viewerIdentityId) => worldMembershipUseCase.hasActiveGrant(worldDocumentId, viewerIdentityId)
                             : null
                     })
                     : null;
-                // 0.2.98 — same peer-stack gate, and the SAME
-                // deviceAuthorizationPropagationUseCase every other
-                // device-aware collaborator here already shares.
-                // `resolveCanEdit(worldDocumentId, identityId)` asks a
-                // DIFFERENT question than worldAuthorizationService's own
-                // canEdit() — "can THIS OTHER participant edit," never
-                // "can the CURRENT viewer edit" — so it re-derives
-                // ownership/grant status directly rather than
-                // misapplying the viewer-centric service: owner by raw
-                // `authorIdentityId` (the same comparison
-                // application/WorldMembershipUseCase.js#_requireOwnerIdentity()
-                // itself makes), OR an active membership grant.
+                // resolveCanEdit asks whether another participant can edit, so it re-derives
+                // ownership (raw authorIdentityId) or an active grant directly rather than
+                // using the viewer-centric authorization service.
                 const worldPresenceUseCase = (peerMessageBus && connectedPeerRegistry && deviceAuthorizationPropagationUseCase)
                     ? new WorldPresenceUseCase({
                         peerMessageBus,
@@ -664,16 +318,7 @@ export class CreateWorldViewUseCase {
                         }
                     })
                     : null;
-                // 0.3.0 — Collaborative Spatial Presence. Same peer-stack
-                // gate as worldPresenceUseCase above, and the SAME
-                // deviceAuthorizationPropagationUseCase — see
-                // application/WorldSpatialPresenceUseCase.js's own
-                // header for why identity is resolved exactly the same
-                // device-aware way its coarser 0.2.98 sibling already
-                // does. Deliberately does NOT reuse worldPresenceUseCase
-                // itself — a separate protocol, a separate use case, a
-                // separate optional collaborator, so a caller can wire
-                // one without the other with no coupling either way.
+                // A separate protocol from worldPresenceUseCase; either can be wired alone.
                 const worldSpatialPresenceUseCase = (peerMessageBus && connectedPeerRegistry && deviceAuthorizationPropagationUseCase)
                     ? new WorldSpatialPresenceUseCase({
                         peerMessageBus,
@@ -684,10 +329,6 @@ export class CreateWorldViewUseCase {
                 const session = new WorldNavigationSession({
                     registry,
                     loadPublicationDocumentUseCase,
-                    // 0.9.605: the material-bridge fallback — see this
-                    // method's own comment on loadPublishedWorldSessionUseCase,
-                    // above, and WorldNavigationSession#_loadWorld()'s own
-                    // comment on where it is actually consulted.
                     loadPublishedWorldSessionUseCase,
                     worldLayoutProvider,
                     saveDocumentUseCase,
@@ -696,128 +337,51 @@ export class CreateWorldViewUseCase {
                     restoreHistoryStateUseCase,
                     identityProvider,
                     documentCloneService,
-                    // 0.5.9 — World View no longer has brick-selection
-                    // copy/paste/repeat at all (see
-                    // docs/Principles.md, "World View Observes and
-                    // Navigates; Editor Mutates and Builds"); these
-                    // three use cases are EditorSession's alone now.
-                    // 0.2.20: fork-on-write needs to resolve a loaded
-                    // world's Publication to check its fork policy
-                    // before lazily forking it.
+                    // World View has no brick copy/paste/repeat (docs/Principles.md, "World View
+                    // Observes and Navigates; Editor Mutates and Builds"). Fork-on-write needs the
+                    // publication to check its fork policy.
                     discoveryProvider,
-                    // 0.9.597: see this method's own header comment,
-                    // above, and WorldNavigationSession's own constructor
-                    // comment on this exact parameter.
                     publicationActionDiscoveryProvider,
-                    // 0.2.23: placement is where a published world
-                    // sits in shared space — a separate concern from
-                    // the document itself; see getPlacementInfo/
-                    // movePlacement.
                     placementRegistry,
                     moveWorldPlacementUseCase,
-                    // 0.9.600 — the SAME placePublicationUseCase instance
-                    // PublishDocumentUseCase already uses for automatic
-                    // initial placement (above), now ALSO handed to the
-                    // session itself so an explicit, user-triggered
-                    // placePublication() call (see
-                    // WorldNavigationSession's own constructor comment
-                    // and placePublication() method) reuses this exact
-                    // instance rather than constructing a second one.
                     placePublicationUseCase,
-                    // 0.9.197: the removal counterpart — see
-                    // getPlacementInfo/removePlacement.
                     removeWorldPlacementUseCase,
-                    // 0.9.198: the Publication-layer counterpart, one
-                    // authority up — see unpublishDocument().
                     unpublishDocumentUseCase,
-                    // 0.9.248: see getPublicationCommentaries()/
-                    // addPublicationCommentary(). 0.9.285: the collaborator
-                    // handed here is now publicationCommentaryCapability —
-                    // addPublicationCommentaryUseCase decorated with a real
-                    // NotificationEventStore-backed notification producer
-                    // (see this method's own 0.9.285 comment above) — never
-                    // the raw addPublicationCommentaryUseCase instance.
-                    // WorldNavigationSession itself is unaware of the
-                    // difference: it only ever calls `.execute()` on
-                    // whatever it is given.
                     getPublicationCommentariesUseCase,
                     addPublicationCommentaryUseCase: publicationCommentaryCapability,
-                    // 0.9.284: see getRecipientNotificationEvents().
                     getRecipientNotificationEventsUseCase,
-                    // 0.2.26: search/navigation — see searchWorld/
-                    // getDocumentsAtPosition.
                     searchWorldUseCase,
-                    // 0.2.35: the local avatar — see above.
                     avatarProfileUseCase,
                     avatarPresenceSession,
-                    // 0.2.40: gates whether the local avatar's
-                    // presence is even eligible to publish — see
-                    // WorldNavigationSession's own comment.
                     presenceVisibilityUseCase,
-                    // 0.2.58: gates whether the local avatar's
-                    // PROFILE is even eligible to publish — its own,
-                    // independent policy, no longer borrowing
-                    // presenceVisibilityUseCase's.
                     avatarProfileVisibilityUseCase,
-                    // 0.2.37: remote avatar presence — see above.
                     presenceBroadcastProvider,
                     avatarTemplateRegistry,
-                    // 0.2.41: remote avatar appearance — see above.
                     avatarProfileBroadcastProvider,
-                    // 0.2.45: ephemeral avatar interaction sync — see above.
                     avatarInteractionBroadcastProvider,
-                    // 0.2.59: the coarse "do I currently have at least
-                    // one real, mutual friend" predicate 0.2.58 already
-                    // taught WorldNavigationSession to consult — see
-                    // above for why this is the first caller to
-                    // actually supply it.
                     hasFriend,
-                    // 0.2.60: the RECEIVER-side isBlocked predicate —
-                    // see this method's own header above. undefined
-                    // here (when no peerBlockUseCase was wired) falls
-                    // through to WorldNavigationSession's own `null`
-                    // default, exactly like `hasFriend` above.
                     isBlocked,
-                    // 0.2.93: World View Instance Inspection — see above.
                     structureResolver: structureDocumentResolver,
                     loadDocumentUseCase,
-                    // 0.2.95: World Editing Authorization Foundation —
-                    // see above.
                     worldAuthorizationService,
-                    // 0.2.97: Shared World Ordering & Conflict
-                    // Resolution — see above.
                     worldCommandPropagation,
-                    // 0.2.98: Shared World Membership & Collaborative
-                    // Presence — see above.
                     worldMembershipUseCase,
                     worldPresenceUseCase,
-                    // 0.3.0: Collaborative Spatial Presence — see above.
                     worldSpatialPresenceUseCase,
-                    // 0.3.10: World Persistence & Return Experience — see above.
                     localWorldExperienceStore,
-                    // 0.5.2: Place Naming & Naming Claims — see above.
                     placeNamingClaimUseCase,
                     localNamePreferenceStore,
-                    // 0.5.3: Decentralized Place Name Exchange — see above.
                     placeNamingClaimExchange,
-                    // 0.9.701 — World View Persistence — see above.
                     avatarInventoryPersistenceStore,
                     vehicleRuntimeInstancePersistenceStore,
                     animalRuntimeInstancePersistenceStore,
-                    // 0.9.702 — Avatar Inventory Transfer. The SAME
-                    // app-wide peerMessageBus/connectedPeerRegistry pair
-                    // every other real-peer-transport collaborator in
-                    // this method already shares — see
-                    // WorldNavigationSession's own constructor comment on
-                    // these two parameters.
                     peerMessageBus,
                     connectedPeerRegistry
                 });
                 sessionRef = session;
                 return session;
             },
-            // Expose the spatial index and content store so the application
-            // layer can construct spatial use cases for the UI to consume.
+            // Exposed so the application layer can build spatial use cases for the UI.
             spatialIndexProvider,
             placementRegistry,
             contentStore
