@@ -1,7 +1,7 @@
-import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
-import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
-import { describePublisherLeaderboardClaimSnapshotDivergence } from '../application/leaderboard/PublisherLeaderboardClaimSnapshotDivergenceView.js';
+import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/snapshot/Snapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/snapshot/Fingerprint.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/claim/Record.js';
+import { describePublisherLeaderboardClaimSnapshotDivergence } from '../application/leaderboard/claimSnapshot/DivergenceView.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationPlan } from '../application/claimSnapshotReconciliation/PlanView.js';
 import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
@@ -255,8 +255,8 @@ async function run() {
         const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/claimSnapshotReconciliation/PlanView.js', import.meta.url), 'utf8');
         const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
         assert(importLines.length === 2, '31. this file has exactly two imports');
-        assert(importLines.some((line) => line.includes("from '../leaderboard/LeaderboardClaimRecord.js'")), '32. imports LeaderboardClaimRecord (0.8.123, UNCHANGED)');
-        assert(importLines.some((line) => line.includes("from '../leaderboard/PublisherLeaderboardClaimSnapshotDivergenceView.js'")), '33. imports 0.8.142\'s own divergence view');
+        assert(importLines.some((line) => line.includes("from '../leaderboard/claim/Record.js'")), '32. imports LeaderboardClaimRecord (0.8.123, UNCHANGED)');
+        assert(importLines.some((line) => line.includes("from '../leaderboard/claimSnapshot/DivergenceView.js'")), '33. imports 0.8.142\'s own divergence view');
         for (const forbiddenModule of ['PublisherLeaderboardClaimSnapshotCorrespondenceView', 'PublisherLeaderboardClaimSnapshotCorrespondenceVerificationView', 'PublisherLeaderboardHistoricalClaimVerification', 'PublisherLeaderboardClaimSnapshotAssociationView', 'PublisherLeaderboardSnapshotDifference', 'PublisherLeaderboardClaimEvolutionView', 'LocalIdentityProvider', 'PublicationObservationArchive', 'PublisherLeaderboardRankingPolicy', 'resolveSigningIdentityId', 'PublisherLeaderboardSnapshotTimelineView']) {
             assert(!importLines.some((line) => line.includes(forbiddenModule)), `34. this file never imports ${forbiddenModule} — no second correspondence/verification/divergence engine, no signing/identity/archive/ranking/timeline import`);
         }

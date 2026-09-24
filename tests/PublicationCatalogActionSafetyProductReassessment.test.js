@@ -220,7 +220,7 @@ async function run() {
         // invariant, one view over. 0.9.561 (Publication List Commentary
         // Parity) moved v-for/:key from the row's own <tr> onto a
         // wrapping <template> — the same convention
-        // ReconciliationCandidateLeaderboardTable.js's own detail-row
+        // ui/components/reconciliation/CandidateLeaderboardTable.js's own detail-row
         // pattern already uses — so a second, conditional <tr> (the
         // commentary row) can share the identical loop key; the
         // invariant this assertion protects (each row keyed by pub.id,

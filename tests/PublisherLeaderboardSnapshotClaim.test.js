@@ -2,13 +2,13 @@ import { PublicationObservationArchive } from '../application/publication/observ
 import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
 import { CreatePublicationReferenceRecordUseCase } from '../application/publication/CreatePublicationReferenceRecordUseCase.js';
 import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { reconstructPublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
-import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js';
+import { reconstructPublisherLeaderboardSnapshot } from '../application/leaderboard/snapshot/Snapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/snapshot/Fingerprint.js';
+import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/leaderboard/snapshot/CreateClaimUseCase.js';
 import {
     describePublisherLeaderboardSnapshotClaimVerification,
     verifyPublisherLeaderboardSnapshotClaim
-} from '../application/leaderboard/PublisherLeaderboardSnapshotClaimVerification.js';
+} from '../application/leaderboard/snapshot/ClaimVerification.js';
 import {
     PublisherLeaderboardSnapshotClaim,
     getPublisherLeaderboardSnapshotClaimSigningDescriptor,
@@ -25,7 +25,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // Section B: toJSON()/fromJSON() round trip, self-describing wire envelope
 // Section C: getSigningDescriptor() — canonical payload shape, never carries
 //            score/reputation/trust vocabulary
-// Section D: application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js — deterministic,
+// Section D: application/leaderboard/snapshot/Fingerprint.js — deterministic,
 //            changes with the snapshot, tolerant of malformed input
 // Section E: CreatePublisherLeaderboardSnapshotClaimUseCase — the ONE
 //            construction boundary; requires an authenticated identity;
@@ -233,7 +233,7 @@ async function run() {
     console.log('✓ Section C: getSigningDescriptor() produces the canonical protocol/claimKind/evidenceFingerprint/policyVersion/snapshotFingerprint payload, never evaluative vocabulary');
 
     // ---------------------------------------------------------------
-    // Section D — application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js.
+    // Section D — application/leaderboard/snapshot/Fingerprint.js.
     // ---------------------------------------------------------------
     {
         const archive = buildSharedArchive();

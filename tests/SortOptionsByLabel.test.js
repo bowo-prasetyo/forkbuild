@@ -148,7 +148,7 @@ async function run() {
         const chat = await source('ui/views/ChatView.js');
         assert(!/sortOptionsByLabel/.test(chat) && /<option value="">System default mic<\/option>/.test(chat),
             'audio devices keep the OS order with the system default first');
-        const pairSelector = await source('ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector.js');
+        const pairSelector = await source('ui/components/reconciliation/EvidenceExportComparisonRecordPairSelector.js');
         assert(!/sortOptionsByLabel/.test(pairSelector), 'reconciliation record pools stay in their flat, unreordered order');
     }
     console.log('✓ Section C: ordered lists keep their deliberate order');

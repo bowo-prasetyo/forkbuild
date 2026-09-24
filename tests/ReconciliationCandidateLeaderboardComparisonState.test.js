@@ -292,7 +292,7 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const moduleSource = await (await import('node:fs/promises')).readFile(
-            new URL('../ui/components/ReconciliationCandidateLeaderboardTable.js', import.meta.url), 'utf8'
+            new URL('../ui/components/reconciliation/CandidateLeaderboardTable.js', import.meta.url), 'utf8'
         );
         const codeOnly = moduleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 

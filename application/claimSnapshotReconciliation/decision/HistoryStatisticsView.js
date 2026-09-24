@@ -11,7 +11,7 @@ import { candidateIdentityKey } from '../CandidateIdentityKey.js';
 // projection" (see that file's own header, "Deliberately excluded," bullet
 // three). This file is that projection, and nothing more — the
 // decision-history analogue of
-// `application/leaderboard/PublisherLeaderboardClaimHistoryStatisticsView.js` (0.8.128),
+// `application/leaderboard/claim/HistoryStatisticsView.js` (0.8.128),
 // one subject over: where that file tallies a replica's own stored claim
 // RECEIPTS, this file tallies a replica's own stored reconciliation
 // DECISIONS (0.8.146's own, plain, ordered array of 0.8.145's own decision
@@ -30,7 +30,7 @@ import { candidateIdentityKey } from '../CandidateIdentityKey.js';
 // many distinct," "how many of each" — and none of them interprets
 // `OBSERVE`/`DEFER`, determines whether a decision is still current, or
 // compares any decision against a freshly computed plan. See
-// `application/leaderboard/PublisherLeaderboardClaimHistoryStatisticsView.js`'s own
+// `application/leaderboard/claim/HistoryStatisticsView.js`'s own
 // header, "The question is 'what measurable facts exist?'," held here again
 // over a decision history instead of a claim history.
 //
@@ -115,7 +115,7 @@ import { candidateIdentityKey } from '../CandidateIdentityKey.js';
 //
 // `dispositionCounts`/`candidateTypeCounts` PRESERVE FIRST-APPEARANCE
 // ORDER — NEVER ALPHABETICAL, NEVER SORTED BY COUNT. Mirroring
-// `application/leaderboard/PublisherLeaderboardClaimHistoryStatisticsView.js`'s own
+// `application/leaderboard/claim/HistoryStatisticsView.js`'s own
 // `signerIdentityCounts` convention exactly: each lists only the values
 // that actually occur in `history`, each entry's own `count` stating
 // exactly how many stored decisions carry that value, ordered by when that
@@ -154,7 +154,7 @@ import { candidateIdentityKey } from '../CandidateIdentityKey.js';
 //
 // `describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatistics()`/
 // `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatistics()`
-// — THE IDENTICAL SPLIT `application/leaderboard/PublisherLeaderboardClaimHistoryStatisticsView.js`'s
+// — THE IDENTICAL SPLIT `application/leaderboard/claim/HistoryStatisticsView.js`'s
 // OWN 0.8.128/0.8.130 PAIR ALREADY HOLDS.
 // `describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatistics()`
 // is the pure computation, over one plain, in-memory decision-history array
@@ -166,7 +166,7 @@ import { candidateIdentityKey } from '../CandidateIdentityKey.js';
 // own `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory()`
 // — the ONE seam that reads the archive, exactly the promise this file's own
 // header already made about a future integration, now kept the same way
-// `PublisherLeaderboardClaimHistoryStatisticsView.js`'s own header already
+// `leaderboard/claim/HistoryStatisticsView.js`'s own header already
 // held for 0.8.130.
 //
 // SYNCHRONOUS, PURE, NO MUTATION, NO STORAGE, NO NETWORK. Reads no clock.

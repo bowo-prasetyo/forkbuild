@@ -108,7 +108,7 @@ import { parseJSONOrNull } from '../../../utils/parseJsonOrNull.js';
 // exposes only the plain count application/publication/observationArchive/PublicationObservationArchive.js's
 // own `leaderboardClaimRecordCount` already exposes, never a per-signer
 // structural index and never any verification result over the receipts it
-// counts — see application/leaderboard/LeaderboardClaimRecord.js's own header.
+// counts — see application/leaderboard/claim/Record.js's own header.
 //
 // THE RESULT IS A PLAIN, FROZEN, ONE-LEVEL DATA SHAPE — NEVER A NEW
 // DOMAIN OBJECT, NEVER ANOTHER DURABLE ARCHIVE HISTORY. Deliberately NOT a

@@ -235,8 +235,8 @@ async function run() {
         // assumed. For two REAL users of the shipped product to ever
         // complete this journey together, SOME user's UI must be able to
         // author and export their own signed claim. Does one exist?
-        const createClaimSource = await readSource('application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js');
-        const exchangeSource = await readSource('application/leaderboard/PublisherLeaderboardSnapshotClaimExchange.js');
+        const createClaimSource = await readSource('application/leaderboard/snapshot/CreateClaimUseCase.js');
+        const exchangeSource = await readSource('application/leaderboard/snapshot/ClaimExchange.js');
         assert(
             createClaimSource.includes('export class CreatePublisherLeaderboardSnapshotClaimUseCase'),
             n('E1. the signing use case itself is real, complete, and already tested (0.8.121) — the capability is not missing at the application layer')

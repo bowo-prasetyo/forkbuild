@@ -2,15 +2,15 @@ import { PublicationObservationArchive } from '../application/publication/observ
 import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
 import { CreatePublicationReferenceRecordUseCase } from '../application/publication/CreatePublicationReferenceRecordUseCase.js';
 import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js';
-import { reconstructPublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
-import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
-import { appendLeaderboardClaimHistoryEntry } from '../application/leaderboard/LeaderboardClaimHistory.js';
-import { describePublisherLeaderboardClaimVerification } from '../application/leaderboard/PublisherLeaderboardClaimVerificationView.js';
+import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/leaderboard/snapshot/CreateClaimUseCase.js';
+import { reconstructPublisherLeaderboardSnapshot } from '../application/leaderboard/snapshot/Snapshot.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/claim/Record.js';
+import { appendLeaderboardClaimHistoryEntry } from '../application/leaderboard/claim/History.js';
+import { describePublisherLeaderboardClaimVerification } from '../application/leaderboard/claim/VerificationView.js';
 import {
     describePublisherLeaderboardClaimVerificationHistory,
     reconstructPublisherLeaderboardClaimVerificationHistory
-} from '../application/leaderboard/PublisherLeaderboardClaimVerificationHistoryView.js';
+} from '../application/leaderboard/claim/VerificationHistoryView.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';

@@ -1,8 +1,8 @@
-import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
-import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
-import { describePublisherLeaderboardClaimSnapshotCorrespondenceVerification } from '../application/leaderboard/PublisherLeaderboardClaimSnapshotCorrespondenceVerificationView.js';
-import { describePublisherLeaderboardClaimSnapshotDivergence } from '../application/leaderboard/PublisherLeaderboardClaimSnapshotDivergenceView.js';
+import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/snapshot/Snapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/snapshot/Fingerprint.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/claim/Record.js';
+import { describePublisherLeaderboardClaimSnapshotCorrespondenceVerification } from '../application/leaderboard/claimSnapshot/CorrespondenceVerificationView.js';
+import { describePublisherLeaderboardClaimSnapshotDivergence } from '../application/leaderboard/claimSnapshot/DivergenceView.js';
 import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -245,10 +245,10 @@ async function run() {
     // vocabulary, network access.
     // ---------------------------------------------------------------
     {
-        const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/leaderboard/PublisherLeaderboardClaimSnapshotDivergenceView.js', import.meta.url), 'utf8');
+        const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/leaderboard/claimSnapshot/DivergenceView.js', import.meta.url), 'utf8');
         const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
         assert(importLines.length === 1, '31. this file has exactly one import');
-        assert(importLines.some((line) => line.includes("from './PublisherLeaderboardClaimSnapshotCorrespondenceVerificationView.js'")), '32. imports 0.8.140\'s own correspondence verification view');
+        assert(importLines.some((line) => line.includes("from './CorrespondenceVerificationView.js'")), '32. imports 0.8.140\'s own correspondence verification view');
         for (const forbiddenModule of ['LeaderboardClaimRecord', 'PublisherLeaderboardClaimSnapshotCorrespondenceView', 'PublisherLeaderboardHistoricalClaimVerification', 'PublisherLeaderboardClaimSnapshotAssociationView', 'PublisherLeaderboardSnapshotDifference', 'LocalIdentityProvider', 'PublicationObservationArchive', 'PublisherLeaderboardRankingPolicy', 'resolveSigningIdentityId', 'PublisherLeaderboardSnapshotTimelineView']) {
             assert(!importLines.some((line) => line.includes(forbiddenModule)), `33. this file never imports ${forbiddenModule} — no second correspondence/verification/difference engine, no signing/identity/archive/ranking/timeline import`);
         }

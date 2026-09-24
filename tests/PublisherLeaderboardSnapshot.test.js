@@ -15,7 +15,7 @@ import { describePublisherRanking } from '../application/leaderboard/PublisherRa
 import {
     describePublisherLeaderboardSnapshot,
     reconstructPublisherLeaderboardSnapshot
-} from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
+} from '../application/leaderboard/snapshot/Snapshot.js';
 
 // 0.8.119 — Reproducible Leaderboard Snapshot.
 //

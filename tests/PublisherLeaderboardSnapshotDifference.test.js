@@ -1,7 +1,7 @@
 import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
-import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
-import * as PublisherLeaderboardSnapshotDifferenceModule from '../application/leaderboard/PublisherLeaderboardSnapshotDifference.js';
-import { describePublisherLeaderboardSnapshotDifference } from '../application/leaderboard/PublisherLeaderboardSnapshotDifference.js';
+import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/snapshot/Snapshot.js';
+import * as PublisherLeaderboardSnapshotDifferenceModule from '../application/leaderboard/snapshot/Difference.js';
+import { describePublisherLeaderboardSnapshotDifference } from '../application/leaderboard/snapshot/Difference.js';
 
 // 0.8.134 — Historical Snapshot Difference Projection.
 //

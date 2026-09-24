@@ -20,7 +20,7 @@ import {
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentity
 } from '../application/claimSnapshotReconciliation/evidenceExportComparison/RecordIdentityView.js';
-import default_ReconciliationCandidateLeaderboardEvidenceExportComparisonTable from '../ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js';
+import default_ReconciliationCandidateLeaderboardEvidenceExportComparisonTable from '../ui/components/reconciliation/EvidenceExportComparisonTable.js';
 
 // 0.8.192/0.8.194 — Reconciliation Candidate Leaderboard Evidence Export
 // Comparison UI, and its Detail extension.
@@ -31,10 +31,10 @@ import default_ReconciliationCandidateLeaderboardEvidenceExportComparisonTable f
 //       this Node-based test, exactly the way every prior Composition API
 //       view in this codebase is only ever source-inspected here, never
 //       mounted)
-//   ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js
+//   ui/components/reconciliation/EvidenceExportComparisonTable.js
 //     — an Options API, zero-`application/`-import presentation component,
 //       executed directly below via its own `computed` functions, exactly
-//       the way ReconciliationCandidateLeaderboardTable.js is already
+//       the way ui/components/reconciliation/CandidateLeaderboardTable.js is already
 //       exercised by ReconciliationCandidateEvidenceDetailUI.test.js
 //
 // Section A: FLAGSHIP — two exported JSON documents, deliberately
@@ -449,7 +449,7 @@ async function run() {
         new URL('../ui/views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js', import.meta.url), 'utf8'
     );
     const tableModuleSource = await (await import('node:fs/promises')).readFile(
-        new URL('../ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js', import.meta.url), 'utf8'
+        new URL('../ui/components/reconciliation/EvidenceExportComparisonTable.js', import.meta.url), 'utf8'
     );
     const viewCodeOnly = viewModuleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
     const tableCodeOnly = tableModuleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');

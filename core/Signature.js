@@ -238,10 +238,10 @@ export const SignatureType = Object.freeze({
     // X itself asserts that the leaderboard snapshot fingerprinting to
     // `snapshotFingerprint` is the exact snapshot its `evidenceFingerprint`
     // and `policyVersion` reproduce" — a claim ABOUT a reproducible
-    // conclusion (application/leaderboard/PublisherLeaderboardSnapshot.js, 0.8.119),
+    // conclusion (application/leaderboard/snapshot/Snapshot.js, 0.8.119),
     // never about the achievement evidence beneath it, and never a
     // second, competing verdict alongside application/
-    // PublisherLeaderboardSnapshotVerification.js's own independent,
+    // leaderboard/snapshot/Verification.js's own independent,
     // unsigned comparison (0.8.120). Signed with a did:key
     // identity/SigningIdentity.js identity ONLY — deliberately never with
     // an application/publisher/PublisherIdentityRecord.js label, which carries no

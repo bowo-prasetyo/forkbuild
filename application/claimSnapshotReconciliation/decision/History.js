@@ -6,7 +6,7 @@
 // how to keep it — see that file's own header, "Deliberately excluded,"
 // bullet three. This file is the first to keep more than one: an
 // append-only collection of 0.8.145's own decision records, mirroring
-// `application/leaderboard/LeaderboardClaimHistory.js` (0.8.123) exactly, one
+// `application/leaderboard/claim/History.js` (0.8.123) exactly, one
 // relationship over:
 //
 //   []
@@ -18,7 +18,7 @@
 //   [decisionA, decisionB]
 //
 // APPENDED TO, NEVER OVERWRITTEN, NEVER MUTATED, NEVER REORDERED OR
-// DEDUPLICATED — MULTIPLICITY IS PRESERVED, EXACTLY AS `LeaderboardClaimHistory.js`'s
+// DEDUPLICATED — MULTIPLICITY IS PRESERVED, EXACTLY AS `leaderboard/claim/History.js`'s
 // OWN HEADER ALREADY ESTABLISHES ONE RELATIONSHIP OVER. Recording the
 // byte-identical decision twice — OBSERVE on Claim B against Snapshot S2 at
 // the identical `decidedAt`, called twice, whether by the same caller or by
@@ -26,7 +26,7 @@
 // TWO independent history entries here, never collapsed into "one
 // decision, made twice." This file draws the identical distinction this
 // whole family already holds one relationship down: `receipt identity !=
-// claim identity` (`LeaderboardClaimHistory.js`'s own header) becomes
+// claim identity` (`leaderboard/claim/History.js`'s own header) becomes
 // `decision history entry != reconciliation candidate` here. Deduplicating
 // is real, separately sized, later work — this file never attempts it.
 //
@@ -98,7 +98,7 @@
 // none, and this file embeds that record by value, unchanged. A future
 // milestone that needs provenance can add an explicit `origin` field
 // reusing this codebase's own existing vocabulary (see
-// `application/leaderboard/LeaderboardClaimRecord.js`'s own
+// `application/leaderboard/claim/Record.js`'s own
 // `PublicationObservationArchiveProvenanceOrigin`) if and when a genuine
 // need for it exists — this file does not anticipate that need.
 //
@@ -134,7 +134,7 @@
 //   families, and this file never reaches for one.
 // - **Persistence or synchronization of any kind.** `history` is an
 //   in-memory array handed in and handed back, exactly like
-//   `LeaderboardClaimHistory.js`'s own `history` argument.
+//   `leaderboard/claim/History.js`'s own `history` argument.
 // - **Automatic, periodic, or background computation of any kind.** These
 //   functions run only when a caller explicitly calls them.
 export function appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry(history, decision) {

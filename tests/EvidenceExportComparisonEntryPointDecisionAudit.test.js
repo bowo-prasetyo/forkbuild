@@ -93,8 +93,8 @@ async function run() {
             assert(comparisonViewSource.includes(symbol), n(`A3. the view imports and therefore actually calls the real backend symbol ${symbol}`));
         }
         assert(
-            comparisonViewSource.includes("import ReconciliationCandidateLeaderboardEvidenceExportComparisonTable from '../components/ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js';") &&
-            comparisonViewSource.includes("import ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector from '../components/ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector.js';"),
+            comparisonViewSource.includes("import ReconciliationCandidateLeaderboardEvidenceExportComparisonTable from '../components/reconciliation/EvidenceExportComparisonTable.js';") &&
+            comparisonViewSource.includes("import ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector from '../components/reconciliation/EvidenceExportComparisonRecordPairSelector.js';"),
             n('A4. the view renders two real, dedicated frontend components, not inline stubs')
         );
         assert(
@@ -113,8 +113,8 @@ async function run() {
             'application/claimSnapshotReconciliation/evidenceExportComparison/RecordDifferenceView.js',
             'application/claimSnapshotReconciliation/evidenceExportComparison/RecordDifferenceReadModel.js',
             'application/claimSnapshotReconciliation/evidenceExportComparison/PairedRecordDifferenceView.js',
-            'ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js',
-            'ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector.js'
+            'ui/components/reconciliation/EvidenceExportComparisonTable.js',
+            'ui/components/reconciliation/EvidenceExportComparisonRecordPairSelector.js'
         ];
         for (const file of backendFiles) {
             await readSource(file); // throws ENOENT if missing — the assertion IS that this resolves

@@ -8,11 +8,11 @@ import { describePublisherLeaderboard, reconstructPublisherLeaderboard } from '.
 import {
     describePublisherLeaderboardSnapshot,
     reconstructPublisherLeaderboardSnapshot
-} from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
+} from '../application/leaderboard/snapshot/Snapshot.js';
 import {
     describePublisherLeaderboardSnapshotVerification,
     verifyPublisherLeaderboardSnapshot
-} from '../application/leaderboard/PublisherLeaderboardSnapshotVerification.js';
+} from '../application/leaderboard/snapshot/Verification.js';
 
 // 0.8.120 — Reproducible Leaderboard Snapshot Verification.
 //

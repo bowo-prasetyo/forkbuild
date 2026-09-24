@@ -2,25 +2,25 @@ import { PublicationObservationArchive } from '../application/publication/observ
 import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
 import { CreatePublicationReferenceRecordUseCase } from '../application/publication/CreatePublicationReferenceRecordUseCase.js';
 import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js';
-import { verifyPublisherLeaderboardSnapshotClaim } from '../application/leaderboard/PublisherLeaderboardSnapshotClaimVerification.js';
-import { exportPublisherLeaderboardSnapshotClaim } from '../application/leaderboard/PublisherLeaderboardSnapshotClaimExchange.js';
+import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/leaderboard/snapshot/CreateClaimUseCase.js';
+import { verifyPublisherLeaderboardSnapshotClaim } from '../application/leaderboard/snapshot/ClaimVerification.js';
+import { exportPublisherLeaderboardSnapshotClaim } from '../application/leaderboard/snapshot/ClaimExchange.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
-import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/claim/Record.js';
 import {
     appendLeaderboardClaimHistoryEntry,
     findLeaderboardClaimRecordsBySignerIdentityId,
     findLeaderboardClaimRecordsBySnapshotFingerprint,
     findLeaderboardClaimRecordsByEvidenceFingerprint
-} from '../application/leaderboard/LeaderboardClaimHistory.js';
+} from '../application/leaderboard/claim/History.js';
 import {
     ReceivePublisherLeaderboardSnapshotClaimUseCase,
     LeaderboardClaimReceiptOutcome
-} from '../application/leaderboard/ReceivePublisherLeaderboardSnapshotClaimUseCase.js';
+} from '../application/leaderboard/snapshot/ReceiveClaimUseCase.js';
 import {
     describePublisherLeaderboardClaimHistoryEntry,
     describePublisherLeaderboardClaimHistory
-} from '../application/leaderboard/PublisherLeaderboardClaimHistoryView.js';
+} from '../application/leaderboard/claim/HistoryView.js';
 import { PublicationObservationArchiveProvenanceOrigin } from '../application/publication/observationArchive/PublicationObservationArchiveProvenance.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';

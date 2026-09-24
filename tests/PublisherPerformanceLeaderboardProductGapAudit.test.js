@@ -145,25 +145,30 @@ async function run() {
         // The reconciliation table itself explicitly, in its own header,
         // declines the very idea of ranking — not merely happens to omit
         // it.
-        const reconciliationTableCode = await readSource('ui/components/ReconciliationCandidateLeaderboardTable.js');
-        assert(/no candidate ranking anywhere in this file/i.test(reconciliationTableCode), n('A6. ReconciliationCandidateLeaderboardTable.js\'s own header states plainly that it performs no candidate ranking'));
+        const reconciliationTableCode = await readSource('ui/components/reconciliation/CandidateLeaderboardTable.js');
+        assert(/no candidate ranking anywhere in this file/i.test(reconciliationTableCode), n('A6. ui/components/reconciliation/CandidateLeaderboardTable.js\'s own header states plainly that it performs no candidate ranking'));
         assert(/score, rank, ordering by evidence weight/i.test(reconciliationTableCode), n('A7. the same file explicitly excludes score/rank/ordering-by-weight from its own stated scope'));
         assert(!/<th[^>]*>\s*Rank\s*<\/th>/i.test(reconciliationTableCode), n('A8. the reconciliation table renders no "Rank" column'));
 
-        // The seventy-seven-file family a naive name-prefix scan finds —
+        // The eighty-three-file family a naive name-prefix and folder scan finds —
         // reconfirmed fresh, the identical methodology 0.9.414 Section C
         // and 0.9.415 Section A10 already used. The claim-snapshot
         // reconciliation part of it now lives in its own folder, which also
         // holds the two Record*IntoArchiveUseCase files the prefix never matched
-        // and three shared record helpers.
+        // and three shared record helpers. The leaderboard's claim, claim-snapshot
+        // and snapshot files now live in application/leaderboard/{claim,claimSnapshot,snapshot}/
+        // without the prefix; that folder also holds six claim files the prefix
+        // never matched (the claim record and history, and four snapshot-claim use
+        // cases), so the family grows from seventy-seven to eighty-three.
+        const inLeaderboardSubfolder = (f) => /^application\/leaderboard\/(claim|claimSnapshot|snapshot)\//.test(f);
         const inReconciliationFolder = (f) => f.startsWith('application/claimSnapshotReconciliation/')
             && !path.basename(f).endsWith('IntoArchiveUseCase.js')
             && !SHARED_RECONCILIATION_HELPER_FILES.includes(path.basename(f));
-        leaderboardFamilyFiles = listFiles(['application']).filter((f) => path.basename(f).startsWith('PublisherLeaderboard') || inReconciliationFolder(f));
-        assert(leaderboardFamilyFiles.length === 77, n(`A9. the PublisherLeaderboard* name-prefix family still numbers seventy-seven files, recomputed fresh (found ${leaderboardFamilyFiles.length})`));
+        leaderboardFamilyFiles = listFiles(['application']).filter((f) => path.basename(f).startsWith('PublisherLeaderboard') || inLeaderboardSubfolder(f) || inReconciliationFolder(f));
+        assert(leaderboardFamilyFiles.length === 83, n(`A9. the PublisherLeaderboard* family (by prefix or folder) numbers eighty-three files, recomputed fresh (found ${leaderboardFamilyFiles.length})`));
         assert(leaderboardFamilyFiles.includes('application/leaderboard/PublisherLeaderboardView.js'), n('A10. PublisherLeaderboardView.js — the genuine performance-ranking presentation file — is itself swept into that same seventy-seven-file, name-prefix-defined family'));
-        const reconciliationFamilyCount = leaderboardFamilyFiles.filter((f) => inReconciliationFolder(f) || path.basename(f).includes('Reconciliation') || path.basename(f).includes('Snapshot') || path.basename(f).includes('Claim')).length;
-        assert(reconciliationFamilyCount >= 70, n(`A11. at least seventy of the seventy-seven are, by their own filenames, reconciliation-evidence/snapshot/claim machinery, not ranking machinery (found ${reconciliationFamilyCount})`));
+        const reconciliationFamilyCount = leaderboardFamilyFiles.filter((f) => inReconciliationFolder(f) || inLeaderboardSubfolder(f) || path.basename(f).includes('Reconciliation') || path.basename(f).includes('Snapshot') || path.basename(f).includes('Claim')).length;
+        assert(reconciliationFamilyCount >= 70, n(`A11. at least seventy of the eighty-three are, by their own filenames, reconciliation-evidence/snapshot/claim machinery, not ranking machinery (found ${reconciliationFamilyCount})`));
 
         // PublisherRankingPolicy.js — the actual ranking ENGINE — does not
         // even carry the shared prefix, so no prior name-prefix scan ever
@@ -173,7 +178,7 @@ async function run() {
         console.log('\n=== SECTION A: ESTABLISH THE TWO MEANINGS ===');
         console.log('  /reconciliation-leaderboard  -> ReconciliationCandidateLeaderboardView (evidence-diff diagnostic, self-declared "no candidate ranking")');
         console.log('  PublisherRankingPolicy.js    -> real ranking engine, invisible to the PublisherLeaderboard*-prefix scan entirely');
-        console.log('  PublisherLeaderboardView.js  -> real ranking presentation, swept into the 77-file family by name accident alone');
+        console.log('  PublisherLeaderboardView.js  -> real ranking presentation, swept into the 83-file family by name accident alone');
         console.log('✓ Section A: the two "leaderboard" concepts are proven, on real current source, to be genuinely distinct — not merely asserted because both contain the word "Leaderboard."');
     }
 
@@ -310,7 +315,7 @@ async function run() {
             for (const m of matches) exportedFormatterNames.push(m.replace(/^export function /, '').replace(/\($/, ''));
         }
         const rankingPresentationFormatters = exportedFormatterNames.filter((name) => name === 'describePublisherLeaderboard');
-        assert(rankingPresentationFormatters.length === 1, n(`C10. exactly one function named describePublisherLeaderboard exists anywhere in the seventy-seven-file family (found ${rankingPresentationFormatters.length}) — no second, competing ranking-presentation formatter exists`));
+        assert(rankingPresentationFormatters.length === 1, n(`C10. exactly one function named describePublisherLeaderboard exists anywhere in the eighty-three-file family (found ${rankingPresentationFormatters.length}) — no second, competing ranking-presentation formatter exists`));
         assert(exportedFormatterNames.filter((name) => /Performance/i.test(name)).length === 0, n('C11. no "Performance"-named formatter exists yet either — confirming this milestone has not silently pre-built its own successor'));
 
         console.log('\n=== SECTION C: PublisherLeaderboardView IS GENUINE PRESENTATION MACHINERY ===');
@@ -383,7 +388,7 @@ async function run() {
         assert(liveRanking.entries.length > 0 && leaderboardFamilyFiles.includes('application/leaderboard/PublisherLeaderboardView.js'), n('D7. the backend capability (PublisherRankingPolicy.js + PublisherLeaderboardView.js) is confirmed operational (Sections B/C) at the exact same moment D1-D6 confirm it is now genuinely reachable — 0.9.416\'s own gap is closed, not merely re-described'));
 
         // The ONE, single, indirect path by which PublisherLeaderboardView.js
-        // is ever composed at all: PublisherLeaderboardSnapshot.js (0.8.119),
+        // is ever composed at all: leaderboard/snapshot/Snapshot.js (0.8.119),
         // for cross-replica evidence-fingerprint reproducibility — never to
         // display a rank to a user.
         const applicationBundleFiles = listFiles(['application']);
@@ -391,11 +396,11 @@ async function run() {
         for (const file of applicationBundleFiles) {
             if (file === 'application/leaderboard/PublisherLeaderboardView.js') continue;
             const src = await readSource(file);
-            if (/from '\.\/PublisherLeaderboardView\.js'/.test(src)) realConsumers.push(file);
+            if (/from '(\.\.?\/)+PublisherLeaderboardView\.js'/.test(src)) realConsumers.push(file);
         }
-        assert(realConsumers.length === 1 && realConsumers[0] === 'application/leaderboard/PublisherLeaderboardSnapshot.js', n(`D8. exactly one file in application/ imports PublisherLeaderboardView.js directly — PublisherLeaderboardSnapshot.js (0.8.119), for reproducibility, not display (found: ${JSON.stringify(realConsumers)})`));
-        const snapshotSource = await readSource('application/leaderboard/PublisherLeaderboardSnapshot.js');
-        assert(!/render|<div|<td|<th/i.test(snapshotSource), n('D9. PublisherLeaderboardSnapshot.js itself renders nothing — it composes the leaderboard purely as reproducibility data, confirming the indirect path never reaches a user-visible rank'));
+        assert(realConsumers.length === 1 && realConsumers[0] === 'application/leaderboard/snapshot/Snapshot.js', n(`D8. exactly one file in application/ imports PublisherLeaderboardView.js directly — leaderboard/snapshot/Snapshot.js (0.8.119), for reproducibility, not display (found: ${JSON.stringify(realConsumers)})`));
+        const snapshotSource = await readSource('application/leaderboard/snapshot/Snapshot.js');
+        assert(!/render|<div|<td|<th/i.test(snapshotSource), n('D9. leaderboard/snapshot/Snapshot.js itself renders nothing — it composes the leaderboard purely as reproducibility data, confirming the indirect path never reaches a user-visible rank'));
 
         console.log('\n=== SECTION D: REACHABILITY AUDIT (AMENDED BY 0.9.417) ===');
         console.log(`  UI files importing PublisherRankingPolicy.js directly = ${filesImportingRankingPolicyDirectly.length}`);
@@ -673,7 +678,7 @@ async function run() {
     console.log('(Section A): /reconciliation-leaderboard is a real, routed evidence-diff');
     console.log('diagnostic that explicitly declines ranking in its own source; PublisherRankingPolicy.js');
     console.log('(0.8.112) and PublisherLeaderboardView.js (0.8.113) are a real, separate ranking');
-    console.log('engine and its correct presentation projection, swept into the same 77-file');
+    console.log('engine and its correct presentation projection, swept into the same 83-file');
     console.log('name-prefix family as the reconciliation machinery by naming accident alone.');
     console.log('The ranking capability was executed live against real, freshly-constructed');
     console.log('publication and association data — deterministic, meaningfully ordered,');

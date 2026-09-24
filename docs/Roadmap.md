@@ -36701,7 +36701,7 @@ Publisher Leaderboard Snapshot
   { evidenceFingerprint, policy, leaderboard }
 ```
 
-`application/leaderboard/PublisherLeaderboardSnapshot.js` builds exactly two functions,
+`application/leaderboard/snapshot/Snapshot.js` builds exactly two functions,
 each composing existing computation, never a second one:
 
 ```text
@@ -36866,7 +36866,7 @@ Remote Snapshot
 Local Evidence ──► Local Snapshot   (0.8.119, UNCHANGED)
 ```
 
-`application/leaderboard/PublisherLeaderboardSnapshotVerification.js` builds exactly
+`application/leaderboard/snapshot/Verification.js` builds exactly
 two functions:
 
 ```text
@@ -37047,12 +37047,12 @@ of a bare one.
 **TWO KINDS OF SNAPSHOT IDENTITY, NEITHER REPLACING THE OTHER.**
 0.8.119's own `(evidenceFingerprint, policy.version)` pair remains,
 untouched, the SEMANTIC identity — "would two replicas compute the same
-leaderboard?" `application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js`
+leaderboard?" `application/leaderboard/snapshot/Fingerprint.js`
 adds a narrower, CRYPTOGRAPHIC digest — a SHA-256 over the COMPLETE
 snapshot (evidence fingerprint, full policy, full leaderboard) — because a
 signature authorizes exact bytes, never a semantic equivalence class.
 0.8.119's own header declined a snapshot hash for every purpose it ever
-served, and that restraint stands — `application/leaderboard/PublisherLeaderboardSnapshot.js`
+served, and that restraint stands — `application/leaderboard/snapshot/Snapshot.js`
 itself gains no new field and no new export. The new fingerprint lives
 beside it, in its own file, for the one purpose 0.8.119 never needed to
 serve.
@@ -37068,7 +37068,7 @@ one layer up, over a derived conclusion instead of a raw fact.
 
 **A VALID SIGNATURE NEVER MEANS THE CLAIM IS TRUE RELATIVE TO A
 REPLICA'S OWN EVIDENCE — THE FLAGSHIP DISTINCTION.**
-`application/leaderboard/PublisherLeaderboardSnapshotClaimVerification.js` computes
+`application/leaderboard/snapshot/ClaimVerification.js` computes
 FOUR genuinely independent facts, never one derived from another:
 
 ```text
@@ -37107,7 +37107,7 @@ vocabulary boundary every file in this family already holds. A signature
 establishes who signed what; it does not, and structurally cannot,
 establish that a ranking is objectively correct.
 
-**SIGNING IS NEVER AUTOMATIC.** `application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js`
+**SIGNING IS NEVER AUTOMATIC.** `application/leaderboard/snapshot/CreateClaimUseCase.js`
 is the ONE construction boundary — nothing in the achievement pipeline,
 ranking policy, or leaderboard projection ever calls it as a side effect.
 A claim is a durable, attributable, cryptographically binding STATEMENT
@@ -37180,7 +37180,7 @@ a JSON payload  ─────────────────────�
 ```
 
 **TRANSPORT INTRODUCES NO NEW TRUST SEMANTICS — THE ONE RULE THIS
-MILESTONE EXISTS TO ENFORCE.** `application/leaderboard/PublisherLeaderboardSnapshotClaimExchange.js`
+MILESTONE EXISTS TO ENFORCE.** `application/leaderboard/snapshot/ClaimExchange.js`
 does not re-decide what a valid signature means, does not re-decide what
 "matches" means, and does not compare a claim against any archive. It has
 exactly two jobs: turn a claim a replica already holds into portable JSON,
@@ -37240,7 +37240,7 @@ OUTCOME.** `PublisherLeaderboardSnapshotClaimImportOutcome` is exactly
 `IMPORTED` / `INVALID_CLAIM` / `UNVERIFIABLE_CLAIM` — neither a malformed
 payload nor a well-formed-but-forged one ever throws. Only a missing or
 malformed `verifier` argument throws — a programmer error, never untrusted
-external input, the identical distinction `application/leaderboard/PublisherLeaderboardSnapshotClaimVerification.js`
+external input, the identical distinction `application/leaderboard/snapshot/ClaimVerification.js`
 already draws for its own `verifier` parameter.
 
 **THE FLAGSHIP SCENARIO.** Alice signs a claim over her own evidence.
@@ -37333,7 +37333,7 @@ LeaderboardClaimHistory   ──────►   describePublisherLeaderboardCl
 ```
 
 **PERSIST A SIGNED CLAIM AS A RECEIVED STATEMENT — NEVER AS TRUE, CURRENT,
-AUTHORITATIVE, OR RANKED.** `application/leaderboard/LeaderboardClaimRecord.js` is a
+AUTHORITATIVE, OR RANKED.** `application/leaderboard/claim/Record.js` is a
 small, immutable triple: `{ claim, receivedAt, origin }`. `claim` is the
 EXACT `PublisherLeaderboardSnapshotClaim` instance a caller already holds
 — carried through unchanged, never copied field-by-field into a new
@@ -37351,7 +37351,7 @@ raw one.
 
 **AN APPEND-ONLY HISTORY THAT PRESERVES MULTIPLICITY, THE IDENTICAL
 DISCIPLINE `application/publication/PublicationReferenceRecordHistory.js` (0.8.104)
-ALREADY HOLDS.** `application/leaderboard/LeaderboardClaimHistory.js` offers exactly
+ALREADY HOLDS.** `application/leaderboard/claim/History.js` offers exactly
 four operations over a plain array: `appendLeaderboardClaimHistoryEntry()`
 and three lookups — `findLeaderboardClaimRecordsBySignerIdentityId()`,
 `findLeaderboardClaimRecordsBySnapshotFingerprint()`,
@@ -37365,13 +37365,13 @@ narrow, factual "which records on file name this exact signer / snapshot
 / evidence set" — never "which of these claims should I believe." A
 caller wanting to know whether a found record's claim still agrees with
 local evidence still runs `application/
-PublisherLeaderboardSnapshotClaimVerification.js` (0.8.121, UNCHANGED)
+leaderboard/snapshot/ClaimVerification.js` (0.8.121, UNCHANGED)
 itself, separately. If a future milestone wants deduplication or a
 distinct-claim count, that is an explicitly separate projection built on
 top of this file — this file computes neither.
 
 **THE ONE NEW APPLICATION BOUNDARY: `application/
-ReceivePublisherLeaderboardSnapshotClaimUseCase.js`.** Four steps,
+leaderboard/snapshot/ReceiveClaimUseCase.js`.** Four steps,
 exactly, never a fifth: (1) accept an imported signed claim, (2)
 structurally validate it is a genuine claim — by delegating to 0.8.122's
 own `importPublisherLeaderboardSnapshotClaim()`, never re-implementing
@@ -37393,14 +37393,14 @@ identical immutable-input/immutable-output shape `PublicationObservationArchive`
 own `.with...()` methods already hold.
 
 **A DELIBERATELY FACTUAL PROJECTION: `application/
-PublisherLeaderboardClaimHistoryView.js`.** `describePublisherLeaderboardClaimHistory()`
+leaderboard/claim/HistoryView.js`.** `describePublisherLeaderboardClaimHistory()`
 returns `{ claimCount, claims: [...] }`, each entry exactly `{ id,
 signerIdentityId, evidenceFingerprint, policyVersion, snapshotFingerprint,
 createdAt, receivedAt, origin }` — every field carried through unchanged
 from the record and its own claim, in the same order `history` already
 holds them. No `trusted`, `valid`, `current`, `authoritative`, `verified`,
 `score`, `rank`, or `matches` field is persisted or presented anywhere in
-this file's output. `application/leaderboard/PublisherLeaderboardSnapshotClaimVerification.js`
+this file's output. `application/leaderboard/snapshot/ClaimVerification.js`
 (0.8.121, UNCHANGED) remains the ONLY authority for the question it was
 designed to answer — whether a signature is valid, and whether a claim's
 fingerprints agree with a particular replica's own reconstructed snapshot
@@ -37443,7 +37443,7 @@ Deliberately excluded:
   caller's own, separate, explicit step, run whenever it chooses to ask,
   against whichever archive it currently holds.
 - **Deduplication of any kind.** The identical claim received twice is
-  two records, always — see `application/leaderboard/LeaderboardClaimHistory.js`'s
+  two records, always — see `application/leaderboard/claim/History.js`'s
   own header.
 - **A ninth `PublicationObservationArchive` collection, with its own
   provenance array, fingerprint contribution, export/import, difference
@@ -37503,7 +37503,7 @@ signature verification  local snapshot reconstruction
 ```
 
 **A PROJECTION, NEVER A NEW VERIFIER.** `application/
-PublisherLeaderboardClaimVerificationView.js` computes nothing 0.8.121
+leaderboard/claim/VerificationView.js` computes nothing 0.8.121
 does not already compute. `signatureValid`, `evidenceFingerprintMatches`,
 `policyVersionMatches`, `snapshotFingerprintMatches`, and `matches` are
 `describePublisherLeaderboardSnapshotClaimVerification()`'s (0.8.121,
@@ -37511,7 +37511,7 @@ UNCHANGED) own result, carried through byte for byte. This file adds
 exactly three fields on top — `signerIdentityId`, `claimCreatedAt`,
 `receivedAt` — read straight off the record and its own claim, the
 identical "carried through unchanged, never re-derived" restraint
-`application/leaderboard/PublisherLeaderboardClaimHistoryView.js`'s own header already
+`application/leaderboard/claim/HistoryView.js`'s own header already
 holds. There is no second verification taxonomy: no `trusted`, `valid`,
 `current`, `authoritative`, `verified`, `score`, or `rank` field, and the
 five 0.8.120/0.8.121 comparison names are reused exactly, never renamed or
@@ -37584,7 +37584,7 @@ meaningful content is its signer and signature), a malformed
 `LeaderboardClaimRecord` here has no `receivedAt` to honestly report at
 all — there is no receipt to project a comparison onto in the first
 place — so this file returns `null` rather than inventing one, the
-identical tolerance `application/leaderboard/PublisherLeaderboardClaimHistoryView.js#describePublisherLeaderboardClaimHistoryEntry()`
+identical tolerance `application/leaderboard/claim/HistoryView.js#describePublisherLeaderboardClaimHistoryEntry()`
 already holds.
 
 **FLAGSHIP.** Alice and Bob hold the identical evidence at signing time.
@@ -37665,7 +37665,7 @@ LeaderboardClaimHistory                   reconstructPublisherLeaderboardSnapsho
 ```
 
 **A PROJECTION OF A PROJECTION, NEVER A NEW VERIFIER.** `application/
-PublisherLeaderboardClaimVerificationHistoryView.js` computes nothing
+leaderboard/claim/VerificationHistoryView.js` computes nothing
 0.8.124 does not already compute. Every entry in `verifications` is
 exactly `describePublisherLeaderboardClaimVerification()`'s (0.8.124,
 UNCHANGED) own result for that one record, carried through byte for byte
@@ -37678,7 +37678,7 @@ over, for every entry.
 signed claim received three times is three entries here, in the exact
 order `LeaderboardClaimHistory` (0.8.123, UNCHANGED) already holds them —
 never collapsed into one, never counted, never averaged. This is
-`application/leaderboard/LeaderboardClaimHistory.js`'s own rule, unchanged, held here
+`application/leaderboard/claim/History.js`'s own rule, unchanged, held here
 once more: claim identity ≠ receipt identity. A caller wanting to know how
 many DISTINCT claims are on file is asking a genuinely different, later
 question — this milestone answers neither; it only projects the history
@@ -37732,7 +37732,7 @@ Deliberately excluded:
   onto any record or any history.
 - **A "distinct claims on file" or "claims received more than once"
   count.** Real, separately sized, later work, exactly as
-  `application/leaderboard/LeaderboardClaimHistory.js`'s own header already draws this
+  `application/leaderboard/claim/History.js`'s own header already draws this
   same line for reference counts vs. distinct referencer counts.
 - **Exchanging claim verification histories between replicas, a claim
   difference projection, a claim identity/multiplicity projection, or a
@@ -37961,9 +37961,9 @@ further transformation.
 
 **COMPARES STORED RECEIPTS, NEVER VERIFICATION RESULTS — THE
 ARCHITECTURAL BOUNDARY THIS MILESTONE EXISTS TO HOLD.** This module
-imports nothing from `application/leaderboard/PublisherLeaderboardSnapshotClaimVerification.js`,
-`application/leaderboard/PublisherLeaderboardClaimVerificationView.js`, or
-`application/leaderboard/PublisherLeaderboardClaimVerificationHistoryView.js`
+imports nothing from `application/leaderboard/snapshot/ClaimVerification.js`,
+`application/leaderboard/claim/VerificationView.js`, or
+`application/leaderboard/claim/VerificationHistoryView.js`
 (0.8.120/0.8.124/0.8.125). Two replicas holding the byte-identical receipt
 for claim X report no difference for that receipt, even when one
 replica's own current evidence makes that claim verify successfully and
@@ -38014,7 +38014,7 @@ Deliberately excluded:
 - **Any merge, export, or import.** `sourceOnly`/`targetOnly` are
   read-only facts about the difference; folding either side's exclusive
   receipts into the other history remains
-  `application/leaderboard/PublisherLeaderboardClaimHistoryExchange.js`'s own,
+  `application/leaderboard/claim/HistoryExchange.js`'s own,
   already-built job (0.8.126), one call away, entirely untouched by this
   milestone's own module.
 - **Claim identity/multiplicity statistics, a historical claim timeline,
@@ -38111,9 +38111,9 @@ oldest received first.
 
 **COMPARES STORED RECEIPTS, NEVER VERIFICATION RESULTS — THE IDENTICAL
 ARCHITECTURAL BOUNDARY 0.8.127 ALREADY HOLDS.** This milestone's module
-imports nothing from `application/leaderboard/PublisherLeaderboardSnapshotClaimVerification.js`,
-`application/leaderboard/PublisherLeaderboardClaimVerificationView.js`, or
-`application/leaderboard/PublisherLeaderboardClaimVerificationHistoryView.js`
+imports nothing from `application/leaderboard/snapshot/ClaimVerification.js`,
+`application/leaderboard/claim/VerificationView.js`, or
+`application/leaderboard/claim/VerificationHistoryView.js`
 (0.8.120/0.8.124/0.8.125). A replica's own statistics over its stored
 claim history never change merely because its own current evidence
 changes and a claim's verification outcome flips.
@@ -38235,9 +38235,9 @@ byte-comparable.
 
 **ARCHITECTURAL BOUNDARY: A RECEIPT LOG, NEVER A VERDICT — THE IDENTICAL
 BOUNDARY 0.8.127/0.8.128 ALREADY HOLD.** This milestone's module imports
-nothing from `application/leaderboard/PublisherLeaderboardSnapshotClaimVerification.js`,
-`application/leaderboard/PublisherLeaderboardClaimVerificationView.js`, or
-`application/leaderboard/PublisherLeaderboardClaimVerificationHistoryView.js`
+nothing from `application/leaderboard/snapshot/ClaimVerification.js`,
+`application/leaderboard/claim/VerificationView.js`, or
+`application/leaderboard/claim/VerificationHistoryView.js`
 (0.8.120/0.8.124/0.8.125). The timeline can only ever say "this claim
 receipt exists in the history, and these are its associated timestamps and
 metadata" — never "was this claim valid when it was received?" A claim
@@ -38328,12 +38328,12 @@ PublicationObservationArchive
 
 **AN ELEVENTH, INDEPENDENT COLLECTION — `leaderboardClaimRecords` —
 HOLDS `LeaderboardClaimRecord` RECEIPTS DIRECTLY, NEVER A SEPARATE
-`LeaderboardClaimHistory` WRAPPER.** `application/leaderboard/LeaderboardClaimHistory.js`
+`LeaderboardClaimHistory` WRAPPER.** `application/leaderboard/claim/History.js`
 (0.8.123) is, and remains, exactly what every file in this family already
 calls it: "the plain, in-memory array of `LeaderboardClaimRecord`." This
 milestone gives that array a durable home — the archive's own flat
 collection — and keeps the history abstraction a VIEW over it, per
-`application/leaderboard/PublisherLeaderboardClaimHistoryView.js`'s own new
+`application/leaderboard/claim/HistoryView.js`'s own new
 `reconstructPublisherLeaderboardClaimHistory(archive)`, THE ONE seam that
 understands the archive's own collection. Every downstream projection
 (difference/statistics/timeline/verification-history) continues composing
@@ -38352,7 +38352,7 @@ no migration path pretends otherwise.
 
 **THE ARCHIVE'S NEW API MIRRORS EVERY EXISTING COLLECTION'S OWN
 DISCIPLINE EXACTLY.** `appendLeaderboardClaimRecord(record, origin)`
-reuses `application/leaderboard/LeaderboardClaimHistory.js`'s own, UNCHANGED
+reuses `application/leaderboard/claim/History.js`'s own, UNCHANGED
 `appendLeaderboardClaimHistoryEntry()` — never a new construction path.
 Adding a claim receipt never mutates the existing archive instance.
 Repeated identical receipts remain independently stored, exactly as
@@ -38707,7 +38707,7 @@ to the exact same reproducible conclusion. That fact is real and worth
 surfacing on its own — it is not evidence that either signer is
 trustworthy, not a step toward resolving a "conflict," and not a vote.
 This file counts relationships, never verdicts, holding the identical
-restraint `application/leaderboard/PublisherLeaderboardClaimHistoryStatisticsView.js`'s
+restraint `application/leaderboard/claim/HistoryStatisticsView.js`'s
 own header already states: "An Achievement Describes An Attributable
 Fact, Not A Person's Worth (0.8.102)."
 
@@ -38751,9 +38751,9 @@ on the other side of this same distinction.
 
 **Architectural boundary: structural facts about stored claims, never a
 verification, trust, or ranking determination of any kind.** The new file
-imports nothing from `application/leaderboard/PublisherLeaderboardSnapshotClaimVerification.js`,
-`application/leaderboard/PublisherLeaderboardClaimVerificationView.js`, or
-`application/leaderboard/PublisherLeaderboardClaimVerificationHistoryView.js`
+imports nothing from `application/leaderboard/snapshot/ClaimVerification.js`,
+`application/leaderboard/claim/VerificationView.js`, or
+`application/leaderboard/claim/VerificationHistoryView.js`
 (0.8.120/0.8.124/0.8.125). Two signers sharing a snapshot fingerprint are
 reported as sharing a snapshot fingerprint, full stop — never as
 "corroborating one another," and this file never consults either
@@ -38879,9 +38879,9 @@ progress, maturity, or quality. The result carries no `improved`,
 claims, never a verification, trust, or ranking determination of any
 kind.** The identical boundary 0.8.127/0.8.128/0.8.129/0.8.132 already
 hold. This file imports nothing from
-`application/leaderboard/PublisherLeaderboardSnapshotClaimVerification.js`,
-`application/leaderboard/PublisherLeaderboardClaimVerificationView.js`, or
-`application/leaderboard/PublisherLeaderboardClaimVerificationHistoryView.js`
+`application/leaderboard/snapshot/ClaimVerification.js`,
+`application/leaderboard/claim/VerificationView.js`, or
+`application/leaderboard/claim/VerificationHistoryView.js`
 (0.8.120/0.8.124/0.8.125).
 
 **`describePublisherLeaderboardClaimEvolution()`/
@@ -39056,10 +39056,10 @@ a regression.
 **Architectural boundary: observable facts about two artifacts, never a
 verification, trust, or ranking determination of any kind.** This file
 imports nothing from
-`application/leaderboard/PublisherLeaderboardSnapshotVerification.js`,
-`application/leaderboard/PublisherLeaderboardSnapshotClaimVerification.js`,
-`application/leaderboard/PublisherLeaderboardClaimVerificationView.js`, or
-`application/leaderboard/PublisherLeaderboardClaimVerificationHistoryView.js`
+`application/leaderboard/snapshot/Verification.js`,
+`application/leaderboard/snapshot/ClaimVerification.js`,
+`application/leaderboard/claim/VerificationView.js`, or
+`application/leaderboard/claim/VerificationHistoryView.js`
 (0.8.120/0.8.124/0.8.125). It never determines which snapshot is correct,
 never verifies a signature, never compares claims, never determines
 whether a signer was truthful, never says a publisher "improved" or
@@ -39070,7 +39070,7 @@ recomputes a rank, and never persists or modifies anything.
 oversight.** Every other file in this family pairs a pure `describeXxx()`
 with a thin `reconstructXxx()` that pulls THIS replica's own CURRENT
 state. This file has none, for the identical reason 0.8.121's own
-`PublisherLeaderboardSnapshotFingerprint.js` has none: both inputs are
+`leaderboard/snapshot/Fingerprint.js` has none: both inputs are
 already-computed, historical artifacts a caller already holds — never
 something this file should silently replace with whatever this replica's
 archive currently produces. A version that accepted an archive and quietly
@@ -39332,7 +39332,7 @@ element. Every actual comparison between two snapshots is
 called once per adjacent pair and embedded on the result, byte for byte, as
 `transitions[i].difference` — never re-derived, never summarized, and never
 recomputed by a second, competing algorithm. Grep `application/
-PublisherLeaderboardSnapshotTimelineView.js` and there is no
+leaderboard/snapshot/TimelineView.js` and there is no
 `JSON.stringify(...) !== JSON.stringify(...)` anywhere in it, no
 `evidenceFingerprintChanged`, no `policyChanged`, no `leaderboardChanged`
 named directly — every one of 0.8.134's own change facts already exists,
@@ -39433,10 +39433,10 @@ direction.
 
 **Architectural boundary: sequence-level structure over already-computed
 artifacts, never a verification, trust, or ranking determination of any
-kind.** `application/leaderboard/PublisherLeaderboardSnapshotTimelineView.js` imports
-nothing from `application/leaderboard/PublisherLeaderboardSnapshotVerification.js`,
-`application/leaderboard/PublisherLeaderboardSnapshotClaimVerification.js`, or
-`application/leaderboard/PublisherLeaderboardHistoricalClaimVerification.js`
+kind.** `application/leaderboard/snapshot/TimelineView.js` imports
+nothing from `application/leaderboard/snapshot/Verification.js`,
+`application/leaderboard/snapshot/ClaimVerification.js`, or
+`application/leaderboard/claim/HistoricalVerification.js`
 (0.8.120/0.8.121/0.8.135) — none of that vocabulary appears. It never
 determines which snapshot in the sequence is correct, never verifies a
 signature, never associates a snapshot with the signer who may have claimed
@@ -39526,7 +39526,7 @@ LeaderboardClaimRecord              PublisherLeaderboardSnapshot
 
 **Association answers "does this claim describe this snapshot?"; verification
 answers "is the claim's signature valid?"** This new module,
-`application/leaderboard/PublisherLeaderboardClaimSnapshotAssociationView.js`, computes
+`application/leaderboard/claimSnapshot/AssociationView.js`, computes
 no cryptographic check of any kind — it accepts no `verifier` argument and
 carries no `signatureValid` field. A claim may be cryptographically signed
 and associated with a snapshot; cryptographically signed but associated
@@ -39644,7 +39644,7 @@ describePublisherLeaderboardClaimSnapshotAssociationHistory()
 ```
 
 **A history of explicitly supplied pairs, never a matching algorithm.**
-The new module, `application/leaderboard/PublisherLeaderboardClaimSnapshotAssociationHistoryView.js`,
+The new module, `application/leaderboard/claimSnapshot/AssociationHistoryView.js`,
 accepts a single argument, `associations` — a caller-supplied list of
 `{ claimRecord, snapshot }` pairs — never two independent
 `claims`/`snapshots` arrays this file would then have to combine.
@@ -39690,8 +39690,8 @@ byte-identical association history entry, because 0.8.137 deliberately
 ignores signatures.
 
 **Architectural boundary: imports 0.8.137 only.** This file imports
-nothing from `application/leaderboard/PublisherLeaderboardSnapshotClaimVerification.js`,
-`application/leaderboard/PublisherLeaderboardHistoricalClaimVerification.js`, any
+nothing from `application/leaderboard/snapshot/ClaimVerification.js`,
+`application/leaderboard/claim/HistoricalVerification.js`, any
 signing or identity module, any archive module, or any ranking module —
 grep it and none of that vocabulary appears. The dependency direction
 stays a single line: 0.8.137 → 0.8.138, never a second, parallel
@@ -39758,7 +39758,7 @@ calling it; this file's caller does not, and hands over two independently
 supplied collections instead — the exact "two separate arrays this file
 would then have to combine" 0.8.138's own header declined to build. For
 every distinct stored claim, the new module,
-`application/leaderboard/PublisherLeaderboardClaimSnapshotCorrespondenceView.js`, tries
+`application/leaderboard/claimSnapshot/CorrespondenceView.js`, tries
 every supplied snapshot and keeps the ones whose complete identity agrees.
 
 **The complete `snapshotFingerprint` is the correspondence key — never
@@ -39815,9 +39815,9 @@ reported as two distinct `snapshotIndex` values, never merged into one.
 
 **Architectural boundary: imports 0.8.123's record class and 0.8.137
 only.** This file imports nothing from
-`application/leaderboard/PublisherLeaderboardSnapshotClaimVerification.js`, any
+`application/leaderboard/snapshot/ClaimVerification.js`, any
 signing or identity module, any archive module, any ranking module, or
-`application/leaderboard/PublisherLeaderboardSnapshotTimelineView.js` — grep it and
+`application/leaderboard/snapshot/TimelineView.js` — grep it and
 none of that vocabulary appears.
 
 **Deliberately excluded — not this milestone.** Cryptographic signature
@@ -39850,7 +39850,7 @@ asking that question of in the first place. This milestone is the
 composition of the two, finally built: 0.8.139 discovers WHICH pairs are
 eligible, and 0.8.135 is called once for every pair it discovered.
 
-New module, `application/leaderboard/PublisherLeaderboardClaimSnapshotCorrespondenceVerificationView.js`:
+New module, `application/leaderboard/claimSnapshot/CorrespondenceVerificationView.js`:
 `describePublisherLeaderboardClaimSnapshotCorrespondenceVerification(claimHistory, snapshots, verifier)`.
 
 **Correspondence determines which pairs are eligible for verification; it
@@ -39909,10 +39909,10 @@ correspondence is never turned into an invented verification failure.
 
 **Architectural boundary: imports 0.8.123's record class, 0.8.139, and
 0.8.135 only.** This file imports nothing from
-`application/leaderboard/PublisherLeaderboardClaimSnapshotAssociationView.js`,
-`application/leaderboard/PublisherLeaderboardSnapshotClaimVerification.js`, any
+`application/leaderboard/claimSnapshot/AssociationView.js`,
+`application/leaderboard/snapshot/ClaimVerification.js`, any
 signing or identity module, any archive module, any ranking module, or
-`application/leaderboard/PublisherLeaderboardSnapshotTimelineView.js` — grep it and
+`application/leaderboard/snapshot/TimelineView.js` — grep it and
 none of that vocabulary appears.
 
 **Deliberately excluded — not this milestone.** Automatic snapshot
@@ -39947,7 +39947,7 @@ finally built: 0.8.140's own per-claim correspondence/verification result,
 attached onto 0.8.133's own per-signer claim sequence.
 
 New module,
-`application/leaderboard/PublisherLeaderboardClaimSnapshotCorrespondenceVerificationEvolutionView.js`:
+`application/leaderboard/claimSnapshot/CorrespondenceVerificationEvolutionView.js`:
 `describePublisherLeaderboardClaimSnapshotCorrespondenceVerificationEvolution(claimHistory, snapshots, verifier)`.
 
 **This is a narrative projection, never an evaluation engine.** Given a
@@ -40000,10 +40000,10 @@ of Claim A and Claim B are also stored, proving Alice's own `claimCount`
 stays 4 (distinct), never 6 (receipts).
 
 **Architectural boundary: imports 0.8.133 and 0.8.140 only.** This file
-imports nothing from `application/leaderboard/LeaderboardClaimRecord.js` (it performs
+imports nothing from `application/leaderboard/claim/Record.js` (it performs
 no independent record filtering — both 0.8.133 and 0.8.140 already do
-that), `application/leaderboard/PublisherLeaderboardClaimSnapshotCorrespondenceView.js`,
-`application/leaderboard/PublisherLeaderboardHistoricalClaimVerification.js`, any
+that), `application/leaderboard/claimSnapshot/CorrespondenceView.js`,
+`application/leaderboard/claim/HistoricalVerification.js`, any
 signing or identity module, any archive module, or any ranking module.
 
 **No reconstruct variant — matching 0.8.139's/0.8.140's own choice, not
@@ -40067,7 +40067,7 @@ a deliberately tiny persistence boundary: a caller supplies an
 already-computed, genuine 0.8.145 decision record; this class validates it
 is genuinely `{ decided: true, ... }`, appends it via
 `archive.appendReconciliationDecisionRecord()`, and returns the new
-archive. Unlike `ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js`
+archive. Unlike `leaderboard/snapshot/ReceiveClaimIntoArchiveUseCase.js`
 (0.8.130), it delegates to no intermediate use case, because 0.8.145 is a
 pure function, not a class-shaped one — there is nothing upstream to
 delegate to. It performs no verification, no plan reconstruction, no
@@ -40116,7 +40116,7 @@ was never added to `tests.html` by 0.8.149); `docs/Roadmap.md` and
 0.8.150 gave a replica's own reconciliation decisions a durable,
 archive-backed home, but never let one replica hand its history to
 another — the identical gap 0.8.122 once left for a single signed claim,
-closed one layer up by 0.8.126's own `PublisherLeaderboardClaimHistoryExchange.js`.
+closed one layer up by 0.8.126's own `leaderboard/claim/HistoryExchange.js`.
 This milestone is that same missing step, one subject over: a new
 `application/claimSnapshotReconciliation/decision/HistoryExchange.js`
 with three functions —
@@ -40128,7 +40128,7 @@ it does not make new ones.**
 
 **No signature, no verifier, no verification step — a genuine, deliberate
 absence, not an oversight.** Every claim-shaped exchange in this codebase
-(`PublisherLeaderboardSnapshotClaimExchange.js`, `PublisherLeaderboardClaimHistoryExchange.js`)
+(`leaderboard/snapshot/ClaimExchange.js`, `leaderboard/claim/HistoryExchange.js`)
 requires a `verifier` argument and structurally checks a signature on
 import, because a claim carries one. A 0.8.145 decision record carries
 none — it is an explicit, unsigned, local historical fact from the moment
@@ -41007,7 +41007,7 @@ this milestone), and the revalidation relationship between them
 lowercase hex>, candidateCount }`, mirroring the exact fingerprint shape
 already established by `application/publication/observationArchive/PublicationObservationArchiveFingerprint.js`
 (0.8.84), `application/achievement/AchievementEvidenceFingerprint.js` (0.8.116), and
-`application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js` (0.8.121) —
+`application/leaderboard/snapshot/Fingerprint.js` (0.8.121) —
 SHA-256 implemented from first principles and deliberately duplicated a
 fourth time, for the identical reason each of those three files' own
 headers already give (`crypto.subtle.digest()` is Promise-only and has
@@ -42413,7 +42413,7 @@ there on purpose. This milestone is the first to actually put that result
 on screen, rather than adding another `describeXxx()` layer beneath it:
 
 ```
-ui/components/ReconciliationCandidateLeaderboardTable.js
+ui/components/reconciliation/CandidateLeaderboardTable.js
   describeCandidateLabel(candidate) -> a short, readable label for
     each of 0.8.144's three candidate shapes
   buildLeaderboardRows(page) -> one display row per page.rows entry,
@@ -42694,11 +42694,11 @@ never this file's own dependency); the counts path and the detail path
 are two independent readings of the identical 0.8.176 result.
 
 **UI layer — an "Inspect Evidence" button per row, and nothing else.**
-`ui/components/ReconciliationCandidateEvidenceDetailPanel.js` is a pure
+`ui/components/reconciliation/CandidateEvidenceDetailPanel.js` is a pure
 projection renderer (imports nothing from `application/`, exactly
 0.8.180's own discipline) that renders one candidate's own
 `decisionDetail`/`observationDetail` as two sections, each split Shared /
-Source-only / Target-only. `ui/components/ReconciliationCandidateLeaderboardTable.js`
+Source-only / Target-only. `ui/components/reconciliation/CandidateLeaderboardTable.js`
 gains a second, independent prop — `evidenceDetail` — and matches a
 display row to its own detail entry by CANDIDATE IDENTITY
 (`candidateIdentityKey()`, duplicated here for the identical reason
@@ -42850,7 +42850,7 @@ computed value, `comparisonState`, calling 0.8.183's own `describeXxx()`
 over the identical `hasPeerArchive`/`targetArchive` it already tracked; the
 Peer Archive box's own hint text now branches on all three states instead
 of two, and the state is handed down to
-`ui/components/ReconciliationCandidateLeaderboardTable.js` as a third,
+`ui/components/reconciliation/CandidateLeaderboardTable.js` as a third,
 independent prop. The table renders it as one plain-text banner ABOVE the
 table itself — the one place the ambiguous counts actually appear — via a
 plain string comparison, never an import of 0.8.183's own enum (the
@@ -43009,7 +43009,7 @@ two new, page-local refs — `evidenceKindFilter`/`replicaRelationFilter`,
 each defaulting to `ALL` — and one new computed value, `filteredPage`,
 calling 0.8.184's own `describeXxx()` over `page` (unchanged, 0.8.179's
 own result) and those two refs. `filteredPage`, not `page`, is what gets
-handed down to `ui/components/ReconciliationCandidateLeaderboardTable.js`
+handed down to `ui/components/reconciliation/CandidateLeaderboardTable.js`
 as its own `page` prop; the table renders whatever page-shaped object it
 receives exactly as it already does, with no filtering logic of its own —
 "the application layer describes the filtered page, the Vue component
@@ -43097,8 +43097,8 @@ declaring a fifth relation or a fourth evidence kind of its own.
 vocabulary.** A filtered candidate entry is still `{ candidate,
 decisionDetail, observationDetail }`, and each detail object still
 carries the identical six fields 0.8.182 already established. This is why
-`ui/components/ReconciliationCandidateEvidenceDetailPanel.js` and
-`ui/components/ReconciliationCandidateLeaderboardTable.js` needed **no
+`ui/components/reconciliation/CandidateEvidenceDetailPanel.js` and
+`ui/components/reconciliation/CandidateLeaderboardTable.js` needed **no
 change of their own at all** to render a filtered result — a filtered
 candidate entry is handed to the existing panel exactly the way an
 unfiltered one already is. A list this file excludes becomes an empty,
@@ -43180,7 +43180,7 @@ filter selection. There is only one Evidence Filter box on the page; it
 now drives both which rows are visible and what a visible row's own
 detail panel shows. `filteredEvidenceDetail`, not `evidenceDetail`, is
 what gets handed down to
-`ui/components/ReconciliationCandidateLeaderboardTable.js` as its own
+`ui/components/reconciliation/CandidateLeaderboardTable.js` as its own
 `evidence-detail` prop — the table and the detail panel beneath it needed
 no code change of their own to render it, since 0.8.185's own result is
 shaped exactly like 0.8.182's.
@@ -43785,7 +43785,7 @@ of pixels on purpose. This is the UI integration milestone that closes
 that chain: a new
 `ui/views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js`
 and a new
-`ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js`,
+`ui/components/reconciliation/EvidenceExportComparisonTable.js`,
 reached at a new `/evidence-export-comparison` route.
 
 ```
@@ -44120,7 +44120,7 @@ count — each prop renders exactly its own already-computed fact.
 
 **The table component gained a `detail` prop and per-dimension expand
 state, nothing else.**
-`ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js`
+`ui/components/reconciliation/EvidenceExportComparisonTable.js`
 keeps rendering the same three independent summary tables 0.8.192 already
 drew, each now followed by its own "Inspect records" toggle. Expanding one
 reveals three columns (Source-only / Shared / Target-only) of 0.8.193's own
@@ -44129,7 +44129,7 @@ still renders its summary immediately without forcing every record onto
 the page. Which dimensions are expanded is this component's own local,
 never-persisted `expanded` data, reset on every mount, exactly the
 "entirely local, presentational state" discipline `expandedKeys` already
-holds on `ReconciliationCandidateLeaderboardTable.js` (0.8.180) — toggling
+holds on `ui/components/reconciliation/CandidateLeaderboardTable.js` (0.8.180) — toggling
 it never mutates `view` or `detail`, and never affects any other dimension.
 
 **Evidence stays flat — candidate identity is shown, never regrouped by
@@ -44137,7 +44137,7 @@ candidate.** Every record list this component renders is 0.8.193's own
 flat, cross-candidate array, in 0.8.193's own order. A record's own
 `candidate` field is decoded into a short label (the identical
 `{ type, claimId?, snapshotIndex? }` decoding
-`ReconciliationCandidateLeaderboardTable.js`'s own `describeCandidateLabel()`
+`ui/components/reconciliation/CandidateLeaderboardTable.js`'s own `describeCandidateLabel()`
 already performs, duplicated here rather than imported — this component
 still imports nothing at all) and shown alongside that record, so a reader
 can see which candidate an entry concerns without this component ever
@@ -44906,10 +44906,10 @@ page, builds the explicit pair, and watches it run through 0.8.198 ->
 
 **Two new/extended UI-layer files, wiring five already-complete
 application-layer projections together for the first time.** A new
-`ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector.js`
+`ui/components/reconciliation/EvidenceExportComparisonRecordPairSelector.js`
 (an Options API, zero-`application/`-import presentation/selection
 component, the identical discipline
-`ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js`
+`ui/components/reconciliation/EvidenceExportComparisonTable.js`
 already holds), and an extension to
 `ui/views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js`
 (0.8.192/0.8.194/0.8.196's own Composition API view), which now also owns
@@ -45019,7 +45019,7 @@ identical scope 0.8.195's own identity projection already holds. A new
 route or top-nav entry — this remains part of the existing
 `/evidence-export-comparison` page.
 
-`ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector.js`
+`ui/components/reconciliation/EvidenceExportComparisonRecordPairSelector.js`
 added; `ui/views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js`
 extended; `css/main.css` updated (`.evidence-export-comparison-pairing`/
 `.evidence-pair-selector`/`.evidence-pair-list`/`.evidence-pair-differences`);
@@ -45051,7 +45051,7 @@ label, an always-visible difference-count summary, and an "Inspect
 differences ▼"/"Hide differences ▲" toggle that reveals that one pair's own
 source/target labels and differing-field list — the same expand/collapse
 discipline
-`ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js` already
+`ui/components/reconciliation/EvidenceExportComparisonTable.js` already
 holds for "Inspect records"/"Inspect identity," now held one file over, at
 the pair level.
 
@@ -45078,7 +45078,7 @@ the pair level.
 ```
 
 **One extended UI-layer file, no new application-layer projection.**
-`ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector.js`
+`ui/components/reconciliation/EvidenceExportComparisonRecordPairSelector.js`
 gains `expandedPairDifferences` (this component's own `data()` — entirely
 local, presentational, never-persisted expand/collapse state, resetting to
 fully collapsed on every remount), `pairDifferenceKey(dimension, index)` (an
@@ -45164,7 +45164,7 @@ this extension. A new application-layer projection — see "One extended
 UI-layer file," above; 0.8.200's own `pairedView` already carries everything
 this milestone displays.
 
-`ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector.js`
+`ui/components/reconciliation/EvidenceExportComparisonRecordPairSelector.js`
 extended; `css/main.css` updated (`.evidence-pair-difference-list`/
 `.evidence-pair-difference-item`/`.evidence-pair-difference-summary`/
 `.evidence-pair-difference-index`/`.evidence-pair-difference-count`/
@@ -98272,7 +98272,7 @@ the connection timer and the "Be Discoverable" state app-wide instead of per pag
 
 **Shared SHA-256.** `core/Sha256.js` (`sha256()`, `sha256Hex()`) replaces five identical hand-written copies in
 `application/publication/observationArchive/PublicationObservationArchiveFingerprint.js`, `application/achievement/AchievementEvidenceFingerprint.js`,
-`application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js`,
+`application/leaderboard/snapshot/Fingerprint.js`,
 `application/claimSnapshotReconciliation/PlanIdentity.js` and
 `anchoring/BitcoinAnchorSignedPsbtFinalizer.js`. It stays synchronous (`crypto.subtle.digest()` is Promise-only) and
 dependency-free. Fingerprints are unchanged; the plan-identity boundary test now allows exactly this one import.
@@ -98434,3 +98434,14 @@ its compose functions through `mainFiles()` (267 reads in 168 files); inventorie
 the compose function holding the code, and checks that only the composition root may read
 `window.arweaveWallet`/`window.nostr` count `ui/main/` as part of it. Two unused bindings the old file already had
 (`resolvedIpfsGatewayUrl`, `resolvedNostrRelayUrl`) moved unchanged.
+
+**Leaderboard claim and snapshot files grouped into folders.** The 30 `application/leaderboard/` files that repeated
+the folder's own name (up to 72 characters) now live in `leaderboard/claim/` (the claim record, history and their
+views), `leaderboard/claimSnapshot/` (claim–snapshot association, correspondence and divergence views) and
+`leaderboard/snapshot/` (the snapshot, its fingerprint, verification and exchange, and the snapshot-claim use cases),
+with the `PublisherLeaderboard` prefix dropped. `PublisherLeaderboardView.js` and `PublisherRankingPolicy.js` stay
+where they are. The four `ui/components/ReconciliationCandidate*` components moved to `ui/components/reconciliation/`
+the same way. Exported identifiers are unchanged. Imports, source paths in tests, comments and docs name the new
+paths; the two leaderboard family-census tests count the new folders (the family is now 83 files, since the folders
+also hold six claim files the prefix never matched). The Bitcoin and Base anchoring folders keep their names, since
+each file there is named after the class it exports.

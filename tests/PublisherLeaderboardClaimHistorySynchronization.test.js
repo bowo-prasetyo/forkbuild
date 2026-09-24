@@ -1,23 +1,23 @@
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
 import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js';
-import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
-import { appendLeaderboardClaimHistoryEntry } from '../application/leaderboard/LeaderboardClaimHistory.js';
+import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/leaderboard/snapshot/CreateClaimUseCase.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/claim/Record.js';
+import { appendLeaderboardClaimHistoryEntry } from '../application/leaderboard/claim/History.js';
 import { PublicationObservationArchiveProvenanceOrigin } from '../application/publication/observationArchive/PublicationObservationArchiveProvenance.js';
 import {
     PublisherLeaderboardClaimHistoryExchangeProtocolVersion,
     exportPublisherLeaderboardClaimHistory,
     applyPublisherLeaderboardClaimHistoryExchange,
     PublisherLeaderboardClaimHistoryExchangeApplyOutcome
-} from '../application/leaderboard/PublisherLeaderboardClaimHistoryExchange.js';
-import { describePublisherLeaderboardClaimHistoryDifference } from '../application/leaderboard/PublisherLeaderboardClaimHistoryDifference.js';
+} from '../application/leaderboard/claim/HistoryExchange.js';
+import { describePublisherLeaderboardClaimHistoryDifference } from '../application/leaderboard/claim/HistoryDifference.js';
 import {
     describePublisherLeaderboardClaimHistorySynchronization,
     reconstructPublisherLeaderboardClaimHistorySynchronization,
     exportPublisherLeaderboardClaimHistorySynchronization,
     applyPublisherLeaderboardClaimHistorySynchronization
-} from '../application/leaderboard/PublisherLeaderboardClaimHistorySynchronization.js';
+} from '../application/leaderboard/claim/HistorySynchronization.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';

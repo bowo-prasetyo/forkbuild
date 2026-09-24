@@ -413,7 +413,7 @@ async function run() {
             "from '../../anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistory.js'",
             "from '../../anchoring/base/BaseTransactionInclusionObservationHistory.js'",
             "from '../PublicationReferenceRecordHistory.js'",
-            "from '../../leaderboard/LeaderboardClaimHistory.js'",
+            "from '../../leaderboard/claim/History.js'",
             "from '../../claimSnapshotReconciliation/decision/History.js'"
         ];
         for (const marker of spannedFamilies) {

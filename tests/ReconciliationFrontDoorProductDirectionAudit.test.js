@@ -244,7 +244,7 @@ async function run() {
     {
         peerConnectionsSource = await readSource('ui/views/PeerConnectionsView.js');
         const claimCoreSource = await readSource('core/PublisherLeaderboardSnapshotClaim.js');
-        const claimExchangeSource = await readSource('application/leaderboard/PublisherLeaderboardSnapshotClaimExchange.js');
+        const claimExchangeSource = await readSource('application/leaderboard/snapshot/ClaimExchange.js');
 
         // E1. PeerConnectionsView carries zero archive/claim vocabulary
         // today — a genuinely blank slate, not an existing, unwired seam.
@@ -263,7 +263,7 @@ async function run() {
         // this operation to Peer Connections would introduce a MISLEADING
         // coupling this feature does not actually have.
         assert(claimExchangeSource.includes('TRANSPORT INTRODUCES NO NEW TRUST SEMANTICS'),
-            n('E3. claim transport (application/leaderboard/PublisherLeaderboardSnapshotClaimExchange.js) is documented as portable JSON exchange, the identical out-of-band paste shape the Leaderboard\'s own peer-archive comparison already uses — never a live peer-session/connection dependency Peer Connections would actually provide'));
+            n('E3. claim transport (application/leaderboard/snapshot/ClaimExchange.js) is documented as portable JSON exchange, the identical out-of-band paste shape the Leaderboard\'s own peer-archive comparison already uses — never a live peer-session/connection dependency Peer Connections would actually provide'));
         assert(!/Alice's replica.*Bob's replica.*peer connection|WebRTC|PeerSession/s.test(claimExchangeSource),
             n('E3. the claim exchange file never names a live peer session, WebRTC channel, or PeerSessionManager as part of its own transport — confirming the transport genuinely does not need what Peer Connections would supply'));
 
@@ -272,7 +272,7 @@ async function run() {
             description: 'a Peer card -> reconcile local publications against that peer\'s archive -> observations',
             userValue: 'DEMONSTRATED', semanticOwnership: 'UNCLAIMED', existingDataAvailability: 'NONE',
             architecturalFit: 'NEUTRAL', scope: 'UNBOUNDED', semanticCost: 'MODERATE',
-            evidence: 'PeerConnectionsView.js carries zero archive/claim vocabulary today — a blank slate, not an unwired seam. The claim\'s signerIdentityId genuinely IS the same did:key identity space this page already manages, a real point in this candidate\'s favor — but the claim\'s own actual transport (PublisherLeaderboardSnapshotClaimExchange.js) is explicit, portable JSON paste, never a live peer session; anchoring the front door here would misleadingly imply a live-connection dependency the feature does not have. Building the whole claim vocabulary from nothing, on a page whose own current job is connection lifecycle (My Peers/Known Peers/Friends/Blocked) rather than evidence archives, is exactly as large a construction as candidate 5 below, with a real semantic mismatch added on top'
+            evidence: 'PeerConnectionsView.js carries zero archive/claim vocabulary today — a blank slate, not an unwired seam. The claim\'s signerIdentityId genuinely IS the same did:key identity space this page already manages, a real point in this candidate\'s favor — but the claim\'s own actual transport (leaderboard/snapshot/ClaimExchange.js) is explicit, portable JSON paste, never a live peer session; anchoring the front door here would misleadingly imply a live-connection dependency the feature does not have. Building the whole claim vocabulary from nothing, on a page whose own current job is connection lifecycle (My Peers/Known Peers/Friends/Blocked) rather than evidence archives, is exactly as large a construction as candidate 5 below, with a real semantic mismatch added on top'
         });
         assert(candidate.decision === 'NOT_SELECTED', n('E4. the gate rejects this candidate — semanticOwnership is only UNCLAIMED (identity space matches, but no existing archive/claim concept lives here), so ownership is not clear even though no boundary is directly violated'));
         candidates.push(candidate);
@@ -333,10 +333,10 @@ async function run() {
     // Section G — Candidate 4: Automatic reconciliation.
     // ===============================================================
     {
-        const createClaimSource = await readSource('application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js');
+        const createClaimSource = await readSource('application/leaderboard/snapshot/CreateClaimUseCase.js');
 
         assert(createClaimSource.includes('SIGNING IS NEVER AUTOMATIC — THE MOST IMPORTANT RESTRAINT THIS FILE'),
-            n('G1. application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js states, verbatim, in its own header, "SIGNING IS NEVER AUTOMATIC — THE MOST IMPORTANT RESTRAINT THIS FILE HOLDS" — a direct, named, documented boundary this candidate would violate by construction, not merely a missing seam'));
+            n('G1. application/leaderboard/snapshot/CreateClaimUseCase.js states, verbatim, in its own header, "SIGNING IS NEVER AUTOMATIC — THE MOST IMPORTANT RESTRAINT THIS FILE HOLDS" — a direct, named, documented boundary this candidate would violate by construction, not merely a missing seam'));
         assert(createClaimSource.includes('as a side effect of anything else in this codebase.'),
             n('G1. the same file explicitly rules out exactly this candidate\'s own shape — signing is called "never as a side effect of anything else in this codebase"'));
 
@@ -345,7 +345,7 @@ async function run() {
             description: 'peer/archive change -> automatic reconciliation -> candidate observations',
             userValue: 'NOT_DEMONSTRATED', semanticOwnership: 'N/A', existingDataAvailability: 'FULL',
             architecturalFit: 'VIOLATES_ESTABLISHED_BOUNDARY', scope: 'UNBOUNDED', semanticCost: 'HIGH',
-            evidence: 'the exact family of files this operation would touch (CreatePublisherLeaderboardSnapshotClaimUseCase.js) states, in its own header, that signing is never automatic and never a side effect — the single most directly-applicable documented boundary on this entire roster. It also introduces substantial, unscoped scheduling/lifecycle semantics this audit\'s own request explicitly warns against building "merely because it makes the Leaderboard populate automatically"'
+            evidence: 'the exact family of files this operation would touch (leaderboard/snapshot/CreateClaimUseCase.js) states, in its own header, that signing is never automatic and never a side effect — the single most directly-applicable documented boundary on this entire roster. It also introduces substantial, unscoped scheduling/lifecycle semantics this audit\'s own request explicitly warns against building "merely because it makes the Leaderboard populate automatically"'
         });
         assert(candidate.decision === 'NOT_SELECTED', n('G2. the gate rejects this candidate on architecturalFit alone — it would violate a boundary this codebase already states in its own source, independent of any UNBOUNDED-scope concern'));
         candidates.push(candidate);

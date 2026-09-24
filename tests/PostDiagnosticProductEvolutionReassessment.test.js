@@ -499,7 +499,7 @@ async function runTests() {
             if (KNOWN_EMPTY_STUBS.has(f)) return 'EMPTY_PLACEHOLDER_STUB';
             if (base === 'CreateDelegationUseCase.js' || base === 'VerifyDelegationUseCase.js' || f === 'identity/LocalDelegationResolver.js') return 'DELEGATION_FAMILY';
             if (base === 'CreateReplicationUseCase.js') return 'HISTORICAL_REPLICATION_FAMILY';
-            if (/^PublisherLeaderboardClaimSnapshot.*View\.js$/.test(base)) return 'RECONCILIATION_DECISION_FAMILY';
+            if (/^PublisherLeaderboardClaimSnapshot.*View\.js$/.test(base) || /^application\/leaderboard\/claimSnapshot\/.*View\.js$/.test(f)) return 'RECONCILIATION_DECISION_FAMILY';
             if (base === 'BaseAnchorPublicationObservationView.js') return 'BITCOIN_ANCHOR_ORPHANED_VIEW';
             if (base === 'DecentralizedPublicationDiscoveryProvider.js') return 'DECENTRALIZED_DISCOVERY_SEAM';
             if (base === 'LoadPublishedWorldSessionUseCase.js') return 'BYPASSED_COMPOSITION_ROOT'; // ResolvePublicationUseCase's own superseding sibling — same subtree, same bucket (D3c)

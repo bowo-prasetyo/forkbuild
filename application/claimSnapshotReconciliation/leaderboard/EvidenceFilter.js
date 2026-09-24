@@ -150,7 +150,7 @@
 //   technology choice.** This file returns plain, frozen, page-SHAPED
 //   data; turning a selected filter into an actual control a reader
 //   operates is `ui/views/ReconciliationCandidateLeaderboardView.js`'s own
-//   job, exactly as `ui/components/ReconciliationCandidateLeaderboardTable.js`
+//   job, exactly as `ui/components/reconciliation/CandidateLeaderboardTable.js`
 //   already renders 0.8.178's own rows without recomputing them.
 
 export const ReconciliationCandidateLeaderboardEvidenceKind = Object.freeze({

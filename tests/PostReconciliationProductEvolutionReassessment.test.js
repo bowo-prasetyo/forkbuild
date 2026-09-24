@@ -433,7 +433,7 @@ async function run() {
         // this arc's own journey" — applies here, at greater scale.
         const convergence412 = await readSource('tests/PublisherSnapshotClaimRoundTripProductConvergenceAudit.test.js');
         assert(
-            convergence412.includes("a separate, pre-existing, unrelated feature — application/leaderboard/LeaderboardClaimHistory.js — not part of this arc\\'s own journey"),
+            convergence412.includes("a separate, pre-existing, unrelated feature — application/leaderboard/claim/History.js — not part of this arc\\'s own journey"),
             n('F6. 0.9.412\'s own precedent for the sibling claim-history feature — pre-existing, unrelated to this arc\'s own journey — is still on file, and this section applies the identical reasoning to the larger reconciliation-decision-history family')
         );
 

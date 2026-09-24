@@ -355,7 +355,7 @@ async function run() {
         const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(/entry\.evidence\.anchors/.test(decentralizedViewSource),
             'G2a. STRUCTURAL: anchors are still rendered scoped to one Publication\'s own `entry`, never as a global, cross-Publication list that could imply two Publications sharing a contentHash are one.');
-        const reconciliationPanelSource = await readSource('ui/components/ReconciliationCandidateEvidenceDetailPanel.js');
+        const reconciliationPanelSource = await readSource('ui/components/reconciliation/CandidateEvidenceDetailPanel.js');
         assert(!/contentHash|anchor/i.test(reconciliationPanelSource),
             'G2b. STRUCTURAL: confirms the Reconciliation "evidence" vocabulary is a genuinely different feature (publisher-claim reconciliation) with no contentHash/anchor rendering to confuse with Publication evidence at all.');
 

@@ -9,7 +9,7 @@ import { PublicationObservationArchive } from '../../publication/observationArch
 // that file's own header, "Architectural boundary — no imports at all").
 // 0.8.150 gave the archive itself a durable home for exactly that array —
 // `reconciliationDecisionRecords`. This file is the single seam between the
-// two, mirroring `application/leaderboard/PublisherLeaderboardClaimHistoryView.js`'s own
+// two, mirroring `application/leaderboard/claim/HistoryView.js`'s own
 // 0.8.130 `reconstructPublisherLeaderboardClaimHistory()` exactly, one
 // subsystem over:
 //

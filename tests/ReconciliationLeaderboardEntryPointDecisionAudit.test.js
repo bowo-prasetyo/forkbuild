@@ -80,7 +80,7 @@ async function run() {
             assert(viewSource.includes(symbol), n(`A3. the view imports and therefore actually calls the real backend symbol ${symbol}`));
         }
         assert(
-            viewSource.includes("import ReconciliationCandidateLeaderboardTable from '../components/ReconciliationCandidateLeaderboardTable.js';"),
+            viewSource.includes("import ReconciliationCandidateLeaderboardTable from '../components/reconciliation/CandidateLeaderboardTable.js';"),
             n('A4. the view renders a real, dedicated frontend component, not an inline stub')
         );
 
@@ -92,7 +92,7 @@ async function run() {
             'application/claimSnapshotReconciliation/candidate/FilteredEvidenceDetailView.js',
             'application/claimSnapshotReconciliation/leaderboard/EvidenceExport.js',
             'application/claimSnapshotReconciliation/leaderboard/EvidenceImport.js',
-            'ui/components/ReconciliationCandidateLeaderboardTable.js'
+            'ui/components/reconciliation/CandidateLeaderboardTable.js'
         ];
         for (const file of backendFiles) {
             await readSource(file); // throws ENOENT if missing — the assertion IS that this resolves
@@ -284,7 +284,7 @@ async function run() {
         const leaderboardOwnFiles = [
             'ui/views/ReconciliationCandidateLeaderboardView.js',
             'ui/views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js',
-            'ui/components/ReconciliationCandidateLeaderboardTable.js'
+            'ui/components/reconciliation/CandidateLeaderboardTable.js'
         ];
         for (const file of leaderboardOwnFiles) {
             const status = execSync(`git status --porcelain -- ${file}`, { cwd: SOURCE_ROOT }).toString().trim();

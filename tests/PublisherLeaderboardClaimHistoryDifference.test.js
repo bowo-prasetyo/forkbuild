@@ -1,20 +1,20 @@
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
 import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js';
-import { verifyPublisherLeaderboardSnapshotClaim } from '../application/leaderboard/PublisherLeaderboardSnapshotClaimVerification.js';
-import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
-import { appendLeaderboardClaimHistoryEntry } from '../application/leaderboard/LeaderboardClaimHistory.js';
+import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/leaderboard/snapshot/CreateClaimUseCase.js';
+import { verifyPublisherLeaderboardSnapshotClaim } from '../application/leaderboard/snapshot/ClaimVerification.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/claim/Record.js';
+import { appendLeaderboardClaimHistoryEntry } from '../application/leaderboard/claim/History.js';
 import { PublicationObservationArchiveProvenanceOrigin } from '../application/publication/observationArchive/PublicationObservationArchiveProvenance.js';
 import {
     exportPublisherLeaderboardClaimHistory,
     applyPublisherLeaderboardClaimHistoryExchange,
     PublisherLeaderboardClaimHistoryExchangeApplyOutcome
-} from '../application/leaderboard/PublisherLeaderboardClaimHistoryExchange.js';
+} from '../application/leaderboard/claim/HistoryExchange.js';
 import {
     describePublisherLeaderboardClaimHistoryDifference,
     reconstructPublisherLeaderboardClaimHistoryDifference
-} from '../application/leaderboard/PublisherLeaderboardClaimHistoryDifference.js';
+} from '../application/leaderboard/claim/HistoryDifference.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -53,7 +53,7 @@ function assert(condition, message) {
 
 // 0.8.130 — reconstructPublisherLeaderboardClaimHistoryDifference() now
 // reads each side's history from an archive rather than accepting one
-// directly (see application/leaderboard/PublisherLeaderboardClaimHistoryDifference.js's
+// directly (see application/leaderboard/claim/HistoryDifference.js's
 // own 0.8.130 update). This helper folds a plain claim-record array into a
 // fresh `PublicationObservationArchive`, preserving each record's own
 // `origin` as the archive-level provenance tag it was appended under —

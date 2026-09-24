@@ -8,12 +8,12 @@ import ReconciliationWorkspaceView from '../ui/views/ReconciliationWorkspaceView
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
 import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { reconstructPublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
-import { exportPublisherLeaderboardSnapshotClaim } from '../application/leaderboard/PublisherLeaderboardSnapshotClaimExchange.js';
-import { ReconcilePublisherLeaderboardSnapshotClaimOutcome } from '../application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js';
+import { reconstructPublisherLeaderboardSnapshot } from '../application/leaderboard/snapshot/Snapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/snapshot/Fingerprint.js';
+import { exportPublisherLeaderboardSnapshotClaim } from '../application/leaderboard/snapshot/ClaimExchange.js';
+import { ReconcilePublisherLeaderboardSnapshotClaimOutcome } from '../application/leaderboard/snapshot/ReconcileClaimUseCase.js';
 import { RevalidationObservationArchiveOutcome } from '../application/claimSnapshotReconciliation/revalidationObservation/RecordRevalidationObservationIntoArchiveUseCase.js';
-import { LeaderboardClaimArchiveReceiptOutcome } from '../application/leaderboard/ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js';
+import { LeaderboardClaimArchiveReceiptOutcome } from '../application/leaderboard/snapshot/ReceiveClaimIntoArchiveUseCase.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
@@ -541,8 +541,8 @@ async function run() {
     console.log('');
     console.log('ui/views/PublisherLeaderboardSnapshotClaimAuthoringView.js is now the');
     console.log('first user-facing surface over');
-    console.log('application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js (0.8.121)');
-    console.log('and application/leaderboard/PublisherLeaderboardSnapshotClaimExchange.js (0.8.122) —');
+    console.log('application/leaderboard/snapshot/CreateClaimUseCase.js (0.8.121)');
+    console.log('and application/leaderboard/snapshot/ClaimExchange.js (0.8.122) —');
     console.log('a small, explicit page: generate and sign a claim about this replica\'s');
     console.log('own current leaderboard snapshot, explicitly, then export it separately,');
     console.log('explicitly. The full Author -> Sign -> Export -> Parse/import -> Workspace');

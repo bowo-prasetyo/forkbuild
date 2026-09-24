@@ -1,9 +1,9 @@
-import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
-import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
-import { describePublisherLeaderboardClaimEvolution } from '../application/leaderboard/PublisherLeaderboardClaimEvolutionView.js';
-import { describePublisherLeaderboardClaimSnapshotCorrespondenceVerification } from '../application/leaderboard/PublisherLeaderboardClaimSnapshotCorrespondenceVerificationView.js';
-import { describePublisherLeaderboardClaimSnapshotCorrespondenceVerificationEvolution } from '../application/leaderboard/PublisherLeaderboardClaimSnapshotCorrespondenceVerificationEvolutionView.js';
+import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/snapshot/Snapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/snapshot/Fingerprint.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/claim/Record.js';
+import { describePublisherLeaderboardClaimEvolution } from '../application/leaderboard/claim/EvolutionView.js';
+import { describePublisherLeaderboardClaimSnapshotCorrespondenceVerification } from '../application/leaderboard/claimSnapshot/CorrespondenceVerificationView.js';
+import { describePublisherLeaderboardClaimSnapshotCorrespondenceVerificationEvolution } from '../application/leaderboard/claimSnapshot/CorrespondenceVerificationEvolutionView.js';
 import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -270,11 +270,11 @@ async function run() {
     // vocabulary, network access.
     // ---------------------------------------------------------------
     {
-        const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/leaderboard/PublisherLeaderboardClaimSnapshotCorrespondenceVerificationEvolutionView.js', import.meta.url), 'utf8');
+        const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/leaderboard/claimSnapshot/CorrespondenceVerificationEvolutionView.js', import.meta.url), 'utf8');
         const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
         assert(importLines.length === 2, '42. this file has exactly two imports');
-        assert(importLines.some((line) => line.includes("from './PublisherLeaderboardClaimEvolutionView.js'")), '43. imports 0.8.133\'s own claim evolution view');
-        assert(importLines.some((line) => line.includes("from './PublisherLeaderboardClaimSnapshotCorrespondenceVerificationView.js'")), '44. imports 0.8.140\'s own correspondence verification view');
+        assert(importLines.some((line) => line.includes("from '../claim/EvolutionView.js'")), '43. imports 0.8.133\'s own claim evolution view');
+        assert(importLines.some((line) => line.includes("from './CorrespondenceVerificationView.js'")), '44. imports 0.8.140\'s own correspondence verification view');
         for (const forbiddenModule of ['LeaderboardClaimRecord', 'PublisherLeaderboardClaimSnapshotAssociationView', 'PublisherLeaderboardClaimSnapshotCorrespondenceView', 'PublisherLeaderboardHistoricalClaimVerification', 'PublisherLeaderboardSnapshotClaimVerification', 'PublisherLeaderboardClaimAgreementView', 'LocalIdentityProvider', 'PublicationObservationArchive', 'PublisherLeaderboardRankingPolicy', 'resolveSigningIdentityId', 'PublisherLeaderboardSnapshotTimelineView', 'PublisherLeaderboardClaimSnapshotAssociationHistoryView']) {
             assert(!importLines.some((line) => line.includes(forbiddenModule)), `45. this file never imports ${forbiddenModule} — no second evolution/correspondence/verification engine, no signing/identity/archive/ranking/timeline import`);
         }

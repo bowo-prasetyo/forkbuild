@@ -1,5 +1,5 @@
-import { LeaderboardClaimRecord } from '../leaderboard/LeaderboardClaimRecord.js';
-import { describePublisherLeaderboardClaimSnapshotDivergence } from '../leaderboard/PublisherLeaderboardClaimSnapshotDivergenceView.js';
+import { LeaderboardClaimRecord } from '../leaderboard/claim/Record.js';
+import { describePublisherLeaderboardClaimSnapshotDivergence } from '../leaderboard/claimSnapshot/DivergenceView.js';
 
 // 0.8.143 — Claim/Snapshot Reconciliation Plan Projection.
 //
@@ -121,8 +121,8 @@ import { describePublisherLeaderboardClaimSnapshotDivergence } from '../leaderbo
 // file computes both sets with one pass over `divergence.divergences`
 // (already 0.8.142's own single call's own result) and never opens a
 // second correspondence-discovery pass over `claimHistory`/`snapshots`
-// itself — no import of `PublisherLeaderboardClaimSnapshotCorrespondenceView.js`
-// or `PublisherLeaderboardClaimSnapshotCorrespondenceVerificationView.js`
+// itself — no import of `leaderboard/claimSnapshot/CorrespondenceView.js`
+// or `leaderboard/claimSnapshot/CorrespondenceVerificationView.js`
 // appears anywhere in this file.
 //
 // `claimHistoryPosition` NAMES A POSITION IN THE SUPPLIED `claimHistory`
@@ -172,14 +172,14 @@ import { describePublisherLeaderboardClaimSnapshotDivergence } from '../leaderbo
 //
 // ARCHITECTURAL BOUNDARY — IMPORTS 0.8.142 AND 0.8.123'S OWN RECORD CLASS
 // ONLY. This file imports nothing from
-// `application/leaderboard/PublisherLeaderboardClaimSnapshotCorrespondenceView.js`,
-// `application/leaderboard/PublisherLeaderboardClaimSnapshotCorrespondenceVerificationView.js`,
-// `application/leaderboard/PublisherLeaderboardHistoricalClaimVerification.js`,
-// `application/leaderboard/PublisherLeaderboardClaimSnapshotAssociationView.js`,
-// `application/leaderboard/PublisherLeaderboardSnapshotDifference.js`,
-// `application/leaderboard/PublisherLeaderboardClaimEvolutionView.js`, any signing or
+// `application/leaderboard/claimSnapshot/CorrespondenceView.js`,
+// `application/leaderboard/claimSnapshot/CorrespondenceVerificationView.js`,
+// `application/leaderboard/claim/HistoricalVerification.js`,
+// `application/leaderboard/claimSnapshot/AssociationView.js`,
+// `application/leaderboard/snapshot/Difference.js`,
+// `application/leaderboard/claim/EvolutionView.js`, any signing or
 // identity module, any archive module, any ranking module, or
-// `application/leaderboard/PublisherLeaderboardSnapshotTimelineView.js` — grep it and
+// `application/leaderboard/snapshot/TimelineView.js` — grep it and
 // none of that vocabulary appears. The dependency direction stays a
 // single line: 0.8.142 → 0.8.143, never a parallel engine duplicating it.
 //

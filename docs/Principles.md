@@ -19255,7 +19255,7 @@ was computed from, and the policy it was ordered by — and by nothing else.
 evidence fingerprints match and their policy versions match.** Not when
 they were computed at the same moment; not when they name the same number
 of publishers; not when a hash computed over the rendered leaderboard
-happens to agree. `application/leaderboard/PublisherLeaderboardSnapshot.js`'s own
+happens to agree. `application/leaderboard/snapshot/Snapshot.js`'s own
 `{ evidenceFingerprint, policy, leaderboard }` carries no field a caller
 would need beyond those two to decide whether two replicas would produce —
 or did produce — the same leaderboard. Recomputing a snapshot from
@@ -19329,7 +19329,7 @@ more, one layer up, over a derived conclusion instead of a raw fact.
 
 **`signatureValid` and a replica's own semantic match are computed
 independently, and neither is ever inferred from the other.**
-`application/leaderboard/PublisherLeaderboardSnapshotClaimVerification.js` names four
+`application/leaderboard/snapshot/ClaimVerification.js` names four
 facts — `signatureValid`, `evidenceFingerprintMatches`,
 `policyVersionMatches`, `snapshotFingerprintMatches` — the first answering
 only "did the signer genuinely sign this?" without consulting any
@@ -19377,7 +19377,7 @@ still agrees with reality is a fact about the PRESENT, computed fresh,
 every time, against whatever evidence this replica currently holds.
 
 **Persisting a claim never freezes its verification result alongside it.**
-`application/leaderboard/LeaderboardClaimRecord.js`'s own fields —
+`application/leaderboard/claim/Record.js`'s own fields —
 `claim`/`receivedAt`/`origin` — are the entire durable receipt; there is
 no `matches`, `signatureValid`, or `verifiedAt` field anywhere near it,
 in memory or on disk. `application/publication/observationArchive/PublicationObservationArchive.js`'s own
@@ -19398,12 +19398,12 @@ this is not a bug the reconstruction functions work around, it is the
 whole reason verification is recomputed on demand rather than persisted.
 
 **Only one function is ever allowed to read the archive's own claim
-collection directly.** `application/leaderboard/PublisherLeaderboardClaimHistoryView.js`'s
+collection directly.** `application/leaderboard/claim/HistoryView.js`'s
 own `reconstructPublisherLeaderboardClaimHistory(archive)` is that one
-seam; `application/leaderboard/PublisherLeaderboardClaimHistoryDifference.js`,
-`PublisherLeaderboardClaimHistoryStatisticsView.js`,
-`PublisherLeaderboardClaimHistoryTimelineView.js`, and
-`PublisherLeaderboardClaimVerificationHistoryView.js` all compose on top
+seam; `application/leaderboard/claim/HistoryDifference.js`,
+`leaderboard/claim/HistoryStatisticsView.js`,
+`leaderboard/claim/HistoryTimelineView.js`, and
+`leaderboard/claim/VerificationHistoryView.js` all compose on top
 of the plain array it returns, never reading `archive.leaderboardClaimRecords`
 themselves. A durable archive integration that let every downstream
 projection independently reach into the archive's own collection would
@@ -19440,7 +19440,7 @@ because a durable store is exactly the layer where "just append it" is
 easiest to quietly extend into "and also check it's the right choice."
 
 **The persistence use case is deliberately smaller than its claim-receiving
-counterpart.** `application/leaderboard/ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js`
+counterpart.** `application/leaderboard/snapshot/ReceiveClaimIntoArchiveUseCase.js`
 (0.8.130) delegates to an existing use case
 (`ReceivePublisherLeaderboardSnapshotClaimUseCase`) and adds only the
 archive append. `application/claimSnapshotReconciliation/decision/RecordDecisionIntoArchiveUseCase.js`
@@ -19493,7 +19493,7 @@ See `docs/Roadmap.md`, 0.8.150, for the full milestone entry.
 ### Exchange Transports Historical Decisions; It Does Not Make New Ones (0.8.151)
 
 0.8.126 already drew this line once, for signed claims:
-`PublisherLeaderboardClaimHistoryExchange.js` moves receipts, never
+`leaderboard/claim/HistoryExchange.js` moves receipts, never
 conclusions, and never re-verifies anything a claim's own signature
 already settled. 0.8.151 holds the identical line one subject over, for
 reconciliation decisions — a subject with one genuine structural
@@ -19501,8 +19501,8 @@ difference from a signed claim that makes the boundary worth restating
 rather than merely inheriting: a decision carries no signature at all.
 
 **Unlike every claim-shaped exchange in this codebase, `importXxx()` takes
-no verifier argument.** `PublisherLeaderboardSnapshotClaimExchange.js` and
-`PublisherLeaderboardClaimHistoryExchange.js` both require one and
+no verifier argument.** `leaderboard/snapshot/ClaimExchange.js` and
+`leaderboard/claim/HistoryExchange.js` both require one and
 structurally check a signature on import, because a claim's own identity
 is bound to cryptographic proof. A 0.8.145 decision record's own identity
 is bound to nothing but its own recorded content — "a caller explicitly
@@ -19515,7 +19515,7 @@ be forged and structurally caught, when in truth it is simply an ordinary
 plain object a caller could have typed by hand from the start, exactly as
 true or false either way. The only thing exchange owes a decision record
 is exact structural transport — carried through unchanged, exactly as
-`PublisherLeaderboardClaimHistoryExchange.js`'s own header already proved
+`leaderboard/claim/HistoryExchange.js`'s own header already proved
 for a claim's signature bytes, held here again for a decision's own
 disposition field instead.
 

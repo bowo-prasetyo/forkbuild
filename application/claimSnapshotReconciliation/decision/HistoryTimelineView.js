@@ -10,7 +10,7 @@ import { isGenuineDecision } from './DecisionRecord.js';
 // (see 0.8.146's own header, "Deliberately excluded," bullet four, and
 // 0.8.147's own, bullet two). This file is that projection, and nothing
 // more — the decision-history analogue of
-// `application/leaderboard/PublisherLeaderboardClaimHistoryTimelineView.js` (0.8.129),
+// `application/leaderboard/claim/HistoryTimelineView.js` (0.8.129),
 // one subject over: where that file narrates a replica's own stored claim
 // RECEIPTS in chronological order, this file narrates a replica's own
 // stored reconciliation DECISIONS (0.8.146's own, plain, ordered array of
@@ -25,7 +25,7 @@ import { isGenuineDecision } from './DecisionRecord.js';
 // RECONCILIATION DECISIONS?" — NEVER "WHICH DECISION IS CURRENT, CORRECT,
 // RESOLVED, OR SUPERSEDED?" This is the one boundary this whole milestone
 // exists to hold, held here again over decisions instead of claims — see
-// `PublisherLeaderboardClaimHistoryTimelineView.js`'s own header,
+// `leaderboard/claim/HistoryTimelineView.js`'s own header,
 // "Architectural boundary: a receipt log, never a verdict."
 //
 // THE TIMELINE ORDERS BY `decidedAt`, THE ONLY MEANINGFUL TEMPORAL FIELD A
@@ -46,7 +46,7 @@ import { isGenuineDecision } from './DecisionRecord.js';
 //
 // (in that append order) produce the timeline D1, D2, D3, D4 — exactly that
 // order, with D2 before D3 because D2 appeared first in `history`, the
-// identical reasoning `PublisherLeaderboardClaimHistoryTimelineView.js`'s
+// identical reasoning `leaderboard/claim/HistoryTimelineView.js`'s
 // own header already gives for why history-array position, not any other
 // field, is the tie-break: two decisions can legitimately share the
 // identical `decidedAt`, and the order `history` itself already holds them
@@ -93,7 +93,7 @@ import { isGenuineDecision } from './DecisionRecord.js';
 //
 // EACH ENTRY IS A NEW, PLAIN, FROZEN OBJECT — NEVER THE ORIGINAL DECISION
 // RECORD, AND `candidate`/`decision` ARE NEVER EMBEDDED WHOLESALE. This
-// mirrors `PublisherLeaderboardClaimHistoryTimelineView.js`'s own
+// mirrors `leaderboard/claim/HistoryTimelineView.js`'s own
 // departure from the archive-record shape: `disposition` names 0.8.145's
 // own `decision` field under a name that does not collide with this
 // file's own field for JavaScript's own `decision` object being narrated,

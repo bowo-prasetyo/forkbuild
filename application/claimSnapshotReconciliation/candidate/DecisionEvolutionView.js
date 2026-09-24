@@ -11,7 +11,7 @@ import { candidateIdentityKey } from '../CandidateIdentityKey.js';
 // embedded candidate — in `history`'s own existing order, never re-sorted
 // and never grouped. This file is the reverse direction of that same
 // relationship, and nothing more — the decision-history analogue of
-// `application/leaderboard/PublisherLeaderboardClaimEvolutionView.js` (0.8.133), one
+// `application/leaderboard/claim/EvolutionView.js` (0.8.133), one
 // subject over: where that file narrates HOW ONE SIGNER'S OWN SEQUENCE OF
 // CLAIMS looks, this file narrates HOW ONE CANDIDATE'S OWN SEQUENCE OF
 // RECORDED DECISIONS looks:

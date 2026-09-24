@@ -13,8 +13,8 @@ import { describePublisherLeaderboardClaimSnapshotReconciliationCandidateDecisio
 // each candidate evolve over time?" by grouping a single history's own
 // decisions by CANDIDATE identity. Neither one answers the question this
 // milestone exists for — the decision-history analogue of
-// `application/leaderboard/PublisherLeaderboardClaimEvolutionView.js` meeting
-// `application/leaderboard/PublisherLeaderboardSnapshotDifference.js` one layer up —
+// `application/leaderboard/claim/EvolutionView.js` meeting
+// `application/leaderboard/snapshot/Difference.js` one layer up —
 // stated plainly in this milestone's own request:
 //
 //   Given two replicas' decision histories, which candidate-specific

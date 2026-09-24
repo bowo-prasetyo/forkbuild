@@ -58,7 +58,7 @@ import { Signature, SignatureType, SIGNING_DOMAIN } from './Signature.js';
 // deliberately small — `evidenceFingerprint`, `policyVersion`, and
 // `snapshotFingerprint` alone, never the full leaderboard, never the full
 // policy object, never a single achievement event. A verifier (see
-// `application/leaderboard/PublisherLeaderboardSnapshotClaimVerification.js`) never
+// `application/leaderboard/snapshot/ClaimVerification.js`) never
 // reads a leaderboard OFF a claim — it independently reconstructs its own
 // snapshot from its own archive and compares fingerprints, the identical
 // "never trust a supplied conclusion" discipline 0.8.120 already
@@ -78,7 +78,7 @@ import { Signature, SignatureType, SIGNING_DOMAIN } from './Signature.js';
 //                                  digest of the COMPLETE snapshot
 //                                  (evidence fingerprint, full policy,
 //                                  full leaderboard) — see
-//                                  `application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js`.
+//                                  `application/leaderboard/snapshot/Fingerprint.js`.
 //                                  Answers "is this the exact byte-content
 //                                  the signer's key attests to?"
 //
@@ -113,7 +113,7 @@ import { Signature, SignatureType, SIGNING_DOMAIN } from './Signature.js';
 // `trust`, `confidence`, `quality`, `worthiness`, `authority`, or
 // `verifiedPublisher` field, and never will — the identical vocabulary
 // boundary every file in the achievement/leaderboard family already
-// holds (see `application/leaderboard/PublisherLeaderboardSnapshotVerification.js`'s
+// holds (see `application/leaderboard/snapshot/Verification.js`'s
 // own header). A signature establishes WHO signed WHAT; it does not, and
 // structurally cannot, establish that a ranking is objectively correct.
 //
@@ -122,7 +122,7 @@ import { Signature, SignatureType, SIGNING_DOMAIN } from './Signature.js';
 // `core/BlueprintLineageClaim.js`, there is no `withSignature()`-after-
 // storage mutation path that changes what was signed — `withSignature()`
 // only ever attaches a signature to a freshly constructed, not-yet-signed
-// claim (see `application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js`,
+// claim (see `application/leaderboard/snapshot/CreateClaimUseCase.js`,
 // the ONE construction boundary). If a signer's understanding of their
 // own snapshot changes, the old signed claim remains exactly as signed,
 // forever, and a new claim is created alongside it — never in place of

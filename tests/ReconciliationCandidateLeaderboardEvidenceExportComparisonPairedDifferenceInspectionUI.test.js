@@ -1,6 +1,6 @@
 import default_ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector, {
     pairDifferenceKey
-} from '../ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector.js';
+} from '../ui/components/reconciliation/EvidenceExportComparisonRecordPairSelector.js';
 
 // 0.8.202 — Paired Record Difference Inspection UI.
 //
@@ -11,7 +11,7 @@ import default_ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordP
 // carries a 1-based "Decision Pair N"/"Observation Pair N" label and an
 // "Inspect differences" toggle over that one pair's own source/target
 // labels and differing-field list, exactly the expand/collapse discipline
-// `ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js`
+// `ui/components/reconciliation/EvidenceExportComparisonTable.js`
 // already holds for "Inspect records"/"Inspect identity."
 //
 // Section A: Rendering — the template names both dimensions' pair labels,
@@ -233,7 +233,7 @@ async function main() {
     //             extension.
     // ---------------------------------------------------------------
     const selectorModuleSource = await (await import('node:fs/promises')).readFile(
-        new URL('../ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector.js', import.meta.url), 'utf8'
+        new URL('../ui/components/reconciliation/EvidenceExportComparisonRecordPairSelector.js', import.meta.url), 'utf8'
     );
     const selectorCodeOnly = selectorModuleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 

@@ -104,8 +104,8 @@ async function run() {
             'application/claimSnapshotReconciliation/evidenceExportComparison/EvidenceExportComparison.js',
             'application/claimSnapshotReconciliation/evidenceExportComparison/EvidenceExportComparisonReadModel.js',
             'application/claimSnapshotReconciliation/evidenceExportComparison/EvidenceExportComparisonView.js',
-            'ui/components/ReconciliationCandidateLeaderboardTable.js',
-            'ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js'
+            'ui/components/reconciliation/CandidateLeaderboardTable.js',
+            'ui/components/reconciliation/EvidenceExportComparisonTable.js'
         ];
         for (const file of backendFiles) {
             await readSource(file); // throws ENOENT if missing — the assertion IS that this resolves
@@ -322,9 +322,9 @@ async function run() {
             'ui/views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js',
             'ui/views/DecentralizedPublicationsView.js',
             'ui/App.js',
-            'ui/components/ReconciliationCandidateLeaderboardTable.js',
-            'ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js',
-            'ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector.js'
+            'ui/components/reconciliation/CandidateLeaderboardTable.js',
+            'ui/components/reconciliation/EvidenceExportComparisonTable.js',
+            'ui/components/reconciliation/EvidenceExportComparisonRecordPairSelector.js'
         ];
         for (const file of untouchedFiles) {
             const status = execSync(`git status --porcelain -- ${file}`, { cwd: SOURCE_ROOT }).toString().trim();

@@ -450,7 +450,7 @@ async function run() {
             'application/leaderboard/PublisherLeaderboardView.js',
             'ui/App.js',
             'ui/views/ReconciliationCandidateLeaderboardView.js',
-            'ui/components/ReconciliationCandidateLeaderboardTable.js'
+            'ui/components/reconciliation/CandidateLeaderboardTable.js'
         ];
         for (const file of untouchedFiles) {
             const status = execSync(`git status --porcelain -- ${file}`, { cwd: SOURCE_ROOT }).toString().trim();

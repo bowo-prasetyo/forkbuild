@@ -25,7 +25,7 @@ import { PublicationObservationArchiveProvenanceOrigin, isValidPublicationObserv
 //        ▼
 //   a new PublicationObservationArchive
 //
-// UNLIKE `ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js`
+// UNLIKE `leaderboard/snapshot/ReceiveClaimIntoArchiveUseCase.js`
 // (0.8.130), THIS FILE DELEGATES TO NO INTERMEDIATE USE CASE — BECAUSE NONE
 // EXISTS. 0.8.145 is a pure function, not a class-shaped use case; a caller
 // already holds its own already-computed decision record (typically the
@@ -67,7 +67,7 @@ import { PublicationObservationArchiveProvenanceOrigin, isValidPublicationObserv
 // (or its safe, empty degradation) handed in, unchanged.
 //
 // `origin` DEFAULTS TO `LOCAL`, THE OPPOSITE DEFAULT FROM
-// `ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js`'s OWN
+// `leaderboard/snapshot/ReceiveClaimIntoArchiveUseCase.js`'s OWN
 // `IMPORTED` DEFAULT — AND DELIBERATELY SO. A received claim's most
 // ordinary path into this codebase is arriving FROM SOMEWHERE ELSE; a
 // reconciliation decision's most ordinary path is a caller ON THIS REPLICA

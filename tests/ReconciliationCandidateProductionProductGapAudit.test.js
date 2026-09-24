@@ -5,14 +5,14 @@ import { fileURLToPath } from 'node:url';
 
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { PublicationObservationArchiveProvenanceOrigin } from '../application/publication/observationArchive/PublicationObservationArchiveProvenance.js';
-import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
-import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/claim/Record.js';
+import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/snapshot/Snapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/snapshot/Fingerprint.js';
 import { reconstructPublisherLeaderboard } from '../application/leaderboard/PublisherLeaderboardView.js';
 import {
     ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase,
     LeaderboardClaimArchiveReceiptOutcome
-} from '../application/leaderboard/ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js';
+} from '../application/leaderboard/snapshot/ReceiveClaimIntoArchiveUseCase.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationPlan } from '../application/claimSnapshotReconciliation/PlanView.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecision } from '../application/claimSnapshotReconciliation/decision/Decision.js';
 import {
@@ -197,9 +197,9 @@ async function run() {
     // ===============================================================
     {
         const backendFiles = [
-            'application/leaderboard/LeaderboardClaimRecord.js',
-            'application/leaderboard/ReceivePublisherLeaderboardSnapshotClaimUseCase.js',
-            'application/leaderboard/ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js',
+            'application/leaderboard/claim/Record.js',
+            'application/leaderboard/snapshot/ReceiveClaimUseCase.js',
+            'application/leaderboard/snapshot/ReceiveClaimIntoArchiveUseCase.js',
             'application/leaderboard/PublisherLeaderboardView.js',
             'application/claimSnapshotReconciliation/PlanView.js',
             'application/claimSnapshotReconciliation/ReconciliationCandidate.js',

@@ -100,7 +100,7 @@ import { describePublisherLeaderboardClaimSnapshotReconciliationCandidate } from
 // `{ decided: false, outcome: 'INVALID_DECIDED_AT' }` — never silently
 // defaulted to "now." A valid `decidedAt` is serialized into the record as
 // an ISO 8601 string, the identical convention
-// `application/leaderboard/PublisherLeaderboardClaimHistoryTimelineView.js` already
+// `application/leaderboard/claim/HistoryTimelineView.js` already
 // uses for `receivedAt`/`claimCreatedAt` — never embedded as a live,
 // mutable `Date` object a caller could later mutate out from under an
 // already-frozen record.
@@ -129,7 +129,7 @@ import { describePublisherLeaderboardClaimSnapshotReconciliationCandidate } from
 // ARCHITECTURAL BOUNDARY — EXACTLY ONE IMPORT, 0.8.144's OWN SELECTION
 // BOUNDARY, NOTHING ELSE. This file does not import
 // `application/claimSnapshotReconciliation/PlanView.js`,
-// `application/leaderboard/PublisherLeaderboardClaimSnapshotDivergenceView.js`, or any
+// `application/leaderboard/claimSnapshot/DivergenceView.js`, or any
 // other module in this family — it trusts nothing about how `plan` was
 // produced beyond what 0.8.144 itself already validates.
 //

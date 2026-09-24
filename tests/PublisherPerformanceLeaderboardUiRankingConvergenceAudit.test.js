@@ -554,7 +554,7 @@ async function run() {
             assert(!pattern.test(applicationBundle), n(`I1. application/ contains no class matching ${pattern} — no new persistence/caching layer for the performance leaderboard`));
             assert(!pattern.test(uiBundle), n(`I2. ui/ contains no class matching ${pattern} either`));
         }
-        // Note: PublisherLeaderboardSnapshot.js (0.8.119) already existed
+        // Note: leaderboard/snapshot/Snapshot.js (0.8.119) already existed
         // before this milestone, scoped to signed cross-replica evidence
         // reproducibility, never to caching a rank for display — confirmed
         // untouched by 0.9.417 and this milestone alike (Section J below).

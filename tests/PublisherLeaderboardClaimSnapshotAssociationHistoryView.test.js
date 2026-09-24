@@ -1,8 +1,8 @@
-import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
-import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
-import { describePublisherLeaderboardClaimSnapshotAssociation } from '../application/leaderboard/PublisherLeaderboardClaimSnapshotAssociationView.js';
-import { describePublisherLeaderboardClaimSnapshotAssociationHistory } from '../application/leaderboard/PublisherLeaderboardClaimSnapshotAssociationHistoryView.js';
+import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/snapshot/Snapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/snapshot/Fingerprint.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/claim/Record.js';
+import { describePublisherLeaderboardClaimSnapshotAssociation } from '../application/leaderboard/claimSnapshot/AssociationView.js';
+import { describePublisherLeaderboardClaimSnapshotAssociationHistory } from '../application/leaderboard/claimSnapshot/AssociationHistoryView.js';
 import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -259,10 +259,10 @@ async function run() {
     // vocabulary, network access.
     // ---------------------------------------------------------------
     {
-        const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/leaderboard/PublisherLeaderboardClaimSnapshotAssociationHistoryView.js', import.meta.url), 'utf8');
+        const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/leaderboard/claimSnapshot/AssociationHistoryView.js', import.meta.url), 'utf8');
         const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
         assert(importLines.length === 1, '30. this file has exactly one import');
-        assert(importLines[0].includes("from './PublisherLeaderboardClaimSnapshotAssociationView.js'"), '31. this file imports only 0.8.137\'s own PublisherLeaderboardClaimSnapshotAssociationView.js');
+        assert(importLines[0].includes("from './AssociationView.js'"), '31. this file imports only 0.8.137\'s own leaderboard/claimSnapshot/AssociationView.js');
         for (const forbiddenModule of ['PublisherLeaderboardSnapshotClaimVerification', 'PublisherLeaderboardHistoricalClaimVerification', 'LocalIdentityProvider', 'PublicationObservationArchive', 'PublisherLeaderboardRankingPolicy', 'resolveSigningIdentityId']) {
             assert(!importLines.some((line) => line.includes(forbiddenModule)), `32. this file never imports ${forbiddenModule} — no parallel association/verification engine, no signing/identity/archive/ranking import`);
         }

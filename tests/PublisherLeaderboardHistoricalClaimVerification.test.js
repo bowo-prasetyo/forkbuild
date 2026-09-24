@@ -2,14 +2,14 @@ import { PublicationObservationArchive } from '../application/publication/observ
 import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
 import { CreatePublicationReferenceRecordUseCase } from '../application/publication/CreatePublicationReferenceRecordUseCase.js';
 import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js';
-import { reconstructPublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
-import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
+import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/leaderboard/snapshot/CreateClaimUseCase.js';
+import { reconstructPublisherLeaderboardSnapshot } from '../application/leaderboard/snapshot/Snapshot.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/claim/Record.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
 import {
     describePublisherLeaderboardHistoricalClaimVerification,
     verifyPublisherLeaderboardHistoricalClaim
-} from '../application/leaderboard/PublisherLeaderboardHistoricalClaimVerification.js';
+} from '../application/leaderboard/claim/HistoricalVerification.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -315,7 +315,7 @@ async function run() {
     // Section F — no reconstruction, determinism, vocabulary, network access.
     // ---------------------------------------------------------------
     {
-        const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/leaderboard/PublisherLeaderboardHistoricalClaimVerification.js', import.meta.url), 'utf8');
+        const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/leaderboard/claim/HistoricalVerification.js', import.meta.url), 'utf8');
         const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
         assert(!importLines.some((line) => line.includes('PublicationObservationArchive')), '41. this file never imports PublicationObservationArchive — no archive-reading entry point exists anywhere in it, the critical rule this milestone exists to enforce');
         assert(!importLines.some((line) => line.includes('reconstructPublisherLeaderboardSnapshot')), '42. this file never imports reconstructPublisherLeaderboardSnapshot() — it never reconstructs a snapshot from an archive, historical or otherwise');

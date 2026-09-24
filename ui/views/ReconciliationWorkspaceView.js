@@ -2,7 +2,7 @@ import { PublicationObservationArchive } from '../../application/publication/obs
 import {
     ReconcilePublisherLeaderboardSnapshotClaimUseCase,
     ReconcilePublisherLeaderboardSnapshotClaimOutcome
-} from '../../application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js';
+} from '../../application/leaderboard/snapshot/ReconcileClaimUseCase.js';
 import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVerifier.js';
 
 // The literal success value `execute()` itself returns on a fully
@@ -17,7 +17,7 @@ const RECONCILIATION_RECORDED_OUTCOME = 'RECORDED';
 // 0.9.408 — Reconciliation Workspace UI.
 //
 // 0.9.407 built the production-owned execution seam — application/
-// ReconcilePublisherLeaderboardSnapshotClaimUseCase.js, ONE explicit
+// leaderboard/snapshot/ReconcileClaimUseCase.js, ONE explicit
 // operation composing the five existing, UNCHANGED reconciliation stages —
 // and left it with zero call sites anywhere in `ui/` on purpose (see that
 // file's own header, "No UI... a presentation surface over this exact

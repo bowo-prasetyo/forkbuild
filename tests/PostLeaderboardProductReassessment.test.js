@@ -397,7 +397,7 @@ async function run() {
         // one this milestone reassesses. Confirmed fresh that exposing THIS
         // leaderboard creates no new obligation toward that family.
         const applicationFiles = listFiles(['application']);
-        const claimSnapshotFamily = applicationFiles.filter((f) => path.basename(f).startsWith('PublisherLeaderboardClaimSnapshot') || f.startsWith('application/claimSnapshotReconciliation/'));
+        const claimSnapshotFamily = applicationFiles.filter((f) => path.basename(f).startsWith('PublisherLeaderboardClaimSnapshot') || f.startsWith('application/leaderboard/claimSnapshot/') || f.startsWith('application/claimSnapshotReconciliation/'));
         assert(claimSnapshotFamily.length > 10, n(`F1. a large PublisherLeaderboardClaimSnapshot* reconciliation-analytics family genuinely exists in application/ (found ${claimSnapshotFamily.length} files) — a real, substantial parked surface, not a hypothetical one`));
 
         assert(!performanceViewSource.includes('PublisherLeaderboardClaimSnapshot'), n('F2. PublisherPerformanceLeaderboardView.js — the new, reachable surface — imports or references none of that family by name'));
@@ -414,7 +414,9 @@ async function run() {
         // The specific anti-pattern this milestone's own brief warns
         // against: additional PublisherLeaderboard*Analytics-shaped files
         // existing is not, by itself, a reason the UI must expose them.
-        const analyticsShaped = applicationFiles.filter((f) => /PublisherLeaderboard.*(Statistics|Timeline|History|Difference|Synchronization|Exchange)/.test(path.basename(f)));
+        // Moved leaderboard files sit in application/leaderboard/{claim,claimSnapshot,snapshot}/ without the prefix.
+        const analyticsShaped = applicationFiles.filter((f) => /PublisherLeaderboard.*(Statistics|Timeline|History|Difference|Synchronization|Exchange)/.test(path.basename(f))
+            || /^application\/leaderboard\/(claim|claimSnapshot|snapshot)\/.*(Statistics|Timeline|History|Difference|Synchronization|Exchange)/.test(f));
         assert(analyticsShaped.length > 5, n(`F5. a real set of additional PublisherLeaderboard*-analytics-shaped files exists (found ${analyticsShaped.length}) — the exact kind of pre-existing machinery this section checks against, not a strawman`));
         const uiExposureOfAnalytics = grepFilesRegex(new RegExp(analyticsShaped.map((f) => path.basename(f, '.js')).join('|')), ['ui']);
         const uiExposureExcludingKnownReconciliationSurfaces = uiExposureOfAnalytics.filter((f) => f !== 'ui/views/PublisherPerformanceLeaderboardView.js');

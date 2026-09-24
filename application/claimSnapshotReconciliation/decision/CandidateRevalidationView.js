@@ -125,7 +125,7 @@ import { isGenuineDecision } from './DecisionRecord.js';
 // the caller's behalf — exactly the automatic-selection mistake 0.8.144's
 // own header already forbids, one layer up, over an entire plan instead of
 // one field of one. This file therefore ships with `describeXxx()` alone,
-// mirroring `application/leaderboard/PublisherLeaderboardSnapshotDifference.js`'s own,
+// mirroring `application/leaderboard/snapshot/Difference.js`'s own,
 // identically-reasoned choice to have no reconstruction entry point at all:
 // both of THIS file's inputs are already-computed, historical/explicit
 // artifacts a caller already holds — never something this file should
@@ -147,7 +147,7 @@ import { isGenuineDecision } from './DecisionRecord.js';
 // `application/claimSnapshotReconciliation/decision/Decision.js`,
 // `application/claimSnapshotReconciliation/decision/History.js`,
 // `application/claimSnapshotReconciliation/decision/HistoryView.js`,
-// `application/leaderboard/PublisherLeaderboardClaimSnapshotDivergenceView.js`, any
+// `application/leaderboard/claimSnapshot/DivergenceView.js`, any
 // correspondence/verification/signature module, or any archive module — it
 // trusts nothing about how `decisionRecord` or `plan` was produced beyond
 // their own documented shapes, and never calls 0.8.144 to make a NEW

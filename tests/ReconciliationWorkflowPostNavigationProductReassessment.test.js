@@ -389,8 +389,8 @@ async function run() {
             'ui/views/DecentralizedPublicationsView.js',
             'ui/views/ReconciliationCandidateLeaderboardView.js',
             'ui/views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js',
-            'ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js',
-            'ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector.js'
+            'ui/components/reconciliation/EvidenceExportComparisonTable.js',
+            'ui/components/reconciliation/EvidenceExportComparisonRecordPairSelector.js'
         ];
         for (const file of untouchedFiles) {
             const status = execSync(`git status --porcelain -- ${file}`, { cwd: SOURCE_ROOT }).toString().trim();
