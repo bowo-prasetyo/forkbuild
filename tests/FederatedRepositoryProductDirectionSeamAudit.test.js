@@ -1,7 +1,8 @@
-import { readFile } from 'node:fs/promises';
 import { applicationPath } from './support/ApplicationFiles.js';
 import { execSync } from 'node:child_process';
 import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.330 — Federated Repository Product Direction & Seam Audit.
 //
@@ -53,15 +54,7 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 //   Section I — UX semantics, deliberately left undesigned.
 //   Section J — Final classification and production-change guard.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {

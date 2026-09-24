@@ -30,6 +30,7 @@ import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase
 import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.91 — World Instance Editing & Placement Management.
 //
@@ -71,10 +72,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //              it — and editing House afterward is immediately visible
 //              through BOTH A and C while their own position/rotation
 //              stay exactly where the user left them.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 class InMemoryStorageProvider extends StorageProvider {
     constructor() {

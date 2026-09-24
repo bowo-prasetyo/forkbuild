@@ -1,6 +1,7 @@
 import { BlockchainKind, isValidBlockchainKind } from '../application/anchoring/BlockchainKind.js';
 import { BlockchainPublicationIdentity } from '../application/anchoring/BlockchainPublicationIdentity.js';
 import { BitcoinAnchorPublicationRecord } from '../application/anchoring/bitcoin/BitcoinAnchorPublicationRecord.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.89 — Multi-Blockchain Publication Domain Boundary.
 //
@@ -22,10 +23,6 @@ import { BitcoinAnchorPublicationRecord } from '../application/anchoring/bitcoin
 //              the one, additive projection; unchanged toJSON() shape
 //   Section D: FLAGSHIP — same contentHash, same chainReference string,
 //              different blockchain: never the same publication
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const FORBIDDEN_KEYS = [
     'status', 'confidence', 'health', 'trusted', 'valid', 'canonical', 'reliable',

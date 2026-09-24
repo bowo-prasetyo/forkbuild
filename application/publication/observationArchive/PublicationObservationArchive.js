@@ -12,8 +12,8 @@ import { PublicationReferenceRecord } from '../PublicationReferenceRecord.js';
 import { appendPublicationReferenceRecordHistoryEntry } from '../PublicationReferenceRecordHistory.js';
 import { PublisherPublicationAssociationRecord } from '../../publisher/PublisherPublicationAssociationRecord.js';
 import { appendPublisherPublicationAssociationRecordHistoryEntry } from '../../publisher/PublisherPublicationAssociationRecordHistory.js';
-import { LeaderboardClaimRecord } from '../../leaderboard/LeaderboardClaimRecord.js';
-import { appendLeaderboardClaimHistoryEntry } from '../../leaderboard/LeaderboardClaimHistory.js';
+import { LeaderboardClaimRecord } from '../../leaderboard/claim/Record.js';
+import { appendLeaderboardClaimHistoryEntry } from '../../leaderboard/claim/History.js';
 import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry } from '../../claimSnapshotReconciliation/decision/History.js';
 import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryEntry } from '../../claimSnapshotReconciliation/revalidationObservation/History.js';
 import {
@@ -21,6 +21,7 @@ import {
     isValidPublicationObservationArchiveProvenanceOrigin
 } from './PublicationObservationArchiveProvenance.js';
 import { isPlainObject } from '../../../utils/typeGuards.js';
+import { hasOnlyKeys } from '../../../utils/typeGuards.js';
 
 const SCHEMA_VERSION = 10;
 
@@ -777,10 +778,6 @@ const REVALIDATION_OBSERVATION_RECORD_FIELDS = [
     'observed', 'decision', 'planIdentity', 'candidatePresent', 'candidateType', 'candidateMatchesPlan', 'observedAt'
 ];
 const REVALIDATION_OBSERVATION_CANDIDATE_TYPES = ['DIVERGENT_CORRESPONDENCE', 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT', 'SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM'];
-
-function hasOnlyKeys(value, allowedKeys) {
-    return Object.keys(value).every((key) => allowedKeys.includes(key));
-}
 
 function isValidTimestamp(value) {
     if (typeof value !== 'string') return false;

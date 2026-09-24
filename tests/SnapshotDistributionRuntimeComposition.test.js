@@ -12,6 +12,8 @@ import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/
 import { createArweaveInjectedProviderSigner } from '../arweave/ArweaveInjectedProviderSigner.js';
 import { createNostrInjectedProviderPublisher } from '../nostr/NostrInjectedProviderPublisher.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.137 — Snapshot Distribution Runtime Composition.
 // See docs/Roadmap.md, "0.9.137 — Snapshot Distribution Runtime
@@ -38,10 +40,6 @@ import { computeContentHash } from '../serializer/contentHash.js';
 //   Section I: architectural regression — no browser API, no orchestration
 //              entry point, no summary availability flag, still unwired
 //              into ui/main.js
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;
@@ -579,7 +577,7 @@ async function run() {
         // call site never reads snapshotPlacementStoreRegistry") is now
         // OBSOLETE BY DESIGN and replaced below with the opposite
         // assertion: it does, and that is exactly the point.
-        const uiMainCode = await codeOnlySource('ui/main.js');
+        const uiMainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(uiMainCode.includes('composeSnapshotDistributionRuntime('), "39a. ui/main.js now calls composeSnapshotDistributionRuntime(), wired by 0.9.138 — World View Snapshot Distribution Action");
         const stillUnreferencedTerms = ['NostrSnapshotDiscoveryPublisher'];
         for (const term of stillUnreferencedTerms) {

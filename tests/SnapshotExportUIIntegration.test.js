@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { BuildPublicationSnapshotTransferPackageUseCase } from '../application/snapshot/BuildPublicationSnapshotTransferPackageUseCase.js';
 import { ImportPublicationSnapshotTransferPackageUseCase } from '../application/snapshot/ImportPublicationSnapshotTransferPackageUseCase.js';
@@ -10,9 +9,11 @@ import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.215 — Snapshot Export Capability Integration.
 //
@@ -68,10 +69,6 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 //               and Import are now genuinely symmetric, not merely two
 //               independently-tested halves.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 async function expectRejects(promise, message) {
     let threw = null;
     try { await promise; } catch (e) { threw = e; }
@@ -84,21 +81,6 @@ async function flushMicrotasks() {
     for (let i = 0; i < 10; i++) {
         await Promise.resolve();
     }
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 function signPublication(identityProvider, fields) {
@@ -174,12 +156,6 @@ function panelCtx(overrides = {}) {
     };
 }
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 // Strips full-line `//` comments before searching, so a structural check
 // never mistakes a class merely named in prose for a genuine import or
 // call site — the identical restraint tests/PostUndoRedoProductReassessment.test.js
@@ -214,7 +190,7 @@ async function runTests() {
         // threads it (alongside the existing import use case) into
         // SnapshotContentMaterializationCoordinator — never a second,
         // disconnected catalog/store pair.
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(/new BuildPublicationSnapshotTransferPackageUseCase\(\s*\{\s*publicationCatalog,\s*contentStore:\s*publicationContentStore\s*\}\s*\)/.test(codeOnly(mainSource)),
             'A2a. ui/main.js constructs BuildPublicationSnapshotTransferPackageUseCase over the SAME publicationCatalog/publicationContentStore every other Snapshot action already shares');
         assert(/new SnapshotContentMaterializationCoordinator\(\s*importPublicationSnapshotTransferPackageUseCase,\s*buildPublicationSnapshotTransferPackageUseCase\s*\)/.test(codeOnly(mainSource)),
@@ -235,8 +211,8 @@ async function runTests() {
         // method calls exactly one thing: the injected exportSnapshotCommand
         // prop, over the whole `publication` object — the SAME shape
         // distributeOwnSnapshot()/discoverOwnSnapshot() already hold.
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
-        const exportMethodMatch = panelSource.match(/exportOwnSnapshot\(\)\s*\{([\s\S]*?)\n\s{8}\},/);
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
+        const exportMethodMatch = panelSource.match(/exportOwnSnapshot\(\)\s*\{([\s\S]*?)\n {4}\},?/);
         assert(exportMethodMatch, 'A4a. OwnPublicationPanel.js defines an exportOwnSnapshot() method');
         assert(/this\.exportSnapshotCommand\(publication\)/.test(exportMethodMatch[1]), 'A4b. exportOwnSnapshot() calls this.exportSnapshotCommand(publication) — the injected prop, over the whole publication object');
         assert(!/BuildPublicationSnapshotTransferPackageUseCase|SnapshotContentMaterializationCoordinator/.test(exportMethodMatch[1]),
@@ -293,7 +269,7 @@ async function runTests() {
     // comparison, or retention.
     // ---------------------------------------------------------------
     {
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const codeOnlyPanel = codeOnly(panelSource);
         const exportCallSites = (codeOnlyPanel.match(/this\.exportSnapshotCommand\(/g) || []).length;
         assert(exportCallSites === 1, `C1. this.exportSnapshotCommand( is called from exactly one place in OwnPublicationPanel.js (found ${exportCallSites}) — no second, implicit call site`);
@@ -489,7 +465,7 @@ async function runTests() {
     // this capability — only the composed command function.
     // ---------------------------------------------------------------
     {
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const codeOnlyPanel = codeOnly(panelSource);
         const importBlock = codeOnlyPanel.slice(0, codeOnlyPanel.indexOf('export default'));
         for (const forbidden of ['BuildPublicationSnapshotTransferPackageUseCase', 'SnapshotContentMaterializationCoordinator', 'ContentStore', 'PublicationCatalog', 'NostrSnapshotDiscoveryPublisher', 'ArweaveContentStore']) {
@@ -508,7 +484,7 @@ async function runTests() {
         const { execSync } = await import('node:child_process');
         const grepOutput = execSync("grep -rl 'new BuildPublicationSnapshotTransferPackageUseCase(' ui/ || true", { cwd: new URL('../', import.meta.url), encoding: 'utf8' });
         const constructingFiles = grepOutput.split('\n').map((line) => line.trim()).filter(Boolean);
-        assert(constructingFiles.length === 1 && constructingFiles[0] === 'ui/main.js', `H3. exactly one file under ui/ constructs BuildPublicationSnapshotTransferPackageUseCase — ui/main.js (found: ${constructingFiles.join(', ') || 'none'})`);
+        assert(constructingFiles.length === 1 && constructingFiles[0] === 'ui/main/composeContentAndSnapshots.js', `H3. exactly one file under ui/ constructs BuildPublicationSnapshotTransferPackageUseCase — ui/main/composeContentAndSnapshots.js (found: ${constructingFiles.join(', ') || 'none'})`);
 
         console.log('✓ Section H: structural boundary — OwnPublicationPanel.js and WorldView.js never import the export use case, the coordinator class, or a ContentStore/PublicationCatalog directly; only ui/main.js composes them, exposing a plain injected command function.');
     }

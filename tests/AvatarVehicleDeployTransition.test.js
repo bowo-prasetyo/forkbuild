@@ -3,6 +3,7 @@ import { AvatarVehicleDeployIntent } from '../core/AvatarVehicleDeployIntent.js'
 import { createAvatarVehicleMount } from '../core/AvatarVehicleMount.js';
 import { emptyAvatarInventory, withEntryAdded, createAvatarInventoryEntry, InventoryEntryKind } from '../core/AvatarInventory.js';
 import { VehicleType } from '../core/VehicleType.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.670 — Avatar Vehicle Deploy Transition, core/AvatarVehicleDeployTransition.js.
 //
@@ -13,10 +14,6 @@ import { VehicleType } from '../core/VehicleType.js';
 //   Section E: 0.9.671 — selectedEntryId deploys a specific carried
 //              entry, with the same resolve()-driven fallback for a
 //              stale/absent selection
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function runTests() {
     const { NONE, DEPLOY } = AvatarVehicleDeployIntent;

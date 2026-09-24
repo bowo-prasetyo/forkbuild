@@ -1,6 +1,6 @@
-import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
-import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
+import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/snapshot/Snapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/snapshot/Fingerprint.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/claim/Record.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationPlan } from '../application/claimSnapshotReconciliation/PlanView.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecision } from '../application/claimSnapshotReconciliation/decision/Decision.js';
 import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry } from '../application/claimSnapshotReconciliation/decision/History.js';
@@ -11,10 +11,12 @@ import {
 import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { featureImportLines } from './support/SharedHelperImports.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.8.148 — Reconciliation Decision History Timeline Projection.
 //
@@ -39,29 +41,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //            boundary
 // Section K: vocabulary boundary — no state-machine/interpretive
 //            vocabulary anywhere, zero imports
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
-}
 
 function makePolicy(version) {
     return Object.freeze({
@@ -390,8 +369,8 @@ async function run() {
         // application/claimSnapshotReconciliation/decision/HistoryView.js),
         // used only by reconstructXxx() below. It still imports nothing from
         // the reconciliation FAMILY itself (plan/candidate/decision).
-        const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
-        assert(importLines.length === 1, '55. this file imports exactly one module');
+        const importLines = featureImportLines(moduleSource);
+        assert(importLines.length === 1, '55. besides shared helpers, this file imports exactly one module');
         assert(importLines[0].includes('./HistoryView.js'), '56. the one import is the 0.8.150 archive reconstruction seam, never the reconciliation family itself');
     }
     console.log('✓ Section K: the result carries no state-machine or interpretive vocabulary, and the module imports only the 0.8.150 archive reconstruction seam');

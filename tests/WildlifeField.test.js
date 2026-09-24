@@ -5,6 +5,7 @@ import { ecologyZoneAt, ECOLOGY_ZONE } from '../core/TerrainEcology.js';
 import { isRiverAt } from '../core/Hydrology.js';
 import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { TERRAIN_TILE_SIZE, tileCoordinateForPosition } from '../core/TerrainTiling.js';
+import { assert } from './support/Assert.js';
 
 // Deterministic World Wildlife, core/WildlifeField.js — the identical
 // section shape tests/NaturalFeatureField.test.js already established for
@@ -20,10 +21,6 @@ import { TERRAIN_TILE_SIZE, tileCoordinateForPosition } from '../core/TerrainTil
 //              tile load order, and stable across a "long journey away
 //              and back"
 //   Section F: no animal ever stands in a river channel
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function tileBounds(tx, tz, tileSize = TERRAIN_TILE_SIZE) {
     const minX = tx * tileSize;

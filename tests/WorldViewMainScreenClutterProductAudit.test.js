@@ -1,8 +1,9 @@
-import { readFile } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { WorldViewNavigationState, WorldViewPrimaryMode } from '../application/world/WorldViewNavigationState.js';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.359 — World View Main-Screen Clutter Product Audit.
 //
@@ -49,10 +50,6 @@ import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileG
 //   I. Candidate decision matrix.
 //   J. Final UX decision, per candidate, plus this milestone's own verdict.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function escapeRegExp(literal) {
     return literal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -72,12 +69,6 @@ function divGatedOn(source, condition, cssClass) {
     return pattern.test(source);
 }
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 async function codeOnlySource(relativePath) {
     const text = await rawSource(relativePath);
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
@@ -95,7 +86,7 @@ function sliceForward(source, markerPattern, maxLength) {
 async function run() {
     const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
     const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
-    const ownPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+    const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
     const canvasCodeOnly = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
 
     // ===============================================================

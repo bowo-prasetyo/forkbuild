@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
 import { parseSnapshotDiscoveryEnvelope } from '../core/SnapshotDiscoveryEnvelope.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.133 — Nostr Snapshot Discovery Publisher.
 // See docs/Roadmap.md, "0.9.133 — Snapshot Location Discovery via Nostr."
@@ -30,10 +31,6 @@ import { parseSnapshotDiscoveryEnvelope } from '../core/SnapshotDiscoveryEnvelop
 //              publishImpl throws immediately
 //   Section I: no caching — two calls issue two fresh publish exchanges
 //   Section J: architectural regression — no forbidden imports/vocabulary
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

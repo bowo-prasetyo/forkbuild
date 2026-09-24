@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
@@ -13,7 +12,6 @@ import { CreateDiscoveryUseCase } from '../application/discovery/CreateDiscovery
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
@@ -26,7 +24,10 @@ import { PublicationPeerExchange } from '../application/publication/PublicationP
 import { PublicationPeerConnectionSync } from '../application/publication/PublicationPeerConnectionSync.js';
 import { PeerContentExchange } from '../application/peer/PeerContentExchange.js';
 import { CreatePublicationPeerExchangeUseCase } from '../application/publication/CreatePublicationPeerExchangeUseCase.js';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.343 — Peer Publication Synchronization Product Reassessment.
 //
@@ -94,10 +95,6 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 //   I — Offline peer boundary: unchanged by 0.9.342's production wiring.
 //   J — Final product matrix and verdict.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 if (typeof globalThis.window === 'undefined') {
     const store = new Map();
     globalThis.window = {
@@ -111,26 +108,12 @@ if (typeof globalThis.window === 'undefined') {
     };
 }
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 function wait(ms = 20) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function clearLocalPublications() {
     window.localStorage.removeItem('forkbuild:forkbuild-publications');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeIdentity(label) {
@@ -626,7 +609,7 @@ async function run() {
         // No app-wide signal exists: confirm no toast/badge/counter is
         // wired to PublicationPeerConnectionSync or to onPublicationReceived
         // anywhere outside the one page that already handles it.
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(!/connectionSync\.on|feedback\.show.*[Pp]ublication.*received|badge.*[Pp]ublication/.test(mainSource),
             '3. no app-wide toast, badge, or counter is wired to connection-time sync anywhere in the composition root.');
 

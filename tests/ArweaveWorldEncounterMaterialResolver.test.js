@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { ArweaveWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js';
 import { DecentralizedWorldEncounterMaterialSource } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialSource.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.35 — Arweave World Encounter Material Resolver.
 // See docs/Roadmap.md, "0.9.35 — Arweave World Encounter Material Resolver."
@@ -36,10 +37,6 @@ import { WorldEncounterKind } from '../core/WorldEncounter.js';
 //              DecentralizedWorldEncounterMaterialSource as a bare
 //              retrieveByUri function
 //   Section L: architectural regression — no forbidden imports/vocabulary
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

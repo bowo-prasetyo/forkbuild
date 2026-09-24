@@ -18,6 +18,7 @@ import { transformStructureBricks } from '../application/editor/StructureComposi
 import { EditorSession } from '../application/editor/EditorSession.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { ToolId } from '../application/editor-state/ToolId.js';
+import { assert } from './support/Assert.js';
 
 // 0.4.5 — Unified Build Placement.
 //
@@ -50,10 +51,6 @@ import { ToolId } from '../application/editor-state/ToolId.js';
 //              or creates a Document; EditorSession.forkStructure()
 //              ("Fork As New Document", still a distinct secondary
 //              action) still does
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const stubIdentityProvider = {
     currentUser: () => ({ username: 'alice', displayName: 'alice', providerId: 'stub' })

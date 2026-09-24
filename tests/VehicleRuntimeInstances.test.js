@@ -4,6 +4,7 @@ import { nearbyVehicleInstances, VEHICLE_RENDER_RADIUS } from '../application/wo
 import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { isValidVehicleInstance } from '../core/VehicleInstance.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.116 — Mounted Vehicle Movement, application/world/VehicleRuntimeInstances.js.
 //
@@ -43,10 +44,6 @@ function findRealVehicle() {
         throw new Error(`Test fixture vehicle ${REAL_VEHICLE_ID} not found under DEFAULT_WORLD_SEED — has core/VehiclePlacement.js changed?`);
     }
     return vehicle;
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
 }
 
 async function runTests() {

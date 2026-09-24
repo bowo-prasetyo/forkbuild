@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { ArweaveGatewayConfiguration } from '../core/ArweaveGatewayConfiguration.js';
@@ -9,11 +8,12 @@ import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfi
 import { NostrRelayConfigurationStore } from '../storage/NostrRelayConfigurationStore.js';
 import { IceServerConfigurationStore } from '../storage/IceServerConfigurationStore.js';
 import { RendezvousConfigurationStore } from '../storage/RendezvousConfigurationStore.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
 import { RendezvousDiscoveryProvider } from '../peer/RendezvousDiscoveryProvider.js';
 import { RendezvousTransport } from '../peer/RendezvousTransport.js';
-import { worldViewFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, editorViewFiles, mainFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.392 — Post-Infrastructure-Arc Product Evolution Reassessment.
 //
@@ -78,9 +78,7 @@ function n(message) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
+
 async function sourceExists(relativePath) {
     try { await source(relativePath); return true; } catch { return false; }
 }
@@ -94,14 +92,6 @@ async function grepCount(pattern, dirs) {
             { cwd: SOURCE_ROOT.pathname }).toString();
     } catch { /* grep exits non-zero on no match; treated as zero hits */ }
     return hits.trim() ? hits.trim().split('\n').length : 0;
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 class FakeDataChannel {
@@ -341,7 +331,7 @@ async function run() {
         const navLinkCount = (appSource.match(/router-link/g) || []).length / 2;
         assert(navLinkCount === 11, n(`D2. the nav carries exactly 11 router-link destinations, the five settings destinations now consolidated behind one Network Settings hub link (found ${navLinkCount}) — the corrected counts in tests/PostInfrastructureProductEvolutionReassessment.test.js and tests/WholeProductProductEvolutionReassessment.test.js now match live reality`));
 
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         assert(mainSource.includes('bootstrapProviders: resolvedRendezvousUrls.map((url) => new RendezvousDiscoveryProvider('),
             n('D2. discoveryBootstrap\'s bootstrapProviders is built from resolvedRendezvousUrls, not a bare literal — the corrected assertion in tests/UserConfigurableInfrastructureEndpointProductDirectionAudit.test.js now matches live reality'));
         assert(await sourceExists('core/RendezvousConfiguration.js'),

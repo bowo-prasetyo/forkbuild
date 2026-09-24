@@ -4,16 +4,13 @@ import {
     getPublicationCommentaryById,
     getPublicationCommentariesForPublication
 } from '../core/PublicationCommentaryCollection.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.242 — Publication Commentary Domain Boundary. Covers the pure
 // domain descriptor (core/PublicationCommentary.js) and its small
 // in-memory collection (core/PublicationCommentaryCollection.js) —
 // nothing else. No UI, no networking, no persistence adapter, no
 // real-time synchronization exists yet for this milestone to test.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function runTests() {
     // -------------------------------------------------------------

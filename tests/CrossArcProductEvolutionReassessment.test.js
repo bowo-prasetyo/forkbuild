@@ -1,15 +1,17 @@
 import { readFile } from 'node:fs/promises';
-import { owningView } from './support/SourceFileGroups.js';
+import { owningView, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 import { execSync } from 'node:child_process';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
 import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
 import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
 import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.288 — Cross-Arc Product Evolution Reassessment.
 //
@@ -65,15 +67,7 @@ import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFil
 //    rhythm         Commentary       Notification      reassessed,
 //    established)   selected)        selected)         STOP)
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {
@@ -113,21 +107,6 @@ async function grepComponentCount(pattern, dirs) {
 // tests/PostNotificationHistoryProductReassessment.test.js and
 // tests/PostCommentaryUIProductReassessment.test.js.
 // ---------------------------------------------------------------------
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
-}
 
 function makePublication({ id, publisherProvider }) {
     const publication = new Publication({
@@ -418,7 +397,7 @@ async function runTests() {
         // E4. The ONE UI component these commands are bound to.
         const bindingSites = await grepComponentCount(':getPublicationCommentariesCommand=\\|:addPublicationCommentaryCommand=', ['ui']);
         assert(bindingSites === 1, `E4. Exactly one UI binding site passes these commands as props today (found ${bindingSites}) — OwnPublicationPanel.`);
-        const ownPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(ownPanelSource.includes('getPublicationCommentariesCommand') && ownPanelSource.includes('addPublicationCommentaryCommand'),
             'E4b. ui/components/OwnPublicationPanel.js is that one component.');
 

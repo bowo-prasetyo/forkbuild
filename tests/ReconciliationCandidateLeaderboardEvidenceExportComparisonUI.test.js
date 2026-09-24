@@ -20,7 +20,9 @@ import {
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentity
 } from '../application/claimSnapshotReconciliation/evidenceExportComparison/RecordIdentityView.js';
-import default_ReconciliationCandidateLeaderboardEvidenceExportComparisonTable from '../ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js';
+import default_ReconciliationCandidateLeaderboardEvidenceExportComparisonTable from '../ui/components/reconciliation/EvidenceExportComparisonTable.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.192/0.8.194 — Reconciliation Candidate Leaderboard Evidence Export
 // Comparison UI, and its Detail extension.
@@ -31,10 +33,10 @@ import default_ReconciliationCandidateLeaderboardEvidenceExportComparisonTable f
 //       this Node-based test, exactly the way every prior Composition API
 //       view in this codebase is only ever source-inspected here, never
 //       mounted)
-//   ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js
+//   ui/components/reconciliation/EvidenceExportComparisonTable.js
 //     — an Options API, zero-`application/`-import presentation component,
 //       executed directly below via its own `computed` functions, exactly
-//       the way ReconciliationCandidateLeaderboardTable.js is already
+//       the way ui/components/reconciliation/CandidateLeaderboardTable.js is already
 //       exercised by ReconciliationCandidateEvidenceDetailUI.test.js
 //
 // Section A: FLAGSHIP — two exported JSON documents, deliberately
@@ -127,14 +129,6 @@ import default_ReconciliationCandidateLeaderboardEvidenceExportComparisonTable f
 // Section Y: the table component's own source carries no ranking,
 //            correctness, synchronization, or reconciliation vocabulary
 //            anywhere, including in its new 0.8.196 code.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function candidateOf(claimId) {
     return Object.freeze({ type: 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT', claimId });
@@ -449,7 +443,7 @@ async function run() {
         new URL('../ui/views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js', import.meta.url), 'utf8'
     );
     const tableModuleSource = await (await import('node:fs/promises')).readFile(
-        new URL('../ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js', import.meta.url), 'utf8'
+        new URL('../ui/components/reconciliation/EvidenceExportComparisonTable.js', import.meta.url), 'utf8'
     );
     const viewCodeOnly = viewModuleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
     const tableCodeOnly = tableModuleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');

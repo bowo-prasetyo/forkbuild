@@ -1,6 +1,4 @@
-import { readFile } from 'node:fs/promises';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
@@ -28,7 +26,10 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { worldNavigationSessionFiles, worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, worldEncounterCanvasFiles, worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.603 — Publication World Materialization Boundary Audit.
 //
@@ -72,15 +73,6 @@ import { worldNavigationSessionFiles, worldEncounterCanvasFiles, worldViewFiles 
 //   J. Regression / no production changes.
 //   K. Decision matrix / closure classification.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 if (typeof globalThis.window === 'undefined') {
     const store = new Map();
     globalThis.window = {
@@ -92,14 +84,6 @@ if (typeof globalThis.window === 'undefined') {
             get length() { return store.size; }
         }
     };
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 const UNIT_BOUNDS = () => new SpatialBounds({ min: { x: -0.5, y: 0, z: -0.5 }, max: { x: 0.5, y: 1, z: 0.5 } });
@@ -317,7 +301,7 @@ async function run() {
         // constructs it, which 0.9.602 Section F10 already established
         // for the sibling ResolvePublicationUseCase and is reconfirmed
         // here for this one.)
-        const mainSrc = await readSource('ui/main.js');
+        const mainSrc = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(!/LoadPublishedWorldSessionUseCase/.test(mainSrc),
             'E4. RECONFIRMED: ui/main.js — the app\'s own real composition root — never constructs application/publication/LoadPublishedWorldSessionUseCase.js either. The class exists, is tested (Section D5, and tests/PublishedWorld.test.js/DecentralizedContent.test.js/ForkPublishedWorld.test.js), and needs no new collaborator per Section E1/E2 — it is simply never called from the one composition root that matters.');
 

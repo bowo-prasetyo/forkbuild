@@ -10,7 +10,9 @@ import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.701 — Released Animal Rendering, World View integration.
 //
@@ -30,18 +32,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //
 // Mirrors tests/WorldViewVehicleRenderingIntegration.test.js's own "real
 // logic, fake low-level renderer" posture exactly.
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function fakeRenderFacade() {
     const listeners = [];
@@ -207,7 +197,7 @@ async function runTests() {
             assert(!controllerSource.includes(term),
                 `14. application/avatar/AvatarAnimalInteractionController.js never references "${term}" — catch/release stays entirely independent of rendering`);
         }
-        const sessionSource = await readFile(new URL('../application/world/WorldNavigationSession.js', import.meta.url), 'utf8');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         assert(sessionSource.includes('avatarAnimalInteractionState'),
             '15. the existing catch/release observation seam is still exposed, untouched by this milestone');
     }

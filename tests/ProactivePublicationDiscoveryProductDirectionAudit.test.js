@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
@@ -13,7 +12,6 @@ import { PUBLICATION_CONTENT_KIND } from '../application/publication/Publication
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
@@ -21,6 +19,10 @@ import { NostrDiscoveryQueryService } from '../application/nostr/NostrDiscoveryQ
 import { queryDecentralizedWorldDiscovery } from '../application/discovery/DecentralizedWorldDiscoveryQuery.js';
 import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
+import { ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.351 — Proactive Publication Discovery Product Direction Audit.
 //
@@ -71,16 +73,6 @@ import { WorldEncounterKind } from '../core/WorldEncounter.js';
 //   I — Architectural cost inventory.
 //   J — Final decision matrix and verdict.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 function wait(ms = 20) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -100,14 +92,6 @@ if (typeof globalThis.window === 'undefined') {
             get length() { return store.size; }
         }
     };
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeIdentity(label) {
@@ -321,7 +305,7 @@ async function run() {
         const placeNamingQuerySource = await readSource('application/placeNaming/PlaceNamingDiscoveryQueryService.js');
         assert(placeNamingQuerySource.includes('class PlaceNamingDiscoveryQueryService'),
             '6. Place Naming ALSO already has its own read-side query service (application/placeNaming/PlaceNamingDiscoveryQueryService.js).');
-        const ownPanelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         assert(/discoverSnapshotCandidatesCommand|discoverSnapshotCommand/.test(ownPanelSource),
             '7. Snapshot\'s read-side query service is wired into a real UI browsing surface (ui/components/OwnPublicationPanel.js).');
 
@@ -337,7 +321,7 @@ async function run() {
         // reads — confirmed at its one real construction site in
         // ui/main.js, which hands it a FRESH, LOCAL-ONLY LocalDiscoveryProvider
         // instead, never the shared, Repository-visible one.
-        const mainSourceForComposition = await readSource('ui/main.js');
+        const mainSourceForComposition = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         const compositionCallStart = mainSourceForComposition.indexOf('composeDiscoverWorldEncounterPublicationCommand({');
         const compositionCallBlock = mainSourceForComposition.slice(compositionCallStart, mainSourceForComposition.indexOf('});', compositionCallStart));
         // The provider is a named local-only instance, shared with
@@ -426,7 +410,7 @@ async function run() {
         //       discovery provider, never decentralizedPublicationDiscoveryProvider
         //       — reconfirmed here directly against ui/main.js's own
         //       composition call, not merely a name-based sweep.
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         const compositionStart = mainSource.indexOf('composeDiscoverWorldEncounterPublicationCommand({');
         const compositionBlock = mainSource.slice(compositionStart, mainSource.indexOf('});', compositionStart));
         assert(compositionBlock.includes('discoveryProvider: worldEncounterPublicationEvidenceProvider')

@@ -1,15 +1,12 @@
 import { readFile } from 'node:fs/promises';
 import { describeDecentralizedWorldDiscoveryLead } from '../core/DecentralizedWorldDiscoveryLead.js';
 import { ContentReference } from '../core/ContentReference.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.24 — Decentralized World Discovery Source Boundary.
 //
 // See docs/Roadmap.md, "0.9.24 — Decentralized World Discovery Source
 // Boundary," for the full milestone story.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function leadOf(overrides = {}) {
     return {

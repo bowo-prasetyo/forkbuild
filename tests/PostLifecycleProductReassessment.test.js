@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { Brick } from '../core/Brick.js';
 import { Building } from '../core/Building.js';
@@ -7,7 +6,6 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
 import { VehicleType } from '../core/VehicleType.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { DocumentManifest } from '../application/document/DocumentManifest.js';
 import { LocalRecoveryStore } from '../persistence/LocalRecoveryStore.js';
@@ -18,7 +16,10 @@ import { CheckRecoveryUseCase } from '../application/document/CheckRecoveryUseCa
 import { RecoverDocumentUseCase } from '../application/document/RecoverDocumentUseCase.js';
 import { DiscardRecoveryUseCase } from '../application/document/DiscardRecoveryUseCase.js';
 import { CreatePersistenceUseCase } from '../application/document/CreatePersistenceUseCase.js';
-import { editorViewFiles, worldViewFiles, worldViewTemplateFiles } from './support/SourceFileGroups.js';
+import { editorViewFiles, worldViewFiles, worldViewTemplateFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.203 — Post-Lifecycle Product Reassessment.
 //
@@ -46,30 +47,12 @@ import { editorViewFiles, worldViewFiles, worldViewTemplateFiles } from './suppo
 // This file does not implement anything it finds. Per the brief, it
 // stops at classification and recommendation.
 
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function createTestDocument() {
     const world = new World();
     const building = new Building({ creator: 'tester' });
     building.addBrick(new Brick({ definitionId: 'core:cube', position: new Position(0, 0.5, 0) }));
     world.addBuilding(building);
     return new Document({ world, metadata: new DocumentMetadata({ title: 'Post-Lifecycle Reassessment Test', author: 'tester' }) });
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 // Strips full-line `//` comments — the same restraint 0.9.156 through
@@ -115,7 +98,7 @@ async function runTests() {
         const emitsMatch = placementInfoPanelSource.match(/emits:\s*\[([^\]]*)\]/);
         assert(emitsMatch && /\bremove\b/i.test(emitsMatch[1]), 'A3. PlacementInfoPanel.js still emits \'remove\' — 0.9.197\'s removal action remains reachable');
 
-        const ownPublicationPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(/unpublishCommand/.test(ownPublicationPanelSource), 'A4. OwnPublicationPanel.js still wires an unpublishCommand — 0.9.198\'s retract action remains reachable');
 
         console.log(`✓ Section A: World interaction/navigation — COMPLETE. ${componentTags.size} component families, including the removal/unpublish actions the 0.9.196 arc added, all still reachable from the same surface.`);
@@ -268,7 +251,7 @@ async function runTests() {
     // an INTENTIONAL_BOUNDARY, unchanged.
     // ---------------------------------------------------------------
     {
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const clickHandlers = new Set((panelSource.match(/@click="[a-zA-Z]+/g) || []).map((s) => s.replace('@click="', '')));
         assert(clickHandlers.size >= 9, `D1. OwnPublicationPanel.js still wires at least 9 distinct actions (found ${clickHandlers.size})`);
         const unpublishHandlers = [...clickHandlers].filter((h) => /^unpublish|^retract/i.test(h));

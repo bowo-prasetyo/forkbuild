@@ -1,5 +1,4 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { PeerIdentity } from '../peer/PeerIdentity.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
@@ -16,6 +15,8 @@ import {
 import { toIdentitySuccessionRecord, getIdentitySuccessionSigningDescriptor } from '../core/IdentitySuccessionEnvelope.js';
 import { toIdentityRevocationRecord } from '../core/IdentityRevocationEnvelope.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.68 — Identity Lifecycle Propagation.
 //
@@ -31,17 +32,6 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 // anything ELSE this device has on record: PeerRelationship(A) and
 // PeerRelationship(B) stay two distinct entries even after Alice
 // rotates A -> B and everyone involved has verified it.
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, message) {
     try {

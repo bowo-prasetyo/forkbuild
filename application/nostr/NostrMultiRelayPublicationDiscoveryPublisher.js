@@ -1,4 +1,5 @@
 import { NostrPublicationDiscoveryPublisher } from './NostrPublicationDiscoveryPublisher.js';
+import { normalizeRelayUrls } from './NostrRelayUrls.js';
 
 // 0.9.444 — Nostr Multi-Relay Announcement Fan-Out.
 //
@@ -219,25 +220,4 @@ export class NostrMultiRelayPublicationDiscoveryPublisher {
             return Object.freeze({ relayUrl, published: false, error: outcome.reason });
         });
     }
-}
-
-// De-duplicates `relayUrls` by trimmed string equality, preserving the order
-// each distinct value first appears in — see this file's own header,
-// "duplicate relay URLs are normalized before execution." Non-string or
-// empty-after-trim entries are dropped silently, the same "malformed input
-// degrades silently" discipline `NostrPublicationDiscoveryPublisher`'s own
-// constructor holds for a single `relayUrl` — a genuinely empty result (every
-// entry malformed) is reported by this file's own caller, the constructor
-// above, as "no usable relay URL supplied," never here.
-function normalizeRelayUrls(relayUrls) {
-    const seen = new Set();
-    const normalized = [];
-    for (const relayUrl of relayUrls) {
-        if (typeof relayUrl !== 'string') continue;
-        const trimmed = relayUrl.trim();
-        if (trimmed.length === 0 || seen.has(trimmed)) continue;
-        seen.add(trimmed);
-        normalized.push(trimmed);
-    }
-    return normalized;
 }

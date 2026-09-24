@@ -1,13 +1,15 @@
-import { readFile } from 'node:fs/promises';
 
 import { NostrRelayConfiguration, DEFAULT_NOSTR_RELAY_URL } from '../core/NostrRelayConfiguration.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { NostrRelayConfigurationStore } from '../storage/NostrRelayConfigurationStore.js';
 import { NostrDiscoveryQueryService } from '../application/nostr/NostrDiscoveryQueryService.js';
 import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
 import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
 import { composeDecentralizedWorldEncounterMaterialDiscoveryServices } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
 import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.369 — Nostr Relay Configuration Discovery Integration.
 // See docs/Roadmap.md, "0.9.369 — Nostr Relay Configuration Boundary."
@@ -55,28 +57,11 @@ import { composeDiscoverSnapshotRuntime } from '../application/snapshot/Discover
 // compatibility, not `ui/main.js`'s own real wiring, is what Section A
 // verifies.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
 // A queryImpl double that never actually needs to resolve — every section
 // here asserts against the CONSTRUCTED instance's own relayUrl, never
 // against a network round-trip, matching every sibling read-path class's
 // own "queryImpl is an injection point" restraint.
 async function fakeQueryImpl() { return []; }
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function run() {
     // ===============================================================
@@ -138,10 +123,10 @@ async function run() {
     // `resolvedNostrRelayUrl`.
     // ===============================================================
     {
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
 
-        assert(mainSource.includes("import { NostrRelayConfigurationStore } from '../storage/NostrRelayConfigurationStore.js';"), 'D1. ui/main.js imports NostrRelayConfigurationStore');
-        assert(mainSource.includes("import { DEFAULT_NOSTR_RELAY_URL } from '../core/NostrRelayConfiguration.js';"), 'D2. ui/main.js imports DEFAULT_NOSTR_RELAY_URL');
+        assert(mainSource.includes("import { NostrRelayConfigurationStore } from '../../storage/NostrRelayConfigurationStore.js';"), 'D1. ui/main.js imports NostrRelayConfigurationStore');
+        assert(mainSource.includes("import { DEFAULT_NOSTR_RELAY_URL } from '../../core/NostrRelayConfiguration.js';"), 'D2. ui/main.js imports DEFAULT_NOSTR_RELAY_URL');
         assert(mainSource.includes('new NostrRelayConfigurationStore('), 'D3. ui/main.js actually constructs a NostrRelayConfigurationStore, never just imports the class unused');
         assert(/nostrRelayConfigurationStore\.get\(\)\s*\|\|\s*\{\s*relayUrls:\s*\[DEFAULT_NOSTR_RELAY_URL\]\s*\}/.test(mainSource), 'D4. ui/main.js resolves "absent -> default, present -> override" exactly — never a merge, never silently dropping the persisted store\'s own value');
 

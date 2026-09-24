@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { computeCameraFraming, CameraPerspective } from '../core/CameraPerspective.js';
@@ -24,8 +23,10 @@ import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.550 — World Navigation & Orientation Product Reassessment.
 //
@@ -85,23 +86,6 @@ import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 //   K — Flagship journey: the brief's own scripted scenario, composed
 //       end to end through real production functions.
 //   L — Deliberate exclusions and production guard.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function buildRegistry() {
     const registry = new AvatarTemplateRegistry();

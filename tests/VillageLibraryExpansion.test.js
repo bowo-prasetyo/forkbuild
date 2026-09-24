@@ -12,6 +12,7 @@ import { CopyStructureIntoDocumentUseCase } from '../application/editor/CopyStru
 import { transformStructureBricks } from '../application/editor/StructureCompositionTransform.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { BrickRenderer } from '../renderer/BrickRenderer.js';
+import { assert } from './support/Assert.js';
 
 // 0.4.4 — Village Library Expansion.
 //
@@ -54,10 +55,6 @@ import { BrickRenderer } from '../renderer/BrickRenderer.js';
 //   Section J: Structure != Building — several structures place zero
 //              wall_1x3 bricks, proving a Structure is a reusable
 //              spatial composition, never a synonym for "building"
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const EXPECTED_CATEGORY_COUNTS = {
     residential: 4,

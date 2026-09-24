@@ -1,8 +1,7 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
 import { RoleAwareProviderResolver, RoleProviderResolutionStatus } from '../application/settings/RoleAwareProviderResolver.js';
 import { ResolvePreferredRoleProviderUseCase } from '../application/settings/ResolvePreferredRoleProviderUseCase.js';
@@ -10,7 +9,10 @@ import { SetRoleProviderPreferenceUseCase } from '../application/settings/SetRol
 import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.304 — Post-Content-Preference Product Evolution Reassessment.
 //
@@ -74,14 +76,7 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 // Section I's own regression guard proves each of these is still absent,
 // rather than merely asserting it in prose.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function listJsFiles(relativeDir, results = []) {
     const dirUrl = new URL(relativeDir.endsWith('/') ? relativeDir : `${relativeDir}/`, SOURCE_ROOT);
@@ -112,14 +107,6 @@ async function repoWideProductionFiles() {
         await listJsFiles(dir, files);
     }
     return files;
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 // A minimal stand-in satisfying RoleAwareProviderResolver's own
@@ -214,7 +201,7 @@ async function run() {
         assert(localDiscoveryProviderFiles.length >= 2, // base + at least LocalDiscoveryProvider
             '7. discovery/ still ships DiscoveryProvider.js plus concrete local/catalog implementations, not a ' +
             'multi-substrate registry');
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const localDiscoveryConstructions = (mainSource.match(/new LocalDiscoveryProvider\(/g) || []).length;
         assert(localDiscoveryConstructions <= 1,
             '8. ui/main.js constructs at most one LocalDiscoveryProvider — this seam is NO_SELECTION (this ' +
@@ -339,7 +326,7 @@ async function run() {
     // ─────────────────────────────────────────────────────────────────
     let contentProviderCount = 0;
     {
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         // Content: the one real, explicit, per-action, multi-provider
         // choice already shipped — the exact evidence 0.9.298 first
         // established (local + ipfs, side by side, real buttons).
@@ -486,7 +473,7 @@ async function run() {
         const compositionUseCaseSource = await source('application/snapshot/placement/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js');
         assert(/preferenceStore = new RoleProviderPreferenceStore\(\)/.test(compositionUseCaseSource),
             '37b. that one site is a default parameter, satisfied only when no caller supplies its own store');
-        const uiMainSource = await source('ui/main.js');
+        const uiMainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         assert(!/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase\(\)\.execute\(\{[^}]*preferenceStore/s.test(uiMainSource)
             && /coordinator:\s*preferredSnapshotPlacementCreationCoordinator,\s*\n\s*preferenceStore:\s*roleProviderPreferenceStore/.test(uiMainSource),
             '37c. ui/main.js never passes its own preferenceStore in — it captures the ONE instance the ' +

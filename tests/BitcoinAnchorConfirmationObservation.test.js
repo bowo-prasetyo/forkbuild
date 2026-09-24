@@ -3,6 +3,7 @@ import { BitcoinAnchorConfirmationState } from '../application/anchoring/bitcoin
 import { BitcoinAnchorTransactionBuilder } from '../anchoring/BitcoinAnchorTransactionBuilder.js';
 import { BitcoinAnchorPsbtBuilder } from '../anchoring/BitcoinAnchorPsbtBuilder.js';
 import { BitcoinAnchorSignedPsbtFinalizer } from '../anchoring/BitcoinAnchorSignedPsbtFinalizer.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.54 — Bitcoin Anchor Confirmation Observation.
 //
@@ -48,10 +49,6 @@ import { BitcoinAnchorSignedPsbtFinalizer } from '../anchoring/BitcoinAnchorSign
 //              fakes
 //
 // See docs/Roadmap.md, "0.8.54 — Bitcoin Anchor Confirmation Observation."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

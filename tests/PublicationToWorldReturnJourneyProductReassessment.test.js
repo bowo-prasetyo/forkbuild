@@ -1,8 +1,6 @@
-import { readFile } from 'node:fs/promises';
 
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { PublicationQuery } from '../core/PublicationQuery.js';
@@ -11,6 +9,9 @@ import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter
 import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.556 — Publication-to-World Return Journey Product Reassessment.
 //
@@ -64,23 +65,6 @@ import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileG
 // that could get a Wanderer to Open/Fork/Explore. Not recommended for
 // action in this milestone, per this arc's own established restraint
 // (0.9.555 F/G, 0.9.553 H).
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 // Writes a plain Publication record directly into the SAME
 // 'forkbuild-publications' storage key LocalDiscoveryProvider/

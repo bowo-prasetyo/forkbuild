@@ -1,6 +1,4 @@
-import { readFile } from 'node:fs/promises';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
@@ -16,6 +14,10 @@ import { composeWorldEncounterMaterialVerifier } from '../application/worldEncou
 import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.495 — Arweave Announcement/Discovery Round-Trip Production
 // Integration Audit.
@@ -98,20 +100,12 @@ import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/
 //   Section E's own point is that none is needed; inventing one here would
 //   contradict the finding.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 let assertionCount = 0;
 function check(condition, message) {
     assertionCount += 1;
     assert(condition, message);
 }
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 function codeOnlyOf(text) {
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
@@ -130,14 +124,6 @@ function decodeBase64Url(value) {
 }
 function encodeBase64Url(value) {
     return btoa(value).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function buildRealSigner(storage, username) {
@@ -257,7 +243,7 @@ async function run() {
     // source.
     // ===============================================================
     {
-        const mainCodeOnly = codeOnlyOf(await source('ui/main.js'));
+        const mainCodeOnly = codeOnlyOf((await Promise.all(mainFiles().map((file) => source(file)))).join('\n'));
         check(/createArweaveTaggedTransactionUpload\(/.test(mainCodeOnly),
             'A1. ui/main.js still constructs the real uploadTaggedTransaction adapter (0.9.492) — the write-side wire has not regressed');
         const providerCallMatch = mainCodeOnly.match(/createPublicationDistributionRuntimeProvider\(\{[\s\S]{0,400}?\}\)/);

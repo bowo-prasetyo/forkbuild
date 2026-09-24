@@ -3,7 +3,6 @@ import { execSync } from 'node:child_process';
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
 import { SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
 import { computeContentHash } from '../serializer/contentHash.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
@@ -35,6 +34,10 @@ import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.487 — Walking-Triggered Multi-Source Snapshot Discovery End-to-End
 // Integration Audit.
@@ -127,10 +130,6 @@ import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.j
 //               throttling anywhere this arc touched.
 //   Section P — Scope guard: this milestone is test-only.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function pos(x, y, z) { return { x, y, z }; }
 function ctx(position) { return { position }; }
 
@@ -152,21 +151,6 @@ function readSource(relativePath) {
 
 function stripLineComments(source) {
     return source.replace(/\/\/.*$/gm, '');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 function signedPlacement(identityProvider, { publicationId, contentHash, storage, locator }) {
@@ -270,7 +254,7 @@ async function run() {
         assert((compositeSource.match(/new LocalSnapshotCandidateDiscoveryQueryService\(/g) || []).length === 1,
             '2. exactly one production construction site exists anywhere for the Local candidate adapter.');
 
-        const mainSource = stripLineComments(readSource('ui/main.js'));
+        const mainSource = stripLineComments((await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n'));
         assert((mainSource.match(/composeSnapshotCandidateDiscoveryRuntime\(/g) || []).length === 1,
             '3. ui/main.js calls composeSnapshotCandidateDiscoveryRuntime() exactly once.');
         assert((mainSource.match(/new WorldSnapshotDiscoveryMonitor\(/g) || []).length === 1,
@@ -708,7 +692,7 @@ async function run() {
     // cascade).
     // ===============================================================
     {
-        const mainSource = stripLineComments(readSource('ui/main.js'));
+        const mainSource = stripLineComments((await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n'));
         const monitorSource = stripLineComments(readSource('application/snapshot/WorldSnapshotDiscoveryMonitor.js'));
         const commandSource = stripLineComments(readSource('application/snapshot/DiscoverSnapshotCandidatesCommand.js'));
         const cascadeSource = stripLineComments(readSource('application/snapshot/AutomaticSnapshotEncounterCascade.js'));

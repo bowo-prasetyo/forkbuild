@@ -4,7 +4,6 @@ import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
@@ -12,7 +11,10 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { publicationsPageFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, worldEncounterCanvasFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.305 — Cross-Surface Publication Commentary Reassessment.
 //
@@ -50,15 +52,7 @@ import { publicationsPageFiles, worldEncounterCanvasFiles } from './support/Sour
 //
 // Sections A-J below map directly onto this milestone's own brief.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function codeOnlySource(relativePath) {
     const text = await rawSource(relativePath);
@@ -90,14 +84,6 @@ function findRepoWide(pattern) {
             { cwd: SOURCE_ROOT.pathname }).toString();
     } catch { /* zero hits */ }
     return hits.trim() ? hits.trim().split('\n').filter(Boolean) : [];
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeDocument(title, author) {
@@ -139,7 +125,7 @@ async function runTests() {
 
         // A7. The three live UI bindings, confirmed by their own
         // real, current prop/inject declarations rather than assumed.
-        const ownPanel = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPanel = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const card = await rawSource('ui/components/PublicationCard.js');
         const canvas = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(/getPublicationCommentariesCommand:\s*\{\s*\n?\s*type: Function/.test(ownPanel),
@@ -169,7 +155,8 @@ async function runTests() {
             'ui/components/PublicationCommentarySection.js',
             'ui/components/PublicationCatalog.js',
             'ui/components/PublicationList.js',
-            'ui/components/WorldEncounterCanvas.js',
+            // WorldEncounterCanvas.js's own reads live in its computed module.
+            'ui/components/worldEncounterCanvas/selectionInspectionComputed.js',
             'ui/views/DecentralizedPublicationsView.js',
             // WorldView.js's own encountered-publication hand-off to the Editor.
             'ui/views/worldView/useEditorHandoff.js'
@@ -360,7 +347,7 @@ async function runTests() {
         assert(distributionPropCount === 2,
             `F1. exactly two ui/components/*.js files declare a snapshotDistributionCommand prop (found ${distributionPropCount}) — OwnPublicationPanel.js and WorldEncounterCanvas.js, exactly as docs/Roadmap.md's own 0.9.139/0.9.141 entries describe.`);
 
-        const ownPanel = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPanel = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const canvas = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
 
         // F2. In BOTH files, the distribution UI's own entry point and
@@ -475,7 +462,7 @@ async function runTests() {
         // action (see Section F's own amendment) rather than the
         // interactive body, which now lives one popup over, in
         // WorldDistributionDialog.js.
-        const ownPanel = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPanel = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const distributionIdx = ownPanel.indexOf('own-publication-distribution-trigger-action');
         const commentaryIdx = ownPanel.indexOf('own-publication-commentary');
         assert(distributionIdx > -1 && commentaryIdx > -1,

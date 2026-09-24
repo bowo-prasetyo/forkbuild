@@ -17,6 +17,7 @@ import {
     describeAchievementEvidenceFingerprint,
     reconstructAchievementEvidenceFingerprint
 } from '../application/achievement/AchievementEvidenceFingerprint.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.116 — Achievement Evidence Set Fingerprint.
 //
@@ -48,10 +49,6 @@ import {
 //              exchanging one of those conclusions
 //   Section L: format and shape — 64-char lowercase hex, exactly the
 //              documented fields, no conclusion/verification vocabulary
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const HEX64_PATTERN = /^[0-9a-f]{64}$/;
 const NETWORK = 'mainnet';

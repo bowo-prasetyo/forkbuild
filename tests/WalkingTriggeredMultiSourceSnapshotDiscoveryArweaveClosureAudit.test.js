@@ -1,6 +1,5 @@
 import { execSync } from 'node:child_process';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
 import { SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
@@ -27,7 +26,9 @@ import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.501 — Walking-Triggered Multi-Source Snapshot Discovery End-to-End
 // Integration Audit (Arweave Closure).
@@ -138,10 +139,6 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 //               with no branch of its own.
 //   Section L — Scope guard: zero production changes.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
 
 function readSource(relativePath) {
@@ -159,14 +156,6 @@ async function flushMicrotasks() {
     for (let i = 0; i < 10; i++) {
         await Promise.resolve();
     }
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeNostrQueryImpl(events) {
@@ -272,7 +261,7 @@ async function run() {
     // Section A — Real production topology.
     // ===============================================================
     {
-        const mainSource = stripLineComments(readSource('ui/main.js'));
+        const mainSource = stripLineComments((await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n'));
         const worldViewSource = stripLineComments(worldViewFiles().map((file) => readSource(file)).join('\n'));
 
         const nostrSites = execSync('grep -rlE "new NostrSnapshotDiscoveryQueryService\\(" application ui --include="*.js" || true', { cwd: SOURCE_ROOT.pathname }).toString().trim().split('\n').filter(Boolean);
@@ -648,7 +637,7 @@ async function run() {
         // second, Discovery-specific one; Discovery-side retrieval still
         // goes exclusively through composeDiscoverSnapshotRuntime()'s own
         // construction, untouched by this milestone.
-        const mainSourceForContentStoreCheck = stripLineComments(readSource('ui/main.js'));
+        const mainSourceForContentStoreCheck = stripLineComments((await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n'));
         assert((mainSourceForContentStoreCheck.match(/new ArweaveContentStore\(/g) || []).length === 1,
             '3b. ui/main.js constructs exactly one ArweaveContentStore directly (0.9.505, Snapshot Placement) — never a second, Discovery-specific one alongside composeDiscoverSnapshotRuntime()\'s own retrieval-side construction.');
 

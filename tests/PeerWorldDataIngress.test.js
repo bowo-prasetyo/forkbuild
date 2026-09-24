@@ -3,10 +3,7 @@ import {
     WorldDiscoveryInputKeys
 } from '../core/WorldDiscoverySource.js';
 import { describePeerWorldDiscoverySource } from '../peer/PeerWorldDataIngress.js';
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
+import { assert } from './support/Assert.js';
 
 function connectedPeerOf(identityId) {
     return { remoteIdentity: identityId ? { identityId } : null };

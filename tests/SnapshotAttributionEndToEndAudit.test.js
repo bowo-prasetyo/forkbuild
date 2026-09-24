@@ -15,7 +15,8 @@ import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.145 — End-to-End Snapshot Attribution Audit.
 //
@@ -104,10 +105,6 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 //            vocabulary, the resolver carries no Publication/ownership
 //            vocabulary, and distribution remains a separate command
 //            path from discovery/attribution in both directions.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -417,7 +414,7 @@ async function run() {
         // algorithm of their own (see ui/views/WorldView.js's own
         // discoverOwnSnapshot(), reused verbatim for both, per 0.9.144).
         const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(canvasCode.includes('discoverSelectedSnapshot()') && panelCode.includes('discoverOwnSnapshot()'),
             'B3. sanity: both entry points genuinely define their own action method, each of which calls the identical injected discoverSnapshotCommand, never a second discovery/verification algorithm of its own');
 
@@ -887,7 +884,8 @@ async function run() {
             await walkJsFiles(new URL('../ui/', import.meta.url), '', new Set(), async (relativePath, codeOnly) => {
                 audited.push(relativePath);
                 assert(!forbidden.test(codeOnly), `I1. ui/${relativePath} never constructs an Arweave/Nostr/resolver collaborator or hashes content directly`);
-                if (relativePath !== 'main.js') {
+                // The composition root is ui/main.js plus the compose functions in ui/main/.
+                if (relativePath !== 'main.js' && !relativePath.startsWith('main/')) {
                     assert(!hostCapabilityRead.test(codeOnly), `I2. ui/${relativePath} never reads window.arweaveWallet/window.nostr directly — only ui/main.js may`);
                     assert(!arweaveStoreConstruction.test(codeOnly), `I2b. ui/${relativePath} never constructs an ArweaveContentStore directly — only ui/main.js, the one composition root, may`);
                 }

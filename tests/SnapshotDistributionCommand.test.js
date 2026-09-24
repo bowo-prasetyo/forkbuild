@@ -9,6 +9,8 @@ import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placemen
 import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
 import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.136 — Snapshot Distribution Command.
 //
@@ -43,10 +45,6 @@ import { computeContentHash } from '../serializer/contentHash.js';
 //     through executeSnapshotDistributionCommand(), then discover,
 //     resolve, retrieve, and verify it end to end through the already-
 //     existing decentralized Snapshot retrieval path.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function expectRejects(promise, message) {
     let threw = false;
@@ -155,7 +153,7 @@ async function run() {
     // application/publication/distribution/PublicationDistributionCommand.js. This section now
     // records that later fact instead of re-asserting the superseded one.
     {
-        const uiMainCode = await codeOnlySource('ui/main.js');
+        const uiMainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(uiMainCode.includes('executeSnapshotDistributionCommand('), '2a. ui/main.js now calls executeSnapshotDistributionCommand() directly, wired by 0.9.138 — World View Snapshot Distribution Action');
         console.log('✓ 2. application/snapshot/SnapshotDistributionCommand.js is a plain, constructible collaborator, wired into ui/main.js by 0.9.138');
     }

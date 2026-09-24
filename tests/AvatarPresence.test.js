@@ -3,16 +3,13 @@ import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
 import { Position } from '../core/Position.js';
 import { AvatarProfile } from '../core/AvatarProfile.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.33 — Avatar Identity & Presence Model. This file covers the
 // EPHEMERAL half: core/AvatarPresence.js (the live-state value
 // object) and application/avatar/AvatarPresenceSession.js (the in-memory,
 // no-storage-dependency session that tracks the local user's own
 // presence). See tests/AvatarProfile.test.js for the PERSISTENT half.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function runTests() {
     // -------------------------------------------------------------

@@ -10,7 +10,8 @@ import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.142 — World View Snapshot Discovery Command.
 //
@@ -44,10 +45,6 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 //            discoverOwnSnapshot/discoverSnapshotCommand the same way it
 //            already wires distributeWorldEncounterSnapshot, and
 //            OwnPublicationPanel.js never touches Arweave/Nostr directly.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -170,7 +167,7 @@ async function runTests() {
     // Section B — command boundary (structural).
     // ---------------------------------------------------------------
     {
-        const code = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const code = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         const forbiddenConstruction = [
             "from '../../content/ArweaveContentStore.js'",
             "from '../../application/nostr/NostrSnapshotDiscoveryQueryService.js'",
@@ -367,7 +364,7 @@ async function runTests() {
         assert(/<OwnPublicationPanel[\s\S]{0,400}:discoverSnapshotCommand="discoverOwnSnapshot"/.test(viewCode),
             '20. OwnPublicationPanel is wired to discoverOwnSnapshot, mirroring the existing :snapshotDistributionCommand wiring');
 
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         const forbiddenInUi = [
             'window.arweaveWallet', 'window.nostr', 'WebSocket',
             'new ArweaveContentStore(', 'new NostrSnapshotDiscoveryQueryService(', 'new DecentralizedSnapshotResolver(',
@@ -379,7 +376,7 @@ async function runTests() {
             assert(!panelCode.includes(term), `21. OwnPublicationPanel.js never references '${term}'`);
         }
 
-        const mainCode = await codeOnlySource('ui/main.js');
+        const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(mainCode.includes("composeDiscoverSnapshotRuntime("), '22. ui/main.js composes the discovery runtime');
         assert(mainCode.includes("app.provide('discoverSnapshotCommand', discoverSnapshotCommand)"),
             '23. ui/main.js provides discoverSnapshotCommand app-wide, mirroring snapshotDistributionCommand');

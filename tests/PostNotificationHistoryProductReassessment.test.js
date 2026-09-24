@@ -1,6 +1,5 @@
 import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
@@ -10,7 +9,11 @@ import { PublicationCommentaryNotificationProducer } from '../application/public
 import { GetRecipientNotificationEventsUseCase } from '../application/chat/GetRecipientNotificationEventsUseCase.js';
 import { NotificationEvent } from '../core/NotificationEvent.js';
 import { NotificationEventStore, NotificationPersistenceOutcome } from '../storage/NotificationEventStore.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.287 — Post-Notification Product Reassessment.
 //
@@ -79,15 +82,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 //    policy,
 //    store)
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {
@@ -121,21 +116,6 @@ async function grepCount(pattern, dirs, { ignoreCase = false } = {}) {
 // tests/PostNotificationPersistenceProductReassessment.test.js and
 // tests/NotificationEndToEndLifecycleAudit.test.js.
 // ---------------------------------------------------------------------
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
-}
 
 function makePublication({ id, publisherProvider }) {
     const publication = new Publication({
@@ -461,7 +441,7 @@ async function runTests() {
     {
         // E1. The one real, existing consumer: NotificationHistoryPanel,
         // reached exclusively through WorldView's own thin command.
-        const worldNavSession = await rawSource('application/world/WorldNavigationSession.js');
+        const worldNavSession = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(worldNavSession.includes('getRecipientNotificationEvents'),
             'E1a. application/world/WorldNavigationSession.js still exposes the one thin read method this arc built.');
         const historyPanelCallers = await grepCount('NotificationHistoryPanel', ['ui']);

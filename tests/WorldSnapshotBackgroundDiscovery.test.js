@@ -1,7 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { shouldRefreshSnapshotDiscovery, DEFAULT_DISCOVERY_REFRESH_RADIUS } from '../application/snapshot/ShouldRefreshSnapshotDiscovery.js';
 import { WorldSnapshotDiscoveryMonitor } from '../application/snapshot/WorldSnapshotDiscoveryMonitor.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.186 — World Snapshot Background Discovery.
 //
@@ -38,10 +39,6 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 //   Section L: architectural regression — ui/main.js and
 //              ui/views/WorldView.js wire the monitor the same way every
 //              other Snapshot discovery capability is already wired
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function flushMicrotasks() {
     for (let i = 0; i < 10; i++) {
@@ -327,7 +324,7 @@ async function runTests() {
     // Section L — architectural regression.
     // ---------------------------------------------------------------
     {
-        const mainCode = await codeOnlySource('ui/main.js');
+        const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(mainCode.includes('new WorldSnapshotDiscoveryMonitor({ discoverSnapshotCandidatesCommand })'),
             '28. ui/main.js composes WorldSnapshotDiscoveryMonitor around the SAME existing discoverSnapshotCandidatesCommand — never a second query service');
         assert(mainCode.includes("app.provide('worldSnapshotDiscoveryMonitor', worldSnapshotDiscoveryMonitor)"),

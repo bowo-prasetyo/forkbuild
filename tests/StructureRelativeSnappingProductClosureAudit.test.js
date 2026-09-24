@@ -17,7 +17,8 @@ import { SelectionUseCase } from '../application/editor/SelectionUseCase.js';
 import { StructurePreviewUseCase } from '../application/editor/StructurePreviewUseCase.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.612 — Structure Relative Snapping Product Closure Audit.
 //
@@ -88,20 +89,8 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // headless file; re-reading it satisfies this audit's obligation to
 // confirm it rather than take "single hit" on faith.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function approxEqual(a, b, eps = 1e-9) {
     return Math.abs(a - b) < eps;
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function saveDocument(storage, serializer, document) {

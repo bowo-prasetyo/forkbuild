@@ -3,7 +3,6 @@ import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
 import { RoleProviderResolutionStatus } from '../application/settings/RoleAwareProviderResolver.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
 import { PublicationResolver } from '../application/publication/PublicationResolver.js';
@@ -16,9 +15,11 @@ import { PreferredSnapshotPlacementCreationCoordinator } from '../application/sn
 import { SnapshotPlacementCreationOutcome } from '../application/snapshot/placement/SnapshotPlacementCreationOutcome.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.299 — Content Creation Provider Preference Integration.
 //
@@ -67,31 +68,12 @@ import { computeContentHash } from '../serializer/contentHash.js';
 // application/snapshot/placement/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js
 // for the full design rationale.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 async function expectThrowsAsync(fn, message) {
     let threw = false;
     let errorMessage = null;
     try { await fn(); } catch (e) { threw = true; errorMessage = e.message; }
     assert(threw, message);
     return errorMessage;
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 // A tiny in-memory stand-in for a Kubo node's HTTP RPC API — the

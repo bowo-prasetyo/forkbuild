@@ -1,4 +1,4 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 import { applicationPath } from './support/ApplicationFiles.js';
 
 import { Brick } from '../core/Brick.js';
@@ -10,7 +10,6 @@ import { World } from '../core/World.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { CreateWorldLandmarkCommand } from '../application/commands/CreateWorldLandmarkCommand.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { IdentityUseCase } from '../application/identity/IdentityUseCase.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
@@ -25,7 +24,10 @@ import { WorldAuthorizationService } from '../application/identity/WorldAuthoriz
 import { WorldPresenceActivity } from '../core/WorldPresenceActivity.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
-import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.219 — Post-Presence Product Reassessment.
 //
@@ -86,19 +88,11 @@ import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './su
 // anything it classifies, and does not fix the Section C finding even
 // if genuine — per the brief, that stays a separate decision.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function wait(ms = 0) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 function codeOnlyLines(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//'));
@@ -130,14 +124,6 @@ async function repoWideInstantiationCount(className) {
         }
     }
     return total;
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeDevice(label) {
@@ -443,11 +429,11 @@ async function runTests() {
         // mirrors, Snapshot export composition — all 0.9.213-0.9.215).
         const spatialEditingServiceSource = await rawSource('application/editor/SpatialEditingService.js');
         assert(/getGestureFeedback\(\)\s*\{\s*return this\._gestureFeedback;\s*\}/.test(spatialEditingServiceSource), 'B4a. SpatialEditingService still exposes getGestureFeedback()');
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(/new BuildPublicationSnapshotTransferPackageUseCase\(/.test(mainSource), 'B4b. ui/main.js still composes BuildPublicationSnapshotTransferPackageUseCase');
 
         // B5 — Publication lifecycle + distribution. COMPLETE.
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const clickHandlers = new Set((panelSource.match(/@click="[a-zA-Z]+/g) || []).map((s) => s.replace('@click="', '')));
         assert(clickHandlers.size >= 10, `B5a. OwnPublicationPanel.js still wires at least 10 distinct actions (found ${clickHandlers.size})`);
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
@@ -471,7 +457,7 @@ async function runTests() {
         // B8 — Cross-cutting infrastructure. COMPLETE for cross-document
         // isolation (reconfirmed); the event/error-boundary question
         // gets its own dedicated Section C rather than a footnote here.
-        const navigationSessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const navigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(/this\._historyPreview\.documentId === docId/.test(navigationSessionSource), 'B8a. history preview restore still scoped to its own documentId');
         assert(/checkPlacementOverlap\(documentId,\s*newPosition\)/.test(navigationSessionSource), 'B8b. placement overlap check still takes an explicit documentId');
 
@@ -566,7 +552,7 @@ async function runTests() {
     // record found.
     // ---------------------------------------------------------------
     {
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
 
         // D1 — the two confirmed OBSOLETE findings (explicit in-repo
         // supersession record each), reconfirmed unchanged.
@@ -634,7 +620,7 @@ async function runTests() {
         // documented intent name a user-facing workflow that is
         // currently unreachable, for a reason that is NOT already an
         // established INTENTIONAL_BOUNDARY or a redundant wrapper?
-        const navigationSessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const navigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         // AMENDED by the My Worlds dead-code cleanup: the redundant
         // getRecentlyVisitedWorlds() wrapper was deleted outright (its

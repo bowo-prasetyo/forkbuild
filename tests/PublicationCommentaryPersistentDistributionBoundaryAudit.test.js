@@ -1,9 +1,6 @@
 import { execSync } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
@@ -24,6 +21,10 @@ import {
 } from '../core/SnapshotDiscoveryEnvelope.js';
 import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
 import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.625 — Publication Commentary Persistent Distribution Boundary Audit.
 //
@@ -144,9 +145,7 @@ function n(message) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
+
 function codeOnly(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
@@ -171,21 +170,6 @@ function runGuardLive(relativeTestFile) {
     } catch (error) {
         return { passed: false, stdout: `${error.stdout || ''}${error.stderr || ''}` };
     }
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 // A real, signed Commentary distribution envelope — the exact production
@@ -272,7 +256,7 @@ async function run() {
         assert(nostrResult && nostrResult.published === true,
             n('a real NostrPublicationDiscoveryPublisher, live, accepts and publishes a well-formed LOCATOR envelope — confirming its own actual, working role before Section D tests what it does with a Commentary'));
 
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(/createNostrPublicationDistributionRuntimeAdapter\(\s*\{\s*publish:\s*nostrHostPublisher\s*\}\s*\)/.test(mainSource),
             n('ui/main.js — the one real production composition root — wires createNostrPublicationDistributionRuntimeAdapter() to a genuine host capability (nostrHostPublisher, a NIP-07 window.nostr delegate), not to an empty object; the two older per-file headers (0.9.108/0.9.109) describing "nothing real to adapt yet" describe a state a later, unread-here milestone already superseded — Nostr Publication/Snapshot announcement is a LIVE, reachable production capability today, not inert scaffolding'));
 
@@ -302,7 +286,7 @@ async function run() {
         assert(arweaveResult && arweaveResult.published === true,
             n('a real ArweaveAnnouncementPublisher, live, accepts and publishes the identical well-formed LOCATOR envelope shape Nostr\'s own publisher accepts — confirming its own actual, working role before Section D'));
 
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(/window\.arweaveWallet/.test(mainSource) && /createArweavePublicationDistributionRuntimeAdapter\(\s*\{\s*signer:\s*arweaveHostSigner\s*\}\s*\)/.test(mainSource),
             n('ui/main.js wires a real injected-provider Arweave signer (window.arweaveWallet) into createArweavePublicationDistributionRuntimeAdapter() — the identical "genuinely live, not inert scaffolding" fact Section B established for Nostr, held here for Arweave'));
         assert(/Register Arweave as Snapshot Content Store/.test(mainSource),
@@ -491,7 +475,7 @@ async function run() {
             && commentaryUiHits.includes('ui/views/WorldView.js')
             && commentaryUiHits.includes('ui/main.js'),
             n(`the UI hits for "share/distribute/sync/offline"-adjacent Commentary vocabulary are ui/views/WorldView.js (a 0.9.248 header comment describing its OWN code-style restraint, never a Commentary feature) and, as of 0.9.628, ui/main.js (its own section header comments naming "Publication Commentary Nostr Asynchronous Distribution") — found: ${commentaryUiHits.join(', ') || 'none'}`));
-        const mainCodeOnly = codeOnly(await rawSource('ui/main.js'));
+        const mainCodeOnly = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         assert(!/share.{0,20}commentary|distribute.{0,20}commentary|commentary.{0,20}(share|distribute|sync|offline)/i.test(mainCodeOnly),
             n('with comments stripped, ui/main.js has no REAL affordance matching that vocabulary either — every 0.9.628 hit was a section-header comment naming the milestone, never a UI feature; the two genuine new production call sites 0.9.628 added (a best-effort Nostr publish after creation, and an explicitly-invoked discoverPublicationCommentaryFromNostrCommand) are named `publish`/`discover`, not `share`/`sync`/`offline`, and neither is a user-facing "share this Commentary" affordance of any kind'));
 

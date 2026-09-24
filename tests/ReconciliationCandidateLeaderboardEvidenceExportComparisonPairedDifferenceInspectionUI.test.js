@@ -1,6 +1,7 @@
 import default_ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector, {
     pairDifferenceKey
-} from '../ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector.js';
+} from '../ui/components/reconciliation/EvidenceExportComparisonRecordPairSelector.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.202 — Paired Record Difference Inspection UI.
 //
@@ -11,7 +12,7 @@ import default_ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordP
 // carries a 1-based "Decision Pair N"/"Observation Pair N" label and an
 // "Inspect differences" toggle over that one pair's own source/target
 // labels and differing-field list, exactly the expand/collapse discipline
-// `ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js`
+// `ui/components/reconciliation/EvidenceExportComparisonTable.js`
 // already holds for "Inspect records"/"Inspect identity."
 //
 // Section A: Rendering — the template names both dimensions' pair labels,
@@ -34,10 +35,6 @@ import default_ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordP
 //            0.8.199's/0.8.200's own describeXxx() functions, and still
 //            carries no sorting/ranking/verdict vocabulary, even after the
 //            0.8.202 extension.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function candidateOf(claimId) {
     return Object.freeze({ type: 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT', claimId });
@@ -233,7 +230,7 @@ async function main() {
     //             extension.
     // ---------------------------------------------------------------
     const selectorModuleSource = await (await import('node:fs/promises')).readFile(
-        new URL('../ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector.js', import.meta.url), 'utf8'
+        new URL('../ui/components/reconciliation/EvidenceExportComparisonRecordPairSelector.js', import.meta.url), 'utf8'
     );
     const selectorCodeOnly = selectorModuleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 

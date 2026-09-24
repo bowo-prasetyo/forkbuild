@@ -6,11 +6,12 @@ import { isValidIdentityRevocationRecord, toIdentityRevocationRecord } from '../
 import { isValidIdentitySuccessionRecord } from '../core/IdentitySuccessionEnvelope.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { IncorrectPassphraseError } from '../identity/KeyEncryption.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerAuthenticationState } from '../peer/PeerAuthenticationState.js';
 import * as Ed25519 from '../identity/Ed25519.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.67 — Identity Lifecycle Hardening.
 //
@@ -35,18 +36,6 @@ import * as Ed25519 from '../identity/Ed25519.js';
 // yet a fact that propagates to any other device or peer on its own.
 
 const TEST_ITERATIONS = 25; // fast, deliberately weak KDF cost for tests
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, message) {
     try {

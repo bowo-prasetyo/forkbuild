@@ -7,11 +7,13 @@ import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
 
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.504 — Snapshot Content Storage Choice Capability Boundary Audit.
 //
@@ -118,10 +120,6 @@ import { RoleProviderRole } from '../core/RoleProviderRole.js';
 //   file only confirms that remains true (Section I), never changes it.
 // - **Any UI, panel, or preference control.** Nothing in `ui/` is edited.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 let assertionCount = 0;
 function check(condition, message) {
     assertionCount += 1;
@@ -137,14 +135,6 @@ async function expectRejects(promise, message, ErrorType = null) {
         check(error instanceof ErrorType, `${message} (wrong error type: ${error && error.constructor && error.constructor.name})`);
     }
     return error;
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function fakeCid(text) {
@@ -528,7 +518,7 @@ async function run() {
     // is never an eligible Distribution target.
     // ===============================================================
     {
-        const mainSource = await codeOnlySource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
 
         const placementSiteMatch = mainSource.match(/stores:\s*\[publicationContentStore,\s*new IpfsContentStore\(\{ apiUrl: resolvedIpfsNodeApiUrl \}\)\]/);
         check(Boolean(placementSiteMatch), 'J. ui/main.js\'s real Placement composition site registers exactly [publicationContentStore (local), new IpfsContentStore({ apiUrl: resolvedIpfsNodeApiUrl })] — Local + IPFS, never Arweave');

@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { Brick } from '../core/Brick.js';
 import { Building } from '../core/Building.js';
@@ -15,6 +14,8 @@ import { SelectionUseCase } from '../application/editor/SelectionUseCase.js';
 import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
 import { editorViewFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.214 — Editor Transform Gesture Feedback.
 //
@@ -89,9 +90,6 @@ import { editorViewFiles } from './support/SourceFileGroups.js';
 //              EditorView unmount/remount cannot carry a stale gesture
 //              overlay from a previous mount into a new one.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 function close(actual, expected, message) {
     assert(Math.abs(actual - expected) < 1e-9, `${message}: expected ${expected}, got ${actual}`);
 }
@@ -202,11 +200,6 @@ function selectBrick(editorContext, building, brickId) {
 
 function pointerEvent(clientX, extra = {}) {
     return { button: 0, clientX, clientY: 0, shiftKey: false, ctrlKey: false, metaKey: false, altKey: false, ...extra };
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 function extractArrowBody(source, name) {

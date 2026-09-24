@@ -1,6 +1,8 @@
 import { describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardView } from '../application/claimSnapshotReconciliation/leaderboard/LeaderboardView.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardReadModel } from '../application/claimSnapshotReconciliation/leaderboard/LeaderboardReadModel.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceAgreement } from '../application/claimSnapshotReconciliation/candidate/EvidenceAgreementView.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.178 — Reconciliation Candidate Leaderboard Page View.
 //
@@ -17,14 +19,6 @@ import { describePublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenc
 // Section I: vocabulary/import boundary — no ranking vocabulary, imports
 //            nothing at all
 // Section J: interop — a real 0.8.177 read model flows through unchanged
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 const C1 = Object.freeze({ type: 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT', claimId: 'Claim-1' });
 const C2 = Object.freeze({ type: 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT', claimId: 'Claim-2' });

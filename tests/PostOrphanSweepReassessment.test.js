@@ -2,10 +2,12 @@ import { readFile, readdir } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, editorSessionFiles, mainFiles } from './support/SourceFileGroups.js';
 import {
     reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage
 } from '../application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.328 — Post-Orphan-Sweep Product Evolution Reassessment.
 //
@@ -64,15 +66,7 @@ import {
 //   Section I — Candidate ranking. Vacuous — zero survivors.
 //   Section J — Final roadmap decision.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {
@@ -298,7 +292,7 @@ async function run() {
         assert(canvasSource.includes('registerMaterializedSnapshotWorldSource') || canvasSource.includes('unregisterSelectedSnapshot'), 'C2. Materialization -> World hop still intact.');
 
         assert(await sourceExists('ui/components/PlaceNamingPanel.js'), 'C3. Place Naming -> Publish -> Stranger Discovery -> Adoption: claim/persist hop still exists.');
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(mainSource.includes('NostrPlaceNamingDiscoveryPublisher') || mainSource.includes('placeNamingPublicationRuntime'), 'C3. Publication runtime still composed.');
         assert(await sourceExists('application/placeNaming/PlaceNamingDiscoveryMonitor.js'), 'C3. Publish -> stranger discovery hop still exists.');
         assert((await rawSource('application/placeNaming/PlaceNamingClaimExchange.js')).includes('importClaim'), 'C3. Stranger discovery -> adoption hop still exists.');
@@ -307,7 +301,7 @@ async function run() {
         assert(await sourceExists('application/publication/commentary/PublicationCommentaryNotificationProducer.js'), 'C4. Commentary -> Notification hop still exists.');
         assert((await rawSource('ui/components/NotificationHistoryPanel.js')).includes("name: 'NotificationHistoryPanel'"), 'C4. Notification -> Recipient History hop still exists.');
 
-        const editorSessionSource = await rawSource('application/editor/EditorSession.js');
+        const editorSessionSource = (await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(editorSessionSource.includes('new RemoteDocumentOperationApplicationUseCase()'), 'C5. Collaboration -> Remote Operation -> Causal Readiness -> Application: still live-constructed.');
         assert(await sourceExists('core/DocumentOperationApplicationReadiness.js') && await sourceExists('core/DocumentOperationApplicationEligibility.js'), 'C5. Causal-readiness primitives still exist.');
         assert(await sourceExists('application/document/DocumentOperationRecoveryUseCase.js') && await sourceExists('application/document/RecoveredOperationReplayUseCase.js'), 'C5. Recovery/replay still exists.');
@@ -418,7 +412,7 @@ async function run() {
         // constructs any of the five family writers either, confirming
         // the absence is genuinely at the composition root, not merely
         // absent from component-level code.
-        const mainSrcForFamily = await rawSource('ui/main.js');
+        const mainSrcForFamily = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         for (const writer of RECONCILIATION_FAMILY_WRITERS) {
             assert(!mainSrcForFamily.includes(writer), `E2c-sanity. ui/main.js never references ${writer}.`);
         }

@@ -1,12 +1,14 @@
 import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { Position } from '../core/Position.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { DiscoverPlacementsUseCase } from '../application/placement/DiscoverPlacementsUseCase.js';
-import { worldNavigationSessionFiles, worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, editorSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.307 — Post-Arc Product Evolution Reassessment.
 //
@@ -60,15 +62,7 @@ import { worldNavigationSessionFiles, worldEncounterCanvasFiles, editorViewFiles
 //    rhythm                         STOP)           Commentary    closed                   closed)
 //    established)                                   gap)          0.9.291)
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {
@@ -94,14 +88,6 @@ async function grepCount(pattern, dirs, { ignoreCase = false } = {}) {
             { cwd: SOURCE_ROOT.pathname }).toString();
     } catch { /* grep exits non-zero on no match; treated as zero hits */ }
     return hits.trim() ? hits.trim().split('\n').length : 0;
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 async function runTests() {
@@ -224,7 +210,7 @@ async function runTests() {
         // by another user?" — NO, reconfirmed: the distribution runtime
         // adapters (Nostr/Arweave) are constructed and wired to a real
         // click handler, not merely imported.
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(/createNostrPublicationDistributionRuntimeAdapter/.test(mainSource) && /createArweavePublicationDistributionRuntimeAdapter/.test(mainSource),
             'B6. ui/main.js still constructs both real distribution runtime adapters, not stubs.');
 
@@ -242,9 +228,9 @@ async function runTests() {
         // observe/attribute/export) — REACHABLE_AND_COMPLETE, per this
         // milestone's own dedicated Snapshot research pass. Reconfirmed
         // with one signal per stage rather than the full prior sweep.
-        assert((await rawSource('ui/components/OwnPublicationPanel.js')).includes('discoverOwnSnapshot') &&
+        assert(((await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n')).includes('discoverOwnSnapshot') &&
             ((await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n')).includes('armComparisonSelection') &&
-            (await rawSource('ui/main.js')).includes("app.provide('exportSnapshotCommand'"),
+            ((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n')).includes("app.provide('exportSnapshotCommand'"),
             'C1. Snapshot discovery, comparison, and export all still have real UI call sites.');
         classifications.push(['Snapshot discovery/compare/materialize/place/observe', 'REACHABLE_AND_COMPLETE']);
 
@@ -263,7 +249,7 @@ async function runTests() {
         // composed for World Documents (CreateWorldViewUseCase.js), but
         // EditorSession.js never constructs ReplayDocumentUseCase or
         // RestoreHistoryStateUseCase at all.
-        const editorSessionSource = codeOnlyLines(await rawSource('application/editor/EditorSession.js'));
+        const editorSessionSource = codeOnlyLines((await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n'));
         assert(!/ReplayDocumentUseCase|RestoreHistoryStateUseCase|getTimeline/.test(editorSessionSource),
             'C3. application/editor/EditorSession.js still has zero references to ReplayDocumentUseCase/RestoreHistoryStateUseCase/getTimeline.');
         classifications.push(['History Timeline for Editor/Structure Documents', 'NO_REAL_USER_VALUE-CANDIDATE — never composed, not merely un-wired']);
@@ -341,7 +327,7 @@ async function runTests() {
         // has Review history, not Recover) — reconfirmed fresh here.
         const hasEditorRecovery = /RecoveryObserver/.test((await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n'));
         const hasEditorHistory = await sourceExists('application/editor/EditorSession.js') &&
-            /getTimeline/.test(codeOnlyLines(await rawSource('application/editor/EditorSession.js')));
+            /getTimeline/.test(codeOnlyLines((await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n')));
         const hasWorldRecovery = /Recovery/i.test((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         const hasWorldHistory = /HistoryTimelinePanel/.test((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         assert(hasEditorRecovery && !hasEditorHistory, 'D4a. Editor surface: Recover yes, Review-history no.');
@@ -474,7 +460,7 @@ async function runTests() {
         // "(publication) -> ..." command-prop shape every other
         // OwnPublicationPanel capability (snapshotDistributionCommand,
         // discoverSnapshotCommand, exportSnapshotCommand) already uses.
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(/publication:\s*\{\s*type:\s*Object/.test(codeOnlyLines(panelSource)) && /placementInfo/.test(panelSource),
             'G4. OwnPublicationPanel.js already receives both the full Publication object and a singular placementInfo prop — the exact two inputs an "all placements" section needs, already present.');
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');

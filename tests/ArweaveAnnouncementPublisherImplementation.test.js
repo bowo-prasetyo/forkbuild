@@ -8,6 +8,7 @@ import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnno
 import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
 import { executePublicationDistribution } from '../application/publication/distribution/PublicationDistributionExecutor.js';
 import { composePublicationDistributionRuntime } from '../application/publication/distribution/PublicationDistributionRuntimeComposition.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.428 — Arweave Announcement Publisher Implementation.
 //
@@ -42,10 +43,6 @@ import { composePublicationDistributionRuntime } from '../application/publicatio
 // file does not test `node.tags` discovery reconstruction, multi-substrate
 // selection UI, or automatic Arweave+Nostr fan-out, because this milestone
 // builds none of them.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function expectThrowsAsync(fn, message) {
     let threw = false;

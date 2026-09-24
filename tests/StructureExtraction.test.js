@@ -10,6 +10,7 @@ import { CopyStructureIntoDocumentUseCase } from '../application/editor/CopyStru
 import { CreateStructureFromSelectionUseCase } from '../application/editor/CreateStructureFromSelectionUseCase.js';
 import { ForkStructureUseCase } from '../application/editor/ForkStructureUseCase.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
+import { assert } from './support/Assert.js';
 
 // 0.4.2 — Structure Extraction & Blueprint Creation.
 //
@@ -41,10 +42,6 @@ import { CommandHistory } from '../application/editor/CommandHistory.js';
 //            produces byte-identical Structure geometry and metadata
 //   Guards:  a StructurePlacement selection, an empty selection, and a
 //            missing name are all rejected predictably
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function bricksSnapshot(bricks) {
     return bricks

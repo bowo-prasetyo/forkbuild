@@ -1,8 +1,8 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.460 — Base On-Chain Publishing Capability Boundary Audit.
 //
@@ -113,9 +113,7 @@ function n(message) {
 }
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
-async function source(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
+
 async function sourceExists(relativePath) {
     try { await source(relativePath); return true; } catch { return false; }
 }
@@ -352,7 +350,7 @@ async function run() {
         assert(/path:\s*'\/publications'.*component:\s*DecentralizedPublicationsView/.test(routerSrc.replace(/\n/g, ' ')),
             n('J1. /publications is a real, registered route pointing at DecentralizedPublicationsView'));
 
-        const mainSrc = codeOnly(await source('ui/main.js'));
+        const mainSrc = codeOnly((await Promise.all(mainFiles().map((file) => source(file)))).join('\n'));
         const provideKeys = [
             'baseWalletConnection', 'baseNetworkObserver', 'basePublicationTransactionPlanCoordinator',
             'baseInjectedProviderWalletTransactionSigner', 'baseReviewedSigningCoordinator',

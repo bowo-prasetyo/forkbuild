@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
 import { PublicationCommentaryStore, PublicationCommentaryConflictError } from '../storage/PublicationCommentaryStore.js';
@@ -22,7 +21,10 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 
 import PublicationCard from '../ui/components/PublicationCard.js';
 import PublicationCommentarySection from '../ui/components/PublicationCommentarySection.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.541 — Publication Commentary Product Reassessment.
 //
@@ -97,10 +99,6 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 //
 // FINDING: see the verdict block at the end of this file.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function wait(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -110,9 +108,6 @@ function codeOnlyLines(source) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 // Mirrors tests/PostPublicationCommentaryProductReassessment.test.js's own
 // helper — the one grep-verifiable signal this reassessment lineage uses
@@ -125,14 +120,6 @@ async function grepFiles(pattern, dirs) {
             { cwd: SOURCE_ROOT.pathname }).toString();
     } catch { /* grep exits non-zero on no match; treated as zero hits */ }
     return hits.trim() ? hits.trim().split('\n').sort() : [];
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 // Reused verbatim from tests/PublicationCatalogActionSafetyProductReassessment.test.js
@@ -225,7 +212,7 @@ async function run() {
             && withSubmit.includes('ui/components/worldEncounterCanvas/publicationDiscoveryMethods.js'),
             `1. FRESH INVENTORY: exactly three UI files define a real commentary SUBMIT method today (found: ${withSubmit.join(', ')}) — the same three 0.9.248/0.9.289/0.9.291 built and 0.9.305 last confirmed (0.9.289's PublicationCard.js submit now lives in the shared PublicationCommentarySection.js that both catalog views mount), re-verified now rather than assumed still current. (ui/views/WorldView.js and ui/main.js merely wire the command through; ui/components/NotificationHistoryPanel.js only displays the resulting NotificationEvents — none of the three defines a submit method of its own.)`);
 
-        ownPanelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         // The card view's Commentary is the card plus the shared
         // PublicationCommentarySection.js it mounts while expanded.
         cardSource = await readSource('ui/components/PublicationCard.js') + await readSource('ui/components/PublicationCommentarySection.js');

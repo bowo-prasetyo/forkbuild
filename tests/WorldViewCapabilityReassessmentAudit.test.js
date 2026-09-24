@@ -36,7 +36,8 @@ import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.168 — World View Capability Reassessment & Architecture Audit.
 //
@@ -108,20 +109,8 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //              `.UNAVAILABLE`, `SnapshotWorldRegistrationOutcome.REGISTERED`)
 //              stays exactly as narrow as it already was.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function flush() {
     return new Promise((resolve) => setTimeout(resolve, 0));
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 const stubIdentityProvider = {

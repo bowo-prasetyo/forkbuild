@@ -8,6 +8,8 @@ import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.107 — Publication Distribution Runtime Provider.
 //
@@ -36,10 +38,6 @@ import { Signature } from '../core/Signature.js';
 //              — still ends in the SAME plain notice 0.9.104/0.9.105/
 //              0.9.106 already produce
 //   Section C: architectural regression — ui/main.js wiring
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -220,7 +218,7 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const { readFile } = await import('node:fs/promises');
-        const source = await readFile(new URL('../ui/main.js', import.meta.url), 'utf8');
+        const source = (await Promise.all(mainFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         assert(codeOnly.includes("import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js'"),

@@ -1,5 +1,4 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
@@ -10,6 +9,8 @@ import { DeviceAuthorizationPropagationUseCase } from '../application/identity/D
 import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
 import { FriendshipState } from '../core/FriendshipState.js';
 import { ChatUseCase } from '../application/chat/ChatUseCase.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.79 — Multi-Device Social State Semantics.
 //
@@ -28,17 +29,6 @@ import { ChatUseCase } from '../application/chat/ChatUseCase.js';
 // this milestone's own new query) rather than the raw, literally-
 // authenticated key — see application/identity/FriendRelationshipUseCase.js's and
 // application/chat/ChatUseCase.js's own 0.2.79 headers.
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function wait(ms = 0) {
     return new Promise((resolve) => setTimeout(resolve, ms));

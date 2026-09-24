@@ -26,12 +26,14 @@ import { resolveSnapshotPublicationAttribution } from '../application/snapshot/S
 import { SnapshotPublicationAttributionOutcome } from '../application/snapshot/SnapshotPublicationAttributionOutcome.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { computeContentHash } from '../serializer/contentHash.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.148 — End-to-End Decentralized Discovery Runtime Audit.
 //
@@ -126,10 +128,6 @@ import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 //              live reproduction proving one real client instance
 //              genuinely drives both independently-composed services to
 //              real results over one shared relay.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -276,14 +274,6 @@ function gatewayRetrievalFetch(materialByTxId) {
         }
         return new Response(JSON.stringify(material), { status: 200 });
     };
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function buildRealSigner(storage, username) {
@@ -846,7 +836,7 @@ async function run() {
     // ui/main.js's own composition, plus a live reproduction.
     // ===============================================================
     {
-        const mainCodeOnly = await codeOnlySource('ui/main.js');
+        const mainCodeOnly = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
 
         const constructionMatches = mainCodeOnly.match(/createNostrRelayQueryClient\(/g) || [];
         assert(constructionMatches.length === 1, 'I1. ui/main.js constructs the relay query client exactly once — never a second instance for either family');

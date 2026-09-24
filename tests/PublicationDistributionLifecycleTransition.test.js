@@ -9,6 +9,7 @@ import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPu
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.51 — Publication Distribution Lifecycle Transition Boundary.
 // See docs/Roadmap.md, "0.9.51 — Publication Distribution Lifecycle
@@ -29,10 +30,6 @@ import { Signature } from '../core/Signature.js';
 //              mutated
 //   Section H: determinism and freezing
 //   Section I: architectural regression
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function signedPublication(overrides = {}) {
     const publication = new Publication({

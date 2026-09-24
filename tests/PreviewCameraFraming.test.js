@@ -1,15 +1,12 @@
 import { SpatialBounds } from '../core/SpatialBounds.js';
 import { computeThumbnailCamera } from '../core/PreviewCameraFraming.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.32 — deterministic camera framing, pure geometry. No Three.js,
 // no rendering, no randomness — see core/PreviewCameraFraming.js's own
 // comment for the exact guarantee under test: SAME bounds -> SAME
 // intended camera shot, always. (Byte-identical pixels across GPUs is
 // explicitly NOT the guarantee — that's verified visually, not here.)
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function runTests() {
     const small = new SpatialBounds({ min: { x: -0.5, y: 0, z: -0.5 }, max: { x: 0.5, y: 1, z: 0.5 } });

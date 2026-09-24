@@ -4,6 +4,7 @@ import {
     isValidAvatarContinuousMovementIntent,
     deriveAvatarContinuousMovementIntent
 } from '../core/AvatarContinuousMovementIntent.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.64 — Avatar Continuous Movement Intent, core/AvatarContinuousMovementIntent.js.
 //
@@ -21,10 +22,6 @@ import {
 // Central architectural claim under test throughout: this milestone
 // moves nothing. Every assertion below concerns only what INTENT should
 // exist, never an avatar position — see docs/Roadmap.md, 0.9.64.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function runTests() {
     const { NONE, FORWARD, BACKWARD } = AvatarContinuousMovementIntent;

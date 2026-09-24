@@ -4,6 +4,7 @@ import { Position } from '../core/Position.js';
 import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
 import { EventBus } from '../core/events/EventBus.js';
 import { DomainEvent } from '../core/events/Event.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.702 — World Animal Decorations, core/AnimalDecoration.js +
 // core/World.js's own animalDecorations wiring.
@@ -14,10 +15,6 @@ import { DomainEvent } from '../core/events/Event.js';
 //   Section D: backward compatibility — old World JSON has no
 //              animalDecorations field at all
 //   Section E: domain events
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function runTests() {
     // -------------------------------------------------------------

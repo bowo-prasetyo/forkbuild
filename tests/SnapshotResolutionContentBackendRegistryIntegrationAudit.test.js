@@ -4,7 +4,6 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
 import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
 import { resolveSnapshotDistributionContentStore } from '../application/snapshot/SnapshotDistributionContentBackendSelection.js';
@@ -17,6 +16,9 @@ import { DecentralizedSnapshotResolver } from '../application/snapshot/Decentral
 import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 import { executeDiscoverSnapshotCommand } from '../application/snapshot/DiscoverSnapshotCommand.js';
 import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.508 — Snapshot Resolution Content Backend Registry Integration.
 //
@@ -113,22 +115,10 @@ import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/R
 //   this file audits only the ONE gap 0.9.507 found and this milestone
 //   fixed.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 let assertionCount = 0;
 function check(condition, message) {
     assertionCount += 1;
     assert(condition, message);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function fakeCid(text) {
@@ -284,12 +274,15 @@ async function run() {
     // Section A — production wiring.
     // ===============================================================
     {
-        const mainSource = await readFile(new URL('../ui/main.js', import.meta.url), 'utf8');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
 
-        check(mainSource.includes("resolver: snapshotResolver,\n    storeRegistry: publicationSnapshotPlacementResolutionStoreRegistry\n});\napp.provide('discoverSnapshotCommand'"),
-            'A. discoverSnapshotCommand now passes storeRegistry: publicationSnapshotPlacementResolutionStoreRegistry, immediately followed by its own app.provide()');
-        check(mainSource.includes("resolver: snapshotResolver,\n    storeRegistry: publicationSnapshotPlacementResolutionStoreRegistry\n});\napp.provide('resolveSelectedSnapshotCommand'"),
-            'A. resolveSelectedSnapshotCommand now passes storeRegistry: publicationSnapshotPlacementResolutionStoreRegistry, immediately followed by its own app.provide()');
+        // Both commands are built in ui/main/composeSnapshotDiscovery.js and provided by ui/main.js.
+        check(/const discoverSnapshotCommand = \(contentHash\) => executeDiscoverSnapshotCommand\(\{[^;]*resolver: snapshotResolver,\s*storeRegistry: publicationSnapshotPlacementResolutionStoreRegistry\s*\}\);/.test(mainSource)
+            && mainSource.includes("app.provide('discoverSnapshotCommand', discoverSnapshotCommand);"),
+            'A. discoverSnapshotCommand now passes storeRegistry: publicationSnapshotPlacementResolutionStoreRegistry, and is provided app-wide');
+        check(/const resolveSelectedSnapshotCommand = \(candidate\) => executeResolveSelectedSnapshotCommand\(\{[^;]*resolver: snapshotResolver,\s*storeRegistry: publicationSnapshotPlacementResolutionStoreRegistry\s*\}\);/.test(mainSource)
+            && mainSource.includes("app.provide('resolveSelectedSnapshotCommand', resolveSelectedSnapshotCommand);"),
+            'A. resolveSelectedSnapshotCommand now passes storeRegistry: publicationSnapshotPlacementResolutionStoreRegistry, and is provided app-wide');
 
         check(!mainSource.includes('contentStore: snapshotRetrievalContentStore'),
             'A. neither production command wiring passes the old fixed, Arweave-only contentStore any longer');

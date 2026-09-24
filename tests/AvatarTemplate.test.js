@@ -3,6 +3,7 @@ import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
 import { validateAvatarAppearance, isValidHexColor } from '../core/AvatarAppearanceValidator.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.34 — Avatar Templates & Customization. Covers core/AvatarTemplate.js
 // (declarative template data + the lenient resolveEffectiveAppearance
@@ -11,10 +12,6 @@ import { validateAvatarAppearance, isValidHexColor } from '../core/AvatarAppeara
 // core/library/CoreAvatarTemplateLibrary.js data itself. See
 // tests/AvatarProfile.test.js for AvatarProfileUseCase's own
 // validate-on-write / never-fail-on-read integration.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function buildTemplate() {
     return new AvatarTemplate({

@@ -14,14 +14,11 @@ import { EditorContext } from '../application/editor/EditorContext.js';
 import { SelectionUseCase } from '../application/editor/SelectionUseCase.js';
 import { SelectionTool } from '../application/tools/SelectionTool.js';
 import { TransformMath } from '../application/editor/TransformMath.js';
+import { assert } from './support/Assert.js';
 
 // ---------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function close(actual, expected, message) {
     assert(Math.abs(actual - expected) < 1e-9, `${message}: expected ${expected}, got ${actual}`);

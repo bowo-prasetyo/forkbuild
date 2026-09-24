@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
@@ -14,7 +13,6 @@ import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
 import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
@@ -27,6 +25,10 @@ import { PlacePublicationUseCase } from '../application/placement/PlacePublicati
 import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
 import { MoveWorldPlacementUseCase } from '../application/placement/MoveWorldPlacementUseCase.js';
 import { DiscoverWorldsUseCase } from '../application/discovery/DiscoverWorldsUseCase.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.467 — Orphaned Placement Lifecycle Semantics Reconciliation Audit.
 //
@@ -89,18 +91,6 @@ import { DiscoverWorldsUseCase } from '../application/discovery/DiscoverWorldsUs
 // does NOT decide a cleanup policy. It closes the semantics question the
 // proposal opened, using the decision this codebase already made.
 
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function assertThrows(fn, message) {
     try {
         fn();
@@ -121,11 +111,6 @@ function makeDocument(title, brickCount = 1) {
         world,
         metadata: new DocumentMetadata({ title, author: 'alice', license: new License({ id: LicenseId.CC0_1_0 }) })
     });
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 function codeOnlyLines(source) {
@@ -344,7 +329,7 @@ async function runTests() {
     {
         const unpublishUseCaseSource = await rawSource('application/publication/UnpublishDocumentUseCase.js');
         const publisherProviderSource = await rawSource('publisher/LocalPublisherProvider.js');
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const registrySource = await rawSource('placement/LocalPlacementRegistry.js');
 
         const cleanupVocabulary = /RemoveWorldPlacementUseCase|PlacementRegistry|SpatialIndexProvider|_placementRegistry|_spatialIndexProvider/;

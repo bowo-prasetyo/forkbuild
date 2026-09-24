@@ -1,11 +1,11 @@
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { createArweaveInjectedProviderSigner } from '../arweave/ArweaveInjectedProviderSigner.js';
 import { createNostrInjectedProviderPublisher } from '../nostr/NostrInjectedProviderPublisher.js';
 import { composeSnapshotDistributionRuntime } from '../application/snapshot/SnapshotDistributionRuntimeComposition.js';
 import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
 
 // Host Wallet Capability Lazy Resolution Fix.
 //
@@ -69,10 +69,6 @@ function n(message) {
     return `${assertionCount + 1}. ${message}`;
 }
 
-const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
-async function source(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
 function codeOnly(text) {
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
@@ -85,9 +81,12 @@ function codeOnly(text) {
 function extractBlock(mainSource, startMarker) {
     const start = mainSource.indexOf(startMarker);
     if (start === -1) return null;
-    const end = mainSource.indexOf('\n};', start);
+    // The block's closing "};" sits at the same indentation as its opener.
+    const indent = mainSource.slice(mainSource.lastIndexOf('\n', start) + 1, start);
+    const closing = `\n${indent}};`;
+    const end = mainSource.indexOf(closing, start);
     if (end === -1) return null;
-    return mainSource.slice(start, end + 3); // include the closing "\n};"
+    return mainSource.slice(start, end + closing.length);
 }
 
 function fakeArweaveWallet({ idPrefix = 'FakeTx' } = {}) {
@@ -143,7 +142,7 @@ function makeFakeRelaySocketClass() {
 }
 
 async function run() {
-    const mainSource = await source('ui/main.js');
+    const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
 
     // ===============================================================
     // Section A — structural.

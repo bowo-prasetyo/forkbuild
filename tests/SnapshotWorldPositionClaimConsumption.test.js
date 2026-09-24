@@ -16,8 +16,10 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
 import { Position } from '../core/Position.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.172 — Decentralized Snapshot Position Claim Consumption.
 //
@@ -50,23 +52,11 @@ import { computeContentHash } from '../serializer/contentHash.js';
 //              unmodified by this milestone).
 //   Section K: structural sweep — deliberate exclusions.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));
     for (let i = 0; i < 10; i++) {
         await Promise.resolve();
     }
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeFakeArweaveGateway() {
@@ -618,7 +608,7 @@ async function run() {
         // materialization command itself — it only reads
         // selectedSnapshotCandidate/publication, already computed by
         // separate clicks.
-        const panelSource = await readFile(new URL('../ui/components/OwnPublicationPanel.js', import.meta.url), 'utf8');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const bodyStart = panelSource.indexOf('useClaimedSnapshotPosition() {');
         const bodyEnd = panelSource.indexOf('\n        },', bodyStart);
         const body = panelSource.slice(bodyStart, bodyEnd);

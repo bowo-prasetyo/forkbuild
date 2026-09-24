@@ -2,17 +2,19 @@ import {
     buildDecisionEntries,
     buildObservationEntries,
     default as ReconciliationCandidateEvidenceDetailPanel
-} from '../ui/components/ReconciliationCandidateEvidenceDetailPanel.js';
+} from '../ui/components/reconciliation/CandidateEvidenceDetailPanel.js';
 import {
     buildLeaderboardRows,
     default as ReconciliationCandidateLeaderboardTable
-} from '../ui/components/ReconciliationCandidateLeaderboardTable.js';
+} from '../ui/components/reconciliation/CandidateLeaderboardTable.js';
 import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry } from '../application/claimSnapshotReconciliation/decision/History.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation } from '../application/claimSnapshotReconciliation/revalidationObservation/RevalidationObservation.js';
 import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryEntry } from '../application/claimSnapshotReconciliation/revalidationObservation/History.js';
 import { reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage } from '../application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js';
 import { reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetail } from '../application/claimSnapshotReconciliation/candidate/EvidenceDetailView.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.182 — Reconciliation Candidate Evidence Detail View (UI layer).
 //
@@ -38,14 +40,6 @@ import { PublicationObservationArchive } from '../application/publication/observ
 //            reads for `page`
 // Section F: no ranking/judgment vocabulary anywhere in the new UI code;
 //            no mutation of either archive through the extended pipeline
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function genuineDecisionRecord(candidate, decision, decidedAt) {
     return Object.freeze({ decided: true, candidate: Object.freeze(candidate), decision, decidedAt: decidedAt.toISOString() });
@@ -275,7 +269,7 @@ async function run() {
         assert(missingDetail === null, '36. detailFor() returns null, never throws, for a candidate key with no matching detail entry');
 
         const moduleSource = await (await import('node:fs/promises')).readFile(
-            new URL('../ui/components/ReconciliationCandidateLeaderboardTable.js', import.meta.url), 'utf8'
+            new URL('../ui/components/reconciliation/CandidateLeaderboardTable.js', import.meta.url), 'utf8'
         );
         assert(moduleSource.includes("Inspect Evidence"), '37. the template carries the Inspect Evidence button copy');
         assert(moduleSource.includes('<ReconciliationCandidateEvidenceDetailPanel'), '38. the template renders the detail panel component');

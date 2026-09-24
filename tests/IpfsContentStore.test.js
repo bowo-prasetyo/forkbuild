@@ -1,6 +1,7 @@
 import { IpfsContentStore, ContentUnavailableError } from '../content/IpfsContentStore.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { assert } from './support/Assert.js';
 
 // 0.7.1 — IPFS Content Publication & Resolution.
 //
@@ -24,10 +25,6 @@ import { computeContentHash } from '../serializer/contentHash.js';
 //              silent success
 //
 // See docs/Principles.md, "Availability Is Not Validity (0.7.1)."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function expectRejects(promiseFn, message, ErrorType = null) {
     let threw = false;

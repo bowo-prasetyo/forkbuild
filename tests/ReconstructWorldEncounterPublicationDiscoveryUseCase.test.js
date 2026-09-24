@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
@@ -9,7 +8,10 @@ import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.651 — Persist World-Encounter Publication Admissions.
 //
@@ -31,25 +33,8 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //   Section F — constructor contract.
 //   Section G — ui/main.js composition wiring.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function throwsFn(fn) {
     try { fn(); return false; } catch { return true; }
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makePublication({ id, documentId = id, title = 'World Encountered Work', author = 'someone-else', contentHash = `hash-${id}` }) {
@@ -228,7 +213,7 @@ async function run() {
     // Section G — ui/main.js composition wiring.
     // ===============================================================
     {
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
 
         assert(mainSource.includes("import { CreateWorldEncounterPublicationAdmissionLogUseCase } from '../application/worldEncounter/CreateWorldEncounterPublicationAdmissionLogUseCase.js';"),
             '1. ui/main.js imports the composition-root use case.');

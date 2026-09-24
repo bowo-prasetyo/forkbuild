@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { NostrRelayConfiguration, DEFAULT_NOSTR_RELAY_URL } from '../core/NostrRelayConfiguration.js';
@@ -13,6 +12,8 @@ import {
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
 import { executePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommand.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.442 — Nostr Relay Multiplicity & Resilience Product Reassessment.
 //
@@ -89,9 +90,6 @@ function n(message) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 const HEX64_A = 'a'.repeat(64);
 const HEX64_B = 'b'.repeat(64);
@@ -150,7 +148,7 @@ async function run() {
         // as 0.9.439's own Section F1 already found for the read/write
         // split, but this time also checking that the write side's OWN
         // default is untouched by any settings-resolved value at all.
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         // UNIFIED — Nostr Publication Relay Set Discovery Alignment (0.9.451)
         // originally split World Encounter (Publication) discovery onto its
         // own, separately-configured relay SET, apart from the general
@@ -257,7 +255,7 @@ async function run() {
         // the same campaign today — fan-out (and failover) are both
         // exclusively THIS TEST's own construction, never an existing
         // product capability.
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const publisherConstructionCount = (mainSource.match(/new NostrPublicationDiscoveryPublisher\(/g) || []).length
             + (mainSource.match(/composePublicationDistributionRuntime\(/g) || []).length;
         assert(publisherConstructionCount <= 1,

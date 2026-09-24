@@ -1,5 +1,7 @@
 import { readFile } from 'node:fs/promises';
-import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.252 — Post-Commentary-UI Product Reassessment.
 //
@@ -44,15 +46,7 @@ import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './su
 //                                                           investigation,
 //                                                           no pick)
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {
@@ -120,8 +114,8 @@ async function runTests() {
         const store = await rawSource('storage/PublicationCommentaryStore.js');
         const addUseCase = await rawSource('application/publication/commentary/AddPublicationCommentaryUseCase.js');
         const getUseCase = await rawSource('application/publication/commentary/GetPublicationCommentariesUseCase.js');
-        const navSession = await rawSource('application/world/WorldNavigationSession.js');
-        const panel = await rawSource('ui/components/OwnPublicationPanel.js');
+        const navSession = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
+        const panel = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
 
         assert(/publicationId/.test(domain) && !/\bdocumentId\b/.test(codeOnlyLines(domain)),
             'A3a. core/PublicationCommentary.js still keys commentary on publicationId, never documentId (0.9.242).');
@@ -163,7 +157,7 @@ async function runTests() {
         const editorView = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const createWorldView = await rawSource('application/world/CreateWorldViewUseCase.js');
-        const mainJs = await rawSource('ui/main.js');
+        const mainJs = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
 
         assert(/new\s+EditorSession\s*\(/.test(editorView), 'B1. Editor still constructs a real EditorSession.');
         capabilityRegister.push(['Editor', 'COMPLETE']);
@@ -204,7 +198,7 @@ async function runTests() {
         const canComment = await rawSource('application/publication/CanCommentOnPublicationUseCase.js');
         assert(canComment.includes('ANY authenticated identity may comment on ANY Publication') || /publication\s*=\s*this\._discoveryProvider\.findById\(publicationId\)/.test(canComment),
             'B12a. application/publication/CanCommentOnPublicationUseCase.js still enforces no ownership restriction — only "does this Publication resolve" (0.9.246, unchanged).');
-        const navSession = await rawSource('application/world/WorldNavigationSession.js');
+        const navSession = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const getCommentaryMethod = navSession.match(/getPublicationCommentaries\(publicationId\) \{[\s\S]*?\n    \}/)[0];
         assert(!/isOwn|owner|myIdentityId/i.test(getCommentaryMethod),
             'B12b. WorldNavigationSession#getPublicationCommentaries() still takes a bare publicationId with no "is this mine" check of its own.');
@@ -309,7 +303,7 @@ async function runTests() {
         // subscription/polling/websocket vocabulary in the real read
         // methods.
         const getUseCase = await rawSource('application/publication/commentary/GetPublicationCommentariesUseCase.js');
-        const panel = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panel = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const refreshMethod = panel.match(/refreshPublicationCommentaries\(\) \{[\s\S]*?\n        \},/);
         assert(refreshMethod, 'C6a. refreshPublicationCommentaries() still exists in its expected shape.');
         const syncVocab = /subscri|\bpoll(?:ing)?\b|websocket|nostr/i;
@@ -360,7 +354,7 @@ async function runTests() {
             assert(new RegExp(`\\b${field}\\b`).test(publicationDomain),
                 `D1a. publisher/Publication.js's own constructor still carries a ${field} field.`);
         }
-        const panel = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panel = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const detailBlock = panel.match(/<dl v-if="publication" class="own-publication-detail">[\s\S]*?<\/dl>/)[0];
         assert(detailBlock.includes('publication.title') && detailBlock.includes('publication.author'),
             'D1b. own-publication-detail still renders publication.title and publication.author.');

@@ -1,5 +1,4 @@
 import { readFile } from 'node:fs/promises';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { WorldEncounterMaterialSignatureVerifier } from '../application/worldEncounter/WorldEncounterMaterialSignatureVerifier.js';
 import {
@@ -9,25 +8,12 @@ import {
 } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import { Publication } from '../publisher/Publication.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.41 — World Encounter Material Signature Verifier.
 // See docs/Roadmap.md, "0.9.41 — World Encounter Material Signature Verifier."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function selectionOf({ kind = WorldEncounterKind.PUBLICATION, objectId = 'pub-123', origin = 'decentralized:nostr' } = {}) {
     return Object.freeze({ kind, objectId, origin });

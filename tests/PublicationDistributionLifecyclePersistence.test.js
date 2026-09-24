@@ -10,6 +10,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.54 — Publication Distribution Lifecycle Snapshot Persistence
 // Boundary.
@@ -34,10 +35,6 @@ import { Signature } from '../core/Signature.js';
 //   Section K: the constructor requires a save/load/remove/list
 //              implementation
 //   Section L: architectural regression
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 class InMemoryStorageProvider extends StorageProvider {
     constructor() {

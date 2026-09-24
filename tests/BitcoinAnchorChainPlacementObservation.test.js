@@ -10,6 +10,7 @@ import {
     describeBitcoinAnchorChainPlacementObservations
 } from '../application/anchoring/bitcoin/BitcoinAnchorChainPlacementObservationView.js';
 import { appendBitcoinAnchorConfirmationObservationHistoryEntry } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistory.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.76 — Bitcoin Anchor Chain Placement Change Observation.
 //
@@ -35,10 +36,6 @@ import { appendBitcoinAnchorConfirmationObservationHistoryEntry } from '../appli
 //            valid/canonical/reliable/reorg) anywhere in this milestone's
 //            output — "reorganization" remains fine in comments/docs, but
 //            never in a field's own name or value
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function confirmed({ txid, blockHash, blockHeight, confirmationCount, observedAt }) {
     return Object.freeze({

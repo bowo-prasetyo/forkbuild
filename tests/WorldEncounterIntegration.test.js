@@ -5,10 +5,7 @@ import {
     LOCAL_WORLD_DISCOVERY_ORIGIN
 } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { describePeerWorldDiscoverySource } from '../peer/PeerWorldDataIngress.js';
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
+import { assert } from './support/Assert.js';
 
 function connectedPeerOf(identityId) {
     return { remoteIdentity: identityId ? { identityId } : null };

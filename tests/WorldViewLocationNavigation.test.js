@@ -4,7 +4,6 @@ import { StructurePlacement } from '../core/StructurePlacement.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
@@ -21,6 +20,8 @@ import { WorldLocationDirectory, ORIGIN_LOCATION_ID } from '../application/world
 import { CameraFocusAnimator } from '../application/editor/CameraFocusAnimator.js';
 import { Publication } from '../publisher/Publication.js';
 import { computeCompassHeading, resolveCompassLabel } from '../core/CompassHeading.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.2.94 — World View Location & Navigation.
 //
@@ -57,18 +58,6 @@ import { computeCompassHeading, resolveCompassLabel } from '../core/CompassHeadi
 //              proven to be camera-only, exactly as docs/Principles.md's
 //              "World View Navigation Operates On Spatial Observation,
 //              Never On Document Mutation (0.2.94)" claims.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 // A stateful camera render-facade stub — unlike WorldViewInstanceInspection's
 // own stubRenderer() (whose setCameraState() is a fire-and-forget no-op,

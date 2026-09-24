@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { resolveArweaveUploaderOptions, resolveNostrPublisherOptions } from '../application/publication/distribution/PublicationDistributionConfigurationProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.105 — Publication Distribution Configuration Boundary.
 // See docs/Roadmap.md, "0.9.105 — Publication Distribution Configuration
@@ -16,10 +17,6 @@ import { resolveArweaveUploaderOptions, resolveNostrPublisherOptions } from '../
 //   Section E: neither resolver mutates its own input or the app-wide
 //              defaults either underlying constructor already owns
 //   Section F: architectural regression
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function run() {
     // ---------------------------------------------------------------

@@ -12,6 +12,7 @@ import { BlockchainKind } from '../application/anchoring/BlockchainKind.js';
 import { BlockchainPublicationIdentity } from '../application/anchoring/BlockchainPublicationIdentity.js';
 import { BitcoinAnchorPublicationRecord } from '../application/anchoring/bitcoin/BitcoinAnchorPublicationRecord.js';
 import { BitcoinWalletConnection } from '../anchoring/BitcoinWalletConnection.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.90 — Explicit Base Network & Account Observation.
 //
@@ -40,10 +41,6 @@ import { BitcoinWalletConnection } from '../anchoring/BitcoinWalletConnection.js
 //              implementation existing
 //   Section H: a connected network reporting a non-Base chain id is never
 //              labeled BASE, and the actual chain id is never discarded
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function expectThrowsAsync(fn, message) {
     let threw = false;

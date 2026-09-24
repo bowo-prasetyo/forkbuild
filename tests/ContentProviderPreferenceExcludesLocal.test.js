@@ -2,13 +2,13 @@ import { readFile } from 'node:fs/promises';
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { RoleAwareProviderResolver } from '../application/settings/RoleAwareProviderResolver.js';
 import { ResolvePreferredRoleProviderUseCase } from '../application/settings/ResolvePreferredRoleProviderUseCase.js';
 import {
     PreferredSnapshotPlacementCreationCoordinator,
     NON_PREFERABLE_CONTENT_STORAGE_TYPES
 } from '../application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // Content Provider settings no longer offer "Local".
 //
@@ -28,14 +28,6 @@ let assertionCount = 0;
 function assert(condition, message) {
     assertionCount += 1;
     if (!condition) throw new Error(`ASSERT FAILED: ${assertionCount}. ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeCoordinator(storageTypes = ['local', 'ipfs', 'ar']) {

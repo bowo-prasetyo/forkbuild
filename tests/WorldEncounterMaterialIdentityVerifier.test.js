@@ -6,17 +6,11 @@ import {
     WorldEncounterMaterialVerifier
 } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.9.38 — World Encounter Material Identity Verifier.
 // See docs/Roadmap.md, "0.9.38 — World Encounter Material Identity Verifier."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function selectionOf({ kind = WorldEncounterKind.PUBLICATION, objectId = 'pub-123', origin = 'decentralized:nostr' } = {}) {
     return Object.freeze({ kind, objectId, origin });

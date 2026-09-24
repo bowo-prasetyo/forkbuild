@@ -2,6 +2,7 @@ import { BitcoinAnchorTransactionBuilder } from '../anchoring/BitcoinAnchorTrans
 import { BitcoinAnchorPsbtBuilder } from '../anchoring/BitcoinAnchorPsbtBuilder.js';
 import { BitcoinAnchorSignedPsbtInspector } from '../anchoring/BitcoinAnchorSignedPsbtInspector.js';
 import { BitcoinAnchorWalletSigner } from '../anchoring/BitcoinAnchorWalletSigner.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.50 — Explicit Bitcoin Wallet Signing.
 //
@@ -45,10 +46,6 @@ import { BitcoinAnchorWalletSigner } from '../anchoring/BitcoinAnchorWalletSigne
 //              base64 alike.
 //
 // See docs/Principles.md, "A Wallet's Claim Is Not The Signature (0.8.50)."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

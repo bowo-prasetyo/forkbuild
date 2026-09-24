@@ -1,8 +1,9 @@
-import { readFile, rename } from 'node:fs/promises';
+import { rename } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.398 — Stable Plateau Closure Audit.
 //
@@ -84,9 +85,6 @@ function n(message) {
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
 
-async function readSource(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
 async function sourceExists(relativePath) {
     try { await readSource(relativePath); return true; } catch { return false; }
 }

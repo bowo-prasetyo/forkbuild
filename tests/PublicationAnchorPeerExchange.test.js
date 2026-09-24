@@ -3,8 +3,6 @@ import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPub
 import { PublicationAnchorExchange } from '../application/anchoring/PublicationAnchorExchange.js';
 import { ExternalAnchorVerifier } from '../application/anchoring/ExternalAnchorVerifier.js';
 import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import {
     PublicationAnchorPeerMessageKind,
@@ -19,6 +17,9 @@ import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.8.4 — External Anchor Publication Over Peers.
 // 0.8.5 — Historical Anchor Discovery & Synchronization.
@@ -69,10 +70,6 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 // Results (0.8.4)," and "Synchronization Distributes Claims, Not
 // Verification, Truth, Or Authority (0.8.5)."
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function expectThrows(fn, message) {
     let threw = false;
     try { fn(); } catch (e) { threw = true; }
@@ -81,21 +78,6 @@ function expectThrows(fn, message) {
 
 function wait(ms = 20) {
     return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 function signAnchor(identityProvider, fields) {

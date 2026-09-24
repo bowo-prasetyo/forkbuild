@@ -50,6 +50,7 @@
 import { terrainHeightAt } from './TerrainHeightField.js';
 import { surfaceCategoryAt, SURFACE_CATEGORY, WATER_LEVEL, HIGHLAND_ELEVATION, SURFACE_PALETTE } from './TerrainSurface.js';
 import { ecologyGroundColorAt } from './TerrainEcology.js';
+import { lerp, smoothstep } from '../utils/interpolation.js';
 
 export const HYDROLOGY_FEATURE = Object.freeze({
     NONE: 'NONE',   // dry ground — no lake, no river
@@ -59,14 +60,6 @@ export const HYDROLOGY_FEATURE = Object.freeze({
 
 function clamp01(v) {
     return v < 0 ? 0 : v > 1 ? 1 : v;
-}
-
-function lerp(a, b, t) {
-    return a + (b - a) * t;
-}
-
-function smoothstep(t) {
-    return t * t * (3 - 2 * t);
 }
 
 // A small, fast, deterministic 32-bit avalanche hash — independently

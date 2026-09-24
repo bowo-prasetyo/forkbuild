@@ -8,7 +8,6 @@ import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
@@ -16,7 +15,9 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { readFile } from 'node:fs/promises';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.248 — Publication Commentary UI Integration.
 //
@@ -37,18 +38,6 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 // sibling test file in this codebase already invokes them: bound to a
 // plain ctx object mirroring a Vue component instance, never a full Vue
 // mount.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function makeDocument(title, author) {
     const world = new World();
@@ -242,7 +231,7 @@ async function runTests() {
         assert(receivedInput.publicationId === publication.id && receivedInput.content === 'through the use case',
             '13. the exact publicationId/content typed by the person reaches the command unmodified');
 
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         const forbidden = [
             "from '../../core/PublicationCommentary.js'",
             "from '../../storage/PublicationCommentaryStore.js'",
@@ -361,7 +350,7 @@ async function runTests() {
             '30. a Publication with no commentary yet resolves to an empty array');
         assert(ctx.publicationCommentaryError === null, '31. an empty result is never reported as an error');
 
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(panelCode.includes('No commentary yet.'), '32. the template renders a dedicated empty-state message');
 
         console.log('✓ Section H: an empty Publication renders an intentional empty state, never an error');
@@ -449,7 +438,7 @@ async function runTests() {
         assert(viewCode.includes('session.addPublicationCommentary({ publicationId, content, commentaryId, createdAt })'),
             '44. WorldView.js\'s own command forwards to WorldNavigationSession, never a use case directly');
 
-        const sessionCode = await codeOnlySource('application/world/WorldNavigationSession.js');
+        const sessionCode = (await Promise.all(worldNavigationSessionFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(sessionCode.includes('this._getPublicationCommentariesUseCase.execute({ publicationId })'),
             '45. WorldNavigationSession delegates reads to the unmodified use case');
         assert(sessionCode.includes('this._addPublicationCommentaryUseCase.execute({ publicationId, content, commentaryId, createdAt })'),

@@ -1,15 +1,12 @@
 import { EditorActionRegistry, createStandardActions } from '../application/editor/EditorActionRegistry.js';
 import { EditorActionContext } from '../application/editor/EditorActionContext.js';
+import { assert } from './support/Assert.js';
 
 // 0.1.50 — Command palette tests. The component (ui/components/
 // CommandPalette.js) is a thin visual layer; everything testable
 // headlessly lives on EditorActionRegistry, and that is what this suite
 // exercises: search behavior, grouping, disabled-state surfacing, and
 // execution gating.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 class MinimalSession {
     constructor(state = {}) {

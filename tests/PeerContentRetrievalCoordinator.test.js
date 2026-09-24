@@ -7,7 +7,6 @@ import { PublicationResolutionCoordinator } from '../application/publication/Pub
 import { PeerContentRetrievalCoordinator } from '../application/peer/PeerContentRetrievalCoordinator.js';
 import { PeerContentExchange } from '../application/peer/PeerContentExchange.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND } from '../core/BlueprintAttribution.js';
@@ -17,6 +16,8 @@ import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
 //
@@ -44,10 +45,6 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 // See docs/Principles.md, "Replication Creates Availability; It Does
 // Not Create Authority (0.7.6)."
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function expectThrows(fn, message) {
     let threw = false;
     try { fn(); } catch (e) { threw = true; }
@@ -62,14 +59,6 @@ async function expectRejects(promise, message) {
 
 function wait(ms = 20) {
     return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeIdentity(label) {

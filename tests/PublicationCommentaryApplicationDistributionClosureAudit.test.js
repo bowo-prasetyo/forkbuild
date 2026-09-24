@@ -1,9 +1,6 @@
 import { execSync } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
@@ -20,6 +17,10 @@ import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.621 — Publication Commentary Application Distribution Closure Audit.
 //
@@ -105,9 +106,7 @@ function wait(ms = 20) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
+
 function codeOnly(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
@@ -132,21 +131,6 @@ function runGuardLive(relativeTestFile) {
     } catch (error) {
         return { passed: false, stdout: `${error.stdout || ''}${error.stderr || ''}` };
     }
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 // An independent receiving replica — the same test-double shape
@@ -247,7 +231,7 @@ async function run() {
     // Section B — composition-root census.
     // ===============================================================
     {
-        const mainSource = codeOnly(await rawSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
 
         const busConstructions = (mainSource.match(/new PeerMessageBus\(\)/g) || []).length;
         assert(busConstructions === 1,
@@ -378,7 +362,7 @@ async function run() {
     // announce, structurally and behaviorally.
     // ===============================================================
     {
-        const mainSource = codeOnly(await rawSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         const wrapperMatch = mainSource.match(/function addPublicationCommentaryCommand\(input\) \{([\s\S]*?)\n\}/);
         assert(wrapperMatch !== null, n('ui/main.js\'s own addPublicationCommentaryCommand wrapper is found, source-level'));
         const wrapperBody = wrapperMatch[1];
@@ -668,7 +652,7 @@ async function run() {
         const useCaseSource = codeOnly(await rawSource('application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js'));
         const peerExchangeSource = codeOnly(await rawSource('application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js'));
         const exchangeSource = codeOnly(await rawSource('application/publication/commentary/PublicationCommentaryDistributionExchange.js'));
-        const mainSource = codeOnly(await rawSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         const wrapperMatch = mainSource.match(/function addPublicationCommentaryCommand\(input\) \{([\s\S]*?)\n\}/);
         const wrapperBody = wrapperMatch ? wrapperMatch[1] : '';
 

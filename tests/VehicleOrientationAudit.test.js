@@ -23,8 +23,10 @@ import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.124 — Vehicle Orientation Audit.
 //
@@ -94,18 +96,6 @@ import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickReg
 // NO PRODUCTION CODE CHANGES. Every invariant below already holds under
 // 0.9.123's own implementation — this file is the audit itself, not a
 // fix. See docs/Roadmap.md, 0.9.124.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function buildRegistry() {
     const registry = new AvatarTemplateRegistry();
@@ -814,7 +804,7 @@ async function runTests() {
         // rotation. The avatar's rotation while mounted comes ONLY from
         // `moved.rotationY` (steering); `moved.vehicleInstance.heading`
         // is never read there at all.
-        const sessionCode = await sourceOf('../application/world/WorldNavigationSession.js');
+        const sessionCode = (await Promise.all(worldNavigationSessionFiles().map((file) => sourceOf(`../${file}`)))).join('\n');
         assert(sessionCode.includes('rotation: { y: moved.rotationY }'),
             '80. sanity: the avatar\'s own rotation while riding still comes from moved.rotationY, exactly as before 0.9.123');
         assert(!sessionCode.includes('moved.vehicleInstance.heading') && !sessionCode.includes('vehicleInstance.heading'),

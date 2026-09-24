@@ -7,6 +7,7 @@ import { computeContentHash } from '../serializer/contentHash.js';
 
 import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
 import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.133 — Snapshot Location Discovery via Nostr.
 //
@@ -57,10 +58,6 @@ import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSn
 //     locator, retrieve the bytes, verify identity — then break each half
 //     independently, and prove a false discovery record is discoverable
 //     but never verified.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function expectRejects(promise, message, ErrorType = null) {
     let rejected = false;

@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { NostrRelayConfiguration, DEFAULT_NOSTR_RELAY_URL, isValidNostrRelayUrl } from '../core/NostrRelayConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -14,6 +13,10 @@ import { composeDiscoverSnapshotRuntime } from '../application/snapshot/Discover
 import { composeSnapshotDistributionRuntime } from '../application/snapshot/SnapshotDistributionRuntimeComposition.js';
 import { composePlaceNamingPublicationRuntime } from '../application/placeNaming/PlaceNamingPublicationRuntimeComposition.js';
 import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.371 — Nostr Relay Settings UI.
 //
@@ -62,22 +65,10 @@ import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
 // ui/views/NostrRelaySettingsView.js for the full design rationale this
 // milestone carries out.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function expectThrows(fn, message) {
     let threw = false;
     try { fn(); } catch { threw = true; }
     assert(threw, message);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 // Mirrors tests/NostrRelayConfigurationConvergenceAudit.test.js's own
@@ -130,18 +121,13 @@ function makeEmptyResultRelaySocketClass() {
     return EmptyResultRelaySocket;
 }
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 async function run() {
     // ===============================================================
     // Section 0 — settings entry point reachability.
     // ===============================================================
     {
-        const mainSource = await source('ui/main.js');
-        assert(mainSource.includes("import { SetNostrRelayConfigurationUseCase } from '../application/settings/SetNostrRelayConfigurationUseCase.js';"),
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
+        assert(mainSource.includes("import { SetNostrRelayConfigurationUseCase } from '../../application/settings/SetNostrRelayConfigurationUseCase.js';"),
             '1. ui/main.js imports the new write use case');
         assert(/new SetNostrRelayConfigurationUseCase\(\{\s*nostrRelayConfigurationStore\s*\}\)/.test(mainSource),
             '2. ui/main.js wires SetNostrRelayConfigurationUseCase against the SAME shared nostrRelayConfigurationStore the 0.9.369 read-path composition already resolves through, never a second disconnected store');

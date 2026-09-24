@@ -14,14 +14,15 @@ import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.639 — Publication Commentary Distribution Provider Selection Product
 // Closure Audit.
@@ -85,22 +86,12 @@ function n(message) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
+
 function codeOnly(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
 async function codeOnlySource(relativePath) {
     return codeOnly(await rawSource(relativePath));
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeDocument(title, author) {
@@ -154,7 +145,7 @@ function makeBackend() {
 // body out of ui/main.js's own source and execute it against fake WebRTC/
 // Nostr/Arweave collaborators — never a reimplementation that could drift.
 async function extractPath1Wrapper() {
-    const mainSource = await codeOnlySource('ui/main.js');
+    const mainSource = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
     const wrapperMatch = mainSource.match(/function addPublicationCommentaryCommand\(input\) \{([\s\S]*?)\n\}/);
     assert(wrapperMatch !== null, n('sanity: the real addPublicationCommentaryCommand wrapper is found in ui/main.js\'s current source'));
     // eslint-disable-next-line no-new-func
@@ -261,7 +252,7 @@ async function run() {
                /addPublicationCommentaryCommand\(\{ publicationId: this\.publication\.id, content, commentaryId, createdAt, discoveryProvider \}\)/.test(listCode),
             n('PATH 1 precedent intact: PublicationList.js\'s rows submit through the same shared section, with the identical call shape'));
 
-        const mainCode = await codeOnlySource('ui/main.js');
+        const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(/const discoveryProvider = \(input && input\.discoveryProvider\) \|\| 'nostr';/.test(mainCode),
             n('no second source of truth: exactly one place (ui/main.js) still reads input.discoveryProvider, unmodified since before 0.9.637'));
         assert(/const asynchronousDistribution = discoveryProvider === 'arweave'\s*\?\s*publicationCommentaryArweaveDistribution\s*:\s*publicationCommentaryNostrDistribution;/.test(mainCode),

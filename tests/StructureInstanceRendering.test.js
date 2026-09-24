@@ -20,7 +20,8 @@ import { TransformMath } from '../application/editor/TransformMath.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.2.91 — World Instance Editing & Placement Management: the rendering
 // half. tests/StructureInstanceEditing.test.js covers everything that
@@ -54,18 +55,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //              position -> committing (World#updateStructurePlacement())
 //              re-renders the instance at its new transform, still
 //              picking correctly there
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function makeFakeRenderer(terrainHeightAt = null) {
     const meshes = new Set();

@@ -17,8 +17,10 @@ import { PlaceNamingClaimExchange } from '../application/placeNaming/PlaceNaming
 import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.319 — Post-Place-Naming Stable Product Baseline Closure.
 //
@@ -69,15 +71,7 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 //               reconfirmed present and still not READY.
 //   Section I — Final verdict.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {
@@ -100,14 +94,6 @@ function grepFiles(pattern, dirs, { ignoreCase = false } = {}) {
 
 function grepCount(pattern, dirs, opts = {}) {
     return grepFiles(pattern, dirs, opts).length;
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeIdentity(label) {

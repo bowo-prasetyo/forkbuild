@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { executeDiscoverSnapshotCommand } from '../application/snapshot/DiscoverSnapshotCommand.js';
 import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.142 — World View Snapshot Discovery Command.
 // See docs/Roadmap.md, "0.9.142 — World View Snapshot Discovery Command,"
@@ -13,10 +14,6 @@ import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/
 //              and its own result is returned unchanged, not re-described
 //   Section C: a genuine rejection from the resolver propagates unchanged
 //   Section D: architectural regression
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

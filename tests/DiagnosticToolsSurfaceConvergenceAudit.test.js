@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { applicationFiles } from './support/ApplicationFiles.js';
 import { readdirSync } from 'node:fs';
 
@@ -21,7 +20,6 @@ import { DecentralizedSnapshotResolver } from '../application/snapshot/Decentral
 import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { Document } from '../core/Document.js';
@@ -30,7 +28,10 @@ import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, ownPublicationPanelSource } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.325 — Diagnostic Tools Surface Convergence Audit.
 //
@@ -120,10 +121,6 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 // is itself a healthy, reportable outcome — this file exists to prove
 // convergence, not to invent a reason to keep building.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));
     for (let i = 0; i < 10; i++) {
@@ -131,16 +128,13 @@ async function flushMicrotasks() {
     }
 }
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
+function codeOnlyText(text) {
+    const withoutHtmlComments = text.replace(/<!--[\s\S]*?-->/g, '');
+    return withoutHtmlComments.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
 
 async function codeOnlySource(relativePath) {
-    const text = await rawSource(relativePath);
-    const withoutHtmlComments = text.replace(/<!--[\s\S]*?-->/g, '');
-    return withoutHtmlComments.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
+    return codeOnlyText(await rawSource(relativePath));
 }
 
 // ---------------------------------------------------------------------
@@ -150,14 +144,6 @@ async function codeOnlySource(relativePath) {
 // real, unmodified production machinery every other Snapshot pipeline
 // suite already trusts — nothing here is a simplified stand-in.
 // ---------------------------------------------------------------------
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 const stubIdentityProvider = {
     currentUser: () => ({ username: 'alice', displayName: 'alice', providerId: 'stub' }),
@@ -344,8 +330,8 @@ const PIPELINE_ACTIONS = [
 async function runTests() {
     console.log('Running Diagnostic Tools Surface Convergence Audit tests...\n');
 
-    const rawPanel = await rawSource('ui/components/OwnPublicationPanel.js');
-    const codePanel = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+    const rawPanel = ownPublicationPanelSource();
+    const codePanel = codeOnlyText(ownPublicationPanelSource());
 
     // ---------------------------------------------------------------
     // Section A — Pipeline identity.

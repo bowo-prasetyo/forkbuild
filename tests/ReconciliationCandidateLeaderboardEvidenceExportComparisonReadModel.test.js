@@ -4,6 +4,8 @@ import {
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparison
 } from '../application/claimSnapshotReconciliation/evidenceExportComparison/EvidenceExportComparison.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.190 — Reconciliation Candidate Leaderboard Evidence Export Comparison
 // Read Model.
@@ -23,14 +25,6 @@ import {
 // Section K: immutability/determinism.
 // Section L: zero ranking/judgment vocabulary; no verdict booleans beyond
 //            the two 0.8.189 already computed; import boundary.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function detailOf(shared, sourceOnly, targetOnly) {
     return Object.freeze({

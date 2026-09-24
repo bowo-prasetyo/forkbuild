@@ -1,6 +1,5 @@
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
 import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
@@ -17,6 +16,8 @@ import {
     describeSnapshotPeerPossessionObservationDetail,
     describeSnapshotPeerPossessionObservationDetails
 } from '../application/snapshot/possession/SnapshotPeerPossessionObservationDetailView.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.8.45 — Explicit Peer Possession Observation Inspection.
 //
@@ -54,18 +55,6 @@ import {
 //
 // See docs/Principles.md, "Peer Possession Observations Describe What
 // Peers Report; They Do Not Become Placement Claims (0.8.41)."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 // The identical evaluative-vocabulary scan tests/
 // SnapshotMaterializationHistoryDetailView.test.js's own

@@ -1,5 +1,6 @@
 import { ArweaveGraphqlDiscoveryQueryService } from '../application/arweave/ArweaveGraphqlDiscoveryQueryService.js';
 import { DecentralizedDiscoveryQueryService } from '../application/discovery/DecentralizedWorldDiscoveryQuery.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.25 — Decentralized Discovery Query Adapter (concrete service).
 //
@@ -38,10 +39,6 @@ import { DecentralizedDiscoveryQueryService } from '../application/discovery/Dec
 //              the announcement id preserved alongside the reported uri,
 //              and every way an envelope can be unavailable/malformed
 //              skips that candidate without ever substituting its own id
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function makeFakeGateway({ handler, envelopes = {} }) {
     const requests = [];

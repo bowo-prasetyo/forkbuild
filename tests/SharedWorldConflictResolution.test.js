@@ -5,7 +5,6 @@ import { StructurePlacement } from '../core/StructurePlacement.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
@@ -30,6 +29,8 @@ import { WorldCommandPropagationUseCase } from '../application/document/WorldCom
 import { LogicalClock } from '../core/LogicalClock.js';
 import { compareWorldOperations, worldOperationSortKey } from '../core/WorldOperationOrder.js';
 import { WorldConflictResolver, WorldOperationOutcome } from '../replication/WorldConflictResolver.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.2.97 — Shared World Ordering & Conflict Resolution.
 //
@@ -64,18 +65,6 @@ import { WorldConflictResolver, WorldOperationOutcome } from '../replication/Wor
 //              collaborator, broadcasts a LOCAL mutation automatically,
 //              with zero manual broadcastCommand() call anywhere in the
 //              test.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function wait(ms = 0) {
     return new Promise((resolve) => setTimeout(resolve, ms));

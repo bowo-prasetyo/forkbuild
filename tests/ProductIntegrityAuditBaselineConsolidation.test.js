@@ -1,4 +1,4 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { findRawStatusInterpolations, OVERCLAIM_WORDS } from './support/RawStatusInterpolationSweep.js';
@@ -10,6 +10,7 @@ import { describeVerificationOutcome } from '../application/publication/evidence
 import { PublicationResolutionOutcome } from '../application/publication/PublicationResolutionOutcome.js';
 import { describePublicationOutcome } from '../application/publication/PublicationResolutionView.js';
 import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.522 — Product Integrity Audit Baseline Consolidation.
 //
@@ -80,10 +81,6 @@ import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/Sour
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
 const SOURCE_ROOT_PATH = SOURCE_ROOT.pathname;
-
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 let assertionCount = 0;
 function check(condition, message) {

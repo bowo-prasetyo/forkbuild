@@ -12,6 +12,8 @@ import { SnapshotPublicationAttributionOutcome } from '../application/snapshot/S
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
+import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.153 — Selected Snapshot Resolution End-to-End Audit.
 //
@@ -97,10 +99,6 @@ import { ContentReference } from '../core/ContentReference.js';
 //            identical resolved Snapshot attributed against A's hash
 //            reports NO_MATCH — proving selection materially changes the
 //            answer, not merely the label on an unchanged result.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -466,8 +464,9 @@ async function run() {
         // Structural: resolveSelectedSnapshot() itself never calls
         // resolveSnapshotPublicationAttribution — the method body contains
         // no such call.
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
-        const resolveSelectedSnapshotBody = panelCode.slice(panelCode.indexOf('resolveSelectedSnapshot('), panelCode.indexOf('}', panelCode.lastIndexOf('selectedSnapshotResolutionExecuting = false;')));
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
+        const resolveSelectedSnapshotStart = panelCode.indexOf('resolveSelectedSnapshot(');
+        const resolveSelectedSnapshotBody = panelCode.slice(resolveSelectedSnapshotStart, panelCode.indexOf('}', panelCode.indexOf('selectedSnapshotResolutionExecuting = false;', resolveSelectedSnapshotStart)));
         assert(!resolveSelectedSnapshotBody.includes('resolveSnapshotPublicationAttribution'),
             'E5. structural: resolveSelectedSnapshot()\'s own method body never calls resolveSnapshotPublicationAttribution() — only discoverOwnSnapshot() does');
 
@@ -529,7 +528,7 @@ async function run() {
         // contains no duplicated retrieval/hashing/verification logic —
         // it only ever calls the injected resolveSelectedSnapshotCommand.
         {
-            const code = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+            const code = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
             assert(!/\.get\(reference\)|computeContentHash\(|new ContentReference\(|storeRegistry\.get\(|new DecentralizedSnapshotResolver\(/.test(code),
                 'G2. ui/components/OwnPublicationPanel.js never retrieves, hashes, verifies, or constructs a resolver/ContentReference itself');
         }
@@ -539,7 +538,7 @@ async function run() {
         // resolver's existing outcome vocabulary unchanged.
         {
             const commandCode = await codeOnlySource('application/snapshot/ResolveSelectedSnapshotCommand.js');
-            const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+            const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
             const resolverCode = await codeOnlySource('application/snapshot/DecentralizedSnapshotResolver.js');
             const forbidden = /SELECTED_CANDIDATE_FAILED|SELECTION_FAILED|CANDIDATE_REJECTED|SELECTED_CONTENT_HASH_MISMATCH/;
             assert(!forbidden.test(commandCode) && !forbidden.test(panelCode) && !forbidden.test(resolverCode),

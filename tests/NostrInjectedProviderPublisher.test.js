@@ -3,6 +3,7 @@ import { createNostrInjectedProviderPublisher } from '../nostr/NostrInjectedProv
 import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
 import { describeDecentralizedDiscoveryEnvelope, DECENTRALIZED_DISCOVERY_ENVELOPE_PROTOCOL, DECENTRALIZED_DISCOVERY_ENVELOPE_VERSION } from '../core/DecentralizedDiscoveryEnvelope.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.121 — Nostr Injected Provider Publisher.
 // See docs/Roadmap.md, "0.9.121 — Publication Distribution Host Capability
@@ -17,10 +18,6 @@ import { WorldEncounterKind } from '../core/WorldEncounter.js';
 //              NostrPublicationDiscoveryPublisher, actually publishes an envelope
 //   Section G: architectural regression — no distribution-infrastructure knowledge, no external dependency
 //   Section H: an extension that never answers getPublicKey()/signEvent() times out
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function fakeExtension({ idPrefix = 'a' } = {}) {
     const calls = { getPublicKey: 0, signEvent: [] };

@@ -664,7 +664,7 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
     // whether `evidenceFingerprint`/`policyVersion`/`snapshotFingerprint`
     // actually match ANY replica's own independently reconstructed
     // snapshot is never asked here — that is application/
-    // PublisherLeaderboardSnapshotClaimVerification.js's own, separate
+    // leaderboard/snapshot/ClaimVerification.js's own, separate
     // question, composed on top of this structural check rather than
     // folded into it. A signature that verifies here proves only that
     // `signerIdentityId` genuinely signed exactly this fingerprint triple;

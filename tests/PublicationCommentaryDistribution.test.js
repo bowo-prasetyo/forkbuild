@@ -1,5 +1,3 @@
-import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
@@ -20,7 +18,10 @@ import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeer
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
-import { readFile } from 'node:fs/promises';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.618 — Publication Commentary Distribution Envelope.
 //
@@ -58,10 +59,6 @@ import { readFile } from 'node:fs/promises';
 //               structurally, not just by convention.
 //   Section N — existing local Commentary behavior is unchanged.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function expectThrows(fn, message) {
     let threw = false;
     try { fn(); } catch (e) { threw = true; }
@@ -72,30 +69,8 @@ function wait(ms = 20) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 function codeOnly(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-}
-
-// The identical in-memory StorageProvider fake every Commentary/
-// Notification test file in this codebase already uses.
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 function makeCommentary({ publicationId = 'pub-x', authorIdentityId, content = 'a real comment' } = {}) {

@@ -13,6 +13,7 @@ import {
     exportPublicationObservationArchive,
     importPublicationObservationArchive
 } from '../application/publication/observationArchive/PublicationObservationArchiveExport.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.82 — Durable Publication Archive Export & Import.
 //
@@ -46,10 +47,6 @@ import {
 //   Section G: export requires a genuine archive instance and never
 //              mutates it; import accepts both a raw string and an
 //              already-parsed value
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 // 0.8.83 — Publication Archive Provenance & Imported-Fact Boundary changed
 // what "restored" means: `importPublicationObservationArchive()` now

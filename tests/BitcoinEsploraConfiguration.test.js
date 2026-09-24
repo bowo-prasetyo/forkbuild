@@ -1,6 +1,7 @@
-import { readFile } from 'node:fs/promises';
 
 import { BitcoinEsploraConfiguration, isValidBitcoinEsploraApiUrl, DEFAULT_BITCOIN_ESPLORA_API_URL } from '../core/BitcoinEsploraConfiguration.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
 
 // User-Configurable Bitcoin Esplora Endpoint Configuration Boundary.
 // See tests/BitcoinEndpointConfigurationUIReachabilityAudit.test.js's own
@@ -22,19 +23,10 @@ import { BitcoinEsploraConfiguration, isValidBitcoinEsploraApiUrl, DEFAULT_BITCO
 // Section H: architecture sweep — no persistence, no network, no ui/, no
 //            extra fields, no list/failover shape
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function expectThrows(fn, message) {
     let threw = false;
     try { fn(); } catch { threw = true; }
     assert(threw, message);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 async function run() {

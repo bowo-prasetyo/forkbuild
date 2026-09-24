@@ -30,6 +30,7 @@
 
 import { terrainHeightAt } from './TerrainHeightField.js';
 import { surfaceCategoryAt, surfaceColorAt, SURFACE_CATEGORY, WATER_LEVEL, HIGHLAND_ELEVATION } from './TerrainSurface.js';
+import { lerp, smoothstep } from '../utils/interpolation.js';
 
 export const ECOLOGY_ZONE = Object.freeze({
     WATER: 'WATER',         // mirrors SURFACE_CATEGORY.WATER exactly — a low depression
@@ -68,14 +69,6 @@ const FIELD_CULTIVATION_THRESHOLD = 0.55;
 
 function clamp01(v) {
     return v < 0 ? 0 : v > 1 ? 1 : v;
-}
-
-function lerp(a, b, t) {
-    return a + (b - a) * t;
-}
-
-function smoothstep(t) {
-    return t * t * (3 - 2 * t);
 }
 
 // A small, fast, deterministic 32-bit avalanche hash — the exact same

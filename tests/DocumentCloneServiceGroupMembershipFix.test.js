@@ -16,7 +16,8 @@ import { ImportDocumentUseCase } from '../application/document/ImportDocumentUse
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
 import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.644 — Fix DocumentCloneService Group Membership Identity Remapping.
 //
@@ -29,18 +30,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // regenerating bricks, and reuses that SAME map to remap every group's
 // brickIds — no second mapping, no ImportDocumentUseCase-side special
 // casing. This file is the focused regression suite for that fix.
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function buildingWithBricks(creator, count, { startX = 0, definitionId = 'core:cube' } = {}) {
     const building = new Building({ creator });

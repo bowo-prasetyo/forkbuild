@@ -122,7 +122,7 @@ import { sha256Hex } from '../../core/Sha256.js';
 // NEVER A COMPETING SCHEME. `{ algorithm: 'SHA-256', fingerprint: <64-char
 // lowercase hex> }` is application/publication/observationArchive/PublicationObservationArchiveFingerprint.js's
 // (0.8.84), application/achievement/AchievementEvidenceFingerprint.js's (0.8.116), and
-// application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js's (0.8.121) own
+// application/leaderboard/snapshot/Fingerprint.js's (0.8.121) own
 // established shape, reused here a fourth time under a name this file's
 // own result carries as `planFingerprint`, and hashed with the same
 // synchronous core/Sha256.js those three files use. The

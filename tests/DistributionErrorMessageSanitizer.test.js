@@ -1,4 +1,5 @@
 import { sanitizeDistributionErrorMessage } from '../application/publication/distribution/DistributionErrorMessageSanitizer.js';
+import { assert } from './support/Assert.js';
 
 // Post-Publish Distribution Error Sanitization.
 //
@@ -9,10 +10,6 @@ import { sanitizeDistributionErrorMessage } from '../application/publication/dis
 // show the underlying cause when it can be stripped down to something safe
 // to display, and returns null (never a guess, never an empty string) when
 // it cannot — see that module's own header for the full rationale.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function run() {
     {

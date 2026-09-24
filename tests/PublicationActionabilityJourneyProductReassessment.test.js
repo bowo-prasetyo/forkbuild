@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { AutomaticSnapshotEncounterCascade } from '../application/snapshot/AutomaticSnapshotEncounterCascade.js';
 import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
@@ -28,7 +27,6 @@ import { PlacementRecord } from '../core/PlacementRecord.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { License, LicenseId } from '../core/License.js';
 import { Publication } from '../publisher/Publication.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
@@ -47,7 +45,10 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.598 — Publication Actionability Journey Product Reassessment.
 //
@@ -127,25 +128,8 @@ import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileG
 //      tested use case" (Section D's own finding — a narrower thing).
 //   H. Product conclusion and classification.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function wait(ms = 0) {
     return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 // Same posture as tests/RepositoryAdmissionToPublicationActionContinuityAudit.test.js
@@ -491,7 +475,7 @@ async function run() {
         assert(/forkPublicationCommand/.test(worldEncounterCanvasSource), 'C2. Fork remains wired (forkPublicationCommand prop).');
         assert(/explorePublicationCommand/.test(worldEncounterCanvasSource), 'C3. Explore remains wired (explorePublicationCommand prop) — and Section A live-proved it is a real navigation, not a preview.');
 
-        const ownPublicationPanelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         assert(/getPublicationCommentariesCommand|addPublicationCommentaryCommand/.test(ownPublicationPanelSource), 'C4. Commentary remains wired once a Publication resolves (OwnPublicationPanel\'s own commentary surface).');
 
         // C5: no "place" action exists in WorldEncounterCanvas.js's own
@@ -530,7 +514,7 @@ async function run() {
         // the codebase it inspects, the same posture 0.9.600 itself took
         // amending tests/PublicationMultiPlacementVisibility.test.js's own
         // superseded assertion in place rather than leaving it false.
-        const worldNavigationSessionSource = await readSource('application/world/WorldNavigationSession.js');
+        const worldNavigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(/placePublicationUseCase = null,/.test(worldNavigationSessionSource) && /placePublication\(publicationId, position\) \{/.test(worldNavigationSessionSource),
             'D2. AS OF 0.9.600 (superseding this file\'s own original D2 finding): WorldNavigationSession.js now accepts an optional placePublicationUseCase collaborator and exposes a publicationId-keyed placePublication() method — the smallest legitimate next step this file\'s own Section H named. movePlacement()/removePlacement() (below) remain the only DOCUMENT-ID-keyed placement-mutating methods; placePublication() is PUBLICATION-ID-keyed and deliberately separate — see 0.9.600\'s own WorldNavigationSession.js header.');
         assert(/movePlacement\(documentId, newPosition\) \{[\s\S]{0,300}if \(!record\) \{\s*\n\s*throw new Error/.test(worldNavigationSessionSource),

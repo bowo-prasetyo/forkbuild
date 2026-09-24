@@ -13,7 +13,8 @@ import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/R
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.152 — Selected Snapshot Candidate Resolution.
 //
@@ -55,10 +56,6 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 //   Section M: architectural regression — one candidate->retrieval->
 //              verification path, never two; the UI never substitutes a
 //              bare contentHash for the candidate object
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;
@@ -575,7 +572,7 @@ async function run() {
             '39. ResolveSelectedSnapshotCommand.js never constructs infrastructure or calls the other discovery/resolution commands');
         assert((commandCode.match(/resolver\.resolveCandidate\(/g) || []).length === 1, '40. resolver.resolveCandidate() is called from exactly one place');
 
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert((panelCode.match(/this\.resolveSelectedSnapshotCommand\(/g) || []).length === 1, '41. resolveSelectedSnapshotCommand is called from exactly one place');
         assert(panelCode.includes('this.resolveSelectedSnapshotCommand(candidate)'),
             '42. OwnPublicationPanel.js calls resolveSelectedSnapshotCommand with the CANDIDATE OBJECT — never candidate.contentHash or any other derived string');
@@ -591,7 +588,7 @@ async function run() {
         assert(/<OwnPublicationPanel[\s\S]{0,700}:resolveSelectedSnapshotCommand="resolveSelectedSnapshotCommand"/.test(viewCode),
             '46. OwnPublicationPanel is wired to the injected resolveSelectedSnapshotCommand');
 
-        const mainCode = await codeOnlySource('ui/main.js');
+        const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(mainCode.includes("app.provide('resolveSelectedSnapshotCommand', resolveSelectedSnapshotCommand)"),
             '47. ui/main.js provides resolveSelectedSnapshotCommand app-wide');
         assert((mainCode.match(/composeDiscoverSnapshotRuntime\(/g) || []).length === 1,

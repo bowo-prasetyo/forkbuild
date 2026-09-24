@@ -3,6 +3,7 @@ import {
 } from '../core/TerrainSurface.js';
 import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { TERRAIN_TILE_SIZE, tileCenter } from '../core/TerrainTiling.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.79 — Terrain Surface & Natural Color.
 //
@@ -20,10 +21,6 @@ import { TERRAIN_TILE_SIZE, tileCenter } from '../core/TerrainTiling.js';
 // fixed coordinate (the exact palette/thresholds are implementation
 // detail); every assertion is about determinism, boundedness, continuity,
 // and the elevation/slope relationship that DEFINES classification.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function slopeAt(seed, x, z) {
     const h = terrainHeightAt(seed, x, z);

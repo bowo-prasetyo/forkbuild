@@ -17,29 +17,19 @@ import { ForkPublishedWorldUseCase } from '../application/publication/ForkPublis
 import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { LoadPublishedWorldSessionUseCase } from '../application/publication/LoadPublishedWorldSessionUseCase.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // ---------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 const stubIdentityProvider = {
     currentUser: () => ({ username: 'bob', displayName: 'bob', providerId: 'stub' }),
     sign: (data) => ({ signedBy: 'bob', providerId: 'stub', data })
 };
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, expectedMessage, message) {
     try { fn(); assert(false, message); }

@@ -1,3 +1,5 @@
+import { lerp } from '../utils/interpolation.js';
+
 // 0.2.37 — pure visual smoothing math for REMOTE avatars only. A
 // remote presence arrives in bursts (whatever the sending replica's
 // own movement ticks produced, then a burst-free gap, then another
@@ -35,10 +37,6 @@ export function interpolatePresence(from, to, t) {
         rotation: { x: 0, y: lerpAngleDegrees(fromRotationY, toRotationY, clampedT), z: 0 },
         animation: to.animation
     };
-}
-
-function lerp(a, b, t) {
-    return a + (b - a) * t;
 }
 
 // Interpolates through the SHORTER arc (e.g. 350deg -> 10deg turns by

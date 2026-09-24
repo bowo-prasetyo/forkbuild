@@ -8,6 +8,8 @@ import {
     reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage
 } from '../application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.179 — Archive-Backed Reconciliation Candidate Leaderboard Page.
 //
@@ -25,14 +27,6 @@ import { PublicationObservationArchive } from '../application/publication/observ
 //            determinism
 // Section G: vocabulary/import boundary — imports exactly 0.8.177 and
 //            0.8.178, and nothing beneath them
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function genuineDecisionRecord(candidate, decision, decidedAt) {
     return Object.freeze({ decided: true, candidate: Object.freeze(candidate), decision, decidedAt: decidedAt.toISOString() });

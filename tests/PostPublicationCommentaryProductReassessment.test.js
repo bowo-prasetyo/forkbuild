@@ -1,5 +1,7 @@
 import { readFile } from 'node:fs/promises';
-import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.250 — Post-Publication-Commentary Product Reassessment.
 //
@@ -46,15 +48,7 @@ import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './su
 //                     baseline)                 picks                                  re-rank, no pick)
 //                                                Commentary)
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {
@@ -113,9 +107,9 @@ async function runTests() {
         const addUseCase = await rawSource('application/publication/commentary/AddPublicationCommentaryUseCase.js');
         const getUseCase = await rawSource('application/publication/commentary/GetPublicationCommentariesUseCase.js');
         const canComment = await rawSource('application/publication/CanCommentOnPublicationUseCase.js');
-        const navSession = await rawSource('application/world/WorldNavigationSession.js');
+        const navSession = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const createWorldView = await rawSource('application/world/CreateWorldViewUseCase.js');
-        const panel = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panel = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
 
         // A1a. Publication, not Document — the one architectural decision
         // 0.9.242's own header calls out explicitly.
@@ -230,7 +224,7 @@ async function runTests() {
         // still re-queries rather than optimistically appending on a
         // successful submission — the exact structural fact 0.9.249
         // Section C proved with a destructive stale-array test.
-        const panel = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panel = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(panel.includes('refreshPublicationCommentaries()') &&
                !/publicationCommentaries\.push\(/.test(codeOnlyLines(panel)),
             'B5. ui/components/OwnPublicationPanel.js\'s own CODE still never pushes a locally-held commentary object into publicationCommentaries — every successful submission re-queries through refreshPublicationCommentaries(), the store staying the one source of truth (0.9.248/0.9.249 Section C).');
@@ -283,7 +277,7 @@ async function runTests() {
         // C4. Vehicles — AvatarVehicleInteractionController/
         // AvatarVehicleMovementController imported and used by
         // WorldNavigationSession, referenced live in WorldView.
-        const navSession = await rawSource('application/world/WorldNavigationSession.js');
+        const navSession = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(navSession.includes("import { AvatarVehicleInteractionController }") &&
                navSession.includes("import { AvatarVehicleMovementController }") &&
                worldView.includes('vehicleInteractionState'),
@@ -323,7 +317,7 @@ async function runTests() {
 
         // C9. Discovery — PublicationCatalogDiscoveryProvider constructed
         // live in ui/main.js.
-        const mainJs = await rawSource('ui/main.js');
+        const mainJs = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(mainJs.includes('new PublicationCatalogDiscoveryProvider('),
             'C9. ui/main.js still constructs a real PublicationCatalogDiscoveryProvider.');
         capabilityRegister.push(['Discovery', 'COMPLETE']);
@@ -387,7 +381,7 @@ async function runTests() {
         // authorIdentityId per entry — this is not merely storable data,
         // it's already ON SCREEN, exactly as this milestone's own brief
         // asks to check.
-        const panel = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panel = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(panel.includes('own-publication-commentary-author') && panel.includes('{{ commentary.authorIdentityId }}'),
             'D2. ui/components/OwnPublicationPanel.js still renders {{ commentary.authorIdentityId }} for every commentary entry — identity display already exists, as the raw authenticated identity id (no profile-name resolution).');
         seamRegister.push(['identity display', 'COMPLETE (raw authorIdentityId shown per entry; no display-name resolution)']);
@@ -527,7 +521,7 @@ async function runTests() {
         // E2. WorldNavigationSession's own commentary methods never touch
         // CommandHistory, EditorSession, or the causal chain — they
         // delegate exclusively to the two commentary use cases.
-        const navSession = await rawSource('application/world/WorldNavigationSession.js');
+        const navSession = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const getMethodMatch = navSession.match(/getPublicationCommentaries\(publicationId\) \{[\s\S]*?\n    \}/);
         const addMethodMatch = navSession.match(/addPublicationCommentary\(\{ publicationId, content, commentaryId, createdAt \}\) \{[\s\S]*?\n    \}/);
         assert(getMethodMatch && addMethodMatch, 'E2a. Both commentary methods still exist on WorldNavigationSession in their expected shape (addPublicationCommentary\'s own signature grew commentaryId/createdAt in 0.9.542 — see that method\'s own header).');

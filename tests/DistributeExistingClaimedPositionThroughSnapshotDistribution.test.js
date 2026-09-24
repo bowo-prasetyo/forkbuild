@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
 import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
@@ -7,9 +6,11 @@ import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
 import { Position } from '../core/Position.js';
 import { Publication } from '../publisher/Publication.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { computeContentHash } from '../serializer/contentHash.js';
-import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.566 — Distribute Existing Claimed Position Through Snapshot
 // Distribution.
@@ -56,18 +57,6 @@ import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFil
 // Section H: structural fidelity — the real ui/views/WorldView.js and
 //            application/snapshot/SnapshotDistributionCommand.js source actually
 //            implement the shape Sections A-G exercise.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function makeNostrNetwork() {
     const events = [];
@@ -180,11 +169,6 @@ function fakeContentStore(entries = {}) {
             return Object.prototype.hasOwnProperty.call(entries, key) ? JSON.stringify(entries[key]) : null;
         }
     };
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 async function run() {
@@ -371,7 +355,7 @@ async function run() {
         assert(placementRegistry.findByPublicationId(publication.id).length === 1,
             '3. exactly one PlacementRecord still exists for this Publication — distribution never adds a second one.');
 
-        const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         assert(/@click="useClaimedSnapshotPosition"/.test(panelSource),
             '4. a distributed claim still only ever becomes a placement through the pre-existing, person-initiated "Use Claimed Position" click — never automatically, from this milestone\'s own change.');
     }

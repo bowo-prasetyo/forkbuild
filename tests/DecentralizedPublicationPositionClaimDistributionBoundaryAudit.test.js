@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { resolveSnapshotWorldPositionClaim } from '../application/snapshot/placement/SnapshotWorldPositionClaim.js';
 import { SnapshotWorldPositionClaimOutcome } from '../application/snapshot/placement/SnapshotWorldPositionClaimOutcome.js';
@@ -7,7 +6,9 @@ import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnaps
 import { ArweaveSnapshotDiscoveryPublisher } from '../application/arweave/ArweaveSnapshotDiscoveryPublisher.js';
 import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
 import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.565 — Decentralized Publication Position Claim Distribution Boundary
 // Audit.
@@ -83,15 +84,6 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 //       missing subsystem.
 //   I — Classification and the smallest closing seam, named precisely.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 function freezePosition(x, y, z) {
     return Object.freeze({ x, y, z });
 }
@@ -102,7 +94,7 @@ async function run() {
     // Section A — Authoritative position source already exists.
     // =======================================================================
     {
-        const sessionSource = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(/getPlacementInfoForPublication\(publicationId\)\s*\{/.test(sessionSource),
             '1. application/world/WorldNavigationSession.js exposes getPlacementInfoForPublication(publicationId) — a publisher-side lookup keyed by the exact Publication identity a distribution claim would need to be bound to.');
         assert(/getPlacementInfo\(documentId\)\s*\{/.test(sessionSource),
@@ -249,7 +241,7 @@ async function run() {
     // independent of the claim question.
     // =======================================================================
     {
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(/new ArweaveSnapshotDiscoveryQueryService\(/.test(mainSource),
             '1. ui/main.js constructs a real ArweaveSnapshotDiscoveryQueryService — the READ side of Arweave Snapshot discovery is wired.');
         assert(!/new ArweaveSnapshotDiscoveryPublisher\(/.test(mainSource),
@@ -324,7 +316,7 @@ async function run() {
         assert(!/PlacementRecord|LocalPlacementRegistry/.test(claimSource),
             '4. ...and, structurally, never touches PlacementRecord/LocalPlacementRegistry — consuming a claim still never becomes authoritative World state on its own.');
 
-        const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         assert(/useClaimedSnapshotPosition\(\)\s*\{/.test(panelSource),
             '5. the one place a claim is ever consumed remains a distinct, person-initiated method...');
         assert(/@click="useClaimedSnapshotPosition"/.test(panelSource),
@@ -336,7 +328,7 @@ async function run() {
     // Section H — The existing consumer is already production-ready.
     // =======================================================================
     {
-        const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         assert(/import \{ resolveSnapshotWorldPositionClaim \} from '\.\.\/\.\.\/application\/snapshot\/placement\/SnapshotWorldPositionClaim\.js'/.test(panelSource),
             '1. ui/components/OwnPublicationPanel.js — a real, shipped production UI component — already imports the consumer function directly.');
         assert(/this\.selectedSnapshotWorldPositionClaimResult = resolveSnapshotWorldPositionClaim\(candidate, publication\.id\)/.test(panelSource),

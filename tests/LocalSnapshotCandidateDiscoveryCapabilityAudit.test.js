@@ -8,7 +8,8 @@ import { WorldSnapshotDiscoveryMonitor } from '../application/snapshot/WorldSnap
 import { shouldRefreshSnapshotDiscovery } from '../application/snapshot/ShouldRefreshSnapshotDiscovery.js';
 import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
 import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/snapshot/materialization/CheckLocalSnapshotContentAvailabilityUseCase.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.480 — Local Snapshot Candidate Discovery Capability Audit.
 //
@@ -84,19 +85,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //   Section K — Deliberate exclusions; no production file touched;
 //               final classification.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function grepFiles(pattern, dirs, { ignoreCase = false } = {}) {
     let hits = '';

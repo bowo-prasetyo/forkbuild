@@ -2,17 +2,18 @@ import { PublicationObservationArchive } from '../application/publication/observ
 import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
 import { CreatePublicationReferenceRecordUseCase } from '../application/publication/CreatePublicationReferenceRecordUseCase.js';
 import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js';
-import { verifyPublisherLeaderboardSnapshotClaim } from '../application/leaderboard/PublisherLeaderboardSnapshotClaimVerification.js';
+import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/leaderboard/snapshot/CreateClaimUseCase.js';
+import { verifyPublisherLeaderboardSnapshotClaim } from '../application/leaderboard/snapshot/ClaimVerification.js';
 import {
     exportPublisherLeaderboardSnapshotClaim,
     importPublisherLeaderboardSnapshotClaim,
     PublisherLeaderboardSnapshotClaimImportOutcome
-} from '../application/leaderboard/PublisherLeaderboardSnapshotClaimExchange.js';
+} from '../application/leaderboard/snapshot/ClaimExchange.js';
 import { PublisherLeaderboardSnapshotClaim, PUBLISHER_LEADERBOARD_SNAPSHOT_CLAIM_KIND } from '../core/PublisherLeaderboardSnapshotClaim.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { assert } from './support/Assert.js';
+import { makeIdentity } from './support/TestIdentity.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.122 — Portable Signed Leaderboard Claim Exchange.
 //
@@ -40,25 +41,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // Section H: no persistence — import never touches any archive or store;
 //            two imports of the identical claim are independent
 // Section I: determinism, purity, zero network access
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
-}
 
 async function withoutNetworkAccess(fn) {
     let networkCallOccurred = false;
@@ -124,10 +106,6 @@ function buildSharedArchive() {
     archive = associationUseCase.execute(archive, { publisherId: 'Dave', publicationIdentity: identityC, createdAt: CREATED_AT.daveC });
 
     return archive;
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
 }
 
 async function run() {

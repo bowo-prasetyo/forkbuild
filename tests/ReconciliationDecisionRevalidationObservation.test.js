@@ -1,5 +1,8 @@
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation } from '../application/claimSnapshotReconciliation/revalidationObservation/RevalidationObservation.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationPlanIdentity } from '../application/claimSnapshotReconciliation/PlanIdentity.js';
+import { featureImportLines } from './support/SharedHelperImports.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.162 — Historical Decision Revalidation Observation Record.
 //
@@ -18,14 +21,6 @@ import { describePublisherLeaderboardClaimSnapshotReconciliationPlanIdentity } f
 // Section L: architectural regression — exactly one import (0.8.161), no
 //            forbidden dependencies or interpretation vocabulary, no
 //            reconstructXxx(), no archive integration
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function divergentEntry(claimId, snapshotIndex, overrides = {}) {
     return Object.freeze({
@@ -286,8 +281,8 @@ async function run() {
         const moduleSource = await fs.readFile(new URL('../application/claimSnapshotReconciliation/revalidationObservation/RevalidationObservation.js', import.meta.url), 'utf8');
         const codeOnly = moduleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n').toLowerCase();
 
-        const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
-        assert(importLines.length === 1, '48. this file imports exactly one module');
+        const importLines = featureImportLines(moduleSource);
+        assert(importLines.length === 1, '48. besides shared helpers, this file imports exactly one module');
         assert(importLines[0].includes('../decision/HistoryRevalidationPlanIdentityView.js'), '49. the one import is 0.8.161\'s own combined revalidation-plus-plan-identity projection');
 
         const forbiddenInCode = [

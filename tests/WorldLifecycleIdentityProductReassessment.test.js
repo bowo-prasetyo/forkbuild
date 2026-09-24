@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { World } from '../core/World.js';
 import { Document } from '../core/Document.js';
@@ -29,7 +28,9 @@ import { LocalWorldExperienceStore } from '../application/world/LocalWorldExperi
 import { LocalWorldExperience } from '../core/LocalWorldExperience.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { ObserverLocalEncounterStore } from '../application/worldEncounter/ObserverLocalEncounterStore.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.576 — World Lifecycle & Identity Product Reassessment.
 //
@@ -137,16 +138,6 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 // production code; it is reconnaissance/reassessment only.
 //
 // FINDING: see the verdict block at the end of this file.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 class InMemoryStorageProvider extends StorageProvider {
     constructor() {
@@ -281,7 +272,7 @@ async function main() {
         // 0.2.27 doc comment, from `_activeDocumentId` ("which document
         // would an edit land on"). Cited structurally (this file cannot
         // be imported live — see this file's own header).
-        const sessionSource = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(/_focusedDocumentId = null;/.test(sessionSource) && /_activeDocumentId = null;/.test(sessionSource),
             'A9a. WorldNavigationSession.js declares both `_focusedDocumentId` and `_activeDocumentId` as separate fields.');
         assert(/Camera Focus, Active Document, and Selection Are Three Different Things/.test(sessionSource) === false
@@ -452,7 +443,7 @@ async function main() {
         // radius, so D1-D3's coexistence above is the ORDINARY case in
         // production, not a scenario this milestone had to construct
         // artificially.
-        const sessionSource = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(/_loadedDocuments = new Map\(\)/.test(sessionSource), 'D4a. WorldNavigationSession keeps a Map of loaded documents, not a single "current World" scalar.');
         assert(/const toLoad = visibleIds\.filter/.test(sessionSource) && /for \(const id of toLoad\)/.test(sessionSource),
             'D4b. Real streaming loads potentially MULTIPLE documents per updateSpatialView() pass — multi-World coexistence is the ordinary, designed-for shape.');
@@ -624,7 +615,7 @@ async function main() {
         // entirely and drives the session directly still lands on the
         // identical underlying mechanism. There is no second "enter a
         // World" primitive to accidentally diverge from the first.
-        const sessionSource = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         const focusDocumentDefCount = (sessionSource.match(/^\s*focusDocument\(documentId/m) || []).length;
         assert(focusDocumentDefCount === 1, 'G3. focusDocument() itself is defined exactly once in WorldNavigationSession.js — the single real implementation every navigation entry point (router, focusWorld(), navigateToDocument()) ultimately funds.');
 
@@ -681,7 +672,7 @@ async function main() {
         // persisted (contrasted directly against H1's LocalWorldExperience,
         // which persists WHERE the camera was, not WHICH World is
         // currently focused; the two are genuinely different facts).
-        const sessionSource = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(!/_focusedDocumentId.*(?:localStorage|StorageProvider)/.test(sessionSource), 'H5. Nothing persists `_focusedDocumentId` itself — only a per-World camera snapshot (H1) is ever saved, never "which World was focused."');
 
         // H6. Placement information (WorldPlacement, A5): real WORLD_STATE
@@ -763,7 +754,7 @@ async function main() {
         // load exception is caught, recorded into `_failedLoads` for
         // retry, and the loop continues to the NEXT id, never aborting
         // the whole batch. Quoted directly.
-        const sessionSource = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(/for \(const id of toLoad\) \{\s*try \{\s*this\._loadWorld\(id\);/.test(sessionSource),
             'J2a. updateSpatialView() wraps EACH id\'s own _loadWorld() call in its own try/catch, inside the loop.');
         assert(/catch \(err\) \{\s*console\.warn\(`WorldNavigationSession: failed to load world \$\{id\}/.test(sessionSource),
@@ -804,7 +795,7 @@ async function main() {
         // overwrites World-B's active state" cannot occur HERE,
         // structurally, regardless of how fast a Wanderer switches
         // Worlds.
-        const sessionSource = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(!/\bawait\s/.test(sessionSource), 'K1a. No `await` anywhere in WorldNavigationSession.js.');
         assert(!/\basync\s+\w|\basync\s*\(/.test(sessionSource), 'K1b. No `async` function/method anywhere in WorldNavigationSession.js.');
         assert(!/\.then\(/.test(sessionSource), 'K1c. No `.then(` promise chain anywhere in WorldNavigationSession.js — navigation (focusDocument/_loadWorld/_unloadWorld) is fully synchronous, structurally incapable of a late-async-write race.');
@@ -913,7 +904,7 @@ async function main() {
         assert(worldFields.has('_id') && worldFields.has('_buildings') && worldFields.has('_regions'),
             'M1. core/World.js\'s own field set is exactly what this milestone found it to be at the start (id/buildings/groups/placements/landmarks/regions/metadata/eventBus) — no new World identity field was added.');
 
-        const sessionSource = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(!/setInterval\(.*retry|automaticRecover|autoRecover/i.test(sessionSource) || /RETRY_DELAYS/.test(sessionSource),
             'M2. The pre-existing `_failedLoads`/RETRY_DELAYS retry bookkeeping (0.2.x, already in production before this milestone) is a bounded retry of a transient streaming load, never a new "automatic World recovery" feature — nothing new was added here.');
 

@@ -4,10 +4,11 @@ import { WorldNavigationSession } from '../application/world/WorldNavigationSess
 import { DiscoverPlacementsUseCase } from '../application/placement/DiscoverPlacementsUseCase.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
 import { Position } from '../core/Position.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.308 — Publication Multi-Placement Visibility.
 //
@@ -31,18 +32,6 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 // plain ctx object mirroring a Vue component instance, never a full Vue
 // mount. Mirrors tests/PublicationCommentaryUIIntegration.test.js's own
 // structure exactly, one capability over.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 // The real application stack this milestone wires OwnPublicationPanel.js
 // to — a real LocalPlacementRegistry/DiscoverPlacementsUseCase pair
@@ -129,7 +118,7 @@ async function runTests() {
         // WorldNavigationSession.getPlacementsForPublication(), which
         // itself delegates to the registry's own findByPublicationId() —
         // never a second, parallel discovery path.
-        const sessionCode = await codeOnlySource('application/world/WorldNavigationSession.js');
+        const sessionCode = (await Promise.all(worldNavigationSessionFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(sessionCode.includes('getPlacementsForPublication(publicationId)'),
             '4. WorldNavigationSession exposes getPlacementsForPublication()');
         assert(sessionCode.includes('this._placementRegistry.findByPublicationId(publicationId)'),
@@ -221,7 +210,7 @@ async function runTests() {
             '16. an unplaced Publication resolves to a real, empty array');
         assert(ctx.publicationPlacementsError === null, '17. zero placements is never reported as an error');
 
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(panelCode.includes('This Publication has not been placed anywhere yet.'),
             '18. the template renders a dedicated, honest empty-state message');
 
@@ -283,7 +272,7 @@ async function runTests() {
         // calls the mutating placement use cases anywhere in the file —
         // this feature's own methods/template add no new call site for
         // any of them.
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         const forbidden = [
             "from '../../application/placement/PlacePublicationUseCase.js'",
             "from '../../application/placement/MoveWorldPlacementUseCase.js'",

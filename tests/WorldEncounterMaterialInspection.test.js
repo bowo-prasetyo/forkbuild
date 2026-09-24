@@ -6,18 +6,12 @@ import { WorldEncounterMaterialLoadStatus, WorldEncounterMaterialSource } from '
 import { WorldEncounterMaterialVerificationStatus, WorldEncounterMaterialVerifier } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import { LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/worldEncounter/WorldEncounterIntegration.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.9.39 — World Encounter Material Inspection Orchestration.
 // See docs/Roadmap.md, "0.9.39 — World Encounter Material Inspection
 // Orchestration & UI Integration."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function selectionOf({ kind = WorldEncounterKind.PUBLICATION, objectId = 'P1', origin = LOCAL_WORLD_DISCOVERY_ORIGIN } = {}) {
     return Object.freeze({ kind, objectId, origin });

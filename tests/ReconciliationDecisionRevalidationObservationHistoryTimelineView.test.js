@@ -5,6 +5,9 @@ import {
     reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryTimeline
 } from '../application/claimSnapshotReconciliation/revalidationObservation/HistoryTimelineView.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { featureImportLines } from './support/SharedHelperImports.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.165 — Revalidation Observation History Timeline Projection.
 //
@@ -23,14 +26,6 @@ import { PublicationObservationArchive } from '../application/publication/observ
 // Section K: determinism, and reconstruct()'s thin, deliberately-empty
 //            archive boundary
 // Section L: architectural regression — forbidden vocabulary, zero imports
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function planNaming({ divergent = [], claims = [], snapshots = [] } = {}) {
     return Object.freeze({
@@ -360,13 +355,13 @@ async function run() {
         assert(!('observed' in timeline.timeline[0]), '60. an entry never carries its own "observed" field — every genuine timeline entry is, by construction, already a genuine observation');
 
         const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/claimSnapshotReconciliation/revalidationObservation/HistoryTimelineView.js', import.meta.url), 'utf8');
-        const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
+        const importLines = featureImportLines(moduleSource);
         // 0.8.167 — this file now imports exactly ONE module: the archive
         // reconstruction seam (application/
         // application/claimSnapshotReconciliation/revalidationObservation/HistoryView.js),
         // used only by reconstructXxx() above. It still imports nothing from
         // 0.8.162/0.8.163/0.8.164 themselves, or any decision/plan module.
-        assert(importLines.length === 1, '61. this file imports exactly one module');
+        assert(importLines.length === 1, '61. besides shared helpers, this file imports exactly one module');
         assert(importLines[0].includes('./HistoryView.js'), '61b. the one import is the 0.8.167 archive reconstruction seam, never 0.8.162/0.8.163/0.8.164 themselves');
 
         const codeOnly = moduleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n').toLowerCase();

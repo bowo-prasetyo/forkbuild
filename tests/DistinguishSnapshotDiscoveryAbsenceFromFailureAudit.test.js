@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
 import { SnapshotCandidateDiscoveryQueryService } from '../application/snapshot/SnapshotCandidateDiscoveryQueryService.js';
@@ -8,7 +7,9 @@ import {
     executeDiscoverSnapshotCandidatesCommandWithOutcome
 } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.589 — Distinguish Snapshot Discovery Absence from Discovery
 // Failure.
@@ -46,21 +47,11 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 //   H. Flagship — Own Publication: zero candidates (honest) vs
 //      unavailable (honest), through the real production command chain.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));
     for (let i = 0; i < 10; i++) {
         await Promise.resolve();
     }
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 async function codeOnlySource(relativePath) {
@@ -266,7 +257,7 @@ async function runTests() {
         // 'unavailable', and keeps the pre-existing copy for every other
         // empty-result case (genuine empty, and the legacy null-outcome
         // path).
-        const panelTemplate = await readSource('ui/components/OwnPublicationPanel.js');
+        const panelTemplate = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         assert(panelTemplate.includes('Snapshot discovery is currently unavailable.'),
             '27. the template carries the new, honest unavailable-state copy');
         assert(panelTemplate.includes('No Snapshots have been announced under this discoveryTag yet.'),

@@ -1,24 +1,22 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
-import { reconstructPublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
+import { reconstructPublisherLeaderboardSnapshot } from '../application/leaderboard/snapshot/Snapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/snapshot/Fingerprint.js';
 import { reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage } from '../application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js';
-import { LeaderboardClaimArchiveReceiptOutcome } from '../application/leaderboard/ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js';
+import { LeaderboardClaimArchiveReceiptOutcome } from '../application/leaderboard/snapshot/ReceiveClaimIntoArchiveUseCase.js';
 import { ReconciliationDecisionArchiveOutcome } from '../application/claimSnapshotReconciliation/decision/RecordDecisionIntoArchiveUseCase.js';
 import { RevalidationObservationArchiveOutcome } from '../application/claimSnapshotReconciliation/revalidationObservation/RecordRevalidationObservationIntoArchiveUseCase.js';
 import {
     ReconcilePublisherLeaderboardSnapshotClaimUseCase,
     ReconcilePublisherLeaderboardSnapshotClaimOutcome
-} from '../application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js';
+} from '../application/leaderboard/snapshot/ReconcileClaimUseCase.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { readSource } from './support/SourceText.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.407 — Reconciliation Workspace Execution Boundary.
 //
@@ -29,7 +27,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // existing object should become that front door and rejected every one of
 // them, most decisively the Leaderboard itself, self-documented as
 // read-only. This milestone builds the smallest production seam that
-// answers both: application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js,
+// answers both: application/leaderboard/snapshot/ReconcileClaimUseCase.js,
 // ONE explicit application operation composing the five existing,
 // UNCHANGED stages, invoked only by explicit caller action, taking only
 // genuine local-archive + peer-claim-payload inputs.
@@ -80,10 +78,6 @@ function n(message) {
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
 
-async function readSource(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
-
 // A genuine COMPOSITION/IMPORT means the symbol is actually IMPORTED (an
 // `import { ... } from` binding a file's own code can construct and call)
 // — never merely mentioned in a comment. Hoisted to module scope (rather
@@ -99,21 +93,6 @@ function importsSymbol(text, symbol) {
 // exercise the new SEAM, not to author a fifteenth variant of the
 // underlying reconciliation machinery's own fixtures.
 // ---------------------------------------------------------------------
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
-}
 
 function fingerprintOf(snapshot) {
     return describePublisherLeaderboardSnapshotFingerprint(snapshot).fingerprint;
@@ -135,14 +114,14 @@ async function run() {
     // Section A — Operation ownership.
     // ===============================================================
     {
-        const source = await readSource('application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js');
-        assert(source.length > 500, n('A1. application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js exists and is genuine, non-trivial source'));
+        const source = await readSource('application/leaderboard/snapshot/ReconcileClaimUseCase.js');
+        assert(source.length > 500, n('A1. application/leaderboard/snapshot/ReconcileClaimUseCase.js exists and is genuine, non-trivial source'));
         assert(typeof ReconcilePublisherLeaderboardSnapshotClaimUseCase === 'function', n('A2. ReconcilePublisherLeaderboardSnapshotClaimUseCase is a real, importable class'));
         assert(typeof ReconcilePublisherLeaderboardSnapshotClaimOutcome === 'object' && ReconcilePublisherLeaderboardSnapshotClaimOutcome !== null, n('A3. ReconcilePublisherLeaderboardSnapshotClaimOutcome is a real, importable outcome object'));
 
         const applicationFiles = execSync('git ls-files application', { cwd: SOURCE_ROOT }).toString().split('\n').filter((f) => f.endsWith('.js'));
         const uiFiles = execSync('git ls-files ui', { cwd: SOURCE_ROOT }).toString().split('\n').filter((f) => f.endsWith('.js'));
-        const otherFiles = [...applicationFiles, ...uiFiles].filter((f) => f !== 'application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js');
+        const otherFiles = [...applicationFiles, ...uiFiles].filter((f) => f !== 'application/leaderboard/snapshot/ReconcileClaimUseCase.js');
 
         const receiptSymbol = 'ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase';
         const decisionWriteSymbol = 'RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionIntoArchiveUseCase';
@@ -257,7 +236,7 @@ async function run() {
         const archiveSource = await readSource('application/publication/observationArchive/PublicationObservationArchive.js');
         assert(!/reconciliationWorkspace|workspaceRecord|workspaceStore/i.test(archiveSource), n('C4. PublicationObservationArchive.js introduces no parallel "workspace" collection of any kind'));
 
-        const newFileSource = await readSource('application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js');
+        const newFileSource = await readSource('application/leaderboard/snapshot/ReconcileClaimUseCase.js');
         assert(!/new\s+Map\s*\(|new\s+Set\s*\(/.test(newFileSource.replace(/\/\/.*$/gm, '')), n('C5. the new use case holds no in-memory collection of its own — it introduces no hidden, parallel store'));
 
         console.log('\n=== SECTION C: EXISTING STORES, NO PARALLEL WORKSPACE STORE ===');
@@ -337,11 +316,11 @@ async function run() {
             n(`E1. exactly the one file 0.9.408 authorized to call this operation genuinely imports it — never a second, accidental caller (found: ${JSON.stringify(uiFilesImportingOperation)})`)
         );
 
-        const newFileSource = await readSource('application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js');
+        const newFileSource = await readSource('application/leaderboard/snapshot/ReconcileClaimUseCase.js');
         assert(!/setInterval|setTimeout|requestAnimationFrame|addEventListener|\.on\(/.test(newFileSource), n('E2. the new file contains no timer, interval, animation-frame loop, or event subscription of any kind — it can only ever run because a caller explicitly calls execute()'));
         assert(!/automatic\s*=\s*true|source\s*=\s*['"]leaderboard['"]/.test(newFileSource), n('E3. the new file accepts no automatic=true flag and no source="leaderboard" flag'));
 
-        const applicationFiles = execSync('git ls-files application', { cwd: SOURCE_ROOT }).toString().split('\n').filter((f) => f.endsWith('.js') && f !== 'application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js');
+        const applicationFiles = execSync('git ls-files application', { cwd: SOURCE_ROOT }).toString().split('\n').filter((f) => f.endsWith('.js') && f !== 'application/leaderboard/snapshot/ReconcileClaimUseCase.js');
         const applicationSourceBundle = (await Promise.all(applicationFiles.map((f) => readSource(f)))).join('\n');
         assert(!/\bReconcilePublisherLeaderboardSnapshotClaimUseCase\b/.test(applicationSourceBundle), n('E4. no OTHER application/ file references ReconcilePublisherLeaderboardSnapshotClaimUseCase either — it has no caller anywhere in current source'));
 
@@ -400,7 +379,7 @@ async function run() {
         const AUTHORIZED = new Set([
             'tests.html',
             'tests/ReconciliationWorkspaceExecutionBoundary.test.js',
-            'application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js'
+            'application/leaderboard/snapshot/ReconcileClaimUseCase.js'
         ]);
         const unauthorized = changed.filter((f) => !AUTHORIZED.has(f));
         assert(unauthorized.length === 0, n(`H1. every changed/added file is one this milestone explicitly authorized (found unauthorized: ${JSON.stringify(unauthorized)})`));
@@ -413,16 +392,16 @@ async function run() {
 
         const applicationStatus = execSync('git status --porcelain -- application', { cwd: SOURCE_ROOT }).toString().split('\n').map((line) => line.trim()).filter(Boolean);
         const applicationChangedFiles = applicationStatus.map((line) => line.slice(3).trim());
-        assert(applicationChangedFiles.length === 1 && applicationChangedFiles[0] === 'application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js', n('H3. application/ shows exactly one changed file — the new use case — never a modification to any EXISTING reconciliation-family file'));
+        assert(applicationChangedFiles.length === 1 && applicationChangedFiles[0] === 'application/leaderboard/snapshot/ReconcileClaimUseCase.js', n('H3. application/ shows exactly one changed file — the new use case — never a modification to any EXISTING reconciliation-family file'));
 
         console.log('\n=== SECTION H: PRODUCTION BOUNDARY ===');
-        console.log('✓ Section H: only application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js (new), this test file, and tests.html\'s own registration changed. No existing production file was modified.');
+        console.log('✓ Section H: only application/leaderboard/snapshot/ReconcileClaimUseCase.js (new), this test file, and tests.html\'s own registration changed. No existing production file was modified.');
     }
 
     console.log('\n' + '='.repeat(78));
     console.log('RECONCILIATION_WORKSPACE_EXECUTION_BOUNDARY_ESTABLISHED');
     console.log('');
-    console.log('application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js is now the');
+    console.log('application/leaderboard/snapshot/ReconcileClaimUseCase.js is now the');
     console.log('ONE explicit application operation composing the full, UNCHANGED five-stage');
     console.log('reconciliation producer chain, reachable only by explicit caller action.');
     console.log('The Leaderboard remains exactly what 0.9.406 decided it must stay: a');

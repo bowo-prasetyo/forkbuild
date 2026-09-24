@@ -6,6 +6,7 @@ import { PublicationDistributionState } from '../application/publication/distrib
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.105 — Publication Distribution Configuration Boundary.
 // See docs/Roadmap.md, "0.9.105 — Publication Distribution Configuration
@@ -25,10 +26,6 @@ import { Signature } from '../core/Signature.js';
 //   Section D: two composed commands are entirely independent — no shared
 //              state between them
 //   Section E: architectural regression
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

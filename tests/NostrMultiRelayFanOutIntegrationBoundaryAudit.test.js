@@ -1,4 +1,4 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
@@ -11,7 +11,8 @@ import {
 import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
 import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
-import { publicationsPageFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, editorViewFiles, worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.445 — Nostr Multi-Relay Fan-Out Integration Boundary Audit.
 //
@@ -96,9 +97,7 @@ function n(message) {
 }
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
-async function source(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
+
 function codeOnly(text) {
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
@@ -684,6 +683,10 @@ async function run() {
         // for all six allowlisted files together, not only ui/main.js.
         const NOSTR_MULTI_RELAY_UI_REACHABILITY_ALLOWLIST = new Set([
             'ui/main.js',
+            // The composition root's compose functions that wire the relay set.
+            'ui/main/composePublicationDistribution.js',
+            'ui/main/composeSnapshotDiscovery.js',
+            'ui/main/composeWorldDiscovery.js',
             'ui/router/index.js',
             'ui/views/NostrPublicationRelaySettingsView.js',
             'ui/views/WorldView.js',
@@ -701,7 +704,7 @@ async function run() {
         const unexpectedUiFiles = uiFilesReferencingMultiRelay.filter((relPath) => !NOSTR_MULTI_RELAY_UI_REACHABILITY_ALLOWLIST.has(relPath));
         assert(unexpectedUiFiles.length === 0, n(`J4. AMENDED BY 0.9.450 — no file under ui/ OUTSIDE this milestone's own six allowlisted files references "MultiRelay" or "nostrRelayUrls" — found unexpected: ${JSON.stringify(unexpectedUiFiles)}. The UI layer still has no independent, hidden fan-out capability of its own — the only reachability is through the existing, unmodified application-layer composer`));
         assert(new Set(uiFilesReferencingMultiRelay).size <= NOSTR_MULTI_RELAY_UI_REACHABILITY_ALLOWLIST.size, n('J4b. the allowlisted set itself has not silently grown beyond the six files this milestone actually added'));
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         assert(!/new NostrMultiRelayPublicationDiscoveryPublisher/.test(mainSource) && !mainSource.includes("from '../application/nostr/NostrMultiRelayPublicationDiscoveryPublisher.js'"),
             n('J4c. ui/main.js never constructs NostrMultiRelayPublicationDiscoveryPublisher directly and never imports it — it only calls composeMultiRelayNostrPublicationDistributionCommand(), the existing application-layer composer, exactly as it already does for the single-relay command'));
         // J4d. AMENDED BY 0.9.450 — the same "no direct construction, no
@@ -828,6 +831,10 @@ async function run() {
         // files, for the identical reason.
         const NOSTR_MULTI_RELAY_UI_REACHABILITY_ALLOWLIST = new Set([
             'ui/main.js',
+            // The composition root's compose functions that wire the relay set.
+            'ui/main/composePublicationDistribution.js',
+            'ui/main/composeSnapshotDiscovery.js',
+            'ui/main/composeWorldDiscovery.js',
             'ui/router/index.js',
             'ui/views/NostrPublicationRelaySettingsView.js',
             'ui/views/WorldView.js',

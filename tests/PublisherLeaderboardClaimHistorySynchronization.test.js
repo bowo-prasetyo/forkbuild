@@ -1,26 +1,27 @@
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
 import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js';
-import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
-import { appendLeaderboardClaimHistoryEntry } from '../application/leaderboard/LeaderboardClaimHistory.js';
+import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/leaderboard/snapshot/CreateClaimUseCase.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/claim/Record.js';
+import { appendLeaderboardClaimHistoryEntry } from '../application/leaderboard/claim/History.js';
 import { PublicationObservationArchiveProvenanceOrigin } from '../application/publication/observationArchive/PublicationObservationArchiveProvenance.js';
 import {
     PublisherLeaderboardClaimHistoryExchangeProtocolVersion,
     exportPublisherLeaderboardClaimHistory,
     applyPublisherLeaderboardClaimHistoryExchange,
     PublisherLeaderboardClaimHistoryExchangeApplyOutcome
-} from '../application/leaderboard/PublisherLeaderboardClaimHistoryExchange.js';
-import { describePublisherLeaderboardClaimHistoryDifference } from '../application/leaderboard/PublisherLeaderboardClaimHistoryDifference.js';
+} from '../application/leaderboard/claim/HistoryExchange.js';
+import { describePublisherLeaderboardClaimHistoryDifference } from '../application/leaderboard/claim/HistoryDifference.js';
 import {
     describePublisherLeaderboardClaimHistorySynchronization,
     reconstructPublisherLeaderboardClaimHistorySynchronization,
     exportPublisherLeaderboardClaimHistorySynchronization,
     applyPublisherLeaderboardClaimHistorySynchronization
-} from '../application/leaderboard/PublisherLeaderboardClaimHistorySynchronization.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
+} from '../application/leaderboard/claim/HistorySynchronization.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { assert } from './support/Assert.js';
+import { makeIdentity } from './support/TestIdentity.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.131 — Claim History Synchronization Exchange.
 //
@@ -49,31 +50,12 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //            results; every payload this file produces is a genuine
 //            0.8.126 envelope, never a new shape
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function archiveFromClaimHistory(history) {
     let archive = PublicationObservationArchive.empty();
     for (const record of history) {
         archive = archive.appendLeaderboardClaimRecord(record, record.origin);
     }
     return archive;
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 async function withoutNetworkAccess(fn) {
@@ -88,10 +70,6 @@ async function withoutNetworkAccess(fn) {
 }
 
 const NETWORK = 'mainnet';
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function anchor(archive, letter, txid, createdAt) {
     const useCase = new CreateBitcoinAnchorPublicationRecordUseCase();

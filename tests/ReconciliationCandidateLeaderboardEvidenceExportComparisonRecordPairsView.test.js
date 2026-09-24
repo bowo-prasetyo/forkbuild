@@ -4,6 +4,8 @@ import {
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifference
 } from '../application/claimSnapshotReconciliation/evidenceExportComparison/RecordDifferenceView.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.198 — Reconciliation Candidate Leaderboard Evidence Export Comparison
 // Record Pairs View.
@@ -29,14 +31,6 @@ import {
 //            reconstructXxx, no candidate-based/timestamp-based pairing,
 //            no sourceOnly/targetOnly reads, no difference/verdict
 //            vocabulary.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function candidateOf(claimId) {
     return Object.freeze({ type: 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT', claimId });

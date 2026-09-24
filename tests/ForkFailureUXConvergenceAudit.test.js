@@ -29,6 +29,8 @@ import { ForkFailureReason } from '../application/document/ForkFailureReason.js'
 import { StorageProvider } from '../storage/StorageProvider.js';
 import ForkFailureDialog from '../ui/components/ForkFailureDialog.js';
 import { editorViewFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.354 — Fork Failure UX Convergence Audit.
 //
@@ -74,15 +76,6 @@ import { editorViewFiles } from './support/SourceFileGroups.js';
 // own id, not a separate concept that merely happens to route the same
 // way. `/world/:documentId` (ui/router/index.js) then resolves that
 // exact id as the World to open.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 // -----------------------------------------------------------------
 // Harness: real, in-memory collaborators. InMemoryStorageProvider

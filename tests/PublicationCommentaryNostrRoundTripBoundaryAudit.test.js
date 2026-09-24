@@ -1,8 +1,6 @@
 import { execSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
@@ -29,6 +27,8 @@ import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
 // job in Section A, exactly as 0.9.625/0.9.626 already found.
 import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
 import { NostrDiscoveryQueryService } from '../application/nostr/NostrDiscoveryQueryService.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.627 — Publication Commentary Nostr Round-Trip Boundary Audit.
 //
@@ -133,21 +133,6 @@ function n(message) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
-}
 
 function fakeExtension(signerIdentityHint) {
     const calls = { getPublicKey: 0, signEvent: [] };

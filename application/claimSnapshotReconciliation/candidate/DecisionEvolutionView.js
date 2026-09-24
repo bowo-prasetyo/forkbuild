@@ -2,6 +2,7 @@ import {
     describePublisherLeaderboardClaimSnapshotReconciliationDecisionCandidateCorrespondence,
     reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionCandidateCorrespondence
 } from '../decision/CandidateCorrespondenceView.js';
+import { candidateIdentityKey } from '../CandidateIdentityKey.js';
 
 // 0.8.154 — Reconciliation Candidate Decision Evolution Projection.
 //
@@ -10,7 +11,7 @@ import {
 // embedded candidate — in `history`'s own existing order, never re-sorted
 // and never grouped. This file is the reverse direction of that same
 // relationship, and nothing more — the decision-history analogue of
-// `application/leaderboard/PublisherLeaderboardClaimEvolutionView.js` (0.8.133), one
+// `application/leaderboard/claim/EvolutionView.js` (0.8.133), one
 // subject over: where that file narrates HOW ONE SIGNER'S OWN SEQUENCE OF
 // CLAIMS looks, this file narrates HOW ONE CANDIDATE'S OWN SEQUENCE OF
 // RECORDED DECISIONS looks:
@@ -286,21 +287,4 @@ function buildEvolution(correspondence) {
         distinctCandidateCount: candidateEvolutions.length,
         candidateEvolutions: Object.freeze(candidateEvolutions)
     });
-}
-
-// The complete structural candidate identity key — 0.8.147's and 0.8.153's
-// own key, reused unchanged. `type` is always part of the key;
-// `claimId`/`snapshotIndex` are included only when 0.8.144's own shape for
-// that `type` actually carries them.
-function candidateIdentityKey(candidate) {
-    if (candidate.type === 'DIVERGENT_CORRESPONDENCE') {
-        return `DIVERGENT_CORRESPONDENCE:${candidate.claimId}:${candidate.snapshotIndex}`;
-    }
-    if (candidate.type === 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT') {
-        return `CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT:${candidate.claimId}`;
-    }
-    if (candidate.type === 'SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM') {
-        return `SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM:${candidate.snapshotIndex}`;
-    }
-    return `UNKNOWN:${JSON.stringify(candidate)}`;
 }

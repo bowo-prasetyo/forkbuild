@@ -8,6 +8,7 @@ import {
     latestIpfsPublicationContentVerification
 } from '../application/ipfs/IpfsPublicationContentVerificationHistory.js';
 import { describeIpfsPublicationContentVerificationHistory } from '../application/ipfs/IpfsPublicationContentVerificationHistoryView.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.72 — IPFS Publication Verification History & Inspection UI.
 //
@@ -45,10 +46,6 @@ import { describeIpfsPublicationContentVerificationHistory } from '../applicatio
 //
 // See docs/Roadmap.md, "0.8.72 — IPFS Publication Verification History &
 // Inspection UI."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertNeverScored(obj, path) {
     if (!obj || typeof obj !== 'object') return;

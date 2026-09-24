@@ -2,7 +2,6 @@ import { execSync } from 'node:child_process';
 
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
 import { SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
 import { LocalSnapshotCandidateDiscoveryQueryService } from '../application/snapshot/LocalSnapshotCandidateDiscoveryQueryService.js';
 import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
@@ -11,6 +10,9 @@ import { composeSnapshotCandidateDiscoveryRuntime } from '../application/snapsho
 import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
 import { SnapshotPlacementResolver } from '../application/snapshot/placement/SnapshotPlacementResolver.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.485 — Walking-Triggered Snapshot Candidate Query Service Integration
 // Audit.
@@ -61,10 +63,6 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 // now). Every other section here still holds unmodified: Local and Nostr
 // remain exactly as this file already proved them.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
 
 function readSource(relativePath) {
@@ -83,14 +81,6 @@ function grepFiles(pattern, dirs, { ignoreCase = false } = {}) {
 
 function stripLineComments(source) {
     return source.replace(/\/\/.*$/gm, '');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeNostrQueryImpl(events) {
@@ -394,7 +384,7 @@ async function run() {
         // for 0.9.486's own full audit of that wiring. This assertion is
         // updated in place, rather than left to fail forever, to confirm
         // the wiring 0.9.485 deferred has genuinely landed.
-        const mainSource = readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(/const discoverSnapshotCandidatesCommand = \(\) => executeDiscoverSnapshotCandidatesCommand\(\{\s*\n\s*discoveryTag: 'forkbuild-snapshot',\s*\n\s*discoveryQueryService: snapshotCandidateDiscoveryQueryService/.test(mainSource),
             '4. ui/main.js\'s own discoverSnapshotCandidatesCommand now calls snapshotCandidateDiscoveryQueryService (the Local+Nostr composite this milestone built) — wired in by 0.9.486, as this milestone\'s own header already named.');
 
@@ -467,7 +457,7 @@ async function run() {
         // Nostr and placementCatalog lines — see tests/
         // SnapshotCandidateDiscoveryArweaveCompositionIntegrationAudit.test.js
         // for that milestone's own full audit of the Arweave source itself.
-        const mainSource = stripLineComments(readSource('ui/main.js'));
+        const mainSource = stripLineComments((await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n'));
         assert(/composeSnapshotCandidateDiscoveryRuntime\(\{\s*\n\s*nostrSnapshotDiscoveryQueryService: snapshotDiscoveryQueryService,\s*\n\s*arweaveSnapshotDiscoveryQueryService,\s*\n\s*placementCatalog: publicationSnapshotPlacementCatalog/.test(mainSource),
             '5. ui/main.js composes the runtime from the SAME snapshotDiscoveryQueryService, arweaveSnapshotDiscoveryQueryService, and publicationSnapshotPlacementCatalog instances it already built for other purposes — never a second construction of any of the three.');
         assert(!/new NostrSnapshotDiscoveryQueryService\([^)]*\)[\s\S]{0,400}composeSnapshotCandidateDiscoveryRuntime/.test(mainSource),

@@ -1,18 +1,16 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { PublicationObservationArchiveProvenanceOrigin } from '../application/publication/observationArchive/PublicationObservationArchiveProvenance.js';
-import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
-import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/claim/Record.js';
+import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/snapshot/Snapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/snapshot/Fingerprint.js';
 import { reconstructPublisherLeaderboard } from '../application/leaderboard/PublisherLeaderboardView.js';
 import {
     ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase,
     LeaderboardClaimArchiveReceiptOutcome
-} from '../application/leaderboard/ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js';
+} from '../application/leaderboard/snapshot/ReceiveClaimIntoArchiveUseCase.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationPlan } from '../application/claimSnapshotReconciliation/PlanView.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecision } from '../application/claimSnapshotReconciliation/decision/Decision.js';
 import {
@@ -27,11 +25,11 @@ import {
 import { reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage } from '../application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
 import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { readSource } from './support/SourceText.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.405 — Reconciliation Candidate Production Product Gap Audit.
 //
@@ -125,10 +123,6 @@ function n(message) {
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
 
-async function readSource(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
-
 // ---------------------------------------------------------------------
 // Fixture helpers — the identical shapes 0.8.144-0.8.167's own tests
 // already use (tests/PublicationObservationArchiveReconciliationDecision
@@ -137,21 +131,6 @@ async function readSource(relativePath) {
 // reinvented, because this audit's job is to exercise the REAL machinery,
 // not to author a fourteenth variant of it.
 // ---------------------------------------------------------------------
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
-}
 
 function makePolicy(version) {
     return Object.freeze({
@@ -197,9 +176,9 @@ async function run() {
     // ===============================================================
     {
         const backendFiles = [
-            'application/leaderboard/LeaderboardClaimRecord.js',
-            'application/leaderboard/ReceivePublisherLeaderboardSnapshotClaimUseCase.js',
-            'application/leaderboard/ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js',
+            'application/leaderboard/claim/Record.js',
+            'application/leaderboard/snapshot/ReceiveClaimUseCase.js',
+            'application/leaderboard/snapshot/ReceiveClaimIntoArchiveUseCase.js',
             'application/leaderboard/PublisherLeaderboardView.js',
             'application/claimSnapshotReconciliation/PlanView.js',
             'application/claimSnapshotReconciliation/ReconciliationCandidate.js',

@@ -1,6 +1,6 @@
-import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
-import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
+import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/snapshot/Snapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/snapshot/Fingerprint.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/claim/Record.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationPlan } from '../application/claimSnapshotReconciliation/PlanView.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecision } from '../application/claimSnapshotReconciliation/decision/Decision.js';
 import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry } from '../application/claimSnapshotReconciliation/decision/History.js';
@@ -11,10 +11,12 @@ import {
 import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { featureImportLines } from './support/SharedHelperImports.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.8.153 — Historical Reconciliation Decision-to-Candidate Correspondence
 // Projection.
@@ -36,29 +38,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //            stored history itself
 // Section J: vocabulary/import boundary — no rediscovery of 0.8.144, no
 //            interpretive vocabulary
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
-}
 
 function makePolicy(version) {
     return Object.freeze({
@@ -370,8 +349,8 @@ async function run() {
         // this file imports exactly ONE module: the archive reconstruction
         // seam, used only by reconstructXxx(). It never imports the plan,
         // candidate-selection, or reconciliation-discovery modules.
-        const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
-        assert(importLines.length === 1, '57. this file imports exactly one module');
+        const importLines = featureImportLines(moduleSource);
+        assert(importLines.length === 1, '57. besides shared helpers, this file imports exactly one module');
         assert(importLines[0].includes('./HistoryView.js'), '58. the one import is the 0.8.150 archive reconstruction seam, never 0.8.144\'s own candidate-selection boundary or any plan/discovery module');
         assert(!codeOnly.includes('reconciliationplanview') && !codeOnly.includes('describepublisherleaderboardclaimsnapshotreconciliationcandidate'), '59. this file never calls 0.8.144\'s own candidate-selection function to rediscover a candidate');
     }

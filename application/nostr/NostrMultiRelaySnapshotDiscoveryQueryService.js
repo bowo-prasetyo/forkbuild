@@ -1,5 +1,6 @@
 import { NostrSnapshotDiscoveryQueryService } from './NostrSnapshotDiscoveryQueryService.js';
 import { SnapshotCandidateDiscoveryOutcome } from '../snapshot/SnapshotCandidateDiscoveryOutcome.js';
+import { normalizeRelayUrls } from './NostrRelayUrls.js';
 
 // Nostr Multi-Relay Snapshot Discovery Query Service.
 //
@@ -135,19 +136,4 @@ export class NostrMultiRelaySnapshotDiscoveryQueryService {
 
         return { outcome: mergedOutcome, candidates };
     }
-}
-
-// De-duplicates `relayUrls` by trimmed string equality, preserving the
-// order each distinct value first appears in.
-function normalizeRelayUrls(relayUrls) {
-    const seen = new Set();
-    const normalized = [];
-    for (const relayUrl of relayUrls) {
-        if (typeof relayUrl !== 'string') continue;
-        const trimmed = relayUrl.trim();
-        if (trimmed.length === 0 || seen.has(trimmed)) continue;
-        seen.add(trimmed);
-        normalized.push(trimmed);
-    }
-    return normalized;
 }

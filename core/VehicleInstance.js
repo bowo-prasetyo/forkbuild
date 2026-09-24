@@ -2,6 +2,7 @@ import { Position } from './Position.js';
 import { VehicleType, isValidVehicleType } from './VehicleType.js';
 import { VehiclePresence } from './VehiclePresence.js';
 import { isNonEmptyString } from '../utils/typeGuards.js';
+import { isFiniteCoordinate } from './FiniteCoordinates.js';
 
 // 0.9.114 — Vehicle Runtime Instance State.
 //
@@ -187,10 +188,6 @@ import { isNonEmptyString } from '../utils/typeGuards.js';
 // vehicleInstanceFromPresence() sets `heading` to the same neutral `0`
 // default described above — core/VehiclePresence.js has no facing
 // concept of its own to copy, and this file never invents one.
-
-function isFiniteCoordinate(value) {
-    return typeof value === 'number' && Number.isFinite(value);
-}
 
 function toHeading(value) {
     if (value === undefined) {

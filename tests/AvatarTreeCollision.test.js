@@ -6,6 +6,7 @@ import { AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
 import { treeCollisionCircleFor, treeCollisionGeometryInRegion } from '../core/TreeCollisionGeometry.js';
 import { naturalFeaturesInRegion, FEATURE_TYPE } from '../core/NaturalFeatureField.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.60 — Avatar-Tree Collision Detection, core/AvatarTreeCollision.js.
 //
@@ -24,10 +25,6 @@ import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 // it never RESOLVES — every test asserts a boolean fact about two given
 // circles, never a movement outcome. See docs/Roadmap.md, 0.9.60, for the
 // full milestone story.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function runTests() {
     // -------------------------------------------------------------

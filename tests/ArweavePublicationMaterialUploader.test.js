@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { ArweavePublicationMaterialUploader } from '../application/arweave/ArweavePublicationMaterialUploader.js';
 import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.45 — Arweave Publication Material Uploader.
 // See docs/Roadmap.md, "0.9.45 — Arweave Publication Material Uploader."
@@ -36,10 +37,6 @@ import { describePublicationDistribution } from '../application/publication/dist
 //   Section K: the resulting uri composes directly as
 //              PublicationDistributionDescriptor's own materialUri
 //   Section L: architectural regression — no forbidden imports/vocabulary
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

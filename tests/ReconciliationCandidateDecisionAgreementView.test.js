@@ -1,6 +1,6 @@
-import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
-import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
+import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/snapshot/Snapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/snapshot/Fingerprint.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/claim/Record.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationPlan } from '../application/claimSnapshotReconciliation/PlanView.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecision } from '../application/claimSnapshotReconciliation/decision/Decision.js';
 import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry } from '../application/claimSnapshotReconciliation/decision/History.js';
@@ -11,10 +11,12 @@ import {
 import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { featureImportLines } from './support/SharedHelperImports.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.8.156 — Reconciliation Candidate Decision Agreement Projection.
 //
@@ -37,29 +39,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // Section I: reconstruct()'s archive-reading boundary
 // Section J: malformed input tolerance
 // Section K: vocabulary/import boundary
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
-}
 
 function makePolicy(version) {
     return Object.freeze({
@@ -472,8 +451,8 @@ async function run() {
         // difference), 0.8.150's own archive-reading seam, and 0.8.154 (the
         // candidate grouping) — nothing from 0.8.144/0.8.145/0.8.146/0.8.151
         // through 0.8.153, 0.8.155.
-        const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
-        assert(importLines.length === 3, '78. this file imports from exactly three modules');
+        const importLines = featureImportLines(moduleSource);
+        assert(importLines.length === 3, '78. besides shared helpers, this file imports from exactly three modules');
         const importBlock = moduleSource.slice(0, moduleSource.indexOf('function describePublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionAgreement'));
         assert(importBlock.includes('../decision/HistoryDifference.js'), '79. one import is 0.8.149\'s own decision history difference module');
         assert(importBlock.includes('./DecisionEvolutionView.js'), '80. one import is 0.8.154\'s own candidate decision evolution module');

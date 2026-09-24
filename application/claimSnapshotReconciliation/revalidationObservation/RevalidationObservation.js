@@ -1,4 +1,5 @@
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryRevalidationPlanIdentity } from '../decision/HistoryRevalidationPlanIdentityView.js';
+import { isGenuineDecision } from '../decision/DecisionRecord.js';
 
 // 0.8.162 — Historical Decision Revalidation Observation Record.
 //
@@ -106,9 +107,8 @@ import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryR
 // rejects exactly three things, each producing the identical
 // `{ observed: false, outcome: 'INVALID_OBSERVATION' }`:
 //   - `decisionRecord` is not a genuine `{ decided: true, candidate,
-//     decision, decidedAt }` record (0.8.153's/0.8.156's/0.8.157's/0.8.158's
-//     own duplicated `isGenuineDecision()` rule, applied here once more for
-//     the identical reason those files each duplicate it);
+//     decision, decidedAt }` record (the shared `isGenuineDecision()` rule
+//     in decision/DecisionRecord.js);
 //   - `plan` is not itself a genuine, non-null OBJECT — a narrower gate than
 //     0.8.144's/0.8.160's own tolerance, and deliberately so: those files
 //     already treat a plan whose relevant LIST is missing, or is not a
@@ -214,20 +214,4 @@ export function describePublisherLeaderboardClaimSnapshotReconciliationDecisionR
         candidateMatchesPlan: revalidation.candidateMatchesPlan,
         observedAt: observedAtDate.toISOString()
     });
-}
-
-// A genuine 0.8.145 decision record — duplicated from 0.8.153's/0.8.156's/
-// 0.8.157's/0.8.158's own private `isGenuineDecision()` for the identical
-// reason those files each duplicate it: this file must apply the exact
-// same genuineness rule without importing a module that itself carries
-// plan/discovery vocabulary.
-function isGenuineDecision(entry) {
-    return (
-        entry !== null && typeof entry === 'object'
-        && entry.decided === true
-        && entry.candidate !== null && typeof entry.candidate === 'object'
-        && typeof entry.candidate.type === 'string'
-        && (entry.decision === 'OBSERVE' || entry.decision === 'DEFER')
-        && typeof entry.decidedAt === 'string'
-    );
 }

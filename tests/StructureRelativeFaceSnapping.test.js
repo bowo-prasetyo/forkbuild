@@ -15,7 +15,8 @@ import { StructurePlacementTool } from '../application/tools/StructurePlacementT
 import { StructurePreviewUseCase } from '../application/editor/StructurePreviewUseCase.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.611 — Add Structure Relative Face Snapping.
 //
@@ -66,20 +67,8 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //      structure placement and SelectionTool's drag-move path are
 //      unaffected.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function approxEqual(a, b, eps = 1e-9) {
     return Math.abs(a - b) < eps;
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function saveDocument(storage, serializer, document) {

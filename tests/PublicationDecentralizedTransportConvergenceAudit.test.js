@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { applicationPath } from './support/ApplicationFiles.js';
 import { execSync } from 'node:child_process';
 
@@ -24,10 +23,12 @@ import { PLACE_NAMING_CLAIM_PUBLICATION_KIND } from '../application/placeNaming/
 import { createPlaceNamingClaimPublicationKind } from '../application/placeNaming/PlaceNamingClaimPublicationKind.js';
 
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.332 — Publication Decentralized Transport Convergence Audit.
 //
@@ -68,10 +69,6 @@ import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 //               Repository's concern.
 //   Section I — Final verdict and production-change guard.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function expectThrows(fn, message) {
     let threw = false;
     let error = null;
@@ -81,10 +78,6 @@ function expectThrows(fn, message) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {
@@ -103,14 +96,6 @@ function grepFiles(pattern, dirs, { ignoreCase = false } = {}) {
             { cwd: SOURCE_ROOT.pathname }).toString();
     } catch { /* grep exits non-zero on no match; treated as zero hits */ }
     return hits.trim() ? hits.trim().split('\n') : [];
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeIdentity(label) {

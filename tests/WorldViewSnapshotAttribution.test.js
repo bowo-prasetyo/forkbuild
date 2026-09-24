@@ -14,7 +14,8 @@ import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.144 — World View Snapshot Attribution Integration.
 //
@@ -71,10 +72,6 @@ import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileG
 //            place; both entry points share the exact same
 //            discoverOwnSnapshot() function; Snapshot Distribution stays
 //            entirely untouched by this milestone.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -502,7 +499,7 @@ async function runTests() {
     // Section I — architectural regression.
     // ---------------------------------------------------------------
     {
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
 
         const forbiddenInUi = [
@@ -528,9 +525,9 @@ async function runTests() {
         // never "exactly one call in the whole file."
         assert((panelCode.match(/resolveSnapshotPublicationAttribution\(/g) || []).length === 2,
             '28. OwnPublicationPanel.js calls resolveSnapshotPublicationAttribution() from exactly two places — discoverOwnSnapshot()\'s own (0.9.144) and attributeSelectedSnapshot()\'s own (0.9.154), never a third');
-        assert((panelCode.match(/discoverOwnSnapshot\(\)\s*\{[\s\S]*?\n\s{8}\},/) || [''])[0].includes('resolveSnapshotPublicationAttribution('),
+        assert((panelCode.match(/discoverOwnSnapshot\(\)\s*\{[\s\S]*?\n {4}\},?/) || [''])[0].includes('resolveSnapshotPublicationAttribution('),
             '28b. discoverOwnSnapshot() still contains its own original call site, unchanged by this milestone');
-        assert((panelCode.match(/attributeSelectedSnapshot\(\)\s*\{[\s\S]*?\n\s{8}\}/) || [''])[0].includes('resolveSnapshotPublicationAttribution('),
+        assert((panelCode.match(/attributeSelectedSnapshot\(\)\s*\{[\s\S]*?\n {4}\}/) || [''])[0].includes('resolveSnapshotPublicationAttribution('),
             '28c. attributeSelectedSnapshot() (0.9.154) contains its own, independent call site');
         assert((canvasCode.match(/resolveSnapshotPublicationAttribution\(/g) || []).length === 1,
             '29. WorldEncounterCanvas.js calls resolveSnapshotPublicationAttribution() from exactly one place');
@@ -539,7 +536,7 @@ async function runTests() {
 
         // Snapshot Distribution stays entirely untouched by this
         // milestone — no automatic attribution during distribution.
-        assert((panelCode.match(/distributeOwnSnapshot\(\)\s*\{[\s\S]*?\n\s{8}\},/) || [''])[0].indexOf('resolveSnapshotPublicationAttribution') === -1,
+        assert((panelCode.match(/distributeOwnSnapshot\(\)\s*\{[\s\S]*?\n {4}\},?/) || [''])[0].indexOf('resolveSnapshotPublicationAttribution') === -1,
             '31. distributeOwnSnapshot() never calls resolveSnapshotPublicationAttribution() — distribution and attribution stay independent');
         assert((canvasCode.match(/distributeSelectedSnapshot\(\)\s*\{[\s\S]*?\n\s{4}\},/) || [''])[0].indexOf('resolveSnapshotPublicationAttribution') === -1,
             '32. distributeSelectedSnapshot() never calls resolveSnapshotPublicationAttribution() either');

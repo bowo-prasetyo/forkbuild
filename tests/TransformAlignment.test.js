@@ -10,6 +10,7 @@ import { SpatialEditingService } from '../application/editor/SpatialEditingServi
 import { SpatialSelectionState } from '../application/spatial-state/SpatialSelectionState.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
 import { TransformAlignment } from '../application/editor/TransformAlignment.js';
+import { assert } from './support/Assert.js';
 
 // 0.1.48 — Alignment & Distribution tests.
 //
@@ -19,10 +20,6 @@ import { TransformAlignment } from '../application/editor/TransformAlignment.js'
 // preserve rotation and group membership, produce zero history entries
 // when they are no-ops, and behave byte-identically in Editor and World
 // View — with no new domain entities, commands, or transform models.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function close(actual, expected, message) {
     assert(Math.abs(actual - expected) < 1e-9, `${message}: expected ${expected}, got ${actual}`);

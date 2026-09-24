@@ -15,6 +15,13 @@ const NEARBY_RADIUS = 5;
 // document and placement info, overlap checks, search, the location browser,
 // placing/moving/removing placements, unpublishing, commentary and
 // notification history.
+//
+// The World Location Browser is camera-driven exploration of a region,
+// instead of knowing a name or typing coordinates. Not a second discovery
+// mechanism: every method wraps searchWorldByLocation/searchWorld, so there
+// is one path (query -> discoveryProvider -> position enrichment -> radius
+// test). Nothing in it moves, edits, forks or publishes (see
+// docs/Principles.md, "Navigation Never Implies Editing").
 export const placementMethods = {
     // Normalized data for the Document Info panel — the same shape
     // for a published snapshot, a fork, or an ordinary loaded

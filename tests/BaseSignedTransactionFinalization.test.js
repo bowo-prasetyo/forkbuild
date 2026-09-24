@@ -3,6 +3,7 @@ import { BaseSignedTransactionFinalizer } from '../base/BaseSignedTransactionFin
 import { BaseSignedTransactionFinalizationCoordinator } from '../application/anchoring/base/BaseSignedTransactionFinalizationCoordinator.js';
 import { BaseSignedTransactionFinalizationState, isValidBaseSignedTransactionFinalizationState } from '../application/anchoring/base/BaseSignedTransactionFinalizationState.js';
 import { describeBaseSignedTransactionFinalization, describeBaseSignedTransactionFinalizationStateLabel } from '../application/anchoring/base/BaseSignedTransactionFinalizationView.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.94 — Explicit Base Signed Transaction Verification & Finalization.
 //
@@ -43,10 +44,6 @@ import { describeBaseSignedTransactionFinalization, describeBaseSignedTransactio
 //              list, contract creation) vs. genuine cryptographic ones.
 //   Section N: a malformed `plan` throws, before rawTransaction is ever
 //              considered.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

@@ -1,8 +1,5 @@
 import { execSync } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
@@ -20,6 +17,10 @@ import {
 
 import { createNostrInjectedProviderPublisher } from '../nostr/NostrInjectedProviderPublisher.js';
 import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.628 — Publication Commentary Nostr Asynchronous Distribution.
 //
@@ -85,9 +86,7 @@ function n(message) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
+
 function codeOnly(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
@@ -98,21 +97,6 @@ function grepFiles(pattern, dirs) {
             { cwd: SOURCE_ROOT.pathname }).toString();
     } catch { /* zero hits */ }
     return hits.trim() ? hits.trim().split('\n') : [];
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 function makeExchange(identityProvider) {
@@ -457,7 +441,7 @@ async function run() {
         // UNIFIED — ui/main.js now imports the fan-out wrapper instead of
         // the single-relay class directly; see this file's own "production
         // wiring census" amendment, above.
-        const mainSource = codeOnly(await rawSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         assert(mainSource.includes("import { NostrMultiRelayPublicationCommentaryDistribution } from '../application/nostr/NostrMultiRelayPublicationCommentaryDistribution.js';")
             && mainSource.includes("import { DiscoverPublicationCommentaryFromNostrUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryFromNostrUseCase.js';"),
             n('ui/main.js imports both new classes'));
@@ -474,7 +458,7 @@ async function run() {
     // announce -> Nostr publish, source order and live instrumentation.
     // ===============================================================
     {
-        const mainSource = codeOnly(await rawSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         const wrapperMatch = mainSource.match(/function addPublicationCommentaryCommand\(input\) \{([\s\S]*?)\n\}/);
         assert(wrapperMatch !== null, n('ui/main.js\'s own addPublicationCommentaryCommand wrapper is found, source-level'));
         const wrapperBody = wrapperMatch[1];
@@ -554,7 +538,7 @@ async function run() {
         assert(!/Nostr/.test(getUseCaseSource) && !/Nostr/.test(createUseCaseSource),
             n('application/publication/commentary/GetPublicationCommentariesUseCase.js and application/publication/commentary/CreatePublicationCommentaryUseCase.js — both unmodified by this milestone — mention nothing Nostr-shaped; the synchronous, storage-only read path is untouched, exactly as this milestone\'s own requesting brief required ("retrieval should remain explicitly separate")'));
 
-        const mainSource = codeOnly(await rawSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         assert(mainSource.includes('function discoverPublicationCommentaryFromNostrCommand(publicationId) {')
             && !/getPublicationCommentariesCommand\s*=.*[Nn]ostr/.test(mainSource),
             n('the Nostr discovery command is its own, separately-named, separately-invoked function — never folded into getPublicationCommentariesCommand, and never invoked automatically inside it'));
@@ -570,7 +554,7 @@ async function run() {
         assert(!/Nostr/.test(bridgeSource),
             n('application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js is unmodified by this milestone — it still mentions nothing Nostr-shaped, because it does not need to: it already accepts the transport-agnostic { commentary, isNew } shape'));
 
-        const mainSource = codeOnly(await rawSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         // AMENDED BY 0.9.631 — Publication Commentary Arweave Asynchronous
         // Distribution added a third call site, `discoverPublicationCommentaryFromArweaveCommand`,
         // mirroring the Nostr one exactly and funneling into the SAME

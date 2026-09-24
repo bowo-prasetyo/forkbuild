@@ -9,7 +9,6 @@ import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSessi
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { SpatialCameraController } from '../application/world/SpatialCameraController.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
@@ -27,6 +26,8 @@ import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { License, LicenseId } from '../core/License.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.36 — Local Avatar Movement & Animation.
 //
@@ -40,18 +41,6 @@ import { License, LicenseId } from '../core/License.js';
 // tests/AvatarRendering.test.js already established: Section D bypasses
 // WorldNavigationSession.start()'s real Renderer/WebGL entirely by
 // wiring a duck-typed spy facade directly onto session._session.
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function buildRegistry() {
     const registry = new AvatarTemplateRegistry();

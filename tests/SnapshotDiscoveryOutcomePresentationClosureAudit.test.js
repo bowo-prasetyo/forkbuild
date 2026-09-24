@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
 import { ArweaveSnapshotDiscoveryQueryService } from '../application/arweave/ArweaveSnapshotDiscoveryQueryService.js';
@@ -10,7 +9,9 @@ import {
     executeDiscoverSnapshotCandidatesCommandWithOutcome
 } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.590 — Snapshot Discovery Outcome Presentation Closure Audit.
 //
@@ -49,21 +50,11 @@ import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles } from
 //      composite cannot currently tell "Arweave's query failed" from "Arweave asked
 //      and found nothing" — reported here, live, and NOT fixed by this milestone.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));
     for (let i = 0; i < 10; i++) {
         await Promise.resolve();
     }
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 function panelCtx(overrides = {}) {
@@ -205,7 +196,7 @@ async function runTests() {
 
         // ui/main.js still wires the monitor to the LEGACY command, never the
         // outcome-aware one — the monitor never migrated.
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(/new WorldSnapshotDiscoveryMonitor\(\{\s*discoverSnapshotCandidatesCommand\s*\}\)/.test(mainSource),
             '14. WorldSnapshotDiscoveryMonitor is still constructed with the LEGACY discoverSnapshotCandidatesCommand, never the outcome-aware sibling');
 
@@ -305,7 +296,7 @@ async function runTests() {
         assert(malformedCtx.snapshotCandidateDiscoveryOutcome === 'some-unexpected-value',
             '26. the panel stores whatever it is handed verbatim — it validates nothing itself');
 
-        const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         const templateStart = panelSource.indexOf('template: `');
         const template = panelSource.slice(templateStart);
         assert(/snapshotCandidateDiscoveryResult\.length === 0 && snapshotCandidateDiscoveryOutcome === 'unavailable'/.test(template),
@@ -352,8 +343,8 @@ async function runTests() {
 
         // The method body itself never references any downstream family's
         // own fields — a static, structural guarantee, not just this one run.
-        const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
-        const methodMatch = panelSource.match(/discoverSnapshotCandidates\(\) \{[\s\S]*?\n {8}\},/);
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
+        const methodMatch = panelSource.match(/discoverSnapshotCandidates\(\) \{[\s\S]*?\n {4}\},?/);
         assert(methodMatch, '34. discoverSnapshotCandidates() method body is present and extractable');
         const methodBody = methodMatch[0];
         assert(!/selectedSnapshot|Placement|Registration|Materialization|Attribution/.test(methodBody),
@@ -581,7 +572,7 @@ async function runTests() {
         // workaround — see tests/ArweaveSnapshotDiscoveryOutcomeParityIntegrationAudit.test.js's
         // own Section E/G for the identical journey run WITH Arweave
         // included, end to end.
-        const mainSourceForFinding = await readSource('ui/main.js');
+        const mainSourceForFinding = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(/arweaveSnapshotDiscoveryQueryService/.test(mainSourceForFinding) && /nostrSnapshotDiscoveryQueryService: snapshotDiscoveryQueryService/.test(mainSourceForFinding),
             '59. production confirmation: the real discoverSnapshotCandidatesWithOutcomeCommand is composed from Nostr + Local + Arweave together — this fix is reachable in production, not only in this test\'s own constructed scenario');
 

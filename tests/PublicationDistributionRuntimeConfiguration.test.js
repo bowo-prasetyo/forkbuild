@@ -7,6 +7,7 @@ import { PublicationDistributionState } from '../application/publication/distrib
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.106 — Publication Distribution Runtime Configuration.
 // See docs/Roadmap.md, "0.9.106 — Publication Distribution Runtime
@@ -22,10 +23,6 @@ import { Signature } from '../core/Signature.js';
 //   Section D: FLAGSHIP — the resolved configuration composes into a real
 //              command that reaches the real orchestrator/executor
 //   Section E: architectural regression
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function signedPublication(overrides = {}) {
     const publication = new Publication({

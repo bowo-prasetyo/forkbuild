@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { NostrRelayConfiguration, DEFAULT_NOSTR_RELAY_URL } from '../core/NostrRelayConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -17,7 +16,10 @@ import { composePlaceNamingDiscoveryRuntime } from '../application/placeNaming/P
 import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
 import { DECENTRALIZED_DISCOVERY_ENVELOPE_PROTOCOL, DECENTRALIZED_DISCOVERY_ENVELOPE_VERSION } from '../core/DecentralizedDiscoveryEnvelope.js';
 import { SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.372 — Nostr Relay Settings Lifecycle & Product Reassessment.
 //
@@ -78,10 +80,6 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 // See docs/Roadmap.md, 0.9.372, for this suite's full verdict and
 // rationale.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function expectThrows(fn, message) {
     let threw = false;
     try { fn(); } catch { threw = true; }
@@ -92,14 +90,6 @@ async function expectRejects(promise, message) {
     let threw = false;
     try { await promise; } catch { threw = true; }
     assert(threw, message);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 // Two SEPARATE instances over one externally-owned namespace behave the
@@ -193,11 +183,6 @@ function snapshotEnvelopeContent({ contentHash, locator, storage }) {
     });
 }
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 async function run() {
     // ===============================================================
     // Section A — capability inventory. A self-contained sweep — this
@@ -230,7 +215,7 @@ async function run() {
             'A5. the settings view wires both Save and Use Deployment Default');
 
         // A6. Startup composition.
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         assert(mainSource.includes('new NostrRelayConfigurationStore('), 'A6. ui/main.js constructs the store at startup');
         assert(/resolvedNostrRelayUrls\s*=\s*\(nostrRelayConfigurationStore\.get\(\)\s*\|\|\s*\{\s*relayUrls:\s*\[DEFAULT_NOSTR_RELAY_URL\]\s*\}\)\.relayUrls/.test(mainSource),
             'A6. ui/main.js resolves the effective relay set once, at startup, from the store');
@@ -425,7 +410,7 @@ async function run() {
     // alternative source at all.
     // ===============================================================
     {
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
 
         // C1-C3. All three surfaces were already proven end-to-end in
         // Section B — this section confirms the STRUCTURAL claim behind
@@ -598,7 +583,7 @@ async function run() {
         // ever announced, or the relay was unreachable — a genuine,
         // currently invisible ambiguity, on the ONE discovery family that
         // (like Place Naming) has no alternative source.
-        const ownPublicationPanelSource = await source('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => source(file)))).join('\n');
         assert(ownPublicationPanelSource.includes('No Snapshots have been announced under this discoveryTag yet.'),
             'E4. sanity — the exact ambiguous copy this finding is about exists in source');
 
@@ -751,7 +736,7 @@ async function run() {
         // was originally about.
         const worldEncounterCompositionSource = await source('application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
         assert(!/ipfs/i.test(worldEncounterCompositionSource), 'H1. World Encounter material discovery composition still never references IPFS — Local + Nostr + Arweave only');
-        const mainSourceForIpfs = await source('ui/main.js');
+        const mainSourceForIpfs = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const ipfsGatewayUsageCount = (mainSourceForIpfs.match(/composeIpfsGatewayContentStore\(resolvedIpfsGatewayUrls\)/g) || []).length;
         assert(ipfsGatewayUsageCount === 2, `H1. the IPFS gateway content store is still built at exactly its two known, narrowly-scoped call sites, now through composeIpfsGatewayContentStore(resolvedIpfsGatewayUrls) per 0.9.666's own read failover extension — found ${ipfsGatewayUsageCount}`);
         decisions.ipfsGateway = { candidate: 'IPFS Gateway', verdict: 'BUILT (0.9.665)', evidence: 'Narrow, opt-in-per-item failure mode correctly justified DEFER through 0.9.657 — reversed once the hardcoded default itself became permanently unreachable, never merely by resemblance to Arweave.' };

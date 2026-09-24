@@ -11,6 +11,7 @@ import { terrainHeightAt, DEFAULT_WORLD_SEED, TERRAIN_HEIGHT_BOUND } from '../co
 import { surfaceCategoryAt, SURFACE_CATEGORY, WATER_LEVEL } from '../core/TerrainSurface.js';
 import { hydrologyFeatureAt, HYDROLOGY_FEATURE, LAKE_SURFACE_HEIGHT, isRiverAt } from '../core/Hydrology.js';
 import { DEFAULT_MAX_WALKING_DEPTH } from '../core/AvatarWaterWalkability.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.633 — Avatar Shallow-Water Traversal Boundary Audit.
 //
@@ -65,10 +66,6 @@ import { DEFAULT_MAX_WALKING_DEPTH } from '../core/AvatarWaterWalkability.js';
 //   Section H: classification — a fixed, closed vocabulary, one label
 //              per finding, never a single verdict standing in for seven
 //              different answers.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function readSource(relativePath) {
     return readFile(new URL(`../${relativePath}`, import.meta.url), 'utf8');

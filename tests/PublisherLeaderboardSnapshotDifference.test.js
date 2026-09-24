@@ -1,7 +1,9 @@
 import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
-import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
-import * as PublisherLeaderboardSnapshotDifferenceModule from '../application/leaderboard/PublisherLeaderboardSnapshotDifference.js';
-import { describePublisherLeaderboardSnapshotDifference } from '../application/leaderboard/PublisherLeaderboardSnapshotDifference.js';
+import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/snapshot/Snapshot.js';
+import * as PublisherLeaderboardSnapshotDifferenceModule from '../application/leaderboard/snapshot/Difference.js';
+import { describePublisherLeaderboardSnapshotDifference } from '../application/leaderboard/snapshot/Difference.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.134 — Historical Snapshot Difference Projection.
 //
@@ -40,14 +42,6 @@ import { describePublisherLeaderboardSnapshotDifference } from '../application/l
 // Section Q: no reconstruction entry point, and no `snapshotFingerprint`
 //            vocabulary anywhere in this file
 // Section R: vocabulary boundary — no verification/trust/evaluative terms
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function identity(publisherId) {
     return new PublisherIdentityRecord({ publisherId });

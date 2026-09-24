@@ -10,6 +10,8 @@ import {
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparison
 } from '../application/claimSnapshotReconciliation/evidenceExportComparison/EvidenceExportComparison.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.197 — Reconciliation Candidate Leaderboard Evidence Export Comparison
 // Record Difference View.
@@ -37,14 +39,6 @@ import {
 // Section H: vocabulary/import boundary — zero imports, no
 //            reconstructXxx, no verdict/ranking/synchronization
 //            vocabulary.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function candidateOf(claimId) {
     return Object.freeze({ type: 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT', claimId });

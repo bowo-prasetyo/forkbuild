@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { createArweaveInjectedProviderSigner } from '../arweave/ArweaveInjectedProviderSigner.js';
 import { ArweavePublicationMaterialUploader } from '../application/arweave/ArweavePublicationMaterialUploader.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.121 — Arweave Injected Provider Signer.
 // See docs/Roadmap.md, "0.9.121 — Publication Distribution Host Capability
@@ -16,10 +17,6 @@ import { ArweavePublicationMaterialUploader } from '../application/arweave/Arwea
 //   Section H: FLAGSHIP — the produced signer, handed to the real, unmodified
 //              ArweavePublicationMaterialUploader, actually uploads
 //   Section I: architectural regression — no distribution-infrastructure knowledge, no external dependency
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function fakeGateway({ anchor = 'fake-anchor-value', reward = '123456', anchorOk = true, rewardOk = true } = {}) {
     return async (url) => {

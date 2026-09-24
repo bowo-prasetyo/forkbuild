@@ -7,6 +7,7 @@ import { analyzeBitcoinAnchorObservationConsistency } from '../application/ancho
 import { composeBitcoinAnchorObservationEvidence } from '../application/anchoring/bitcoin/BitcoinAnchorObservationEvidence.js';
 import { describeBitcoinAnchorObservationEvidence } from '../application/anchoring/bitcoin/BitcoinAnchorObservationEvidenceView.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.78 — Bitcoin Anchor Observation Evidence Correlation.
 //
@@ -40,10 +41,6 @@ import { PublicationObservationArchive } from '../application/publication/observ
 //            restored from application/publication/observationArchive/PublicationObservationArchive.js's
 //            own toJSON()/fromJSON() (0.8.75) matches composing over the
 //            live archive, byte-for-byte
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function confirmed({ txid, blockHash, blockHeight, confirmationCount, observedAt }) {
     return Object.freeze({

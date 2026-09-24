@@ -4,6 +4,7 @@ import { HttpPinningProvider, PinningRejectedError } from '../content/HttpPinnin
 import { ContentUnavailableError } from '../content/IpfsContentStore.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.67 — Explicit Remote IPFS Publishing via a Pinning Provider.
 //
@@ -30,10 +31,6 @@ import { computeContentHash } from '../serializer/contentHash.js';
 //              this class's own put() returned — proving "gateway solves
 //              reading, remote pinning solves creation" actually
 //              composes into one working pipeline
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function expectRejects(promiseFn, message, ErrorType = null) {
     let threw = false;

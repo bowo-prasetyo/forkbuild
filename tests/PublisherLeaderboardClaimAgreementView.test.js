@@ -1,21 +1,22 @@
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
 import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js';
+import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/leaderboard/snapshot/CreateClaimUseCase.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
-import { reconstructPublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
-import { verifyPublisherLeaderboardSnapshotClaim } from '../application/leaderboard/PublisherLeaderboardSnapshotClaimVerification.js';
+import { reconstructPublisherLeaderboardSnapshot } from '../application/leaderboard/snapshot/Snapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/snapshot/Fingerprint.js';
+import { verifyPublisherLeaderboardSnapshotClaim } from '../application/leaderboard/snapshot/ClaimVerification.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
-import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/claim/Record.js';
 import { PublicationObservationArchiveProvenanceOrigin } from '../application/publication/observationArchive/PublicationObservationArchiveProvenance.js';
 import {
     describePublisherLeaderboardClaimAgreement,
     reconstructPublisherLeaderboardClaimAgreement
-} from '../application/leaderboard/PublisherLeaderboardClaimAgreementView.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
+} from '../application/leaderboard/claim/AgreementView.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { assert } from './support/Assert.js';
+import { makeIdentity } from './support/TestIdentity.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.132 — Claim Agreement & Divergence Projection.
 //
@@ -41,10 +42,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //            local evidence changes
 // Section L: vocabulary boundary — no evaluative/verification terms
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function archiveFromClaimHistory(history) {
     let archive = PublicationObservationArchive.empty();
     for (const record of history) {
@@ -53,26 +50,7 @@ function archiveFromClaimHistory(history) {
     return archive;
 }
 
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
-}
-
 const NETWORK = 'mainnet';
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function anchor(archive, letter, txid, createdAt) {
     const useCase = new CreateBitcoinAnchorPublicationRecordUseCase();

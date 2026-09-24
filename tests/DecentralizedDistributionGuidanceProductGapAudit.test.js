@@ -1,6 +1,4 @@
-import { readFile } from 'node:fs/promises';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { UnpublishDocumentUseCase } from '../application/publication/UnpublishDocumentUseCase.js';
@@ -11,7 +9,10 @@ import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.346 — Decentralized Distribution Guidance Product Gap Audit.
 //
@@ -75,23 +76,6 @@ import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles } from
 //       Unpublish, or any other code path examined in this audit.
 //   J — Final decision matrix and verdict.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
 const stubIdentityProvider = {
     currentUser: () => ({ username: 'alice', displayName: 'alice', providerId: 'stub' }),
     sign: (data) => ({ signedBy: 'alice', providerId: 'stub', data })
@@ -147,7 +131,7 @@ async function run() {
     // Section B — Capability inventory, sourced exactly.
     // =======================================================================
     {
-        const ownPanelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         assert(/>\{\{ snapshotDistributionExecuting \? 'Distributing…' : 'Distribute Snapshot' \}\}<\/button>/.test(ownPanelSource),
             '1. "Distribute Snapshot" — the Arweave-content-store + Nostr-discovery-announce pair — is a real button on ui/components/OwnPublicationPanel.js, the primary "My Publication" screen, gated on nothing but :disabled="!publication || snapshotDistributionExecuting".');
         assert(/>Unpublish<\/button>/.test(ownPanelSource) && />\{\{ snapshotExportExecuting \? 'Exporting…' : 'Export Snapshot' \}\}<\/button>/.test(ownPanelSource),
@@ -196,7 +180,7 @@ Capability inventory (Section B):
         assert(/if \(!this\.selectedEncounter \|\| this\.selectedEncounter\.kind !== 'PUBLICATION'\) \{/.test(gateMatch[0]),
             '2. "Distribute Publication" is reachable ONLY when a World Encounter is currently SELECTED, of kind PUBLICATION — never merely because a local Publication exists.');
 
-        const ownPanelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         assert(/:disabled="!publication \|\| snapshotDistributionExecuting"/.test(ownPanelSource),
             '3. by contrast, "Distribute Snapshot" (OwnPublicationPanel.js) is disabled ONLY by the absence of a Publication or an in-flight call — the identical `publication` prop a successful Repository Publish already supplies, with no selection of any kind required.');
 
@@ -324,7 +308,7 @@ Capability inventory (Section B):
 
         // G1 — Snapshot placement (local IPFS daemon) vs. remote IPFS
         // pinning (hosted service): DISTINCT, not duplicative.
-        assert(/new IpfsContentStore\(\)/.test(await readSource('ui/main.js')) && /composeIpfsGatewayContentStore\(resolvedIpfsGatewayUrls\)/.test(await readSource('ui/main.js')),
+        assert(/new IpfsContentStore\(\)/.test((await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n')) && /composeIpfsGatewayContentStore\(resolvedIpfsGatewayUrls\)/.test((await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n')),
             '1. Snapshot Placement\'s own "ipfs" storage type is backed by content/IpfsContentStore.js (Kubo — a locally-run IPFS daemon the person must have installed), confirmed in ui/main.js\'s own composition. (AMENDED 0.9.665 — the gateway construction now carries a resolved, settings-backed gatewayUrl; AMENDED FURTHER 0.9.666 — that construction now goes through composeIpfsGatewayContentStore(resolvedIpfsGatewayUrls) for read failover; see docs/Roadmap.md.)');
         assert(/HttpPinningProvider/.test(await readSource('application/ipfs/IpfsRemotePublicationCoordinator.js')),
             '2. "Publish to Remote IPFS" is backed by a completely different collaborator, content/HttpPinningProvider.js (a hosted, third-party pinning service, no local daemon required) — genuinely different infrastructure behind a similar-sounding label, not the same capability shown twice.');
@@ -339,7 +323,7 @@ Capability inventory (Section B):
 
         // G3 — Export Snapshot vs. Distribute Snapshot: DISTINCT (local,
         // synchronous, no network, vs. external content store + announce).
-        const ownPanelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         assert(/Snapshot Export Capability Integration/.test(ownPanelSource) && /no file save, download, or copy-to-clipboard/.test(ownPanelSource),
             '4. Export Snapshot is confirmed, by its own file\'s header, to be a local package-export capability with no network step at all — distinct in kind from Distribute Snapshot\'s external content-store + announce pair, not a redundant path to the same outcome.');
     }

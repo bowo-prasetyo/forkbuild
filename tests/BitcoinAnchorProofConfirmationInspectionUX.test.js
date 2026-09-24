@@ -10,6 +10,7 @@ import {
     describeBitcoinAnchorConfirmationObservationDetail
 } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistoryDetailView.js';
 import { describeBitcoinAnchorContentProofStateLabel, describeBitcoinAnchorContentProof } from '../application/anchoring/bitcoin/BitcoinAnchorContentProofView.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.57 — Bitcoin Anchor Proof & Confirmation Inspection UI.
 //
@@ -52,10 +53,6 @@ import { describeBitcoinAnchorContentProofStateLabel, describeBitcoinAnchorConte
 //
 // See docs/Roadmap.md, "0.8.57 — Bitcoin Anchor Proof & Confirmation
 // Inspection UI."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const TXID = 'b'.repeat(64);
 const CONTENT_HASH = 'cafef00d';

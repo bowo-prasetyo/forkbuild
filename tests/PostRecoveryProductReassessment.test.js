@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { Brick } from '../core/Brick.js';
 import { Building } from '../core/Building.js';
@@ -15,7 +14,9 @@ import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import { ReplayDocumentUseCase } from '../application/document/ReplayDocumentUseCase.js';
 import { RestoreHistoryStateUseCase } from '../application/document/RestoreHistoryStateUseCase.js';
 import { RecoveryObserver } from '../application/document/RecoveryObserver.js';
-import { worldViewFiles, worldNavigationSessionFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, editorViewFiles, editorSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.206 — Post-Recovery Product Reassessment.
 //
@@ -38,22 +39,12 @@ import { worldViewFiles, worldNavigationSessionFiles, editorViewFiles } from './
 // stops at classification and recommendation — 0.9.206 does not
 // prescribe 0.9.207.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function createTestDocument() {
     const world = new World();
     const building = new Building({ creator: 'tester' });
     building.addBrick(new Brick({ definitionId: 'core:cube', position: new Position(0, 0.5, 0) }));
     world.addBuilding(building);
     return new Document({ world, metadata: new DocumentMetadata({ title: 'Post-Recovery Reassessment Test', author: 'tester' }) });
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 // Strips full-line `//` comments — the same restraint 0.9.156 through
@@ -100,7 +91,7 @@ async function runTests() {
         const emitsMatch = placementInfoPanelSource.match(/emits:\s*\[([^\]]*)\]/);
         assert(emitsMatch && /\bremove\b/i.test(emitsMatch[1]), 'A3. PlacementInfoPanel.js still emits \'remove\' — 0.9.197\'s removal action remains reachable');
 
-        const ownPublicationPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(/unpublishCommand/.test(ownPublicationPanelSource), 'A4. OwnPublicationPanel.js still wires an unpublishCommand — 0.9.198\'s retract action remains reachable');
 
         // A5 — the one thing 0.5.9's own design record (docs/Principles.md,
@@ -284,7 +275,7 @@ async function runTests() {
     // Section D — Publication workflow. COMPLETE, reconfirmed.
     // ---------------------------------------------------------------
     {
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const clickHandlers = new Set((panelSource.match(/@click="[a-zA-Z]+/g) || []).map((s) => s.replace('@click="', '')));
         assert(clickHandlers.size >= 9, `D1. OwnPublicationPanel.js still wires at least 9 distinct actions (found ${clickHandlers.size})`);
         const unpublishHandlers = [...clickHandlers].filter((h) => /^unpublish|^retract/i.test(h));
@@ -348,7 +339,7 @@ async function runTests() {
         // exportStructure()/importBlueprint() handlers call, wired to
         // BuildLibraryPanel's 'export-personal-structure'/'import-blueprint'
         // events in the template.
-        const editorSessionSource = await rawSource('application/editor/EditorSession.js');
+        const editorSessionSource = (await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n');
         // ForkStructureUseCase/CopyStructureIntoDocumentUseCase are
         // EditorSession's own constructor defaults (EditorView no longer
         // builds duplicate instances to pass in).
@@ -377,7 +368,7 @@ async function runTests() {
         // milestone's own brief draws — "implemented + unreachable" that
         // is OBSOLETE, not a candidate gap: the capability it offers is
         // fully covered elsewhere, under a different, newer surface.
-        assert(!/GroupsPanel/.test(await rawSource('ui/main.js')), 'E3a. GroupsPanel is not registered in ui/main.js');
+        assert(!/GroupsPanel/.test((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n')), 'E3a. GroupsPanel is not registered in ui/main.js');
         for (const file of ['ui/views/WorldView.js', 'ui/views/LiveWorldView.js']) {
             const source = await rawSource(file);
             assert(!/import .*GroupsPanel/.test(source), `E3b. ${file} does not import GroupsPanel`);

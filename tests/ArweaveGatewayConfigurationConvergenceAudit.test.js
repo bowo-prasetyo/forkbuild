@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { ArweaveGatewayConfiguration, DEFAULT_ARWEAVE_GATEWAY_URL } from '../core/ArweaveGatewayConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -9,6 +8,10 @@ import { ArweaveWorldEncounterMaterialResolver } from '../application/worldEncou
 import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
 import { composeSnapshotDistributionRuntime } from '../application/snapshot/SnapshotDistributionRuntimeComposition.js';
 import { resolvePublicationDistributionRuntimeConfiguration } from '../application/publication/distribution/PublicationDistributionRuntimeConfiguration.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.365 — Arweave Gateway Configuration Convergence Audit.
 //
@@ -71,18 +74,6 @@ import { resolvePublicationDistributionRuntimeConfiguration } from '../applicati
 // change of any kind — see docs/Roadmap.md, 0.9.365, for the full list this
 // audit exists to confirm rather than to build.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
 // A StorageProvider whose bytes live in an externally-owned plain object —
 // never in this instance's own memory. Two SEPARATE instances constructed
 // over the SAME `sharedNamespace` object behave the way two separate page
@@ -133,11 +124,6 @@ function makeRejectingFetchSpy(rejectPrefix, message = 'network unreachable') {
     return fetchImpl;
 }
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 async function run() {
     console.log('Running Arweave Gateway Configuration Convergence Audit tests...\n');
 
@@ -148,7 +134,7 @@ async function run() {
     {
         const configSource = await source('core/ArweaveGatewayConfiguration.js');
         const storeSource = await source('storage/ArweaveGatewayConfigurationStore.js');
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const contentStoreSource = await source('content/ArweaveContentStore.js');
         const resolverSource = await source('application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js');
         const uploaderSource = await source('application/arweave/ArweavePublicationMaterialUploader.js');

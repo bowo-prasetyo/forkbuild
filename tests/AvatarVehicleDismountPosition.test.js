@@ -5,6 +5,7 @@ import {
 import { VehiclePresence } from '../core/VehiclePresence.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { Position } from '../core/Position.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.80 — Vehicle Dismount Position Resolution, core/AvatarVehicleDismountPosition.js.
 //
@@ -27,10 +28,6 @@ import { Position } from '../core/Position.js';
 // never decides whether a dismount should happen, never touches mount
 // state, and never resolves a vehicle from an id. See docs/Roadmap.md,
 // 0.9.80.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, message) {
     let threw = false;

@@ -22,8 +22,10 @@ import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.127 — Vehicle Steering Integration Audit.
 //
@@ -108,20 +110,8 @@ import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickReg
 // core/VehicleSteeringSimulation.js's pure function VERBATIM. See
 // docs/Roadmap.md, 0.9.127.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function assertClose(actual, expected, message, epsilon = 1e-6) {
     assert(Math.abs(actual - expected) < epsilon, `${message} (expected ${expected}, got ${actual})`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function buildRegistry() {
@@ -752,7 +742,7 @@ async function runTests() {
         const steeringSimCode = await sourceOf('../core/VehicleSteeringSimulation.js');
         assert(!steeringSimCode.includes('resolveVehicleHeadingFromMovement'),
             '47. core/VehicleSteeringSimulation.js still never calls resolveVehicleHeadingFromMovement() itself — this milestone\'s own integration reused it at the CONTROLLER layer, never inside the pure steering-simulation file');
-        const sessionCode = await sourceOf('../application/world/WorldNavigationSession.js');
+        const sessionCode = (await Promise.all(worldNavigationSessionFiles().map((file) => sourceOf(`../${file}`)))).join('\n');
         assert(!sessionCode.includes('resolveVehicleHeadingFromMovement') && !sessionCode.includes('resolveVehicleMovementDirectionFromSteering'),
             '48. application/world/WorldNavigationSession.js itself never calls either heading or steering math directly — it only ever threads a VehicleSteeringIntent value through to the controller, exactly like it already does for movementIntent');
     }

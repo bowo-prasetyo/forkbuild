@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { Publication } from '../publisher/Publication.js';
@@ -8,6 +7,8 @@ import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.523 — Repository / Discovery Product Boundary Reassessment.
 //
@@ -41,15 +42,7 @@ import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/Sour
 //               continuity, with no invented auto-placement behavior.
 //   Section H — Classification and production guard.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 function flush() {
     return new Promise((resolve) => setTimeout(resolve, 0));

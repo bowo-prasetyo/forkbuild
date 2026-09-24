@@ -5,6 +5,7 @@ import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSn
 import { describeDecentralizedDiscoveryEnvelope, DECENTRALIZED_DISCOVERY_ENVELOPE_PROTOCOL, DECENTRALIZED_DISCOVERY_ENVELOPE_VERSION } from '../core/DecentralizedDiscoveryEnvelope.js';
 import { describeSnapshotDiscoveryEnvelope, SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.147 — Decentralized Discovery Relay Query Client.
 // See docs/Roadmap.md, "0.9.147 — Decentralized Discovery Relay Query
@@ -26,10 +27,6 @@ import { WorldEncounterKind } from '../core/WorldEncounter.js';
 //              one implementation, two dormant seams
 //   Section L: architectural regression — a pure transport producer, no
 //              discovery-semantic knowledge, no external dependency
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 // A minimal fake relay speaking the REQ/EVENT/EOSE/CLOSE subset this file's
 // own NostrRelayQueryClient actually uses. `respond(subscriptionId, filter)`

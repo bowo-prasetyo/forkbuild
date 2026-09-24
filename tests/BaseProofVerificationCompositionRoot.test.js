@@ -1,5 +1,3 @@
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
@@ -13,9 +11,11 @@ import { CreateArweaveAnchorProofVerifierUseCase } from '../application/anchorin
 import { BitcoinOpReturnProofVerifier } from '../anchoring/BitcoinOpReturnProofVerifier.js';
 import { ArweaveTransactionDataProofVerifier } from '../anchoring/ArweaveTransactionDataProofVerifier.js';
 import { encodeBasePublicationCommitment } from '../application/anchoring/base/BasePublicationCommitmentEncoding.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.465 — Wire Base Proof Verification into the Production Composition
 // Root.
@@ -84,37 +84,14 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // production BaseAnchorPublisher should exist at all is a separate product
 // question this milestone does not answer.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 let assertionCount = 0;
 function check(condition, message) {
     assertionCount += 1;
     assert(condition, message);
 }
 
-const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
-async function source(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
 function codeOnly(src) {
     return src.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 // A minimal, deterministic fake Base JSON-RPC endpoint — the same
@@ -161,14 +138,14 @@ function buildSignedBaseAnchor({ identityProvider, publicationId, contentHash, t
 async function run() {
     console.log('Running Base Proof Verification Composition Root...\n');
 
-    const mainSrc = await source('ui/main.js');
+    const mainSrc = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
     const mainCode = codeOnly(mainSrc);
 
     // ===============================================================
     // Section A — production registration.
     // ===============================================================
     {
-        check(/import \{ CreateBaseAnchorProofVerifierUseCase \} from '\.\.\/application\/anchoring\/base\/CreateBaseAnchorProofVerifierUseCase\.js';/.test(mainCode),
+        check(/import \{ CreateBaseAnchorProofVerifierUseCase \} from '(\.\.\/)+application\/anchoring\/base\/CreateBaseAnchorProofVerifierUseCase\.js';/.test(mainCode),
             'A1. ui/main.js imports CreateBaseAnchorProofVerifierUseCase');
         check(/const \{ baseProofVerifier \} = new CreateBaseAnchorProofVerifierUseCase\(\)\.execute\(\);/.test(mainCode),
             'A2. ui/main.js constructs a real baseProofVerifier from it');
@@ -484,7 +461,7 @@ async function run() {
         // and application/anchoring/base/CreateBaseAnchorProofVerifierUseCase.js's own
         // unit tests keep passing unchanged, because those files know
         // nothing about ui/main.js at all.
-        const freshMainCode = codeOnly(await source('ui/main.js'));
+        const freshMainCode = codeOnly((await Promise.all(mainFiles().map((file) => source(file)))).join('\n'));
         const hasImport = /import \{ CreateBaseAnchorProofVerifierUseCase \}/.test(freshMainCode);
         const hasConstruction = /new CreateBaseAnchorProofVerifierUseCase\(\)\.execute\(\)/.test(freshMainCode);
         const hasRegistration = /externalAnchorProofVerifierRegistry\.register\(baseProofVerifier\)/.test(freshMainCode);

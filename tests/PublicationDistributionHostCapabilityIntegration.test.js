@@ -1,3 +1,4 @@
+import { mainFiles } from './support/SourceFileGroups.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { createArweaveInjectedProviderSigner } from '../arweave/ArweaveInjectedProviderSigner.js';
 import { createNostrInjectedProviderPublisher } from '../nostr/NostrInjectedProviderPublisher.js';
@@ -12,6 +13,7 @@ import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.121 — Publication Distribution Host Capability Integration.
 //
@@ -42,10 +44,6 @@ import { Signature } from '../core/Signature.js';
 //   Section D: source audit — ui/main.js's own new wiring never
 //              reimplements any wallet/relay/upload/signing/publishing
 //              algorithm itself
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 // The real chain this file exercises includes crypto.subtle.digest() calls
 // (inside arweave/ArweaveInjectedProviderSigner.js), which round-trip
@@ -338,8 +336,7 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const { readFile } = await import('node:fs/promises');
-        const sourceUrl = new URL('../ui/main.js', import.meta.url);
-        const source = await readFile(sourceUrl, 'utf8');
+        const source = (await Promise.all(mainFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         assert(!/crypto\.subtle|new WebSocket\(|createTransaction|data_root|signEvent\(/.test(codeOnly),

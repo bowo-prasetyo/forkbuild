@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { Publication } from '../publisher/Publication.js';
@@ -18,9 +17,12 @@ import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
+import { ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.609 — Publication Discovery Reconstruction Lifecycle Closure Audit.
 //
@@ -85,31 +87,15 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 // production-change accounting, which lists it explicitly rather than
 // asserting a zero-diff that would no longer be true.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function throws(fn) {
     try { fn(); return false; } catch { return true; }
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
 
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 function tamperHex(hex) {
     const flipped = hex[0] === '0' ? '1' : '0';
     return flipped + hex.slice(1);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeIdentity(label, storage) {
@@ -429,7 +415,7 @@ async function run() {
     // Section G — Startup ordering (ui/main.js composition root).
     // ===============================================================
     {
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
 
         const constructionIndex = mainSource.indexOf('const decentralizedPublicationDiscoveryProvider = new DecentralizedPublicationDiscoveryProvider();');
         assert(constructionIndex !== -1, '1. the discovery provider is still constructed at exactly the site 0.9.607/0.9.608 identified.');
@@ -550,7 +536,7 @@ async function run() {
         // of this milestone, that "cataloged/discoverable" and "placed"
         // are rendered as two distinct facts, and that zero placements
         // is a real, honest value rather than an error.
-        const ownPanelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         assert(ownPanelSource.includes('NO_PLACEMENTS ≠ DISCOVERY_FAILED'),
             '1. ui/components/OwnPublicationPanel.js still draws its own explicit "no placements is not a discovery failure" distinction — reconstruction (a discovery-layer fact) is never conflated with placement (a wholly separate fact) anywhere this UI renders a Publication\'s own placements.');
         assert(ownPanelSource.includes('PLACEMENT RECORDS, NEVER WORLD VISIBILITY OR OCCUPANCY'),

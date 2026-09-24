@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { Publication } from '../publisher/Publication.js';
@@ -16,8 +15,10 @@ import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.j
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles, worldNavigationSessionFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.473 — World Encounter -> Repository Continuity Boundary Audit.
 //
@@ -108,19 +109,11 @@ import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles } from
 // See docs/Roadmap.md's own 0.9.329, 0.9.330, 0.9.334, 0.9.335, 0.9.337,
 // 0.9.339 entries for the sibling arc this milestone measures against.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function wait(ms = 20) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 function grepFiles(pattern, dirs, { ignoreCase = false } = {}) {
     let hits = '';
@@ -130,14 +123,6 @@ function grepFiles(pattern, dirs, { ignoreCase = false } = {}) {
             { cwd: SOURCE_ROOT.pathname }).toString();
     } catch { /* grep exits non-zero on no match; treated as zero hits */ }
     return hits.trim() ? hits.trim().split('\n') : [];
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeIdentity(label) {
@@ -312,7 +297,7 @@ async function run() {
         // decentralizedPublicationDiscoveryProvider) call (one occurrence
         // for the string key, one for the variable) -- never a fourth,
         // which a WorldEncounter-composition call site would require.
-        const mainSourceForB = await readSource('ui/main.js');
+        const mainSourceForB = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         const providerOccurrences = (mainSourceForB.match(/decentralizedPublicationDiscoveryProvider/g) || []).length;
         assert(providerOccurrences === 3,
             `2. ui/main.js references decentralizedPublicationDiscoveryProvider exactly three times -- its own declaration plus its own app.provide() call (key + value) -- never threaded into WorldEncounter composition (found ${providerOccurrences} occurrences).`);
@@ -420,7 +405,7 @@ async function run() {
         // decentralizedPublicationDiscoveryProvider prop (never a second,
         // WorldView.js-local `.add()` call of its own -- WorldView.js
         // itself still never calls `.add()`, confirmed below).
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         const provideMatches = mainSource.match(/app\.provide\('decentralizedPublicationDiscoveryProvider'/g) || [];
         assert(provideMatches.length === 1, '1. ui/main.js provides the shared decentralizedPublicationDiscoveryProvider exactly once.');
 
@@ -526,7 +511,7 @@ async function run() {
         // the cascade fires at all. Assertions 1/3 are amended to prove
         // the new, narrower fact directly rather than assert the
         // now-superseded absence.
-        const sessionSource = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(/findPublicationById\(publicationId\) \{[\s\S]{0,300}_publicationActionDiscoveryProvider\.findById\(publicationId\)/.test(sessionSource),
             '1. AMENDED BY 0.9.597 — WorldNavigationSession#findPublicationById() now delegates to its own `_publicationActionDiscoveryProvider.findById()` — a SEPARATE collaborator from fork-policy/world-layout\'s own `_discoveryProvider` (see that constructor\'s own comment) — the exact collaborator application/snapshot/AutomaticSnapshotEncounterCascade.js reads, unchanged (still "null ... when ... the publication is not locally known", now meaning "not known to EITHER local or Repository-admitted discovery").');
 

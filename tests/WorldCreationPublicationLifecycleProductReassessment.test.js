@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { World } from '../core/World.js';
 import { Document } from '../core/Document.js';
@@ -26,6 +25,8 @@ import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LoadPublishedWorldSessionUseCase } from '../application/publication/LoadPublishedWorldSessionUseCase.js';
 import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.577 — World Creation & Publication Lifecycle Product Reassessment.
 //
@@ -117,16 +118,6 @@ import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 // code; it is reconnaissance/reassessment only.
 //
 // FINDING: see the verdict block at the end of this file.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 class InMemoryStorageProvider extends StorageProvider {
     constructor() {
@@ -564,10 +555,10 @@ async function main() {
         // specific methods its own brief named: focusWorld's real
         // implementation, focusDocument(), and its own verbatim alias
         // navigateToDocument()).
-        const navigateToDocumentMatch = sessionSource.match(/navigateToDocument\(documentId\) \{[\s\S]*?\n\t\}/);
+        const navigateToDocumentMatch = sessionSource.match(/navigateToDocument\(documentId\) \{[\s\S]*?\n    \}/);
         assert(navigateToDocumentMatch !== null && /return this\.focusDocument\(documentId\);/.test(navigateToDocumentMatch[0]),
             'H3a. navigateToDocument() is a verbatim, one-line alias for focusDocument() — exactly one navigation mechanism, not two.');
-        const focusDocumentMatch = sessionSource.match(/focusDocument\(documentId, \{ setActive = true \} = \{\}\) \{[\s\S]*?\n\t\}/);
+        const focusDocumentMatch = sessionSource.match(/focusDocument\(documentId, \{ setActive = true \} = \{\}\) \{[\s\S]*?\n    \}/);
         assert(focusDocumentMatch !== null
             && !/_publishDocumentUseCase|_publisherProvider\.publish|_storageProvider\.save\(\s*['"]forkbuild-publications/.test(focusDocumentMatch[0]),
             'H3b. focusDocument()\'s own real method body — camera/avatar/selection concerns only — never calls into publish or the Repository catalog write; navigation and publication lifecycle are structurally two different concerns at this layer, not merely different by convention.');

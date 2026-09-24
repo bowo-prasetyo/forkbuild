@@ -19,7 +19,10 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { readFile } from 'node:fs/promises';
-import { worldEncounterCanvasFiles, worldViewFiles, worldViewTemplateFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, worldViewTemplateFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.290 — Publication Commentary Cross-Surface Convergence Audit.
 //
@@ -51,10 +54,6 @@ import { worldEncounterCanvasFiles, worldViewFiles, worldViewTemplateFiles } fro
 //
 // Sections A-L below map directly onto this milestone's own brief.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 // ---------------------------------------------------------------------
 // A StorageProvider that proxies a SHARED backing Map, passed in at
 // construction — the honest Node-runnable analog of two independently
@@ -76,14 +75,6 @@ class SharedNamespaceStorageProvider extends StorageProvider {
     load(name) { return this._backing.has(name) ? JSON.parse(JSON.stringify(this._backing.get(name))) : null; }
     remove(name) { this._backing.delete(name); }
     list() { return Array.from(this._backing.keys()); }
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeDocument(title, author) {
@@ -216,10 +207,6 @@ function cardCtx(overrides = {}) {
     };
 }
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 async function codeOnlySource(relativePath) {
     const text = await rawSource(relativePath);
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
@@ -701,7 +688,7 @@ async function runTests() {
         // command — the decision genuinely never reaches the UI layer.
         const cardCode = await codeOnlySource('ui/components/PublicationCard.js');
         const sectionCode = await codeOnlySource('ui/components/PublicationCommentarySection.js');
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         for (const [file, code] of [['PublicationCard.js', cardCode], ['PublicationCommentarySection.js', sectionCode], ['OwnPublicationPanel.js', panelCode]]) {
             assert(!/publication\.(author|publisherIdentity)\s*===?\s*(this\.)?viewerIdentityId/.test(code),
                 `45. ${file} never compares the Publication's own author/publisher against the viewer to gate commentary`);
@@ -719,7 +706,7 @@ async function runTests() {
     // equivalent.
     // ---------------------------------------------------------------
     {
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(/mounted\s*\(\s*\)\s*\{[^}]*refreshPublicationCommentaries\(\)/s.test(panelCode),
             '46. OwnPublicationPanel eagerly loads commentary on mount — its own existing lifecycle, unchanged');
         assert(/watch\s*:\s*\{/.test(panelCode), '47. OwnPublicationPanel still reacts to a change of the active Publication via a watcher — the eager-reload path this milestone leaves untouched');
@@ -808,7 +795,7 @@ async function runTests() {
     // milestone changes no production file.
     // ---------------------------------------------------------------
     {
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(panelCode.includes('refreshPublicationCommentaries()') && panelCode.includes('submitPublicationCommentary()'),
             '62. OwnPublicationPanel.js still carries its own original commentary methods');
 
@@ -927,7 +914,7 @@ async function runTests() {
         const sectionCode = await codeOnlySource('ui/components/PublicationCommentarySection.js');
         const cardCode = cardOnlyCode + '\n' + sectionCode;
         const compositionCode = await codeOnlySource('application/publication/commentary/CreatePublicationCommentaryUseCase.js');
-        const mainCode = await codeOnlySource('ui/main.js');
+        const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         const combined = cardCode + '\n' + compositionCode;
 
         // 1. Ownership into PublicationCard.

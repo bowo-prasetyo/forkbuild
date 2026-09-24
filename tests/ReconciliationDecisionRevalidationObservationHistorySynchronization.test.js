@@ -16,6 +16,8 @@ import {
     applyPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistorySynchronization
 } from '../application/claimSnapshotReconciliation/revalidationObservation/HistorySynchronization.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.169 — Revalidation Observation History Synchronization.
 //
@@ -49,14 +51,6 @@ import { PublicationObservationArchive } from '../application/publication/observ
 // Section I: no interpretive/trust vocabulary anywhere in this file's own
 //            results; architecture boundary — exactly the two composed
 //            modules, nothing else
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 async function withoutNetworkAccess(fn) {
     let networkCallOccurred = false;

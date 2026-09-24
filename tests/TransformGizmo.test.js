@@ -7,10 +7,8 @@ import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { SpatialEditingService } from '../application/editor/SpatialEditingService.js';
 import { SpatialSelectionState } from '../application/spatial-state/SpatialSelectionState.js';
+import { assert } from './support/Assert.js';
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 function close(actual, expected, message) {
     assert(Math.abs(actual - expected) < 1e-9, `${message}: expected ${expected}, got ${actual}`);
 }

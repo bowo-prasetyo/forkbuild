@@ -4,6 +4,9 @@ import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStor
 import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
 import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.245 — Publication Commentary Authorship Boundary.
 //
@@ -56,31 +59,11 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 // Helpers
 // ---------------------------------------------------------------------
 
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
 class WriteFailingStorageProvider extends StorageProvider {
     save() { throw new Error('simulated write failure'); }
     load() { return null; }
     remove() {}
     list() { return []; }
-}
-
-// A real, authenticated LocalIdentityProvider — the exact
-// makeIdentity(label) pattern tests/PublicationAnchorCreation.test.js
-// and tests/AddPublicationCommentaryUseCase.test.js already use, per
-// this milestone's own brief: reuse the existing identity/authentication
-// infrastructure, never a bespoke stand-in for it.
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 // A permissive CanCommentOnPublicationUseCase — this file is about
@@ -97,10 +80,6 @@ function validInput(overrides = {}) {
         content: 'hello world',
         ...overrides
     };
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
 }
 
 async function runTests() {

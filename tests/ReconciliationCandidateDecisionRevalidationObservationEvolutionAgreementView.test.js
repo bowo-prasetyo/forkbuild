@@ -5,6 +5,9 @@ import {
     reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionRevalidationObservationEvolutionAgreement
 } from '../application/claimSnapshotReconciliation/candidate/DecisionRevalidationObservationEvolutionAgreementView.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { featureImportLines } from './support/SharedHelperImports.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.174 — Reconciliation Candidate Observation Evolution Agreement
 // Projection.
@@ -30,14 +33,6 @@ import { PublicationObservationArchive } from '../application/publication/observ
 // Section I: reconstruct()'s archive-reading boundary
 // Section J: malformed input tolerance
 // Section K: vocabulary/import boundary
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function genuineDecisionRecord(candidate, decision, decidedAt) {
     return Object.freeze({ decided: true, candidate: Object.freeze(candidate), decision, decidedAt: decidedAt.toISOString() });
@@ -424,8 +419,8 @@ async function run() {
         // difference), 0.8.167's own archive-reading seam, and 0.8.172 (the
         // candidate grouping) — nothing from 0.8.144, 0.8.157, 0.8.162
         // through 0.8.165, 0.8.171, or 0.8.173.
-        const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
-        assert(importLines.length === 3, '78. this file imports from exactly three modules');
+        const importLines = featureImportLines(moduleSource);
+        assert(importLines.length === 3, '78. besides shared helpers, this file imports from exactly three modules');
         const importBlock = moduleSource.slice(0, moduleSource.indexOf('function describePublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionRevalidationObservationEvolutionAgreement'));
         assert(importBlock.includes('../revalidationObservation/HistoryDifference.js'), '79. one import is 0.8.166\'s own observation history difference module');
         assert(importBlock.includes('./DecisionRevalidationObservationEvolutionView.js'), '80. one import is 0.8.172\'s own candidate observation evolution module');

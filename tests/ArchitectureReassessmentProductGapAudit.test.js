@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { Brick } from '../core/Brick.js';
 import { Building } from '../core/Building.js';
@@ -6,7 +5,6 @@ import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
@@ -20,7 +18,10 @@ import { PublishDocumentUseCase } from '../application/publication/PublishDocume
 import { UnpublishDocumentUseCase } from '../application/publication/UnpublishDocumentUseCase.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { VehicleType } from '../core/VehicleType.js';
-import { worldNavigationSessionFiles, worldViewFiles, worldViewTemplateFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, worldViewFiles, worldViewTemplateFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.196 — Architecture Reassessment / Product Gap Audit.
 //
@@ -49,22 +50,10 @@ import { worldNavigationSessionFiles, worldViewFiles, worldViewTemplateFiles } f
 // tests/WorldPlacement.test.js and tests/PublicationLifecycle.test.js
 // already exercise, composed here the identical way.
 
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
 const stubIdentityProvider = {
     currentUser: () => ({ username: 'alice', displayName: 'alice', providerId: 'stub' }),
     sign: (data) => ({ signedBy: 'alice', providerId: 'stub', data })
 };
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function createTestDocument() {
     const world = new World();
@@ -72,12 +61,6 @@ function createTestDocument() {
     building.addBrick(new Brick({ definitionId: 'core:cube', position: new Position(0, 0.5, 0) }));
     world.addBuilding(building);
     return new Document({ world, metadata: new DocumentMetadata({ title: 'Gap Audit Test', author: 'tester' }) });
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 // Strips full-line `//` comments so a call-site sweep counts genuine
@@ -278,7 +261,7 @@ async function runTests() {
         // exist, and now does, is the mutation itself.
         const navigationSessionSourceForUnpublish = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(/unpublishDocument\(documentId/.test(navigationSessionSourceForUnpublish), 'C7a. WorldNavigationSession now exposes unpublishDocument(documentId, expectedPublicationId) — the reachable call site 0.9.198 added, mirroring removePlacement()\'s own compare-and-swap shape one authority up');
-        const ownPublicationPanelSourceForUnpublish = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSourceForUnpublish = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(/unpublishCommand/.test(ownPublicationPanelSourceForUnpublish) && /unpublishOwnPublication/.test(ownPublicationPanelSourceForUnpublish), 'C7b. OwnPublicationPanel.js now wires an unpublishCommand prop to an "Unpublish" action, per 0.9.198');
 
         // C6 — both use cases are proven CORRECT here, directly, against
@@ -345,7 +328,7 @@ async function runTests() {
     // missing, from the identical authoring surface.
     // ---------------------------------------------------------------
     {
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const clickHandlers = new Set((panelSource.match(/@click="[a-zA-Z]+/g) || []).map((s) => s.replace('@click="', '')));
         assert(clickHandlers.size >= 9, `D1. OwnPublicationPanel.js already wires at least 9 distinct actions (found ${clickHandlers.size}) — publish/unpublish/anchor/distribute/Snapshot discovery/resolution/materialization/attribution are all reachable`);
         const unpublishHandlers = [...clickHandlers].filter((h) => /^unpublish|^retract/i.test(h));

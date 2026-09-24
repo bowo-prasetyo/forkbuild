@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
 import { parseDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
 import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.46 — Nostr Publication Discovery Publisher.
 // See docs/Roadmap.md, "0.9.46 — Nostr Publication Discovery Publisher."
@@ -34,10 +35,6 @@ import { describePublicationDistribution } from '../application/publication/dist
 //              publishImpl throws immediately
 //   Section I: no caching — two calls issue two fresh publish exchanges
 //   Section J: architectural regression — no forbidden imports/vocabulary
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

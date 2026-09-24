@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { Publication } from '../publisher/Publication.js';
@@ -36,6 +35,9 @@ import { PublicationAnchor } from '../core/PublicationAnchor.js';
 import { ExternalAnchorVerifier } from '../application/anchoring/ExternalAnchorVerifier.js';
 import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
 import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.534 — Repository Publication Lifecycle Product Reassessment.
 //
@@ -85,16 +87,6 @@ import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discover
 // Repository/World refactor, no new vocabulary.
 //
 // FINDING: see the verdict block at the end of this file.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 class InMemoryStorageProvider extends StorageProvider {
     constructor() { super(); this._data = new Map(); this.saveCount = 0; }
@@ -545,7 +537,7 @@ async function main() {
         // focusDocument() references a storage-mutating method — World
         // navigation cannot itself rewrite what a later Repository read
         // would find, under either catalog shape.
-        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         // AMENDED BY 0.9.597 — Publication Action Provider Continuity Fix.
         // findPublicationById() now delegates to `_publicationActionDiscoveryProvider`
         // (a separate, optional capability falling back to `discoveryProvider`

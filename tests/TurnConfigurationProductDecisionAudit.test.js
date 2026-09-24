@@ -1,9 +1,10 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { DEFAULT_ICE_SERVERS, fetchIceServers } from '../peer/IceServerConfig.js';
 import { IceServerConfiguration, isValidStunUrl } from '../core/IceServerConfiguration.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.390 — TURN Configuration Product Decision Audit.
 //
@@ -74,9 +75,7 @@ function n(message) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
+
 async function sourceExists(relativePath) {
     try { await source(relativePath); return true; } catch { return false; }
 }
@@ -325,7 +324,7 @@ async function run() {
         // "GET ?apiKey=... -> JSON array" client), but the ONE call site
         // (ui/main.js) that actually invokes it never varies those
         // defaults — confirmed structurally, live.
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const fetchCallSites = (codeOnly(mainSource).match(/fetchIceServers\(/g) || []).length;
         assert(fetchCallSites === 1, n(`D4. fetchIceServers() is called from exactly one site in ui/main.js today (found ${fetchCallSites}), and that call passes only \`fallback\` — endpoint/apiKey are left at their Metered defaults, live, confirming today's deployment is coupled to Metered by CONFIGURATION CHOICE, not by the function's own code`));
         assert(mainSource.includes('fetchIceServers({ fallback: resolvedIceServers })'),

@@ -1,6 +1,4 @@
 import { readFile } from 'node:fs/promises';
-import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
@@ -9,6 +7,15 @@ import { DiscoverPublicationCommentaryFromNostrUseCase } from '../application/pu
 import { DiscoverPublicationCommentaryFromArweaveUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryFromArweaveUseCase.js';
 import { composeRefreshPublicationCommentaryCommand } from '../application/publication/commentary/RefreshPublicationCommentaryCommandComposition.js';
 import PublicationCommentaryRemoteCheck from '../ui/components/PublicationCommentaryRemoteCheck.js';
+import { ownPublicationPanelSource, worldEncounterCanvasSource, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
+
+const SPLIT_COMPONENT_SOURCES = {
+    'ui/components/OwnPublicationPanel.js': ownPublicationPanelSource,
+    'ui/components/WorldEncounterCanvas.js': worldEncounterCanvasSource
+};
 
 // Publication Commentary — fetch-on-open and "Check for new comments".
 //
@@ -36,27 +43,8 @@ import PublicationCommentaryRemoteCheck from '../ui/components/PublicationCommen
 // Section H: production wiring — main.js composes both networks; all five
 //            Commentary sections mount the component and re-read on refresh.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function flush() {
     return new Promise((resolve) => setTimeout(resolve, 0));
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 function makeExchange(identityProvider) {
@@ -330,7 +318,7 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const read = (path) => readFile(new URL('../' + path, import.meta.url), 'utf8');
-        const mainSource = await read('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => read(file)))).join('\n');
         assert(/composeRefreshPublicationCommentaryCommand\(\{\s*sources: \[\s*\{ name: 'Nostr', discover: discoverPublicationCommentaryFromNostrCommand \},\s*\{ name: 'Arweave', discover: discoverPublicationCommentaryFromArweaveCommand \}\s*\]\s*\}\)/.test(mainSource),
             '37. main.js composes the refresh command from BOTH existing discovery commands — they are no longer unreached');
         assert(mainSource.includes("app.provide('refreshPublicationCommentaryCommand', refreshPublicationCommentaryCommand);"), '38. main.js provides it app-wide');
@@ -344,7 +332,8 @@ async function run() {
             ['ui/components/WorldEncounterCanvas.js', ':publication-id="observerLocalEncounterCommentaryPublicationId" @refreshed="refreshObserverLocalEncounterCommentaries"']
         ];
         for (const [path, binding] of sections) {
-            const componentSource = await read(path);
+            // The two split components are read whole, template expanded.
+            const componentSource = SPLIT_COMPONENT_SOURCES[path] ? SPLIT_COMPONENT_SOURCES[path]() : await read(path);
             assert(componentSource.includes("import PublicationCommentaryRemoteCheck from './PublicationCommentaryRemoteCheck.js';")
                 && /components: \{[^}]*PublicationCommentaryRemoteCheck[^}]*\}/.test(componentSource),
                 `39. ${path} imports and registers the component`);

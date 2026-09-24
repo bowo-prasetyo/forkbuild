@@ -1,6 +1,4 @@
-import { readFile } from 'node:fs/promises';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
@@ -21,6 +19,10 @@ import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutc
 
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { Publication } from '../publisher/Publication.js';
+import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.538 — Publication Discovery Lead Lifecycle Product Reassessment.
 //
@@ -51,10 +53,6 @@ import { Publication } from '../publisher/Publication.js';
 //
 // FINDING: see the verdict block at the end of this file.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));
     for (let i = 0; i < 10; i++) {
@@ -67,14 +65,6 @@ function deferred() {
     let reject;
     const promise = new Promise((res, rej) => { resolve = res; reject = rej; });
     return { promise, resolve, reject };
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 // A real Arweave-shaped CONTENT gateway (put()/get() bytes) — separate
@@ -159,12 +149,6 @@ function makeNostrEnvelopeEvent({ contentHash, locator, storage, publicationId }
 
 function makeNostrQueryImpl(events) {
     return async () => events;
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 async function codeOnlySource(relativePath) {
@@ -732,13 +716,13 @@ async function run() {
         // through, confirmed to match the Discovered -> Selected ->
         // Retrieved -> Confirmed-to-match progression, never a stronger
         // claim.
-        assert(/Discovered Snapshots/i.test(await rawSource('ui/components/OwnPublicationPanel.js')), 'I4. the candidate list is headed "Discovered," matching the first stage of the requested progression');
+        assert(/Discovered Snapshots/i.test((await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n')), 'I4. the candidate list is headed "Discovered," matching the first stage of the requested progression');
         assert(describeSnapshotResolutionOutcomeLabel(DecentralizedSnapshotResolutionOutcome.RESOLVED).toLowerCase().includes('retrieved'), 'I5. a successful resolution is labeled "Retrieved," matching the third stage');
         assert(describeSnapshotAttributionOutcomeLabel('match').toLowerCase().includes('confirmed to match'), 'I6. a hash match is labeled "Confirmed to match," matching the fourth stage — never "verified," "authentic," or "owned"');
 
         // Selection state ("Selected") is real, structural UI state, not
         // merely a label — reconfirm the CSS-class binding exists.
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(panelSource.includes('own-publication-candidate-item-selected'), 'I7. the second stage, "Selected," corresponds to a genuine, distinct UI state (a CSS class keyed to selectedSnapshotCandidate), not merely an unlabeled click');
     }
     console.log('✓ Section I: neither candidate-facing template renders a trust/authenticity/ownership/preference claim, and the actual label vocabulary a Wanderer sees follows exactly Discovered -> Selected -> Retrieved -> Confirmed to match, with no stronger word anywhere in the pipeline — reconfirms 0.9.151/0.9.157\'s own inline "never labels a candidate best/trusted/recommended" comment and 0.9.528\'s label tables, by reading the ACTUAL rendered template text rather than trusting the comment.');

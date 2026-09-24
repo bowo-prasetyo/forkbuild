@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { resolveMovementHeading } from '../core/AvatarMovementSteeringSimulation.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.93 — Vehicle Steering Capability: core/AvatarMovementSteeringSimulation.js,
 // the pure mathematical half (see that file's own header). This suite
@@ -53,10 +54,6 @@ import { resolveMovementHeading } from '../core/AvatarMovementSteeringSimulation
 // behavioral integration suite (WALK regression, per-vehicle ramps,
 // held/released turning, capability switching, wraparound, DRONE
 // blocking) this milestone adds alongside it.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const TWO_PI = Math.PI * 2;
 const HALF_PI = Math.PI / 2;

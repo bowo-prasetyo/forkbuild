@@ -7,6 +7,7 @@ import { composePublicationDistributionRuntime } from '../application/publicatio
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.49 — Publication Distribution Execution Boundary.
 // See docs/Roadmap.md, "0.9.49 — Publication Distribution Execution Boundary,"
@@ -31,10 +32,6 @@ import { Signature } from '../core/Signature.js';
 //   Section G: architectural regression — no transaction/rollback/status
 //              vocabulary, single envelope construction point, no
 //              concrete Arweave/Nostr imports
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function expectRejects(promise, message) {
     let threw = false;

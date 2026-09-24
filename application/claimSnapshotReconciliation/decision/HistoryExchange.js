@@ -1,13 +1,15 @@
 import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry } from './History.js';
 import { parseJSONOrNull } from '../../../utils/parseJsonOrNull.js';
 import { isPlainObject } from '../../../utils/typeGuards.js';
+import { hasOnlyKeys } from '../../../utils/typeGuards.js';
+import { canonicalDecisionKey } from './DecisionRecord.js';
 
 // 0.8.151 — Portable Reconciliation Decision History Exchange.
 //
 // 0.8.150 gave a replica a durable, archive-backed home for its own
 // reconciliation decisions, but never let one replica hand its history to
 // another — the identical gap 0.8.122 once left for a single signed claim,
-// closed one layer up by 0.8.126's own `PublisherLeaderboardClaimHistoryExchange.js`.
+// closed one layer up by 0.8.126's own `leaderboard/claim/HistoryExchange.js`.
 // This file is that same missing step, one subject over — a whole
 // `PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory` (0.8.146's
 // own plain, ordered array of 0.8.145's own decision records) instead of a
@@ -48,7 +50,7 @@ import { isPlainObject } from '../../../utils/typeGuards.js';
 // validated, never as re-derived.
 //
 // UNLIKE A SIGNED CLAIM, A DECISION CARRIES NO SIGNATURE — TRANSPORT NEVER
-// PRETENDS OTHERWISE. `application/leaderboard/PublisherLeaderboardSnapshotClaimExchange.js`'s
+// PRETENDS OTHERWISE. `application/leaderboard/snapshot/ClaimExchange.js`'s
 // own import runs a structural signature check because a claim carries one;
 // a 0.8.145 decision record carries none — it is an explicit, unsigned,
 // local historical fact from the moment it was first recorded (0.8.145's own
@@ -90,7 +92,7 @@ import { isPlainObject } from '../../../utils/typeGuards.js';
 // retained. Only a decision that is EXACTLY identical in all three fields
 // to one already on file is recognized as "the same decision received
 // twice" and contributes no second copy on `applyXxx()` — the identical
-// receipt-identity discipline `application/leaderboard/PublisherLeaderboardClaimHistoryExchange.js`'s
+// receipt-identity discipline `application/leaderboard/claim/HistoryExchange.js`'s
 // own header already establishes one layer down, over transported claim
 // receipts instead of transported decisions. This is a DELIBERATE, narrow
 // departure from 0.8.146's own "never deduplicated" LOCAL append rule —
@@ -118,7 +120,7 @@ import { isPlainObject } from '../../../utils/typeGuards.js';
 // verifier of any kind. A structurally malformed entry is an explicit,
 // per-entry outcome — reported by index and reason in `rejections` — never
 // fatal to the rest of an otherwise genuine payload, mirroring
-// `application/leaderboard/PublisherLeaderboardClaimHistoryExchange.js`'s own tolerance
+// `application/leaderboard/claim/HistoryExchange.js`'s own tolerance
 // for one malformed claim receipt deep inside an otherwise genuine history.
 // Only the top-level envelope itself (`protocolVersion`/`decisions` shape)
 // is atomic — a malformed envelope rejects the WHOLE payload
@@ -132,7 +134,7 @@ import { isPlainObject } from '../../../utils/typeGuards.js';
 // (0.8.146, UNCHANGED) — never a hand-rolled `[...history, decision]` of its
 // own. It never hands anything back to the sender; two replicas wanting to
 // fully converge run the identical exchange in both directions, exactly as
-// `application/leaderboard/PublisherLeaderboardClaimHistoryExchange.js`'s own header
+// `application/leaderboard/claim/HistoryExchange.js`'s own header
 // already documents one layer down.
 //
 // A VALID IMPORT DOES NOT MEAN THE DECISION IS CORRECT — ONLY THAT IT IS
@@ -358,18 +360,6 @@ export function applyPublisherLeaderboardClaimSnapshotReconciliationDecisionHist
         rejectedCount: importResult.rejectedCount,
         rejections: importResult.rejections
     });
-}
-
-// The one, uniform decision identity this file uses for deduplication —
-// see this file's own header, "Decision Identity Governs Deduplication."
-// Reuses 0.8.149's own formula exactly (exact structural equality of
-// `candidate` + `decision` + `decidedAt`), never a narrower key.
-function canonicalDecisionKey(record) {
-    return JSON.stringify({ candidate: record.candidate, decision: record.decision, decidedAt: record.decidedAt });
-}
-
-function hasOnlyKeys(value, allowedKeys) {
-    return Object.keys(value).every((key) => allowedKeys.includes(key));
 }
 
 function hasAllKeys(value, requiredKeys) {

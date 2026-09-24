@@ -18,6 +18,7 @@ import {
     importPublicationObservationArchive,
     recordPublicationObservationArchiveImport
 } from '../application/publication/observationArchive/PublicationObservationArchiveExport.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.83 — Publication Archive Provenance & Imported-Fact Boundary.
 //
@@ -58,10 +59,6 @@ import {
 //              malformed archive field
 //   Section M: withUniformProvenance()/appendArchiveImportEvent() reject
 //              invalid input as a no-op, mirroring every other appendXxx()
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const O = PublicationObservationArchiveProvenanceOrigin;
 

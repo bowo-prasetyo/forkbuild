@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { Publication } from '../publisher/Publication.js';
@@ -12,12 +11,14 @@ import { PUBLICATION_CONTENT_KIND } from '../application/publication/Publication
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { WorldEncounterMaterialVerificationComposition } from '../application/worldEncounter/WorldEncounterMaterialVerificationComposition.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.524 — Repository Admission Verification Boundary Closure Audit.
 //
@@ -67,15 +68,7 @@ import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/Sour
 //               material itself; no invented auto-placement.
 //   Section I — Classification and production guard.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 function flush() {
     return new Promise((resolve) => setTimeout(resolve, 0));
@@ -88,14 +81,6 @@ function flush() {
 function tamperHex(hex) {
     const flipped = hex[0] === '0' ? '1' : '0';
     return flipped + hex.slice(1);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeIdentity(label) {
@@ -408,7 +393,7 @@ async function run() {
         const compositionUseSource = await readSource('application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js');
         assert(/new WorldEncounterMaterialVerificationComposition\(\{\s*\n\s*verifiers: \[identityVerifier, signatureVerifier\]/.test(compositionUseSource),
             '4. application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js still composes exactly WorldEncounterMaterialIdentityVerifier + WorldEncounterMaterialSignatureVerifier — the same class exercised structurally in D1-D3 above, not a stand-in this milestone invented.');
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(mainSource.includes('composeWorldEncounterMaterialVerifier()') && mainSource.includes("app.provide('worldEncounterMaterialVerifier', worldEncounterMaterialVerifier)"),
             '5. ui/main.js provides that SAME composed verifier app-wide, under the name WorldView.js injects and passes into <WorldEncounterCanvas :materialVerifier>.');
 

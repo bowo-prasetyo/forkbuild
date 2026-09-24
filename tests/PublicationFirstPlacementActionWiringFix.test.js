@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
@@ -14,8 +13,10 @@ import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.600 — Publication First-Placement Action Wiring Fix.
 //
@@ -46,23 +47,6 @@ import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileG
 // the requesting brief's own lettered acceptance criteria (A-G) against
 // real production classes, wired exactly as CreateWorldViewUseCase.js
 // wires them today.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 if (typeof globalThis.window === 'undefined') {
     const store = new Map();
@@ -140,7 +124,7 @@ async function run() {
         assert(sessionCtorIndex !== -1 && placePublicationUseCaseArgIndex !== -1,
             'A2/A3. The SAME placePublicationUseCase instance PublishDocumentUseCase already uses is now ALSO handed to WorldNavigationSession\'s own constructor call.');
 
-        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(/placePublicationUseCase = null,/.test(sessionSrc),
             'A4. WorldNavigationSession accepts an optional placePublicationUseCase collaborator.');
         assert(/placePublication\(publicationId, position\) \{/.test(sessionSrc),
@@ -248,7 +232,7 @@ async function run() {
             'E2. Live: the narrow discoveryProvider — what fork-policy/_findPublications() still reads (world-layout was separately widened by 0.9.605, unrelated to this fork-policy boundary) — genuinely cannot see a Repository-admitted-only Publication.');
         // _isKnownPublication()/_checkForkPolicy() both key off _findPublications(documentId),
         // which reads _discoveryProvider (narrow) — confirmed structurally in WorldNavigationSession.js.
-        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         const findPublicationsBody = sessionSrc.match(/_findPublications\(documentId\) \{[\s\S]*?\n {4}\}/);
         assert(findPublicationsBody !== null && /this\._discoveryProvider/.test(findPublicationsBody[0]) && !/this\._publicationActionDiscoveryProvider/.test(findPublicationsBody[0]),
             'E4. _findPublications() — the shared choke point behind fork-policy — reads ONLY this._discoveryProvider, never this._publicationActionDiscoveryProvider. This milestone never touches that boundary.');
@@ -354,7 +338,7 @@ async function run() {
     // Section J — UI wiring, confirmed in real source.
     // ===============================================================
     {
-        const panelSrc = await readSource('ui/components/OwnPublicationPanel.js');
+        const panelSrc = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         assert(/placePublicationCommand: \{\s*type: Function,\s*default: null\s*\}/.test(panelSrc),
             'J1. OwnPublicationPanel.js declares an optional placePublicationCommand prop, mirroring unpublishCommand\'s own shape.');
         assert(/placeOwnPublication\(\) \{/.test(panelSrc), 'J2. OwnPublicationPanel.js defines placeOwnPublication().');

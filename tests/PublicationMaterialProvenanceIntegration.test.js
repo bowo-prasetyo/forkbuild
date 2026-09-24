@@ -12,9 +12,10 @@ import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/
 import { PublicationMaterialProvenanceOrigin } from '../application/publication/distribution/PublicationMaterialProvenance.js';
 import { LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // UPDATE (0.9.515): fixture fix in Sections B/C/D only, not a behavior
 // change. 0.9.494 amended `application/ArweaveGraphqlDiscoveryQueryService
@@ -53,18 +54,6 @@ import { Publication } from '../publisher/Publication.js';
 //              versa
 //   Section F: object identity — the provenance wrapper never clones or
 //              mutates the underlying Publication/material
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function buildSignedPublication(overrides = {}) {
     const provider = new LocalIdentityProvider(new InMemoryStorageProvider());

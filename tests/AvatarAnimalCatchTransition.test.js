@@ -3,6 +3,7 @@ import { AvatarAnimalCatchIntent } from '../core/AvatarAnimalCatchIntent.js';
 import { emptyAvatarInventory, withEntryAdded, createAvatarInventoryEntry, InventoryEntryKind } from '../core/AvatarInventory.js';
 import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
 import { VehicleType } from '../core/VehicleType.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.700 — Avatar Animal Catch Transition, core/AvatarAnimalCatchTransition.js.
 //
@@ -12,10 +13,6 @@ import { VehicleType } from '../core/VehicleType.js';
 //   Section C: defensive/malformed input
 //   Section D: FLAGSHIP — an inventory already carrying a vehicle gains
 //              the animal alongside it, untouched
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function runTests() {
     const { NONE, CATCH } = AvatarAnimalCatchIntent;

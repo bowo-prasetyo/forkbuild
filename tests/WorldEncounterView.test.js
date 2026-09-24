@@ -2,6 +2,8 @@ import { readFile } from 'node:fs/promises';
 import { describeWorldEncounterView } from '../application/worldEncounter/WorldEncounterView.js';
 import { describeWorldEncounterReadModel } from '../application/worldEncounter/WorldEncounterReadModel.js';
 import { deriveWorldEncounters } from '../core/WorldEncounter.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.9.2 — World View Presentation Projection.
 //
@@ -14,14 +16,6 @@ import { deriveWorldEncounters } from '../core/WorldEncounter.js';
 // Section G: no spatial or evaluative vocabulary, on the result or in the code
 // Section H: no mutation, frozen results, determinism
 // Section I: consumes 0.9.1's own read model result directly
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function publicationOf(overrides = {}) {
     return {

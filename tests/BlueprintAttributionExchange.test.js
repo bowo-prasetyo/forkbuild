@@ -3,9 +3,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { deriveBlueprintFingerprint, blueprintFingerprintsEqual } from '../core/BlueprintFingerprint.js';
 import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND, CURRENT_SCHEMA_VERSION as ATTRIBUTION_SCHEMA_VERSION } from '../core/BlueprintAttribution.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalBlueprintAttributionStore } from '../application/blueprint/LocalBlueprintAttributionStore.js';
 import { LocalBlueprintAttributionPublicationLog } from '../application/blueprint/LocalBlueprintAttributionPublicationLog.js';
 import { BlueprintAttributionUseCase } from '../application/blueprint/BlueprintAttributionUseCase.js';
@@ -18,6 +16,9 @@ import { buildBlueprintPackage, BLUEPRINT_KIND, CURRENT_SCHEMA_VERSION as BLUEPR
 import { validateBlueprintPackage, BlueprintPackageError } from '../application/blueprint/BlueprintImportValidator.js';
 import { ExportBlueprintUseCase } from '../application/blueprint/ExportBlueprintUseCase.js';
 import { ImportBlueprintUseCase } from '../application/blueprint/ImportBlueprintUseCase.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.6.6 — Decentralized Blueprint Exchange.
 //
@@ -47,32 +48,12 @@ import { ImportBlueprintUseCase } from '../application/blueprint/ImportBlueprint
 // See docs/Principles.md, "Attribution Exchange Distributes Assertions;
 // It Never Establishes Who Actually Made A Design (0.6.6)."
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function expectThrows(fn, message) {
     let threw = false;
     let error = null;
     try { fn(); } catch (e) { threw = true; error = e; }
     assert(threw, message);
     return error;
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-// Mirrors tests/BlueprintIdentityAttribution.test.js's own makeIdentity().
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 function brick(definitionId, x, y, z, rotation = 0) {

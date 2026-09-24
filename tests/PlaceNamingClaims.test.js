@@ -6,12 +6,13 @@ import { WorldRegion } from '../core/WorldRegion.js';
 import { RegionKind } from '../core/RegionKind.js';
 import { regionsContaining, describePlace } from '../core/WorldRegionGeography.js';
 import { Position } from '../core/Position.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
 import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
 import { LocalNamePreferenceStore } from '../application/identity/LocalNamePreferenceStore.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.5.2 — Place Naming & Naming Claims.
 //
@@ -26,28 +27,6 @@ import { LocalNamePreferenceStore } from '../application/identity/LocalNamePrefe
 //   LocalNamePreferenceStore = a purely local, unsigned override
 //
 // See docs/Principles.md, "A Name Is A Claim, Not A Fact (0.5.2)."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-// Mirrors tests/MultiDeviceSocialSemantics.test.js's own makeDevice() —
-// one independent, authenticated LocalIdentityProvider standing in for
-// one distinct identity.
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
-}
 
 async function run() {
     // -------------------------------------------------------------

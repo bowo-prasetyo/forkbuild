@@ -12,7 +12,6 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
@@ -36,26 +35,17 @@ import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { PublicationContentCache } from '../world/PublicationContentCache.js';
 import { WorldViewStreamingSession } from '../world/WorldViewStreamingSession.js';
 import { Publication } from '../publisher/Publication.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // ---------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 const stubIdentityProvider = {
     currentUser: () => ({ username: 'stub', displayName: 'stub', providerId: 'stub' }),
     sign: (data) => ({ signedBy: 'stub', providerId: 'stub', data })
 };
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, expectedMessage, message) {
     try {

@@ -1,6 +1,4 @@
-import { readFile } from 'node:fs/promises';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
@@ -29,6 +27,10 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.604 — Publication World Rendering Discovery Boundary Audit.
 //
@@ -69,15 +71,6 @@ import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 //   J. Multi-Publication isolation.
 //   K. Closure classification.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 if (typeof globalThis.window === 'undefined') {
     const store = new Map();
     globalThis.window = {
@@ -89,14 +82,6 @@ if (typeof globalThis.window === 'undefined') {
             get length() { return store.size; }
         }
     };
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 const UNIT_BOUNDS = () => new SpatialBounds({ min: { x: -0.5, y: 0, z: -0.5 }, max: { x: 0.5, y: 1, z: 0.5 } });
@@ -211,7 +196,7 @@ async function run() {
         assert(/const worldLayoutProvider = new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*publicationActionDiscoveryProvider\s*\);/.test(compositionSrc),
             'A8. UPDATED BY 0.9.605 (Wire Publication Discovery into World Rendering): production\'s composition root (application/world/CreateWorldViewUseCase.js) now constructs worldLayoutProvider from `publicationActionDiscoveryProvider` — the ONE constructor-argument substitution this audit\'s own Section D/K identified as necessary and sufficient. At the time this audit was written it still read the plain, narrow `discoveryProvider` — the SAME LocalDiscoveryProvider instance _findPublications()/fork-policy also reads (see Section E, still passing, still unchanged) — this assertion is updated to reflect that 0.9.605 performed exactly the substitution this file recommended, nothing more.');
 
-        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(/const \{ document, isMaterializedPublication \} = this\._resolveWorldDocument\(documentId\);/.test(sessionSrc)
             && /return \{ document: this\._loadPublicationDocumentUseCase\.execute\(documentId, this\._eventBus\), isMaterializedPublication: false \};/.test(sessionSrc),
             'A9. UPDATED BY 0.9.605: where the discovered document is SUBSEQUENTLY loaded: _loadWorld(documentId) (application/world/WorldNavigationSession.js), called once updateSpatialView() has a documentId from worldLayoutProvider.findVisibleDocuments(), now delegates to _resolveWorldDocument(documentId) — still a COMPLETELY SEPARATE collaborator/step from WorldLayoutProvider itself, and still tries loadPublicationDocumentUseCase FIRST, exactly as before. 0.9.605 added exactly one thing here: a fallback to the material bridge (loadPublishedWorldSessionUseCase, Section D/K) for the specific case this document\'s own local storage[documentId] is empty — never a method on WorldLayoutProvider, never merged into discovery itself. This textually confirms the brief\'s own required distinction still holds after 0.9.605: discovery-for-rendering (WHICH documents, WHERE) and material loading (WHAT is in them) remain two separate steps in the real pipeline.');
@@ -438,7 +423,7 @@ already offers, not a capability that provider lacks.
             'E6. AFTER widening worldLayoutProvider: fork-policy\'s own answer for the SAME collisionDocId is UNCHANGED (still null) — session.getPublicationIdForDocument() reads WorldNavigationSession\'s own `discoveryProvider` field, a constructor argument entirely separate from worldLayoutProvider\'s (application/world/CreateWorldViewUseCase.js builds and passes them independently — see Section A8/C1-C2). Widening worldLayoutProvider alone, as Section D proposes, cannot touch this — reproducing 0.9.596\'s exact collision scenario against THIS specific widening and confirming it stays safe, not merely citing that a DIFFERENT widening (a shared session-level discoveryProvider) was once unsafe.');
 
         // Reconfirm the source-level separation this all rests on.
-        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         const findPublicationsBody = sessionSrc.match(/_findPublications\(documentId\) \{[\s\S]*?\n {4}\}/);
         assert(findPublicationsBody !== null && /this\._discoveryProvider/.test(findPublicationsBody[0]) && !/this\._publicationActionDiscoveryProvider/.test(findPublicationsBody[0]) && !/worldLayoutProvider/.test(findPublicationsBody[0]),
             'E7. RECONFIRMED at the source level: _findPublications() reads only `this._discoveryProvider`; it has no reference to worldLayoutProvider or publicationActionDiscoveryProvider anywhere in its own body. The two axes (rendering-discovery, fork-policy-discovery) are, and remain, structurally disjoint.');

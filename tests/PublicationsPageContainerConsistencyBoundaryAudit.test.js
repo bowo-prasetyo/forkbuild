@@ -1,8 +1,7 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { stylesheetFiles, publicationsPageFiles, peerConnectionsViewSource } from './support/SourceFileGroups.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.648 — Publications Page Container Consistency Boundary Audit.
 //
@@ -76,10 +75,6 @@ function n(message) {
 }
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
-
-async function readSource(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
 
 function classToken(selector) {
     const escaped = selector.replace(/[.]/g, '\\.');

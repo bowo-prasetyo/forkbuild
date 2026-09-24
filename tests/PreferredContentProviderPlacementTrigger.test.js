@@ -3,7 +3,6 @@ import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
 import { RoleProviderResolutionStatus } from '../application/settings/RoleAwareProviderResolver.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
 import { PublicationResolver } from '../application/publication/PublicationResolver.js';
@@ -18,11 +17,13 @@ import { describeCreationAttempt } from '../application/snapshot/placement/Snaps
 import { ContentReference } from '../core/ContentReference.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { computeContentHash } from '../serializer/contentHash.js';
-import { readFile } from 'node:fs/promises';
 import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.301 — Preferred Content Provider Placement Trigger.
 //
@@ -61,30 +62,6 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 // application/snapshot/placement/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js,
 // and tests/ContentProviderPreferenceReachabilityAudit.test.js for the full
 // design rationale this milestone carries out.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
-}
 
 // A tiny in-memory stand-in for a Kubo node's HTTP RPC API — the identical
 // technique tests/SnapshotPlacementCreationUX.test.js and tests/

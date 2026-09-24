@@ -5,6 +5,7 @@ import { BitcoinWalletConnection } from '../anchoring/BitcoinWalletConnection.js
 import { BitcoinInjectedProviderWalletAdapter } from '../anchoring/BitcoinInjectedProviderWalletAdapter.js';
 import { BitcoinWalletConnectionState } from '../application/anchoring/bitcoin/BitcoinWalletConnectionState.js';
 import { describeBitcoinWalletConnectionStateLabel, describeBitcoinWalletConnection } from '../application/anchoring/bitcoin/BitcoinWalletConnectionView.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.58 — Explicit Bitcoin Wallet Connection & Signing UX.
 //
@@ -43,10 +44,6 @@ import { describeBitcoinWalletConnectionStateLabel, describeBitcoinWalletConnect
 //
 // See docs/Principles.md, "A Connection Grants A Capability; It Does Not
 // Grant Trust (0.8.58)."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function expectThrowsAsync(fn, message) {
     let threw = false;

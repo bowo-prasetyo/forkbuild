@@ -4,6 +4,7 @@ import { createArweaveTaggedTransactionUpload } from '../application/arweave/Arw
 import { parseSnapshotDiscoveryEnvelope } from '../core/SnapshotDiscoveryEnvelope.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.498 — Arweave Snapshot Discovery Publisher.
 // See application/arweave/ArweaveSnapshotDiscoveryPublisher.js's own header for the
@@ -34,10 +35,6 @@ import { computeContentHash } from '../serializer/contentHash.js';
 //   Section H: end-to-end deterministic round trip — real publisher + real
 //              tagged uploader + real ArweaveContentStore, content to
 //              announcement to a fresh, byte-identical read-back
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

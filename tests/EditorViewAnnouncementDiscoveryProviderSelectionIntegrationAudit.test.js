@@ -1,6 +1,4 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { composePublicationDistributionCommand, composeMultiRelayNostrPublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
@@ -13,7 +11,8 @@ import { PublicationDistributionLifecycleMemoryStore } from '../application/publ
 import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
 import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
 import { sanitizeDistributionErrorMessage } from '../application/publication/distribution/DistributionErrorMessageSanitizer.js';
-import { worldViewFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, editorViewFiles, mainFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.503 — Editor Announcement/Discovery Provider Selection Integration
 // Audit.
@@ -103,9 +102,7 @@ function n(message) {
 }
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
-async function source(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
+
 function codeOnly(text) {
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
@@ -308,7 +305,7 @@ async function run() {
     // Section A — Production wiring.
     // ===============================================================
     {
-        const mainSource = codeOnly(await source('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => source(file)))).join('\n'));
 
         assert((mainSource.match(/composePublicationDistributionCommand\(\{/g) || []).length === 1,
             n('A1. ui/main.js calls composePublicationDistributionCommand() exactly once — one single-relay command instance, never a second, EditorView-specific one'));

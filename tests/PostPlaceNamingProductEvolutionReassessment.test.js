@@ -17,8 +17,10 @@ import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/Local
 import { PlaceNamingClaimExchange } from '../application/placeNaming/PlaceNamingClaimExchange.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.272 — Post-Place-Naming Product Evolution Reassessment.
 //
@@ -81,15 +83,7 @@ import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './su
 //     arc 1)          3 candidates  arc, built)      re-rank)    arc, built)   re-rank)     arc, 5 build/     zero        milestone)
 //                     named)                                                                 reassess cycles) selected)
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {
@@ -136,14 +130,6 @@ async function constructorCallerCount(className, dirs, { excludeSuffix = null } 
     return hits.trim() ? hits.trim().split('\n').length : 0;
 }
 
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
 function makeIdentity(label) {
     const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
     const identity = provider.createLocalIdentity(label);
@@ -171,7 +157,7 @@ async function runTests() {
         const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const createWorldView = await rawSource('application/world/CreateWorldViewUseCase.js');
         const editorView = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
-        const mainJs = await rawSource('ui/main.js');
+        const mainJs = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         const worldEncounterCanvas = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
 
         // A1. World interaction/navigation — COMPLETE since 0.9.196,
@@ -209,7 +195,7 @@ async function runTests() {
         // reconfirmed by 0.9.252. OwnPublicationPanel still wires the
         // full read/write pair through the real use cases, never a
         // second, disconnected implementation.
-        const panel = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panel = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(panel.includes('AddPublicationCommentaryUseCase') || panel.includes('addPublicationCommentaryCommand'),
             'A5a. ui/components/OwnPublicationPanel.js still reaches the real Commentary write path.');
         assert(panel.includes('GetPublicationCommentariesUseCase') || panel.includes('getPublicationCommentariesCommand'),
@@ -256,9 +242,9 @@ async function runTests() {
         const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const createWorldView = await rawSource('application/world/CreateWorldViewUseCase.js');
         const editorView = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
-        const mainJs = await rawSource('ui/main.js');
+        const mainJs = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         const worldEncounterCanvas = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
-        const navSession = await rawSource('application/world/WorldNavigationSession.js');
+        const navSession = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
 
         assert(/new\s+EditorSession\s*\(/.test(editorView), 'B1. Editor: ui/views/EditorView.js still constructs a real EditorSession.');
         macroMatrix.push(['Editor', 'COMPLETE']);
@@ -282,8 +268,8 @@ async function runTests() {
         assert(worldView.includes('CreateExternalSnapshotPlacementUseCase'), 'B6. Snapshot: reconfirmed (Section A2).');
         macroMatrix.push(['Snapshot', 'COMPLETE']);
 
-        assert((await rawSource('ui/components/OwnPublicationPanel.js')).includes('GetPublicationCommentariesUseCase') ||
-               (await rawSource('ui/components/OwnPublicationPanel.js')).includes('getPublicationCommentariesCommand'),
+        assert(((await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n')).includes('GetPublicationCommentariesUseCase') ||
+               ((await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n')).includes('getPublicationCommentariesCommand'),
             'B7. Commentary: reconfirmed (Section A5).');
         macroMatrix.push(['Commentary', 'COMPLETE']);
 

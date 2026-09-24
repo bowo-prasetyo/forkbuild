@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
@@ -14,7 +13,6 @@ import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
 import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
@@ -28,6 +26,10 @@ import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorl
 import { MoveWorldPlacementUseCase } from '../application/placement/MoveWorldPlacementUseCase.js';
 import { DiscoverWorldsUseCase } from '../application/discovery/DiscoverWorldsUseCase.js';
 import { SpatialCameraController } from '../application/world/SpatialCameraController.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.200 — Orphaned World Placement Lifecycle Audit.
 //
@@ -52,18 +54,6 @@ import { SpatialCameraController } from '../application/world/SpatialCameraContr
 //
 // It asks the question with real, running code, against the same real
 // (not mocked) collaborators every other file in this arc already uses.
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, message) {
     try {
@@ -114,11 +104,6 @@ function makeDocument(title, brickCount = 1) {
         world,
         metadata: new DocumentMetadata({ title, author: 'alice', license: new License({ id: LicenseId.CC0_1_0 }) })
     });
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 // Same restraint every prior file in this arc applies to its own
@@ -530,7 +515,7 @@ async function runTests() {
         // No orphan-specific vocabulary was introduced anywhere in
         // production by writing THIS file's own new production-facing
         // read models — there are none; this file adds test code only.
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const noNewFlagVocabulary = /\borphan(ed)?\b|\bisOrphaned\b|\bplacementOrphaned\b/i;
         assert(!noNewFlagVocabulary.test(codeOnlyLines(sessionSource).join('\n')),
             'H3. WorldNavigationSession.js still introduces no orphaned/isOrphaned vocabulary in code (0.9.199\'s own Section G, reconfirmed unchanged)');

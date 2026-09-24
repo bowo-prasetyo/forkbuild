@@ -3,13 +3,15 @@ import { execSync } from 'node:child_process';
 
 import { Position } from '../core/Position.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { DiscoverPlacementsUseCase } from '../application/placement/DiscoverPlacementsUseCase.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.310 — Post-Placement-Visibility Product Evolution Reassessment.
 //
@@ -74,15 +76,7 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 //                            source of     evidenced next
 //                            truth)        placement feature)
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {
@@ -127,14 +121,6 @@ function methodBody(source, signaturePattern, closeIndent) {
     const match = source.match(re);
     assert(match, `method body for ${signaturePattern} could not be located`);
     return match[1];
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeBackend() {
@@ -258,7 +244,7 @@ async function runTests() {
         // legitimately shares this surface. See tests/
         // DiscoveredPublicationPlacementJourneyClosureAudit.test.js
         // (0.9.601) for that journey's own full closure.
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const placementsSection = panelSource.split('own-publication-placements"')[1].split('</div>')[0];
         const interactiveControls = placementsSection.match(/@click="[^"]+"/g) || [];
         assert(interactiveControls.length === 1 && interactiveControls[0] === '@click="placeOwnPublication"',
@@ -290,7 +276,7 @@ async function runTests() {
         // "placement resolution," "placement verification," or
         // "placement materialization" concept anywhere in this
         // codebase's own vocabulary to complete.
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/PlacementResolution|PlacementVerification|PlacementMaterialization/.test(sessionSource),
             'B3. No "PlacementResolution/Verification/Materialization" vocabulary exists anywhere — unlike Snapshot, there is no further named protocol stage this journey stops short of.');
 
@@ -308,7 +294,7 @@ async function runTests() {
         // World placement flow (a Wanderer places a Publication by
         // interacting with the World itself, not from a Publication
         // inspection panel) — OwnPublicationPanel never imports it.
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const panelCode = codeOnlyLines(panelSource);
         assert(!/PlacePublicationUseCase/.test(panelCode),
             'C1. OwnPublicationPanel.js\'s own CODE (comments aside — its own header merely NAMES these use cases as things it deliberately excludes) never references PlacePublicationUseCase — creation stays owned by the World placement flow.');
@@ -390,7 +376,7 @@ async function runTests() {
         // own SINGLE position per document — never through the
         // placement registry, and never by placementId or by an
         // explicit Position at all.
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const sessionCode = codeOnlyLines(sessionSource);
         const focusDocumentBody = methodBody(sessionCode, 'focusDocument\\(documentId, \\{ setActive = true \\} = \\{\\}\\)', 4);
         assert(focusDocumentBody.includes('this._getWorldPosition(documentId)'),
@@ -482,7 +468,7 @@ async function runTests() {
         // entry (a spatial interaction), not a Publication-inspection
         // list row. Confirmed structurally: OwnPublicationPanel.js
         // still has no coordinate-input UI of any kind.
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/<input[^>]*type="number"|PlacementEditorDialog/.test(panelSource),
             'E4. OwnPublicationPanel.js still has no coordinate-entry UI or PlacementEditorDialog reference — "move" has no natural home on this read-only inspection surface.');
 
@@ -495,7 +481,7 @@ async function runTests() {
     // rendered; the one real gap is exposed but unproven as valuable.
     // ===============================================================
     {
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const placementsSection = panelSource.split('own-publication-placements"')[1].split('</div>')[0];
 
         // F1. Coordinates and revision and owner are ALREADY rendered,
@@ -559,7 +545,7 @@ async function runTests() {
         // this coordinate," reached via PlacementInfoPanel's own "View"
         // link on a nonzero overlapCount.
         assert(await sourceExists('ui/components/LocationDocumentsDialog.js'), 'G1. LocationDocumentsDialog.js already exists.');
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(sessionSource.includes('getDocumentsAtPosition(position)'), 'G1b. getDocumentsAtPosition() already exists on WorldNavigationSession.');
         const dialogSource = await rawSource('ui/components/LocationDocumentsDialog.js');
         assert(dialogSource.includes("name: 'LocationDocumentsDialog'") && dialogSource.includes('occupants'),
@@ -615,7 +601,7 @@ async function runTests() {
         // plural read path or its shared enrichment helper — visibility
         // in OwnPublicationPanel's sense is a database fact, never a
         // live-session fact.
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const sessionCode = codeOnlyLines(sessionSource);
         const pluralBody = methodBody(sessionCode, 'getPlacementsForPublication\\(publicationId\\)', 4);
         const enrichBody = methodBody(sessionCode, '_enrichPlacementRecord\\(record\\)', 4);

@@ -1,6 +1,6 @@
-import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
-import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
+import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/snapshot/Snapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/snapshot/Fingerprint.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/claim/Record.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationPlan } from '../application/claimSnapshotReconciliation/PlanView.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecision } from '../application/claimSnapshotReconciliation/decision/Decision.js';
 import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry } from '../application/claimSnapshotReconciliation/decision/History.js';
@@ -11,10 +11,12 @@ import {
 import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { featureImportLines } from './support/SharedHelperImports.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.8.154 — Reconciliation Candidate Decision Evolution Projection.
 //
@@ -36,29 +38,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //            exactly once
 // Section L: vocabulary/import boundary — no rediscovery of 0.8.144 or
 //            0.8.145, no interpretive vocabulary, imports only 0.8.153
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
-}
 
 function makePolicy(version) {
     return Object.freeze({
@@ -445,9 +424,9 @@ async function run() {
         // or read decision records via 0.8.146's own history module — this
         // file imports exactly ONE module: 0.8.153's own correspondence
         // projection, used by both describeXxx() and reconstructXxx().
-        const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
+        const importLines = featureImportLines(moduleSource);
         const importBlock = moduleSource.slice(0, moduleSource.indexOf('\n\n'));
-        assert(importLines.length === 1, '75. this file imports from exactly one module');
+        assert(importLines.length === 1, '75. besides shared helpers, this file imports from exactly one module');
         assert(importBlock.includes('../decision/CandidateCorrespondenceView.js'), '76. the one import is 0.8.153\'s own correspondence projection, never 0.8.144\'s own candidate-selection boundary or any plan/discovery/history-storage module');
         assert(!codeOnly.includes('reconciliationplanview') && !codeOnly.includes('describepublisherleaderboardclaimsnapshotreconciliationcandidate(') && !codeOnly.includes('decisionhistoryview') && !codeOnly.includes('decisionhistory.js'), '77. this file never calls 0.8.144\'s own candidate-selection function and never imports 0.8.146\'s own decision-history storage module');
     }

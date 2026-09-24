@@ -35,6 +35,7 @@ import { terrainHeightAt } from './TerrainHeightField.js';
 import { ecologyZoneAt, ECOLOGY_ZONE } from './TerrainEcology.js';
 import { isRiverAt } from './Hydrology.js';
 import { animalIdFor } from './AnimalIdentity.js';
+import { lerp, smoothstep } from '../utils/interpolation.js';
 
 export const WILDLIFE_FEATURE_TYPE = Object.freeze({
     ANIMAL: 'ANIMAL'
@@ -75,14 +76,6 @@ const JITTER_RANGE = 1 - JITTER_MARGIN * 2;
 // as many animals as trees would read as a farm, not a wilderness.
 const FOREST_ANIMAL_DENSITY_THRESHOLD = 0.90;   // DEER — rare, deep cover
 const GRASSLAND_ANIMAL_DENSITY_THRESHOLD = 0.82; // RABBIT — sparse, but more common than deer
-
-function smoothstep(t) {
-    return t * t * (3 - 2 * t);
-}
-
-function lerp(a, b, t) {
-    return a + (b - a) * t;
-}
 
 // A small, fast, deterministic 32-bit avalanche hash — independently
 // reimplemented per core/NaturalFeatureField.js's own header precedent:

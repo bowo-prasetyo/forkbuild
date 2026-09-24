@@ -1,5 +1,4 @@
 import { readFile } from 'node:fs/promises';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
@@ -15,6 +14,8 @@ import { composeWorldEncounterMaterialVerifier } from '../application/worldEncou
 import { inspectWorldEncounterMaterial } from '../application/worldEncounter/WorldEncounterMaterialInspection.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.43 — World Encounter Material Inspection Completion.
 // See docs/Roadmap.md, "0.9.43 — World Encounter Material Inspection Completion."
@@ -51,18 +52,6 @@ import { WorldEncounterMaterialVerificationStatus } from '../application/worldEn
 //              still builds only 0.9.38/0.9.41/0.9.42's own unmodified
 //              classes, and 0.9.42's own conservative composition semantics
 //              (no per-kind applicability policy) are untouched
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function buildRealSigner(username) {
     const storage = new InMemoryStorageProvider();

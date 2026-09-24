@@ -1,5 +1,4 @@
 import { execSync } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
 
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
 import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
@@ -11,12 +10,14 @@ import { PlacementAcquisitionKind } from '../application/placement/PlacementAcqu
 import { SnapshotPlacementResolver } from '../application/snapshot/placement/SnapshotPlacementResolver.js';
 import { SnapshotPlacementResolutionOutcome } from '../application/snapshot/placement/SnapshotPlacementResolutionOutcome.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
 import { WorldSnapshotDiscoveryMonitor } from '../application/snapshot/WorldSnapshotDiscoveryMonitor.js';
 import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.482 — Passive Peer Contribution to Walking-Triggered Snapshot
 // Discovery Product Audit.
@@ -102,19 +103,11 @@ import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapsho
 //   Section J — Deliberate exclusions; no production file touched; final
 //               classification.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function wait(ms = 20) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 function grepFiles(pattern, dirs, { ignoreCase = false } = {}) {
     let hits = '';
@@ -160,21 +153,6 @@ function resetProductionLocalStorage() {
         key: (i) => Array.from(_productionLocalStorageBacking.keys())[i] ?? null,
         get length() { return _productionLocalStorageBacking.size; }
     };
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 function signPlacement(identityProvider, fields) {

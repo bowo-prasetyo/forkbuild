@@ -1,6 +1,4 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import PublisherPerformanceLeaderboardView from '../ui/views/PublisherPerformanceLeaderboardView.js';
@@ -15,6 +13,7 @@ import { reconstructPublisherAchievementStatistics } from '../application/achiev
 import { describePublisherRankingPolicy, reconstructPublisherRanking } from '../application/leaderboard/PublisherRankingPolicy.js';
 import { reconstructPublisherLeaderboard } from '../application/leaderboard/PublisherLeaderboardView.js';
 import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.418 — Publisher Performance Leaderboard UI/Ranking Convergence Audit.
 //
@@ -66,9 +65,6 @@ function n(message) {
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
 
-async function readSource(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
 function listFiles(dirs) {
     return execSync(`git ls-files ${dirs.join(' ')}`, { cwd: SOURCE_ROOT })
         .toString().split('\n').filter((f) => f.endsWith('.js'));
@@ -554,7 +550,7 @@ async function run() {
             assert(!pattern.test(applicationBundle), n(`I1. application/ contains no class matching ${pattern} — no new persistence/caching layer for the performance leaderboard`));
             assert(!pattern.test(uiBundle), n(`I2. ui/ contains no class matching ${pattern} either`));
         }
-        // Note: PublisherLeaderboardSnapshot.js (0.8.119) already existed
+        // Note: leaderboard/snapshot/Snapshot.js (0.8.119) already existed
         // before this milestone, scoped to signed cross-replica evidence
         // reproducibility, never to caching a rank for display — confirmed
         // untouched by 0.9.417 and this milestone alike (Section J below).

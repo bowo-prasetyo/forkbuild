@@ -1,5 +1,6 @@
 import { BitcoinAnchorTransactionBuilder } from '../anchoring/BitcoinAnchorTransactionBuilder.js';
 import { BitcoinAnchorPsbtBuilder } from '../anchoring/BitcoinAnchorPsbtBuilder.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.48 — Bitcoin Anchor PSBT Construction.
 //
@@ -33,10 +34,6 @@ import { BitcoinAnchorPsbtBuilder } from '../anchoring/BitcoinAnchorPsbtBuilder.
 //              appears.
 //
 // See docs/Principles.md, "A PSBT Is A Description, Not A Signature (0.8.48)."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

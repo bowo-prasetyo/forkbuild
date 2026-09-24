@@ -4,6 +4,7 @@ import {
     WorldEncounterPresentationSourceFamily
 } from '../application/worldEncounter/WorldEncounterPresentation.js';
 import { LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/worldEncounter/WorldEncounterIntegration.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.176 — World Snapshot Presentation.
 //
@@ -26,10 +27,6 @@ import { LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/worldEncounter/Worl
 //   Section F: purity — frozen results, no mutation of inputs, repeatable.
 //   Section G: structural sweep — no rank/trust/verified/best vocabulary,
 //              no I/O, no new WorldEncounterKind.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function publicationInspection(overrides = {}) {
     return Object.freeze({

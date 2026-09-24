@@ -1,7 +1,8 @@
-import { readFile } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.357 — Wire Canonical Publication Discovery Tag into World View.
 //
@@ -30,16 +31,6 @@ import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileG
 // exactly as freely editable as before — all proven live below, not merely
 // read from source.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 // The same "extract methods/props straight off the exported options object
 // and call them with a hand-built ctx" technique
 // tests/DecentralizedWorldEncounterLeadSelectionUI.test.js and 0.9.356's own
@@ -66,7 +57,7 @@ async function run() {
     // provide() call — never two independently-typed copies.
     // ===============================================================
     {
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         const literalDeclarations = mainSource.match(/const PUBLICATION_DISCOVERY_TAG = 'forkbuild-publication';/g) || [];
         assert(literalDeclarations.length === 1,
             `1. exactly one PUBLICATION_DISCOVERY_TAG constant declaration exists in ui/main.js (found ${literalDeclarations.length}).`);
@@ -77,13 +68,20 @@ async function run() {
             '3. the existing distribution runtime provider call now references the SAME constant, not its own separately-typed literal.');
 
         // Ordering: the constant and its provide() call must exist before
-        // ui/main.js's own distribution wiring reads it (composePublicationDistributionCommand,
-        // further down the file) — confirming this is one linear
+        // the distribution wiring reads it — confirming this is one linear
         // definition, never a forward reference or a second declaration.
-        const constantIndex = mainSource.indexOf('const PUBLICATION_DISCOVERY_TAG');
-        const provideIndex = mainSource.indexOf("app.provide('publicationDiscoveryTag'");
-        const distributionUsageIndex = mainSource.indexOf('discoveryTag: PUBLICATION_DISCOVERY_TAG');
-        assert(constantIndex !== -1 && constantIndex < provideIndex && provideIndex < distributionUsageIndex,
+        // The constant is declared in composeWorldDiscovery() and read in
+        // composePublicationDistribution(), so the order is ui/main.js's
+        // call order around its provide().
+        const rootSource = await readSource('ui/main.js');
+        const worldDiscoverySource = await readSource('ui/main/composeWorldDiscovery.js');
+        const distributionSource = await readSource('ui/main/composePublicationDistribution.js');
+        const constantIndex = rootSource.indexOf('composeWorldDiscovery({');
+        const provideIndex = rootSource.indexOf("app.provide('publicationDiscoveryTag'");
+        const distributionUsageIndex = rootSource.indexOf('composePublicationDistribution({');
+        assert(worldDiscoverySource.includes('const PUBLICATION_DISCOVERY_TAG')
+            && distributionSource.includes('discoveryTag: PUBLICATION_DISCOVERY_TAG')
+            && constantIndex !== -1 && constantIndex < provideIndex && provideIndex < distributionUsageIndex,
             '4. declaration, then provide(), then the (unchanged) distribution usage — a single, forward-flowing definition.');
     }
     console.log('✓ Section A: ui/main.js hoists the canonical tag to one named constant, provides it app-wide as publicationDiscoveryTag, and its existing distribution call site now references that SAME constant — confirmed by both usages resolving to one declaration, never two literals.');

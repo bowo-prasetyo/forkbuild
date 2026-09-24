@@ -1,15 +1,14 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
 import { ExternalAnchorPublisherRegistry } from '../application/anchoring/ExternalAnchorPublisherRegistry.js';
 import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
-import { publicationsPageFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, editorViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.422 — Decentralized Substrate Role Choice UI Reachability Audit.
 //
@@ -92,9 +91,6 @@ function n(message) {
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
 
-async function readSource(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
 function listFiles(dirs) {
     return execSync(`git ls-files ${dirs.join(' ')}`, { cwd: SOURCE_ROOT })
         .toString().split('\n').filter((f) => f.endsWith('.js'));
@@ -105,14 +101,6 @@ async function joinedSource(files) {
 }
 function codeOnly(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 async function run() {
@@ -162,7 +150,7 @@ async function run() {
 
         // Real registered provider counts today, from the one real
         // composition root — never assumed from capability alone.
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         const contentProviderCount = /stores: \[publicationContentStore, new IpfsContentStore\(\{ apiUrl: resolvedIpfsNodeApiUrl \}\)\]/.test(mainSource) ? 2 : 0;
         const proofPublisherCount = /publishers: \[bitcoinAnchorPublisher\]/.test(mainSource) ? 1 : 0;
         assert(contentProviderCount === 2, n(`A8. CONTENT has two real registered providers today (found ${contentProviderCount})`));
@@ -181,7 +169,7 @@ async function run() {
         // amendment already gives, extended to a fourth provider-facing
         // options bag.
         const distributionIsSingleFixedPair = /const publicationDistributionCommand = composePublicationDistributionCommand\(\{/.test(mainSource)
-            && /arweaveUploaderOptions,\s*\n\s*ipfsNodeOptions,\s*\n\s*nostrPublisherOptions,\s*\n\s*arweaveAnnouncementPublisherOptions\s*\n\}\);/.test(mainSource);
+            && /arweaveUploaderOptions,\s*\n\s*ipfsNodeOptions,\s*\n\s*nostrPublisherOptions,\s*\n\s*arweaveAnnouncementPublisherOptions\s*\n\s*\}\);/.test(mainSource);
         assert(distributionIsSingleFixedPair, n('A10. ANNOUNCEMENT_AND_DISCOVERY\'s one real write action is composed exactly once, from exactly one Arweave-uploader/Nostr/Arweave-announcement options set — "how many are registered" is not even a meaningful question for this role\'s own real action, because there is no registry to count entries in'));
 
         console.log('\n=== SECTION A: ROLE / PROVIDER / MECHANISM CENSUS ===');
@@ -231,7 +219,7 @@ async function run() {
         // Publication" button always distributed via Nostr regardless of
         // the saved ANNOUNCEMENT_AND_DISCOVERY preference.
         const editorSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
-        const ownPanelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         // AMENDED BY 0.9.450 — Nostr Multi-Relay Publication Distribution
         // Wiring. EditorView.js's own injected key renamed from
         // `publicationDistributionCommand` to

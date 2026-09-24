@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
@@ -27,7 +26,6 @@ import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
 import { Position } from '../core/Position.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
@@ -35,7 +33,10 @@ import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { computeContentHash } from '../serializer/contentHash.js';
-import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.567 — Distributed Publication Position Claim End-to-End Product
 // Reassessment.
@@ -136,23 +137,11 @@ import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFil
 //   authoritative World placement (PlacementRecord) remain three distinct,
 //   non-substitutable facts throughout.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));
     for (let i = 0; i < 10; i++) {
         await Promise.resolve();
     }
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 const stubIdentityProvider = {
@@ -416,11 +405,6 @@ function expectedCanvasCoordinate(worldValue) {
     return 300 + (worldValue / 50) * 300;
 }
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 async function run() {
     // =======================================================================
     // Sections A-F — one continuous, real production journey.
@@ -450,7 +434,7 @@ async function run() {
         const snapshotDistributionCommand = makeRealSnapshotDistributionCommand({ contentStore: host.arweaveStore, discoveryPublisher: host.discoveryPublisher });
         const distributeWorldEncounterSnapshot = makeDistributeWorldEncounterSnapshotAction({ snapshotDistributionCommand, publicationContentStore, session });
 
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         // AMENDED BY 0.9.669 — Per-Click Snapshot Announcement/Discovery
         // Substrate Override. `discoveryProvider` joined the parameter
         // list, and `discoveryPublisher` is now resolved per-call via

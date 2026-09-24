@@ -20,7 +20,8 @@ import { WorldNavigationSession } from '../application/world/WorldNavigationSess
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.208 — World View History Preview/Restore Lifecycle Audit.
 //
@@ -73,10 +74,6 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 // are genuinely about WorldView's own lifecycle (panel-close cancelling
 // preview, onUnmounted disposing the session) are verified structurally,
 // by reading the source directly, exactly like that file's own Section G.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, message) {
     try {
@@ -594,7 +591,7 @@ async function run() {
         // Structural: no history-specific autosave path exists anywhere,
         // and no new document lifecycle vocabulary was introduced.
         const SOURCE_ROOT = new URL('../', import.meta.url);
-        const navSource = await readFile(new URL('application/world/WorldNavigationSession.js', SOURCE_ROOT), 'utf8');
+        const navSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readFile(new URL(file, SOURCE_ROOT), 'utf8')))).join('\n');
         assert(!/Autosave|Recovery/.test(navSource), 'WorldNavigationSession.js references neither Autosave nor Recovery machinery — restore rides on ordinary dirty state alone');
         assert(!/\bRESTORED\b|\bHISTORICAL\b/.test(navSource), 'no new RESTORED/HISTORICAL document lifecycle state was introduced for history restore');
 
@@ -713,7 +710,7 @@ async function run() {
         // Structural: neither method body reaches into publish/placement/
         // storage machinery directly.
         const SOURCE_ROOT = new URL('../', import.meta.url);
-        const navSource = await readFile(new URL('application/world/WorldNavigationSession.js', SOURCE_ROOT), 'utf8');
+        const navSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readFile(new URL(file, SOURCE_ROOT), 'utf8')))).join('\n');
         const extractMethod = (name) => {
             const re = new RegExp(`\\b${name}\\s*\\([^)]*\\)\\s*\\{`);
             const start = navSource.search(re);
@@ -744,7 +741,7 @@ async function run() {
     // -------------------------------------------------------------
     {
         const SOURCE_ROOT = new URL('../', import.meta.url);
-        const navSource = await readFile(new URL('application/world/WorldNavigationSession.js', SOURCE_ROOT), 'utf8');
+        const navSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readFile(new URL(file, SOURCE_ROOT), 'utf8')))).join('\n');
         assert((navSource.match(/new CommandHistory\(/g) || []).length >= 1, 'WorldNavigationSession.js constructs history state via the ONE CommandHistory class');
         assert(!/class\s+\w*History\w*\s*\{/.test(navSource), 'WorldNavigationSession.js defines no second, competing history class of its own');
 

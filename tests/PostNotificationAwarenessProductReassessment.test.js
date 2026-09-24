@@ -1,6 +1,5 @@
 import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
@@ -10,8 +9,11 @@ import { PublicationCommentaryNotificationProducer } from '../application/public
 import { GetRecipientNotificationEventsUseCase } from '../application/chat/GetRecipientNotificationEventsUseCase.js';
 import { NotificationEvent } from '../core/NotificationEvent.js';
 import { NotificationEventStore, NotificationPersistenceOutcome } from '../storage/NotificationEventStore.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.306 — Notification Awareness Product Reassessment.
 //
@@ -74,15 +76,7 @@ import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileG
 //    store, query UI,   essment)
 //    E2E audit)
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {
@@ -115,21 +109,6 @@ async function grepCount(pattern, dirs, { ignoreCase = false } = {}) {
 // tests/PostNotificationHistoryProductReassessment.test.js and
 // tests/NotificationEndToEndLifecycleAudit.test.js.
 // ---------------------------------------------------------------------
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
-}
 
 function makePublication({ id, publisherProvider }) {
     const publication = new Publication({
@@ -254,7 +233,7 @@ async function runTests() {
         // is constructed only inside CreateWorldViewUseCase.js, itself
         // constructed fresh only inside WorldView.js's own mounted()
         // hook — there is no ui/main.js-level, app-wide instance of it.
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(mainSource.includes('new CreatePublicationCommentaryUseCase().execute(identityProvider)')
             && mainSource.includes("app.provide('addPublicationCommentaryCommand', addPublicationCommentaryCommand)"),
             'C1a. ui/main.js still constructs the write-side commentary/notification path ONCE, app-wide, and provides it globally.');

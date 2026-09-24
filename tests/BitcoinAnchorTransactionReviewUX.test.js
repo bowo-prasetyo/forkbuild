@@ -6,6 +6,7 @@ import { BitcoinAnchorReviewedPsbtSigner } from '../anchoring/BitcoinAnchorRevie
 import { BitcoinWalletConnection } from '../anchoring/BitcoinWalletConnection.js';
 import { BitcoinInjectedProviderWalletAdapter } from '../anchoring/BitcoinInjectedProviderWalletAdapter.js';
 import { describeBitcoinAnchorTransactionReview } from '../application/anchoring/bitcoin/BitcoinAnchorTransactionReviewView.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.59 — Explicit Bitcoin Anchor Transaction Review UI.
 //
@@ -49,10 +50,6 @@ import { describeBitcoinAnchorTransactionReview } from '../application/anchoring
 //
 // See docs/Principles.md, "A Transaction Is Signed Only If It Is The
 // Transaction That Was Reviewed (0.8.59)."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function expectThrowsAsync(fn, message) {
     let threw = false;

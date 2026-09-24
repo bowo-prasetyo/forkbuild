@@ -1,6 +1,6 @@
-import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
-import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
+import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/snapshot/Snapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/snapshot/Fingerprint.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/claim/Record.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationPlan } from '../application/claimSnapshotReconciliation/PlanView.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecision } from '../application/claimSnapshotReconciliation/decision/Decision.js';
 import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry } from '../application/claimSnapshotReconciliation/decision/History.js';
@@ -15,10 +15,12 @@ import {
 } from '../application/claimSnapshotReconciliation/decision/HistoryExchange.js';
 import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { featureImportLines } from './support/SharedHelperImports.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.8.151 — Portable Reconciliation Decision History Exchange.
 //
@@ -40,29 +42,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // Section G: determinism, immutability, zero network access, frozen results
 // Section H: no verify/authorize/approve/re-evaluate vocabulary anywhere;
 //            architecture boundary — exactly one import
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
-}
 
 async function withoutNetworkAccess(fn) {
     let networkCallOccurred = false;
@@ -460,8 +439,8 @@ async function run() {
             assert(!codeOnly.includes(term), `71. this file's own code never carries "${term}"`);
         }
 
-        const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import ') && !line.includes("from '../../../utils/"));
-        assert(importLines.length === 1, '72. besides utils/ helpers, this file imports exactly one module');
+        const importLines = featureImportLines(moduleSource);
+        assert(importLines.length === 1, '72. besides shared helpers, this file imports exactly one module');
         assert(importLines[0].includes('./History.js') && !importLines[0].includes('Difference') && !importLines[0].includes('View'), '73. the one import is 0.8.146\'s own append boundary, never the plan/candidate/decision/difference/archive modules');
 
         // Sanity — the two exported functions genuinely require no verifier

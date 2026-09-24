@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 
 import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
@@ -9,7 +8,6 @@ import { PublishDocumentUseCase } from '../application/publication/PublishDocume
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
@@ -19,7 +17,9 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
-import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.378 — Post-Publish Distribution Action Convergence Audit.
 //
@@ -98,10 +98,6 @@ function n(message) {
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
 
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 function codeOnlyLines(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
@@ -124,14 +120,6 @@ async function flushMicrotasks() {
     for (let i = 0; i < 10; i++) {
         await Promise.resolve();
     }
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeDocument(title) {
@@ -441,7 +429,7 @@ async function run() {
     // Section A — Three-surface command convergence.
     // ---------------------------------------------------------------
     {
-        const mainCode = await codeOnlySource('ui/main.js');
+        const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         const provideMatches = mainCode.match(/app\.provide\('publicationDistributionCommand', publicationDistributionCommand\)/g) || [];
         assert(provideMatches.length === 1,
             n('ui/main.js provides publicationDistributionCommand exactly once, at the app root — a single composition, never one per view'));
@@ -855,7 +843,7 @@ async function run() {
             assert(!/ASSERT FAILED/.test(output), n(`${suite} produced no failed assertion`));
         }
 
-        const ownPanelRaw = await readSource('ui/components/OwnPublicationPanel.js');
+        const ownPanelRaw = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         const canvasRaw = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(!/\bEditor\b/.test(ownPanelRaw), n('OwnPublicationPanel.js contains no reference to "Editor" anywhere — zero leakage of the new EditorView-specific capability into this file'));
         assert(!/\bEditor\b/.test(canvasRaw), n('WorldEncounterCanvas.js contains no reference to "Editor" either — zero leakage'));

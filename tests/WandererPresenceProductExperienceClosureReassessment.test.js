@@ -1,6 +1,4 @@
-import { readFile } from 'node:fs/promises';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
@@ -26,6 +24,9 @@ import WorldPresenceIndicator from '../ui/components/WorldPresenceIndicator.js';
 import { buildWorldCollaborationRoster, WorldCollaborationAccess } from '../ui/components/WorldCollaborationRoster.js';
 import { buildSpatialCollaboratorRows } from '../ui/components/WorldCollaboratorIndicator.js';
 import { worldNavigationSessionFiles, stylesheetFiles, worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.583 — Wanderer Presence Product Experience Closure Reassessment.
 //
@@ -112,28 +113,12 @@ import { worldNavigationSessionFiles, stylesheetFiles, worldEncounterCanvasFiles
 //
 // FINDING: see the verdict block at the end of this file.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function wait(ms = 0) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 function codeOnly(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 // Mirrors tests/WandererPresenceSessionContinuityProductReassessment.test.js's

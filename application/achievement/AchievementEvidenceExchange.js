@@ -9,6 +9,7 @@ import {
     mergeAchievementEvidence
 } from './AchievementEvidenceMerge.js';
 import { isPlainObject } from '../../utils/typeGuards.js';
+import { hasOnlyKeys } from '../../utils/typeGuards.js';
 
 // 0.8.118 — Portable Evidence Synchronization Exchange.
 //
@@ -440,8 +441,4 @@ function isValidExchangeRequest(request) {
 
 function isFingerprintHex(value) {
     return typeof value === 'string' && /^[0-9a-f]{64}$/.test(value);
-}
-
-function hasOnlyKeys(value, allowedKeys) {
-    return Object.keys(value).every((key) => allowedKeys.includes(key));
 }

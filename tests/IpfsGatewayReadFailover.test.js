@@ -1,10 +1,12 @@
-import { readFile } from 'node:fs/promises';
 
 import { IpfsGatewayConfiguration } from '../core/IpfsGatewayConfiguration.js';
 import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
 import { IpfsGatewayFailoverContentStore } from '../content/IpfsGatewayFailoverContentStore.js';
 import { ContentUnavailableError } from '../content/IpfsContentStore.js';
 import { ContentReference } from '../core/ContentReference.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.666 — IPFS Gateway Read Failover.
 //
@@ -34,10 +36,6 @@ import { ContentReference } from '../core/ContentReference.js';
 //            operation; put() never fails over either
 // Section K: composition wiring — ui/main.js's own composeIpfsGatewayContentStore()
 //            picks the failover class only for 2+ entries
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function expectRejects(promise, message, ErrorType = null) {
     let rejected = false;
@@ -76,11 +74,6 @@ function makeMultiGatewayFetch(behaviors) {
 
 function totalRequests(requestsByOrigin, origin) {
     return (requestsByOrigin[origin] || []).length;
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 async function run() {
@@ -241,7 +234,7 @@ async function run() {
         assert(!kuboSource.includes('IpfsGatewayFailoverContentStore'), 'I1. content/IpfsContentStore.js (local Kubo) never references the new failover class');
         assert(!pinningSource.includes('IpfsGatewayFailoverContentStore'), 'I2. content/IpfsRemotePinningContentStore.js (remote pinning) never references the new failover class either');
 
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         // A later, sibling milestone (core/IpfsNodeConfiguration.js) gave
         // this construction site a real apiUrl argument, from its own
         // separate resolvedIpfsNodeApiUrl — never this milestone's own
@@ -274,7 +267,7 @@ async function run() {
     // 2+ entries.
     // ===============================================================
     {
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const helperMatch = mainSource.match(/function composeIpfsGatewayContentStore\(gatewayUrls\)\s*\{[\s\S]*?\n\}/);
         assert(helperMatch, 'K1. ui/main.js defines a composeIpfsGatewayContentStore() helper');
         const helperSource = helperMatch[0];

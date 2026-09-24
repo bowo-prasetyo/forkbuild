@@ -1,10 +1,11 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerRelationshipUseCase } from '../application/peer/PeerRelationshipUseCase.js';
 import { PeerReconnectionUseCase } from '../application/peer/PeerReconnectionUseCase.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.62 — Peer Connection Resilience & Reconnection.
 //
@@ -36,18 +37,6 @@ import { PeerReconnectionUseCase } from '../application/peer/PeerReconnectionUse
 // SAME real ConnectToPeerUseCase/LocalPeerConnectionProvider pair, so
 // application/peer/PeerReconnectionUseCase.js's own real logic runs against
 // real authentication, not a mock pretending to authenticate.
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function wait(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));

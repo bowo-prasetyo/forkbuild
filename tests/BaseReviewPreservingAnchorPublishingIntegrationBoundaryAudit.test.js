@@ -1,6 +1,4 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { BaseAnchorPublisher } from '../anchoring/BaseAnchorPublisher.js';
@@ -20,10 +18,11 @@ import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.471 — Base Review-Preserving Anchor Publishing Integration Boundary
 // Audit.
@@ -113,9 +112,7 @@ async function expectThrowsAsync(fn, message) {
 }
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
-async function source(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
+
 function codeOnly(src) {
     return src.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
@@ -182,21 +179,6 @@ function fakeFinalizer({ behavior = 'finalize' } = {}) {
             throw new Error(`unknown fake finalizer behavior: ${behavior}`);
         }
     };
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 function makeReplica() {
@@ -282,7 +264,7 @@ async function run() {
     // real production composition root.
     // ===============================================================
     {
-        const mainSrc = codeOnly(await source('ui/main.js'));
+        const mainSrc = codeOnly((await Promise.all(mainFiles().map((file) => source(file)))).join('\n'));
 
         assert(/const \{ coordinator: basePublicationTransactionPlanCoordinator \} = new CreateBasePublicationTransactionPlanCoordinatorUseCase\(\)\.execute/.test(mainSrc),
             n('B1. ui/main.js already constructs a real basePublicationTransactionPlanCoordinator — the plan half of the pipeline BaseAnchorPublisher would need'));
@@ -308,9 +290,9 @@ async function run() {
         // original form to reflect that the gap they once proved is now
         // closed, rather than deleted, so this file's own historical
         // narrative stays intact and checkable.
-        assert(/BaseAnchorPublisher/.test(await source('ui/main.js')), n('B5. AMENDED BY 0.9.472 — ui/main.js now imports anchoring/BaseAnchorPublisher.js (transitively, via CreateBaseAnchorPublisherUseCase)'));
-        assert(/CreateBaseAnchorPublisherUseCase/.test(await source('ui/main.js')), n('B6. AMENDED BY 0.9.472 — ui/main.js now imports application/anchoring/base/CreateBaseAnchorPublisherUseCase.js'));
-        assert(/baseAnchorPublisher/i.test(await source('ui/main.js')), n('B7. AMENDED BY 0.9.472 — ui/main.js now names a real baseAnchorPublisher, constructed and provided to the app'));
+        assert(/BaseAnchorPublisher/.test((await Promise.all(mainFiles().map((file) => source(file)))).join('\n')), n('B5. AMENDED BY 0.9.472 — ui/main.js now imports anchoring/BaseAnchorPublisher.js (transitively, via CreateBaseAnchorPublisherUseCase)'));
+        assert(/CreateBaseAnchorPublisherUseCase/.test((await Promise.all(mainFiles().map((file) => source(file)))).join('\n')), n('B6. AMENDED BY 0.9.472 — ui/main.js now imports application/anchoring/base/CreateBaseAnchorPublisherUseCase.js'));
+        assert(/baseAnchorPublisher/i.test((await Promise.all(mainFiles().map((file) => source(file)))).join('\n')), n('B7. AMENDED BY 0.9.472 — ui/main.js now names a real baseAnchorPublisher, constructed and provided to the app'));
 
         console.log('✓ Section B: every non-network collaborator BaseAnchorPublisher composes is a real, live production instance in ui/main.js. AMENDED BY 0.9.472 — BaseAnchorPublisher itself is now also constructed there, from those same collaborators; the bridge no longer exists in isolation from the pipeline it was built to bridge.');
     }
@@ -489,7 +471,7 @@ async function run() {
     // decisive section).
     // ===============================================================
     {
-        const mainSrc = await source('ui/main.js');
+        const mainSrc = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const viewSrc = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         const viewCodeOnly = codeOnly(viewSrc);
 
@@ -570,7 +552,7 @@ async function run() {
         assert(typeof BaseAnchorPublisher.prototype.anchorType !== 'undefined' || 'base' === 'base', n('I1. sanity: BaseAnchorPublisher.anchorType is the string "base" (established in Section A/C above)'));
         assert(!registry.has('base'), n('I2. a freshly constructed ExternalAnchorPublisherRegistry never has a "base" entry unless something explicitly registers one — confirming this is a registration choice, not a registry-side block'));
 
-        const mainSrc = codeOnly(await source('ui/main.js'));
+        const mainSrc = codeOnly((await Promise.all(mainFiles().map((file) => source(file)))).join('\n'));
         assert(/publishers:\s*\[bitcoinAnchorPublisher\]/.test(mainSrc), n('I3. the real production registry is still seeded with bitcoinAnchorPublisher (via CreateExternalPublicationAnchorOrchestratorUseCase\'s own `publishers` option), unchanged'));
         assert(/externalAnchorPublisherRegistry\.register\(arweaveAnchorPublisher\)/.test(mainSrc), n('I4. the real production registry still registers arweaveAnchorPublisher, unchanged'));
         assert(!/externalAnchorPublisherRegistry\.register\(baseAnchorPublisher\)/.test(mainSrc), n('I5. the real production registry never registers a baseAnchorPublisher — confirmed absent, not merely never observed'));

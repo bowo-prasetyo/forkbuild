@@ -6,6 +6,9 @@ import {
     reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceAgreement
 } from '../application/claimSnapshotReconciliation/candidate/EvidenceAgreementView.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { featureImportLines } from './support/SharedHelperImports.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.176 — Reconciliation Candidate Evidence Agreement Projection.
 //
@@ -28,14 +31,6 @@ import { PublicationObservationArchive } from '../application/publication/observ
 // Section J: malformed input tolerance
 // Section K: vocabulary/import boundary — no judgment vocabulary, imports
 //            only 0.8.156 and 0.8.174
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function genuineDecisionRecord(candidate, decision, decidedAt) {
     return Object.freeze({ decided: true, candidate: Object.freeze(candidate), decision, decidedAt: decidedAt.toISOString() });
@@ -487,8 +482,8 @@ async function run() {
         // either archive-reading seam directly, either correspondence
         // module, either evolution module, either exclusive-only difference
         // module, or 0.8.175 itself.
-        const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
-        assert(importLines.length === 2, '89. this file imports from exactly two modules');
+        const importLines = featureImportLines(moduleSource);
+        assert(importLines.length === 2, '89. besides shared helpers, this file imports from exactly two modules');
         const importBlock = moduleSource.slice(0, moduleSource.indexOf('\n\n'));
         assert(importBlock.includes('./DecisionAgreementView.js'), '90. one import is 0.8.156\'s own candidate decision agreement projection');
         assert(importBlock.includes('./DecisionRevalidationObservationEvolutionAgreementView.js'), '91. the other import is 0.8.174\'s own candidate observation evolution agreement projection');

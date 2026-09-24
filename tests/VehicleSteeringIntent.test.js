@@ -11,6 +11,7 @@ import { VehiclePresence } from '../core/VehiclePresence.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { VehicleRuntimeInstances } from '../application/world/VehicleRuntimeInstances.js';
 import { resolveVehicleHeadingFromMovement } from '../core/VehicleMovementHeading.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.125 — Vehicle Steering Intent, core/VehicleSteeringIntent.js.
 //
@@ -32,10 +33,6 @@ import { resolveVehicleHeadingFromMovement } from '../core/VehicleMovementHeadin
 // Central architectural claim under test throughout: a VehicleSteeringIntent
 // describes what the driver REQUESTS, never what the vehicle actually does.
 // See docs/Roadmap.md, 0.9.125.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, message) {
     let threw = false;

@@ -1,23 +1,23 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { IpfsPublicationRecord } from '../application/ipfs/IpfsPublicationRecord.js';
-import { reconstructPublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
+import { reconstructPublisherLeaderboardSnapshot } from '../application/leaderboard/snapshot/Snapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/snapshot/Fingerprint.js';
 import { reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage } from '../application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js';
-import { LeaderboardClaimArchiveReceiptOutcome } from '../application/leaderboard/ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js';
+import { LeaderboardClaimArchiveReceiptOutcome } from '../application/leaderboard/snapshot/ReceiveClaimIntoArchiveUseCase.js';
 import { RevalidationObservationArchiveOutcome } from '../application/claimSnapshotReconciliation/revalidationObservation/RecordRevalidationObservationIntoArchiveUseCase.js';
-import { ReconcilePublisherLeaderboardSnapshotClaimOutcome } from '../application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js';
+import { ReconcilePublisherLeaderboardSnapshotClaimOutcome } from '../application/leaderboard/snapshot/ReconcileClaimUseCase.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 import ReconciliationWorkspaceView from '../ui/views/ReconciliationWorkspaceView.js';
 import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.409 — Reconciliation Workspace Persistence Convergence Audit.
 //
@@ -99,10 +99,6 @@ function n(message) {
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
 
-async function readSource(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
-
 // ---------------------------------------------------------------------
 // Fixture helpers — the SAME shape tests/ReconciliationWorkspaceUi.test.js
 // and tests/ReconciliationWorkspaceExecutionBoundary.test.js already use,
@@ -117,14 +113,6 @@ async function readSource(relativePath) {
 // failure, not merely a fake `.save()` method that happens to throw.
 // ---------------------------------------------------------------------
 
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
 // Stands in for a real, exhausted browser storage quota — the identical
 // FAILURE SHAPE `window.localStorage.setItem()` itself throws when full,
 // per storage/LocalStorageProvider.js's own direct pass-through. `load()`
@@ -137,13 +125,6 @@ class FailingStorageProvider extends StorageProvider {
     load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
     remove(name) { this._data.delete(name); }
     list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 function fingerprintOf(snapshot) {
@@ -506,14 +487,14 @@ async function run() {
         // this — never invented for this audit. Every one of the three
         // history files this use case appends to already documents "no
         // deduplication, multiplicity is the fact this file exists to
-        // preserve" (application/leaderboard/LeaderboardClaimHistory.js,
+        // preserve" (application/leaderboard/claim/History.js,
         // application/claimSnapshotReconciliation/decision/History.js,
         // application/claimSnapshotReconciliation/revalidationObservation/History.js
         // — checked directly, below).
-        const claimHistorySource = await readSource('application/leaderboard/LeaderboardClaimHistory.js');
+        const claimHistorySource = await readSource('application/leaderboard/claim/History.js');
         const decisionHistorySource = await readSource('application/claimSnapshotReconciliation/decision/History.js');
         const observationHistorySource = await readSource('application/claimSnapshotReconciliation/revalidationObservation/History.js');
-        assert(/NO DEDUPLICATION HERE/.test(claimHistorySource), n('F3. application/leaderboard/LeaderboardClaimHistory.js already documents "NO DEDUPLICATION HERE" — the SAME claim received twice is two independent records, by explicit, pre-existing design'));
+        assert(/NO DEDUPLICATION HERE/.test(claimHistorySource), n('F3. application/leaderboard/claim/History.js already documents "NO DEDUPLICATION HERE" — the SAME claim received twice is two independent records, by explicit, pre-existing design'));
         assert(/DEDUPLICATED — MULTIPLICITY IS PRESERVED/.test(decisionHistorySource), n('F4. application/claimSnapshotReconciliation/decision/History.js already documents the identical restraint for decisions'));
         assert(/DEDUPLICATED — THE IDENTICAL DISCIPLINE/.test(observationHistorySource), n('F5. application/claimSnapshotReconciliation/revalidationObservation/History.js already documents the identical restraint for revalidation observations'));
 
@@ -533,7 +514,7 @@ async function run() {
 
         const duplicateExecutionClassification = {
             question: 'repeated execution ≠ duplicate bug — unless the domain says these executions represent the same fact',
-            domainAnswer: 'The domain (LeaderboardClaimHistory.js/claimSnapshotReconciliation/decision/History.js/...RevalidationObservationHistory.js) ALREADY says, explicitly and by design, that repeated receipt of the identical claim is legitimate multiplicity, never a duplicate to collapse.',
+            domainAnswer: 'The domain (leaderboard/claim/History.js/claimSnapshotReconciliation/decision/History.js/...RevalidationObservationHistory.js) ALREADY says, explicitly and by design, that repeated receipt of the identical claim is legitimate multiplicity, never a duplicate to collapse.',
             thisAuditsOwnFinding: 'The Workspace\'s repeated-click behavior is CONSISTENT with that existing rule — it introduces no new duplication concern beyond what the domain already accepts.',
             verdict: 'VALID_BEHAVIOR',
             reason: 'not a bug, and not a policy question this milestone needs to open'
@@ -564,7 +545,7 @@ async function run() {
         // "RECONCILIATION_FAILED"-shaped literal anywhere.
         const filesToCheck = [
             'ui/views/ReconciliationWorkspaceView.js',
-            'application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js',
+            'application/leaderboard/snapshot/ReconcileClaimUseCase.js',
             'storage/LocalStoragePublicationObservationArchive.js'
         ];
         for (const file of filesToCheck) {
@@ -673,7 +654,7 @@ async function run() {
         assert(unauthorized.length === 0, n(`I1. every changed/added file is one this milestone explicitly authorized (found unauthorized: ${JSON.stringify(unauthorized)})`));
 
         const gitDiffStat = execSync(
-            'git diff --stat HEAD -- ui/views/ReconciliationWorkspaceView.js application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js storage/LocalStoragePublicationObservationArchive.js application/publication/observationArchive/PublicationObservationArchive.js ui/views/DecentralizedPublicationsView.js ui/views/ReconciliationCandidateLeaderboardView.js application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js application/leaderboard/LeaderboardClaimHistory.js application/claimSnapshotReconciliation/decision/History.js application/claimSnapshotReconciliation/revalidationObservation/History.js 2>/dev/null || true',
+            'git diff --stat HEAD -- ui/views/ReconciliationWorkspaceView.js application/leaderboard/snapshot/ReconcileClaimUseCase.js storage/LocalStoragePublicationObservationArchive.js application/publication/observationArchive/PublicationObservationArchive.js ui/views/DecentralizedPublicationsView.js ui/views/ReconciliationCandidateLeaderboardView.js application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js application/leaderboard/claim/History.js application/claimSnapshotReconciliation/decision/History.js application/claimSnapshotReconciliation/revalidationObservation/History.js 2>/dev/null || true',
             { cwd: SOURCE_ROOT }
         ).toString().trim();
         assert(gitDiffStat === '', n(`I2. no production file this audit examines was modified by this test-only milestone. Found: ${gitDiffStat || '(none)'}.`));

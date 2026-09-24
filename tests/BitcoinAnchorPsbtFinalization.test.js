@@ -1,6 +1,7 @@
 import { BitcoinAnchorTransactionBuilder } from '../anchoring/BitcoinAnchorTransactionBuilder.js';
 import { BitcoinAnchorPsbtBuilder } from '../anchoring/BitcoinAnchorPsbtBuilder.js';
 import { BitcoinAnchorSignedPsbtFinalizer } from '../anchoring/BitcoinAnchorSignedPsbtFinalizer.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.51 — Bitcoin Signed PSBT Finalization & Cryptographic Signature
 // Verification.
@@ -61,10 +62,6 @@ import { BitcoinAnchorSignedPsbtFinalizer } from '../anchoring/BitcoinAnchorSign
 //
 // See docs/Principles.md, "Signing Material Is Not Yet A Signature Until
 // It Verifies (0.8.51)."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

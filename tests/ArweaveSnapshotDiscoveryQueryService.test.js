@@ -5,6 +5,7 @@ import { describeSnapshotDiscoveryEnvelope, SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL
 import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
 import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.499 — Arweave Snapshot Discovery Query Service.
 //
@@ -41,10 +42,6 @@ import { computeContentHash } from '../serializer/contentHash.js';
 //              material, computes no hash, uploads no content, publishes no
 //              announcement, queries no Nostr, performs no walking-distance
 //              filtering, ranking, or cross-source deduplication
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function makeFakeGateway({ handler, envelopes = {} }) {
     const requests = [];

@@ -11,6 +11,8 @@ import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.
 import { surfaceCategoryAt, SURFACE_CATEGORY, WATER_LEVEL } from '../core/TerrainSurface.js';
 import { hydrologyFeatureAt, HYDROLOGY_FEATURE, LAKE_SURFACE_HEIGHT, isRiverAt } from '../core/Hydrology.js';
 import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.614 — Avatar Basic Water Traversal Boundary Audit.
 //
@@ -77,10 +79,6 @@ import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMov
 // tests/AvatarBasicWaterSurfaceConstraint.test.js for the dedicated
 // proof that the REAL, shipped function (extracted from its own source,
 // never re-typed) satisfies the same invariants.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 // Identical scanning discipline to 0.9.613's own findShoreline() — a
 // genuine, deterministic WATER cell with a dry neighbor exactly 1 unit
@@ -399,7 +397,7 @@ async function runTests() {
         // that resolves a capability and calls setMovementCapability()
         // each frame — never once calls a hydrology or ground-category
         // function to do it.
-        const sessionSource = await readFile(new URL('../application/world/WorldNavigationSession.js', import.meta.url), 'utf8');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const sessionCode = sessionSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(!sessionCode.includes('hydrologyFeatureAt(') && !sessionCode.includes('surfaceCategoryAt('),
             '20. application/world/WorldNavigationSession.js never calls hydrologyFeatureAt()/surfaceCategoryAt() anywhere in its own code — the ONLY existing movement-capability PRODUCER is vehicle-mount-derived; a terrain-derived producer would be genuinely new wiring, not a rewire of something already halfway there');

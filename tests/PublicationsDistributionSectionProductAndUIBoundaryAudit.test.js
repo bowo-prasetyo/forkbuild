@@ -1,6 +1,4 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
@@ -10,7 +8,8 @@ import { composePublicationDistributionCommand } from '../application/publicatio
 import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
 import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
 import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
-import { publicationsPageFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, worldEncounterCanvasFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.435 — Publications Distribution Section Product & UI Boundary Audit.
 //
@@ -101,9 +100,7 @@ function n(message) {
 }
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
-async function source(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
+
 function codeOnly(text) {
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
@@ -204,7 +201,7 @@ async function run() {
     // distribution-capable action, from real source.
     // ===============================================================
     {
-        const ownPanelSource = await source('ui/components/OwnPublicationPanel.js');
+        const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => source(file)))).join('\n');
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
         const publicationsViewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
 
@@ -418,7 +415,7 @@ async function run() {
     // concrete adaptation a UI change would need, named precisely.
     // ===============================================================
     {
-        const ownPanelSource = await source('ui/components/OwnPublicationPanel.js');
+        const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => source(file)))).join('\n');
         const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
 
         // OwnPublicationPanel/WorldEncounterCanvas hold ONE set of
@@ -444,7 +441,7 @@ async function run() {
     // execution, kept contextual, never re-embedded.
     // ===============================================================
     {
-        const ownPanelSource = await source('ui/components/OwnPublicationPanel.js');
+        const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => source(file)))).join('\n');
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
         const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
 

@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import PublicationCard from '../ui/components/PublicationCard.js';
@@ -23,8 +22,10 @@ import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { License, LicenseId } from '../core/License.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.542 — Publication Commentary Submission Experience Product
 // Reassessment.
@@ -103,18 +104,6 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 // synchronization protocol, a new mutation framework, a new identity
 // mechanism, a new navigation mechanism, and any UI redesign. None of
 // these appear below.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function makePublisher(storage, identityProvider) {
     const contentStore = new LocalContentStore(storage);
@@ -297,10 +286,6 @@ function publicationRow(publication, overrides = {}) {
     };
 }
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 function codeOnlyLines(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
@@ -311,7 +296,7 @@ async function run() {
     // ===============================================================
     let panelSource, cardSource, canvasSource;
     {
-        panelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         // The card view's submit path now lives in the shared
         // PublicationCommentarySection.js the card mounts.
         cardSource = await readSource('ui/components/PublicationCard.js') + await readSource('ui/components/PublicationCommentarySection.js');

@@ -1,4 +1,4 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 
 import PublicationCard from '../ui/components/PublicationCard.js';
 import PublicationCommentarySection from '../ui/components/PublicationCommentarySection.js';
@@ -23,7 +23,10 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.562 — Publication Commentary Surface Parity Reassessment.
 //
@@ -64,18 +67,6 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 // never "fixed" — this milestone's own test-only scope does not license
 // a production change for a difference that alters no user-facing
 // meaning of what Commentary is.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 // The honest Node-runnable analog of two independently constructed
 // storage/LocalStorageProvider.js instances, which in the real running
@@ -398,9 +389,7 @@ function canvasObserverLocalAdapter(ctx) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
+
 async function codeOnlySource(relativePath) {
     const text = await rawSource(relativePath);
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
@@ -473,11 +462,15 @@ async function runTests() {
             // WorldEncounterCanvas's own commentary methods, moved out of it.
             'ui/components/worldEncounterCanvas/observerLocalEncounterMethods.js',
             'ui/components/worldEncounterCanvas/publicationDiscoveryMethods.js',
+            'ui/components/worldEncounterCanvas/templates/encounterInspectionPanel.js',
+            'ui/components/worldEncounterCanvas/templates/observerLocalEncounterPanel.js',
+            'ui/components/ownPublicationPanel/templates/commentarySection.js',
             'ui/views/WorldView.js',
             // WorldView's own publication actions module, where those wrappers live.
             'ui/views/worldView/useOwnPublicationActions.js',
             // WorldView's Nearby section template, which binds them on WorldEncounterCanvas.
-            'ui/views/worldView/templates/nearbySection.js'
+            'ui/views/worldView/templates/nearbySection.js',
+            'ui/views/worldView/templates/headerSection.js'
         ]);
         assert(wired.length === expectedWired.size, `1. exactly ${expectedWired.size} UI files under ui/components/ or ui/views/ reference the Commentary command vocabulary — found ${wired.length}: ${wired.join(', ')}`);
         for (const file of wired) {
@@ -527,7 +520,7 @@ async function runTests() {
         const cardCode = await codeOnlySource('ui/components/PublicationCard.js');
         const listCode = await codeOnlySource('ui/components/PublicationList.js');
         const sectionCode = await codeOnlySource('ui/components/PublicationCommentarySection.js');
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(cardCode.includes(':publication="publication"') && sectionCode.includes('this.publication.id'), '7. PublicationCard.js hands its own publication to the shared section, which reads identity from this.publication.id.');
         assert(listCode.includes('<PublicationCommentarySection :publication="pub" />') && listCode.includes('openCommentaryIds[pub.id]'), '8. PublicationList.js keys each row by pub.id and hands that row\'s own pub to its section.');
@@ -691,7 +684,7 @@ async function runTests() {
         // one) and nothing else identity-bearing.
         const sectionCode = await codeOnlySource('ui/components/PublicationCommentarySection.js');
         const listCode = await codeOnlySource('ui/components/PublicationList.js');
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
         // AMENDED BY 0.9.638 — Publication Commentary Distribution
         // Provider Selector adds exactly one more field, discoveryProvider,
@@ -975,7 +968,7 @@ async function runTests() {
         const files = {
             'PublicationCard.js': await rawSource('ui/components/PublicationCard.js') + sectionSource,
             'PublicationList.js': await rawSource('ui/components/PublicationList.js') + sectionSource,
-            'OwnPublicationPanel.js': await rawSource('ui/components/OwnPublicationPanel.js'),
+            'OwnPublicationPanel.js': (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n'),
             'WorldEncounterCanvas.js': (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n')
         };
         const sharedStrings = [

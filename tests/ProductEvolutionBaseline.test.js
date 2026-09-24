@@ -1,5 +1,7 @@
 import { readFile } from 'node:fs/promises';
-import { editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { editorViewFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.221 — Product Evolution Selection / Architecture Baseline.
 //
@@ -40,15 +42,7 @@ import { editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 //    (arc start)   (arc closes)   (DEFERRED       (freeze + register +
 //                                  characterized)   seam menu, no pick)
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {
@@ -101,7 +95,7 @@ async function runTests() {
         // reconfirmed 0.9.199-0.9.203). Both removal use cases still have
         // real UI callers.
         const worldViewHasRemove = worldView.includes('RemoveWorldPlacementUseCase');
-        const ownPublicationPanel = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanel = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(worldViewHasRemove, 'A3a. ui/views/WorldView.js still references RemoveWorldPlacementUseCase (0.9.197).');
         assert(ownPublicationPanel.includes('UnpublishDocumentUseCase') || worldView.includes('UnpublishDocumentUseCase'),
             'A3b. UnpublishDocumentUseCase still has a real UI caller (0.9.198).');
@@ -124,7 +118,7 @@ async function runTests() {
         // A6. Undo/redo — reachable (0.9.210/0.9.211, reconfirmed
         // 0.9.212/0.9.216). WorldNavigationSession still exposes real
         // undo()/redo() methods gated on a real CommandHistory.
-        const navSession = await rawSource('application/world/WorldNavigationSession.js');
+        const navSession = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(/\bundo\(\)\s*\{/.test(navSession) && /\bredo\(\)\s*\{/.test(navSession),
             'A6. application/world/WorldNavigationSession.js still exposes undo()/redo() (0.9.210/0.9.211).');
 

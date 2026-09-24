@@ -1,5 +1,3 @@
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
 
@@ -23,7 +21,6 @@ import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Publication } from '../publisher/Publication.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 // 0.9.595 — Section B-Wiring (below): a real, direct `WorldNavigationSession`,
 // built the SAME minimal way tests/ForkOnEdit.test.js already builds one,
@@ -41,7 +38,9 @@ import { PublishDocumentUseCase } from '../application/publication/PublishDocume
 import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.594 — Discovered-Unplaced Publication Actionability Product Boundary
 // Audit.
@@ -136,9 +135,7 @@ function n(message) {
 }
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
-async function source(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
+
 function grep(pattern, dir) {
     return execSync(`grep -rn "${pattern}" ${dir} --include="*.js" || true`, { cwd: SOURCE_ROOT }).toString().split('\n').filter(Boolean);
 }
@@ -150,14 +147,6 @@ function grep(pattern, dir) {
 // codebase's own established convention (each audit/implementation file
 // owns its own harness).
 // ===================================================================
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function makeFakeArweaveGateway() {
     const network = new Map();
@@ -402,7 +391,7 @@ async function run() {
         // Trace the structural bridge itself in real, unmodified source,
         // confirming B2/B3 are not an artifact of this test's own fixture
         // but a real property of the wiring between these three files.
-        const worldNavSrc = await source('application/world/WorldNavigationSession.js');
+        const worldNavSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => source(file)))).join('\n');
         // B5 AMENDED BY 0.9.597 — Publication Action Provider Continuity
         // Fix. At the time this audit was written, getPublicationForDocument()
         // was a thin wrapper over _resolvePublicationForPlacement() (and

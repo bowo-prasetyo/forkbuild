@@ -18,6 +18,7 @@ import { EditorSession } from '../application/editor/EditorSession.js';
 import { EditorContext } from '../application/editor/EditorContext.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { SelectionTransformValidator } from '../core/SelectionTransformValidator.js';
+import { assert } from './support/Assert.js';
 
 // 0.4.8 — Collision-Aware Multi-Brick Transform.
 //
@@ -55,9 +56,6 @@ import { SelectionTransformValidator } from '../core/SelectionTransformValidator
 //              source is blocked; moving it anywhere else commits as
 //              usual; undo/redo both stay exact throughout
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 function close(actual, expected, message) {
     assert(Math.abs(actual - expected) < 1e-9, `${message}: expected ${expected}, got ${actual}`);
 }

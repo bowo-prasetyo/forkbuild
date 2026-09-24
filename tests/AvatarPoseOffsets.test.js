@@ -1,13 +1,10 @@
 import { getAvatarPoseOffsets } from '../core/AvatarPoseOffsets.js';
 import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.35 — pure pose math, no Three.js, no rendering. Same "pure
 // geometry, independently testable" split PreviewCameraFraming.test.js
 // (0.2.32) already established for camera framing, applied here.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function runTests() {
     {

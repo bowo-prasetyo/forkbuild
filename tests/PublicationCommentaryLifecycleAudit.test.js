@@ -8,7 +8,6 @@ import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
@@ -16,6 +15,9 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { readFile } from 'node:fs/promises';
+import { worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.249 — Publication Commentary Lifecycle & Isolation Audit.
 //
@@ -60,18 +62,6 @@ import { readFile } from 'node:fs/promises';
 // no replies, editing, deletion, notifications, or decentralized
 // commentary are added, exercised, or assumed anywhere below — the same
 // restraint 0.9.248's own header already held one milestone earlier.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function makeDocument(title, author) {
     const world = new World();
@@ -355,7 +345,7 @@ async function runTests() {
         // command that intentionally reorders its own side effects (to
         // simulate what an async race WOULD look like) can never actually
         // observe out-of-order delivery through a synchronous call path.
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         const refreshMethodMatch = panelCode.match(/refreshPublicationCommentaries\(\)\s*\{[\s\S]*?\n\s{8}\},/);
         assert(refreshMethodMatch, 'D3: refreshPublicationCommentaries() method body is present in the source for structural inspection');
         const refreshBody = refreshMethodMatch[0];
@@ -687,8 +677,8 @@ async function runTests() {
     // Section J — Architecture boundary.
     // ===================================================================
     {
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
-        const sessionCode = await codeOnlySource('application/world/WorldNavigationSession.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
+        const sessionCode = (await Promise.all(worldNavigationSessionFiles().map((file) => codeOnlySource(file)))).join('\n');
         const addUseCaseCode = await codeOnlySource('application/publication/commentary/AddPublicationCommentaryUseCase.js');
 
         // OwnPublicationPanel.js never imports the domain class, the

@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { WorldSnapshotDiscoveryMonitor } from '../application/snapshot/WorldSnapshotDiscoveryMonitor.js';
@@ -9,6 +8,8 @@ import { PlaceNamingDiscoveryQueryService } from '../application/placeNaming/Pla
 import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.479 — Walking-Triggered Nearby Discovery Source Convergence Audit.
 //
@@ -72,15 +73,7 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 //   Section I — Deliberate exclusions.
 //   Section J — No production file touched; final classification.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 function grepFiles(pattern, dirs, { ignoreCase = false } = {}) {
     let hits = '';

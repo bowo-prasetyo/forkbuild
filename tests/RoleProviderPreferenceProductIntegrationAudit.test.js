@@ -1,8 +1,7 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
 import { RoleAwareProviderResolver } from '../application/settings/RoleAwareProviderResolver.js';
 import { ResolvePreferredRoleProviderUseCase } from '../application/settings/ResolvePreferredRoleProviderUseCase.js';
@@ -10,6 +9,10 @@ import { ResolvePreferredRoleProviderUseCase } from '../application/settings/Res
 import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.298 — Role Provider Preference Product Integration Audit.
 //
@@ -83,14 +86,7 @@ import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
 //   `PROVIDER_NOT_FOUND` are read here exactly as 0.9.295/0.9.297 already
 //   define them — never remapped, never given an invented fallback.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 function normalizeComment(text) {
     return text.replace(/^\s*\/\/\s?/gm, '').replace(/\s+/g, ' ');
@@ -121,16 +117,6 @@ async function repoWideProductionFiles() {
     const all = [];
     for (const dir of dirs) await listJsFiles(dir, all);
     return [...new Set(all)];
-}
-
-// The identical in-memory StorageProvider fake every earlier milestone in
-// this sequence already uses for the same purpose.
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makePreferenceStore() {
@@ -213,7 +199,7 @@ async function run() {
         // existed" seam. `ui/main.js` — this codebase's own real, running
         // composition root — ALREADY registers TWO real content stores
         // for BOTH Publication and Snapshot placement creation today.
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         assert(/stores:\s*\[publicationContentStore,\s*composeIpfsGatewayContentStore\(resolvedIpfsGatewayUrls\)\]/.test(mainSource), 'B2c. ui/main.js registers publicationContentStore (\'local\') AND a real IPFS gateway content store (\'ipfs\', now settings-backed per 0.9.665 and failover-capable per 0.9.666) together for Publication placement creation — two genuine, already-available choices, not a capability gap');
         assert(/stores:\s*\[publicationContentStore,\s*new IpfsContentStore\(\)\]/.test(mainSource), 'B2d. ui/main.js registers publicationContentStore (\'local\') AND a real content/IpfsContentStore.js (\'ipfs\') together for Snapshot placement creation — the identical two-real-choices shape');
         contentSeams[contentSeams.length - 1].evidence = 'ui/main.js already registers TWO real, distinct content stores (local + ipfs) for BOTH Publication and Snapshot placement creation — the only seam in this entire audit, across all three roles, where production wiring today offers a person more than one genuinely available provider to choose among';
@@ -252,7 +238,7 @@ async function run() {
 
         // C2b — UNLIKE Content, Proof has NO real registered redundancy
         // in production today: ui/main.js wires exactly ONE publisher.
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         assert(/publishers:\s*\[bitcoinAnchorPublisher\]/.test(mainSource), 'C2b. ui/main.js registers exactly ONE anchor publisher (Bitcoin) — unlike Content creation, there is no second real option for a preference to distinguish between yet');
         proofSeams[proofSeams.length - 1].evidence = 'ui/main.js registers exactly one real anchor publisher (bitcoinAnchorPublisher) — a preference here has nothing to prefer OVER yet, unlike Content creation';
 

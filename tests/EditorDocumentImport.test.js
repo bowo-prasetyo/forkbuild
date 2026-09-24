@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -17,7 +16,6 @@ import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { DocumentValidator } from '../serializer/DocumentValidator.js';
 import { DocumentSchemaMigrator } from '../serializer/DocumentSchemaMigrator.js';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { DocumentManifest } from '../application/document/DocumentManifest.js';
 import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
@@ -25,7 +23,9 @@ import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase
 import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
 import { ExportDocumentUseCase } from '../application/document/ExportDocumentUseCase.js';
 import { ImportDocumentUseCase } from '../application/document/ImportDocumentUseCase.js';
-import { editorViewFiles } from './support/SourceFileGroups.js';
+import { editorViewFiles, editorSessionFiles } from './support/SourceFileGroups.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // Deliberately does NOT import application/editor/EditorSession.js — same reason
 // tests/EditorDocumentExport.test.js gives: that class pulls in the
@@ -76,18 +76,6 @@ function n(message) {
     return `${assertionCount + 1}. ${message}`;
 }
 
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 function codeOnly(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
@@ -518,7 +506,7 @@ async function run() {
         const toolbarSource = codeOnly(await rawSource('ui/components/Toolbar.js'));
         assert(!/confirm\(/.test(toolbarSource), n('Toolbar.js\'s own New/Load actions carry no confirm()-based dirty guard today — the existing baseline this milestone must not silently diverge from'));
 
-        const editorSessionSource = codeOnly(await rawSource('application/editor/EditorSession.js'));
+        const editorSessionSource = codeOnly((await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n'));
         const importDocumentFnMatch = editorSessionSource.match(/importDocument\(json\)\s*\{[\s\S]*?\n {4}\}/);
         assert(importDocumentFnMatch !== null, n('EditorSession#importDocument() is found in its own real source'));
         const importDocumentFnBody = importDocumentFnMatch[0];
@@ -578,7 +566,7 @@ async function run() {
             n('ImportDocumentUseCase never constructs a Document/World or mints an id directly — every domain object it returns came from the injected collaborators'));
 
         // EditorSession.importDocument() delegates rather than reimplementing.
-        const editorSessionSource = codeOnly(await rawSource('application/editor/EditorSession.js'));
+        const editorSessionSource = codeOnly((await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n'));
         assert(/importDocument\(json\)\s*\{[\s\S]*?this\._importDocumentUseCase\.execute\(json\)/.test(editorSessionSource),
             n('EditorSession.importDocument() delegates straight to this._importDocumentUseCase.execute() — it does not deserialize or clone anything itself'));
         assert(!/this\._loadDocumentUseCase\.execute\(this\._documentManager, json/.test(editorSessionSource),

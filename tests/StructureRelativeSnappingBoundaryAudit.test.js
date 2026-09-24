@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
@@ -17,7 +16,9 @@ import { StructurePlacementTool } from '../application/tools/StructurePlacementT
 import { StructurePreviewUseCase } from '../application/editor/StructurePreviewUseCase.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.610 — Structure Relative Snapping Boundary Audit.
 //
@@ -83,23 +84,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // coverage of what 0.9.611 closes, and
 // tests/StructureRelativeFaceSnappingRendering.test.js for the real-
 // raycast proof of the PickingService half.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function saveDocument(storage, serializer, document) {
     storage.save(document.world.id, serializer.serialize(document));

@@ -1,6 +1,4 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { composePublicationDistributionCommand, composeMultiRelayNostrPublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
@@ -8,7 +6,8 @@ import { PublicationDistributionLifecycleMemoryStore } from '../application/publ
 import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
 import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
 import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
-import { editorViewFiles } from './support/SourceFileGroups.js';
+import { editorViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.502 — Editor Announcement/Discovery Provider Selection.
 //
@@ -90,9 +89,7 @@ function n(message) {
 }
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
-async function source(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
+
 function codeOnly(text) {
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
@@ -416,7 +413,7 @@ async function run() {
     // publication-only forever.
     // ===============================================================
     {
-        const ownPanelSource = await source('ui/components/OwnPublicationPanel.js');
+        const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => source(file)))).join('\n');
         // AMENDED BY 0.9.670 — Publication Material Storage Selection. This
         // call site gained two more forwarded arguments
         // (`publicationMaterialStorage`, and a conditional remote-pinning

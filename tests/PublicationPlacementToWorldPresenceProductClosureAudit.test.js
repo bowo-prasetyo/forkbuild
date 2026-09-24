@@ -1,6 +1,4 @@
-import { readFile } from 'node:fs/promises';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
@@ -29,7 +27,10 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.606 — Publication Placement-to-World Presence Product Closure Audit.
 //
@@ -80,15 +81,6 @@ import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileG
 //   K. Findings classification.
 //   L. Closure classification.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 if (typeof globalThis.window === 'undefined') {
     const store = new Map();
     globalThis.window = {
@@ -100,14 +92,6 @@ if (typeof globalThis.window === 'undefined') {
             get length() { return store.size; }
         }
     };
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 // Same minimal renderer stand-in the 0.9.605 flagship (and
@@ -543,7 +527,7 @@ async function run() {
         const placementSrc = await readSource('core/WorldPlacement.js');
         assert(/does NOT own\s*\n?\/\/ a world\. It points to one via publicationId/.test(placementSrc),
             'F8. Source-confirmed root cause: WorldPlacement\'s own architectural invariant means a documentId can only ever be recovered by asking a discovery provider for the publicationId — there is no second, redundant, already-persisted path this milestone could exploit instead.');
-        const mainSrc = await readSource('ui/main.js');
+        const mainSrc = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(/const decentralizedPublicationDiscoveryProvider = new DecentralizedPublicationDiscoveryProvider\(\);/.test(mainSrc),
             'F9. Source-confirmed: ui/main.js constructs exactly one, never-persisted, module-scope instance — reconfirming Session 2\'s harness faithfully reproduces what a real reload actually does, not a synthetic worst case.');
 
@@ -612,7 +596,7 @@ async function run() {
         assert(harness.session.isDocumentPublished(localPub.documentId) === true,
             'H2. Still correctly marked published via _isKnownPublication()/_findPublications() (the narrow, unwidened discoveryProvider) — fork-policy\'s own choke point, unchanged.');
 
-        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         const findPublicationsBody = sessionSrc.match(/_findPublications\(documentId\) \{[\s\S]*?\n {4}\}/);
         assert(findPublicationsBody !== null && /this\._discoveryProvider/.test(findPublicationsBody[0]) && !/this\._publicationActionDiscoveryProvider/.test(findPublicationsBody[0]),
             'H3. Source-reconfirmed: fork-policy\'s own _findPublications() still reads only the narrow discoveryProvider — this audit touched nothing.');
@@ -660,7 +644,7 @@ async function run() {
     // ===============================================================
     {
         const worldViewSrc = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
-        const panelSrc = await readSource('ui/components/OwnPublicationPanel.js');
+        const panelSrc = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
 
         // Discover / understand.
         assert(/listPublicationsUseCase\.execute\(\)/.test(worldViewSrc),

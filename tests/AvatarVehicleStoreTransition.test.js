@@ -3,6 +3,7 @@ import { AvatarVehicleStoreIntent } from '../core/AvatarVehicleStoreIntent.js';
 import { createAvatarVehicleMount } from '../core/AvatarVehicleMount.js';
 import { emptyAvatarInventory, withEntryAdded, createAvatarInventoryEntry, InventoryEntryKind } from '../core/AvatarInventory.js';
 import { VehicleType } from '../core/VehicleType.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.670 — Avatar Vehicle Store Transition, core/AvatarVehicleStoreTransition.js.
 //
@@ -11,10 +12,6 @@ import { VehicleType } from '../core/VehicleType.js';
 //   Section C: defensive/malformed input
 //   Section D: FLAGSHIP — mount, store, verify inventory contents and
 //              mount clearing together
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function runTests() {
     const { NONE, STORE } = AvatarVehicleStoreIntent;

@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { Publication } from '../publisher/Publication.js';
@@ -20,7 +19,6 @@ import { DecentralizedPublicationDiscoveryProvider } from '../discovery/Decentra
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
@@ -30,7 +28,10 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PublicationExchange } from '../application/publication/PublicationExchange.js';
 import { PublicationPeerExchange } from '../application/publication/PublicationPeerExchange.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
-import { worldViewFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, editorViewFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.339 — Merge Decentralized Publication Discovery into Repository
 // Discovery.
@@ -96,10 +97,6 @@ import { worldViewFiles, editorViewFiles } from './support/SourceFileGroups.js';
 //               identity path (0.9.338), unmodified.
 //   Section L — Deliberately excluded, checked rather than assumed.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function assertThrows(fn, expectedMessageSubstring, message) {
     let threw = false;
     let actual = null;
@@ -114,10 +111,6 @@ function assertThrows(fn, expectedMessageSubstring, message) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 function countOccurrences(source, pattern) {
     return (source.match(pattern) || []).length;
@@ -148,14 +141,6 @@ if (typeof globalThis.window === 'undefined') {
             get length() { return store.size; }
         }
     };
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeIdentity(label) {
@@ -224,7 +209,7 @@ async function run() {
     // source rather than assumed from the milestone's own goal.
     // ===============================================================
     {
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(countOccurrences(mainSource, /new DecentralizedPublicationDiscoveryProvider\(\)/g) === 1,
             '1. ui/main.js still constructs exactly one DecentralizedPublicationDiscoveryProvider — this milestone adds a consumer, never a second instance.');
         assert(countOccurrences(mainSource, /app\.provide\('decentralizedPublicationDiscoveryProvider', decentralizedPublicationDiscoveryProvider\);/g) === 1,

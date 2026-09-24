@@ -8,7 +8,8 @@ import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnaps
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.141 — Distribution Entry-Point Convergence Audit.
 //
@@ -82,10 +83,6 @@ import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileG
 // since it was written. Fixing that registration is exactly the kind of
 // "did the solution create an architectural problem" finding this milestone
 // exists to surface, so it is fixed alongside this file.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -615,7 +612,7 @@ async function run() {
     // the command's own put()-then-publish() sequencing.
     // ===============================================================
     {
-        const ownCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const ownCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
 
         const forbidden = [

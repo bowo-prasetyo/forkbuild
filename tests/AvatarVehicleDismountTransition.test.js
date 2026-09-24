@@ -3,6 +3,7 @@ import { deriveAvatarVehicleDismountTransition } from '../core/AvatarVehicleDism
 import { AvatarVehicleMount, createAvatarVehicleMount } from '../core/AvatarVehicleMount.js';
 import { AvatarVehicleDismountIntent } from '../core/AvatarVehicleDismountIntent.js';
 import { Position } from '../core/Position.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.82 — Avatar-Vehicle Dismount Transition, core/AvatarVehicleDismountTransition.js.
 //
@@ -23,10 +24,6 @@ import { Position } from '../core/Position.js';
 // destination, and never asks whether `currentMount` names the same
 // vehicle the destination/clearance came from. See docs/Roadmap.md,
 // 0.9.82.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, message) {
     let threw = false;

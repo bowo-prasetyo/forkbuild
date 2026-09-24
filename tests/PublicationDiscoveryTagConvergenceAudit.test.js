@@ -1,7 +1,5 @@
-import { readFile } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
@@ -13,7 +11,10 @@ import {
 import { composeDiscoverWorldEncounterPublicationCommand } from '../application/worldEncounter/DiscoverWorldEncounterPublicationCommandComposition.js';
 import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
 import { resolveNostrPublisherOptions } from '../application/publication/distribution/PublicationDistributionConfigurationProvider.js';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.358 — Publication Discovery Tag Convergence Audit.
 //
@@ -60,16 +61,6 @@ import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileG
 //   I — Composition-boundary audit: reusability and dependency direction.
 //   J — Final decision.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 function codeOnly(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
@@ -88,14 +79,6 @@ function makeCanvasContext(overrides = {}) {
         discoveryRequestId: 0,
         ...overrides
     };
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function buildRealSigner(storage, username) {
@@ -165,7 +148,7 @@ async function run() {
     // ===============================================================
     let canonicalTag;
     {
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         const literalDeclarations = mainSource.match(/const PUBLICATION_DISCOVERY_TAG = '([^']+)';/g) || [];
         assert(literalDeclarations.length === 1,
             `1. exactly one PUBLICATION_DISCOVERY_TAG declaration exists in ui/main.js (found ${literalDeclarations.length}) — one authority, not several.`);
@@ -396,7 +379,7 @@ async function run() {
         // discovery is driven through composeDiscoverWorldEncounterPublicationCommand/
         // executeDiscoverWorldEncounterPublicationCommand — two entirely
         // separate composition/command files, never one merged pipeline.
-        const mainCodeOnly = codeOnly(await readSource('ui/main.js'));
+        const mainCodeOnly = codeOnly((await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n'));
         assert(mainCodeOnly.includes('composePublicationDistributionCommand(') && mainCodeOnly.includes('composeDiscoverWorldEncounterPublicationCommand('),
             '3. ui/main.js composes two independent capabilities from the one shared constant — never a single function serving both.');
         assert(!/composePublicationDistributionCommand\([^)]*discoverWorldEncounterPublicationCommand|composeDiscoverWorldEncounterPublicationCommand\([^)]*publicationDistributionCommand/.test(mainCodeOnly),
@@ -411,7 +394,7 @@ async function run() {
     // lifecycle state introduced anywhere near this change.
     // ===============================================================
     {
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(mainSource.includes("discoveryTag: 'forkbuild-snapshot'"),
             '1. Snapshot retains its own, entirely separate campaign literal (\'forkbuild-snapshot\') — never derived from or replaced by PUBLICATION_DISCOVERY_TAG.');
         // Every occurrence of the PUBLICATION_DISCOVERY_TAG identifier in

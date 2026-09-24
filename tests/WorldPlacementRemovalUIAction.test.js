@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
@@ -14,7 +13,6 @@ import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
 import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
@@ -26,7 +24,10 @@ import { PlacePublicationUseCase } from '../application/placement/PlacePublicati
 import { MoveWorldPlacementUseCase } from '../application/placement/MoveWorldPlacementUseCase.js';
 import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
 import { DiscoverWorldsUseCase } from '../application/discovery/DiscoverWorldsUseCase.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.197 — World Placement Removal UI Action.
 //
@@ -48,18 +49,6 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 // removing one placement must never look like removing another,
 // unpublishing a Publication, deleting material, or touching anything
 // Snapshot/Nostr/decentralized-shaped.
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, message) {
     try {
@@ -99,11 +88,6 @@ function makeDocument(title, brickCount = 1) {
         world,
         metadata: new DocumentMetadata({ title, author: 'alice', license: new License({ id: LicenseId.CC0_1_0 }) })
     });
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 // Same restraint tests/ArchitectureReassessmentProductGapAudit.test.js
@@ -304,7 +288,7 @@ async function runTests() {
         assert(!/Snapshot|Nostr|Arweave|Bitcoin|Anchor|Distribution|Unpublish/i.test(removeUseCaseCode),
             '1. RemoveWorldPlacementUseCase.js\'s own CODE carries no Snapshot/Nostr/Arweave/Anchor/Distribution/Unpublish vocabulary at all — it cannot withdraw decentralized content or retract a Publication because it has no path to reach either');
 
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const removePlacementBody = sessionSource.match(/removePlacement\(documentId[^)]*\)\s*\{([\s\S]*?)\n {4}\}/);
         assert(removePlacementBody, '2. removePlacement() method body is found');
         assert(!/Snapshot|Nostr|Arweave|Unpublish|Discovery(?!Provider)/i.test(removePlacementBody[1]),

@@ -29,8 +29,9 @@ import { PlacementRecord } from '../core/PlacementRecord.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Position } from '../core/Position.js';
 import { Publication } from '../publisher/Publication.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.191 — Automatic Snapshot Encounter Retention Lifecycle Audit.
 //
@@ -112,10 +113,6 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 //              concepts only; no new lifecycle enum was introduced to make
 //              discovery and retention compose
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function pos(x, y, z) {
     return { x, y, z };
 }
@@ -131,14 +128,6 @@ const SOURCE_ROOT = new URL('../', import.meta.url);
 async function codeOnlySource(relativePath) {
     const text = await readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeFakeArweaveGateway() {

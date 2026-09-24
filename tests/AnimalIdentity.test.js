@@ -1,11 +1,8 @@
 import { animalIdFor } from '../core/AnimalIdentity.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.700 — Deterministic Animal Identity, core/AnimalIdentity.js.
 // Mirrors tests/VehicleIdentity.test.js's own shape.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function runTests() {
     assert(animalIdFor(1, 0, 0) === 'animal:1:0,0', '1. exact format: animal:<seed>:<cellX>,<cellZ>');

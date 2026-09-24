@@ -6,6 +6,7 @@ import { VEHICLE_INTERACTION_RADIUS } from '../core/AvatarVehicleProximity.js';
 import { AvatarVehicleInteractionIntent } from '../core/AvatarVehicleInteractionIntent.js';
 import { VehiclePresence } from '../core/VehiclePresence.js';
 import { VehicleType } from '../core/VehicleType.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.76 — Avatar-Vehicle Interaction Target Resolution,
 // core/AvatarVehicleInteractionTarget.js.
@@ -33,10 +34,6 @@ import { VehicleType } from '../core/VehicleType.js';
 // only "which vehicle, if any, does the current interaction request
 // target" — never whether the mount succeeds, and it never stores its
 // own answer anywhere. See docs/Roadmap.md, 0.9.76.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, message) {
     let threw = false;

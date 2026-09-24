@@ -1,5 +1,3 @@
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { BitcoinWalletFundingObserver } from '../anchoring/BitcoinWalletFundingObserver.js';
@@ -29,10 +27,11 @@ import { ContentReference } from '../core/ContentReference.js';
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.512 — Bitcoin Granular Pipeline Anchor Publication Integration Audit.
 //
@@ -90,10 +89,6 @@ async function expectRejects(promise, message) {
     assert(threw, message);
 }
 
-const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
-async function source(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
 function codeOnly(src) {
     return src.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
@@ -457,19 +452,6 @@ function fakeBroadcaster(handler) {
     };
 }
 
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
-}
 function publishContent(publicationCatalog, { id, hash }) {
     const publication = new DecentralizedPublication({
         id, contentKind: 'forkbuild.structure', contentReference: new ContentReference({ hash })
@@ -486,10 +468,10 @@ async function run() {
     // into application/anchoring/bitcoin/BitcoinAnchorPublicationCoordinator.js.
     // -------------------------------------------------------------
     {
-        const mainSrc = codeOnly(await source('ui/main.js'));
+        const mainSrc = codeOnly((await Promise.all(mainFiles().map((file) => source(file)))).join('\n'));
         const viewSrc = codeOnly((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n'));
 
-        assert(mainSrc.includes("import { CreateBitcoinAnchorPublicationCoordinatorUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationCoordinatorUseCase.js';"),
+        assert(mainSrc.includes("import { CreateBitcoinAnchorPublicationCoordinatorUseCase } from '../../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationCoordinatorUseCase.js';"),
             n('ui/main.js imports CreateBitcoinAnchorPublicationCoordinatorUseCase'));
         assert(/new CreateBitcoinAnchorPublicationCoordinatorUseCase\(\)\.execute\(\{[^}]*publicationCatalog[^}]*createPublicationAnchorUseCase[^}]*publicationAnchorCatalog[^}]*\}\)/s.test(mainSrc),
             n('ui/main.js constructs the coordinator from this app\'s own shared publicationCatalog/createPublicationAnchorUseCase/publicationAnchorCatalog'));
@@ -787,7 +769,7 @@ async function run() {
     // root call sites (plus this test file) — never a Base or Arweave file.
     // -------------------------------------------------------------
     {
-        const mainSrc = codeOnly(await source('ui/main.js'));
+        const mainSrc = codeOnly((await Promise.all(mainFiles().map((file) => source(file)))).join('\n'));
         const viewSrc = codeOnly((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n'));
 
         assert(!/BitcoinAnchorPublicationCoordinator/.test(await source('anchoring/BaseAnchorPublisher.js')),

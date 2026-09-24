@@ -10,6 +10,8 @@ import {
 } from '../core/AvatarInventory.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.701 — World View Persistence, storage/AvatarInventoryPersistenceStore.js.
 //
@@ -21,18 +23,6 @@ import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
 //   Section E: AvatarInventoryStore integration — a persistenceStore
 //              wired at construction rehydrates; every set() persists;
 //              a store built with none behaves exactly as it always did
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 class ThrowingStorageProvider extends StorageProvider {
     save() { throw new Error('storage is unavailable'); }

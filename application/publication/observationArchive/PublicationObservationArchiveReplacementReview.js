@@ -2,7 +2,7 @@ import { PublicationObservationArchive } from './PublicationObservationArchive.j
 import { describePublicationObservationArchive } from './PublicationObservationArchiveView.js';
 import { describePublicationObservationArchiveProvenance } from './PublicationObservationArchiveProvenanceView.js';
 import { describePublicationObservationArchiveDifference } from './PublicationObservationArchiveDifference.js';
-import { reconstructPublisherLeaderboardClaimHistoryDifference } from '../../leaderboard/PublisherLeaderboardClaimHistoryDifference.js';
+import { reconstructPublisherLeaderboardClaimHistoryDifference } from '../../leaderboard/claim/HistoryDifference.js';
 import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference } from '../../claimSnapshotReconciliation/decision/HistoryDifference.js';
 
 // 0.8.88 — Explicit Publication Archive Replacement Review.
@@ -124,7 +124,7 @@ import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHisto
 // as an eleventh POSITIONAL collection, exactly like every other durable
 // fact this archive holds — see that file's own header. This SEPARATE
 // field is the RECEIPT-IDENTITY, multiset-aware claim-history difference
-// application/leaderboard/PublisherLeaderboardClaimHistoryDifference.js's own
+// application/leaderboard/claim/HistoryDifference.js's own
 // `reconstructPublisherLeaderboardClaimHistoryDifference()` (0.8.127,
 // newly archive-aware) already computes — a genuinely different
 // comparison, because two archives that reordered how they received the

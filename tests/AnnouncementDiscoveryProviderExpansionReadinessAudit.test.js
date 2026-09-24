@@ -1,6 +1,4 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
@@ -9,7 +7,8 @@ import { describePublicationDistributionResult } from '../application/publicatio
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
-import { editorViewFiles } from './support/SourceFileGroups.js';
+import { editorViewFiles, mainFiles } from './support/SourceFileGroups.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.423 — Announcement/Discovery Provider Expansion Readiness Audit.
 //
@@ -122,9 +121,6 @@ function n(message) {
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
 
-async function readSource(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
 function listFiles(dirs) {
     return execSync(`git ls-files ${dirs.join(' ')}`, { cwd: SOURCE_ROOT })
         .toString().split('\n').filter((f) => f.endsWith('.js'));
@@ -229,7 +225,7 @@ async function run() {
     // Section B — the complete pipeline trace.
     // ===============================================================
     {
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         const compositionSource = await readSource('application/publication/distribution/PublicationDistributionCommandComposition.js');
         const commandSource = await readSource('application/publication/distribution/PublicationDistributionCommand.js');
         const orchestratorSource = await readSource('application/publication/distribution/PublicationDistributionOrchestrator.js');
@@ -244,7 +240,7 @@ async function run() {
         // order, while still requiring the original name this section
         // actually traces to be present in the SAME import statement, from
         // the SAME file.
-        assert(/import \{ composePublicationDistributionCommand(, composeMultiRelayNostrPublicationDistributionCommand)? \} from '\.\.\/application\/publication\/distribution\/PublicationDistributionCommandComposition\.js';/.test(mainSource), n('B1. AMENDED BY 0.9.447 — ui/main.js imports composePublicationDistributionCommand — the real, current entry point (now alongside its new, additive multi-relay sibling)'));
+        assert(/import \{ composePublicationDistributionCommand(, composeMultiRelayNostrPublicationDistributionCommand)? \} from '(\.\.\/)+application\/publication\/distribution\/PublicationDistributionCommandComposition\.js';/.test(mainSource), n('B1. AMENDED BY 0.9.447 — ui/main.js imports composePublicationDistributionCommand — the real, current entry point (now alongside its new, additive multi-relay sibling)'));
         assert(/import \{ resolvePublicationDistributionRuntimeConfiguration \}/.test(mainSource), n('B2. ui/main.js imports the one real resolver that turns host capabilities into arweaveUploaderOptions/nostrPublisherOptions'));
         assert(/import \{ executePublicationDistributionCommand(, executeMultiRelayNostrPublicationDistributionCommand)? \} from '\.\/PublicationDistributionCommand\.js';/.test(compositionSource), n('B3. AMENDED BY 0.9.447 — PublicationDistributionCommandComposition.js imports executePublicationDistributionCommand (now alongside its new, additive multi-relay sibling)'));
         assert(/import \{ orchestratePublicationDistribution \} from '\.\/PublicationDistributionOrchestrator\.js';/.test(commandSource), n('B4. PublicationDistributionCommand.js imports orchestratePublicationDistribution'));
@@ -381,7 +377,7 @@ async function run() {
         // device-level collaborator.
         assert(/return \(request\) => executePublicationDistributionCommand\(\{\s*\n\s*\.\.\.request,\s*\n\s*arweaveUploaderOptions,\s*\n\s*ipfsNodeOptions,\s*\n\s*nostrPublisherOptions,\s*\n\s*arweaveAnnouncementPublisherOptions,\s*\n\s*lifecycleStore\s*\n\s*\}\);/.test(compositionSource), n('E2. confirmed in the real code, not only the header: `...request` is spread FIRST, then arweaveUploaderOptions/ipfsNodeOptions/nostrPublisherOptions/arweaveAnnouncementPublisherOptions/lifecycleStore are set explicitly, so a `request.arweaveUploaderOptions` (etc.) a caller supplied would be silently overwritten, never honored — while `request.discoveryProvider`/`request.materialStorage`/`request.remotePinningProviderOptions` pass through unoverridden, the deliberate exceptions'));
 
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(/app\.provide\('publicationDistributionCommand', publicationDistributionCommand\);/.test(mainSource), n('E3. the ONE composed command this produces is provide()\'d exactly once, app-wide, at boot — every later inject() in this app receives the SAME fixed function reference'));
 
         // Contrast: CONTENT's and PROOF_AND_ANCHORING's own coordinators

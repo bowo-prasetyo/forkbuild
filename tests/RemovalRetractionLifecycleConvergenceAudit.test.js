@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
@@ -14,7 +13,6 @@ import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
 import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
@@ -26,7 +24,10 @@ import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
 import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
 import { DiscoverWorldsUseCase } from '../application/discovery/DiscoverWorldsUseCase.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.199 — Removal & Retraction Lifecycle Convergence Audit.
 //
@@ -57,18 +58,6 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 // compare-and-swap guards together, structural non-coupling between the
 // two use cases, and what (if anything) the existing publish/place
 // operations can still do with what survives — never a new undo feature.
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, message) {
     try {
@@ -108,11 +97,6 @@ function makeDocument(title, brickCount = 1) {
         world,
         metadata: new DocumentMetadata({ title, author: 'alice', license: new License({ id: LicenseId.CC0_1_0 }) })
     });
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 // Same restraint tests/WorldPlacementRemovalUIAction.test.js (0.9.197) and
@@ -381,7 +365,7 @@ async function runTests() {
 
         // Neither method's body in WorldNavigationSession reaches for a
         // snapshot/distribution/discovery-registration collaborator.
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const removeBody = sessionSource.match(/removePlacement\(documentId[^)]*\)\s*\{([\s\S]*?)\n {4}\}/)[1];
         const unpublishBody = sessionSource.match(/unpublishDocument\(documentId[^)]*\)\s*\{([\s\S]*?)\n {4}\}/)[1];
         assert(!distributionVocabulary.test(removeBody), 'F3. removePlacement()\'s own body touches no Snapshot/Nostr/Arweave/distribution collaborator');
@@ -411,11 +395,11 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const noNewFlagVocabulary = /\borphan(ed)?\b|\bisOrphaned\b|\bplacementOrphaned\b/i;
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(!noNewFlagVocabulary.test(codeOnlyLines(sessionSource).join('\n')),
             'G1. WorldNavigationSession.js introduces no orphaned/isOrphaned vocabulary in CODE — the word appears only in comments (this audit\'s own, and 0.9.198\'s), never as a field a read model returns');
         const placementInfoPanelSource = await rawSource('ui/components/PlacementInfoPanel.js');
-        const ownPublicationPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(!noNewFlagVocabulary.test(codeOnlyLines(placementInfoPanelSource).join('\n')), 'G2. PlacementInfoPanel.js carries no orphaned-shaped field or prop either');
         assert(!noNewFlagVocabulary.test(codeOnlyLines(ownPublicationPanelSource).join('\n')), 'G3. OwnPublicationPanel.js carries no orphaned-shaped field or prop either');
 
@@ -516,7 +500,7 @@ async function runTests() {
         assert(countReferences(removeUseCaseSource, 'UnpublishDocumentUseCase') === 0, 'I1. RemoveWorldPlacementUseCase.js never references UnpublishDocumentUseCase');
         assert(countReferences(unpublishUseCaseSource, 'RemoveWorldPlacementUseCase') === 0, 'I2. UnpublishDocumentUseCase.js never references RemoveWorldPlacementUseCase');
 
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const removeBody = sessionSource.match(/removePlacement\(documentId[^)]*\)\s*\{([\s\S]*?)\n {4}\}/)[1];
         const unpublishBody = sessionSource.match(/unpublishDocument\(documentId[^)]*\)\s*\{([\s\S]*?)\n {4}\}/)[1];
         assert(!/_unpublishDocumentUseCase/.test(removeBody), 'I3. removePlacement()\'s own body never calls this._unpublishDocumentUseCase');
@@ -530,7 +514,7 @@ async function runTests() {
         const placementEmits = placementInfoPanelSource.match(/emits:\s*\[([^\]]*)\]/)[1];
         assert(!/unpublish|retract/i.test(placementEmits), 'I6. PlacementInfoPanel.js\'s own emits array carries no unpublish/retract-shaped event — that authority lives one layer up, on a different panel entirely');
 
-        const ownPublicationPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/@click="[a-zA-Z]*[Rr]emove/.test(ownPublicationPanelSource), 'I7. OwnPublicationPanel.js wires no remove-shaped click handler — placement removal is PlacementInfoPanel\'s authority, never duplicated here');
 
         // WorldView.js's own two handlers each call exactly one session

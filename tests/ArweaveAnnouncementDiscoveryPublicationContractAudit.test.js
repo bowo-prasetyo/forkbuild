@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import {
@@ -20,6 +19,8 @@ import { describePublicationDistribution } from '../application/publication/dist
 import { ArweavePublicationMaterialUploader } from '../application/arweave/ArweavePublicationMaterialUploader.js';
 import { executePublicationDistribution } from '../application/publication/distribution/PublicationDistributionExecutor.js';
 import { describePublicationDistributionResult } from '../application/publication/distribution/PublicationDistributionResult.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.427 — Arweave Announcement/Discovery Publication Contract Audit.
 //
@@ -150,20 +151,10 @@ import { describePublicationDistributionResult } from '../application/publicatio
 //   that this remains test-only for every substrate is reconfirmed, not
 //   reversed.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 let assertionCount = 0;
 function check(condition, message) {
     assertionCount += 1;
     assert(condition, message);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 function neverCalled() {

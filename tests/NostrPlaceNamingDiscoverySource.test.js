@@ -3,6 +3,7 @@ import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/Nost
 import { PlaceNamingDiscoveryQueryService } from '../application/placeNaming/PlaceNamingDiscoveryQueryService.js';
 import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
 import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.254 — Nostr Place Naming Discovery Source.
 // See docs/Roadmap.md, "0.9.254 — Nostr Place Naming Discovery Source."
@@ -28,10 +29,6 @@ import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvel
 //              PlaceNamingDiscoveryQueryService, discovering a claim
 //              end-to-end through the SAME shared Nostr transport already
 //              proven out for Snapshot discovery
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

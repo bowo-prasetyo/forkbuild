@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { resolveVehicleHeadingFromMovement } from '../core/VehicleMovementHeading.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.123 — Vehicle Orientation, core/VehicleMovementHeading.js.
 //
@@ -11,10 +12,6 @@ import { resolveVehicleHeadingFromMovement } from '../core/VehicleMovementHeadin
 //   Section C: non-finite inputs degrade to previousHeading, never NaN
 //   Section D: the result is always normalized to [0, 360)
 //   Section E: architectural regression — pure, no dependencies
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function runTests() {
     // -------------------------------------------------------------

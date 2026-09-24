@@ -15,10 +15,11 @@ import { BitcoinAnchorEvidenceView } from '../anchoring/BitcoinAnchorEvidenceVie
 import { ArweaveAnchorEvidenceView } from '../anchoring/ArweaveAnchorEvidenceView.js';
 import { BaseProofVerifier } from '../anchoring/BaseProofVerifier.js';
 import { encodeBasePublicationCommitment } from '../application/anchoring/base/BasePublicationCommitmentEncoding.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { publicationsViewSourceWithTemplate } from './support/SourceFileGroups.js';
+import { publicationsViewSourceWithTemplate, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.511 — Base Anchor Evidence View.
 //
@@ -79,25 +80,6 @@ import { publicationsViewSourceWithTemplate } from './support/SourceFileGroups.j
 // patched to keep re-passing. Re-running that audit file after this
 // milestone will fail its own B9/G1/M1/M2 assertions; that failure is
 // this milestone's own intended, documented effect, not a regression.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
-}
 
 async function run() {
     // ---------------------------------------------------------------
@@ -200,10 +182,9 @@ async function run() {
     // "*UIReachabilityAudit.test.js" file's own identical approach).
     // ---------------------------------------------------------------
     {
-        const mainPath = fileURLToPath(new URL('../ui/main.js', import.meta.url));
-        const mainSrc = await readFile(mainPath, 'utf8');
+        const mainSrc = (await Promise.all(mainFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
 
-        assert(/import\s*\{\s*CreateBaseAnchorEvidenceViewUseCase\s*\}\s*from\s*['"]\.\.\/application\/anchoring\/base\/CreateBaseAnchorEvidenceViewUseCase\.js['"]/.test(mainSrc),
+        assert(/import\s*\{\s*CreateBaseAnchorEvidenceViewUseCase\s*\}\s*from\s*['"](\.\.\/)+application\/anchoring\/base\/CreateBaseAnchorEvidenceViewUseCase\.js['"]/.test(mainSrc),
             '24. ui/main.js imports CreateBaseAnchorEvidenceViewUseCase');
         assert(/new CreateBaseAnchorEvidenceViewUseCase\(\)\.execute\(\)/.test(mainSrc),
             '25. ui/main.js constructs a real baseAnchorEvidenceView, the same bare no-options call its two siblings already use');

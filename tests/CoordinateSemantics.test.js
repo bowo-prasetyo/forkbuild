@@ -6,7 +6,8 @@ import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvid
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { Publication } from '../publisher/Publication.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.24 — World Coordinate Semantics & Placement UX.
 //
@@ -22,18 +23,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //     algorithm -> same absolute coordinate on every replica."
 //   - A document-local position and a WorldPlacement's global position
 //     compose by simple addition into an effective world position.
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function makePublication(id, documentId, title) {
     return new Publication({ id, documentId, title, author: 'alice' });

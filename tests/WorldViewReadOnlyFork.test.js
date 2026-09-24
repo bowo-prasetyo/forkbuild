@@ -6,7 +6,6 @@ import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { StructurePlacement } from '../core/StructurePlacement.js';
 import { RegionKind } from '../core/RegionKind.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
@@ -24,6 +23,8 @@ import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase
 import { EditorSession } from '../application/editor/EditorSession.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { WorldFocusKind, WorldFocusAction, deriveWorldFocusContext } from '../core/WorldFocusContext.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.5.9 — World View Read-Only Exploration & Fork-to-Edit.
 //
@@ -52,18 +53,6 @@ import { WorldFocusKind, WorldFocusAction, deriveWorldFocusContext } from '../co
 //      of its own to fork); each of its own regions does.
 //   H. The fork enters ordinary EditorSession architecture — full
 //      mutation capability, no World-View-specific semantics.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function stubRenderer() {
     return {

@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { Publication } from '../publisher/Publication.js';
@@ -19,8 +18,10 @@ import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.j
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.475 — Wire Peer World Encounter Material Source into Production
 // Composition Root.
@@ -74,30 +75,14 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 // (0.9.474) for the Repository-admission half of the pipeline this
 // milestone's own Section G reuses unmodified.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function wait(ms = 20) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
 
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 function codeOnly(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeIdentity(label) {
@@ -221,7 +206,7 @@ async function run() {
     // Section C — production composition-root inspection.
     // ===============================================================
     {
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         const mainCodeOnly = codeOnly(mainSource);
 
         assert(/import \{ PeerWorldEncounterMaterialSource \} from '\.\.\/application\/worldEncounter\/PeerWorldEncounterMaterialSource\.js';/.test(mainCodeOnly),

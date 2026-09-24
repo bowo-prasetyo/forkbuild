@@ -14,6 +14,7 @@ import { resolveDecentralizedWorldEncounterLeadFromRegistry, DecentralizedWorldE
 import { deriveDecentralizedWorldEncounterLeadAssociationEvidenceFromEnvelopes } from '../application/discovery/DecentralizedDiscoveryEnvelopeAssociationEvidenceIngress.js';
 import { parseDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.36 — Decentralized World Encounter Material Runtime Composition.
 // See docs/Roadmap.md, "0.9.36 — Decentralized World Encounter Material Runtime Composition."
@@ -38,10 +39,6 @@ import { WorldEncounterKind } from '../core/WorldEncounter.js';
 //              imports in the composition file itself, no fetch()/WebSocket
 //              of its own, no trust vocabulary, and 0.9.21/0.9.34 are never
 //              modified
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

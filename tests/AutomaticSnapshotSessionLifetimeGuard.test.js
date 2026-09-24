@@ -10,6 +10,7 @@ import { registerMaterializedSnapshotWorldSource } from '../application/snapshot
 import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.193 — Automatic Snapshot Session-Lifetime Guard.
 //
@@ -68,10 +69,6 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 //              is flipped to inactive as the FIRST statement of
 //              `onBeforeUnmount()`, before `session.dispose()`, and handed
 //              to the cascade as `isSessionActive`.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function pos(x, y, z) {
     return { x, y, z };

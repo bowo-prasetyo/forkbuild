@@ -1,6 +1,7 @@
 import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryEntry } from './History.js';
 import { parseJSONOrNull } from '../../../utils/parseJsonOrNull.js';
 import { isPlainObject } from '../../../utils/typeGuards.js';
+import { hasOnlyKeys } from '../../../utils/typeGuards.js';
 
 // 0.8.168 — Portable Revalidation Observation History Exchange.
 //
@@ -423,10 +424,6 @@ function canonicalObservationKey(record) {
         candidateMatchesPlan: record.candidateMatchesPlan,
         observedAt: record.observedAt
     });
-}
-
-function hasOnlyKeys(value, allowedKeys) {
-    return Object.keys(value).every((key) => allowedKeys.includes(key));
 }
 
 function hasAllKeys(value, requiredKeys) {

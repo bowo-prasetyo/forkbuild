@@ -12,6 +12,7 @@ import {
     describeBitcoinAnchorConfirmationObservationHistoryDetails,
     describeBitcoinAnchorConfirmationObservationDetail
 } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistoryDetailView.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.56 — Bitcoin Anchor Confirmation Observation History & Per-Observation
 // Inspection.
@@ -57,10 +58,6 @@ import {
 //
 // See docs/Roadmap.md, "0.8.56 — Bitcoin Anchor Confirmation Observation
 // History."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function fakeConfirmationSource(sequence) {
     let index = 0;

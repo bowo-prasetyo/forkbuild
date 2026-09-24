@@ -1,8 +1,5 @@
 import { execSync } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
@@ -30,6 +27,10 @@ import {
 // genuinely independent (Section I); never modified, never used to carry a
 // single byte of this file's own Commentary traffic.
 import { PublicationCommentaryNostrDistribution } from '../application/publication/commentary/PublicationCommentaryNostrDistribution.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.631 — Publication Commentary Arweave Asynchronous Distribution.
 //
@@ -101,9 +102,7 @@ function n(message) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
+
 function codeOnly(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
@@ -114,21 +113,6 @@ function grepFiles(pattern, dirs) {
             { cwd: SOURCE_ROOT.pathname }).toString();
     } catch { /* zero hits */ }
     return hits.trim() ? hits.trim().split('\n') : [];
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 function makeExchange(provider = makeIdentity('default')) {
@@ -670,7 +654,7 @@ async function run() {
     // selection, never fan-out.
     // ===============================================================
     {
-        const mainSource = codeOnly(await rawSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         assert(mainSource.includes("import { PublicationCommentaryArweaveDistribution } from '../application/publication/commentary/PublicationCommentaryArweaveDistribution.js';")
             && mainSource.includes("import { DiscoverPublicationCommentaryFromArweaveUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryFromArweaveUseCase.js';"),
             n('ui/main.js imports both new classes'));

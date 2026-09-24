@@ -3,14 +3,11 @@ import {
     isValidAvatarVehicleDeployIntent,
     deriveAvatarVehicleDeployIntent
 } from '../core/AvatarVehicleDeployIntent.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.670 — Avatar Vehicle Deploy Intent, core/AvatarVehicleDeployIntent.js.
 // Mirrors tests/AvatarVehicleStoreIntent.test.js's own shape exactly, for
 // the mirror-image vocabulary.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function runTests() {
     const { NONE, DEPLOY } = AvatarVehicleDeployIntent;

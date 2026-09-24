@@ -43,7 +43,6 @@ import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
 import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js';
 import { describeDecentralizedWorldDiscoveryLead } from '../core/DecentralizedWorldDiscoveryLead.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { Document } from '../core/Document.js';
@@ -54,6 +53,8 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.170 — Material Inspection Refresh Precision E2E Audit.
 //
@@ -133,20 +134,8 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 //              state, no retry behavior, no automatic rediscovery, no new
 //              material identity, and no renderer change.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function flush() {
     return new Promise((resolve) => setTimeout(resolve, 0));
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 const stubIdentityProvider = {
@@ -1044,7 +1033,7 @@ async function run() {
         // No Snapshot-specific refresh code, no source-family branching:
         // re-read directly, mirroring 0.9.169's own Section J/F.
         const equalityFunctionMatch = canvasSource.match(/function resolvedEncounterSelectionsEqual\([^)]*\)\s*\{[\s\S]*?\n\}/);
-        const refreshSelectionOutcomeMatch = canvasSource.match(/refreshSelectionOutcome\(\)\s*\{[\s\S]*?\n {4}\},/);
+        const refreshSelectionOutcomeMatch = canvasSource.match(/refreshSelectionOutcome\(\)\s*\{[\s\S]*?\n {4}\},?/);
         assert(equalityFunctionMatch && refreshSelectionOutcomeMatch, '68. sanity — both functions this fix touches are found in the production file');
         const forbiddenInFix = ['Nostr', 'nostr', 'Arweave', 'arweave', 'materialize', 'Materialize', 'ACTIVE', 'EXPIRED', 'STALE', 'SYNCED', 'INACTIVE', 'REVOKED', 'retry', 'Retry', 'rediscover', 'Rediscover'];
         for (const term of forbiddenInFix) {

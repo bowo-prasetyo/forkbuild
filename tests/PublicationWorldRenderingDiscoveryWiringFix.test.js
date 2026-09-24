@@ -1,6 +1,4 @@
-import { readFile } from 'node:fs/promises';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
@@ -28,6 +26,10 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.605 — Wire Publication Discovery into World Rendering.
 //
@@ -64,15 +66,6 @@ import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 //   H. Backward compatibility — local documents render exactly as before.
 //   I. Closure.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 if (typeof globalThis.window === 'undefined') {
     const store = new Map();
     globalThis.window = {
@@ -84,14 +77,6 @@ if (typeof globalThis.window === 'undefined') {
             get length() { return store.size; }
         }
     };
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 // Same minimal renderer stand-in DocumentLifecycle.test.js already uses
@@ -207,12 +192,12 @@ async function run() {
         assert(!/new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*discoveryProvider\s*\);/.test(compositionSrc),
             'A4. The OLD, narrow wiring no longer appears anywhere in this file — replaced, not duplicated alongside a second worldLayoutProvider.');
 
-        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(/loadPublishedWorldSessionUseCase = null,/.test(sessionSrc),
             'A5. WorldNavigationSession accepts loadPublishedWorldSessionUseCase as a new, OPTIONAL constructor parameter — a caller that never wires one (every pre-0.9.605 caller/test) gets no fallback, exactly the same degrade-gracefully posture every other optional collaborator in this class already follows.');
         assert(/_resolveWorldDocument\(documentId\)/.test(sessionSrc) && /_resolvePublicationMaterial\(documentId\)/.test(sessionSrc),
             'A6. _loadWorld() now delegates to _resolveWorldDocument(), which tries the ordinary LOCAL lookup FIRST (loadPublicationDocumentUseCase — unconditional, unchanged) and falls back to the material bridge only when that throws "no document found."');
-        assert(!/this\._findPublications\(documentId\)/.test(sessionSrc.match(/_resolvePublicationMaterial\(documentId\) \{[\s\S]*?\n\t\}/)?.[0] || ''),
+        assert(!/this\._findPublications\(documentId\)/.test(sessionSrc.match(/_resolvePublicationMaterial\(documentId\) \{[\s\S]*?\n    \}/)?.[0] || ''),
             'A7. _resolvePublicationMaterial() never reads _findPublications()/discoveryProvider — it reads ONLY _publicationActionDiscoveryProvider, the same wider capability getPublicationForDocument()/findPublicationById() already use (0.9.597), never fork-policy\'s own narrow choke point.');
 
         console.log('✓ A — both production seams exist verbatim, exactly as recommended, and nothing else in either file was touched to produce them.');
@@ -386,7 +371,7 @@ async function run() {
         assert(harness.session.getPublicationIdForDocument(collisionDocId) === null,
             'D3. fork-policy (getPublicationIdForDocument -> _findPublications -> the narrow discoveryProvider) does not know collisionDocId — 0.9.605\'s widening of worldLayoutProvider/the material fallback is a COMPLETELY SEPARATE constructor argument/code path from the one _findPublications() reads.');
 
-        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         const findPublicationsBody = sessionSrc.match(/_findPublications\(documentId\) \{[\s\S]*?\n {4}\}/);
         assert(findPublicationsBody !== null && /this\._discoveryProvider/.test(findPublicationsBody[0])
             && !/this\._publicationActionDiscoveryProvider/.test(findPublicationsBody[0]),

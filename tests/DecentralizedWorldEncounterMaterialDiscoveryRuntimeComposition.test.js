@@ -1,6 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { worldViewSourceWithTemplate } from './support/SourceFileGroups.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldViewSourceWithTemplate, mainFiles } from './support/SourceFileGroups.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { composeWorldEncounterMaterialVerifier } from '../application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js';
@@ -11,6 +10,8 @@ import {
     composeDecentralizedWorldEncounterMaterialDiscoveryServices,
     composeDecentralizedWorldEncounterMaterialDiscoveryRuntime
 } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.110 — Decentralized Material Retrieval Runtime Composition.
 //
@@ -41,18 +42,6 @@ import {
 //              loading/verification/resolution, and ui/main.js +
 //              ui/views/WorldView.js wire it in without inventing a second
 //              inspection pipeline or new trust vocabulary
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function buildRealSigner(storage, username) {
     const provider = new LocalIdentityProvider(storage);
@@ -345,10 +334,9 @@ async function runTests() {
         assert(!/TRUSTED|UNTRUSTED|\bSAFE\b|UNSAFE|AUTHENTIC|SUSPICIOUS|\bRANK\b|\bSCORE\b|PREFERRED/i.test(compositionCodeOnly),
             '26. the composition introduces no trust/ranking vocabulary of its own');
 
-        const mainUrl = new URL('../ui/main.js', import.meta.url);
-        const mainSource = await readFile(mainUrl, 'utf8');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const mainCodeOnly = mainSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-        assert(/from '\.\.\/application\/worldEncounter\/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition\.js';/.test(mainCodeOnly)
+        assert(/from '(\.\.\/)+application\/worldEncounter\/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition\.js';/.test(mainCodeOnly)
             && mainCodeOnly.includes('composeDecentralizedWorldEncounterMaterialDiscoveryServices(')
             && mainCodeOnly.includes('composeDecentralizedWorldEncounterMaterialDiscoveryRuntime('),
             '27. ui/main.js imports and actually calls the new composition root');

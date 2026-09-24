@@ -31,8 +31,9 @@ import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.169 — Material Inspection Refresh Precision.
 //
@@ -97,20 +98,8 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 //              materialization logic, no registry redesign, and no new
 //              lifecycle state.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function flush() {
     return new Promise((resolve) => setTimeout(resolve, 0));
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 const stubIdentityProvider = {
@@ -629,7 +618,7 @@ async function run() {
 
         const forbiddenInFix = ['Nostr', 'nostr', 'Arweave', 'arweave', 'materialize', 'Materialize', 'ACTIVE', 'EXPIRED', 'STALE', 'SYNCED', 'INACTIVE', 'REVOKED'];
         const equalityFunctionMatch = canvasSource.match(/function resolvedEncounterSelectionsEqual\([^)]*\)\s*\{[\s\S]*?\n\}/);
-        const refreshSelectionOutcomeMatch = canvasSource.match(/refreshSelectionOutcome\(\)\s*\{[\s\S]*?\n {4}\},/);
+        const refreshSelectionOutcomeMatch = canvasSource.match(/refreshSelectionOutcome\(\)\s*\{[\s\S]*?\n {4}\},?/);
         assert(equalityFunctionMatch && refreshSelectionOutcomeMatch, '39. sanity — both functions this milestone touches are found in the production file');
         for (const term of forbiddenInFix) {
             assert(!equalityFunctionMatch[0].includes(term) && !refreshSelectionOutcomeMatch[0].includes(term),

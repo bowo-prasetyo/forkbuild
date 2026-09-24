@@ -12,6 +12,7 @@ import {
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { PublicationObservationArchiveProvenanceOrigin } from '../application/publication/observationArchive/PublicationObservationArchiveProvenance.js';
 import { describePublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchiveView.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.98 — Base Transaction Inclusion Observation Timeline.
 //
@@ -47,10 +48,6 @@ import { describePublicationObservationArchive } from '../application/publicatio
 //
 // See docs/Roadmap.md, "0.8.98 — Base Transaction Inclusion Observation
 // Timeline."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const O = PublicationObservationArchiveProvenanceOrigin;
 const SHARED_CONTENT = 'ForkBuild Base timeline content, committed by two distinct transactions';

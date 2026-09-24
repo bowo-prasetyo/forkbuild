@@ -19,7 +19,8 @@ import { PlacementRecord } from '../core/PlacementRecord.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Position } from '../core/Position.js';
 import { Publication } from '../publisher/Publication.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.552 — Observer-Local Novel Publication Encounter Presentation.
 //
@@ -47,18 +48,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // descriptor — the SAME real-machinery harness (in-memory Nostr relay,
 // in-memory Arweave gateway/signer, real LocalContentStore) 0.9.551's own
 // audit and 0.9.191-0.9.194's own e2e guards already established.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function makeFakeArweaveGateway() {
     const network = new Map();

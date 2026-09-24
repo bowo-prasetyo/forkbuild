@@ -20,6 +20,7 @@ import {
 } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { Publication } from '../publisher/Publication.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.165 — World Discovery Participation Audit.
 //
@@ -112,10 +113,6 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 //   Section G: structural sweep — this milestone adds no production file,
 //              and no dedup/reconciliation/merge/trust/ranking vocabulary
 //              anywhere it touches.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function placedResult(contentHash, publicationId, position, placementId = 'placement-x') {
     return { outcome: SnapshotWorldPlacementOutcome.PLACED, contentHash, publicationId, placementId, position, reason: null };

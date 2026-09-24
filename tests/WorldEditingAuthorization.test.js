@@ -4,7 +4,6 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
@@ -21,6 +20,8 @@ import { WorldAccessLevel, worldAccessAtLeast, isValidWorldAccessLevel } from '.
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
 import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
 import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.2.95 — World Editing Authorization Foundation.
 //
@@ -68,18 +69,6 @@ import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase
 //              World View kept, and it is gated by the exact same
 //              seam. See docs/Principles.md, "World View Observes and
 //              Navigates; Editor Mutates and Builds (0.5.9)".
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function buildOneBrickWorld(position = new Position(0, 0.5, 0)) {
     const world = new World({});

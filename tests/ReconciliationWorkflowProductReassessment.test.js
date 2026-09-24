@@ -1,8 +1,7 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.410 — Reconciliation Workflow Product Reassessment.
 //
@@ -71,10 +70,6 @@ function n(message) {
 }
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
-
-async function readSource(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
 
 function grepFiles(pattern, dirs) {
     const files = execSync(`git ls-files ${dirs.join(' ')}`, { cwd: SOURCE_ROOT }).toString().split('\n').filter((f) => f.endsWith('.js'));
@@ -235,8 +230,8 @@ async function run() {
         // assumed. For two REAL users of the shipped product to ever
         // complete this journey together, SOME user's UI must be able to
         // author and export their own signed claim. Does one exist?
-        const createClaimSource = await readSource('application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js');
-        const exchangeSource = await readSource('application/leaderboard/PublisherLeaderboardSnapshotClaimExchange.js');
+        const createClaimSource = await readSource('application/leaderboard/snapshot/CreateClaimUseCase.js');
+        const exchangeSource = await readSource('application/leaderboard/snapshot/ClaimExchange.js');
         assert(
             createClaimSource.includes('export class CreatePublisherLeaderboardSnapshotClaimUseCase'),
             n('E1. the signing use case itself is real, complete, and already tested (0.8.121) — the capability is not missing at the application layer')
@@ -271,7 +266,7 @@ async function run() {
             exportCallSites.length === 1 && exportCallSites[0] === 'ui/views/PublisherLeaderboardSnapshotClaimAuthoringView.js',
             n(`E4. exactly the one file 0.9.411 authorized to call exportPublisherLeaderboardSnapshotClaim() does so, never a second, accidental caller (found: ${JSON.stringify(exportCallSites)})`)
         );
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(
             !mainSource.includes('CreatePublisherLeaderboardSnapshotClaimUseCase'),
             n('E5. the app\'s own composition root (ui/main.js) never constructs this use case either — the absence is total, not merely missing from one component')
@@ -346,7 +341,7 @@ async function run() {
         // surfaces — this is an established, deliberate house style for
         // this exact class of diagnostic result, not something the
         // Workspace invented or a UX regression it introduced.
-        const ownPanelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         const rawOutcomeInOwnPanel = (ownPanelSource.match(/\{\{\s*\w[\w.]*Result\.outcome\s*\}\}/g) || []).length;
         const rawOutcomeInCanvas = (canvasSource.match(/\{\{\s*\w[\w.]*Result\.outcome\s*\}\}/g) || []).length;

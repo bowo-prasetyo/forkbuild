@@ -5,6 +5,7 @@ import { BaseTransactionBroadcastCoordinator } from '../application/anchoring/ba
 import { BaseTransactionBroadcastState, isValidBaseTransactionBroadcastState } from '../application/anchoring/base/BaseTransactionBroadcastState.js';
 import { describeBaseTransactionBroadcast, describeBaseTransactionBroadcastStateLabel } from '../application/anchoring/base/BaseTransactionBroadcastView.js';
 import { BitcoinAnchorTransactionBroadcaster } from '../anchoring/BitcoinAnchorTransactionBroadcaster.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.95 — Explicit Base Transaction Broadcast.
 //
@@ -50,10 +51,6 @@ import { BitcoinAnchorTransactionBroadcaster } from '../anchoring/BitcoinAnchorT
 //
 // See docs/Principles.md, "Broadcasting Submits; It Does Not Decide
 // (0.8.52)," extended here one chain over.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

@@ -1,9 +1,9 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { DEFAULT_ICE_SERVERS, fetchIceServers } from '../peer/IceServerConfig.js';
 import { IceServerConfiguration, isValidStunUrl } from '../core/IceServerConfiguration.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.453 — TURN Server Configuration Contract Audit.
 //
@@ -96,9 +96,7 @@ function n(message) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
+
 function jsonResponse(body, { ok = true } = {}) {
     return { ok, json: async () => body };
 }

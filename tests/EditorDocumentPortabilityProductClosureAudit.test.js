@@ -18,7 +18,6 @@ import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { DocumentValidator } from '../serializer/DocumentValidator.js';
 import { DocumentSchemaMigrator } from '../serializer/DocumentSchemaMigrator.js';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { DocumentManifest } from '../application/document/DocumentManifest.js';
 import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
@@ -29,7 +28,9 @@ import { ImportDocumentUseCase } from '../application/document/ImportDocumentUse
 import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
-import { editorViewFiles } from './support/SourceFileGroups.js';
+import { editorViewFiles, editorSessionFiles } from './support/SourceFileGroups.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.643 — Editor Document Portability Product Closure Audit.
 //
@@ -108,19 +109,9 @@ function n(message) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
+
 function codeOnly(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 // The 0.9.640-style rich fixture, extended: TWO buildings and TWO groups
@@ -272,7 +263,7 @@ async function run() {
         // verified instead by exact structural proof against real source,
         // the same standard 0.9.641 Section H / 0.9.642 Section K already
         // established and that Section F/K below reconfirm and extend.
-        const editorSessionSource = codeOnly(await rawSource('application/editor/EditorSession.js'));
+        const editorSessionSource = codeOnly((await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n'));
         assert(/exportDocument\(\)\s*\{[\s\S]*?this\._exportDocumentUseCase\.execute\(this\._documentManager\.document\)/.test(editorSessionSource),
             n('EditorSession.exportDocument() delegates straight to this._exportDocumentUseCase.execute() — the exact class this section just ran live'));
         assert(/importDocument\(json\)\s*\{[\s\S]*?this\._importDocumentUseCase\.execute\(json\)/.test(editorSessionSource),
@@ -732,7 +723,7 @@ async function run() {
         // publisher/discovery/peer/etc. for its OTHER features), but
         // specifically the two delegation methods this milestone's
         // journey actually calls.
-        const editorSessionSource = codeOnly(await rawSource('application/editor/EditorSession.js'));
+        const editorSessionSource = codeOnly((await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n'));
         const exportMethodMatch = editorSessionSource.match(/exportDocument\(\)\s*\{[\s\S]*?\n {4}\}/);
         const importMethodMatch = editorSessionSource.match(/importDocument\(json\)\s*\{[\s\S]*?\n {4}\}/);
         assert(exportMethodMatch !== null && importMethodMatch !== null, n('both EditorSession.exportDocument() and EditorSession.importDocument() are found, in isolation, in real source'));
@@ -809,7 +800,7 @@ async function run() {
         const buildLibrarySource = await rawSource('ui/components/BuildLibraryPanel.js');
         assert(/triggerImportBlueprint/.test(buildLibrarySource) && /onImportBlueprintFileChosen/.test(buildLibrarySource),
             n('BuildLibraryPanel.js\'s own, pre-existing "Import Blueprint" file input machinery (triggerImportBlueprint/onImportBlueprintFileChosen) is untouched and textually distinct from Toolbar.js\'s document-Import machinery'));
-        assert(!/importFileInput/.test(await rawSource('application/editor/EditorSession.js')),
+        assert(!/importFileInput/.test((await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n')),
             n('EditorSession.js itself has no shared "importFileInput"-shaped state — Blueprint import and Document import remain two independent UI-layer concerns, never unified into one code path at the session layer either'));
 
         console.log('✓ J: Save, Load, New, Fork, and Publish all still work exactly as before — run live here, not merely re-read — and Toolbar.js\'s pre-existing emits/actions remain present alongside Export/Import rather than replaced by them. The OTHER existing import surface (Blueprint import) remains a fully separate component and file input, confirmed never merged with document Import at either the UI or session layer.');

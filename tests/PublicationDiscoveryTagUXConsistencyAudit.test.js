@@ -1,10 +1,11 @@
-import { readFile } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { composeDiscoverWorldEncounterPublicationCommand } from '../application/worldEncounter/DiscoverWorldEncounterPublicationCommandComposition.js';
 import { queryDecentralizedWorldDiscovery } from '../application/discovery/DecentralizedWorldDiscoveryQuery.js';
 import { resolveNostrPublisherOptions } from '../application/publication/distribution/PublicationDistributionConfigurationProvider.js';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.356 — Publication Discovery Tag UX Consistency Audit.
 //
@@ -40,16 +41,6 @@ import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileG
 //   I — Candidate solution matrix.
 //   J — Final decision.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 // The same "extract methods/computed/props straight off the exported
 // options object and call them with a hand-built ctx" technique
 // tests/DecentralizedWorldEncounterLeadSelectionUI.test.js already
@@ -77,7 +68,7 @@ async function run() {
     // non-empty by the very publisher it configures.
     // ===============================================================
     {
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         // 0.9.357 note: this milestone's own recommendation (hoist the
         // literal to one named constant, reused at both its distribution
         // call site and a new discovery-facing provide() call) has since
@@ -173,7 +164,7 @@ async function run() {
     // source evidence.
     // ===============================================================
     {
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
 
         // Snapshot: the SAME literal ('forkbuild-snapshot') is composed
         // ONCE and reused verbatim at both its publish call site and BOTH
@@ -186,7 +177,7 @@ async function run() {
         assert(snapshotLiteralOccurrences.length === 3,
             `1. 'forkbuild-snapshot' is assigned as discoveryTag in exactly 3 CODE lines in ui/main.js (found ${snapshotLiteralOccurrences.length}) — one publish-side composition, two discovery-side compositions — all three the SAME literal, never re-typed by a caller.`);
 
-        const ownPanelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         assert(!/placeholder=["']?[Dd]iscovery tag/.test(ownPanelSource),
             '2. ui/components/OwnPublicationPanel.js — the real Snapshot Discovery UI surface — renders no "Discovery tag" input of any kind; Snapshot discovery is a single button bound to a Publication object, with no tag ever exposed to a Wanderer.');
         assert(!/placeholder=["']?[Dd]iscovery tag/.test(((await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n')).split('world-encounter-discovery-panel')[0]),
@@ -219,7 +210,7 @@ async function run() {
     // Publication, World, or objectId.
     // ===============================================================
     {
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         // 0.9.357 note: the literal now lives in one hoisted constant
         // declaration rather than inline at its use site — checked there
         // instead, still a bare, non-interpolated string.
@@ -408,7 +399,7 @@ async function run() {
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(canvasSource.includes('discoveryTag: this.defaultDiscoveryTag'),
             '1. as of 0.9.357, WorldEncounterCanvas.js seeds discoveryTag from its own new defaultDiscoveryTag prop rather than an unconditional blank string — the fix this audit recommended.');
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(mainSource.includes("app.provide('publicationDiscoveryTag',") && mainSource.includes("const PUBLICATION_DISCOVERY_TAG = 'forkbuild-publication';"),
             '2. as of 0.9.357, ui/main.js hoists the literal to one named constant and provides it app-wide as publicationDiscoveryTag — never a second, independently-typed literal.');
     }

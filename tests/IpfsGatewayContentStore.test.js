@@ -2,6 +2,7 @@ import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
 import { IpfsContentStore, ContentUnavailableError } from '../content/IpfsContentStore.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.66 — IPFS Remote Gateway Resolution.
 //
@@ -33,10 +34,6 @@ import { computeContentHash } from '../serializer/contentHash.js';
 //
 // See docs/Principles.md, "A Locator Is Not The Content; A Gateway Is Not
 // A Verdict (0.8.66)."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function expectRejects(promiseFn, message, ErrorType = null) {
     let threw = false;

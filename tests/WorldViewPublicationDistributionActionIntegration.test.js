@@ -8,6 +8,7 @@ import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
 import { worldViewFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.104 — World View Publication Distribution Action.
 //
@@ -51,10 +52,6 @@ import { worldViewFiles, worldEncounterCanvasFiles } from './support/SourceFileG
 //            around the existing publicationDistributionCommand, forwards
 //            it verbatim, and constructs no distribution infrastructure
 //            itself.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function flushMicrotasks() {
     // The FLAGSHIP section's own distributionCommand runs the real

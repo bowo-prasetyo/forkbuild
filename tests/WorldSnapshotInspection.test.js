@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { describeWorldSnapshotInspection } from '../application/snapshot/WorldSnapshotInspection.js';
 import { WorldEncounterPresentationSourceFamily } from '../application/worldEncounter/WorldEncounterPresentation.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.177 — World Snapshot Inspection Detail.
 //
@@ -36,10 +37,6 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 //   Section J: purity — frozen results, no mutation of inputs, repeatable.
 //   Section K: structural sweep — no I/O, no registry access, no discovery/
 //              retrieval/hashing/network calls, no rank/trust vocabulary.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function snapshotPresentation(overrides = {}) {
     return Object.freeze({
@@ -308,7 +305,7 @@ function run() {
             '4. no Nostr/Arweave-specific vocabulary — this file operates entirely on already-established World facts, reached only through their existing origin-string encoding');
 
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
-        assert(canvasSource.includes("import { describeWorldSnapshotInspection } from '../../application/snapshot/WorldSnapshotInspection.js';"),
+        assert(canvasSource.includes("import { describeWorldSnapshotInspection } from '../../../application/snapshot/WorldSnapshotInspection.js';"),
             '5. WorldEncounterCanvas.js wires the new pure module in as a plain import, exactly like every other application/ seam it depends on');
 
         console.log('✓ Section K: structural sweep — no I/O, no registry access, no re-invocation of upstream resolution/placement/registration, no hashing, and no rank/trust vocabulary');

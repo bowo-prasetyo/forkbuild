@@ -3,13 +3,10 @@ import { AvatarAnimalCatchIntent } from '../core/AvatarAnimalCatchIntent.js';
 import { AnimalPresence } from '../core/AnimalPresence.js';
 import { Position } from '../core/Position.js';
 import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.700 — Avatar Animal Catch Target Resolution, core/AvatarAnimalCatchTarget.js.
 // Mirrors tests/AvatarVehicleInteractionTarget.test.js's own shape.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function animal(id, x, z, species = ANIMAL_SPECIES.RABBIT) {
     return new AnimalPresence({ id, species, position: new Position(x, 0, z) });

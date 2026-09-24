@@ -1,8 +1,8 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { publicationsPageFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, editorViewFiles, worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.414 — Whole-Product Capability Reassessment.
 //
@@ -72,10 +72,6 @@ function n(message) {
 }
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
-
-async function readSource(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {
@@ -185,7 +181,7 @@ async function run() {
         const publicationsViewCode = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         const catalogCode = await readSource('ui/components/PublicationCatalog.js');
         const worldViewCode = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
-        const mainCode = await readSource('ui/main.js');
+        const mainCode = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         const placeNamingClaimCode = await readSource('core/PlaceNamingClaim.js');
         const authoringViewCode = await readSource('ui/views/PublisherLeaderboardSnapshotClaimAuthoringView.js');
         const workspaceViewCode = await readSource('ui/views/ReconciliationWorkspaceView.js');
@@ -413,7 +409,7 @@ async function run() {
             "from '../../anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistory.js'",
             "from '../../anchoring/base/BaseTransactionInclusionObservationHistory.js'",
             "from '../PublicationReferenceRecordHistory.js'",
-            "from '../../leaderboard/LeaderboardClaimHistory.js'",
+            "from '../../leaderboard/claim/History.js'",
             "from '../../claimSnapshotReconciliation/decision/History.js'"
         ];
         for (const marker of spannedFamilies) {

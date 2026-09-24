@@ -5,12 +5,12 @@ import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { DEFAULT_MAX_STEP_HEIGHT } from '../core/BrickWalkability.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // Regression coverage for the "invisible wall under a floating bridge
 // plate" bug: a flat-topped brick placed far ABOVE the avatar's reach
@@ -27,14 +27,6 @@ import { DEFAULT_MAX_STEP_HEIGHT } from '../core/BrickWalkability.js';
 // allowed to win the max. Both real callers (AvatarStepConstraint#apply()
 // and AvatarMovementController's own currentSupportHeight read) now pass
 // the avatar's own REAL current height as that reference.
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function documentWithBricks(bricks) {
     const world = new World();

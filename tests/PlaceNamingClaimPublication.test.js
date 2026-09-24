@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
 import {
@@ -12,7 +11,9 @@ import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlac
 import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.316 — Place Naming Claim Publication Boundary.
 // See docs/Roadmap.md, "0.9.316 — Place Naming Claim Publication Boundary."
@@ -49,32 +50,14 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //   Section J — regression: existing local-only Place Naming behavior is
 //               unaffected when no publication capability is supplied.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 async function expectRejects(promise, message) {
     let rejected = false;
     try { await promise; } catch { rejected = true; }
     assert(rejected, message);
 }
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 function codeOnlyLines(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeIdentity(label) {

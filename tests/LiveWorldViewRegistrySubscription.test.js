@@ -4,6 +4,7 @@ import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDisc
 import { describeLocalWorldDiscoverySource } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { describePeerWorldDiscoverySource } from '../peer/PeerWorldDataIngress.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.13 — Live World View Registry Subscription.
 //
@@ -45,10 +46,6 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 //            source.origin or listSources() itself, and never calls
 //            deriveWorldEncounters()/assembleWorldDiscoveryInputs()/
 //            describeWorldFromDiscoverySources() directly.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function connectedPeerOf(identityId) {
     return { remoteIdentity: identityId ? { identityId } : null };

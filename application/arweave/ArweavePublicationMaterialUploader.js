@@ -1,3 +1,5 @@
+import { responseContentLength, byteLength } from '../../utils/responseSize.js';
+
 const ARWEAVE_URI_PREFIX = 'ar://';
 const TRANSACTION_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
 const DEFAULT_GATEWAY_URL = 'https://arweave.net';
@@ -390,33 +392,3 @@ export class ArweavePublicationMaterialUploader {
 ArweavePublicationMaterialUploader.DEFAULT_GATEWAY_URL = DEFAULT_GATEWAY_URL;
 ArweavePublicationMaterialUploader.DEFAULT_MAX_MATERIAL_BYTES = DEFAULT_MAX_MATERIAL_BYTES;
 ArweavePublicationMaterialUploader.DEFAULT_MAX_RESPONSE_BYTES = DEFAULT_MAX_RESPONSE_BYTES;
-
-// Pure. Reads a `Content-Length` header off a fetch Response, or `null`
-// when the response carries no headers object, no such header, or a
-// non-numeric value — the cheap first line of defense against an
-// oversized response body; see this file's own header, "Two size
-// ceilings, never conflated." Byte-identical to application/
-// ArweaveWorldEncounterMaterialResolver.js's own private helper of the
-// same name — not imported from it, since that helper is not exported and
-// a GET response and a POST response are different concerns this file
-// keeps deliberately separate; see this file's own header, "same gateway
-// ... opposite direction."
-function responseContentLength(response) {
-    const headers = response && response.headers;
-    if (!headers || typeof headers.get !== 'function') {
-        return null;
-    }
-    const raw = headers.get('content-length');
-    const parsed = raw === null ? NaN : Number(raw);
-    return Number.isFinite(parsed) ? parsed : null;
-}
-
-// Pure. The actual decoded byte length of a string — used for both size
-// ceilings this file enforces: the outgoing `material` (against
-// `maxMaterialBytes`) and the gateway's own response body (against
-// `maxResponseBytes`, as the always-enforced second line of defense
-// independent of whatever, or whether, a `Content-Length` header
-// claimed).
-function byteLength(text) {
-    return new TextEncoder().encode(text).byteLength;
-}

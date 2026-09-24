@@ -20,6 +20,7 @@ import {
     describeAchievementEvidenceMerge,
     mergeAchievementEvidence
 } from '../application/achievement/AchievementEvidenceMerge.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.115 — Explicit Achievement Evidence Merge.
 //
@@ -56,10 +57,6 @@ import {
 //              mutates it
 //   Section I: merge never returns achievement/badge/rank/leaderboard
 //              vocabulary of any kind
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const NETWORK = 'mainnet';
 const TXID_A1 = 'a'.repeat(64);

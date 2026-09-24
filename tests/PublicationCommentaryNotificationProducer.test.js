@@ -9,9 +9,11 @@ import {
     PUBLICATION_COMMENTED_EVENT_TYPE
 } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
 import { NotificationEvent } from '../core/NotificationEvent.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { execSync } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.275 — Publication Commentary Notification Producer. Covers
 // application/publication/commentary/PublicationCommentaryNotificationProducer.js — the first
@@ -29,26 +31,11 @@ import { readFile } from 'node:fs/promises';
 // Helpers
 // ---------------------------------------------------------------------
 
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
 class WriteFailingStorageProvider extends StorageProvider {
     save() { throw new Error('simulated write failure'); }
     load() { return null; }
     remove() {}
     list() { return []; }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 // A real Publication, discoverable through a real LocalDiscoveryProvider —
@@ -74,15 +61,7 @@ function buildProducer({ discoveryProvider, commentaryStore, commentAuthorProvid
     return new PublicationCommentaryNotificationProducer(addUseCase, discoveryProvider, sink);
 }
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 function codeOnlyLines(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');

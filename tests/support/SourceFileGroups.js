@@ -47,11 +47,30 @@ export function editorViewFiles() {
 }
 
 export function worldEncounterCanvasFiles() {
-    return fileGroup('ui/components/WorldEncounterCanvas.js', 'ui/components/worldEncounterCanvas');
+    return [
+        ...fileGroup('ui/components/WorldEncounterCanvas.js', 'ui/components/worldEncounterCanvas'),
+        ...jsFilesIn('ui/components/worldEncounterCanvas/templates')
+    ];
+}
+
+// ui/main.js, the composition root, with the compose functions it calls.
+export function mainFiles() {
+    return fileGroup('ui/main.js', 'ui/main');
+}
+
+export function ownPublicationPanelFiles() {
+    return [
+        ...fileGroup('ui/components/OwnPublicationPanel.js', 'ui/components/ownPublicationPanel'),
+        ...jsFilesIn('ui/components/ownPublicationPanel/templates')
+    ];
 }
 
 export function worldNavigationSessionFiles() {
     return fileGroup('application/world/WorldNavigationSession.js', 'application/worldNavigation');
+}
+
+export function editorSessionFiles() {
+    return fileGroup('application/editor/EditorSession.js', 'application/editorSession');
 }
 
 // css/main.css only @imports its parts, in cascade order.
@@ -90,12 +109,29 @@ export function peerConnectionsViewSource() {
     return [...parts, viewSourceWithTemplate('ui/views/PeerConnectionsView.js', 'ui/views/peerConnections/templates')].join('\n');
 }
 
+// A split component's modules, then the component with its template
+// expanded: the order checks that span the template need it whole.
+function componentSource(componentPath, partsDir) {
+    const parts = jsFilesIn(partsDir).map((file) => readFileSync(join(root, file), 'utf8'));
+    return [...parts, viewSourceWithTemplate(componentPath, `${partsDir}/templates`)].join('\n');
+}
+
+export function worldEncounterCanvasSource() {
+    return componentSource('ui/components/WorldEncounterCanvas.js', 'ui/components/worldEncounterCanvas');
+}
+
+export function ownPublicationPanelSource() {
+    return componentSource('ui/components/OwnPublicationPanel.js', 'ui/components/ownPublicationPanel');
+}
+
 // The view a template-section file belongs to, or the file itself: a check
 // that counts components counts a view and its template sections once.
 const TEMPLATE_OWNERS = {
     'ui/views/worldView/templates/': 'ui/views/WorldView.js',
     'ui/views/peerConnections/templates/': 'ui/views/PeerConnectionsView.js',
-    'ui/views/decentralizedPublications/templates/': 'ui/views/DecentralizedPublicationsView.js'
+    'ui/views/decentralizedPublications/templates/': 'ui/views/DecentralizedPublicationsView.js',
+    'ui/components/worldEncounterCanvas/templates/': 'ui/components/WorldEncounterCanvas.js',
+    'ui/components/ownPublicationPanel/templates/': 'ui/components/OwnPublicationPanel.js'
 };
 export function owningView(file) {
     const dir = Object.keys(TEMPLATE_OWNERS).find((prefix) => file.startsWith(prefix));

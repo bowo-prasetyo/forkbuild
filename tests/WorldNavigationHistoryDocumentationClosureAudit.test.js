@@ -1,5 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { worldViewFiles, worldNavigationSessionFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.587 — World Navigation History Documentation Closure Audit.
 //
@@ -72,14 +74,7 @@ import { worldViewFiles, worldNavigationSessionFiles, editorViewFiles } from './
 // new router, navigation-state persistence. No navigation-history
 // implementation of any kind is added by this file.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 function codeOnly(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');

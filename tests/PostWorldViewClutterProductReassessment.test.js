@@ -1,7 +1,9 @@
 import { readFile, readdir } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { worldViewFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldEncounterCanvasFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.362 — Post-World-View-Clutter Product Reassessment.
 //
@@ -42,19 +44,11 @@ import { worldViewFiles, worldEncounterCanvasFiles } from './support/SourceFileG
 //      still reachable end to end through the relocated surface.
 //   J. Final product verdict.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function escapeRegExp(literal) {
     return literal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {
@@ -88,7 +82,7 @@ async function run() {
     const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
     const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
     const canvasCodeOnly = codeOnlySource(canvasSource);
-    const ownPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+    const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
     const dialogSource = await rawSource('ui/components/WorldDistributionDialog.js');
     const roadmap = await rawSource('docs/Roadmap.md');
 

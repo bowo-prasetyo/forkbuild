@@ -1,5 +1,6 @@
 import { NostrDiscoveryQueryService } from '../application/nostr/NostrDiscoveryQueryService.js';
 import { DecentralizedDiscoveryQueryService } from '../application/discovery/DecentralizedWorldDiscoveryQuery.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.31 — Nostr Decentralized Discovery Adapter.
 //
@@ -26,10 +27,6 @@ import { DecentralizedDiscoveryQueryService } from '../application/discovery/Dec
 //   Section I: storage is read off the envelope's own uri scheme, never
 //              hard-coded, and degrades to null with no recognizable scheme
 //   Section J: a constructor with no queryImpl throws immediately
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function envelopeOf(overrides = {}) {
     return {

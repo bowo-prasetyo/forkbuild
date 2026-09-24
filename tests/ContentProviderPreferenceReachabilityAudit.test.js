@@ -1,5 +1,7 @@
-import { readFile, readdir } from 'node:fs/promises';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { readdir } from 'node:fs/promises';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.300 — Content Provider Preference Reachability Audit.
 //
@@ -67,14 +69,7 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 // - **No change to any concrete store, the resolver, or
 //   `RoleProviderPreferenceStore`.**
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 function normalizeComment(text) {
     return text.replace(/^\s*\/\/\s?/gm, '').replace(/\s+/g, ' ');
@@ -112,7 +107,7 @@ async function run() {
     // Section A — Reachability.
     // ===============================================================
     {
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
 
         // A1. ui/main.js really does build and provide BOTH coordinators
         // side by side — the 0.9.299 composition is real, not aspirational.
@@ -157,7 +152,7 @@ async function run() {
             if (text.includes('preferredSnapshotPlacementCreationCoordinator')) hits.push(file);
         }
         const KNOWN_INJECTION_KEY_FILES = new Set([
-            'ui/main.js', 'ui/views/DecentralizedPublicationsView.js', 'ui/views/ContentProviderSettingsView.js'
+            'ui/main.js', 'ui/main/composeContentAndSnapshots.js', 'ui/views/DecentralizedPublicationsView.js', 'ui/views/ContentProviderSettingsView.js'
         ]);
         assert(hits.length === KNOWN_INJECTION_KEY_FILES.size && hits.every((f) => KNOWN_INJECTION_KEY_FILES.has(f)),
             `A3a. exactly ui/main.js, ui/views/DecentralizedPublicationsView.js, and ui/views/ContentProviderSettingsView.js mention the "preferredSnapshotPlacementCreationCoordinator" identifier anywhere in production source (found ${hits.length}: ${hits.join(', ')}) — ui/main.js defines the binding, and the two views are its only real consumers (0.9.301, 0.9.302)`);

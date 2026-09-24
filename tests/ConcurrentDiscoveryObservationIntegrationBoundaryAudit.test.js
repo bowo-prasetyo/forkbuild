@@ -1,6 +1,4 @@
-import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import path from 'node:path';
 
 import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
 import { executePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommand.js';
@@ -13,7 +11,8 @@ import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.434 — Concurrent Discovery Observation Integration Boundary Audit.
 //
@@ -77,10 +76,6 @@ function n(message) {
     return `${assertionCount + 1}. ${message}`;
 }
 
-const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
-async function source(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
 function codeOnly(text) {
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
@@ -343,7 +338,7 @@ async function run() {
             n('A10. ui/views/WorldView.js genuinely still defines distributeWorldEncounterPublication() with exactly the shape this section reproduces'));
         assert(viewSource.includes("serializedMaterial: JSON.stringify(publication.toJSON())") && viewSource.includes('discoveryProvider'),
             n('A11. ...forwarding serializedMaterial and discoveryProvider exactly as this section\'s own wrapper does'));
-        const mainSource = codeOnly(await source('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => source(file)))).join('\n'));
         assert(/composePublicationDistributionCommand\(\{\s*lifecycleStore:\s*publicationDistributionLifecycleStore/.test(mainSource),
             n('A12. ui/main.js genuinely composes the app-wide command with the SAME lifecycleStore instance it provides app-wide — one store, one command, never a second of either'));
 

@@ -1,6 +1,4 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { BaseProofVerifier } from '../anchoring/BaseProofVerifier.js';
@@ -9,6 +7,8 @@ import { BasePublicationTransactionPlanner } from '../base/BasePublicationTransa
 import { encodeBasePublicationCommitment } from '../application/anchoring/base/BasePublicationCommitmentEncoding.js';
 import { BitcoinOpReturnProofVerifier } from '../anchoring/BitcoinOpReturnProofVerifier.js';
 import { ArweaveTransactionDataProofVerifier } from '../anchoring/ArweaveTransactionDataProofVerifier.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.463 — Base Transaction Proof Verifier.
 //
@@ -57,14 +57,8 @@ import { ArweaveTransactionDataProofVerifier } from '../anchoring/ArweaveTransac
 // See docs/Principles.md, "A Proof Verifier Reports 'Cannot Presently
 // Verify' Separately From 'Proof Is Wrong' (0.8.1)."
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
-async function source(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
+
 function codeOnly(src) {
     return src.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }

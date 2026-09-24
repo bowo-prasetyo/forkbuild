@@ -1,5 +1,6 @@
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryRevalidation } from './HistoryRevalidationView.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference } from './HistoryDifference.js';
+import { canonicalDecisionKey } from './DecisionRecord.js';
 
 // 0.8.159 — Reconciliation Decision History Revalidation Difference
 // Projection.
@@ -306,15 +307,4 @@ function partitionRevalidations(revalidations, exclusiveDecisions) {
         }
     }
     return { exclusive, shared };
-}
-
-// The one, uniform decision identity 0.8.149 already established — exact
-// structural equality of `candidate` + `decision` + `decidedAt` — duplicated
-// here for the identical reason 0.8.156's own `canonicalDecisionKey()` is
-// duplicated: 0.8.149 keeps it private, and this file's own partition must
-// apply the exact same key it used internally to produce
-// `difference.sourceOnly`/`difference.targetOnly`, or the two multisets
-// would not line up.
-function canonicalDecisionKey(record) {
-    return JSON.stringify({ candidate: record.candidate, decision: record.decision, decidedAt: record.decidedAt });
 }

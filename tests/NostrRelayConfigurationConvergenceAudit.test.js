@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { NostrRelayConfiguration, DEFAULT_NOSTR_RELAY_URL, isValidNostrRelayUrl } from '../core/NostrRelayConfiguration.js';
 import { ArweaveGatewayConfiguration } from '../core/ArweaveGatewayConfiguration.js';
@@ -18,6 +17,10 @@ import { createNostrPublicationDistributionRuntimeAdapter } from '../application
 import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import { DECENTRALIZED_DISCOVERY_ENVELOPE_PROTOCOL, DECENTRALIZED_DISCOVERY_ENVELOPE_VERSION } from '../core/DecentralizedDiscoveryEnvelope.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.370 — Nostr Relay Configuration Convergence Audit.
 //
@@ -101,18 +104,6 @@ import { DECENTRALIZED_DISCOVERY_ENVELOPE_PROTOCOL, DECENTRALIZED_DISCOVERY_ENVE
 // Section B) is a separate, later product question about failure
 // visibility, not a configuration-convergence concern.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
 // A StorageProvider whose bytes live in an externally-owned plain object —
 // never in this instance's own memory. Two SEPARATE instances constructed
 // over the SAME `sharedNamespace` object behave the way two separate page
@@ -187,11 +178,6 @@ function makeUnreachableRelaySocketClass() {
     return UnreachableRelaySocket;
 }
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 async function run() {
     console.log('Running Nostr Relay Configuration Convergence Audit tests...\n');
 
@@ -202,7 +188,7 @@ async function run() {
     {
         const configSource = await source('core/NostrRelayConfiguration.js');
         const storeSource = await source('storage/NostrRelayConfigurationStore.js');
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
 
         const otherFiles = await Promise.all([
             ['application/nostr/NostrDiscoveryQueryService.js', await source('application/nostr/NostrDiscoveryQueryService.js')],

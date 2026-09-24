@@ -9,6 +9,7 @@ import { VehicleType } from '../core/VehicleType.js';
 import { Position } from '../core/Position.js';
 import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.114 — Vehicle Runtime Instance State, core/VehicleInstance.js.
 //
@@ -35,10 +36,6 @@ import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 // the vehicle's own identity, or the deterministic lattice
 // core/VehiclePlacement.js computes independently. See docs/Roadmap.md,
 // 0.9.114.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, message) {
     let threw = false;

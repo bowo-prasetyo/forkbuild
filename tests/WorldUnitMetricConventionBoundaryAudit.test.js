@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { computeCameraFraming, CameraPerspective } from '../core/CameraPerspective.js';
 import { AVATAR_COLLISION_RADIUS, AVATAR_COLLISION_HEIGHT, avatarAabbAt, brickAabb, aabbsOverlap } from '../core/AvatarCollision.js';
@@ -17,6 +16,8 @@ import { DEFAULT_NEARBY_GEOGRAPHIC_PLACE_RADIUS } from '../core/GeographicPlaceN
 import { Position } from '../core/Position.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
 import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.547 — World Unit Metric Convention Boundary Audit.
 //
@@ -57,15 +58,6 @@ import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 //   I — Contract candidate, checked against every fact established above.
 //   J — Flagship physical-scale scenario: real production objects composed.
 //   K — Deliberate exclusions and production guard.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 // Extracts a `const NAME = <number>` (or `export const`) literal from
 // source text — used only for constants this file deliberately does not

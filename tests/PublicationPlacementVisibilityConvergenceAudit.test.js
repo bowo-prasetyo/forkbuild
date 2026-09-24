@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
@@ -15,7 +14,6 @@ import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
@@ -25,6 +23,10 @@ import { PlacePublicationUseCase } from '../application/placement/PlacePublicati
 import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
 import { DiscoverPlacementsUseCase } from '../application/placement/DiscoverPlacementsUseCase.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
+import { worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.309 — Publication Placement Visibility Convergence Audit.
 //
@@ -64,18 +66,6 @@ import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 //                              v                         v
 //                       existing World UI       OwnPublicationPanel
 
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function assertThrows(fn, message) {
     try {
         fn();
@@ -99,9 +89,6 @@ function makeDocument(title, brickCount = 1) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 // Same restraint every other structural-sweep test in this codebase
 // already applies: full-line `//` comments are stripped before
@@ -202,7 +189,7 @@ async function runTests() {
 
         // Structural: both routes terminate at the exact same one-line
         // registry call — never two independent queries.
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const discoverSource = await rawSource('application/placement/DiscoverPlacementsUseCase.js');
         assert(codeOnly(sessionSource).includes('this._placementRegistry.findByPublicationId(publicationId)'),
             'A4. getPlacementsForPublication() calls the registry\'s own findByPublicationId()');
@@ -214,7 +201,7 @@ async function runTests() {
         // directly, meaning placement facts have exactly ONE storage
         // location, reached through exactly one method, fanned out through
         // two thin readers.
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         for (const forbidden of ["LocalPlacementRegistry", "from '../../placement/PlacementRegistry.js'", 'DiscoverPlacementsUseCase']) {
             assert(!codeOnly(panelSource).includes(forbidden), `A6. OwnPublicationPanel.js never references '${forbidden}' — it only ever receives placements through the injected command`);
         }
@@ -315,7 +302,7 @@ async function runTests() {
         // (unlike _resolvePlacementRecord/getPlacementInfoForPublication,
         // which both deliberately DO) — proving 0.9.308 added a capability
         // rather than silently redefining an existing one.
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const pluralBody = methodBody(codeOnly(sessionSource), 'getPlacementsForPublication\\(publicationId\\)', 4);
         assert(!pluralBody.includes('.reduce('), 'D6. getPlacementsForPublication()\'s own body performs no "latest" reduction');
         assert(!pluralBody.includes('getPlacementInfoForPublication'), 'D7. getPlacementsForPublication() does not call the singular method internally — the two are independent readers of the same registry, not one wrapping the other');
@@ -436,7 +423,7 @@ async function runTests() {
         // Structural: neither the plural reader nor the shared enrichment
         // helper ever touches the World-facing collaborators — only the
         // placement registry.
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const source = codeOnly(sessionSource);
         const pluralBody = methodBody(source, 'getPlacementsForPublication\\(publicationId\\)', 4);
         const enrichBody = methodBody(source, '_enrichPlacementRecord\\(record\\)', 4);
@@ -447,7 +434,7 @@ async function runTests() {
 
         // The panel's own refresh method never reaches for World/renderer
         // vocabulary either — it only calls the one injected command.
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const refreshBody = methodBody(codeOnly(panelSource), 'refreshPublicationPlacements\\(\\)', 8);
         for (const forbidden of ['worldLayoutProvider', 'addWorld', 'removeWorld', '_session', 'spatialIndexProvider']) {
             assert(!refreshBody.includes(forbidden), `G6. refreshPublicationPlacements()'s own body never references '${forbidden}' — the visibility panel never mutates World state`);
@@ -547,8 +534,8 @@ async function runTests() {
     // lifecycle semantics, no new placement domain model.
     // -----------------------------------------------------------------
     {
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const sessionCode = codeOnly(sessionSource);
         const panelCode = codeOnly(panelSource);
 

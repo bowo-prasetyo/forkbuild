@@ -8,6 +8,8 @@ import {
 } from '../storage/NotificationEventStore.js';
 import { NotificationEvent } from '../core/NotificationEvent.js';
 import { NotificationCollisionOutcome } from '../core/NotificationDeduplicationPolicy.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.281 — NotificationEventStore Persistence Boundary.
 //
@@ -73,14 +75,6 @@ import { NotificationCollisionOutcome } from '../core/NotificationDeduplicationP
 // Helpers
 // ---------------------------------------------------------------------
 
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
 const EVENT_TYPE = 'publication.commented';
 const OTHER_EVENT_TYPE = 'publication.mentioned';
 
@@ -99,10 +93,6 @@ function makeEvent({
         createdAt,
         payload: { commentaryId, ...payload }
     });
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);

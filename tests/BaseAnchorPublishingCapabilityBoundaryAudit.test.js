@@ -1,8 +1,7 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.466 — Base Anchor Publishing Capability Boundary Audit.
 //
@@ -117,9 +116,7 @@ function n(message) {
 }
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
-async function source(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
+
 async function sourceExists(relativePath) {
     try { await source(relativePath); return true; } catch { return false; }
 }
@@ -149,7 +146,7 @@ async function run() {
         assert(!/ANCHOR_PUBLISHING|AnchorPublisher/.test(roleSrc), n('A2. no ANCHOR_PUBLISHING (or similarly named) role exists — AnchorPublisher was never gated by the RoleProviderRole/RoleProviderResolver mechanism at all, unlike ProofVerifier'));
 
         assert(await sourceExists('anchoring/BaseProofVerifier.js'), n('A3. anchoring/BaseProofVerifier.js exists — the PROOF_AND_ANCHORING half of 0.9.460 Section K4 is now closed (0.9.461-0.9.465), confirmed fresh rather than assumed from the requester\'s own summary'));
-        const mainSrc = codeOnly(await source('ui/main.js'));
+        const mainSrc = codeOnly((await Promise.all(mainFiles().map((file) => source(file)))).join('\n'));
         assert(/baseProofVerifier/.test(mainSrc) && /externalAnchorProofVerifierRegistry\.register\(baseProofVerifier\)/.test(mainSrc), n('A4. baseProofVerifier is constructed and registered into the real production registry in ui/main.js — confirmed reachable, not merely present in source'));
 
         assert(!(await sourceExists('anchoring/BaseAnchorPublisher.js')), n('A5. anchoring/BaseAnchorPublisher.js does not exist — the second half of 0.9.460 Section K4 remains open, confirmed fresh'));
@@ -207,7 +204,7 @@ async function run() {
     // precedents, read directly from the real composition root.
     // ===============================================================
     {
-        const mainSrc = await source('ui/main.js');
+        const mainSrc = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
 
         assert(/bitcoinBroadcaster = \{\s*async broadcast\(\) \{\s*return \{\s*broadcast: false,\s*unavailable: true,/.test(mainSrc.replace(/\n\s*/g, ' ')), n('D1. Bitcoin\'s real production AnchorPublisher wiring uses an honest, always-broadcast:false/unavailable:true stub, quoted verbatim from ui/main.js — not paraphrased'));
         assert(/deliberately NOT a real Bitcoin broadcaster/.test(mainSrc), n('D2. ui/main.js\'s own comment confirms this is deliberate, not an oversight'));

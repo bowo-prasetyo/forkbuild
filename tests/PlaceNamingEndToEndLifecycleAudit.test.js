@@ -5,6 +5,7 @@ import { composePlaceNamingDiscoveryRuntime } from '../application/placeNaming/P
 import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNaming/DiscoverPlaceNamingClaimsCommand.js';
 import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
 import { PlaceNamingDiscoveryMonitor } from '../application/placeNaming/PlaceNamingDiscoveryMonitor.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.258 — Comprehensive Place Naming E2E & Lifecycle Audit.
 //
@@ -101,10 +102,6 @@ import { PlaceNamingDiscoveryMonitor } from '../application/placeNaming/PlaceNam
 //   FLAGSHIP:  "Riverside" and "Old River" — two independently authored
 //              claims for the same ground, both displayed, neither
 //              preferred: proximity is never authority
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function flushMicrotasks() {
     for (let i = 0; i < 10; i++) {

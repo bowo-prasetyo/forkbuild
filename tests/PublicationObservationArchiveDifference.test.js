@@ -11,6 +11,7 @@ import {
 import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
 import { BitcoinAnchorPublicationRecord } from '../application/anchoring/bitcoin/BitcoinAnchorPublicationRecord.js';
 import { describePublicationObservationArchiveDifference } from '../application/publication/observationArchive/PublicationObservationArchiveDifference.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.87 — Durable Publication Archive Difference Projection.
 //
@@ -46,10 +47,6 @@ import { describePublicationObservationArchiveDifference } from '../application/
 //              result's own field names
 //   Section L: a changed fact at a shared position is reported as
 //              `changed`, never silently ignored
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const O = PublicationObservationArchiveProvenanceOrigin;
 

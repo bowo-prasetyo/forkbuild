@@ -17,7 +17,8 @@ import { AutosaveDocumentUseCase } from '../application/document/AutosaveDocumen
 import { CheckRecoveryUseCase } from '../application/document/CheckRecoveryUseCase.js';
 import { RecoverDocumentUseCase } from '../application/document/RecoverDocumentUseCase.js';
 import { DiscardRecoveryUseCase } from '../application/document/DiscardRecoveryUseCase.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.205 — Editor Autosave & Recovery Lifecycle Audit.
 //
@@ -53,20 +54,9 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // the same way. Section F below is written as a regression suite for
 // both.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 function assertThrows(fn, message) {
     try { fn(); assert(false, message); }
     catch (e) { /* expected */ }
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function createDocument(title = 'Lifecycle Audit World') {

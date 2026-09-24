@@ -15,6 +15,7 @@ import {
     importPublicationObservationArchive,
     recordPublicationObservationArchiveImport
 } from '../application/publication/observationArchive/PublicationObservationArchiveExport.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.84 — Durable Publication Archive Fingerprint.
 //
@@ -49,10 +50,6 @@ import {
 //              algorithm-level function is strict, mirroring export
 //   Section H: format — exactly 64 lowercase hex characters
 //   Section I: no verification/trust vocabulary anywhere near the view
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const O = PublicationObservationArchiveProvenanceOrigin;
 const HEX64_PATTERN = /^[0-9a-f]{64}$/;

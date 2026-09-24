@@ -1,5 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { describeWorldEncounterInspection } from '../application/worldEncounter/WorldEncounterInspection.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.9.16 — World Encounter Inspection Read Model.
 //
@@ -23,14 +25,6 @@ import { describeWorldEncounterInspection } from '../application/worldEncounter/
 // Section I: no score/rank/trust/verified/nearest/distance vocabulary
 //            anywhere in the result or in this file's own code.
 // Section J: this file imports nothing.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function publicationRow(overrides = {}) {
     return {

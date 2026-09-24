@@ -10,6 +10,7 @@ import {
 } from '../application/publication/observationArchive/PublicationObservationArchiveExport.js';
 import { describePublicationObservationArchiveDifference } from '../application/publication/observationArchive/PublicationObservationArchiveDifference.js';
 import { describePublicationObservationArchiveReplacementReview } from '../application/publication/observationArchive/PublicationObservationArchiveReplacementReview.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.88 — Explicit Publication Archive Replacement Review.
 //
@@ -39,10 +40,6 @@ import { describePublicationObservationArchiveReplacementReview } from '../appli
 //              the review shown BEFORE replacement names the fingerprint
 //              that is about to become current, and that is honestly a
 //              different fingerprint once actually imported
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const O = PublicationObservationArchiveProvenanceOrigin;
 const CONTENT_HASH_A = 'e'.repeat(64);

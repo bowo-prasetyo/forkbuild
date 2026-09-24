@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
@@ -13,7 +12,6 @@ import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
@@ -23,7 +21,10 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PublicationExchange } from '../application/publication/PublicationExchange.js';
 import { PublicationPeerExchange } from '../application/publication/PublicationPeerExchange.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
-import { worldViewFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, editorViewFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.340 — Federated Repository Product Reassessment.
 //
@@ -81,16 +82,6 @@ import { worldViewFiles, editorViewFiles } from './support/SourceFileGroups.js';
 //       every capability in the decision matrix classified as either a
 //       deliberate exclusion or a genuine product gap, from evidence.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 function wait(ms = 20) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -111,14 +102,6 @@ if (typeof globalThis.window === 'undefined') {
             get length() { return store.size; }
         }
     };
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeIdentity(label) {
@@ -572,7 +555,7 @@ async function run() {
         const providerSource = await readSource('discovery/DecentralizedPublicationDiscoveryProvider.js');
         assert(!/StorageProvider|localStorage|IndexedDB|\.load\(/.test(providerSource),
             '4. discovery/DecentralizedPublicationDiscoveryProvider.js imports no persistence collaborator of any kind.');
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         const constructionLine = mainSource.split('\n').find((line) => line.includes('new DecentralizedPublicationDiscoveryProvider()'));
         assert(constructionLine && !/\.load\(|rehydrate|restore/i.test(constructionLine),
             '5. ui/main.js\'s own construction site is a bare `new DecentralizedPublicationDiscoveryProvider()`, with no rehydration step.');

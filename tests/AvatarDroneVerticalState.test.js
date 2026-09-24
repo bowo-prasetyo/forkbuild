@@ -5,10 +5,7 @@ import {
     deriveAvatarDroneVerticalState,
     stepDroneAltitude
 } from '../core/AvatarDroneVerticalState.js';
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
+import { assert } from './support/Assert.js';
 
 async function runTests() {
     // Section A — vocabulary

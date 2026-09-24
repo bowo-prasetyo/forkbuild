@@ -1,8 +1,7 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.511 — Proof/Anchoring Cross-Substrate Capability Parity Audit.
 //
@@ -111,9 +110,7 @@ function n(message) {
 }
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
-async function source(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
+
 async function sourceExists(relativePath) {
     try { await source(relativePath); return true; } catch { return false; }
 }
@@ -180,7 +177,7 @@ async function run() {
     // fresh membership per substrate.
     // ===============================================================
     {
-        const mainSrc = codeOnly(await source('ui/main.js'));
+        const mainSrc = codeOnly((await Promise.all(mainFiles().map((file) => source(file)))).join('\n'));
 
         // Publisher registry.
         assert(/publishers:\s*\[bitcoinAnchorPublisher\]/.test(mainSrc), n('B1. publisher registry: bitcoin registered (stub-backed — see Section C)'));
@@ -204,7 +201,7 @@ async function run() {
     // Section C — Bitcoin: two disconnected creation paths, quoted live.
     // ===============================================================
     {
-        const mainSrc = await source('ui/main.js');
+        const mainSrc = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const flat = flatten(mainSrc);
 
         assert(/bitcoinBroadcaster = \{\s*async broadcast\(\) \{\s*return \{\s*broadcast: false,\s*unavailable: true,/.test(flat),
@@ -240,7 +237,7 @@ async function run() {
     // mints an anchor.
     // ===============================================================
     {
-        const mainSrc = codeOnly(await source('ui/main.js'));
+        const mainSrc = codeOnly((await Promise.all(mainFiles().map((file) => source(file)))).join('\n'));
 
         // D1-D6: none of the six real coordinator CONSTRUCTIONS in
         // ui/main.js receive createPublicationAnchorUseCase or a
@@ -302,7 +299,7 @@ async function run() {
             referencingFiles.every((f) => f === 'application/anchoring/bitcoin/BitcoinAnchorPublicationCoordinator.js' || f === 'application/anchoring/bitcoin/CreateBitcoinAnchorPublicationCoordinatorUseCase.js'),
             n(`E5. across every production directory, only the class's own file and its own factory actually IMPORT or CONSTRUCT it — no composition root, no view (found: ${JSON.stringify(referencingFiles)}; many OTHER files mention its name in cross-referencing comments only, which this check deliberately excludes)`)
         );
-        assert(!/import.*BitcoinAnchorPublicationCoordinator|new BitcoinAnchorPublicationCoordinator|new CreateBitcoinAnchorPublicationCoordinatorUseCase/.test(await source('ui/main.js')), n('E6. ui/main.js — the real composition root — never imports or constructs it, confirmed fresh'));
+        assert(!/import.*BitcoinAnchorPublicationCoordinator|new BitcoinAnchorPublicationCoordinator|new CreateBitcoinAnchorPublicationCoordinatorUseCase/.test((await Promise.all(mainFiles().map((file) => source(file)))).join('\n')), n('E6. ui/main.js — the real composition root — never imports or constructs it, confirmed fresh'));
         assert(await sourceExists('tests/BitcoinAnchorPublicationLifecycle.test.js'), n('E7. yet it is not untested-and-forgotten: a real, dedicated test file already exists for it'));
 
         // E8-E9: the "UniSat" naming clarification — no UniSat-specific
@@ -330,7 +327,7 @@ async function run() {
         assert(/entry\.baseAnchorCreationAttempt = \{\s*creating: false, outcome: ExternalAnchorCreationOutcome\.CREATED, anchor: result\.anchor,/.test(viewSrc), n('F3. a successful publish produces a real anchor, surfaced through the SAME ExternalAnchorCreationOutcome vocabulary Bitcoin/Arweave already use — no separate Base-only outcome type'));
         assert(/loadEvidence\(entry\);/.test(viewSrc.slice(viewSrc.indexOf('async function createBaseAnchor'), viewSrc.indexOf('async function createBaseAnchor') + 2000)), n('F4. and it re-discovers from the anchor catalog immediately after — the created anchor genuinely lands in the SAME catalog Bitcoin/Arweave anchors do'));
 
-        const mainSrc = codeOnly(await source('ui/main.js'));
+        const mainSrc = codeOnly((await Promise.all(mainFiles().map((file) => source(file)))).join('\n'));
         assert(/const \{ baseAnchorPublisher \} = new CreateBaseAnchorPublisherUseCase\(\)\.execute\(\{\s*baseTransactionBroadcaster,\s*createPublicationAnchorUseCase\s*\}\);/.test(mainSrc), n('F5. and in the real composition root, baseAnchorPublisher is built from the SAME baseTransactionBroadcaster and createPublicationAnchorUseCase the generic Bitcoin/Arweave orchestrator itself uses — one shared anchor catalog across every substrate, confirmed fresh'));
 
         // F6-F7: registry absence remains a confirmed, deliberate,
@@ -354,7 +351,7 @@ async function run() {
 
         // G4: verification itself is unaffected — re-confirmed distinct
         // from evidence PRESENTATION, per Section B4-B6.
-        assert(/externalAnchorProofVerifierRegistry\.register\(baseProofVerifier\)/.test(codeOnly(await source('ui/main.js'))), n('G4. baseProofVerifier IS registered (Section B6) — a Base anchor still verifies correctly; only its human-readable, type-specific "view external evidence" presentation is missing, never its underlying validity'));
+        assert(/externalAnchorProofVerifierRegistry\.register\(baseProofVerifier\)/.test(codeOnly((await Promise.all(mainFiles().map((file) => source(file)))).join('\n'))), n('G4. baseProofVerifier IS registered (Section B6) — a Base anchor still verifies correctly; only its human-readable, type-specific "view external evidence" presentation is missing, never its underlying validity'));
 
         console.log('✓ Section G: a real, narrow, well-scoped PRODUCT_GAP — a Base anchor created via createBaseAnchor() (Section F) verifies correctly but renders with no type-specific evidence detail (e.g. a followable Base block-explorer link), degrading silently to the page\'s own generic fallback. This is buildable as a small, additive file with no precedent to invent — anchoring/BitcoinAnchorEvidenceView.js and anchoring/ArweaveAnchorEvidenceView.js are both already-shipping templates for exactly this shape.');
     }
@@ -364,7 +361,7 @@ async function run() {
     // end to end.
     // ===============================================================
     {
-        const mainSrc = codeOnly(await source('ui/main.js'));
+        const mainSrc = codeOnly((await Promise.all(mainFiles().map((file) => source(file)))).join('\n'));
         assert(/const arweaveHostSigner = \{\s*sign\(material\) \{/.test(mainSrc), n('H1. arweaveHostSigner is a real signer object (unlike Bitcoin\'s honest-stub bitcoinBroadcaster)'));
         assert(/const \{ arweaveAnchorPublisher \} = new CreateArweaveAnchorPublisherUseCase\(\)\.execute\(\{\s*signer: arweaveHostSigner,/.test(mainSrc), n('H2. arweaveAnchorPublisher is constructed with that real signer'));
         assert(/externalAnchorPublisherRegistry\.register\(arweaveAnchorPublisher\)/.test(mainSrc), n('H3. and registered into the SAME generic registry Bitcoin\'s stub occupies — the ONLY creation surface Arweave has, and it is genuinely functional (contrast Bitcoin\'s Section C1/D)'));

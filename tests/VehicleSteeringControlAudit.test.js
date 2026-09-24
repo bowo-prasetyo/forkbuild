@@ -17,8 +17,10 @@ import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.129 — Vehicle Steering Control & State Audit.
 //
@@ -74,20 +76,8 @@ import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickReg
 //
 // See docs/Roadmap.md, 0.9.129.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function assertClose(actual, expected, message, epsilon = 1e-6) {
     assert(Math.abs(actual - expected) < epsilon, `${message} (expected ${expected}, got ${actual})`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function buildRegistry() {
@@ -748,7 +738,7 @@ async function runTests() {
         assert(adapterCode.includes('import') && adapterCode.split('import').length - 1 === 1,
             '71. sanity: exactly one import (VehicleSteeringDirection) — the adapter reaches neither the controller nor VehicleMovementHeading.js at all');
 
-        const rawSessionSource = await readFile(new URL('../application/world/WorldNavigationSession.js', import.meta.url), 'utf8');
+        const rawSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const methodMatch = rawSessionSource.match(/_processVehicleSteeringInput\(key, type\)\s*\{([\s\S]*?)\n {4}\}/);
         assert(methodMatch !== null, '72. sanity: _processVehicleSteeringInput() still exists and is extractable as a single method body');
         const methodBody = methodMatch[1];

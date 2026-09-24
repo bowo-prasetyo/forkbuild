@@ -10,7 +10,6 @@ import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
@@ -18,7 +17,9 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { readFile } from 'node:fs/promises';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.289 — Other-Publication Commentary Entry Point.
 //
@@ -45,18 +46,6 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 // test file in this codebase already invokes a component's methods:
 // bound to a plain ctx object mirroring a Vue component instance, never
 // a full Vue mount.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function makeDocument(title, author) {
     const world = new World();
@@ -461,7 +450,7 @@ async function runTests() {
     // remain byte-for-byte as 0.9.248/0.9.285 left them.
     // ---------------------------------------------------------------
     {
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(panelCode.includes('refreshPublicationCommentaries()') && panelCode.includes('submitPublicationCommentary()'),
             '36. OwnPublicationPanel.js still carries its own original commentary methods, untouched');
 
@@ -491,7 +480,7 @@ async function runTests() {
                sectionCode.includes("getPublicationCommentariesCommand: { default: null }") && sectionCode.includes("addPublicationCommentaryCommand: { default: null }"),
             '40. PublicationCard.js (for its toggle) and the PublicationCommentarySection.js it mounts inject the commentary commands as OPTIONAL collaborators — feature hidden when absent');
 
-        const mainCode = await codeOnlySource('ui/main.js');
+        const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(mainCode.includes("new CreatePublicationCommentaryUseCase().execute(identityProvider)"),
             '41. ui/main.js composes the commentary commands through the new, dedicated composition root, sharing the SAME app-wide identityProvider');
         assert(mainCode.includes("app.provide('getPublicationCommentariesCommand', getPublicationCommentariesCommand)") &&

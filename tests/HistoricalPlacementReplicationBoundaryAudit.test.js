@@ -7,7 +7,6 @@ import { ConflictSet } from '../core/ConflictSet.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
 import { Position } from '../core/Position.js';
 import { SpatialBounds } from '../core/SpatialBounds.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 
@@ -26,6 +25,9 @@ import { SetStructurePlacementTransformCommand } from '../application/commands/S
 import { compareWorldOperations, worldOperationSortKey } from '../core/WorldOperationOrder.js';
 import { WorldConflictResolver, WorldOperationOutcome } from '../replication/WorldConflictResolver.js';
 import { WorldCommandPropagationUseCase } from '../application/document/WorldCommandPropagationUseCase.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.312 — Historical Placement Replication Boundary Audit.
 //
@@ -90,15 +92,7 @@ import { WorldCommandPropagationUseCase } from '../application/document/WorldCom
 //               future accidental re-wiring fails this suite, not merely
 //               a future audit.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {
@@ -142,14 +136,6 @@ const HISTORICAL_FAMILY_FILES = new Set([
 
 function outsideFamily(files) {
     return files.filter((f) => !HISTORICAL_FAMILY_FILES.has(f) && !f.startsWith('tests/'));
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function createIdentity(username) {

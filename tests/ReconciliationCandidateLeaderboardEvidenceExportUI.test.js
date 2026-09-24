@@ -12,6 +12,8 @@ import {
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport
 } from '../application/claimSnapshotReconciliation/leaderboard/EvidenceExport.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.187 — Reconciliation Candidate Leaderboard Evidence Export UI
 // Integration.
@@ -40,14 +42,6 @@ import {
 //            filtering/scoring/dedup/sort/server vocabulary of its own;
 //            the download mechanism mirrors the codebase's own existing
 //            "Export Archive" shape rather than inventing a new one.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function detailOf(shared, sourceOnly, targetOnly) {
     return Object.freeze({

@@ -1,4 +1,6 @@
-import { readFile } from 'node:fs/promises';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.368 — Infrastructure Endpoint Product Evolution Reassessment.
 //
@@ -49,16 +51,6 @@ import { readFile } from 'node:fs/promises';
 //   J. Final decision, per candidate: STABLE_STOP / BUILD_NEXT / DEFER /
 //      SEPARATE_PRODUCT.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 function countOccurrences(text, literal) {
     return text.split(literal).length - 1;
 }
@@ -74,8 +66,8 @@ async function run() {
         // A1. Arweave Gateway — COMPLETE. Reconfirmed present: value object,
         // store, settings view, router entry, and exactly two composition
         // call sites in ui/main.js.
-        const mainSource = await source('ui/main.js');
-        assert(mainSource.includes("import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfigurationStore.js';"),
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
+        assert(mainSource.includes("import { ArweaveGatewayConfigurationStore } from '../../storage/ArweaveGatewayConfigurationStore.js';"),
             'A1. ui/main.js imports the 0.9.364 configuration store');
         assert(mainSource.includes('const resolvedArweaveGatewayUrl ='), 'A1. ui/main.js resolves one effective gateway URL');
         assert(countOccurrences(mainSource, 'resolvedArweaveGatewayUrl') >= 3,

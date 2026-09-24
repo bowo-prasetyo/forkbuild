@@ -2,6 +2,7 @@ import { Position } from './Position.js';
 import { VehiclePresence } from './VehiclePresence.js';
 import { VehicleInstance } from './VehicleInstance.js';
 import { VehicleType } from './VehicleType.js';
+import { isFiniteCoordinate, isFiniteXZPosition } from './FiniteCoordinates.js';
 
 // 0.9.80 — Vehicle Dismount Position Resolution.
 // Extended by 0.9.117 — Vehicle-Aware Dismount.
@@ -212,17 +213,6 @@ export const BICYCLE_DISMOUNT_OFFSET_X = 1;
 // own header, "Kept to the vehicle types this codebase can actually
 // place."
 const DISMOUNTABLE_VEHICLE_TYPES = new Set([VehicleType.BICYCLE, VehicleType.MOTORCYCLE, VehicleType.CAR, VehicleType.DRONE]);
-
-function isFiniteCoordinate(value) {
-    return typeof value === 'number' && Number.isFinite(value);
-}
-
-function isFiniteXZPosition(position) {
-    return position !== null
-        && typeof position === 'object'
-        && isFiniteCoordinate(position.x)
-        && isFiniteCoordinate(position.z);
-}
 
 // The one entry point. See this file's own header for the exact
 // reasoning behind every deliberate choice below.

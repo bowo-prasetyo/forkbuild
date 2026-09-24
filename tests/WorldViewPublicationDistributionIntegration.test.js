@@ -1,5 +1,4 @@
 import { readFile } from 'node:fs/promises';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
 import { PublicationDistributionLifecyclePersistence } from '../application/publication/distribution/PublicationDistributionLifecyclePersistence.js';
@@ -7,7 +6,9 @@ import { PublicationDistributionLifecyclePersistenceBridge } from '../applicatio
 import { PublicationDistributionLifecycleRestorer } from '../application/publication/distribution/PublicationDistributionLifecycleRestorer.js';
 import { hydratePublicationDistributionLifecycles } from '../application/publication/distribution/PublicationDistributionLifecycleHydration.js';
 import { describePublicationDistributionLifecycle, PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
-import { worldEncounterCanvasFiles, worldViewSourceWithTemplate } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewSourceWithTemplate, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.100 — Publication Distribution World View Integration.
 //
@@ -69,18 +70,6 @@ import { worldEncounterCanvasFiles, worldViewSourceWithTemplate } from './suppor
 //            imports Arweave/Nostr/executor/orchestrator/transition, and
 //            invents no TRUSTED/PUBLISHED/POPULAR/SUCCESSFUL/ONLINE/
 //            DECENTRALIZED vocabulary in its new wiring.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function distributedLifecycle(publicationId) {
     return describePublicationDistributionLifecycle({
@@ -333,19 +322,18 @@ async function runTests() {
     // Section I — architectural regression: ui/main.js
     // -------------------------------------------------------------
     {
-        const mainSourceUrl = new URL('../ui/main.js', import.meta.url);
-        const mainSource = await readFile(mainSourceUrl, 'utf8');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const mainCodeOnly = mainSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
-        assert(mainCodeOnly.includes("import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';"),
+        assert(mainCodeOnly.includes("import { PublicationDistributionLifecycleMemoryStore } from '../../application/publication/distribution/PublicationDistributionLifecycleStore.js';"),
             '22. ui/main.js imports the existing, unmodified PublicationDistributionLifecycleMemoryStore — never a second store');
-        assert(mainCodeOnly.includes("import { PublicationDistributionLifecyclePersistence } from '../application/publication/distribution/PublicationDistributionLifecyclePersistence.js';"),
+        assert(mainCodeOnly.includes("import { PublicationDistributionLifecyclePersistence } from '../../application/publication/distribution/PublicationDistributionLifecyclePersistence.js';"),
             '23. ...and the existing PublicationDistributionLifecyclePersistence');
-        assert(mainCodeOnly.includes("import { PublicationDistributionLifecyclePersistenceBridge } from '../application/publication/distribution/PublicationDistributionLifecyclePersistenceBridge.js';"),
+        assert(mainCodeOnly.includes("import { PublicationDistributionLifecyclePersistenceBridge } from '../../application/publication/distribution/PublicationDistributionLifecyclePersistenceBridge.js';"),
             '24. ...and the existing PublicationDistributionLifecyclePersistenceBridge');
-        assert(mainCodeOnly.includes("import { PublicationDistributionLifecycleRestorer } from '../application/publication/distribution/PublicationDistributionLifecycleRestorer.js';"),
+        assert(mainCodeOnly.includes("import { PublicationDistributionLifecycleRestorer } from '../../application/publication/distribution/PublicationDistributionLifecycleRestorer.js';"),
             '25. ...and the existing PublicationDistributionLifecycleRestorer');
-        assert(mainCodeOnly.includes("import { hydratePublicationDistributionLifecycles } from '../application/publication/distribution/PublicationDistributionLifecycleHydration.js';"),
+        assert(mainCodeOnly.includes("import { hydratePublicationDistributionLifecycles } from '../../application/publication/distribution/PublicationDistributionLifecycleHydration.js';"),
             '26. ...and the existing hydratePublicationDistributionLifecycles()');
 
         assert(mainCodeOnly.includes('new PublicationDistributionLifecycleMemoryStore(')

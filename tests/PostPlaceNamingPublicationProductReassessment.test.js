@@ -16,8 +16,10 @@ import { PlaceNamingClaimExchange } from '../application/placeNaming/PlaceNaming
 import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldViewFiles, worldViewTemplateFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldViewTemplateFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.322 — Post-Place-Naming Publication Product Reassessment.
 //
@@ -72,10 +74,6 @@ import { worldViewFiles, worldViewTemplateFiles } from './support/SourceFileGrou
 //   Section I — Final product decision: STABLE_WITH_DEFERRED_GAPS — STOP,
 //               decided from Sections A-H, not asserted up front.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 async function flushMicrotasks() {
     for (let i = 0; i < 10; i++) {
         await Promise.resolve();
@@ -83,10 +81,6 @@ async function flushMicrotasks() {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {
@@ -113,14 +107,6 @@ function grepFiles(pattern, dirs, { ignoreCase = false } = {}) {
 
 function grepCount(pattern, dirs, opts = {}) {
     return grepFiles(pattern, dirs, opts).length;
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeIdentity(label) {
@@ -514,7 +500,7 @@ async function run() {
         const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(worldView.includes('Nearby Place Names') && worldView.includes('nearbyPlaceNamingClaimRows'),
             'D5. ui/views/WorldView.js still renders a live "Nearby Place Names" section sourced from this exact automatic pipeline — not merely available machinery nobody surfaces.');
-        assert(!/PlaceNamingGlobalBrowser|GlobalNamingBrowser|AllClaimsBrowser/.test(await rawSource('ui/main.js')),
+        assert(!/PlaceNamingGlobalBrowser|GlobalNamingBrowser|AllClaimsBrowser/.test((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n')),
             'D6. No global naming browser exists anywhere in the composition root — confirming this milestone builds none preemptively.');
 
         console.log('✓ D: A live cross-identity flagship proves the existing PROXIMITY-based discovery pipeline already lets a genuine stranger — no prior relationship, no shared storage, no file ever exchanged — find a name published near them, automatically, with zero additional UI (D1-D3), while genuinely gating on distance rather than showing everything (D4), through UI that already ships (D5). "I want to find names published in THIS region without walking there" is a different, NOT currently evidenced journey — scored separately in Section H, never assumed away and never built here (D6).');
@@ -625,7 +611,7 @@ async function run() {
     // brief names and warns against.
     // ===============================================================
     {
-        const mainJs = await rawSource('ui/main.js');
+        const mainJs = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
 
         // F1. Each arc's own user journey, named precisely, not merely
         // "this domain has a publish button."
@@ -707,7 +693,7 @@ async function run() {
         const compositionSource = await rawSource('application/placeNaming/PlaceNamingPublicationRuntimeComposition.js');
         assert(compositionSource.includes('new NostrPlaceNamingDiscoveryPublisher('),
             'G1b. application/placeNaming/PlaceNamingPublicationRuntimeComposition.js genuinely constructs the publisher in real code, not a comment.');
-        const mainJs = await rawSource('ui/main.js');
+        const mainJs = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(mainJs.includes('composePlaceNamingPublicationRuntime(') && mainJs.includes("app.provide('publishPlaceNamingClaimToNostrCommand'"),
             'G1c. ui/main.js genuinely composes the runtime and provides the resulting command app-wide.');
 

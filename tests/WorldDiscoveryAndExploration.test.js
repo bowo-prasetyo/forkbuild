@@ -5,7 +5,6 @@ import { Brick } from '../core/Brick.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { StructurePlacement } from '../core/StructurePlacement.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
@@ -25,6 +24,8 @@ import { HYDROLOGY_FEATURE } from '../core/Hydrology.js';
 import { Publication } from '../publisher/Publication.js';
 import { WorldPlacement } from '../core/WorldPlacement.js';
 import { SpatialBounds } from '../core/SpatialBounds.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.3.6 — World Discovery & Exploration.
 //
@@ -50,18 +51,6 @@ import { SpatialBounds } from '../core/SpatialBounds.js';
 //   7. Follow uses the existing followAvatarId() path and never touches a
 //      remote replica's own camera
 //   8. Persistence boundary: exploration contributes zero bytes to World
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 // Same stateful camera stub as tests/WorldViewLocationNavigation.test.js:
 // unlike a fire-and-forget stub, this one remembers what was set, so

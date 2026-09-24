@@ -20,13 +20,11 @@ import { CollaborationEnvelope } from '../core/CollaborationEnvelope.js';
 import { TransformSelectionCommand } from '../application/commands/TransformSelectionCommand.js';
 import { DeleteGroupCommand } from '../application/commands/DeleteGroupCommand.js';
 import { RenameGroupCommand } from '../application/commands/RenameGroupCommand.js';
+import { assert } from './support/Assert.js';
 
 // ---------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function createWorld() {
     const world = new World();

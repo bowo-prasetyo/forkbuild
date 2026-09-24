@@ -1,9 +1,6 @@
 import { execSync } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 
@@ -17,6 +14,10 @@ import { PublicationCommentaryDistributionPeerExchange } from '../application/pu
 import { CreatePublicationCommentaryUseCase } from '../application/publication/commentary/CreatePublicationCommentaryUseCase.js';
 import { CreatePublicationCommentaryDistributionPeerExchangeUseCase } from '../application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
+import { ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.622 — Post-Commentary-Distribution Product Reassessment.
 //
@@ -128,9 +129,7 @@ function n(message) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
+
 function codeOnly(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
@@ -155,21 +154,6 @@ function runGuardLive(relativeTestFile) {
     } catch (error) {
         return { passed: false, stdout: `${error.stdout || ''}${error.stderr || ''}` };
     }
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 function installWindowLocalStorage() {
@@ -295,7 +279,7 @@ async function run() {
             n('OBSERVABLE: the SAME real command a UI surface actually calls (getPublicationCommentariesCommand) already returns it — GetPublicationCommentariesUseCase\'s own documented "no discovery-provider call" contract holds; the fact is not hidden from any caller that already knows the publicationId'));
 
         const cardSource = codeOnly(await rawSource('ui/components/PublicationCard.js'));
-        const panelSource = codeOnly(await rawSource('ui/components/OwnPublicationPanel.js'));
+        const panelSource = codeOnly((await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n'));
         assert(/publication:\s*\{\s*type:\s*Object,\s*required:\s*true/.test(cardSource),
             n('DISPLAYED — negative case: ui/components/PublicationCard.js requires an already-resolved Publication OBJECT as a prop; it exposes no path that reaches Commentary from a bare publicationId'));
         assert(/publication:\s*\{\s*type:\s*Object,\s*default:\s*null/.test(panelSource),
@@ -381,7 +365,7 @@ async function run() {
             n('the list reads back in exactly ARRIVAL order (C2, C3, C1) — never re-sorted to creation order (C1, C2, C3) — matching storage/PublicationCommentaryStore.js\'s own "in the order they were originally saved" contract exactly, unmodified by this milestone'));
 
         const cardSource = codeOnly(await rawSource('ui/components/PublicationCard.js'));
-        const panelSource = codeOnly(await rawSource('ui/components/OwnPublicationPanel.js'));
+        const panelSource = codeOnly((await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n'));
         assert(!/commentaries\.sort\(|publicationCommentaries\.sort\(/.test(cardSource) && !/commentaries\.sort\(|publicationCommentaries\.sort\(/.test(panelSource),
             n('neither existing Commentary-rendering component re-sorts the list by date — arrival order IS the documented, and the only, ordering contract this product has ever made'));
 
@@ -393,7 +377,7 @@ async function run() {
     // asymmetry.
     // ===============================================================
     {
-        const mainSource = codeOnly(await rawSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         const peerExchangeSource = codeOnly(await rawSource('application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js'));
         assert(/onCommentaryReceived\(callback\)/.test(peerExchangeSource),
             n('the capability to observe a newly-arrived Commentary locally already exists — application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js#onCommentaryReceived(), built at 0.9.618'));

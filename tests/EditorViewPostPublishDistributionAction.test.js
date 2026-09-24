@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 
 import { executePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommand.js';
@@ -10,14 +9,16 @@ import { PublishDocumentUseCase } from '../application/publication/PublishDocume
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { editorViewFiles, worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.377 — EditorView Post-Publish Distribution Action.
 //
@@ -83,15 +84,7 @@ import { editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 //   Section J — Regression: existing Publication Distribution test files
 //               still pass, run live as real subprocesses.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 function codeOnlyLines(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
@@ -114,14 +107,6 @@ async function flushMicrotasks() {
     for (let i = 0; i < 5; i++) {
         await Promise.resolve();
     }
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeDocument(title) {
@@ -550,7 +535,7 @@ async function run() {
                worldViewCode.includes('serializedMaterial: JSON.stringify(publication.toJSON())'),
             '35. WorldView.js\'s own distributeWorldEncounterPublication() is unchanged except for 0.9.430\'s own discoveryProvider parameter — this milestone\'s EditorView wrapper mirrors its SHAPE, never edits it');
 
-        const mainCode = await codeOnlySource('ui/main.js');
+        const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         const provideMatches = mainCode.match(/app\.provide\('publicationDistributionCommand', publicationDistributionCommand\)/g) || [];
         assert(provideMatches.length === 1,
             '36. ui/main.js still provides publicationDistributionCommand exactly once, at the app root — EditorView reading it a second time cannot cause a second instance to be constructed');

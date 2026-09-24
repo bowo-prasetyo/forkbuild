@@ -1,11 +1,9 @@
-import { readFile } from 'node:fs/promises';
 import { World } from '../core/World.js';
 import { WorldRegion } from '../core/WorldRegion.js';
 import { RegionKind } from '../core/RegionKind.js';
 import { Position } from '../core/Position.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
 import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/LocalPlaceNamingPublicationLog.js';
 import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
@@ -21,7 +19,10 @@ import { PlaceNamingDiscoveryMonitor } from '../application/placeNaming/PlaceNam
 import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNaming/DiscoverPlaceNamingClaimsCommand.js';
 import { composePlaceNamingDiscoveryRuntime } from '../application/placeNaming/PlaceNamingDiscoveryRuntimeComposition.js';
 import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.269 — Nearby Place Naming Claim Adoption Status Indicator.
 //
@@ -67,18 +68,6 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 //   Section Q — FLAGSHIP: Nostr -> discovery -> proximity -> status
 //               presentation -> adoption, end to end
 //   Section R — source-level regression: no second source of truth
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function makeIdentity(label) {
     const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
@@ -207,12 +196,6 @@ function navigateToNearbyPlaceNamingClaim(session, row, feedback, refreshSpatial
     session.focusLocation(row.regionId);
     refreshSpatialUI();
     return true;
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 function codeOnlyLines(source) {
@@ -719,10 +702,10 @@ async function runTests() {
         assert(worldViewCode.includes('function hasPlaceNamingClaim') === false,
             '46. WorldView.js defines no LOCAL hasPlaceNamingClaim()-shaped function of its own — it only ever calls the session\'s.');
 
-        const sessionCode = codeOnlyLines(await rawSource('application/world/WorldNavigationSession.js'));
+        const sessionCode = codeOnlyLines((await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n'));
         assert(sessionCode.includes('hasPlaceNamingClaim(worldId, claimId) {'),
             '47. WorldNavigationSession exposes a real hasPlaceNamingClaim(worldId, claimId) method.');
-        const sessionMethodBlock = extractBetween(sessionCode, 'hasPlaceNamingClaim(worldId, claimId) {', '\n\t}');
+        const sessionMethodBlock = extractBetween(sessionCode, 'hasPlaceNamingClaim(worldId, claimId) {', '\n    }');
         assert(sessionMethodBlock.includes('this._placeNamingClaimUseCase.hasClaim(worldId, claimId)'),
             '48. the session method is a thin pass-through to PlaceNamingClaimUseCase#hasClaim() — no independent lookup logic of its own.');
 

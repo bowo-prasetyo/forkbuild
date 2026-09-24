@@ -7,7 +7,6 @@ import { PlacementRecord } from '../core/PlacementRecord.js';
 import { Position } from '../core/Position.js';
 import { WorldPosition } from '../core/WorldPosition.js';
 import { SpatialBounds } from '../core/SpatialBounds.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 
 import { World } from '../core/World.js';
@@ -17,7 +16,10 @@ import { WorldConflictResolver, WorldOperationOutcome } from '../replication/Wor
 
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
 import { RoleProviderRole, isValidRoleProviderRole } from '../core/RoleProviderRole.js';
-import { worldNavigationSessionFiles, worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.313 — Stable Product Baseline Audit.
 //
@@ -62,15 +64,7 @@ import { worldNavigationSessionFiles, worldEncounterCanvasFiles, editorViewFiles
 //               "interesting API"/"unused class"/"future enhancement."
 //   Section J — Final baseline verdict.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {
@@ -100,14 +94,6 @@ function grepFiles(pattern, dirs, { ignoreCase = false } = {}) {
 
 async function grepCount(pattern, dirs, opts = {}) {
     return grepFiles(pattern, dirs, opts).length;
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function createIdentity(username) {
@@ -243,7 +229,7 @@ async function runTests() {
         const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/publishDocumentUseCase/.test(editorViewSource),
             'B1a. EditorView.js still composes the publish use case — Editor -> Publish.');
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(/createNostrPublicationDistributionRuntimeAdapter/.test(mainSource) && /createArweavePublicationDistributionRuntimeAdapter/.test(mainSource),
             'B1b. ui/main.js still constructs real distribution runtime adapters — Publish -> Distribution.');
         assert(await sourceExists('ui/components/PublicationCatalog.js'),
@@ -275,7 +261,7 @@ async function runTests() {
         const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(sessionSource.includes('getPlacementsForPublication(publicationId)'),
             'B4a. WorldNavigationSession.js still exposes getPlacementsForPublication() returning the PLURAL set — Publication -> Multiple Placements.');
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(panelSource.includes('getPlacementsForPublication') || panelSource.includes('publicationPlacements'),
             'B4b. OwnPublicationPanel.js still renders the plural placements read path — Multiple Placements -> Placement Visibility, the journey\'s own terminus (observation by design, 0.9.308-0.9.310\'s own already-converged finding).');
 
@@ -306,7 +292,7 @@ async function runTests() {
         // C1. Publication placement — OwnPublicationPanel reads placements
         // FROM the navigation session's own registry-backed method; it
         // does not maintain its own placement list independently.
-        const panelSource = codeOnlyLines(await rawSource('ui/components/OwnPublicationPanel.js'));
+        const panelSource = codeOnlyLines((await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n'));
         assert(!/this\._placements\s*=\s*\[\]|localPlacementCache|placementCache/.test(panelSource),
             'C1. OwnPublicationPanel.js carries no independent placement cache/array of its own — it reads through getPlacementsForPublication() each time, never stores a competing copy.');
 
@@ -528,7 +514,7 @@ async function runTests() {
         // RECORD list, unconditionally, independent of whether any of
         // those placements are materialized as a rendered World source
         // right now.
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(panelSource.includes('publicationPlacements'),
             'F1. OwnPublicationPanel.js still renders the plural placement-RECORD list unconditionally — it is not gated on whether any placement is currently materialized/rendered in a live World session.');
 
@@ -667,7 +653,7 @@ async function runTests() {
                     'H. docs/Roadmap.md still carries the standing, unmet evidence bar for placement navigation.');
             }, 'Standing DEFER, reconfirmed unchanged by 0.9.310/0.9.311 and again here (Section A).'],
             ['Placement management duplication ("remove this placement" as a second control)', async () => {
-                const panelSource = codeOnlyLines(await rawSource('ui/components/OwnPublicationPanel.js'));
+                const panelSource = codeOnlyLines((await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n'));
                 assert(!/overlapCount/.test(panelSource),
                     'H. OwnPublicationPanel.js\'s own CODE (its comments merely document the shape overlapCount would take) still never renders overlapCount as a second, duplicate placement-removal/management control — the identical fact already has a more complete answer elsewhere (LocationDocumentsDialog\'s own "View").');
             }, '0.9.310\'s own finding, reconfirmed: a bare duplicate control was correctly deferred, not built.'],

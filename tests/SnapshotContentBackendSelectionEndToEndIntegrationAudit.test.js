@@ -3,7 +3,6 @@ import { readFile } from 'node:fs/promises';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
 import {
@@ -21,7 +20,9 @@ import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/
 import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
 import { executeDiscoverSnapshotCommand } from '../application/snapshot/DiscoverSnapshotCommand.js';
 import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.507 — Snapshot Content Backend Selection End-to-End Integration Audit.
 //
@@ -155,10 +156,6 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 //   object reuse" — Section A confirms that split is deliberate and
 //   pre-existing; this audit does not disturb it.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 let assertionCount = 0;
 function check(condition, message) {
     assertionCount += 1;
@@ -169,14 +166,6 @@ async function expectRejects(promise, message) {
     let rejected = false;
     try { await promise; } catch (e) { rejected = true; }
     check(rejected, message);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function fakeCid(text) {
@@ -326,7 +315,7 @@ async function run() {
     // Section A — production topology.
     // ===============================================================
     {
-        const mainSource = await codeOnlySource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
 
         check((mainSource.match(/new IpfsContentStore\(/g) || []).length >= 1, 'A. an IpfsContentStore is constructed for the creation registry');
         check((mainSource.match(/new ArweaveContentStore\(/g) || []).length === 1, 'A. exactly one ArweaveContentStore is constructed in production — 0.9.506 removed Distribution\'s own former duplicate; Placement and Distribution share this one instance');
@@ -846,7 +835,7 @@ async function run() {
             check(!commandSource.includes(term), `N. application/snapshot/SnapshotDistributionCommand.js never mentions "${term}" either — unchanged by 0.9.506, and this audit confirms it stayed that way`);
         }
 
-        const mainSource = await codeOnlySource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         check(!/const snapshotDistributionCommand = \(bytes, storage = 'ar'\) => executeSnapshotDistributionCommand\(\{[\s\S]{0,400}?discoveryDistributionProvider/.test(mainSource),
             'N. the real snapshotDistributionCommand call site never references discoveryDistributionProvider — the Publication family\'s own, entirely separate Announcement/Discovery substrate selection (0.9.502) stays untouched by Content backend selection');
 

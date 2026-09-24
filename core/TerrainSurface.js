@@ -28,6 +28,7 @@
 // bottom.
 
 import { terrainHeightAt, TERRAIN_HEIGHT_BOUND } from './TerrainHeightField.js';
+import { lerp, smoothstep } from '../utils/interpolation.js';
 
 export const SURFACE_CATEGORY = Object.freeze({
     WATER: 'WATER',   // low depression — looks like a lake, is not one (no water simulation)
@@ -111,10 +112,6 @@ function clamp01(v) {
     return v < 0 ? 0 : v > 1 ? 1 : v;
 }
 
-function lerp(a, b, t) {
-    return a + (b - a) * t;
-}
-
 function lerpColor(a, b, t) {
     return { r: lerp(a.r, b.r, t), g: lerp(a.g, b.g, t), b: lerp(a.b, b.b, t) };
 }
@@ -141,10 +138,6 @@ function variationHash(seed, latticeX, latticeZ) {
     h = Math.imul(h, 0xc2b2ae35);
     h ^= h >>> 16;
     return (h >>> 0) / 4294967296;
-}
-
-function smoothstep(t) {
-    return t * t * (3 - 2 * t);
 }
 
 // Bilinear value noise, in [0, 1) — same shape as

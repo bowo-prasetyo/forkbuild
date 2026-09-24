@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { IpfsRemotePublicationCoordinator } from '../application/ipfs/IpfsRemotePublicationCoordinator.js';
 import { IpfsRemotePublicationState } from '../application/ipfs/IpfsRemotePublicationState.js';
@@ -10,7 +9,8 @@ import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/
 import { executeDiscoverSnapshotCommand } from '../application/snapshot/DiscoverSnapshotCommand.js';
 import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.664 — Node-less Distribution Product Reassessment.
 //
@@ -78,11 +78,6 @@ function assert(condition, message) {
 }
 function n(message) {
     return `${assertionCount + 1}. ${message}`;
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 // Mirrors tests/RemoteIpfsDistributionIntegrationBoundaryAudit.test.js's
@@ -318,7 +313,7 @@ async function run() {
     // =======================================================================
     {
         const registrySource = await source('application/snapshot/placement/SnapshotPlacementStoreRegistry.js');
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
 
         assert(!/class IpfsRemote(Kubo|Fallback|Ranked)ContentStore/.test(await source('content/IpfsRemotePinningContentStore.js')),
             n('D1. no new IPFS provider class was needed to prove Section A\'s retrieval path — content/IpfsRemotePinningContentStore.js is read, never modified, by this reassessment.'));

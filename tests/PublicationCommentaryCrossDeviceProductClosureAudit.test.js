@@ -1,8 +1,5 @@
 import { execSync } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
@@ -20,6 +17,10 @@ import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.j
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { Publication } from '../publisher/Publication.js';
 import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.619 — Publication Commentary Cross-Device Product Closure Audit.
 //
@@ -140,9 +141,6 @@ function wait(ms = 20) {
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
 
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 async function sourceExists(relativePath) {
     try { await readSource(relativePath); return true; } catch { return false; }
 }
@@ -173,21 +171,6 @@ function runGuardLive(relativeTestFile) {
     } catch (error) {
         return { passed: false, stdout: `${error.stdout || ''}${error.stderr || ''}` };
     }
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 function makeCommentaryExchange(identityProvider) {
@@ -269,7 +252,7 @@ async function run() {
         // assembles the running application's app-wide peerMessageBus/
         // registry and wires every sibling capability onto it — now
         // mentions and wires Commentary distribution.
-        const mainSource = codeOnly(await readSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n'));
         assert(/CommentaryDistribution/.test(mainSource),
             n('ui/main.js — the real, single composition root for the running app\'s peer wiring — now imports, constructs, and threads Commentary distribution onto the app-wide peerMessageBus (0.9.620)'));
 

@@ -1,6 +1,6 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.515 — Decentralized Publication & Snapshot Capability Product
 // Reassessment.
@@ -90,9 +90,6 @@ import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/Sour
 const SOURCE_ROOT = new URL('../', import.meta.url);
 const SOURCE_ROOT_PATH = SOURCE_ROOT.pathname;
 
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 function codeOnly(src) {
     return src.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }

@@ -12,6 +12,7 @@ import {
 } from '../core/AvatarInventory.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.670 — Avatar Inventory, core/AvatarInventory.js.
 //
@@ -27,10 +28,6 @@ import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
 //   Section G: 0.9.700 — ANIMAL entries + entriesOf()/kind-scoped
 //              mostRecent()/resolve()/next()/previous() — a shared
 //              inventory that never lets one kind bleed into another
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function runTests() {
     // -------------------------------------------------------------

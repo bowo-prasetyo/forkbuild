@@ -1,3 +1,5 @@
+import { canonicalDecisionKey } from '../decision/DecisionRecord.js';
+
 // 0.8.163 — Historical Decision Revalidation Observation History.
 //
 // 0.8.162 recorded a single, explicit revalidation OBSERVATION — one call,
@@ -178,14 +180,4 @@ export function findPublisherLeaderboardClaimSnapshotReconciliationDecisionReval
     return Object.freeze(list.filter((entry) => (
         entry && entry.observed === true && entry.candidateType === candidateType
     )));
-}
-
-// Decision identity, duplicated from 0.8.149's own `canonicalDecisionKey()`
-// for the identical reason this whole family already duplicates it: a
-// decision record's identity for lookup purposes is its complete
-// structural content — candidate + decision + decidedAt — never `decided`
-// itself (always `true` on any genuine record) and never anything this
-// file infers about the record beyond those three fields.
-function canonicalDecisionKey(record) {
-    return JSON.stringify({ candidate: record.candidate, decision: record.decision, decidedAt: record.decidedAt });
 }

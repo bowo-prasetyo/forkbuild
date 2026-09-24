@@ -1,11 +1,11 @@
-import { readFile } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { Publication } from '../publisher/Publication.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { sanitizeDistributionErrorMessage } from '../application/publication/distribution/DistributionErrorMessageSanitizer.js';
-import { worldEncounterCanvasFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { readSource } from './support/SourceText.js';
 
 // UX-level distribution unification.
 //
@@ -97,12 +97,6 @@ function panelCtx(overrides = {}) {
 // a leg has NOT yet started, never to wait out a leg that has.
 function tick() {
     return new Promise((resolve) => setTimeout(resolve, 0));
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 async function codeOnlySource(relativePath) {
@@ -450,7 +444,7 @@ async function runTests() {
     // ---------------------------------------------------------------
     {
         const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         const editorCode = (await Promise.all(editorViewFiles().map((file) => codeOnlySource(file)))).join('\n');
 
         assert((canvasCode.match(/this\.distributionCommand\(/g) || []).length === 1,

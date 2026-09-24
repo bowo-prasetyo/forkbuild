@@ -8,6 +8,7 @@ import { VehicleInstance, vehicleInstanceFromPresence } from '../core/VehicleIns
 import { VehiclePresence } from '../core/VehiclePresence.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { resolveVehicleHeadingFromMovement } from '../core/VehicleMovementHeading.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.126 — Vehicle Steering Simulation, core/VehicleSteeringSimulation.js.
 //
@@ -30,10 +31,6 @@ import { resolveVehicleHeadingFromMovement } from '../core/VehicleMovementHeadin
 // core/VehicleMovementHeading.js's own resolveVehicleHeadingFromMovement(),
 // fed REALIZED displacement, ever resolves a new heading. See
 // docs/Roadmap.md, 0.9.126.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, message) {
     let threw = false;

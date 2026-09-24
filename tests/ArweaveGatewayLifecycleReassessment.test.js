@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { ArweaveGatewayConfiguration, DEFAULT_ARWEAVE_GATEWAY_URL } from '../core/ArweaveGatewayConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -9,6 +8,10 @@ import { ArweaveWorldEncounterMaterialResolver } from '../application/worldEncou
 import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
 import { composeSnapshotDistributionRuntime } from '../application/snapshot/SnapshotDistributionRuntimeComposition.js';
 import { ContentReference } from '../core/ContentReference.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.367 — Arweave Gateway Settings Product & Lifecycle Reassessment.
 //
@@ -79,10 +82,6 @@ import { ContentReference } from '../core/ContentReference.js';
 // See docs/Roadmap.md, 0.9.367, for this suite's full verdict and
 // rationale.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function expectThrows(fn, message) {
     let threw = false;
     try { fn(); } catch { threw = true; }
@@ -93,14 +92,6 @@ async function expectRejects(promise, message) {
     let threw = false;
     try { await promise; } catch { threw = true; }
     assert(threw, message);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 // Two SEPARATE instances over one externally-owned namespace behave the way
@@ -144,11 +135,6 @@ function makeGatewaySpy({ okPrefix, textBody = '{}' }) {
     return fetchImpl;
 }
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 async function run() {
     // ===============================================================
     // Section A — capability inventory. A self-contained sweep — this
@@ -176,7 +162,7 @@ async function run() {
             'A4. the settings view wires both Save and Use Deployment Default');
 
         // A5. Startup composition.
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         assert(mainSource.includes('new ArweaveGatewayConfigurationStore('), 'A5. ui/main.js constructs the store at startup');
         assert(/resolvedArweaveGatewayUrl\s*=\s*\(arweaveGatewayConfigurationStore\.get\(\)\s*\|\|\s*\{\s*gatewayUrl:\s*DEFAULT_ARWEAVE_GATEWAY_URL\s*\}\)\.gatewayUrl/.test(mainSource),
             'A5. ui/main.js resolves the effective gateway once, at startup, from the store');
@@ -335,7 +321,7 @@ async function run() {
     // now checks each variable's own consumer count independently.
     // ===============================================================
     {
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
 
         // Every EXECUTABLE occurrence of a resolved-gateway variable in
         // ui/main.js — comment-only lines (this file's own design-rationale
@@ -556,7 +542,7 @@ async function run() {
         // did not survive new evidence that the one hardcoded default
         // gateway is now PERMANENTLY unreachable by ordinary programmatic
         // requests (a bot-detection wall) — DEFER was reversed to BUILD.
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const ipfsGatewayUsageCount = (mainSource.match(/composeIpfsGatewayContentStore\(resolvedIpfsGatewayUrls\)/g) || []).length;
         assert(ipfsGatewayUsageCount === 2, `H1. the IPFS gateway content store is built at exactly its two known, narrowly-scoped call sites (Snapshot placement resolution, content verification), now settings-backed and, per 0.9.666, failover-capable — found ${ipfsGatewayUsageCount}`);
         decisions.ipfsGateway = {
@@ -662,7 +648,7 @@ async function run() {
         // The composition root resolves the gateway exactly once, at
         // startup — never inside a function that could run again later
         // in the same process.
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const resolutionOccurrences = (mainSource.match(/resolvedArweaveGatewayUrl\s*=\s*\(arweaveGatewayConfigurationStore\.get\(\)/g) || []).length;
         assert(resolutionOccurrences === 1, `I3. the effective gateway is resolved exactly once in ui/main.js's own top-level composition, never re-resolved inside a callback — found ${resolutionOccurrences}`);
 

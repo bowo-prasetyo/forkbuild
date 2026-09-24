@@ -1,9 +1,6 @@
-import { readFile } from 'node:fs/promises';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
 import {
@@ -40,6 +37,10 @@ import {
 
 import { AuthorizationVerifier } from '../identity/AuthorizationVerifier.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.617 — Publication Commentary Distribution Boundary Audit.
 //
@@ -128,16 +129,6 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 // coverage, including its own Device A -> Device B flagship over the
 // real peer transport.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 function codeOnly(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
@@ -152,23 +143,6 @@ function codeOnly(source) {
 // injected provider, never `window.localStorage` touched directly), applied
 // here to model two physically separate localStorage origins instead of one
 // in-memory fake.
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-// Identical to tests/PublicationCommentaryNotificationProducer.test.js's own
-// helper — a real, authenticated LocalIdentityProvider, never a hand-rolled
-// identity fixture.
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
-}
 
 // A real Publication, discoverable through a real LocalDiscoveryProvider —
 // identical wiring to tests/PublicationCommentaryNotificationProducer.test.js's

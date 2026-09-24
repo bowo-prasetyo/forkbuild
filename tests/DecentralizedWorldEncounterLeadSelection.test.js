@@ -10,6 +10,8 @@ import {
 } from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
 import { describeDecentralizedWorldDiscoveryLead } from '../core/DecentralizedWorldDiscoveryLead.js';
 import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.9.40 — Decentralized Lead Resolution Integration.
 // See docs/Roadmap.md, "0.9.40 — Decentralized Lead Resolution
@@ -37,14 +39,6 @@ import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discover
 //            mirrors 0.9.28's own registry wrapper exactly.
 // Section 6: architectural regression — no association/matching logic of
 //            its own, no core/ import, no rank/trust/preferred vocabulary.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function leadOf(overrides = {}) {
     return describeDecentralizedWorldDiscoveryLead({

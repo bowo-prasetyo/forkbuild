@@ -8,6 +8,7 @@ import { ecologyZoneAt, ECOLOGY_ZONE } from '../core/TerrainEcology.js';
 import { isRiverAt } from '../core/Hydrology.js';
 import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.72 — Deterministic Vehicle Placement, core/VehiclePlacement.js.
 //
@@ -26,10 +27,6 @@ import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
 // arguments — no Math.random, no persisted state, nothing that depends on
 // which region happened to be queried first or in what order. Two
 // replicas querying the same region always get back the identical array.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function tileBounds(tx, tz, tileSize = TERRAIN_TILE_SIZE) {
     const minX = tx * tileSize;

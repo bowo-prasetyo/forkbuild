@@ -68,7 +68,7 @@ import {
 // decisionDetail, observationDetail }`, and each of those is still
 // `{ sharedCount, sourceOnlyCount, targetOnlyCount, shared, sourceOnly,
 // targetOnly }` — the identical fields `ui/components/
-// ReconciliationCandidateEvidenceDetailPanel.js` already knows how to
+// ui/components/reconciliation/CandidateEvidenceDetailPanel.js` already knows how to
 // render. A list this file excludes becomes an EMPTY, frozen array (with
 // its own count at `0`, keeping every count-agrees-with-its-list's-own-
 // length invariant 0.8.182 already holds) — never a differently-shaped
@@ -192,7 +192,7 @@ import {
 //   holds.
 // - **Any markup, DOM nodes, or control-rendering technology choice.**
 //   This file returns plain, frozen, data shaped exactly like 0.8.182's
-//   own result; the existing `ReconciliationCandidateEvidenceDetailPanel.js`
+//   own result; the existing `ui/components/reconciliation/CandidateEvidenceDetailPanel.js`
 //   renders it without any change of its own.
 export function describePublisherLeaderboardClaimSnapshotReconciliationCandidateFilteredEvidenceDetail(evidenceDetail, filter) {
     const sourceEntries = evidenceDetail && Array.isArray(evidenceDetail.candidates)
@@ -296,7 +296,7 @@ function filterCandidateEntry(entry, evidenceKind, replicaRelation) {
 
 // normalizeFilter()/normalizeEvidenceKind()/normalizeReplicaRelation() —
 // duplicated from 0.8.184's own (non-exported) normalization, for the
-// identical reason `ui/components/ReconciliationCandidateLeaderboardTable.js`
+// identical reason `ui/components/reconciliation/CandidateLeaderboardTable.js`
 // already duplicates `candidateIdentityKey()` rather than reaching past
 // its own architectural boundary: 0.8.184 exports its enums and its
 // `describeXxx()`, never its internal normalization helpers. The

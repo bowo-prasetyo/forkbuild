@@ -5,6 +5,7 @@ import {
 } from '../core/TreeCollisionGeometry.js';
 import { naturalFeaturesInRegion, FEATURE_TYPE } from '../core/NaturalFeatureField.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.59 — Deterministic World Tree Collision Geometry, core/TreeCollisionGeometry.js.
 //
@@ -23,10 +24,6 @@ import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 // second, independently-seeded placement decision, and never anything
 // that detects, blocks, or otherwise resolves movement. See docs/Roadmap.md,
 // 0.9.59, for the full milestone story.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function runTests() {
     // -------------------------------------------------------------

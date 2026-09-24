@@ -1,4 +1,5 @@
 import { BitcoinOpReturnProofVerifier } from '../anchoring/BitcoinOpReturnProofVerifier.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.1 — External Anchor Proof Adapters & Verification Registry.
 //
@@ -30,10 +31,6 @@ import { BitcoinOpReturnProofVerifier } from '../anchoring/BitcoinOpReturnProofV
 //
 // See docs/Principles.md, "A Proof Verifier Reports 'Cannot Presently
 // Verify' Separately From 'Proof Is Wrong' (0.8.1)."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const TXID = 'a'.repeat(64);
 

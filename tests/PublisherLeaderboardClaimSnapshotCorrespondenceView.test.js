@@ -1,13 +1,14 @@
-import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
-import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
-import { describePublisherLeaderboardClaimSnapshotAssociation } from '../application/leaderboard/PublisherLeaderboardClaimSnapshotAssociationView.js';
-import { describePublisherLeaderboardClaimSnapshotCorrespondence } from '../application/leaderboard/PublisherLeaderboardClaimSnapshotCorrespondenceView.js';
+import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/snapshot/Snapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/snapshot/Fingerprint.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/claim/Record.js';
+import { describePublisherLeaderboardClaimSnapshotAssociation } from '../application/leaderboard/claimSnapshot/AssociationView.js';
+import { describePublisherLeaderboardClaimSnapshotCorrespondence } from '../application/leaderboard/claimSnapshot/CorrespondenceView.js';
 import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.8.139 — Historical Claim-to-Snapshot Correspondence Projection.
 //
@@ -27,29 +28,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // Section E: snapshot position (never identity) is reported, order is
 //            preserved, no automatic selection, no mutation, determinism,
 //            forbidden vocabulary, zero network access, architecture
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
-}
 
 async function withoutNetworkAccess(fn) {
     let networkCallOccurred = false;
@@ -258,11 +236,11 @@ async function run() {
     // mutation, determinism, vocabulary, network access.
     // ---------------------------------------------------------------
     {
-        const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/leaderboard/PublisherLeaderboardClaimSnapshotCorrespondenceView.js', import.meta.url), 'utf8');
+        const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/leaderboard/claimSnapshot/CorrespondenceView.js', import.meta.url), 'utf8');
         const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
         assert(importLines.length === 2, '33. this file has exactly two imports');
-        assert(importLines.some((line) => line.includes("from './LeaderboardClaimRecord.js'")), '34. imports LeaderboardClaimRecord (0.8.123, UNCHANGED)');
-        assert(importLines.some((line) => line.includes("from './PublisherLeaderboardClaimSnapshotAssociationView.js'")), '35. imports 0.8.137\'s own association view');
+        assert(importLines.some((line) => line.includes("from '../claim/Record.js'")), '34. imports LeaderboardClaimRecord (0.8.123, UNCHANGED)');
+        assert(importLines.some((line) => line.includes("from './AssociationView.js'")), '35. imports 0.8.137\'s own association view');
         for (const forbiddenModule of ['PublisherLeaderboardSnapshotClaimVerification', 'PublisherLeaderboardHistoricalClaimVerification', 'LocalIdentityProvider', 'PublicationObservationArchive', 'PublisherLeaderboardRankingPolicy', 'resolveSigningIdentityId', 'PublisherLeaderboardSnapshotTimelineView', 'PublisherLeaderboardClaimSnapshotAssociationHistoryView']) {
             assert(!importLines.some((line) => line.includes(forbiddenModule)), `36. this file never imports ${forbiddenModule} — no parallel matching engine, no signing/identity/archive/ranking/timeline import`);
         }

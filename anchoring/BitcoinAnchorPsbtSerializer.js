@@ -1,3 +1,5 @@
+import { bytesToHex, hexToBytes, concatBytes, reverseBytes } from '../utils/bytes.js';
+
 const HEX_PATTERN = /^[0-9a-f]+$/i;
 const TXID_PATTERN = /^[0-9a-f]{64}$/i;
 const UINT32_MAX = 0xffffffff;
@@ -387,33 +389,6 @@ function readVarBytes(bytes, offset) {
 // ---------------------------------------------------------------------
 // Byte-level primitives.
 // ---------------------------------------------------------------------
-
-function concatBytes(arrays) {
-    const total = arrays.reduce((sum, array) => sum + array.length, 0);
-    const result = new Uint8Array(total);
-    let offset = 0;
-    for (const array of arrays) {
-        result.set(array, offset);
-        offset += array.length;
-    }
-    return result;
-}
-
-function hexToBytes(hex) {
-    const bytes = new Uint8Array(hex.length / 2);
-    for (let i = 0; i < bytes.length; i++) {
-        bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
-    }
-    return bytes;
-}
-
-function bytesToHex(bytes) {
-    return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
-}
-
-function reverseBytes(bytes) {
-    return Uint8Array.from(bytes).reverse();
-}
 
 function writeUInt32LE(value) {
     const bytes = new Uint8Array(4);

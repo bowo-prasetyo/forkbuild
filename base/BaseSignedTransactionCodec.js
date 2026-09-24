@@ -1,3 +1,5 @@
+import { bytesToHex, hexToBytes, concatBytes } from '../utils/bytes.js';
+
 const HEX_PATTERN = /^0x[0-9a-fA-F]*$/;
 const EIP1559_ENVELOPE_TYPE = 0x02;
 
@@ -551,18 +553,6 @@ function isNonEmptyEvenHex(value) {
     return typeof value === 'string' && value.length > 2 && value.length % 2 === 0 && HEX_PATTERN.test(value);
 }
 
-function hexToBytes(hex) {
-    const bytes = new Uint8Array(hex.length / 2);
-    for (let i = 0; i < bytes.length; i++) {
-        bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
-    }
-    return bytes;
-}
-
-function bytesToHex(bytes) {
-    return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
-}
-
 function bytesToBigInt(bytes) {
     let value = 0n;
     for (const b of bytes) value = (value << 8n) | BigInt(b);
@@ -586,15 +576,4 @@ function minimalBigEndianBytes(value) {
         value >>= 8n;
     }
     return Uint8Array.from(bytes);
-}
-
-function concatBytes(arrays) {
-    const total = arrays.reduce((sum, array) => sum + array.length, 0);
-    const result = new Uint8Array(total);
-    let offset = 0;
-    for (const array of arrays) {
-        result.set(array, offset);
-        offset += array.length;
-    }
-    return result;
 }

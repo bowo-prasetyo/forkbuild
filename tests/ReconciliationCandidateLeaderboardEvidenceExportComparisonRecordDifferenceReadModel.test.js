@@ -4,6 +4,8 @@ import {
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifference
 } from '../application/claimSnapshotReconciliation/evidenceExportComparison/RecordDifferenceView.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.199 — Reconciliation Candidate Leaderboard Evidence Export Comparison
 // Record Difference Read Model.
@@ -26,14 +28,6 @@ import {
 //            reconstructXxx, no sameValue/comparison of its own, no
 //            source/target/sourceOnly/targetOnly reads, no verdict
 //            vocabulary.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function candidateOf(claimId) {
     return Object.freeze({ type: 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT', claimId });

@@ -10,6 +10,7 @@ import { BaseInjectedProviderWalletTransactionSigner } from '../base/BaseInjecte
 import { BaseReviewedSigningCoordinator } from '../application/anchoring/base/BaseReviewedSigningCoordinator.js';
 import { BaseReviewedSigningState, isValidBaseReviewedSigningState } from '../application/anchoring/base/BaseReviewedSigningState.js';
 import { describeBaseReviewedSigning, describeBaseReviewedSigningStateLabel } from '../application/anchoring/base/BaseReviewedSigningView.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.93 — Explicit Base Reviewed Transaction Signing.
 //
@@ -43,10 +44,6 @@ import { describeBaseReviewedSigning, describeBaseReviewedSigningStateLabel } fr
 //              artifact ever exposed by the view.
 //   Section J: BaseInjectedProviderWalletTransactionSigner — the one
 //              concrete EIP-1193 adapter this milestone ships.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

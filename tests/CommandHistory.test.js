@@ -2,6 +2,7 @@ import { Command } from '../application/commands/Command.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { CommandRegistry } from '../application/commands/CommandRegistry.js';
 import { CompositeCommand } from '../application/commands/CompositeCommand.js';
+import { assert } from './support/Assert.js';
 
 class IncrementCommand extends Command {
     constructor({ delta = 1, id, timestamp, executed = false } = {}) {
@@ -46,10 +47,6 @@ class IncrementCommand extends Command {
             executed: json.executed === true
         });
     }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
 }
 
 function assertThrows(fn, expectedMessage, message) {

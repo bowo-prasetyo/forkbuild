@@ -17,6 +17,7 @@ import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.634 — Avatar Shallow-Water Ground Traversal.
 //
@@ -70,10 +71,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //   Section L: full controller integration — a real, wired
 //              AvatarMovementController drives the whole story end to
 //              end through real ticks.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function readSource(relativePath) {
     return readFile(new URL(`../${relativePath}`, import.meta.url), 'utf8');

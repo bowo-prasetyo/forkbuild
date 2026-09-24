@@ -1,6 +1,5 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
@@ -29,7 +28,10 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.602 — Post-Placement World Visibility Product Boundary Audit.
 //
@@ -91,15 +93,6 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 //   J. Regression / no production changes.
 //   K. Closure classification.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 if (typeof globalThis.window === 'undefined') {
     const store = new Map();
     globalThis.window = {
@@ -111,14 +104,6 @@ if (typeof globalThis.window === 'undefined') {
             get length() { return store.size; }
         }
     };
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 const UNIT_BOUNDS = () => new SpatialBounds({ min: { x: -0.5, y: 0, z: -0.5 }, max: { x: 0.5, y: 1, z: 0.5 } });
@@ -425,7 +410,7 @@ and materially larger piece of work.
         assert(!/forkPolicy|isKnownPublication|license|authoriz/i.test(worldLayoutSrc),
             'E1. world-layout/LocalWorldLayoutProvider.js itself contains no fork-policy, licensing, or authorization logic of any kind — structurally reconfirmed here, not merely assumed. Widening its OWN discoveryProvider argument therefore cannot, by construction, touch fork-policy at all.');
 
-        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         const findPublicationsBody = sessionSrc.match(/_findPublications\(documentId\) \{[\s\S]*?\n {4}\}/);
         assert(findPublicationsBody !== null && /this\._discoveryProvider/.test(findPublicationsBody[0]) && !/this\._publicationActionDiscoveryProvider/.test(findPublicationsBody[0]),
             'E2. RECONFIRMED (0.9.601 Section F2): _findPublications() — fork-policy\'s own choke point (_isKnownPublication()/_checkForkPolicy()) — still reads ONLY the narrow discoveryProvider. A worldLayoutProvider widening (Section D3/D4\'s own hypothetical) is a COMPLETELY SEPARATE constructor argument in application/world/CreateWorldViewUseCase.js from the one _findPublications() reads — the two have never been the same object since 0.9.597, and this audit changes nothing about that.');
@@ -444,7 +429,7 @@ and materially larger piece of work.
         const loadDocSrc = await readSource('application/publication/LoadPublicationDocumentUseCase.js');
         assert(/this\._storageProvider\.load\(documentId\)/.test(loadDocSrc),
             'F1. LoadPublicationDocumentUseCase — what WorldNavigationSession#_loadWorld() actually calls to stream a document in (see F2) — reads storage[documentId] DIRECTLY. No discoveryProvider, no contentStore, no contentHash anywhere in this class.');
-        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(/this\._loadPublicationDocumentUseCase\.execute\(documentId, this\._eventBus\)/.test(sessionSrc),
             'F2. _loadWorld(documentId) — the real method updateSpatialView() calls for every document entering the streamed/visible set — calls exactly that use case, with the streamed documentId, and nothing else.');
 
@@ -491,7 +476,7 @@ and materially larger piece of work.
         // as before.
         assert(/this\._loadPublishedWorldSessionUseCase\.execute\(publication, this\._eventBus\)\.getDocument\(\)/.test(sessionSrc),
             'F9. application/world/WorldNavigationSession.js — the class whose _loadWorld()/updateSpatialView() actually drives live World View streaming — now DOES consult LoadPublishedWorldSessionUseCase, as a fallback, exactly the seam this section (F) originally identified as the one remaining piece of real integration work.');
-        const mainSrc = await readSource('ui/main.js');
+        const mainSrc = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(/CreateWorldViewUseCase/.test(mainSrc) && !/CreateWorldViewStreamingUseCase/.test(mainSrc),
             'F10. ui/main.js — the app\'s own real composition root — wires CreateWorldViewUseCase.js (the narrow-discoveryProvider, storage[documentId]-based World View this whole arc has been examining) and never wires application/world/CreateWorldViewStreamingUseCase.js, a SEPARATE, parallel World View streaming subsystem (world/WorldViewStreamingSession.js) that DOES use ResolvePublicationUseCase\'s content-hash-based resolution. That second subsystem exists in this codebase but is orphaned — never reachable from the actual running app.');
 

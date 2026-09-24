@@ -15,8 +15,10 @@ import { PlaceNamingDiscoveryQueryService } from '../application/placeNaming/Pla
 import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNaming/DiscoverPlaceNamingClaimsCommand.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.315 — Place Naming Distribution Gap Audit.
 //
@@ -86,15 +88,7 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 //   Section J — Reconciliation with 0.9.254/0.9.265/0.9.271/0.9.314's own
 //               classifiers, and the final verdict.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {
@@ -129,14 +123,6 @@ async function grepCountInCode(pattern, files) {
         if (new RegExp(pattern).test(code)) count += 1;
     }
     return count;
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeIdentity(label) {
@@ -198,7 +184,7 @@ async function runTests() {
     // production caller path into it.
     // ===============================================================
     {
-        const sessionSource = codeOnlyLines(await rawSource('application/world/WorldNavigationSession.js'));
+        const sessionSource = codeOnlyLines((await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n'));
         const publishIdx = sessionSource.indexOf('publishPlaceNamingClaim(regionId, name) {');
         const publishBody = sessionSource.slice(publishIdx, publishIdx + 400);
         assert(publishIdx > -1 && publishBody.includes('return this._placeNamingClaimUseCase.publish('),
@@ -459,7 +445,7 @@ async function runTests() {
         // Announcement/Discovery role is in scope, and Nostr is already
         // the substrate this codebase chose for exactly that role in this
         // domain — the ONLY discovery source it has ever shipped.
-        const compositionSource = await rawSource('ui/main.js');
+        const compositionSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(compositionSource.includes('NostrPlaceNamingDiscoverySource'),
             'H1. ui/main.js\'s own real composition root already wires Nostr, and only Nostr, as this domain\'s discovery substrate — this audit is not proposing a new provider, only asking whether the existing one\'s read side should gain a write side.');
 

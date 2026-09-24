@@ -14,6 +14,7 @@ import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.122 — Publication Distribution End-to-End Runtime Audit.
 //
@@ -62,10 +63,6 @@ import { Signature } from '../core/Signature.js';
 //   Section H: the "host adapter vs. Arweave protocol implementation"
 //              boundary question — confirmed, not merely asserted, against
 //              the uploader's own already-published contract
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function signedPublication(overrides = {}) {
     const publication = new Publication({
@@ -579,7 +576,8 @@ async function run() {
                 if (!entry.name.endsWith('.js')) continue;
                 const source = await readFile(new URL(entry.name, dirUrl), 'utf8');
                 const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-                const isCompositionRoot = entry.name === 'main.js';
+                // The composition root is ui/main.js plus the compose functions in ui/main/.
+                const isCompositionRoot = entry.name === 'main.js' || /(^|\/)main\/$/.test(relativeLabel);
                 if (isCompositionRoot) {
                     // main.js alone is allowed to RESOLVE window.arweaveWallet/window.nostr
                     // (it is the composition root) but never to construct a

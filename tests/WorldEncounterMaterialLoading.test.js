@@ -4,14 +4,8 @@ import {
     WorldEncounterMaterialLoadStatus,
     WorldEncounterMaterialSource
 } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 class FakeMaterialSource extends WorldEncounterMaterialSource {
     constructor(materialByObjectId = {}) {

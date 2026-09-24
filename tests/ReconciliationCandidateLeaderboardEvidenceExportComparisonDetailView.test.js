@@ -4,6 +4,8 @@ import {
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparison
 } from '../application/claimSnapshotReconciliation/evidenceExportComparison/EvidenceExportComparison.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.193 — Reconciliation Candidate Leaderboard Evidence Export Comparison
 // Detail View.
@@ -29,14 +31,6 @@ import {
 // Section H: determinism, no mutation, frozen output.
 // Section I: vocabulary/import boundary — zero imports, no reconstructXxx,
 //            no ranking/judgment/synchronization vocabulary, no counts.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function detailOf(shared, sourceOnly, targetOnly) {
     return Object.freeze({

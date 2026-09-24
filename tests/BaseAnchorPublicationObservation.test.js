@@ -5,6 +5,7 @@ import { PublicationObservationArchive } from '../application/publication/observ
 import { CreateBaseAnchorPublicationRecordUseCase } from '../application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js';
 import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
 import { BaseTransactionInclusionObservationState } from '../application/anchoring/base/BaseTransactionInclusionObservationState.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.100 — Publication Identity–Scoped Observation Correlation.
 //
@@ -42,10 +43,6 @@ import { BaseTransactionInclusionObservationState } from '../application/anchori
 //   Section H: no verdict vocabulary anywhere in this milestone's own new
 //              surface — no `status`, `confirmed`, `included` (as a
 //              publication-level field), `health`, or `confidence`
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const FORBIDDEN_KEYS = [
     'status', 'confidence', 'health', 'trusted', 'valid', 'canonical', 'reliable',

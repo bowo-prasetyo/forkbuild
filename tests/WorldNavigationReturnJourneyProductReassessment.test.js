@@ -1,6 +1,4 @@
-import { readFile } from 'node:fs/promises';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 
@@ -17,6 +15,9 @@ import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
 import { worldViewFiles, worldNavigationSessionFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.584 — World Navigation & Return Journey Product Reassessment.
 //
@@ -140,10 +141,6 @@ import { worldViewFiles, worldNavigationSessionFiles, worldEncounterCanvasFiles 
 // This file changes no production code unless a genuine gap survives
 // verification (see the verdict block).
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function assertThrows(fn, message) {
     try {
         fn();
@@ -153,21 +150,8 @@ function assertThrows(fn, message) {
     throw new Error(`ASSERT FAILED (expected throw): ${message}`);
 }
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 function codeOnly(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makePublication({ id, documentId, title, author = 'anonymous', contentHash = null }) {

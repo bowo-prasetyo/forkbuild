@@ -4,6 +4,7 @@ import {
 } from '../application/publication/evidence/PublicationEvidenceConvergenceView.js';
 import { ContentBindingSetRelationship } from '../application/publication/evidence/ContentBindingSetRelationship.js';
 import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.13 — Multi-Evidence Comparison & Conflict UX.
 //
@@ -26,10 +27,6 @@ import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerifi
 //
 // See docs/Principles.md, "Evidence Comparison Is Not Adjudication
 // (0.8.13)."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

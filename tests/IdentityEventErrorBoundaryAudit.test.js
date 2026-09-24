@@ -1,10 +1,11 @@
-import { readFile } from 'node:fs/promises';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { IdentityUseCase } from '../application/identity/IdentityUseCase.js';
 import { EventBus } from '../core/events/EventBus.js';
 import { worldViewFiles, peerConnectionsViewSource } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.220 — Identity Event/Error Boundary Characterization Audit.
 //
@@ -51,26 +52,8 @@ import { worldViewFiles, peerConnectionsViewSource } from './support/SourceFileG
 //               for subsequent, unrelated operations.
 //   Section F — Verdict and non-generalization statement.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 function codeOnlyLines(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//'));
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeUseCase(label = 'boundary-audit-identity') {

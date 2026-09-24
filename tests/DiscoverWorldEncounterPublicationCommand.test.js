@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { executeDiscoverWorldEncounterPublicationCommand } from '../application/worldEncounter/DiscoverWorldEncounterPublicationCommand.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.111 — World View Decentralized Publication Retrieval.
 // See docs/Roadmap.md, "0.9.111 — World View Decentralized Publication
@@ -12,10 +13,6 @@ import { executeDiscoverWorldEncounterPublicationCommand } from '../application/
 //              its own result is returned unchanged, not re-described
 //   Section C: a genuine rejection from the runtime propagates unchanged
 //   Section D: architectural regression
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

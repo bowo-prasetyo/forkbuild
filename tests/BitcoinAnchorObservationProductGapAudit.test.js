@@ -14,7 +14,8 @@ import { PublicationObservationArchive } from '../application/publication/observ
 import { CreateBaseAnchorPublicationRecordUseCase } from '../application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js';
 import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
 import { BaseTransactionInclusionObservationState } from '../application/anchoring/base/BaseTransactionInclusionObservationState.js';
-import { publicationsViewSourceWithTemplate } from './support/SourceFileGroups.js';
+import { publicationsViewSourceWithTemplate, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.327 — Bitcoin Anchor Observation Product Gap Audit.
 //
@@ -84,10 +85,6 @@ import { publicationsViewSourceWithTemplate } from './support/SourceFileGroups.j
 //               classifier, reused verbatim.
 //   Section I — Candidate classification.
 //   Section J — Production-change guard.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
 
@@ -185,7 +182,7 @@ async function run() {
         assert(uiConsumers.length === 0, '2. no ui/ file references the orphaned view at all, by name.');
 
         // B2. ui/main.js — the one composition root — never constructs it.
-        const mainSource = await readFile(new URL('ui/main.js', SOURCE_ROOT), 'utf8');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readFile(new URL(file, SOURCE_ROOT), 'utf8')))).join('\n');
         assert(!mainSource.includes('BaseAnchorPublicationObservationView'),
             '3. ui/main.js, the app\'s own composition root, never references the orphaned view.');
 

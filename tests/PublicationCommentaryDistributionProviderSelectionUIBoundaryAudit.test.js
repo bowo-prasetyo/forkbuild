@@ -1,8 +1,6 @@
 import { execSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 
@@ -10,7 +8,10 @@ import { CanCommentOnPublicationUseCase } from '../application/publication/CanCo
 import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
 import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
 import { PublicationCommentaryNotificationProducer } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
-import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.637 — Publication Commentary Distribution Provider Selection UI
 // Boundary Audit.
@@ -102,26 +103,9 @@ function n(message) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
+
 function codeOnly(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 async function run() {
@@ -217,7 +201,7 @@ async function run() {
     {
         const cardSource = (await rawSource('ui/components/PublicationCard.js') + await rawSource('ui/components/PublicationCommentarySection.js'));
         const listSource = (await rawSource('ui/components/PublicationList.js') + await rawSource('ui/components/PublicationCommentarySection.js'));
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
 
         assert(/inject:\s*\{[\s\S]*?addPublicationCommentaryCommand:\s*\{\s*default:\s*null\s*\}/.test(cardSource),
@@ -229,7 +213,7 @@ async function run() {
         assert(/props:\s*\{[\s\S]*?addPublicationCommentaryCommand:\s*\{\s*type:\s*Function,\s*default:\s*null\s*\}/.test(canvasSource),
             n('WorldEncounterCanvas.js declares the identical PROP shape'));
 
-        const mainSource = codeOnly(await rawSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         assert(/app\.provide\('addPublicationCommentaryCommand', addPublicationCommentaryCommand\);/.test(mainSource),
             n('ui/main.js provides exactly one addPublicationCommentaryCommand app-wide — the WebRTC+Nostr/Arweave-wrapping one (0.9.620/0.9.628/0.9.631)'));
         // Precisely which files actually inject THIS key (not merely mention
@@ -254,7 +238,7 @@ async function run() {
         assert(!/nostr|arweave|Distribution|peerExchange|announce/i.test(worldViewSource.match(/function addPublicationCommentaryCommand[\s\S]*?\n {8}\}/)[0]),
             n('confirmed by direct text search: that function body contains zero distribution vocabulary of any kind'));
 
-        const sessionSource = codeOnly(await rawSource('application/world/WorldNavigationSession.js'));
+        const sessionSource = codeOnly((await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n'));
         const sessionMethodMatch = sessionSource.match(/addPublicationCommentary\(\{ publicationId, content, commentaryId, createdAt \}\) \{[\s\S]*?\n {4}\}/);
         assert(sessionMethodMatch !== null, n('WorldNavigationSession.addPublicationCommentary() is found, source-level'));
         assert(/this\._addPublicationCommentaryUseCase\.execute\(\{ publicationId, content, commentaryId, createdAt \}\)/.test(sessionMethodMatch[0]),
@@ -278,7 +262,7 @@ async function run() {
         // Section G technique exactly (that technique, not its conclusion,
         // is what this flagship reuses — the conclusion is reconfirmed
         // independently here).
-        const mainSource = codeOnly(await rawSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         const wrapperMatch = mainSource.match(/function addPublicationCommentaryCommand\(input\) \{([\s\S]*?)\n\}/);
         assert(wrapperMatch !== null, n('PATH 1: the real addPublicationCommentaryCommand wrapper is found in ui/main.js\'s current source'));
         // eslint-disable-next-line no-new-func
@@ -353,7 +337,7 @@ async function run() {
     // Section E — selection identity and no-fan-out, reconfirmed.
     // ===============================================================
     {
-        const mainSource = codeOnly(await rawSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         assert(/const discoveryProvider = \(input && input\.discoveryProvider\) \|\| 'nostr';/.test(mainSource),
             n('the exact selection line is present, unmodified, in current source: input.discoveryProvider, defaulting to the literal string \'nostr\''));
         assert(/const asynchronousDistribution = discoveryProvider === 'arweave'\s*\?\s*publicationCommentaryArweaveDistribution\s*:\s*publicationCommentaryNostrDistribution;/.test(mainSource),
@@ -370,7 +354,7 @@ async function run() {
     {
         const editorSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
-        const mainSource = codeOnly(await rawSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
 
         const uiDefaultsToNostr = /selectedDiscoveryProvider = ref\('nostr'\)/.test(editorSource)
             && /selectedDiscoveryProvider: 'nostr',/.test(canvasSource);
@@ -394,7 +378,7 @@ async function run() {
             'Commentary could not be created.',
             'Commentary could not be loaded.'
         ];
-        const ownPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         for (const text of errorTexts) {
             assert(ownPanelSource.includes(text), n(`OwnPublicationPanel.js's own existing error text "${text}" is scoped to local creation/loading only — never to a distribution outcome, because none is attempted from this component today`));
         }

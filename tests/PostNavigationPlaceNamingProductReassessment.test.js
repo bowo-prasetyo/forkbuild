@@ -10,9 +10,11 @@ import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlac
 import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/LocalPlaceNamingPublicationLog.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { namingView as deriveNamingView } from '../core/PlaceNamingView.js';
 import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.262 — Post-Navigation Place Naming Product Reassessment.
 //
@@ -66,15 +68,7 @@ import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFil
 //               evidence gathered above, not assumed.
 //   Section H — Verdict.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {
@@ -98,14 +92,6 @@ async function grepCount(pattern, dirs, { excludeSuffix = null, ignoreCase = fal
             { cwd: SOURCE_ROOT.pathname }).toString();
     } catch { /* grep exits non-zero on no match; treated as zero hits */ }
     return hits.trim() ? hits.trim().split('\n').length : 0;
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeIdentity(label) {
@@ -358,7 +344,7 @@ async function runTests() {
         // parameter of its own at all, relying entirely on the pkg's own
         // signed claim.
         const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
-        assert(sessionSource.includes('Deliberately NOT scoped to `regionId` or to whatever\n\t// World is currently active'),
+        assert(sessionSource.includes('Deliberately NOT scoped to `regionId` or to whatever\n    // World is currently active'),
             'E3. WorldNavigationSession#importPlaceNamingClaim()\'s own header still states it is deliberately not scoped to the currently active World — the pkg\'s own claim.worldId is the only identity that matters.');
 
         // E4. LIVE PROOF — the identical simultaneous-collision shape

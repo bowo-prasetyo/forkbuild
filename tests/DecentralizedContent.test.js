@@ -2,7 +2,6 @@ import { ContentReference } from '../core/ContentReference.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { Publication } from '../publisher/Publication.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { World } from '../core/World.js';
@@ -15,23 +14,13 @@ import { DocumentManager } from '../application/document/DocumentManager.js';
 import { LoadPublishedWorldSessionUseCase } from '../application/publication/LoadPublishedWorldSessionUseCase.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { computeContentHash } from '../serializer/contentHash.js';
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 const stubIdentityProvider = {
     currentUser: () => ({ username: 'alice', displayName: 'alice', providerId: 'stub' }),
     sign: (data) => ({ signedBy: 'alice', providerId: 'stub', data })
 };
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function createTestDocument(title = 'Test') {
     const world = new World();

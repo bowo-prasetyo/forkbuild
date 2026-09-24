@@ -1,6 +1,4 @@
-import { readFile } from 'node:fs/promises';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
@@ -21,6 +19,10 @@ import { composeWorldEncounterMaterialVerifier } from '../application/worldEncou
 import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.491 — Arweave Announcement/Discovery Production Integration Audit.
 //
@@ -195,10 +197,6 @@ import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/
 //   broader discovery ecosystem.** Explicitly out of scope until a
 //   production-composition audit like this one passes cleanly.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 let assertionCount = 0;
 function check(condition, message) {
     assertionCount += 1;
@@ -219,10 +217,6 @@ function expectThrowsSync(fn, message) {
     return error;
 }
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 function codeOnlyOf(text) {
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
@@ -239,14 +233,6 @@ function decodeBase64Url(value) {
         bytes[i] = binary.charCodeAt(i);
     }
     return new TextDecoder().decode(bytes);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function buildRealSigner(storage, username) {
@@ -344,10 +330,10 @@ async function run() {
     // NOW CLOSED. See this file's own header amendment.
     // ===============================================================
     {
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const mainCodeOnly = codeOnlyOf(mainSource);
 
-        check(/from ['"]\.\.\/application\/arweave\/ArweaveTaggedTransactionUpload\.js['"]/.test(mainCodeOnly),
+        check(/from ['"](\.\.\/)+application\/arweave\/ArweaveTaggedTransactionUpload\.js['"]/.test(mainCodeOnly),
             'A1. ui/main.js now imports application/arweave/ArweaveTaggedTransactionUpload.js — the 0.9.490 adapter is referenced from the production composition root');
         check(/createArweaveTaggedTransactionUpload\(/.test(mainCodeOnly),
             'A2. ...and calls createArweaveTaggedTransactionUpload() — CONSTRUCTED? YES');
@@ -481,7 +467,7 @@ async function run() {
         check(/const arweave = new ArweaveGraphqlDiscoveryQueryService\(/.test(codeOnlyOf(compositionSource)),
             'D1. the real production discovery-services composition unconditionally constructs a real ArweaveGraphqlDiscoveryQueryService — no host-capability gate of any kind, matching this file\'s own header, "Arweave\'s own discovery query... already works with no host capability at all"');
 
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         check(mainSource.includes('composeDecentralizedWorldEncounterMaterialDiscoveryServices(') && mainSource.includes('composeDecentralizedWorldEncounterMaterialDiscoveryRuntime('),
             'D2. ui/main.js genuinely calls both real composition functions — the read/discovery side of this whole loop, unlike the write/announce side (Section A), IS wired into the production composition root');
 

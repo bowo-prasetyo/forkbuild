@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
@@ -12,6 +11,9 @@ import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.588 — Silent Fallback Semantics Product Boundary Audit.
 //
@@ -95,15 +97,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // smallest possible correction, per the requesting brief's own closing
 // paragraph. It did not: see Section K.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 // Strips leading `//` comment markers so a prose regex spanning several
 // wrapped comment lines can match against plain whitespace, exactly as a
@@ -275,7 +269,7 @@ async function main() {
     // milestone.
     // ===============================================================
     {
-        const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
 
         // E1. The panel's own copy for a genuine zero-candidate result.
         assert(/No Snapshots have been announced under this discoveryTag yet\./.test(panelSource),
@@ -433,7 +427,7 @@ async function main() {
         // .catch() (Section E) only ever forwards the ALREADY-collapsed
         // result/rejection; it adds no second layer of error-swallowing
         // of its own around discoverSnapshotCandidatesCommand().
-        const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         const methodStart = panelSource.indexOf('discoverSnapshotCandidates() {');
         const methodEnd = panelSource.indexOf('selectSnapshotCandidate(candidate) {', methodStart);
         const discoveryMethodBody = panelSource.slice(methodStart, methodEnd);

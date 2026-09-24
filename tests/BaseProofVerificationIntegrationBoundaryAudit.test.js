@@ -1,6 +1,4 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
@@ -24,10 +22,12 @@ import { BitcoinAnchorPublisher } from '../anchoring/BitcoinAnchorPublisher.js';
 import { BitcoinOpReturnProofVerifier } from '../anchoring/BitcoinOpReturnProofVerifier.js';
 import { ArweaveAnchorPublisher } from '../anchoring/ArweaveAnchorPublisher.js';
 import { ArweaveTransactionDataProofVerifier } from '../anchoring/ArweaveTransactionDataProofVerifier.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.464 — Base Proof Verification Integration Boundary Audit.
 //
@@ -157,10 +157,6 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 // build that publisher, or wire this verifier in, is the product question
 // this audit hands back — not one it answers by building around it.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 let assertionCount = 0;
 function check(condition, message) {
     assertionCount += 1;
@@ -168,26 +164,9 @@ function check(condition, message) {
 }
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
-async function source(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
+
 function codeOnly(src) {
     return src.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 // The identical helper tests/ArweaveProofAnchorIntegrationBoundaryAudit.test.js
@@ -352,7 +331,7 @@ async function run() {
         // reachable from ui/main.js, the one real composition root this
         // application runs? Contrasted directly against Bitcoin's and
         // Arweave's own, real wiring in the SAME file.
-        const mainSrc = await source('ui/main.js');
+        const mainSrc = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const mainCode = codeOnly(mainSrc);
 
         check(/import \{ CreateBitcoinAnchorProofVerifierUseCase \}/.test(mainCode), 'B5a. sanity: ui/main.js really does import CreateBitcoinAnchorProofVerifierUseCase');
@@ -875,7 +854,7 @@ async function run() {
         // reconfirmed here from ui/main.js directly (Section B already
         // established this; restated here as the UI-facing half of the
         // same finding).
-        const mainCode = codeOnly(await source('ui/main.js'));
+        const mainCode = codeOnly((await Promise.all(mainFiles().map((file) => source(file)))).join('\n'));
         check(!/externalAnchorPublisherRegistry\.register\([^)]*[Bb]ase/.test(mainCode), 'K2. the live externalAnchorPublisherRegistry — the one PublicationAnchorCreationCoordinator#availableAnchorTypes() actually reads from in the running application — never has a Base publisher registered into it; a person using this application today would never see "base" offered as a creation option, regardless of how capable the underlying mechanism is');
 
         // K3. reconfirm, from CURRENT source (not merely cited from

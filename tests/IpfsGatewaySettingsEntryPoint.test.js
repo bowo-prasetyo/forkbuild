@@ -1,10 +1,13 @@
-import { readFile } from 'node:fs/promises';
 
 import { IpfsGatewayConfiguration, DEFAULT_IPFS_GATEWAY_URL, isValidIpfsGatewayUrl } from '../core/IpfsGatewayConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { IpfsGatewayConfigurationStore } from '../storage/IpfsGatewayConfigurationStore.js';
 import { SetIpfsGatewayConfigurationUseCase } from '../application/settings/SetIpfsGatewayConfigurationUseCase.js';
 import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.665 — IPFS Gateway Settings UI.
 //
@@ -26,22 +29,10 @@ import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
 // reopened the question, and docs/Roadmap.md, "0.9.665," for the full
 // reversal record.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function expectThrows(fn, message) {
     let threw = false;
     try { fn(); } catch { threw = true; }
     assert(threw, message);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 class SharedNamespaceStorageProvider extends StorageProvider {
@@ -63,18 +54,13 @@ function makeFetchSpy({ okPrefix, textBody = 'content bytes' } = {}) {
     return fetchImpl;
 }
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 async function run() {
     // ===============================================================
     // Section 0 — settings entry point reachability.
     // ===============================================================
     {
-        const mainSource = await source('ui/main.js');
-        assert(mainSource.includes("import { SetIpfsGatewayConfigurationUseCase } from '../application/settings/SetIpfsGatewayConfigurationUseCase.js';"),
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
+        assert(mainSource.includes("import { SetIpfsGatewayConfigurationUseCase } from '../../application/settings/SetIpfsGatewayConfigurationUseCase.js';"),
             '1. ui/main.js imports the new write use case');
         assert(/new SetIpfsGatewayConfigurationUseCase\(\{\s*ipfsGatewayConfigurationStore\s*\}\)/.test(mainSource),
             '2. ui/main.js wires SetIpfsGatewayConfigurationUseCase against the SAME shared ipfsGatewayConfigurationStore both real retrieval call sites already resolve through, never a second disconnected store');
@@ -265,7 +251,7 @@ async function run() {
         assert(!/IpfsGatewayConfiguration|IpfsGatewayConfigurationStore/.test(pinningSource),
             '37. content/IpfsRemotePinningContentStore.js (remote pinning, the OTHER write path) never references the new gateway configuration classes either');
 
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         // core/IpfsNodeConfiguration.js (a later, sibling milestone) gave the
         // CREATION registry's own IpfsContentStore construction a real
         // apiUrl argument — but a SEPARATE resolved value

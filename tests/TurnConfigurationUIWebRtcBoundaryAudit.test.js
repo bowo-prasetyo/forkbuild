@@ -19,6 +19,9 @@ import { RendezvousConfiguration } from '../core/RendezvousConfiguration.js';
 import { RendezvousConfigurationStore } from '../storage/RendezvousConfigurationStore.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
 import { DEFAULT_ICE_SERVERS } from '../peer/IceServerConfig.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.457 — TURN Configuration UI & WebRTC Integration Boundary Audit.
 //
@@ -142,17 +145,6 @@ function n(message) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 // Records the RAW payload unmodified — used to plant deliberately malformed
 // bytes, mirroring every sibling configuration store's own convention.
@@ -269,7 +261,7 @@ async function run() {
     // pinned against real source, never merely described.
     // ===============================================================
     {
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
 
         assert(/const resolvedTurnServerConfiguration = resolveTurnServerConfiguration\(\{\s*turnServerConfigurationStore\s*\}\);/.test(mainSource),
             n('01. ui/main.js resolves TURN configuration through the real resolveTurnServerConfiguration(), against the real store'));
@@ -393,7 +385,7 @@ async function run() {
         // Structural: ui/main.js's own TURN resolution line calls the
         // provider function, never a bare store.get() (reconfirmed live,
         // beyond Section 0's own pin, against the exact assignment).
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const turnResolutionLine = mainSource.split('\n').find((line) => line.includes('const resolvedTurnServerConfiguration ='));
         assert(turnResolutionLine && turnResolutionLine.includes('resolveTurnServerConfiguration({ turnServerConfigurationStore })'),
             n('C4. the exact line assigning resolvedTurnServerConfiguration calls the provider function, never store.get() inline'));
@@ -789,7 +781,8 @@ async function run() {
             'ui/views/TurnServerSettingsView.js',
             'ui/router/index.js',
             'ui/views/NetworkSettingsView.js',
-            'ui/main.js'
+            'ui/main.js',
+            'ui/main/composeIdentityAndPeers.js'
         ].map((p) => new URL(p, SOURCE_ROOT).pathname));
 
         const TURN_CONCEPT_PATTERN = /TurnServerConfiguration|turnServerConfigurationStore|resolveTurnServerConfiguration|SetTurnServerConfigurationUseCase/;

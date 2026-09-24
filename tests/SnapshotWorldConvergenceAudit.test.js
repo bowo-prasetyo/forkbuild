@@ -14,8 +14,9 @@ import { PlacementRecord } from '../core/PlacementRecord.js';
 import { Position } from '../core/Position.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.162 — Snapshot World Convergence Audit.
 //
@@ -130,18 +131,6 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 //              and that Section A's "three encounters survive" finding is
 //              the CURRENT, intentional behavior of every file involved,
 //              never something this file's own tests work around.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function placeReal(placementRegistry, publicationId, position, owner = 'alice') {
     const record = new PlacementRecord({ publicationId, position, owner });
@@ -454,8 +443,8 @@ async function run() {
         // material sources — a different concept this milestone leaves
         // untouched.
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
-        const publicationRowsBody = canvasSource.match(/publicationRows\(\) \{[\s\S]*?\n {8}\},/)[0];
-        const projectedPublicationsBody = canvasSource.match(/projectedPublications\(\) \{[\s\S]*?\n {8}\},/)[0];
+        const publicationRowsBody = canvasSource.match(/publicationRows\(\) \{[\s\S]*?\n {4}\},?/)[0];
+        const projectedPublicationsBody = canvasSource.match(/projectedPublications\(\) \{[\s\S]*?\n {4}\},?/)[0];
         assert(!/\.origin\b/.test(publicationRowsBody), '5. WorldEncounterCanvas.js\'s own publicationRows computed never reads a discovery source\'s `.origin` field');
         assert(!/\.origin\b/.test(projectedPublicationsBody), '6. WorldEncounterCanvas.js\'s own projectedPublications computed never reads a discovery source\'s `.origin` field — every projected marker is built from objectId/title/x/z alone');
         const markerSource = await readFile(new URL('../ui/components/WorldEncounterMarker.js', import.meta.url), 'utf8');

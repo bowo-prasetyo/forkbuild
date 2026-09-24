@@ -12,6 +12,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.55 — Publication Distribution Lifecycle Persistence Bridge.
 // See docs/Roadmap.md, "0.9.55 — Publication Distribution Lifecycle
@@ -39,10 +40,6 @@ import { Signature } from '../core/Signature.js';
 //   Section L: constructor validation
 //   Section M: malformed observe() input degrades silently
 //   Section N: architectural regression
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 class InMemoryStorageProvider extends StorageProvider {
     constructor() {

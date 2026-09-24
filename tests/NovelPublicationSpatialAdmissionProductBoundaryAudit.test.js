@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { AutomaticSnapshotEncounterCascade } from '../application/snapshot/AutomaticSnapshotEncounterCascade.js';
@@ -24,8 +23,10 @@ import { PlacementRecord } from '../core/PlacementRecord.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Position } from '../core/Position.js';
 import { Publication } from '../publisher/Publication.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldNavigationSessionFiles, worldViewFiles, worldViewTemplateFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, worldViewFiles, worldViewTemplateFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.551 — Novel Publication Spatial Admission Product Boundary Audit.
 //
@@ -108,14 +109,8 @@ import { worldNavigationSessionFiles, worldViewFiles, worldViewTemplateFiles } f
 // claims, or an automatic placement fallback. No production code changes
 // ship with this milestone.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
+
 function codeOnlyLines(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
@@ -127,13 +122,6 @@ function codeOnlyLines(source) {
 // real LocalContentStore, composed through the SAME, unmodified
 // application commands ui/main.js itself wires up.
 // ---------------------------------------------------------------------
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function makeFakeArweaveGateway() {
     const network = new Map();
@@ -486,7 +474,7 @@ async function runTests() {
         // component requires a `publication` prop, and the whole flow is
         // keyed to `this.publication.id` — the panel's own active
         // Publication, never an arbitrary encountered one.
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(/publication:\s*\{/.test(panelSource) && /useClaimedSnapshotPosition\(\)\s*\{/.test(codeOnlyLines(panelSource)),
             'D3. useClaimedSnapshotPosition() exists, scoped to this component\'s own required `publication` prop.');
         assert(/resolveSnapshotWorldPositionClaim\(candidate, publication\.id\)/.test(codeOnlyLines(panelSource)),
@@ -519,7 +507,11 @@ async function runTests() {
             'ui/views/worldView/templates/nearbySection.js',
             'ui/components/WorldEncounterCanvas.js',
             // WorldEncounterCanvas.js's own observer-local methods, moved out of it.
-            'ui/components/worldEncounterCanvas/observerLocalEncounterMethods.js'
+            'ui/components/worldEncounterCanvas/observerLocalEncounterMethods.js',
+            // WorldEncounterCanvas.js's computed properties and template sections.
+            'ui/components/worldEncounterCanvas/canvasProjectionComputed.js',
+            'ui/components/worldEncounterCanvas/selectionInspectionComputed.js',
+            'ui/components/worldEncounterCanvas/templates/observerLocalEncounterPanel.js'
         ]);
         let hits = '';
         try {

@@ -1,5 +1,6 @@
 import { DecentralizedDiscoveryQueryService } from '../discovery/DecentralizedWorldDiscoveryQuery.js';
 import { NostrDiscoveryQueryService } from './NostrDiscoveryQueryService.js';
+import { normalizeRelayUrls } from './NostrRelayUrls.js';
 
 // 0.9.451 — Nostr Publication Relay Set Discovery Alignment.
 //
@@ -193,24 +194,4 @@ export class NostrPublicationRelaySetDiscoveryQueryService extends Decentralized
         }
         return candidates;
     }
-}
-
-// De-duplicates `relayUrls` by trimmed string equality, preserving the
-// order each distinct value first appears in — the identical normalization
-// `NostrMultiRelayPublicationDiscoveryPublisher.js`'s own `normalizeRelayUrls()`
-// already performs for the write side. Non-string or empty-after-trim
-// entries are dropped silently; a genuinely empty result (every entry
-// malformed) is reported by this file's own constructor, above, as "no
-// usable relay URL supplied," never here.
-function normalizeRelayUrls(relayUrls) {
-    const seen = new Set();
-    const normalized = [];
-    for (const relayUrl of relayUrls) {
-        if (typeof relayUrl !== 'string') continue;
-        const trimmed = relayUrl.trim();
-        if (trimmed.length === 0 || seen.has(trimmed)) continue;
-        seen.add(trimmed);
-        normalized.push(trimmed);
-    }
-    return normalized;
 }

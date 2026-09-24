@@ -1,5 +1,7 @@
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryRevalidationPlanIdentity } from '../application/claimSnapshotReconciliation/decision/HistoryRevalidationPlanIdentityView.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationPlanIdentity } from '../application/claimSnapshotReconciliation/PlanIdentity.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.161 — Reconciliation Decision History Revalidation Plan Identity
 // Projection.
@@ -20,14 +22,6 @@ import { describePublisherLeaderboardClaimSnapshotReconciliationPlanIdentity } f
 //            0.8.160), no 0.8.144/0.8.157/archive/plan-reconstruction/
 //            decision-generation/verification imports, no interpretation
 //            vocabulary, no reconstructXxx()
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function divergentEntry(claimId, snapshotIndex, overrides = {}) {
     return Object.freeze({

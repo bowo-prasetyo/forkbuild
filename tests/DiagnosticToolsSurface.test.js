@@ -1,8 +1,9 @@
-import { readFile } from 'node:fs/promises';
 import { applicationFiles } from './support/ApplicationFiles.js';
 
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, ownPublicationPanelSource } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.324 — Diagnostic Tools Surface.
 //
@@ -48,20 +49,13 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 //            automatic counterpart this whole pipeline exists to let a
 //            person manually walk) is untouched.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
+function codeOnlyText(text) {
+    const withoutHtmlComments = text.replace(/<!--[\s\S]*?-->/g, '');
+    return withoutHtmlComments.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
 
 async function codeOnlySource(relativePath) {
-    const text = await rawSource(relativePath);
-    const withoutHtmlComments = text.replace(/<!--[\s\S]*?-->/g, '');
-    return withoutHtmlComments.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
+    return codeOnlyText(await rawSource(relativePath));
 }
 
 // The seven buttons 0.9.151-0.9.172 built, in their own original order —
@@ -100,8 +94,9 @@ const PRIMARY_SCREEN_ACTIONS = [
 async function runTests() {
     console.log('Running Diagnostic Tools Surface tests...\n');
 
-    const rawPanel = await rawSource('ui/components/OwnPublicationPanel.js');
-    const codePanel = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+    // Order checks span the template, so read the panel with it expanded.
+    const rawPanel = ownPublicationPanelSource();
+    const codePanel = codeOnlyText(rawPanel);
 
     // ---------------------------------------------------------------
     // Section A — the popup exists.

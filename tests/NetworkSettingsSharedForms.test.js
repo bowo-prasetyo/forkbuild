@@ -1,6 +1,5 @@
 import { register } from 'node:module';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfigurationStore.js';
 import { IpfsGatewayConfigurationStore } from '../storage/IpfsGatewayConfigurationStore.js';
 import { IpfsNodeConfigurationStore } from '../storage/IpfsNodeConfigurationStore.js';
@@ -21,6 +20,7 @@ import { SetRendezvousConfigurationUseCase } from '../application/settings/SetRe
 import { SetRoleProviderPreferenceUseCase } from '../application/settings/SetRoleProviderPreferenceUseCase.js';
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { splitNonEmptyLines } from '../utils/splitNonEmptyLines.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // Network Settings — shared form behavior.
 //
@@ -46,14 +46,6 @@ let assertionCount = 0;
 function assert(condition, message) {
     assertionCount += 1;
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 // One row per endpoint page. `inputs` names the page's own input refs;

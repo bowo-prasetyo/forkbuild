@@ -30,8 +30,8 @@ import {
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonPairedRecordDifferenceView
 } from '../../application/claimSnapshotReconciliation/evidenceExportComparison/PairedRecordDifferenceView.js';
-import ReconciliationCandidateLeaderboardEvidenceExportComparisonTable from '../components/ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js';
-import ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector from '../components/ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector.js';
+import ReconciliationCandidateLeaderboardEvidenceExportComparisonTable from '../components/reconciliation/EvidenceExportComparisonTable.js';
+import ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector from '../components/reconciliation/EvidenceExportComparisonRecordPairSelector.js';
 
 // 0.8.192/0.8.194/0.8.196/0.8.201 — Reconciliation Candidate Leaderboard
 // Evidence Export Comparison UI, its Detail extension, its Identity

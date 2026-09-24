@@ -15,13 +15,15 @@ import { CreateDelegationUseCase } from '../application/identity/CreateDelegatio
 import { VerifyDelegationUseCase } from '../application/identity/VerifyDelegationUseCase.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
 import { Position } from '../core/Position.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 
 import { World } from '../core/World.js';
 import { StructurePlacement } from '../core/StructurePlacement.js';
 import { MoveStructurePlacementCommand } from '../application/commands/MoveStructurePlacementCommand.js';
 import { WorldConflictResolver, WorldOperationOutcome } from '../replication/WorldConflictResolver.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, worldViewFiles, editorSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.326 — Post-Diagnostic Product Evolution Reassessment.
 //
@@ -106,15 +108,7 @@ import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, worl
 //               clears the bar.
 //   Section J — Final decision.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {
@@ -148,14 +142,6 @@ function grepCount(pattern, dirs, opts = {}) {
 
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 // Section D's own fresh sweep methodology: a recursive walk of every
@@ -260,7 +246,7 @@ async function runTests() {
         // is that SAME capability's presentation, reorganized. Verified
         // structurally: the popup introduces no operation vocabulary of
         // its own (Section C makes this the object of direct proof).
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/class DiagnosticService|application\/Diagnostic/.test(panelSource),
             'A-diagnostic. OwnPublicationPanel.js references no DiagnosticService or application/Diagnostic* file — the popup is presentation, not a second capability.');
 
@@ -356,7 +342,7 @@ async function runTests() {
 
         // B3. Place Naming -> Publish -> Stranger Discovery -> Adoption.
         assert(await sourceExists('ui/components/PlaceNamingPanel.js'), 'B3a. PlaceNamingPanel.js still exists — Place Naming -> name/persist.');
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(mainSource.includes('NostrPlaceNamingDiscoveryPublisher') || mainSource.includes('placeNamingPublicationRuntime'),
             'B3b. ui/main.js still composes the Place Naming publication runtime.');
         assert(await sourceExists('application/placeNaming/PlaceNamingDiscoveryMonitor.js'), 'B3c. PlaceNamingDiscoveryMonitor.js still exists — publish -> stranger discovery.');
@@ -373,7 +359,7 @@ async function runTests() {
 
         // B5. Collaboration -> Remote Operation -> Causal Readiness ->
         // Application.
-        const editorSessionSource = await rawSource('application/editor/EditorSession.js');
+        const editorSessionSource = (await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(editorSessionSource.includes("import { RemoteDocumentOperationApplicationUseCase } from '../document/RemoteDocumentOperationApplicationUseCase.js'")
             && editorSessionSource.includes('new RemoteDocumentOperationApplicationUseCase()'),
             'B5a. application/editor/EditorSession.js still constructs a live RemoteDocumentOperationApplicationUseCase directly.');
@@ -422,7 +408,7 @@ async function runTests() {
             'B8b. WorldView.js still drives the automatic path independently, on its own spatial-observation tick, with no dependency on OwnPublicationPanel\'s own Diagnostic Tools popup state.');
         assert(!worldViewSource.includes('diagnosticToolsOpen'),
             'B8c. WorldView.js never reads or writes diagnosticToolsOpen — the automatic path\'s own tick has no awareness of whether the manual popup is open, closed, or has ever been opened.');
-        assert(codeOnlyLines(await rawSource('ui/components/OwnPublicationPanel.js')).includes("if (!this.discoverSnapshotCandidatesCommand || this.snapshotCandidateDiscoveryExecuting)"),
+        assert(codeOnlyLines((await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n')).includes("if (!this.discoverSnapshotCandidatesCommand || this.snapshotCandidateDiscoveryExecuting)"),
             'B8d. OwnPublicationPanel.js\'s own manual discoverSnapshotCandidates() runs independently on its own click, with no gate on any automatic-path state.');
 
         console.log('✓ B: All six previously-named journeys close, hop to hop, against real, unmodified source, plus one live execution through the World collaboration pipeline (B1-B7, unaffected by the Diagnostic Tools arc). NEW: Automatic Snapshot encounter and Manual Diagnostic recovery verified as two independent entry points sharing the same downstream commands by design — neither reads the other\'s state, neither supersedes the other (B8).');
@@ -435,7 +421,7 @@ async function runTests() {
     // merely carried forward from 0.9.324/0.9.325.
     // ===============================================================
     {
-        const rawPanel = await rawSource('ui/components/OwnPublicationPanel.js');
+        const rawPanel = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const codePanel = codeOnlyLines(rawPanel);
 
         // C1. diagnosticToolsOpen exists ONLY as a data field and inside
@@ -499,7 +485,7 @@ async function runTests() {
             if (KNOWN_EMPTY_STUBS.has(f)) return 'EMPTY_PLACEHOLDER_STUB';
             if (base === 'CreateDelegationUseCase.js' || base === 'VerifyDelegationUseCase.js' || f === 'identity/LocalDelegationResolver.js') return 'DELEGATION_FAMILY';
             if (base === 'CreateReplicationUseCase.js') return 'HISTORICAL_REPLICATION_FAMILY';
-            if (/^PublisherLeaderboardClaimSnapshot.*View\.js$/.test(base)) return 'RECONCILIATION_DECISION_FAMILY';
+            if (/^PublisherLeaderboardClaimSnapshot.*View\.js$/.test(base) || /^application\/leaderboard\/claimSnapshot\/.*View\.js$/.test(f)) return 'RECONCILIATION_DECISION_FAMILY';
             if (base === 'BaseAnchorPublicationObservationView.js') return 'BITCOIN_ANCHOR_ORPHANED_VIEW';
             if (base === 'DecentralizedPublicationDiscoveryProvider.js') return 'DECENTRALIZED_DISCOVERY_SEAM';
             if (base === 'LoadPublishedWorldSessionUseCase.js') return 'BYPASSED_COMPOSITION_ROOT'; // ResolvePublicationUseCase's own superseding sibling — same subtree, same bucket (D3c)
@@ -720,7 +706,7 @@ async function runTests() {
         // (which OwnPublicationPanel's manual click uses) the EXACT SAME
         // discoverSnapshotCandidatesCommand reference — one const, two
         // consumers, never two separately-constructed commands.
-        const mainSource = codeOnlyLines(await rawSource('ui/main.js'));
+        const mainSource = codeOnlyLines((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         assert(/const discoverSnapshotCandidatesCommand = \(\) => executeDiscoverSnapshotCandidatesCommand/.test(mainSource),
             'F1a. ui/main.js still defines discoverSnapshotCandidatesCommand as ONE const.');
         assert(mainSource.includes("app.provide('discoverSnapshotCandidatesCommand', discoverSnapshotCandidatesCommand)"),
@@ -776,7 +762,7 @@ async function runTests() {
         // F3. The explicit empty-state, still on file — a user who opens
         // Diagnostic Tools and finds nothing is told exactly that, not
         // left to guess between "found nothing" and "never asked."
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(panelSource.includes('No Snapshots have been announced under this discoveryTag yet.'),
             'F3. The manual popup still renders an explicit, distinct empty-state message — never collapsed with the "not yet run" (null) state.');
 

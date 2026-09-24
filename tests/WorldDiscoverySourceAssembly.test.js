@@ -5,10 +5,7 @@ import {
 } from '../core/WorldDiscoverySource.js';
 import { assembleWorldDiscoveryInputs } from '../core/WorldDiscoverySourceAssembly.js';
 import { deriveWorldEncounters } from '../core/WorldEncounter.js';
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
+import { assert } from './support/Assert.js';
 
 // ---------------------------------------------------------------------
 // 1. Flagship: three sources, all six dimensions, source order preserved

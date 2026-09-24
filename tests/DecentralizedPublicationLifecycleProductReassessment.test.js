@@ -1,8 +1,8 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { describeRoleProviderPreferenceSettings } from '../application/settings/RoleProviderPreferenceSettingsView.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.517 — Decentralized Publication Lifecycle Product Reassessment.
 //
@@ -61,9 +61,6 @@ import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles } fro
 const SOURCE_ROOT = new URL('../', import.meta.url);
 const SOURCE_ROOT_PATH = SOURCE_ROOT.pathname;
 
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 function codeOnly(src) {
     return src.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
@@ -132,7 +129,7 @@ async function run() {
         // B1. Prove, from real production wiring (never a hand-typed
         // fixture), that 'ar' is a genuine, reachable CONTENT provider
         // key on this settings page — not a hypothetical.
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         check(mainSource.includes("snapshotPlacementStoreRegistry.register(arweaveSnapshotPlacementContentStore);"),
             "B1a. ui/main.js still registers the real Arweave content store into the SAME snapshotPlacementStoreRegistry the Content Provider settings page's own availableProviderKeys is read from");
         check(mainSource.includes("get storage() { return 'ar'; }") || (await source('content/ArweaveContentStore.js')).includes("get storage() { return 'ar'; }"),
@@ -268,7 +265,7 @@ async function run() {
         // Publisher-facing evidence fields — explicitly labeled, opt-in,
         // reconfirmed by direct source read rather than assumed from
         // 0.9.516's own prose.
-        const ownPublicationSource = await source('ui/components/OwnPublicationPanel.js');
+        const ownPublicationSource = (await Promise.all(ownPublicationPanelFiles().map((file) => source(file)))).join('\n');
         check(ownPublicationSource.includes('<dt>Locator</dt>'), 'G1. OwnPublicationPanel.js still explicitly labels a content locator as "Locator", never a raw `uri`/`locator` field name');
         const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         check(decentralizedViewSource.includes('<dt>Transaction</dt>'), 'G2. DecentralizedPublicationsView.js still explicitly labels a proof transaction as "Transaction"');

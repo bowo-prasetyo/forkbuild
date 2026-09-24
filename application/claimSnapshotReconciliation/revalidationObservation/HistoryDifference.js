@@ -1,4 +1,5 @@
 import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory } from './HistoryView.js';
+import { isGenuineObservation, canonicalObservationKey } from './ObservationRecord.js';
 
 // 0.8.166 — Revalidation Observation History Difference Projection.
 //
@@ -274,37 +275,4 @@ function extractUnmatched(from, against) {
         }
     }
     return unmatched;
-}
-
-// Complete structural observation identity — decision + planIdentity +
-// candidatePresent + candidateType + candidateMatchesPlan + observedAt —
-// duplicated from 0.8.164's own `canonicalObservationKey()` for the
-// identical reason this whole family already duplicates it: this file must
-// apply the exact same identity rule without importing a module that itself
-// carries decision/plan/history vocabulary. Never decision identity,
-// candidate identity, or plan identity alone — see this file's own header,
-// "Observation identity is not candidate identity, decision identity, or
-// plan identity."
-function canonicalObservationKey(entry) {
-    return JSON.stringify({
-        decision: entry.decision,
-        planIdentity: entry.planIdentity,
-        candidatePresent: entry.candidatePresent,
-        candidateType: entry.candidateType,
-        candidateMatchesPlan: entry.candidateMatchesPlan,
-        observedAt: entry.observedAt
-    });
-}
-
-// A genuine 0.8.162 observation record — duplicated from 0.8.163's/
-// 0.8.164's/0.8.165's own private genuineness check for the identical
-// reason those files each duplicate it: this file must apply the exact
-// same rule without importing a module that itself carries decision/plan/
-// archive vocabulary.
-function isGenuineObservation(entry) {
-    return (
-        entry !== null && typeof entry === 'object'
-        && entry.observed === true
-        && typeof entry.observedAt === 'string'
-    );
 }

@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
@@ -14,7 +13,6 @@ import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
 import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
@@ -27,7 +25,10 @@ import { PlacePublicationUseCase } from '../application/placement/PlacePublicati
 import { MoveWorldPlacementUseCase } from '../application/placement/MoveWorldPlacementUseCase.js';
 import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
 import { DiscoverWorldsUseCase } from '../application/discovery/DiscoverWorldsUseCase.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.198 — Publication Unpublish/Retract UI Action.
 //
@@ -57,18 +58,6 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 // per this milestone's own safety invariant, the existing use case's
 // ACTUAL semantics govern every "does X survive" question, never an
 // assumption.
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, message) {
     try {
@@ -108,11 +97,6 @@ function makeDocument(title, brickCount = 1) {
         world,
         metadata: new DocumentMetadata({ title, author: 'alice', license: new License({ id: LicenseId.CC0_1_0 }) })
     });
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 // Same restraint tests/WorldPlacementRemovalUIAction.test.js (0.9.197)
@@ -357,10 +341,10 @@ async function runTests() {
         // file's own header does exactly that, in prose, to explain the
         // restraint) — same "prose vs. code" distinction Section E's own
         // sweep already applies, so this checks the CODE only.
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/isUnpublished|publicationRemoved/i.test(codeOnlyLines(sessionSource).join('\n')),
             '3. WorldNavigationSession.js introduces no isUnpublished/publicationRemoved vocabulary in code — the existing getPublicationForDocument()/getPlacementInfo() read models remain the sole source of truth');
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/isUnpublished|publicationRemoved/i.test(codeOnlyLines(panelSource).join('\n')),
             '4. OwnPublicationPanel.js likewise introduces no isUnpublished/publicationRemoved field in code — its own disappearance (via the unchanged v-if="publication" gate) IS the observable state change');
 
@@ -394,7 +378,7 @@ async function runTests() {
         assert(removed === true, '1. a session authenticated as a DIFFERENT identity (bob) can still retract alice\'s Publication — session.unpublishDocument() enforces no ownership check UnpublishDocumentUseCase itself does not already skip');
         assert(discoveryProvider.findById(pub.id) === null, '2. the retraction genuinely took effect');
 
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const unpublishBody = sessionSource.match(/unpublishDocument\(documentId[^)]*\)\s*\{([\s\S]*?)\n {4}\}/);
         assert(unpublishBody, '3. unpublishDocument() method body is found');
         assert(!/owner|ownedByCurrentUser|currentUser/i.test(unpublishBody[1]),
@@ -410,7 +394,7 @@ async function runTests() {
     // PlacementRegistry/spatial classes directly.
     // -------------------------------------------------------------
     {
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(countReferences(panelSource, 'UnpublishDocumentUseCase') === 0,
             '1. OwnPublicationPanel.js never references the raw UnpublishDocumentUseCase (by class or conventional instance name) directly — WorldNavigationSession remains the sole authority it talks to');
         const panelCodeOnly = codeOnlyLines(panelSource).join('\n');
@@ -426,7 +410,7 @@ async function runTests() {
         assert(/session\.unpublishDocument\(/.test(handlerMatch[1]),
             '5. unpublishOwnPublication() calls session.unpublishDocument() — the UI requests retraction, WorldNavigationSession/UnpublishDocumentUseCase remain the sole authority that performs it');
 
-        const unpublishBodySource = await rawSource('application/world/WorldNavigationSession.js');
+        const unpublishBodySource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const unpublishBody = unpublishBodySource.match(/unpublishDocument\(documentId[^)]*\)\s*\{([\s\S]*?)\n {4}\}/)[1];
         assert(!/Snapshot|Nostr|Arweave|spatialIndexProvider|placementRegistry|removeWorldPlacementUseCase/i.test(unpublishBody),
             '6. unpublishDocument()\'s own body touches only publication resolution and UnpublishDocumentUseCase — no Snapshot/Nostr/Arweave/spatial/placement call sites, confirming it never removes a placement itself');

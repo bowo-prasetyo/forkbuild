@@ -8,6 +8,7 @@ import { composeBitcoinAnchorObservationEvidence } from '../application/anchorin
 import { describeBitcoinAnchorObservationEvidence } from '../application/anchoring/bitcoin/BitcoinAnchorObservationEvidenceView.js';
 import { observeBitcoinAnchorChainPlacementChanges } from '../application/anchoring/bitcoin/BitcoinAnchorChainPlacementObserver.js';
 import { analyzeBitcoinAnchorObservationConsistency } from '../application/anchoring/bitcoin/BitcoinAnchorObservationConsistencyAnalyzer.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.79 — Durable Bitcoin Anchor Evidence Restoration & Historical
 // Inspection.
@@ -27,10 +28,6 @@ import { analyzeBitcoinAnchorObservationConsistency } from '../application/ancho
 //            confidence field, and counts match the reconstructed evidence
 // Section D: malformed/absent inputs never throw — missing anchorId,
 //            non-archive input, an anchor never archived at all
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function confirmed({ txid, blockHash, blockHeight, confirmationCount, observedAt }) {
     return Object.freeze({

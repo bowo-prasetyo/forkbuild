@@ -1,4 +1,7 @@
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryRevalidationDifference } from '../application/claimSnapshotReconciliation/decision/HistoryRevalidationDifferenceView.js';
+import { featureImportLines } from './support/SharedHelperImports.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.159 — Reconciliation Decision History Revalidation Difference
 // Projection.
@@ -36,14 +39,6 @@ import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryR
 //            0.8.149), no archive/plan-reconstruction/candidate-selection/
 //            decision-generation import, no state-machine vocabulary, no
 //            reconstructXxx() entry point
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function genuineDecisionRecord(candidate, decision, decidedAt) {
     return Object.freeze({ decided: true, candidate: Object.freeze(candidate), decision, decidedAt: decidedAt.toISOString() });
@@ -416,8 +411,8 @@ async function run() {
         // Exactly two imports — 0.8.158's own decision-history revalidation
         // projection and 0.8.149's own decision-history difference
         // projection, nothing else.
-        const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
-        assert(importLines.length === 2, '100. this file imports exactly two modules');
+        const importLines = featureImportLines(moduleSource);
+        assert(importLines.length === 2, '100. besides shared helpers, this file imports exactly two modules');
         assert(
             importLines.some((line) => line.includes('./HistoryRevalidationView.js')),
             '101. one import is 0.8.158\'s own decision-history revalidation projection'

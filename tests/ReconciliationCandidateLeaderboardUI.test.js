@@ -2,13 +2,15 @@ import {
     describeCandidateLabel,
     buildLeaderboardRows,
     default as ReconciliationCandidateLeaderboardTable
-} from '../ui/components/ReconciliationCandidateLeaderboardTable.js';
+} from '../ui/components/reconciliation/CandidateLeaderboardTable.js';
 import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry } from '../application/claimSnapshotReconciliation/decision/History.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation } from '../application/claimSnapshotReconciliation/revalidationObservation/RevalidationObservation.js';
 import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryEntry } from '../application/claimSnapshotReconciliation/revalidationObservation/History.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceAgreement } from '../application/claimSnapshotReconciliation/candidate/EvidenceAgreementView.js';
 import { reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage } from '../application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.180 — Reconciliation Candidate Leaderboard UI Integration.
 //
@@ -36,14 +38,6 @@ import { PublicationObservationArchive } from '../application/publication/observ
 // Section F: the route is registered in ui/router/index.js
 // Section G: no mutation of either archive through the full pipeline;
 //            determinism
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function genuineDecisionRecord(candidate, decision, decidedAt) {
     return Object.freeze({ decided: true, candidate: Object.freeze(candidate), decision, decidedAt: decidedAt.toISOString() });
@@ -286,7 +280,7 @@ async function run() {
         assert(ReconciliationCandidateLeaderboardTable.computed.rowCount.call({ page: { rowCount: 5 } }) === 5, '47. computed rowCount() reads page.rowCount straight through, unchanged');
 
         const moduleSource = await (await import('node:fs/promises')).readFile(
-            new URL('../ui/components/ReconciliationCandidateLeaderboardTable.js', import.meta.url), 'utf8'
+            new URL('../ui/components/reconciliation/CandidateLeaderboardTable.js', import.meta.url), 'utf8'
         );
         const template = moduleSource.slice(moduleSource.indexOf('template: `'));
         for (const field of ['row.candidateLabel', 'row.decisionShared', 'row.decisionSourceOnly', 'row.decisionTargetOnly', 'row.observationShared', 'row.observationSourceOnly', 'row.observationTargetOnly']) {
@@ -322,7 +316,7 @@ async function run() {
         const importedModules = [...moduleSource.matchAll(/^import\s[\s\S]*?from '([^']+)';/gm)].map((match) => match[1]);
         assert(importedModules.some((m) => m.endsWith('PublicationObservationArchive.js')), '56. imports PublicationObservationArchive.js (to build the honestly-empty targetArchive)');
         assert(importedModules.some((m) => m.endsWith('application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js')), '57. imports 0.8.179\'s own page module');
-        assert(importedModules.some((m) => m.endsWith('ReconciliationCandidateLeaderboardTable.js')), '58. imports 0.8.180\'s own presentational table component');
+        assert(importedModules.some((m) => m.endsWith('components/reconciliation/CandidateLeaderboardTable.js')), '58. imports 0.8.180\'s own presentational table component');
         assert(importedModules.every((m) => m === 'vue' || m.endsWith('.js')), '59. every import resolves to a real module specifier');
     }
     console.log('✓ Section E: ReconciliationCandidateLeaderboardView calls 0.8.179\'s own reconstructXxx() exactly once, builds an honestly-empty targetArchive, and imports no projection beneath 0.8.179');

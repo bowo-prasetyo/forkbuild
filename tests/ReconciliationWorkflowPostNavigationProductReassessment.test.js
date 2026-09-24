@@ -1,8 +1,7 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.404 — Reconciliation Workflow Post-Navigation Product Reassessment.
 //
@@ -78,10 +77,6 @@ function n(message) {
 }
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
-
-async function readSource(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
 
 async function run() {
     let publicationsSource;
@@ -389,8 +384,8 @@ async function run() {
             'ui/views/DecentralizedPublicationsView.js',
             'ui/views/ReconciliationCandidateLeaderboardView.js',
             'ui/views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js',
-            'ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js',
-            'ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector.js'
+            'ui/components/reconciliation/EvidenceExportComparisonTable.js',
+            'ui/components/reconciliation/EvidenceExportComparisonRecordPairSelector.js'
         ];
         for (const file of untouchedFiles) {
             const status = execSync(`git status --porcelain -- ${file}`, { cwd: SOURCE_ROOT }).toString().trim();

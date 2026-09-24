@@ -4,7 +4,6 @@ import { ContentStore } from '../content/ContentStore.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
 import {
@@ -13,6 +12,9 @@ import {
     resolveSnapshotDistributionContentStore
 } from '../application/snapshot/SnapshotDistributionContentBackendSelection.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.506 — Make Snapshot Distribution Content Backend Selectable.
 //
@@ -83,10 +85,6 @@ import { computeContentHash } from '../serializer/contentHash.js';
 //   were.
 // - A second ContentStore implementation, or a second registry.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 let assertionCount = 0;
 function check(condition, message) {
     assertionCount += 1;
@@ -103,14 +101,6 @@ function expectThrows(fn, message) {
     let threw = false;
     try { fn(); } catch (e) { threw = true; }
     check(threw, message);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function fakeCid(text) {
@@ -198,9 +188,9 @@ async function run() {
     // Section A — production topology, structural.
     // ===============================================================
     {
-        const mainSource = await codeOnlySource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
 
-        check(mainSource.includes("import { availableSnapshotDistributionStorageTypes, resolveSnapshotDistributionContentStore } from '../application/snapshot/SnapshotDistributionContentBackendSelection.js';"),
+        check(mainSource.includes("import { availableSnapshotDistributionStorageTypes, resolveSnapshotDistributionContentStore } from '../../application/snapshot/SnapshotDistributionContentBackendSelection.js';"),
             'A. ui/main.js imports the new 0.9.506 selection module');
 
         // AMENDED BY 0.9.669 — `discoveryProvider` joined the parameter

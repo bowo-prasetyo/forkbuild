@@ -9,6 +9,7 @@ import { ArweavePublicationMaterialUploader } from '../application/arweave/Arwea
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.109 — Arweave Publication Distribution Runtime Adapter.
 // See docs/Roadmap.md, "0.9.109 — Arweave Publication Distribution Runtime
@@ -28,10 +29,6 @@ import { Signature } from '../core/Signature.js';
 //              capability still resolves to a real, independently usable
 //              ArweavePublicationMaterialUploader
 //   Section F: architectural regression
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function signedPublication(overrides = {}) {
     const publication = new Publication({

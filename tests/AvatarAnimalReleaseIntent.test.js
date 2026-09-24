@@ -3,14 +3,11 @@ import {
     isValidAvatarAnimalReleaseIntent,
     deriveAvatarAnimalReleaseIntent
 } from '../core/AvatarAnimalReleaseIntent.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.700 — Avatar Animal Release Intent, core/AvatarAnimalReleaseIntent.js.
 // Mirrors tests/AvatarAnimalCatchIntent.test.js's own shape exactly, for
 // the mirror-image vocabulary.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function runTests() {
     const { NONE, RELEASE } = AvatarAnimalReleaseIntent;

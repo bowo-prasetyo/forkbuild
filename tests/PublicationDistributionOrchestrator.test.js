@@ -3,6 +3,7 @@ import { orchestratePublicationDistribution } from '../application/publication/d
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.58 — Publication Decentralized Distribution Orchestrator.
 // See docs/Roadmap.md, "0.9.58 — Publication Decentralized Distribution
@@ -25,10 +26,6 @@ import { Signature } from '../core/Signature.js';
 //   Section G: architectural regression — no re-implemented construction
 //              or sequencing, no lifecycle/persistence imports, no
 //              forbidden vocabulary, no existing file modified
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function expectRejects(promise, message) {
     let threw = false;

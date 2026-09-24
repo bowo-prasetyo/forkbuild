@@ -1,10 +1,11 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { PeerIdentity } from '../peer/PeerIdentity.js';
 import { PeerRelationship } from '../core/PeerRelationship.js';
 import { PeerRelationshipUseCase } from '../application/peer/PeerRelationshipUseCase.js';
 import { PeerSessionManager } from '../application/peer/PeerSessionManager.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.56 — Persistent Peer Relationships.
 //
@@ -23,17 +24,6 @@ import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 // is still there — while application/peer/ConnectedPeerRegistry.js, the
 // thing 0.2.50 through 0.2.55 already proved never persists anything,
 // is empty the entire time.
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function makeDevice(label, storageProvider = new InMemoryStorageProvider()) {
     const provider = new LocalIdentityProvider(storageProvider);

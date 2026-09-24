@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { World } from '../core/World.js';
 import { Document } from '../core/Document.js';
@@ -7,7 +6,6 @@ import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { License, LicenseId } from '../core/License.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalRecoveryStore } from '../persistence/LocalRecoveryStore.js';
@@ -22,6 +20,9 @@ import { CheckRecoveryUseCase } from '../application/document/CheckRecoveryUseCa
 import { RecoverDocumentUseCase } from '../application/document/RecoverDocumentUseCase.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { editorViewFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.580 — Close Editor Trailing-Autosave Loss Window.
 //
@@ -53,25 +54,9 @@ import { editorViewFiles } from './support/SourceFileGroups.js';
 // direct, verbatim source citation, the same discipline 0.9.579's own
 // Section C3 already used for AutosaveScheduler.js.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 function assertThrows(fn, message) {
     try { fn(); assert(false, message); }
     catch (e) { /* expected */ }
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function createDocument(title = 'Loss Window Witness', license = new License({ id: LicenseId.CC0_1_0 })) {

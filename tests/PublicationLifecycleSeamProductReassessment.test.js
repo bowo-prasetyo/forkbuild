@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { Publication } from '../publisher/Publication.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
@@ -11,7 +10,6 @@ import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { License, LicenseId } from '../core/License.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { describePublicationDistributionResult } from '../application/publication/distribution/PublicationDistributionResult.js';
 import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
 import { ArweaveGraphqlDiscoveryQueryService } from '../application/arweave/ArweaveGraphqlDiscoveryQueryService.js';
@@ -38,7 +36,10 @@ import {
     describePublicationMaterialProvenanceFromInspection
 } from '../application/publication/distribution/PublicationMaterialProvenance.js';
 import { ArweaveGatewayFailoverWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.533 — Publication Lifecycle Seam Product Reassessment.
 //
@@ -88,16 +89,6 @@ import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/Sour
 //
 // FINDING: see the verdict block at the end of this file.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 // Extracts a Vue SFC-shaped module's own `template: \`...\`` literal —
 // what actually reaches a Wanderer's screen — stripping HTML comments
 // (`<!-- ... -->`) so a vocabulary check never false-positives on this
@@ -112,14 +103,6 @@ function extractRenderedTemplate(source) {
     const end = source.indexOf('`', contentStart);
     const raw = end === -1 ? '' : source.slice(contentStart, end);
     return raw.replace(/<!--[\s\S]*?-->/g, '');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 // Publishes a real, minimal one-brick Document through the SAME
@@ -551,7 +534,7 @@ async function main() {
         // imports the retrieval-placement class, and
         // DecentralizedPublicationsView.js's own retrieval-placement
         // usage never imports the spatial placement/registry classes.
-        const ownPanelSrc = await readSource('ui/components/OwnPublicationPanel.js');
+        const ownPanelSrc = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         const decentralizedViewSrc = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(!/PublicationSnapshotPlacement/.test(ownPanelSrc),
             '4. OwnPublicationPanel.js never imports PublicationSnapshotPlacement — its own placementId list stays sourced from spatial PlacementRecord/DiscoverPlacementsUseCase alone.');
@@ -592,7 +575,7 @@ async function main() {
         // body never references a discovery provider or catalog at all
         // — the two subsystems are structurally disjoint, not merely
         // coincidentally unaffected in this one test run.
-        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         const focusDocumentBody = sessionSrc.match(/focusDocument\(documentId, \{ setActive = true \} = \{\}\) \{([\s\S]*?)\n {4}\}/);
         assert(focusDocumentBody && !/discoveryProvider|DiscoveryProvider/.test(focusDocumentBody[1]),
             '2. focusDocument()\'s own body never references a discovery provider — structurally incapable of touching Repository catalog state.');
@@ -636,7 +619,7 @@ async function main() {
         // "verified" signal from the mere presence of a spatial or
         // retrieval placement — having been PLACED is never read as
         // having been VERIFIED anywhere in these files.
-        const ownPanelSrc = await readSource('ui/components/OwnPublicationPanel.js');
+        const ownPanelSrc = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         const decentralizedViewSrc = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(!/verified\s*=\s*.*placements?\.length/i.test(ownPanelSrc) && !/verified\s*=\s*.*placements?\.length/i.test(decentralizedViewSrc),
             '7. Neither OwnPublicationPanel.js nor DecentralizedPublicationsView.js derives a "verified" flag from a placement list\'s own length — "placed" and "verified" are never conflated.');

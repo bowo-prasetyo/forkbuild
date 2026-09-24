@@ -22,7 +22,9 @@ import { fingerprintPublicationObservationArchive } from '../application/publica
 import { reconstructAchievementEvidenceFingerprint } from '../application/achievement/AchievementEvidenceFingerprint.js';
 import { PublicationObservationArchiveProvenanceOrigin } from '../application/publication/observationArchive/PublicationObservationArchiveProvenance.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.8.167 — Revalidation Observation History Archive Integration.
 //
@@ -62,22 +64,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // Section J: FLAGSHIP — Plan A / Decision D1 / Observation O1 @ T1,
 //            Plan B / Decision D1 / Observation O2 @ T2, worked through
 //            the full archive/persistence/projection chain
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 // A genuine 0.8.144/0.8.145 decision record — `selected: true` on the
 // embedded candidate, exactly as `describePublisherLeaderboardClaimSnapshotReconciliationCandidate()`

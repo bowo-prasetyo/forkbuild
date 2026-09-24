@@ -1,7 +1,8 @@
-import { readFile } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasSource, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.361 — Publication Discovery Relocation Convergence Audit.
 //
@@ -71,16 +72,6 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 // (0.9.360) already established structurally. This file exists to prove
 // convergence at the seam those two do not cover — the popup's own
 // lifecycle semantics — not to invent new discovery behavior of any kind.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 // Mirrors tests/DiagnosticToolsSurfaceConvergenceAudit.test.js's own
 // codeOnlySource() exactly: strips HTML comments (the template carries
@@ -168,10 +159,10 @@ function verifiedDiscoveryResult(objectId) {
 async function run() {
     console.log('Running Publication Discovery Relocation Convergence Audit tests...\n');
 
-    const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
+    const canvasSource = worldEncounterCanvasSource();
     const canvasCodeOnly = codeOnly(canvasSource);
 
-    const mainSource = await rawSource('ui/main.js');
+    const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
     const canonicalTagMatch = /const PUBLICATION_DISCOVERY_TAG = '([^']+)';/.exec(mainSource);
     assert(canonicalTagMatch, 'sanity: ui/main.js still declares PUBLICATION_DISCOVERY_TAG (0.9.357/0.9.358)');
     const canonicalTag = canonicalTagMatch[1];

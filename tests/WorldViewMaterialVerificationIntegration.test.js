@@ -1,6 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { worldViewSourceWithTemplate } from './support/SourceFileGroups.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldViewSourceWithTemplate, mainFiles } from './support/SourceFileGroups.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
@@ -10,6 +9,8 @@ import { composeWorldEncounterMaterialVerifier } from '../application/worldEncou
 import { inspectWorldEncounterMaterial } from '../application/worldEncounter/WorldEncounterMaterialInspection.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.99 — Decentralized Material Verification World View Integration.
 //
@@ -60,18 +61,6 @@ import { WorldEncounterMaterialVerificationStatus } from '../application/worldEn
 //            TRUSTED/UNTRUSTED/SAFE/UNSAFE/AUTHENTIC/SUSPICIOUS vocabulary,
 //            and the pre-existing `registry` prop / VehicleInteractionPrompt
 //            wiring stay exactly as 0.9.17/0.9.98 left them.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function buildRealSigner(storage, username) {
     const provider = new LocalIdentityProvider(storage);
@@ -218,13 +207,12 @@ async function runTests() {
     // Section E — architectural regression: ui/main.js
     // -------------------------------------------------------------
     {
-        const mainSourceUrl = new URL('../ui/main.js', import.meta.url);
-        const mainSource = await readFile(mainSourceUrl, 'utf8');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const mainCodeOnly = mainSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
-        assert(mainCodeOnly.includes("import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';"),
+        assert(mainCodeOnly.includes("import { LocalWorldEncounterMaterialSource } from '../../application/worldEncounter/LocalWorldEncounterMaterialSource.js';"),
             '9. ui/main.js imports the existing, unmodified LocalWorldEncounterMaterialSource — never a second local loader');
-        assert(mainCodeOnly.includes("import { composeWorldEncounterMaterialVerifier } from '../application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js';"),
+        assert(mainCodeOnly.includes("import { composeWorldEncounterMaterialVerifier } from '../../application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js';"),
             '10. ui/main.js imports the existing, unmodified composeWorldEncounterMaterialVerifier() composition root');
         assert(mainCodeOnly.includes('new LocalWorldEncounterMaterialSource(') && mainCodeOnly.includes('composeWorldEncounterMaterialVerifier('),
             '11. ui/main.js actually calls both — not merely importing them unused');

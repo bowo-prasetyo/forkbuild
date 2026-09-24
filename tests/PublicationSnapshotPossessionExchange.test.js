@@ -1,6 +1,5 @@
 import { ContentReference } from '../core/ContentReference.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
@@ -34,6 +33,8 @@ import { MaterializeSnapshotFromPeerUseCase } from '../application/snapshot/mate
 import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
 import { PublicationSnapshotContentPeerExchange } from '../application/snapshot/materialization/PublicationSnapshotContentPeerExchange.js';
 import { PeerSnapshotMaterializationOutcome } from '../application/snapshot/materialization/PeerSnapshotMaterializationOutcome.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.8.40 — Snapshot Possession Observation Exchange.
 //
@@ -73,10 +74,6 @@ import { PeerSnapshotMaterializationOutcome } from '../application/snapshot/mate
 // See docs/Principles.md, "Peer Possession Responses Are Observations, Not
 // Placement Claims (0.8.40)."
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function expectThrows(fn, message) {
     let threw = false;
     try { fn(); } catch (e) { threw = true; }
@@ -91,14 +88,6 @@ async function expectRejects(promise, message) {
 
 function wait(ms = 20) {
     return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeIdentity(label) {

@@ -1,9 +1,10 @@
 import { LocalIdentity } from '../identity/LocalIdentity.js';
 import { AuthenticationSession, AuthenticationState } from '../identity/AuthenticationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { Signature, SignatureType } from '../core/Signature.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.46 — Local Identity & Authentication Session.
 //
@@ -16,18 +17,6 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 // proves the entire pre-existing 0.1.21/0.2.16 surface
 // (login/logout/currentUser/sign/getSigningIdentity/signCanonical)
 // keeps behaving identically on top of the new model.
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, expectedMessage, message) {
     try {

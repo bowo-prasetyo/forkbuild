@@ -1,10 +1,13 @@
-import { readFile } from 'node:fs/promises';
 
 import { BitcoinEsploraConfiguration, DEFAULT_BITCOIN_ESPLORA_API_URL, isValidBitcoinEsploraApiUrl } from '../core/BitcoinEsploraConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { BitcoinEsploraConfigurationStore } from '../storage/BitcoinEsploraConfigurationStore.js';
 import { SetBitcoinEsploraConfigurationUseCase } from '../application/settings/SetBitcoinEsploraConfigurationUseCase.js';
 import { CreateBitcoinEsploraTransactionConfirmationObserverUseCase } from '../application/anchoring/bitcoin/CreateBitcoinEsploraTransactionConfirmationObserverUseCase.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource as source } from './support/SourceText.js';
 
 // Bitcoin Endpoint Settings UI.
 //
@@ -32,22 +35,10 @@ import { CreateBitcoinEsploraTransactionConfirmationObserverUseCase } from '../a
 //   Section G — view template sweep.
 //   Section H — architecture sweep of the new use case file.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function expectThrows(fn, message) {
     let threw = false;
     try { fn(); } catch { threw = true; }
     assert(threw, message);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 class SharedNamespaceStorageProvider extends StorageProvider {
@@ -70,18 +61,13 @@ function makeFetchSpy(responsesByUrl) {
     return fetchImpl;
 }
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 async function run() {
     // ===============================================================
     // Section 0 — settings entry point reachability.
     // ===============================================================
     {
-        const mainSource = await source('ui/main.js');
-        assert(mainSource.includes("import { SetBitcoinEsploraConfigurationUseCase } from '../application/settings/SetBitcoinEsploraConfigurationUseCase.js';"),
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
+        assert(mainSource.includes("import { SetBitcoinEsploraConfigurationUseCase } from '../../application/settings/SetBitcoinEsploraConfigurationUseCase.js';"),
             '1. ui/main.js imports the new write use case');
         assert(/new SetBitcoinEsploraConfigurationUseCase\(\{\s*bitcoinEsploraConfigurationStore\s*\}\)/.test(mainSource),
             '2. ui/main.js wires SetBitcoinEsploraConfigurationUseCase against the SAME shared bitcoinEsploraConfigurationStore the resolved apiUrl is read from, never a second disconnected store');

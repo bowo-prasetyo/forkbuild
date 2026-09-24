@@ -14,8 +14,9 @@ import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anch
 import { CreateBaseAnchorPublicationRecordUseCase } from '../application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js';
 import { BlockchainKind } from '../application/anchoring/BlockchainKind.js';
 import { BlockchainPublicationIdentity } from '../application/anchoring/BlockchainPublicationIdentity.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.8.104 — Explicit Publication Reference Relationship.
 //
@@ -58,10 +59,6 @@ import { LocalStoragePublicationObservationArchive } from '../storage/LocalStora
 //   Section I: no verdict vocabulary anywhere in this milestone's own new
 //              surface
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const FORBIDDEN_KEYS = [
     'status', 'confidence', 'health', 'trusted', 'valid', 'canonical', 'reliable',
     'risk', 'severity', 'cause', 'verdict', 'score', 'weight', 'strength', 'referenceKind',
@@ -77,14 +74,6 @@ function assertNeverScored(obj, path) {
             else assertNeverScored(value, `${path}.${key}`);
         }
     }
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function identity({ blockchain, contentHash, chainReference, createdAt }) {

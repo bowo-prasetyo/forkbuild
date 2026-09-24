@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { Brick } from '../core/Brick.js';
 import { Building } from '../core/Building.js';
@@ -9,7 +8,9 @@ import { World } from '../core/World.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { CreateWorldLandmarkCommand } from '../application/commands/CreateWorldLandmarkCommand.js';
-import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles, worldEncounterCanvasFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles, worldEncounterCanvasFiles, editorViewFiles, editorSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.212 — Post-Undo/Redo Product Reassessment.
 //
@@ -40,22 +41,12 @@ import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles, wor
 // at classification and recommendation — 0.9.212 does not prescribe
 // 0.9.213.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function createTestDocument() {
     const world = new World();
     const building = new Building({ creator: 'tester' });
     building.addBrick(new Brick({ definitionId: 'core:cube', position: new Position(0, 0.5, 0) }));
     world.addBuilding(building);
     return new Document({ world, metadata: new DocumentMetadata({ title: 'Post-Undo/Redo Reassessment Test', author: 'tester' }) });
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 // Same restraint 0.9.156 through 0.9.209 already apply: strip full-line
@@ -96,7 +87,7 @@ async function runTests() {
         const emitsMatch = placementInfoPanelSource.match(/emits:\s*\[([^\]]*)\]/);
         assert(emitsMatch && /\bremove\b/i.test(emitsMatch[1]), 'A2. PlacementInfoPanel.js still emits \'remove\' — removal stays reachable');
 
-        const ownPublicationPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(/unpublishCommand/.test(ownPublicationPanelSource), 'A3. OwnPublicationPanel.js still wires an unpublishCommand — retract stays reachable');
 
         for (const identifier of ['getTimeline', 'restoreHistoryAt', 'beginHistoryPreview', 'previewHistoryAt', 'cancelHistoryPreview']) {
@@ -221,7 +212,7 @@ async function runTests() {
     // Section D — Publication workflow. COMPLETE, reconfirmed.
     // ---------------------------------------------------------------
     {
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         // AMENDED BY 0.9.672 — World View Distribution Dialog.
         // distributeOwnSnapshot() is no longer wired via a literal
         // `@click="..."` in THIS file's own template — it moved into
@@ -257,7 +248,7 @@ async function runTests() {
         // E1 — manual discovery, automatic discovery, materialization,
         // and World participation are all real, composed, UI-reachable
         // paths — regression-checked directly against source.
-        const ownPublicationPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(/discoverOwnSnapshot\s*\(\)\s*\{/.test(ownPublicationPanelSource) || /discoverOwnSnapshot\(/.test(ownPublicationPanelSource), 'E1a. OwnPublicationPanel.js still defines/calls discoverOwnSnapshot (manual discovery)');
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/worldSnapshotDiscoveryMonitor\.observe\(/.test(worldViewSource), 'E1b. WorldView.js still drives worldSnapshotDiscoveryMonitor.observe() on its own refresh tick (automatic discovery)');
@@ -285,13 +276,13 @@ async function runTests() {
         const buildUseCaseSource = await rawSource('application/snapshot/BuildPublicationSnapshotTransferPackageUseCase.js');
         assert(/export-side counterpart/i.test(buildUseCaseSource), 'E2a. BuildPublicationSnapshotTransferPackageUseCase.js still documents itself as the export-side counterpart of the Import use case');
         assert(/class BuildPublicationSnapshotTransferPackageUseCase/.test(buildUseCaseSource), 'E2b. BuildPublicationSnapshotTransferPackageUseCase still exists, fully implemented');
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(/new ImportPublicationSnapshotTransferPackageUseCase\(/.test(mainSource), 'E2c. ui/main.js still composes ImportPublicationSnapshotTransferPackageUseCase (the wired half)');
         assert(/new BuildPublicationSnapshotTransferPackageUseCase\(/.test(mainSource), 'E2d. ui/main.js now also composes BuildPublicationSnapshotTransferPackageUseCase — 0.9.215 closes the ACTUAL_GAP this section originally found');
         const coordinatorSource = await rawSource('application/snapshot/materialization/SnapshotContentMaterializationCoordinator.js');
         assert(/async import\(pkg\)/.test(coordinatorSource), 'E2e. SnapshotContentMaterializationCoordinator still has an import(pkg) method');
         assert(/async export\(publicationId\)/.test(coordinatorSource), 'E2f. ...and now also has a matching export(publicationId) method, forwarding to the Build use case');
-        const ownPublicationPanelSourceForExport = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSourceForExport = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(/[Ee]xport [Ss]napshot/.test(ownPublicationPanelSourceForExport), 'E2g. OwnPublicationPanel.js now carries "Export Snapshot" UI text — the asymmetry E2 originally found is closed at the UI layer too');
         console.log('✓ Section E2: CLOSED by 0.9.215 — application/snapshot/BuildPublicationSnapshotTransferPackageUseCase.js, already correct and fully tested, is now composed in ui/main.js, reachable through SnapshotContentMaterializationCoordinator\'s own new export() method, and has a real "Export Snapshot" action on OwnPublicationPanel.js. Import and Export are symmetric.');
 
@@ -325,7 +316,7 @@ async function runTests() {
         assert(new Set(commandHistoryImports.map((m) => m[1].split('/').pop())).size === 1, 'F1a. WorldNavigationSession.js and its method modules import exactly one CommandHistory-shaped class');
         assert(/avoids maintaining a second/.test(navigationSessionSource) || !/_undoStack|_redoStack/.test(navigationSessionSource), 'F1b. WorldNavigationSession.js still maintains no second undo/redo stack of its own');
 
-        const editorSessionSource = await rawSource('application/editor/EditorSession.js');
+        const editorSessionSource = (await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/_undoStack|_redoStack/.test(editorSessionSource), 'F2. EditorSession.js also maintains no second undo/redo stack — CommandHistory stays the sole authority for the Editor too');
 
         const commandHistorySource = await rawSource('application/editor/CommandHistory.js');
@@ -370,7 +361,7 @@ async function runTests() {
         assert(/_readGestureFeedback\(\)\s*\{/.test(gizmoControllerSource), 'G1b. TransformGizmoController still reads gesture feedback from the service');
         assert(/feedback:\s*this\._readGestureFeedback\(\)/.test(gizmoControllerSource), 'G1c. ...and still returns it as `feedback` on its pointer-event results');
 
-        const editorSessionSource = await rawSource('application/editor/EditorSession.js');
+        const editorSessionSource = (await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n');
         const onPointerMoveMethod = editorSessionSource.slice(editorSessionSource.indexOf('    onPointerMove(event) {'), editorSessionSource.indexOf('    onPointerUp(event) {'));
         assert(/const result = this\._session\.gizmoPointerMove\(/.test(onPointerMoveMethod), 'G1d. EditorSession.onPointerMove() still reads the gizmo\'s result...');
         assert(/if \(result && result\.consumed\) {\s*return result;/.test(onPointerMoveMethod), 'G1e. ...and still forwards the WHOLE result (including feedback) to its own caller when the gizmo consumed the event');
@@ -519,7 +510,7 @@ async function runTests() {
     {
         // I1 — ui/components/GroupsPanel.js (0.9.206's own finding),
         // reconfirmed unchanged.
-        assert(!/GroupsPanel/.test(await rawSource('ui/main.js')), 'I1a. GroupsPanel is not registered in ui/main.js');
+        assert(!/GroupsPanel/.test((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n')), 'I1a. GroupsPanel is not registered in ui/main.js');
         const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/components:\s*\{[^}]*GroupsPanel/.test(editorViewSource), 'I1b. EditorView.js\'s own components: {} does not register GroupsPanel');
         assert(await rawSource('ui/components/GroupsPanel.js').then(() => false, () => true), 'I1c. ui/components/GroupsPanel.js has since been deleted as dead code (the Editor dead-code cleanup)');

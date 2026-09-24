@@ -1,13 +1,15 @@
-import default_ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector from '../ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector.js';
+import default_ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector from '../ui/components/reconciliation/EvidenceExportComparisonRecordPairSelector.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.201 — Explicit Record-Pair Selection UI.
 //
 // This milestone adds one new UI-layer file:
-//   ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector.js
+//   ui/components/reconciliation/EvidenceExportComparisonRecordPairSelector.js
 //     — an Options API, zero-`application/`-import presentation/selection
 //       component, executed directly below via its own `computed`/
 //       `methods`, exactly the way
-//       ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js
+//       ui/components/reconciliation/EvidenceExportComparisonTable.js
 //       is already exercised by
 //       ReconciliationCandidateLeaderboardEvidenceExportComparisonUI.test.js
 // and extends one existing file, `ui/views/
@@ -50,14 +52,6 @@ import default_ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordP
 //            `comparison`/`comparisonDetail`/`comparisonIdentity`), and
 //            wires the new component's four pair events to its own
 //            add/remove handlers.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function candidateOf(claimId) {
     return Object.freeze({ type: 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT', claimId });
@@ -277,7 +271,7 @@ async function main() {
     //               network/persistence/ranking vocabulary.
     // ---------------------------------------------------------------
     const selectorModuleSource = await (await import('node:fs/promises')).readFile(
-        new URL('../ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector.js', import.meta.url), 'utf8'
+        new URL('../ui/components/reconciliation/EvidenceExportComparisonRecordPairSelector.js', import.meta.url), 'utf8'
     );
     const selectorCodeOnly = selectorModuleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
@@ -321,7 +315,7 @@ async function main() {
         "from '../../application/claimSnapshotReconciliation/evidenceExportComparison/RecordDifferenceView.js'",
         "from '../../application/claimSnapshotReconciliation/evidenceExportComparison/RecordDifferenceReadModel.js'",
         "from '../../application/claimSnapshotReconciliation/evidenceExportComparison/PairedRecordDifferenceView.js'",
-        "from '../components/ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector.js'"
+        "from '../components/reconciliation/EvidenceExportComparisonRecordPairSelector.js'"
     ]) {
         assert(viewModuleSource.includes(requiredImport), `39. the view imports the new 0.8.201 module (${requiredImport})`);
     }

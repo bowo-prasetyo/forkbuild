@@ -4,7 +4,6 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
@@ -24,6 +23,8 @@ import {
     editorEntryContextToQuery,
     editorEntryContextFromQuery
 } from '../core/EditorEntryContext.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.6.0 — Context-Preserving Fork-to-Edit.
 //
@@ -61,18 +62,6 @@ import {
 //      Document.toJSON()/World.toJSON(), and the router-query
 //      encode/decode pair used to carry it across the one page
 //      navigation this milestone crosses round-trips correctly.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function stubRenderSession(extra = {}) {
     let cameraState = { position: { x: 0, y: 0, z: 0 }, target: { x: 0, y: 0, z: 0 }, zoom: 1 };

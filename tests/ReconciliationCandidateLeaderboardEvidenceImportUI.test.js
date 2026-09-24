@@ -6,6 +6,7 @@ import {
     importPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport,
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceImport
 } from '../application/claimSnapshotReconciliation/leaderboard/EvidenceImport.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.188 — Reconciliation Candidate Leaderboard Evidence Export Import.
 //
@@ -29,14 +30,6 @@ import {
 //            filteredEvidenceDetail anywhere in the new code.
 // Section D: vocabulary boundary — no merge/synchronize/network vocabulary
 //            in the new code.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function detailOf(shared, sourceOnly, targetOnly) {
     return Object.freeze({

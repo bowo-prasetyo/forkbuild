@@ -4,6 +4,7 @@ import { BasePublicationTransactionPlanState } from '../application/anchoring/ba
 import { BaseNetworkObservationState } from '../application/anchoring/base/BaseNetworkObservationState.js';
 import { BaseAccountObservation } from '../application/anchoring/base/BaseAccountObservation.js';
 import { describeBasePublicationTransactionReview } from '../application/anchoring/base/BasePublicationTransactionReview.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.92 — Explicit Base Transaction Review.
 //
@@ -32,10 +33,6 @@ import { describeBasePublicationTransactionReview } from '../application/anchori
 //   Section G: caller-contract violations — a missing plan, and every
 //              individually malformed field, all throw before anything
 //              is decoded.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

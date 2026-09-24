@@ -20,6 +20,7 @@ import {
     GROUPS_DOCUMENT,
     CURRENT_DOCUMENT
 } from './fixtures/historicalDocuments.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.80 — Expanded Brick Vocabulary.
 //
@@ -45,10 +46,6 @@ import {
 //   Section F: FLAGSHIP — create document -> place every brick type ->
 //              save -> reload -> render -> same geometry, same brick
 //              types, same document semantics
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const NEW_DEFINITION_IDS = [
     'core:block_2x2', 'core:wall_1x3', 'core:slab_4x4', 'core:roof_hip',

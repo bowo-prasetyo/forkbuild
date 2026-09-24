@@ -4,6 +4,9 @@ import {
     reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationAgreement
 } from '../application/claimSnapshotReconciliation/revalidationObservation/AgreementView.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { featureImportLines } from './support/SharedHelperImports.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.170 — Revalidation Observation Agreement Projection.
 //
@@ -24,14 +27,6 @@ import { PublicationObservationArchive } from '../application/publication/observ
 // Section I: reconstruct()'s archive-reading boundary
 // Section J: malformed input tolerance
 // Section K: vocabulary/import boundary
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function planNaming({ claims = [], snapshots = [], divergent = [] } = {}) {
     return Object.freeze({
@@ -432,8 +427,8 @@ async function run() {
         // This milestone must import only 0.8.166 (observation-level
         // difference) and 0.8.167's own archive-reading seam — nothing else
         // from the revalidation-observation family.
-        const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
-        assert(importLines.length === 2, '82. this file imports from exactly two modules');
+        const importLines = featureImportLines(moduleSource);
+        assert(importLines.length === 2, '82. besides shared helpers, this file imports from exactly two modules');
         const importBlock = moduleSource.slice(0, moduleSource.indexOf('function describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationAgreement'));
         assert(importBlock.includes('./HistoryDifference.js'), '83. one import is 0.8.166\'s own observation history difference module');
         assert(importBlock.includes('./HistoryView.js'), '84. one import is 0.8.167\'s own archive-reading seam');

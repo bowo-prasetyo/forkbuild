@@ -7,6 +7,7 @@ import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDisc
 import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js';
 import { describeDecentralizedWorldDiscoveryLead } from '../core/DecentralizedWorldDiscoveryLead.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.40 — Decentralized Lead Resolution Integration.
 // See docs/Roadmap.md, "0.9.40 — Decentralized Lead Resolution
@@ -41,14 +42,6 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 //            never trusted — resolvedLead falls back to null.
 // Section G: architectural regression — no second matching algorithm, both
 //            new props declared, no rank/trust/preferred vocabulary.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function flush() {
     return new Promise((resolve) => setTimeout(resolve, 0));

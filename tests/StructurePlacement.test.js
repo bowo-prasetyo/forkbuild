@@ -23,6 +23,7 @@ import { StructurePreviewUseCase } from '../application/editor/StructurePreviewU
 import { StructurePlacementTool } from '../application/tools/StructurePlacementTool.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.90 — Structure Placement & World Instances.
 //
@@ -65,10 +66,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //              (the mechanism behind "every placement reflects the
 //              edit"); removing one placement leaves the Document and
 //              the other placement completely intact.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 class InMemoryStorageProvider extends StorageProvider {
     constructor() {

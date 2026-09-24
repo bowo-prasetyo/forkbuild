@@ -6,6 +6,8 @@ import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateFilteredEvidenceDetail,
     reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateFilteredEvidenceDetail
 } from '../application/claimSnapshotReconciliation/candidate/FilteredEvidenceDetailView.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.185 — Reconciliation Candidate Filtered Evidence Detail Projection.
 //
@@ -38,14 +40,6 @@ import {
 // Section K: the view's own wiring — filteredEvidenceDetail is computed
 //            from the SAME two filter refs `filteredPage` reads, and is
 //            handed to the table as its own evidence-detail prop.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function detailOf(shared, sourceOnly, targetOnly) {
     return Object.freeze({

@@ -10,8 +10,9 @@ import {
     importPublicationObservationArchive,
     PublicationObservationArchiveImportOutcome
 } from '../application/publication/observationArchive/PublicationObservationArchiveExport.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.8.97 — Durable Base Transaction Inclusion Observation Archive.
 //
@@ -60,19 +61,7 @@ import { LocalStoragePublicationObservationArchive } from '../storage/LocalStora
 //   Section K: no trust/verdict vocabulary anywhere in this milestone's
 //              own new surface
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const O = PublicationObservationArchiveProvenanceOrigin;
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 const TXID_H = '1'.repeat(64);
 const TXID_H1 = '2'.repeat(64);

@@ -8,7 +8,9 @@ import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.115 — Vehicle Rendering, World View integration.
 //
@@ -28,18 +30,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // renderer" posture: WorldNavigationSession's real methods run
 // unmodified; only the render facade (`session._session`) is a duck-typed
 // stand-in, poked directly exactly like that file's own spyFacade().
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 // A tiny fake onAnimationFrame bus + a syncVehicles spy — everything else
 // dispose() might touch on `this._session` is a harmless no-op, the same
@@ -210,7 +200,7 @@ async function runTests() {
             assert(!controllerSource.includes(term),
                 `19. application/avatar/AvatarVehicleInteractionController.js never references "${term}" — mount/dismount stays entirely independent of rendering`);
         }
-        const sessionSource = await readFile(new URL('../application/world/WorldNavigationSession.js', import.meta.url), 'utf8');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         assert(sessionSource.includes('avatarVehicleInteractionState'),
             '20. the existing mount/dismount observation seam is still exposed, untouched by this milestone');
     }

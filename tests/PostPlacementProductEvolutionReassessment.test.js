@@ -10,7 +10,9 @@ import {
 } from '../core/DocumentCollaborationConsistencyPolicy.js';
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
 import { ConflictResolver, ConflictRelation } from '../replication/ConflictResolver.js';
-import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, editorSessionFiles, worldNavigationSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.311 — Post-Placement Product Evolution Reassessment.
 //
@@ -70,15 +72,7 @@ import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './su
 //                                READY)                      reassess-    reassessment)
 //                                                             ment, STOP)
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {
@@ -216,7 +210,7 @@ async function runTests() {
         const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/documentCommandPropagation/.test(editorViewSource) && /publishDocumentUseCase/.test(editorViewSource),
             'B1a. EditorView.js still composes both live collaboration and the publish use case in the same view.');
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(/createNostrPublicationDistributionRuntimeAdapter/.test(mainSource) && /createArweavePublicationDistributionRuntimeAdapter/.test(mainSource),
             'B1b. ui/main.js still constructs both real distribution runtime adapters.');
         assert(await sourceExists('ui/components/PublicationCatalog.js'),
@@ -237,9 +231,9 @@ async function runTests() {
         // Materialize -> Place. Every stage still has a real, reusable UI
         // action (0.9.307's own dedicated Snapshot research pass,
         // reconfirmed with one signal per stage).
-        assert((await rawSource('ui/components/OwnPublicationPanel.js')).includes('discoverOwnSnapshot') &&
+        assert(((await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n')).includes('discoverOwnSnapshot') &&
             ((await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n')).includes('armComparisonSelection') &&
-            (await rawSource('ui/main.js')).includes("app.provide('exportSnapshotCommand'"),
+            ((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n')).includes("app.provide('exportSnapshotCommand'"),
             'B3. Snapshot discovery, comparison, and export all still have real UI call sites.');
 
         // B4. Place Publication -> Own Publication -> See all placements.
@@ -247,7 +241,7 @@ async function runTests() {
         // proven and converged) — reconfirmed with one fresh, live signal
         // that the plural read path still returns every placement,
         // unreduced.
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(panelSource.includes('getPlacementsForPublication') || panelSource.includes('publicationPlacements'),
             'B4. OwnPublicationPanel.js still renders the plural placements read path 0.9.308 wired.');
 
@@ -294,7 +288,7 @@ async function runTests() {
         // three more instances, none previously named by any prior
         // reassessment.
         const bypassedRoots = [
-            ['CreateIdentityUseCase', 'new CreateIdentityProviderUseCase().execute()', 'ui/main.js'],
+            ['CreateIdentityUseCase', 'new CreateIdentityProviderUseCase().execute()', 'ui/main/composeIdentityAndPeers.js'],
             ['CreateAuthorizationUseCase', 'new LocalAuthorizationVerifier();', 'application/publication/CreatePublicationCatalogUseCase.js'],
             ['CreateWorldLayoutUseCase', 'new LocalWorldLayoutProvider(', 'application/world/CreateWorldViewUseCase.js']
         ];
@@ -349,7 +343,7 @@ async function runTests() {
         // autosave-recovery parity — already established (0.9.307 C3/C4/D4)
         // as real, but LARGE-scope gaps. Reconfirmed unchanged, three
         // milestones later.
-        const editorSessionSource = codeOnlyLines(await rawSource('application/editor/EditorSession.js'));
+        const editorSessionSource = codeOnlyLines((await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n'));
         assert(!/ReplayDocumentUseCase|RestoreHistoryStateUseCase|getTimeline/.test(editorSessionSource),
             'C7a. application/editor/EditorSession.js still has zero references to ReplayDocumentUseCase/RestoreHistoryStateUseCase/getTimeline — unchanged since 0.9.307.');
         assert(!/[Aa]utosave|[Rr]ecovery/i.test((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n')),
@@ -460,7 +454,7 @@ async function runTests() {
         // F2. Navigation — 0.9.310's own Section D finding (document-keyed,
         // never placement-keyed, proven on two independent existing
         // features) reconfirmed fresh with one signal.
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(sessionSource.includes('this._getWorldPosition(documentId)'),
             'F2. focusDocument() still resolves its camera target through the per-DOCUMENT _getWorldPosition(), never a per-placement one — 0.9.310\'s own finding holds unchanged.');
 

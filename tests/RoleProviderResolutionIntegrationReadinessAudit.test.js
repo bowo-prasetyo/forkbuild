@@ -1,8 +1,7 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
 import { RoleAwareProviderResolver, RoleProviderResolutionStatus } from '../application/settings/RoleAwareProviderResolver.js';
 
@@ -16,6 +15,9 @@ import { BitcoinOpReturnProofVerifier } from '../anchoring/BitcoinOpReturnProofV
 import { BitcoinAnchorPublisher } from '../anchoring/BitcoinAnchorPublisher.js';
 import { composeDecentralizedWorldEncounterMaterialDiscoveryServices } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
 import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.296 — Role Provider Resolution Integration Readiness Audit.
 //
@@ -99,14 +101,7 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 //   `neverCalled` restraint — structure and identity only, never live
 //   wire behavior.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function listJsFiles(relativeDir, results = []) {
     const dirUrl = new URL(relativeDir.endsWith('/') ? relativeDir : `${relativeDir}/`, SOURCE_ROOT);
@@ -133,17 +128,6 @@ async function repoWideProductionFiles() {
     const all = [];
     for (const dir of dirs) await listJsFiles(dir, all);
     return [...new Set(all)];
-}
-
-// The identical in-memory StorageProvider fake tests/
-// DecentralizedRoleProviderPreferencePersistence.test.js and tests/
-// RoleAwareProviderResolution.test.js already use for the same purpose.
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makePreferenceStore() {

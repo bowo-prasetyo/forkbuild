@@ -12,6 +12,8 @@ import { SnapshotPublicationAttributionOutcome } from '../application/snapshot/S
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
+import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.155 — Selected Snapshot Attribution End-to-End Audit.
 //
@@ -110,10 +112,6 @@ import { ContentReference } from '../core/ContentReference.js';
 //            announcement. Selecting each in turn, through the real UI,
 //            proves the complete outcome changes accordingly: MATCH,
 //            NO_MATCH, and CONTENT_HASH_MISMATCH.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -601,9 +599,12 @@ async function run() {
 
         // Structural: both call sites genuinely invoke the SAME imported
         // function — never two parallel comparison implementations.
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
-        const importLines = panelCode.match(/import\s*\{\s*resolveSnapshotPublicationAttribution\s*\}/g) || [];
-        assert(importLines.length === 1, 'F6. resolveSnapshotPublicationAttribution is imported exactly once, from application/snapshot/SnapshotPublicationAttribution.js — never reimplemented for either path');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
+        // The panel's methods live in two modules, and each imports it once.
+        const importLines = panelCode.match(/import\s*\{\s*resolveSnapshotPublicationAttribution\s*\}[^;]*;/g) || [];
+        assert(importLines.length === 2 && importLines.every((line) => line.includes("application/snapshot/SnapshotPublicationAttribution.js'"))
+            && !/function resolveSnapshotPublicationAttribution/.test(panelCode),
+            'F6. resolveSnapshotPublicationAttribution is imported once per method module, always from application/snapshot/SnapshotPublicationAttribution.js — never reimplemented for either path');
         const callSites = panelCode.match(/resolveSnapshotPublicationAttribution\(/g) || [];
         assert(callSites.length === 2, 'F7. exactly two call sites exist in this file — discoverOwnSnapshot()\'s own (0.9.144) and attributeSelectedSnapshot()\'s own (0.9.154) — both invoking the identical imported function, per resolveSnapshotPublicationAttribution() itself (application/snapshot/SnapshotPublicationAttribution.js), rather than a second, independent comparison');
 
@@ -770,22 +771,22 @@ async function run() {
     // Section I — NO IMPLICIT ACTIONS, structural and behavioral.
     // ===============================================================
     {
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
 
         // I-i. Structural: selectSnapshotCandidate() never resolves.
-        const selectSnapshotCandidateBody = (panelCode.match(/selectSnapshotCandidate\(candidate\)\s*\{[\s\S]*?\n\s{8}\},/) || [''])[0];
+        const selectSnapshotCandidateBody = (panelCode.match(/selectSnapshotCandidate\(candidate\)\s*\{[\s\S]*?\n {4}\},?/) || [''])[0];
         assert(selectSnapshotCandidateBody.length > 0, 'I1. sanity: selectSnapshotCandidate() body was found');
         assert(!selectSnapshotCandidateBody.includes('resolveSelectedSnapshotCommand') && !selectSnapshotCandidateBody.includes('resolveSnapshotPublicationAttribution'),
             'I2. selectSnapshotCandidate() never calls resolveSelectedSnapshotCommand or resolveSnapshotPublicationAttribution — selecting never resolves and never attributes');
 
         // I-ii. Structural: resolveSelectedSnapshot() never attributes.
-        const resolveSelectedSnapshotBody = (panelCode.match(/resolveSelectedSnapshot\(\)\s*\{[\s\S]*?\n\s{8}\},/) || [''])[0];
+        const resolveSelectedSnapshotBody = (panelCode.match(/resolveSelectedSnapshot\(\)\s*\{[\s\S]*?\n {4}\},?/) || [''])[0];
         assert(resolveSelectedSnapshotBody.length > 0, 'I3. sanity: resolveSelectedSnapshot() body was found');
         assert(!resolveSelectedSnapshotBody.includes('resolveSnapshotPublicationAttribution'),
             'I4. resolveSelectedSnapshot() never calls resolveSnapshotPublicationAttribution() — resolving never attributes');
 
         // I-iii. Structural: attributeSelectedSnapshot() never (re-)resolves.
-        const attributeSelectedSnapshotBody = (panelCode.match(/attributeSelectedSnapshot\(\)\s*\{[\s\S]*?\n\s{8}\}/) || [''])[0];
+        const attributeSelectedSnapshotBody = (panelCode.match(/attributeSelectedSnapshot\(\)\s*\{[\s\S]*?\n {4}\}/) || [''])[0];
         assert(attributeSelectedSnapshotBody.length > 0, 'I5. sanity: attributeSelectedSnapshot() body was found');
         assert(!attributeSelectedSnapshotBody.includes('resolveSelectedSnapshotCommand') && !attributeSelectedSnapshotBody.includes('this.resolveSelectedSnapshot('),
             'I6. attributeSelectedSnapshot() never calls resolveSelectedSnapshotCommand or resolveSelectedSnapshot() itself — attributing never (re-)resolves');

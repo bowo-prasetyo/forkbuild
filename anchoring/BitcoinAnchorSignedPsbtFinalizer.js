@@ -1,6 +1,7 @@
 import { BitcoinAnchorPsbtSerializer } from './BitcoinAnchorPsbtSerializer.js';
 import { BitcoinAnchorSignedPsbtInspector } from './BitcoinAnchorSignedPsbtInspector.js';
 import { sha256 } from '../core/Sha256.js';
+import { bytesToHex, hexToBytes, concatBytes, reverseBytes } from '../utils/bytes.js';
 
 const HEX_PATTERN = /^[0-9a-f]+$/i;
 const BASE64_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
@@ -734,33 +735,6 @@ function bytesEqual(a, b) {
         if (a[i] !== b[i]) return false;
     }
     return true;
-}
-
-function concatBytes(arrays) {
-    const total = arrays.reduce((sum, array) => sum + array.length, 0);
-    const result = new Uint8Array(total);
-    let offset = 0;
-    for (const array of arrays) {
-        result.set(array, offset);
-        offset += array.length;
-    }
-    return result;
-}
-
-function hexToBytes(hex) {
-    const bytes = new Uint8Array(hex.length / 2);
-    for (let i = 0; i < bytes.length; i++) {
-        bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
-    }
-    return bytes;
-}
-
-function bytesToHex(bytes) {
-    return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
-}
-
-function reverseBytes(bytes) {
-    return Uint8Array.from(bytes).reverse();
 }
 
 function writeUInt32LE(value) {

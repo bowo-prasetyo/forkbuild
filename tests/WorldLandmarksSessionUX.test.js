@@ -3,7 +3,6 @@ import { World } from '../core/World.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
@@ -15,6 +14,8 @@ import { WorldNavigationSession } from '../application/world/WorldNavigationSess
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { WorldAuthorizationService } from '../application/identity/WorldAuthorizationService.js';
 import { CommandHistoryEvent } from '../application/events/CommandHistoryEvent.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.3.7 — World Landmarks & Personal Waypoints — Session/UI integration.
 //
@@ -37,18 +38,6 @@ import { CommandHistoryEvent } from '../application/events/CommandHistoryEvent.j
 //              READ but not EDIT Alice's World, is refused at every
 //              landmark mutation entry point.
 //   Section D: Failure modes — no live avatar, not authenticated.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 // Mirrors tests/WorldEditingAuthorization.test.js's own makeIdentityProvider().
 function makeIdentityProvider({ identityId = null, username = null } = {}) {

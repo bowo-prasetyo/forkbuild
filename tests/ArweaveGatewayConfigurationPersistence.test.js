@@ -1,8 +1,10 @@
-import { readFile } from 'node:fs/promises';
 
 import { ArweaveGatewayConfiguration, DEFAULT_ARWEAVE_GATEWAY_URL } from '../core/ArweaveGatewayConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfigurationStore.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.364 — User-Configurable Arweave Gateway Configuration Persistence.
 // See docs/Roadmap.md, "0.9.364 — User-Configurable Arweave Gateway," and
@@ -26,22 +28,10 @@ import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfi
 //            present -> override" pattern a caller (ui/main.js) applies
 // Section I: architecture sweep — no provider imports, no registry, no UI
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function expectThrows(fn, message) {
     let threw = false;
     try { fn(); } catch { threw = true; }
     assert(threw, message);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 class ThrowingStorageProvider extends StorageProvider {
@@ -49,11 +39,6 @@ class ThrowingStorageProvider extends StorageProvider {
     load() { throw new Error('storage backend unavailable'); }
     remove() { throw new Error('storage backend unavailable'); }
     list() { return []; }
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 async function run() {

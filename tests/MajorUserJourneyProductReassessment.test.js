@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { Publication } from '../publisher/Publication.js';
@@ -25,7 +24,9 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { World } from '../core/World.js';
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.650 — Major User Journey Product Reassessment.
 //
@@ -98,9 +99,7 @@ function n(message) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
+
 function codeOnly(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
@@ -120,14 +119,6 @@ function runGuardLive(relativeTestFile) {
     } catch (error) {
         return { passed: false, stdout: `${error.stdout || ''}${error.stderr || ''}` };
     }
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeIdentity(label, storage) {
@@ -331,7 +322,7 @@ async function run() {
     // Section D — Commentary journey.
     // ===============================================================
     {
-        const mainSource = codeOnly(await rawSource('ui/main.js'));
+        const mainSource = codeOnly((await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n'));
         const nostrDiscoverSource = await rawSource('application/publication/commentary/DiscoverPublicationCommentaryFromNostrUseCase.js');
 
         // D1. Local authoring/distribution: real UI entry points, real
@@ -367,7 +358,7 @@ async function run() {
         // reachability gap above is Discovery-time, not Notification-time.
         const bridgeCallSites = grepFiles('handleCommentaryReceived\\(', ['ui/main.js']);
         assert(bridgeCallSites.length > 0, 'D3a. ui/main.js calls handleCommentaryReceived() from its own composition root.');
-        const mainSourceRaw = await rawSource('ui/main.js');
+        const mainSourceRaw = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         const webrtcSiteIndex = mainSourceRaw.indexOf('publicationCommentaryDistributionPeerExchange.onCommentaryReceived');
         const nostrSiteIndex = mainSourceRaw.indexOf('discoverPublicationCommentaryFromNostrCommand');
         const arweaveSiteIndex = mainSourceRaw.indexOf('discoverPublicationCommentaryFromArweaveCommand');
@@ -381,7 +372,7 @@ async function run() {
     // Section E — cross-session continuity, exhaustive.
     // ===============================================================
     {
-        const mainSourceRaw = await rawSource('ui/main.js');
+        const mainSourceRaw = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
 
         // E1. Documents — persisted (LocalStorageProvider) and
         // reconstructed on demand (LoadDocumentUseCase.listSavedDocuments()

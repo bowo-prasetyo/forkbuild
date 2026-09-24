@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
@@ -9,7 +8,8 @@ import { describeWorldEncounterMaterialVerificationStatusLabel } from '../applic
 import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 import { shouldRefreshSnapshotDiscovery, DEFAULT_DISCOVERY_REFRESH_RADIUS } from '../application/snapshot/ShouldRefreshSnapshotDiscovery.js';
 import { materializedSnapshotWorldOrigin } from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { worldViewFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldEncounterCanvasFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.528 — Snapshot Encounter & Placement Product Experience
 // Reassessment.
@@ -59,10 +59,6 @@ import { worldViewFiles, worldEncounterCanvasFiles } from './support/SourceFileG
 const SOURCE_ROOT = new URL('../', import.meta.url);
 const SOURCE_ROOT_PATH = SOURCE_ROOT.pathname;
 
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 let assertionCount = 0;
 function check(condition, message) {
     assertionCount += 1;
@@ -109,7 +105,7 @@ async function run() {
     // Section B — Candidate vs material distinction.
     // ===============================================================
     {
-        const panelSource = await source('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => source(file)))).join('\n');
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
 
         // Four genuinely distinct fields exist for four genuinely distinct
@@ -211,10 +207,10 @@ async function run() {
         // call sites, all six render sites, actually route through the
         // new view rather than a raw `.outcome` interpolation.
         // -----------------------------------------------------------
-        const panelSource = await source('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => source(file)))).join('\n');
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
 
-        check(panelSource.includes("import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../../application/snapshot/SnapshotOutcomeInspectionView.js';"),
+        check(panelSource.includes("import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../../../application/snapshot/SnapshotOutcomeInspectionView.js';"),
             'C9. OwnPublicationPanel.js imports the new view');
         check(canvasSource.includes("import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../../../application/snapshot/SnapshotOutcomeInspectionView.js';"),
             'C10. WorldEncounterCanvas.js imports the new view');
@@ -250,7 +246,7 @@ async function run() {
         // describeMaterialVerificationStatusLabel() shape from 0.9.519.
         check(canvasSource.includes('describeSnapshotResolutionLabel(outcome) {\n        return describeSnapshotResolutionOutcomeLabel(outcome);\n    },'),
             'C15. WorldEncounterCanvas.js\'s own wrapper method is a pure pass-through, no logic of its own');
-        check(panelSource.includes('describeSnapshotAttributionLabel(outcome) {\n            return describeSnapshotAttributionOutcomeLabel(outcome);\n        }'),
+        check(panelSource.includes('describeSnapshotAttributionLabel(outcome) {\n        return describeSnapshotAttributionOutcomeLabel(outcome);\n    }'),
             'C16. OwnPublicationPanel.js\'s own wrapper method is a pure pass-through, no logic of its own');
 
         // An unrecognized outcome still renders — never hidden, never
@@ -409,7 +405,7 @@ async function run() {
     // ===============================================================
     {
         const newViewSource = await source('application/snapshot/SnapshotOutcomeInspectionView.js');
-        const panelSource = await source('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => source(file)))).join('\n');
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
 
         const classifications = [];
@@ -475,7 +471,7 @@ async function run() {
         // 0.9.521's own precedent for a technical, no-claim-word token
         // never duplicated in humanized form anywhere else in this
         // codebase — named here so the decision is visible, not silent.
-        const panelSource = await source('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => source(file)))).join('\n');
         const diagnosticRawOutcomes = [
             '{{ selectedSnapshotMaterializationResult.outcome }}',
             '{{ selectedSnapshotWorldPositionClaimResult.outcome }}',

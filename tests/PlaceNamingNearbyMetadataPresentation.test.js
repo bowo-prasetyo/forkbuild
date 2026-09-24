@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
 import { namingView as deriveNamingView } from '../core/PlaceNamingView.js';
 import {
@@ -14,8 +13,10 @@ import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/Local
 import { PlaceNamingClaimExchange } from '../application/placeNaming/PlaceNamingClaimExchange.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { worldViewFiles, stylesheetFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.266 — Nearby Place Naming Claim Metadata Presentation.
 //
@@ -63,18 +64,6 @@ import { worldViewFiles, stylesheetFiles } from './support/SourceFileGroups.js';
 //               signed claim
 //   Section N — architectural regression: the reproduction above genuinely
 //               matches what ui/views/WorldView.js contains
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function makeIdentity(label) {
     const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
@@ -166,12 +155,6 @@ function makeGetRegionsSession(regions, { onFocusLocation } = {}) {
             throw new Error(`fake session: unexpected access to session.${String(prop)}`);
         }
     });
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 function codeOnlyLines(source) {

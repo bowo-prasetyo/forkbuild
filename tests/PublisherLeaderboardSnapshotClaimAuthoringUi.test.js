@@ -1,6 +1,4 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import PublisherLeaderboardSnapshotClaimAuthoringView from '../ui/views/PublisherLeaderboardSnapshotClaimAuthoringView.js';
@@ -8,17 +6,17 @@ import ReconciliationWorkspaceView from '../ui/views/ReconciliationWorkspaceView
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
 import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { reconstructPublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
-import { exportPublisherLeaderboardSnapshotClaim } from '../application/leaderboard/PublisherLeaderboardSnapshotClaimExchange.js';
-import { ReconcilePublisherLeaderboardSnapshotClaimOutcome } from '../application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js';
+import { reconstructPublisherLeaderboardSnapshot } from '../application/leaderboard/snapshot/Snapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/snapshot/Fingerprint.js';
+import { exportPublisherLeaderboardSnapshotClaim } from '../application/leaderboard/snapshot/ClaimExchange.js';
+import { ReconcilePublisherLeaderboardSnapshotClaimOutcome } from '../application/leaderboard/snapshot/ReconcileClaimUseCase.js';
 import { RevalidationObservationArchiveOutcome } from '../application/claimSnapshotReconciliation/revalidationObservation/RecordRevalidationObservationIntoArchiveUseCase.js';
-import { LeaderboardClaimArchiveReceiptOutcome } from '../application/leaderboard/ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js';
+import { LeaderboardClaimArchiveReceiptOutcome } from '../application/leaderboard/snapshot/ReceiveClaimIntoArchiveUseCase.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { readSource } from './support/SourceText.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.411 — Publisher Leaderboard Snapshot Claim Authoring & Export.
 //
@@ -67,10 +65,6 @@ function n(message) {
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
 
-async function readSource(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
-
 // A genuine IMPORT means the symbol is actually bound by an
 // `import { ... } from` statement — never merely mentioned in a comment.
 // Identical helper to tests/ReconciliationWorkspaceUi.test.js's own
@@ -89,14 +83,6 @@ function codeOnly(source) {
 // here rather than reinvented.
 // ---------------------------------------------------------------------
 
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
 class FakePublicationObservationArchiveStorage {
     constructor(archive = PublicationObservationArchive.empty()) {
         this._archive = archive;
@@ -104,13 +90,6 @@ class FakePublicationObservationArchiveStorage {
     }
     load() { return this._archive; }
     save(archive) { this._archive = archive; this.saveCallCount += 1; }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 // The SAME shape `application/identity/IdentityUseCase.js#provider` already
@@ -541,8 +520,8 @@ async function run() {
     console.log('');
     console.log('ui/views/PublisherLeaderboardSnapshotClaimAuthoringView.js is now the');
     console.log('first user-facing surface over');
-    console.log('application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js (0.8.121)');
-    console.log('and application/leaderboard/PublisherLeaderboardSnapshotClaimExchange.js (0.8.122) —');
+    console.log('application/leaderboard/snapshot/CreateClaimUseCase.js (0.8.121)');
+    console.log('and application/leaderboard/snapshot/ClaimExchange.js (0.8.122) —');
     console.log('a small, explicit page: generate and sign a claim about this replica\'s');
     console.log('own current leaderboard snapshot, explicitly, then export it separately,');
     console.log('explicitly. The full Author -> Sign -> Export -> Parse/import -> Workspace');

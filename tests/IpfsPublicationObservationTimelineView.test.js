@@ -7,6 +7,7 @@ import {
     IpfsPublicationObservationTimelineEntryKind,
     describeIpfsPublicationObservationTimeline
 } from '../application/ipfs/IpfsPublicationObservationTimelineView.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.73 — IPFS Publication Observation Timeline.
 //
@@ -53,10 +54,6 @@ import {
 //            empty or is skipped, never throwing
 //
 // See docs/Roadmap.md, "0.8.73 — IPFS Publication Observation Timeline."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertNeverScored(obj, path) {
     if (!obj || typeof obj !== 'object') return;

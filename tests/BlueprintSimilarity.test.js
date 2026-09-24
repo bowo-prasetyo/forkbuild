@@ -5,6 +5,7 @@ import {
     compareBlueprintSimilarity, isPossibleLineageCandidate, describeBlueprintSimilarity,
     DEFAULT_SIMILARITY_THRESHOLD
 } from '../core/BlueprintSimilarity.js';
+import { assert } from './support/Assert.js';
 
 // 0.6.8 — Blueprint Lineage & Revision Discovery.
 //
@@ -13,10 +14,6 @@ import {
 // separate from, and never becomes, an assertion of lineage. See that
 // module's own header and docs/Principles.md, "Similarity Is Evidence;
 // It Never Becomes Lineage (0.6.8)."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function brick(definitionId, x, y, z, rotation = 0) {
     return new Brick({ definitionId, position: new Position(x, y, z), rotation });

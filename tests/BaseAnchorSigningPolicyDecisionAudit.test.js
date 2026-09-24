@@ -1,8 +1,9 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.469 — Base Anchor Signing Policy Decision Audit.
 //
@@ -125,9 +126,7 @@ function n(message) {
 }
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
-async function source(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
+
 async function sourceExists(relativePath) {
     try { await source(relativePath); return true; } catch { return false; }
 }
@@ -168,7 +167,7 @@ async function run() {
     {
         assert(!(await sourceExists('anchoring/BaseAnchorPublisher.js')), n('A1. anchoring/BaseAnchorPublisher.js still does not exist — the gap 0.9.466 named remains open, confirmed fresh rather than assumed'));
 
-        const mainSrc = codeOnly(await source('ui/main.js'));
+        const mainSrc = codeOnly((await Promise.all(mainFiles().map((file) => source(file)))).join('\n'));
         assert(!/baseAnchorPublisher/i.test(mainSrc), n('A2. ui/main.js still names no baseAnchorPublisher of any kind'));
 
         const rawSignerSrc = await source('base/BaseTransactionSigner.js');
@@ -282,7 +281,7 @@ async function run() {
         assert(/async publishAnchor\(/.test(coordinatorSrc), n('E4. it exposes ONE async publishAnchor() call — the identical one-call shape a BaseAnchorPublisher would need'));
         assert(/this\._createPublicationAnchorUseCase\.execute\(publicationId,/.test(coordinatorSrc), n('E5. that one call runs the full plan -> PSBT -> sign (raw, non-reviewed wallet signer) -> finalize -> broadcast -> CreatePublicationAnchorUseCase.execute() sequence internally, confirmed at the real call site'));
 
-        const mainSrc = codeOnly(await source('ui/main.js'));
+        const mainSrc = codeOnly((await Promise.all(mainFiles().map((file) => source(file)))).join('\n'));
         assert(!/BitcoinAnchorPublicationCoordinator/.test(mainSrc), n('E6. ui/main.js never imports or constructs this class — it is not wired into the running production app'));
         const viewFiles = ['ui/views/DecentralizedPublicationsView.js'];
         for (const file of viewFiles) {
@@ -365,7 +364,7 @@ async function run() {
         // already produced by the EXISTING, live, reviewed pipeline —
         // confirmed these three coordinators are real and provided to the
         // running app today, not hypothetical future wiring.
-        const mainSrc = codeOnly(await source('ui/main.js'));
+        const mainSrc = codeOnly((await Promise.all(mainFiles().map((file) => source(file)))).join('\n'));
         assert(/app\.provide\('basePublicationTransactionPlanCoordinator', basePublicationTransactionPlanCoordinator\)/.test(mainSrc), n('H5a. basePublicationTransactionPlanCoordinator is a real, currently-provided collaborator in the running production app'));
         assert(/app\.provide\('baseReviewedSigningCoordinator', baseReviewedSigningCoordinator\)/.test(mainSrc), n('H5b. baseReviewedSigningCoordinator likewise — the review-gated signing step is already live today'));
         assert(/app\.provide\('baseTransactionBroadcastCoordinator', baseTransactionBroadcastCoordinator\)/.test(mainSrc), n('H5c. baseTransactionBroadcastCoordinator likewise — a real Base transaction can already be reviewed, signed, and broadcast end to end in the running app today, with no new signing capability of any kind'));

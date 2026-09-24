@@ -30,7 +30,7 @@ import { PublicationObservationArchiveProvenanceOrigin, isValidPublicationObserv
 //        ▼
 //   a new PublicationObservationArchive
 //
-// UNLIKE `ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js`
+// UNLIKE `leaderboard/snapshot/ReceiveClaimIntoArchiveUseCase.js`
 // (0.8.130), THIS FILE DELEGATES TO NO INTERMEDIATE USE CASE — BECAUSE NONE
 // EXISTS, THE IDENTICAL REASON 0.8.150'S OWN USE CASE ALREADY GIVES. 0.8.162
 // is a pure function, not a class-shaped use case; a caller already holds

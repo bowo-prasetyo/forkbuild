@@ -6,6 +6,7 @@ import { registerMaterializedSnapshotWorldSource } from '../application/snapshot
 import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
 import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
 import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.190 — Automatic Snapshot Encounter Retention Integration.
 //
@@ -39,10 +40,6 @@ import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
 //              forgotten subject
 //   Section M: defensive/boundary behavior — missing registry, malformed
 //              noteAutomaticRegistration() input, missing wandererPosition
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function pos(x, y, z) {
     return { x, y, z };

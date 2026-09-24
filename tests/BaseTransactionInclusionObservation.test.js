@@ -13,6 +13,7 @@ import {
     latestBaseTransactionInclusionObservation
 } from '../application/anchoring/base/BaseTransactionInclusionObservationHistory.js';
 import { BitcoinAnchorConfirmationObserver } from '../anchoring/BitcoinAnchorConfirmationObserver.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.96 — Explicit Base Transaction Inclusion & Confirmation Observation.
 //
@@ -67,10 +68,6 @@ import { BitcoinAnchorConfirmationObserver } from '../anchoring/BitcoinAnchorCon
 //
 // See docs/Principles.md, "The UI Displays Observations; It Does Not Turn
 // Them Into A Verdict (0.8.57)," extended here one chain over.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

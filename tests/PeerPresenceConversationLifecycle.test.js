@@ -1,5 +1,4 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
@@ -15,6 +14,8 @@ import { ConversationReadMarker } from '../core/ConversationReadMarker.js';
 import { PeerPresenceUseCase } from '../application/presence/PeerPresenceUseCase.js';
 import { toChatMessage, deriveConversationId } from '../core/ChatMessage.js';
 import { FriendshipState } from '../core/FriendshipState.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.70 — Presence & Conversation Lifecycle.
 //
@@ -31,18 +32,6 @@ import { FriendshipState } from '../core/FriendshipState.js';
 // conversation) are also gone, and that a stale/rejected connection
 // event can never corrupt the reconciled view, extending 0.2.62's own
 // stale-incarnation defense into this new layer.
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function wait(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));

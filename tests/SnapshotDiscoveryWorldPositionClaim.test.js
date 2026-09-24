@@ -8,6 +8,7 @@ import {
 } from '../core/SnapshotDiscoveryEnvelope.js';
 import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
 import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.171 — Decentralized Snapshot World Position Claim.
 //
@@ -61,10 +62,6 @@ import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSn
 //     lives entirely inside the Snapshot discovery protocol; none of this
 //     milestone's own files reference a content store, a placement
 //     resolver, or the Signed Claim distribution family.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function envelopeOf(overrides = {}) {
     return {

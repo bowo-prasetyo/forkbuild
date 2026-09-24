@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { ArweaveSnapshotDiscoveryQueryService } from '../application/arweave/ArweaveSnapshotDiscoveryQueryService.js';
 import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
@@ -8,6 +7,9 @@ import { SnapshotCandidateDiscoveryOutcome } from '../application/snapshot/Snaps
 import { executeDiscoverSnapshotCandidatesCommandWithOutcome } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
 import { SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
+import { ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.591 — Arweave Snapshot Discovery Outcome Parity.
 //
@@ -50,20 +52,11 @@ import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 //      Repository, provider selection, Arweave announcement publishing,
 //      or gateway retry/failover.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));
     for (let i = 0; i < 10; i++) {
         await Promise.resolve();
     }
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 function graphqlResponse(ids) {
@@ -359,7 +352,7 @@ async function runTests() {
 
         // Confirm which copy the template actually renders for each case,
         // reading the real template source rather than assuming it.
-        const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         const templateStart = panelSource.indexOf('template: `');
         const template = panelSource.slice(templateStart);
         assert(/snapshotCandidateDiscoveryResult\.length === 0 && snapshotCandidateDiscoveryOutcome === 'unavailable'/.test(template),
@@ -405,7 +398,7 @@ async function runTests() {
         assert(!/searchWithOutcome/.test(compositionSource),
             '42. application/snapshot/SnapshotCandidateDiscoveryRuntimeComposition.js (provider selection) needed no change — the composite already duck-types searchWithOutcome() per source');
 
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         assert(/new ArweaveSnapshotDiscoveryQueryService\(\{ gatewayUrl: resolvedArweaveGatewayUrl \}\)/.test(mainSource),
             '43. ui/main.js still constructs exactly one ArweaveSnapshotDiscoveryQueryService the identical way — no new construction site, no gateway retry/failover config added');
 

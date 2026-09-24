@@ -1,4 +1,5 @@
 import { BitcoinAnchorTransactionBuilder } from '../anchoring/BitcoinAnchorTransactionBuilder.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.47 — Bitcoin Anchor Transaction Construction.
 //
@@ -34,10 +35,6 @@ import { BitcoinAnchorTransactionBuilder } from '../anchoring/BitcoinAnchorTrans
 //
 // See docs/Principles.md, "A Transaction Plan Is Not A Transaction
 // (0.8.47)."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

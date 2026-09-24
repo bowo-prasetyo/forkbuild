@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { Publication } from '../publisher/Publication.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
@@ -11,7 +10,6 @@ import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { License, LicenseId } from '../core/License.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { PublicationQuery } from '../core/PublicationQuery.js';
@@ -24,6 +22,9 @@ import {
 import PublicationCard from '../ui/components/PublicationCard.js';
 import PublicationList from '../ui/components/PublicationList.js';
 import { publicationsPageFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.539 — Publication Selection & Identity Presentation Product
 // Reassessment.
@@ -84,10 +85,6 @@ import { publicationsPageFiles, worldEncounterCanvasFiles } from './support/Sour
 //
 // FINDING: see the verdict block at the end of this file.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 // A real Wanderer clicking "Publish" twice is two separate human actions,
 // never two calls in the same JS microtask — this stands in for that gap
 // so the two republishes below land, as they realistically always would,
@@ -95,20 +92,6 @@ function assert(condition, message) {
 // clock resolution.
 function wait(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 // The same minimal, real, one-brick Document/publish helper
@@ -355,7 +338,7 @@ async function run() {
         const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(/entry\.evidence\.anchors/.test(decentralizedViewSource),
             'G2a. STRUCTURAL: anchors are still rendered scoped to one Publication\'s own `entry`, never as a global, cross-Publication list that could imply two Publications sharing a contentHash are one.');
-        const reconciliationPanelSource = await readSource('ui/components/ReconciliationCandidateEvidenceDetailPanel.js');
+        const reconciliationPanelSource = await readSource('ui/components/reconciliation/CandidateEvidenceDetailPanel.js');
         assert(!/contentHash|anchor/i.test(reconciliationPanelSource),
             'G2b. STRUCTURAL: confirms the Reconciliation "evidence" vocabulary is a genuinely different feature (publisher-claim reconciliation) with no contentHash/anchor rendering to confuse with Publication evidence at all.');
 

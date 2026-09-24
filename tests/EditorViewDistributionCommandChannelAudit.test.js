@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { executePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommand.js';
@@ -9,14 +8,16 @@ import { PublishDocumentUseCase } from '../application/publication/PublishDocume
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { worldViewFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, editorViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.376 — EditorView Distribution Command Channel Audit.
 //
@@ -58,15 +59,7 @@ import { worldViewFiles, editorViewFiles } from './support/SourceFileGroups.js';
 //   Section I — Scope and API pollution: one capability, not a bus.
 //   Section J — Final decision matrix and verdict.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 function codeOnlyLines(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
@@ -95,14 +88,6 @@ async function grepCodeOnlyFiles(pattern, dirs) {
 }
 
 const PRODUCTION_DIRS = ['application', 'ui', 'core', 'publisher'];
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function makeDocument(title) {
     const world = new World();
@@ -161,7 +146,7 @@ async function run() {
     // callable contract EditorView could receive.
     // ---------------------------------------------------------------
     {
-        const mainCode = await codeOnlySource('ui/main.js');
+        const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         const provideMatches = mainCode.match(/app\.provide\('publicationDistributionCommand', publicationDistributionCommand\)/g) || [];
         assert(provideMatches.length === 1,
             '1. ui/main.js provides publicationDistributionCommand exactly once, at the APP level (app.provide), not scoped to any route or view');
@@ -406,7 +391,7 @@ async function run() {
         }
         assert(threw, '27. the exact real command chain rejects on a genuine failure when called through the SAME one-argument wrapper contract a hypothetical EditorView caller would use');
 
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(panelCode.includes('this.publicationDistributionError = sanitizeDistributionErrorMessage(error)') &&
                panelCode.includes("|| 'Publication distribution could not be completed.'"),
             '28. the ONE existing UI-facing fallback failure message stays a single fixed string, now reached through the shared sanitizeDistributionErrorMessage() seam — a fourth caller (a hypothetical EditorView surface) would reuse this exact fallback, never a distinct one, the same restraint 0.9.375 already confirmed for a third caller');
@@ -458,7 +443,7 @@ async function run() {
     // unaffected by anything EditorView would do.
     // ---------------------------------------------------------------
     {
-        const mainCode = await codeOnlySource('ui/main.js');
+        const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         const provideCount = (mainCode.match(/app\.provide\('publicationDistributionCommand'/g) || []).length;
         assert(provideCount === 1,
             '33. publicationDistributionCommand is provided exactly once, at the app root — a SECOND injector (EditorView) reads the SAME already-constructed instance, it cannot cause a second one to be built or the first to be reconstructed');

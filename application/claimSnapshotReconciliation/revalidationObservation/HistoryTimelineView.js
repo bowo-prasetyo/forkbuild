@@ -1,4 +1,5 @@
 import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory } from './HistoryView.js';
+import { isGenuineObservation } from './ObservationRecord.js';
 
 // 0.8.165 — Revalidation Observation History Timeline Projection.
 //
@@ -219,18 +220,6 @@ export function describePublisherLeaderboardClaimSnapshotReconciliationDecisionR
 export function reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryTimeline(archive) {
     return describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryTimeline(
         reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory(archive)
-    );
-}
-
-// A genuine 0.8.162 observation record — duplicated from 0.8.163's/0.8.164's
-// own private genuineness check for the identical reason those files each
-// duplicate it: this file must apply the exact same rule without importing
-// a module that itself carries decision/plan/archive vocabulary.
-function isGenuineObservation(entry) {
-    return (
-        entry !== null && typeof entry === 'object'
-        && entry.observed === true
-        && typeof entry.observedAt === 'string'
     );
 }
 

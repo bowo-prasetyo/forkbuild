@@ -4,6 +4,7 @@ import { VehicleRuntimeInstances } from '../application/world/VehicleRuntimeInst
 import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
 import { Position } from '../core/Position.js';
 import { VehicleType } from '../core/VehicleType.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.670 — Avatar Inventory (store/deploy) Runtime Integration.
 //
@@ -30,10 +31,6 @@ import { VehicleType } from '../core/VehicleType.js';
 //              press E again WITHOUT MOVING: the deterministic query
 //              must never re-offer the just-stored vehicle as a mount
 //              target, or a second store would crash on a duplicate id
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function buildAvatarPresenceSession(startPosition) {
     return new AvatarPresenceSession(

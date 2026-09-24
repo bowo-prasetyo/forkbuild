@@ -1,15 +1,16 @@
-import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
-import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
-import { describePublisherLeaderboardClaimSnapshotCorrespondence } from '../application/leaderboard/PublisherLeaderboardClaimSnapshotCorrespondenceView.js';
-import { describePublisherLeaderboardHistoricalClaimVerification } from '../application/leaderboard/PublisherLeaderboardHistoricalClaimVerification.js';
-import { describePublisherLeaderboardClaimSnapshotCorrespondenceVerification } from '../application/leaderboard/PublisherLeaderboardClaimSnapshotCorrespondenceVerificationView.js';
+import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/snapshot/Snapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/snapshot/Fingerprint.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/claim/Record.js';
+import { describePublisherLeaderboardClaimSnapshotCorrespondence } from '../application/leaderboard/claimSnapshot/CorrespondenceView.js';
+import { describePublisherLeaderboardHistoricalClaimVerification } from '../application/leaderboard/claim/HistoricalVerification.js';
+import { describePublisherLeaderboardClaimSnapshotCorrespondenceVerification } from '../application/leaderboard/claimSnapshot/CorrespondenceVerificationView.js';
 import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.8.140 — Historical Claim-to-Snapshot Correspondence Verification Projection.
 //
@@ -26,29 +27,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //            automatic selection; no mutation; determinism; zero network
 //            access; every fact is byte-identical to a direct 0.8.139/
 //            0.8.135 call
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
-}
 
 async function withoutNetworkAccess(fn) {
     let networkCallOccurred = false;
@@ -246,12 +224,12 @@ async function run() {
     // mutation, determinism, vocabulary, network access.
     // ---------------------------------------------------------------
     {
-        const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/leaderboard/PublisherLeaderboardClaimSnapshotCorrespondenceVerificationView.js', import.meta.url), 'utf8');
+        const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/leaderboard/claimSnapshot/CorrespondenceVerificationView.js', import.meta.url), 'utf8');
         const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
         assert(importLines.length === 3, '39. this file has exactly three imports');
-        assert(importLines.some((line) => line.includes("from './LeaderboardClaimRecord.js'")), '40. imports LeaderboardClaimRecord (0.8.123, UNCHANGED)');
-        assert(importLines.some((line) => line.includes("from './PublisherLeaderboardClaimSnapshotCorrespondenceView.js'")), '41. imports 0.8.139\'s own correspondence view');
-        assert(importLines.some((line) => line.includes("from './PublisherLeaderboardHistoricalClaimVerification.js'")), '42. imports 0.8.135\'s own historical verification');
+        assert(importLines.some((line) => line.includes("from '../claim/Record.js'")), '40. imports LeaderboardClaimRecord (0.8.123, UNCHANGED)');
+        assert(importLines.some((line) => line.includes("from './CorrespondenceView.js'")), '41. imports 0.8.139\'s own correspondence view');
+        assert(importLines.some((line) => line.includes("from '../claim/HistoricalVerification.js'")), '42. imports 0.8.135\'s own historical verification');
         for (const forbiddenModule of ['PublisherLeaderboardClaimSnapshotAssociationView', 'PublisherLeaderboardSnapshotClaimVerification', 'LocalIdentityProvider', 'PublicationObservationArchive', 'PublisherLeaderboardRankingPolicy', 'resolveSigningIdentityId', 'PublisherLeaderboardSnapshotTimelineView', 'PublisherLeaderboardClaimSnapshotAssociationHistoryView']) {
             assert(!importLines.some((line) => line.includes(forbiddenModule)), `43. this file never imports ${forbiddenModule} — no second correspondence/verification engine, no signing/identity/archive/ranking/timeline import`);
         }

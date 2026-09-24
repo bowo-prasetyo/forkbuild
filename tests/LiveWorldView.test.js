@@ -5,6 +5,7 @@ import {
     bootstrapWorldDiscoveryRuntime,
     WORLD_DISCOVERY_PEER_PROTOCOL
 } from '../application/discovery/WorldDiscoveryRuntimeBootstrap.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.15 — Mount Live World View.
 //
@@ -45,10 +46,6 @@ import {
 //            from owning.
 // Section C: the `/live-world` route is registered in
 //            `ui/router/index.js` and points at `LiveWorldView`.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function connectedPeerOf(identityId) {
     return { connectionId: `conn-${identityId}`, remoteIdentity: identityId ? { identityId } : null };

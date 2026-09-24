@@ -11,7 +11,8 @@ import { createNostrPublicationDistributionRuntimeAdapter } from '../application
 import { createArweaveTaggedTransactionUpload } from '../application/arweave/ArweaveTaggedTransactionUpload.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
 import { sanitizeDistributionErrorMessage } from '../application/publication/distribution/DistributionErrorMessageSanitizer.js';
-import { worldEncounterCanvasFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.527 — Publication Creation & Distribution Presentation Boundary
 // Closure Audit.
@@ -83,9 +84,7 @@ function n(message) {
 }
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
-async function source(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
+
 function codeOnly(text) {
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
@@ -723,7 +722,7 @@ async function run() {
             n(`H5. no file under application/ references normalizeDistributionResultForDisplay — it never became an application-level contract (found: ${JSON.stringify(crossFileHits)})`));
 
         const worldEncounterCanvasSource = codeOnly((await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n'));
-        const ownPublicationPanelSource = codeOnly(await source('ui/components/OwnPublicationPanel.js'));
+        const ownPublicationPanelSource = codeOnly((await Promise.all(ownPublicationPanelFiles().map((file) => source(file)))).join('\n'));
         assert(!worldEncounterCanvasSource.includes('normalizeDistributionResultForDisplay') && !ownPublicationPanelSource.includes('normalizeDistributionResultForDisplay'),
             n('H6. neither sibling distribution surface (WorldEncounterCanvas.js, OwnPublicationPanel.js) references this normalization at all — the boundary belongs to EditorView.js alone, never shared, never duplicated'));
 

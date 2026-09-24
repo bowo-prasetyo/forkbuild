@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.9.18 — Render Selected Encounter Inspection.
 //
@@ -29,14 +31,6 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 //            core/.
 // Section H: kind/objectId cross-matching still never happens through the
 //            canvas's own computed.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function publicationRow(overrides = {}) {
     return {

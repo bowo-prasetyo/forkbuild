@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { AutomaticSnapshotEncounterCascade } from '../application/snapshot/AutomaticSnapshotEncounterCascade.js';
 import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
@@ -24,7 +23,6 @@ import { GridPlacementStrategy } from '../application/placement/InitialPlacement
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Publication } from '../publisher/Publication.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
@@ -40,7 +38,10 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.601 — Discovered Publication Placement Journey Closure Audit.
 //
@@ -101,25 +102,8 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 //   K. Authorization boundary documentation.
 //   L. Closure classification.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function wait(ms = 0) {
     return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 // Same posture as every prior milestone in this arc: application/
@@ -607,7 +591,7 @@ async function run() {
         // nor WorldNavigationSession.placePublication() ever reads a
         // "claimed" or "encounter" position from anywhere — position is
         // purely the second, caller-supplied argument.
-        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         const placePublicationMethod = sessionSrc.match(/placePublication\(publicationId, position\) \{[\s\S]*?\n {4}\}/);
         assert(placePublicationMethod !== null && !/claimedPosition|encounterPosition/.test(placePublicationMethod[0]),
             'E4. WorldNavigationSession#placePublication() itself never references claimedPosition/encounterPosition — position is exclusively its own second parameter, forwarded verbatim.');
@@ -632,7 +616,7 @@ async function run() {
         assert(/const worldLayoutProvider = new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*publicationActionDiscoveryProvider\s*\);/.test(composition),
             'F1. UPDATED BY 0.9.605 (Wire Publication Discovery into World Rendering): worldLayoutProvider is now built from publicationActionDiscoveryProvider — this exact composition point was still the plain, narrow discoveryProvider when this audit was written (0.9.596/0.9.599/0.9.600 each reconfirmed that, then), and the finding below (F2-F5) is unaffected: it concerns _findPublications()/getPlacementInfo(), a completely separate call path this milestone left untouched.');
 
-        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         const findPublicationsBody = sessionSrc.match(/_findPublications\(documentId\) \{[\s\S]*?\n {4}\}/);
         assert(findPublicationsBody !== null && /this\._discoveryProvider/.test(findPublicationsBody[0]) && !/this\._publicationActionDiscoveryProvider/.test(findPublicationsBody[0]),
             'F2. _findPublications() — the shared choke point behind fork-policy AND (see F3-F5, below) getPlacementInfo()/_loadWorld() — still reads ONLY the narrow discoveryProvider.');
@@ -883,7 +867,7 @@ async function run() {
     // Section J — Product surface sanity.
     // ===============================================================
     {
-        const panelSrc = await readSource('ui/components/OwnPublicationPanel.js');
+        const panelSrc = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         assert(/placePublicationCommand: \{\s*type: Function,\s*default: null\s*\}/.test(panelSrc),
             'J1. OwnPublicationPanel.js declares placePublicationCommand as an optional prop.');
         const placementsSection = panelSrc.split('own-publication-placements"')[1].split('</div>')[0];
@@ -916,7 +900,7 @@ async function run() {
         const executeBody = placePublicationSrc.match(/execute\(publicationId, position, options = \{\}\) \{[\s\S]*\n {4}\}/);
         assert(executeBody !== null && !/authoriz|permission|canPlace|isAllowed/i.test(executeBody[0]),
             'K1. PlacePublicationUseCase.execute()\'s own method body contains no authorization/permission gate of any kind — confirmed against current source, not merely asserted.');
-        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         const placePublicationMethod = sessionSrc.match(/placePublication\(publicationId, position\) \{[\s\S]*?\n {4}\}/);
         assert(placePublicationMethod !== null && !/authoriz|permission|canPlace|isAllowed/i.test(placePublicationMethod[0]),
             'K2. WorldNavigationSession#placePublication() itself introduces no authorization/permission check either.');

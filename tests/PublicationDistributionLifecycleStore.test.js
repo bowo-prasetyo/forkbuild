@@ -9,6 +9,7 @@ import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPu
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.52 — Publication Distribution Lifecycle Store Boundary.
 // See docs/Roadmap.md, "0.9.52 — Publication Distribution Lifecycle Store
@@ -26,10 +27,6 @@ import { Signature } from '../core/Signature.js';
 //   Section H: the store never mutates a stored value
 //   Section I: independent instances share no state
 //   Section J: architectural regression
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function signedPublication(overrides = {}) {
     const publication = new Publication({

@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { IceServerConfiguration, isValidStunUrl } from '../core/IceServerConfiguration.js';
 import { ArweaveGatewayConfiguration } from '../core/ArweaveGatewayConfiguration.js';
@@ -12,6 +11,10 @@ import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvid
 import { WebRtcPeerConnection } from '../peer/WebRtcPeerConnection.js';
 import { DEFAULT_ICE_SERVERS, fetchIceServers } from '../peer/IceServerConfig.js';
 import { DEFAULT_RENDEZVOUS_URLS } from '../peer/RendezvousConfig.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.387 — STUN Configuration Lifecycle & Convergence Audit.
 //
@@ -89,18 +92,6 @@ import { DEFAULT_RENDEZVOUS_URLS } from '../peer/RendezvousConfig.js';
 // configuration work (0.9.388, a separate milestone), and no production
 // code change of any kind — this file exists to confirm 0.9.386's own
 // architecture is closed, never to extend it.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 // Two or more SEPARATE instances over one externally-owned namespace — the
 // same "restart" shape every sibling convergence audit in this codebase
@@ -206,10 +197,6 @@ function wait(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 function executableOf(src) {
     return src.replace(/\/\/.*$/gm, '');
 }
@@ -226,7 +213,7 @@ async function run() {
         const storeSource = await source('storage/IceServerConfigurationStore.js');
         const useCaseSource = await source('application/settings/SetIceServerConfigurationUseCase.js');
         const viewSource = await source('ui/views/StunSettingsView.js');
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
 
         const otherFiles = await Promise.all([
             ['peer/IceServerConfig.js', await source('peer/IceServerConfig.js')],

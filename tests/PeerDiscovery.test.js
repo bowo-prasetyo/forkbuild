@@ -1,5 +1,4 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerInvitation } from '../peer/PeerInvitation.js';
 import { PeerDiscoveryRecord } from '../peer/PeerDiscoveryRecord.js';
@@ -11,6 +10,8 @@ import { PeerAuthenticationState } from '../peer/PeerAuthenticationState.js';
 import { DiscoverPeersUseCase } from '../application/peer/DiscoverPeersUseCase.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.50 — Peer Discovery & Rendezvous.
 //
@@ -23,17 +24,6 @@ import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry
 // imports it, discovers her candidate endpoint, connects, 0.2.49 mutual
 // authentication runs on both sides, and Bob ends up with a proven
 // PeerIdentity — never merely "Alice claimed to be Alice."
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function wait(ms = 10) {
     return new Promise((resolve) => setTimeout(resolve, ms));

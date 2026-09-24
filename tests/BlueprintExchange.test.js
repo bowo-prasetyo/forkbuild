@@ -4,7 +4,6 @@ import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { Structure } from '../core/Structure.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
 import { CopyStructureIntoDocumentUseCase } from '../application/editor/CopyStructureIntoDocumentUseCase.js';
@@ -16,6 +15,8 @@ import { buildBlueprintPackage, CURRENT_SCHEMA_VERSION, BLUEPRINT_KIND } from '.
 import { validateBlueprintPackage, BlueprintPackageError } from '../application/blueprint/BlueprintImportValidator.js';
 import { ExportBlueprintUseCase } from '../application/blueprint/ExportBlueprintUseCase.js';
 import { ImportBlueprintUseCase } from '../application/blueprint/ImportBlueprintUseCase.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.4.6 — Blueprint Sharing & Exchange.
 //
@@ -42,18 +43,6 @@ import { ImportBlueprintUseCase } from '../application/blueprint/ImportBlueprint
 //              an independent Personal Library, places it through the
 //              ordinary composition pipeline, and Alice's own copy is
 //              proven structurally irrelevant to what Bob now has
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 // Ignores instance ids on purpose — this is the geometry(A) === geometry(B)
 // comparison the milestone's own design conversation calls for, deliberately

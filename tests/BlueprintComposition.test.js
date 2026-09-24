@@ -14,6 +14,7 @@ import { DocumentManager } from '../application/document/DocumentManager.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.4.0 — Structure Composition & Blueprint Library.
 //
@@ -45,10 +46,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //            multiple Structures is an ORDINARY Document; forking it
 //            (ForkDocumentUseCase) reproduces every composed brick with
 //            fresh identities, exactly like forking any other Document
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 class InMemoryStorageProvider extends StorageProvider {
     constructor() {

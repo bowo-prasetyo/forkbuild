@@ -4,6 +4,7 @@ import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.
 import { surfaceCategoryAt, SURFACE_CATEGORY, WATER_LEVEL } from '../core/TerrainSurface.js';
 import { hydrologyFeatureAt, HYDROLOGY_FEATURE, LAKE_SURFACE_HEIGHT, isRiverAt } from '../core/Hydrology.js';
 import { DEFAULT_MAX_WALKING_DEPTH } from '../core/AvatarWaterWalkability.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.615 — Avatar Basic Water Surface Constraint.
 //
@@ -56,10 +57,6 @@ import { DEFAULT_MAX_WALKING_DEPTH } from '../core/AvatarWaterWalkability.js';
 //   Section H: no breath/drowning/stamina mechanics anywhere.
 //   Section I: no new persisted avatar/world state — the fix is a pure,
 //              stateless function of (renderer, position) alone.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function readSource(relativePath) {
     return readFile(new URL(`../${relativePath}`, import.meta.url), 'utf8');

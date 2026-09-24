@@ -14,6 +14,7 @@ import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.117 — Vehicle-Aware Dismount.
 //
@@ -45,10 +46,6 @@ import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickReg
 // milestone's own brief: once mounted, the vehicle's CURRENT runtime
 // position — never its deterministic spawn position — is the spatial
 // authority for dismounting. See docs/Roadmap.md, 0.9.117.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 // -------------------------------------------------------------
 // Section A-F fixtures — the exact SEED=29 discipline

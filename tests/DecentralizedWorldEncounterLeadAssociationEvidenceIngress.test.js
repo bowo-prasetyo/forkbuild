@@ -9,6 +9,7 @@ import {
     resolveDecentralizedWorldEncounterLead,
     DecentralizedWorldEncounterLeadResolutionStatus
 } from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.29 — Decentralized Association Evidence Ingress.
 //
@@ -31,10 +32,6 @@ import {
 // Section 7: architectural regression — no verification, ranking,
 //            retrieval, or avatar-producing vocabulary; no second
 //            validation algorithm.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function publicationOf(overrides = {}) {
     return {

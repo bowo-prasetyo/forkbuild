@@ -1,8 +1,7 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
 import { RoleAwareProviderResolver, RoleProviderResolutionStatus } from '../application/settings/RoleAwareProviderResolver.js';
 import { ResolvePreferredRoleProviderUseCase } from '../application/settings/ResolvePreferredRoleProviderUseCase.js';
@@ -22,11 +21,14 @@ import { PublicationCatalogDiscoveryProvider } from '../discovery/PublicationCat
 import { PublicationCatalogContentResolver } from '../discovery/PublicationCatalogContentResolver.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { computeContentHash } from '../serializer/contentHash.js';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.303 — Content Provider Preference Lifecycle Audit.
 //
@@ -112,10 +114,6 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 // each of these is still absent, rather than merely asserting it in
 // prose.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 async function expectThrows(fn, message) {
     let threw = false;
     try { await fn(); } catch (e) { threw = true; }
@@ -123,9 +121,6 @@ async function expectThrows(fn, message) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function listJsFiles(relativeDir, results = []) {
     const dirUrl = new URL(relativeDir.endsWith('/') ? relativeDir : `${relativeDir}/`, SOURCE_ROOT);
@@ -156,21 +151,6 @@ async function repoWideProductionFiles() {
         await listJsFiles(dir, files);
     }
     return files;
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 // The identical in-memory Kubo-RPC stand-in tests/
@@ -295,7 +275,7 @@ async function run() {
         // 0. Re-verified here at the two load-bearing points rather than
         // re-run wholesale, so this suite still fails loudly if either
         // side of the arc's public entry points ever drifts.
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         assert(/preferenceStore:\s*roleProviderPreferenceStore/.test(mainSource) && /new SetRoleProviderPreferenceUseCase\(\{\s*preferenceStore:\s*roleProviderPreferenceStore\s*\}\)/.test(mainSource),
             '1. ui/main.js still wires the Settings-side write use case against the SAME store instance the placement-side read chain resolves through');
         const routerSource = await source('ui/router/index.js');
@@ -585,7 +565,7 @@ async function run() {
         // preferenceStore CreatePreferredSnapshotPlacementCreationCoordinatorUseCase
         // returns is the SAME instance handed to SetRoleProviderPreferenceUseCase.
         const app = composeApplication({ stores: [new LocalContentStore(new InMemoryStorageProvider())] });
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         assert(/const \{\s*coordinator: preferredSnapshotPlacementCreationCoordinator,\s*preferenceStore: roleProviderPreferenceStore\s*\} = new CreatePreferredSnapshotPlacementCreationCoordinatorUseCase\(\)\.execute\(/.test(mainSource),
             '41. ui/main.js still destructures the SAME preferenceStore instance the coordinator wiring itself returns, rather than constructing a second one');
         assert(/preferenceStore:\s*roleProviderPreferenceStore\s*\}\)/.test(mainSource),

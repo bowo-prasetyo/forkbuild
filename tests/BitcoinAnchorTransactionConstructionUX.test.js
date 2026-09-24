@@ -7,6 +7,7 @@ import {
     describeBitcoinAnchorTransactionConstruction,
     describeBitcoinAnchorTransactionConstructionStateLabel
 } from '../application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionView.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.
 //
@@ -46,10 +47,6 @@ import {
 //
 // See docs/Principles.md, "A Transaction Plan Records What Produced It; It
 // Does Not Refresh It (0.8.61)."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

@@ -1,14 +1,11 @@
 import { readFile } from 'node:fs/promises';
 import { describeDecentralizedPublicationLocationClaim } from '../core/DecentralizedPublicationLocationClaim.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.29 — Decentralized Association Evidence Ingress.
 //
 // See docs/Roadmap.md, "0.9.29 — Decentralized Association Evidence
 // Ingress," for the full milestone story.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function publicationOf(overrides = {}) {
     return {

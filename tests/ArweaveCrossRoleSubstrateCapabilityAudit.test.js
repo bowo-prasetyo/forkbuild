@@ -1,4 +1,4 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
@@ -20,6 +20,8 @@ import { ExternalProofVerifierRegistry } from '../application/anchoring/External
 import { ExternalAnchorPublisherRegistry } from '../application/anchoring/ExternalAnchorPublisherRegistry.js';
 import { PublicationAnchorCreationCoordinator } from '../application/anchoring/PublicationAnchorCreationCoordinator.js';
 import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.424 — Arweave Cross-Role Substrate Capability Audit.
 //
@@ -113,10 +115,6 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 //   F proves no such path exists, and this milestone adds none.
 // - **Any UI, panel, or preference control.** Nothing in `ui/` is edited.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 let assertionCount = 0;
 function check(condition, message) {
     assertionCount += 1;
@@ -124,10 +122,6 @@ function check(condition, message) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 // Same recursive production-file sweep 0.9.292's own
 // DecentralizedSubstrateCapabilityMatrixAudit.test.js already established

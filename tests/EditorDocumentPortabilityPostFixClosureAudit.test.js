@@ -1,5 +1,4 @@
 import { execSync } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -21,7 +20,9 @@ import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase
 import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
 
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.645 — Editor Document Portability Post-Fix Closure Audit.
 //
@@ -76,14 +77,6 @@ function n(message) {
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
 
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
 const stubIdentityProvider = {
     currentUser: () => ({ username: 'alice', displayName: 'alice', providerId: 'stub' }),
     sign: (data) => ({ signedBy: 'alice', providerId: 'stub', data })
@@ -122,9 +115,6 @@ function totalBrickCount(document) {
     return document.world.getBuildings().reduce((sum, b) => sum + b.getBricks().length, 0);
 }
 
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 function codeOnly(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
@@ -450,9 +440,9 @@ async function run() {
             // anywhere in either method body. This is the identical
             // standard 0.9.643 Section A/C already established for
             // EditorSession-adjacent code it likewise could not run live.
-            const navSource = codeOnly(await rawSource('application/world/WorldNavigationSession.js'));
-            const cloneMethodMatch = navSource.match(/\bcloneDocument\(documentId\)\s*\{[\s\S]*?\n\t\}/);
-            const forkMethodMatch = navSource.match(/\bforkDocument\(documentId\)\s*\{[\s\S]*?\n\t\}/);
+            const navSource = codeOnly((await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n'));
+            const cloneMethodMatch = navSource.match(/\bcloneDocument\(documentId\)\s*\{[\s\S]*?\n    \}/);
+            const forkMethodMatch = navSource.match(/\bforkDocument\(documentId\)\s*\{[\s\S]*?\n    \}/);
             assert(cloneMethodMatch !== null && forkMethodMatch !== null, n('G2: both cloneDocument() and forkDocument() are found, in isolation, in real source'));
             assert(/this\._documentCloneService\.execute\(doc,\s*\{\s*eventBus:\s*this\._eventBus\s*\}\)/.test(cloneMethodMatch[0]),
                 n('G2: cloneDocument() (World View "Duplicate") delegates straight to this._documentCloneService.execute() — the exact class/method live-verified in Sections A-F, with no other options object shape that could carry a second identity mechanism'));

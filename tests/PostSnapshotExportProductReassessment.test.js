@@ -1,4 +1,4 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 import { applicationPath } from './support/ApplicationFiles.js';
 
 import { Brick } from '../core/Brick.js';
@@ -22,7 +22,9 @@ import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles, worldEncounterCanvasFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles, worldEncounterCanvasFiles, editorViewFiles, editorSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.216 — Post-Snapshot-Export Product Reassessment.
 //
@@ -106,10 +108,6 @@ import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles, wor
 // anything it classifies OBSOLETE. Per the brief, it stops at
 // classification and recommendation.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function createTestDocument() {
     const world = new World();
     const building = new Building({ creator: 'tester' });
@@ -119,10 +117,6 @@ function createTestDocument() {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 // Same restraint every reassessment since 0.9.156 already applies: strip
 // full-line `//` comments before counting/searching references, so a
@@ -229,7 +223,7 @@ async function runTests() {
         const commandHistoryImports = [...navigationSessionSource.matchAll(/import\s*\{[^}]*\bCommandHistory\b[^}]*\}\s*from\s*['"]([^'"]+)['"]/g)];
         assert(new Set(commandHistoryImports.map((m) => m[1].split('/').pop())).size === 1, 'C4a. WorldNavigationSession.js and its method modules import exactly one CommandHistory-shaped class');
         assert(!/_undoStack|_redoStack/.test(navigationSessionSource), 'C4b. WorldNavigationSession.js still maintains no second undo/redo stack of its own');
-        const editorSessionSource = await rawSource('application/editor/EditorSession.js');
+        const editorSessionSource = (await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/_undoStack|_redoStack/.test(editorSessionSource), 'C4c. EditorSession.js also maintains no second undo/redo stack');
 
         console.log('✓ Section C: World material/document lifecycle — COMPLETE, reconfirmed. Autosave/recovery, history/replay/restore, and placement/publication/naming all remain composed and UI-reachable; CommandHistory remains the sole undo/redo authority for both sessions.');
@@ -242,7 +236,7 @@ async function runTests() {
     // integrity"). Both COMPLETE.
     // ---------------------------------------------------------------
     {
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         // AMENDED BY 0.9.672 — World View Distribution Dialog.
         // distributeOwnSnapshot()/distributeOwnPublication()/
         // distributeOwnPublicationAndSnapshot() are no longer wired via a
@@ -287,7 +281,7 @@ async function runTests() {
         // unmodified method.
         assert(/@distribute-publication="distributeSelectedPublication"/.test(canvasSource), 'D2c. ...wired to a real event handler — "Distribute Publication" stays reachable');
 
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(/composePublicationDistributionCommand\(/.test(mainSource), 'D2d. ui/main.js still composes publicationDistributionCommand via composePublicationDistributionCommand()');
         assert(/provide\('publicationDistributionCommand'/.test(mainSource), 'D2e. ...and still provides it app-wide');
 
@@ -324,7 +318,7 @@ async function runTests() {
         // E3 — Snapshot export composition (closed by 0.9.215) —
         // reconfirmed at the SOURCE level here; Section G below re-proves
         // it BEHAVIORALLY and audits the symmetry boundary in depth.
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(/new BuildPublicationSnapshotTransferPackageUseCase\(/.test(mainSource), 'E3a. ui/main.js still composes BuildPublicationSnapshotTransferPackageUseCase');
         const coordinatorSource = await rawSource('application/snapshot/materialization/SnapshotContentMaterializationCoordinator.js');
         assert(/async export\(publicationId\)/.test(coordinatorSource), 'E3b. SnapshotContentMaterializationCoordinator still has a matching export(publicationId) method');
@@ -337,7 +331,7 @@ async function runTests() {
     // participation. COMPLETE, reconfirmed (0.9.212's own Section E1).
     // ---------------------------------------------------------------
     {
-        const ownPublicationPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(/discoverOwnSnapshot\(/.test(ownPublicationPanelSource), 'F1. OwnPublicationPanel.js still calls discoverOwnSnapshot (manual discovery)');
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/worldSnapshotDiscoveryMonitor\.observe\(/.test(worldViewSource), 'F2. WorldView.js still drives worldSnapshotDiscoveryMonitor.observe() (automatic discovery)');
@@ -405,7 +399,7 @@ async function runTests() {
         // G5 — no file download / clipboard affordance was added for
         // export either; the panel's own template comment documents the
         // restraint directly.
-        const ownPublicationPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(/Deliberately no file save, download, or copy-to-clipboard/.test(ownPublicationPanelSource), 'G5a. OwnPublicationPanel.js\'s own template comment still documents "no file save, download, or copy-to-clipboard"');
         assert(!/<a[^>]+download[\s=]/i.test(ownPublicationPanelSource) && !/navigator\.clipboard/.test(ownPublicationPanelSource), 'G5b. ...and its CODE genuinely contains neither a download link nor a clipboard call');
 
@@ -474,7 +468,7 @@ async function runTests() {
     // instead) — it lives on ui/components/WorldEncounterCanvas.js.
     // ---------------------------------------------------------------
     {
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(/composeDecentralizedWorldEncounterMaterialDiscoveryRuntime\(/.test(mainSource), 'H1a. ui/main.js still composes the decentralized World Material discovery runtime (Nostr + Arweave)');
         assert(/provide\('discoverWorldEncounterPublicationCommand'/.test(mainSource) || /discoverWorldEncounterPublicationCommand/.test(mainSource), 'H1b. ...and still exposes a discovery command app-wide');
 
@@ -511,7 +505,7 @@ async function runTests() {
     // row. COMPLETE.
     // ---------------------------------------------------------------
     {
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(/composeWorldEncounterMaterialVerifier\(/.test(mainSource), 'I1a. ui/main.js still composes the material verifier (signature -> identity -> inspection chain)');
         assert(/provide\('worldEncounterMaterialVerifier'/.test(mainSource), 'I1b. ...and provides it app-wide');
 
@@ -519,7 +513,7 @@ async function runTests() {
         assert(/materialInspection\.verification\.status/.test(canvasSource) || /discoveryResult\.inspection\.verification\.status/.test(canvasSource), 'I2a. WorldEncounterCanvas.js still renders a verification status field');
         assert(/resolveSnapshotPublicationAttribution/.test(canvasSource), 'I2b. ...and still resolves Snapshot/Publication attribution');
 
-        const ownPublicationPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(/resolveSnapshotPublicationAttribution/.test(ownPublicationPanelSource), 'I3. OwnPublicationPanel.js also resolves attribution — a second, independent rendering surface, not a single unreachable path');
 
         console.log('✓ Section I: Material verification / attribution — COMPLETE. The full verifier chain is composed app-wide and its result is rendered on two independent surfaces (WorldEncounterCanvas.js, OwnPublicationPanel.js).');
@@ -698,7 +692,7 @@ async function runTests() {
     // ---------------------------------------------------------------
     {
         // M1 — the two ALREADY-known findings, reconfirmed unchanged.
-        const mainSource = await rawSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/GroupsPanel/.test(mainSource), 'M1a. ui/components/GroupsPanel.js is still not registered in ui/main.js');
         assert(!/CreatePublicationSnapshotPlacementCatalogUseCase/.test(mainSource), 'M1b. application/snapshot/placement/CreatePublicationSnapshotPlacementCatalogUseCase.js is still not composed in ui/main.js');
         assert((await rawSource('application/snapshot/placement/CreatePublicationSnapshotPlacementCatalogUseCase.js')).includes('class CreatePublicationSnapshotPlacementCatalogUseCase'), 'M1c. ...and still exists on disk, unremoved');

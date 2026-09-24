@@ -12,8 +12,9 @@ import {
     describePublisherAchievementProfile,
     reconstructPublisherAchievementProfile
 } from '../application/achievement/PublisherAchievementProfileView.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.8.109 — Publisher Achievement Profile Projection.
 //
@@ -45,10 +46,6 @@ import { LocalStoragePublicationObservationArchive } from '../storage/LocalStora
 //            parallel engine of either kind
 // Section I: no verdict/score/points/rank vocabulary anywhere
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const FORBIDDEN_KEYS = [
     'status', 'confidence', 'health', 'trusted', 'valid', 'canonical', 'reliable',
     'risk', 'severity', 'cause', 'verdict', 'score', 'weight', 'strength',
@@ -65,14 +62,6 @@ function assertNeverScored(obj, path) {
             else assertNeverScored(value, `${path}.${key}`);
         }
     }
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 async function withoutNetworkAccess(fn) {

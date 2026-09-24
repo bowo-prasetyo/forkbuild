@@ -11,6 +11,7 @@ import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDisc
 import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
 import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.192 — Automatic World Observation Cadence Audit.
 //
@@ -92,10 +93,6 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 //              observation/reconciliation phase per tick, two independently-
 //              timed asynchronous phases (discovery, cascade) that may each
 //              complete on a LATER tick than the one that started them
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function pos(x, y, z) {
     return { x, y, z };

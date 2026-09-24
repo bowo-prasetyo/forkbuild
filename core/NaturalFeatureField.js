@@ -34,6 +34,7 @@
 import { terrainHeightAt } from './TerrainHeightField.js';
 import { ecologyZoneAt, ECOLOGY_ZONE, moistureAt } from './TerrainEcology.js';
 import { isRiverAt } from './Hydrology.js';
+import { lerp, smoothstep } from '../utils/interpolation.js';
 
 export const FEATURE_TYPE = Object.freeze({
     TREE: 'TREE'
@@ -83,14 +84,6 @@ const JITTER_RANGE = 1 - JITTER_MARGIN * 2;
 // of it is not.
 const FOREST_DENSITY_THRESHOLD = 0.42;
 const GRASSLAND_DENSITY_THRESHOLD = 0.80;
-
-function smoothstep(t) {
-    return t * t * (3 - 2 * t);
-}
-
-function lerp(a, b, t) {
-    return a + (b - a) * t;
-}
 
 // A small, fast, deterministic 32-bit avalanche hash — independently
 // reimplemented per this file's own header precedent (see

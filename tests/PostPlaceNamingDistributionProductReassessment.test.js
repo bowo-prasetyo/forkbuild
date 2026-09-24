@@ -15,8 +15,10 @@ import { PlaceNamingClaimExchange } from '../application/placeNaming/PlaceNaming
 import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.318 — Post-Place-Naming Distribution Product Reassessment.
 //
@@ -100,15 +102,7 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 // AS OF 0.9.318, while no longer asserting a state 0.9.320 has since
 // changed.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {
@@ -135,14 +129,6 @@ function grepFiles(pattern, dirs, { ignoreCase = false } = {}) {
 
 function grepCount(pattern, dirs, opts = {}) {
     return grepFiles(pattern, dirs, opts).length;
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeIdentity(label) {
@@ -205,7 +191,7 @@ async function runTests() {
         assert(publishFnMatch && !publishFnMatch[0].includes('Nostr') && !publishFnMatch[0].includes('Publisher'),
             'A2. The full body of publishNamingClaim() contains no reference to Nostr or to any publisher class — clicking "Publish" today performs local persistence ONLY, exactly what 0.9.315 Section B/F already characterized this action as, before the write-side capability even existed.');
 
-        const navSessionCode = codeOnlyLines(await rawSource('application/world/WorldNavigationSession.js'));
+        const navSessionCode = codeOnlyLines((await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n'));
         assert(!navSessionCode.includes('NostrPlaceNamingDiscoveryPublisher'),
             'A2b. application/world/WorldNavigationSession.js — the one class publishNamingClaim() calls into — never references NostrPlaceNamingDiscoveryPublisher anywhere in its own code.');
 
@@ -240,7 +226,7 @@ async function runTests() {
         // wired one, reusing the SAME nostrHostPublisher instance already
         // resolved for Publication/Snapshot distribution — never a second
         // read of window.nostr.
-        const mainJs = await rawSource('ui/main.js');
+        const mainJs = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(mainJs.includes('NostrPlaceNamingDiscoverySource') && mainJs.includes('nostrRelayQueryClient'),
             'A4a. ui/main.js still composes a real Nostr QUERY client for Place Naming discovery.');
         assert(mainJs.includes('composePlaceNamingPublicationRuntime(') && mainJs.includes("app.provide('publishPlaceNamingClaimToNostrCommand'"),
@@ -305,7 +291,7 @@ async function runTests() {
         // (publishPlaceNamingClaimToNostrCommand: a thin function, never a
         // bare publisher instance handed to the app), the identical shape
         // every other injected command in ui/main.js already takes.
-        const mainJs = await rawSource('ui/main.js');
+        const mainJs = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
         assert(mainJs.includes("app.provide('placeNamingDiscoveryQueryService'"),
             'B2a. A real, live discoveryQueryService is provided from ui/main.js\'s own composition root — reachable by any view that injects it.');
         assert(mainJs.includes("app.provide('publishPlaceNamingClaimToNostrCommand'"),
@@ -522,7 +508,7 @@ async function runTests() {
     // because the three arcs now look structurally similar.
     // ===============================================================
     {
-        const mainJs = await rawSource('ui/main.js');
+        const mainJs = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
 
         // F1. Publication distribution: decentralized publication AND
         // discovery, both live-wired with a real publishImpl.

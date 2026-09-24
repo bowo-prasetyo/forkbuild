@@ -5,6 +5,7 @@ import {
 } from '../core/WildlifeCollisionGeometry.js';
 import { wildlifeInRegion, WILDLIFE_FEATURE_TYPE, ANIMAL_SPECIES } from '../core/WildlifeField.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { assert } from './support/Assert.js';
 
 // Deterministic World Animal Collision Geometry, core/WildlifeCollisionGeometry.js
 // — the direct structural twin of tests/TreeCollisionGeometry.test.js,
@@ -16,10 +17,6 @@ import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 //   Section C: proportionality — radius scales with feature.scale, per species
 //   Section D: architectural regression — this file never reaches into
 //              movement, detection, response, or rendering
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function runTests() {
     // -------------------------------------------------------------

@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { DEFAULT_ICE_SERVERS } from '../peer/IceServerConfig.js';
@@ -13,6 +12,8 @@ import { RendezvousConfiguration } from '../core/RendezvousConfiguration.js';
 import { NostrRelayConfiguration } from '../core/NostrRelayConfiguration.js';
 import { ArweaveGatewayConfiguration } from '../core/ArweaveGatewayConfiguration.js';
 import { IceServerConfiguration } from '../core/IceServerConfiguration.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.439 — Endpoint Multiplicity & Failover Semantics Audit.
 //
@@ -91,9 +92,7 @@ function n(message) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
+
 async function sourceExists(relativePath) {
     try { await source(relativePath); return true; } catch { return false; }
 }
@@ -269,7 +268,7 @@ async function run() {
         // checked live below — not currently constructed anywhere in the
         // running app at all, so it is out of THIS audit's scope for "an
         // endpoint a user could currently switch."
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         assert(!mainSource.includes('ArweaveGraphqlDiscoveryQueryService'),
             n('B5. application/arweave/ArweaveGraphqlDiscoveryQueryService.js is never constructed in ui/main.js today — a real, fourth, independent Arweave endpoint field that is not part of the live composition root, and therefore out of scope for a "which endpoint should gain multiplicity" decision until a separate milestone composes it at all'));
 
@@ -466,7 +465,7 @@ async function run() {
     // merely the value objects' own headers.
     // ===============================================================
     {
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
 
         // F1. UNIFIED — Nostr now has exactly ONE user-configurable relay
         // set (resolvedNostrRelayUrls), threaded into every READ composition
@@ -642,7 +641,7 @@ async function run() {
         // user-facing override exists AT ALL today (Section F2/F3); a
         // multiplicity/failover decision is premature ahead of a more
         // basic configurability decision.
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         assert(!/arweaveUploaderOptions[\s\S]{0,200}gatewayUrl/.test(mainSource),
             n('H4. arweaveUploaderOptions (Signed Claim distribution\'s own write-path options) never carries a gatewayUrl anywhere in ui/main.js today — the write gateway is not user-configurable even as a SINGLE value yet, so "which failover semantic" is not yet the live question for this candidate'));
         semantics.arweaveWrite = 'PREMATURE for a list/failover decision — no single-value user override exists yet for Publication/Snapshot distribution\'s own write gateway; that gap, not multiplicity, is the actual next question here';

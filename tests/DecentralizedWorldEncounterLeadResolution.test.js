@@ -6,6 +6,7 @@ import {
 } from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
 import { describeDecentralizedWorldDiscoveryLead } from '../core/DecentralizedWorldDiscoveryLead.js';
 import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.28 — Decentralized Lead → Encounter Resolution Boundary.
 //
@@ -29,10 +30,6 @@ import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discover
 // Section 8: architectural regression — no inference, ranking, retrieval,
 //            or trust vocabulary; no `.find()`-style "pick one" among
 //            genuinely ambiguous candidates.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function leadOf(overrides = {}) {
     return describeDecentralizedWorldDiscoveryLead({

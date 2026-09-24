@@ -1,4 +1,5 @@
 import { BitcoinEsploraTransactionBroadcaster } from '../anchoring/BitcoinEsploraTransactionBroadcaster.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.52 — Bitcoin Anchor Transaction Broadcasting.
 //
@@ -23,10 +24,6 @@ import { BitcoinEsploraTransactionBroadcaster } from '../anchoring/BitcoinEsplor
 //
 // See docs/Principles.md, "Broadcasting Submits; It Does Not Decide
 // (0.8.52)."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function makeFakeExplorer({ handler }) {
     const requests = [];

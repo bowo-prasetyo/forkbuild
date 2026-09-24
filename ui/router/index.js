@@ -218,7 +218,7 @@ const routes = [
     // /reconciliation-leaderboard, still never a top-nav destination.
     { path: '/evidence-export-comparison', name: 'evidence-export-comparison', component: ReconciliationCandidateLeaderboardEvidenceExportComparisonView },
     // 0.9.408 — Reconciliation Workspace UI. The first user-facing surface
-    // over application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js
+    // over application/leaderboard/snapshot/ReconcileClaimUseCase.js
     // (0.9.407, UNCHANGED) — see ui/views/ReconciliationWorkspaceView.js's
     // own header. Deliberately its own route, one hop from /publications
     // (the same "Publication Archive" card that already links to

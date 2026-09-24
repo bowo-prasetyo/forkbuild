@@ -1,11 +1,8 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { RoleProviderRole, isValidRoleProviderRole } from '../core/RoleProviderRole.js';
 import { RoleProviderPreference, isValidRoleProviderKey } from '../core/RoleProviderPreference.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
 import { RoleAwareProviderResolver, RoleProviderResolutionStatus } from '../application/settings/RoleAwareProviderResolver.js';
 import { ResolvePreferredRoleProviderUseCase } from '../application/settings/ResolvePreferredRoleProviderUseCase.js';
@@ -13,6 +10,9 @@ import { PreferredSnapshotPlacementCreationCoordinator } from '../application/sn
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
 import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
 import { describePublicationDistributionResult } from '../application/publication/distribution/PublicationDistributionResult.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.421 — Multi-Substrate Publication Preference Product Direction Audit.
 //
@@ -105,9 +105,6 @@ function n(message) {
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
 
-async function readSource(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
 function listFiles(dirs) {
     return execSync(`git ls-files ${dirs.join(' ')}`, { cwd: SOURCE_ROOT })
         .toString().split('\n').filter((f) => f.endsWith('.js'));
@@ -118,14 +115,6 @@ async function joinedSource(files) {
 }
 function codeOnly(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function inertRegistry(map = {}) {
@@ -286,7 +275,7 @@ async function run() {
         // header held against 0.9.296/0.9.298.
         assert(Object.values(RoleProviderRole).length === 3, n('E1. the closed three-role vocabulary is unchanged since 0.9.293'));
 
-        const mainSource = await readSource('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
         // Same evidence shape 0.9.304's own Section D already used: the
         // real creation-side registry is built from a `stores: [...]`
         // array naming both a local store and an IpfsContentStore — never

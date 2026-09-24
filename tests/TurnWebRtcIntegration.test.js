@@ -18,6 +18,9 @@ import { RendezvousConfiguration } from '../core/RendezvousConfiguration.js';
 import { RendezvousConfigurationStore } from '../storage/RendezvousConfigurationStore.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
 import { DEFAULT_ICE_SERVERS, fetchIceServers } from '../peer/IceServerConfig.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.455 — TURN Configuration into WebRTC ICE.
 //
@@ -86,17 +89,6 @@ function n(message) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 // One shared namespace, several independent store instances over it — the
 // same "restart"/"one authority, no bleed" shape every sibling convergence
@@ -180,11 +172,11 @@ async function run() {
     // pinned against real source, never merely described.
     // ===============================================================
     {
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
 
-        assert(mainSource.includes("import { TurnServerConfigurationStore } from '../storage/TurnServerConfigurationStore.js';"),
+        assert(mainSource.includes("import { TurnServerConfigurationStore } from '../../storage/TurnServerConfigurationStore.js';"),
             n('01. ui/main.js imports the real TurnServerConfigurationStore'));
-        assert(mainSource.includes("import { resolveTurnServerConfiguration } from '../application/settings/TurnServerConfigurationProvider.js';"),
+        assert(mainSource.includes("import { resolveTurnServerConfiguration } from '../../application/settings/TurnServerConfigurationProvider.js';"),
             n('02. ui/main.js imports the real resolveTurnServerConfiguration()'));
 
         const storeConstructions = (mainSource.match(/new TurnServerConfigurationStore\(/g) || []).length;
@@ -624,7 +616,7 @@ async function run() {
         assert(!/retry|failover|fallback.*turn|rank/i.test(providerSource),
             n('K4. peer/WebRtcPeerConnectionProvider.js contains no retry/failover/ranking vocabulary of any kind'));
 
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const composedRegion = mainSource.slice(mainSource.indexOf('const turnServerConfigurationStore'), mainSource.indexOf('const peerConnectionProvider'));
         assert(!/try\s*{[\s\S]*catch/.test(composedRegion), n('K5. ui/main.js\'s own TURN composition contains no try/catch — a malformed or absent TURN configuration is handled entirely by resolveTurnServerConfiguration()\'s own null-or-value contract, never a local retry/catch'));
 

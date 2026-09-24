@@ -13,6 +13,7 @@ import {
     describeIpfsPublicationContentVerificationStateLabel
 } from '../application/ipfs/IpfsPublicationContentVerificationView.js';
 import { IpfsPublicationContentVerificationState } from '../application/ipfs/IpfsPublicationContentVerificationState.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.70 — IPFS Publication & Content Verification UI.
 //
@@ -49,10 +50,6 @@ import { IpfsPublicationContentVerificationState } from '../application/ipfs/Ipf
 //              produces a real, usable coordinator.
 //
 // See docs/Roadmap.md, "0.8.70 — IPFS Publication & Content Verification UI."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function expectRejects(promiseFn, message) {
     let threw = false;

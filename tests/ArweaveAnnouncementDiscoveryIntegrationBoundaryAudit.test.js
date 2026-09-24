@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
 import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
@@ -13,6 +12,9 @@ import { ArweaveTransactionDataProofVerifier } from '../anchoring/ArweaveTransac
 import { executePublicationDistribution } from '../application/publication/distribution/PublicationDistributionExecutor.js';
 import { composePublicationDistributionRuntime } from '../application/publication/distribution/PublicationDistributionRuntimeComposition.js';
 import { orchestratePublicationDistribution } from '../application/publication/distribution/PublicationDistributionOrchestrator.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.429 — Arweave Announcement/Discovery Integration Boundary Audit.
 //
@@ -88,10 +90,6 @@ import { orchestratePublicationDistribution } from '../application/publication/d
 //   `ExternalAnchorPublisherRegistry`. Section I documents the gap
 //   precisely enough for a future milestone to close it, and stops there.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 let assertionCount = 0;
 function check(condition, message) {
     assertionCount += 1;
@@ -102,11 +100,6 @@ async function expectThrowsAsync(fn, message) {
     let threw = false;
     try { await fn(); } catch { threw = true; }
     assert(threw, message);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 // A window of `length` characters starting at `marker`'s own first
@@ -714,13 +707,15 @@ async function run() {
         // shared field name in a different subsystem. The precise claim
         // this section makes is narrower and checked directly against the
         // three real call sites that matter.
-        const uiMainSource = await source('ui/main.js');
+        const uiMainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const providerCallWindow = windowAfter(uiMainSource, 'createPublicationDistributionRuntimeProvider(');
         const configCallWindow = windowAfter(uiMainSource, 'resolvePublicationDistributionRuntimeConfiguration(');
         const commandCallWindow = windowAfter(uiMainSource, 'composePublicationDistributionCommand(');
 
         check(providerCallWindow !== null, 'I4. ui/main.js still calls createPublicationDistributionRuntimeProvider() — the real composition-root seam');
-        check(!/discoveryProvider|arweaveAnnouncementPublisherOptions/.test(providerCallWindow), 'I5. ...and that real call site supplies neither discoveryProvider nor arweaveAnnouncementPublisherOptions');
+        // Only the call's own arguments, up to its closing "});".
+        const providerCallArguments = providerCallWindow ? providerCallWindow.slice(0, providerCallWindow.indexOf('});')) : '';
+        check(providerCallArguments.length > 0 && !/discoveryProvider|arweaveAnnouncementPublisherOptions/.test(providerCallArguments), 'I5. ...and that real call site supplies neither discoveryProvider nor arweaveAnnouncementPublisherOptions');
         // I6 (that call site never resolved arweaveAnnouncementPublisherOptions)
         // stopped being true at 0.9.430/0.9.492.
         check(configCallWindow !== null, 'I6. ui/main.js still calls resolvePublicationDistributionRuntimeConfiguration()');

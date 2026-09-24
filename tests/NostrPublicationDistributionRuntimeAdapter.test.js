@@ -10,6 +10,7 @@ import { describePublicationDistribution } from '../application/publication/dist
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.108 — Nostr Publication Discovery Runtime Adapter.
 // See docs/Roadmap.md, "0.9.108 — Nostr Publication Discovery Runtime
@@ -26,10 +27,6 @@ import { Signature } from '../core/Signature.js';
 //              any layer; the adapter's own Nostr capability still resolves
 //              to a real, independently usable NostrPublicationDiscoveryPublisher
 //   Section F: architectural regression
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function signedPublication(overrides = {}) {
     const publication = new Publication({

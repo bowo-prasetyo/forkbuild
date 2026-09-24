@@ -3,6 +3,7 @@ import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { publicationsPageFiles, peerConnectionsViewSource } from './support/SourceFileGroups.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.400 — Reconciliation Leaderboard Product Entry-Point Decision Audit.
 //
@@ -47,10 +48,6 @@ function n(message) {
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
 
-async function readSource(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
-
 async function run() {
     // ===============================================================
     // Section A — Feature boundary census.
@@ -80,7 +77,7 @@ async function run() {
             assert(viewSource.includes(symbol), n(`A3. the view imports and therefore actually calls the real backend symbol ${symbol}`));
         }
         assert(
-            viewSource.includes("import ReconciliationCandidateLeaderboardTable from '../components/ReconciliationCandidateLeaderboardTable.js';"),
+            viewSource.includes("import ReconciliationCandidateLeaderboardTable from '../components/reconciliation/CandidateLeaderboardTable.js';"),
             n('A4. the view renders a real, dedicated frontend component, not an inline stub')
         );
 
@@ -92,7 +89,7 @@ async function run() {
             'application/claimSnapshotReconciliation/candidate/FilteredEvidenceDetailView.js',
             'application/claimSnapshotReconciliation/leaderboard/EvidenceExport.js',
             'application/claimSnapshotReconciliation/leaderboard/EvidenceImport.js',
-            'ui/components/ReconciliationCandidateLeaderboardTable.js'
+            'ui/components/reconciliation/CandidateLeaderboardTable.js'
         ];
         for (const file of backendFiles) {
             await readSource(file); // throws ENOENT if missing — the assertion IS that this resolves
@@ -284,7 +281,7 @@ async function run() {
         const leaderboardOwnFiles = [
             'ui/views/ReconciliationCandidateLeaderboardView.js',
             'ui/views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js',
-            'ui/components/ReconciliationCandidateLeaderboardTable.js'
+            'ui/components/reconciliation/CandidateLeaderboardTable.js'
         ];
         for (const file of leaderboardOwnFiles) {
             const status = execSync(`git status --porcelain -- ${file}`, { cwd: SOURCE_ROOT }).toString().trim();

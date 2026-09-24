@@ -1,5 +1,4 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
 import { PeerConnectionOffer } from '../peer/PeerConnectionOffer.js';
 import { PeerConnectionAnswer } from '../peer/PeerConnectionAnswer.js';
@@ -8,6 +7,8 @@ import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerDiscoveryProvider } from '../peer/LocalPeerDiscoveryProvider.js';
 import { DiscoverPeersUseCase } from '../application/peer/DiscoverPeersUseCase.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.51 — Real WebRTC Peer Transport & Signaling Handoff.
 //
@@ -21,17 +22,6 @@ import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.j
 // Offer -> portable payload -> Answer -> portable payload -> DataChannel ->
 // completely unmodified 0.2.49 mutual authentication -> proven
 // PeerIdentity, on BOTH ends.
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function makeDevice(label) {
     const provider = new LocalIdentityProvider(new InMemoryStorageProvider());

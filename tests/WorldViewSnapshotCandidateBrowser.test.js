@@ -6,7 +6,8 @@ import { composeDiscoverSnapshotRuntime } from '../application/snapshot/Discover
 import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.151 — World View Snapshot Candidate Browser.
 //
@@ -44,10 +45,6 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 //            Nostr/ContentStore/crypto/Arweave directly, and
 //            WorldView.js/ui/main.js wire the new command the same way
 //            every sibling capability in this family already is.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -203,7 +200,7 @@ async function runTests() {
             ctx.snapshotCandidateDiscoveryResult[2].contentHash === 'hash-second',
             '9. arrival order survives into presentation verbatim — no alphabetical, hash, or any other sort is introduced by this UI');
 
-        const panelSource = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(!panelSource.includes('.sort(') , '10. OwnPublicationPanel.js never sorts the candidate collection');
 
         console.log('✓ Section C: relay/application order survives into presentation verbatim — the UI introduces no ranking of its own');
@@ -401,7 +398,7 @@ async function runTests() {
     // Section J — structural boundary.
     // ---------------------------------------------------------------
     {
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         const forbiddenConstruction = [
             "from '../../content/ArweaveContentStore.js'",
             "from '../../application/nostr/NostrSnapshotDiscoveryQueryService.js'",
@@ -434,7 +431,7 @@ async function runTests() {
         assert(/<OwnPublicationPanel[\s\S]{0,600}:discoverSnapshotCandidatesCommand="discoverSnapshotCandidatesCommand"/.test(viewCode),
             '43. OwnPublicationPanel is wired to the injected discoverSnapshotCandidatesCommand, mirroring the existing :discoverSnapshotCommand wiring');
 
-        const mainCode = await codeOnlySource('ui/main.js');
+        const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(mainCode.includes("app.provide('discoverSnapshotCandidatesCommand', discoverSnapshotCandidatesCommand)"),
             '44. ui/main.js provides discoverSnapshotCandidatesCommand app-wide');
         assert((mainCode.match(/composeDiscoverSnapshotRuntime\(/g) || []).length === 1,

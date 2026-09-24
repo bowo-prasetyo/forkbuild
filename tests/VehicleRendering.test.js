@@ -4,6 +4,7 @@ import { VehicleVisual } from '../renderer/VehicleVisual.js';
 import { VehicleFieldRenderer } from '../renderer/VehicleFieldRenderer.js';
 import { VehicleInstance } from '../core/VehicleInstance.js';
 import { VehicleType } from '../core/VehicleType.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.115 — Vehicle Rendering.
 //
@@ -24,10 +25,6 @@ import { VehicleType } from '../core/VehicleType.js';
 // tests/AvatarRendering.test.js's own header already establishes: these
 // classes build real THREE.Group/Mesh/Material objects (three's CPU-side
 // scene graph needs no GPU context at all).
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function countMeshes(object3D) {
     let count = 0;

@@ -6,6 +6,9 @@ import {
     reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceSummary
 } from '../application/claimSnapshotReconciliation/candidate/EvidenceSummaryView.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { featureImportLines } from './support/SharedHelperImports.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.175 — Reconciliation Candidate Evidence Summary Projection.
 //
@@ -25,14 +28,6 @@ import { PublicationObservationArchive } from '../application/publication/observ
 //            0.8.171 exactly once each
 // Section K: vocabulary/import boundary — no judgment vocabulary, imports
 //            only 0.8.153 and 0.8.171
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function genuineDecisionRecord(candidate, decision, decidedAt) {
     return Object.freeze({ decided: true, candidate: Object.freeze(candidate), decision, decidedAt: decidedAt.toISOString() });
@@ -372,9 +367,9 @@ async function run() {
         // This milestone must import exactly 0.8.153's and 0.8.171's own
         // correspondence projections — never 0.8.144, 0.8.157, either
         // history-storage module, or either candidate-evolution module.
-        const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
+        const importLines = featureImportLines(moduleSource);
         const importBlock = moduleSource.slice(0, moduleSource.indexOf('\n\n'));
-        assert(importLines.length === 2, '63. this file imports from exactly two modules');
+        assert(importLines.length === 2, '63. besides shared helpers, this file imports from exactly two modules');
         assert(importBlock.includes('../decision/CandidateCorrespondenceView.js'), '64. one import is 0.8.153\'s own decision-candidate correspondence projection');
         assert(importBlock.includes('../revalidationObservation/CandidateCorrespondenceView.js'), '65. the other import is 0.8.171\'s own observation-candidate correspondence projection');
         assert(!codeOnly.includes('decisionhistoryview') && !codeOnly.includes('decisionhistory.js') && !codeOnly.includes('revalidationobservationhistoryview') && !codeOnly.includes('revalidationobservation.js') && !codeOnly.includes('candidatedecisionevolutionview') && !codeOnly.includes('candidatedecisionrevalidationobservationevolutionview'), '66. this file never imports either history-storage module, either raw observation-recording module, or either candidate-evolution module');

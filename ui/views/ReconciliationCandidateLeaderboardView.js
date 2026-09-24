@@ -29,7 +29,7 @@ import {
     importPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport,
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceImport
 } from '../../application/claimSnapshotReconciliation/leaderboard/EvidenceImport.js';
-import ReconciliationCandidateLeaderboardTable from '../components/ReconciliationCandidateLeaderboardTable.js';
+import ReconciliationCandidateLeaderboardTable from '../components/reconciliation/CandidateLeaderboardTable.js';
 
 // 0.8.181 — Explicit Peer Archive Leaderboard Comparison.
 //

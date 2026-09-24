@@ -1,5 +1,6 @@
 import { DecentralizedDiscoveryQueryService } from '../discovery/DecentralizedWorldDiscoveryQuery.js';
 import { parseDecentralizedDiscoveryEnvelope } from '../../core/DecentralizedDiscoveryEnvelope.js';
+import { responseContentLength, byteLength } from '../../utils/responseSize.js';
 
 const DEFAULT_GRAPHQL_URL = 'https://arweave.net/graphql';
 // Deliberately the same host ArweaveWorldEncounterMaterialResolver.js's own
@@ -366,23 +367,4 @@ function parseTransactionIds(body) {
 function extractUriScheme(uri) {
     const match = URI_SCHEME_PATTERN.exec(uri);
     return match ? match[1] : null;
-}
-
-// Pure. Byte-for-byte the same private helper `application/
-// ArweaveWorldEncounterMaterialResolver.js` already defines for itself —
-// not imported from it; see this file's own header, "a new adapter, never
-// a shared base class" convention this whole family already follows.
-function responseContentLength(response) {
-    const headers = response && response.headers;
-    if (!headers || typeof headers.get !== 'function') {
-        return null;
-    }
-    const raw = headers.get('content-length');
-    const parsed = raw === null ? NaN : Number(raw);
-    return Number.isFinite(parsed) ? parsed : null;
-}
-
-// Pure. The actual decoded byte length of a string.
-function byteLength(text) {
-    return new TextEncoder().encode(text).byteLength;
 }

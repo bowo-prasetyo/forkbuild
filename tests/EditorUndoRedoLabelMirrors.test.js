@@ -18,6 +18,8 @@ import { SelectionUseCase } from '../application/editor/SelectionUseCase.js';
 import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
 import { EditorActionRegistry, createStandardActions } from '../application/editor/EditorActionRegistry.js';
 import { EditorActionContext } from '../application/editor/EditorActionContext.js';
+import { editorSessionFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.213 — Editor Undo/Redo Label Mirrors.
 //
@@ -67,10 +69,6 @@ import { EditorActionContext } from '../application/editor/EditorActionContext.j
 //   Section H: Structural audit — no CommandHistory duplication, no
 //              independently generated labels, no second history state,
 //              no new persistence/autosave/publication coupling.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 class InMemoryStorageProvider {
     constructor() { this._data = new Map(); }
@@ -412,7 +410,7 @@ async function run() {
         // EditorSession.js itself needed no change — getUndoLabel()/
         // getRedoLabel() are still the exact pre-existing one-line
         // delegations to this._commandHistory.
-        const sessionSource = codeOnlyLines(await rawSource('application/editor/EditorSession.js'));
+        const sessionSource = codeOnlyLines((await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n'));
         assert(/getUndoLabel\(\)\s*\{\s*return this\._commandHistory \? this\._commandHistory\.getUndoLabel\(\) : null;\s*\}/.test(sessionSource),
             '12. EditorSession.getUndoLabel() is still the unchanged one-line CommandHistory delegation');
         assert(/getRedoLabel\(\)\s*\{\s*return this\._commandHistory \? this\._commandHistory\.getRedoLabel\(\) : null;\s*\}/.test(sessionSource),

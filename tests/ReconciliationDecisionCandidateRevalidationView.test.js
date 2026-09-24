@@ -1,15 +1,17 @@
-import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
-import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
+import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/snapshot/Snapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/snapshot/Fingerprint.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/claim/Record.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationPlan } from '../application/claimSnapshotReconciliation/PlanView.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecision } from '../application/claimSnapshotReconciliation/decision/Decision.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionCandidateRevalidation } from '../application/claimSnapshotReconciliation/decision/CandidateRevalidationView.js';
 import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { featureImportLines } from './support/SharedHelperImports.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.8.157 — Historical Reconciliation Decision-to-Plan Candidate
 // Revalidation Projection.
@@ -38,29 +40,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // Section I: architectural regression — no forbidden vocabulary, no
 //            rediscovery of 0.8.144's own matching logic, exactly one
 //            import, no reconstructXxx() entry point
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
-}
 
 function makePolicy(version) {
     return Object.freeze({
@@ -410,8 +389,8 @@ async function run() {
         // Exactly one import — 0.8.144's own candidate-selection boundary,
         // reused whole. No plan-projection, decision-history, archive, or
         // verification module is ever imported.
-        const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
-        assert(importLines.length === 1, '56. this file imports exactly one module');
+        const importLines = featureImportLines(moduleSource);
+        assert(importLines.length === 1, '56. besides shared helpers, this file imports exactly one module');
         assert(importLines[0].includes('../ReconciliationCandidate.js') && !importLines[0].includes('PlanView') && !importLines[0].includes('Decision.js') && !importLines[0].includes('History'), '57. the one import is 0.8.144\'s own candidate-selection boundary, never a plan/history/archive module');
         assert(!codeOnly.includes('archive'), '58. this file never mentions an archive of any kind — it never reads current archive state to manufacture a plan');
 

@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { describeWorldEncounterReadModel } from '../application/worldEncounter/WorldEncounterReadModel.js';
 import { deriveWorldEncounters } from '../core/WorldEncounter.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.9.1 — World Encounter Read Model.
 //
@@ -11,14 +13,6 @@ import { deriveWorldEncounters } from '../core/WorldEncounter.js';
 // Section E: no evaluative/spatial-navigation vocabulary, on the result or in the code
 // Section F: no mutation, frozen results, determinism, row order preserved
 // Section G: consumes 0.9.0's own deriveWorldEncounters() result directly
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function publicationOf(overrides = {}) {
     return {

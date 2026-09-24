@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { ArweaveGatewayConfiguration, DEFAULT_ARWEAVE_GATEWAY_URL } from '../core/ArweaveGatewayConfiguration.js';
@@ -9,12 +8,14 @@ import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfi
 import { NostrRelayConfigurationStore } from '../storage/NostrRelayConfigurationStore.js';
 import { IceServerConfigurationStore } from '../storage/IceServerConfigurationStore.js';
 import { RendezvousConfigurationStore } from '../storage/RendezvousConfigurationStore.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { DEFAULT_ICE_SERVERS, fetchIceServers } from '../peer/IceServerConfig.js';
 import { DEFAULT_RENDEZVOUS_URLS } from '../peer/RendezvousConfig.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
 import { RendezvousTransport } from '../peer/RendezvousTransport.js';
 import { RendezvousDiscoveryProvider } from '../peer/RendezvousDiscoveryProvider.js';
+import { mainFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.391 — Infrastructure Configuration Product Reassessment.
 //
@@ -83,9 +84,7 @@ function n(message) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
+
 async function sourceExists(relativePath) {
     try { await source(relativePath); return true; } catch { return false; }
 }
@@ -94,14 +93,6 @@ function codeOnly(src) {
 }
 function jsonResponse(body, { ok = true } = {}) {
     return { ok, json: async () => body };
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 class FakeDataChannel {
@@ -236,7 +227,7 @@ async function run() {
 
         // C3. Restart -> startup resolution: ui/main.js resolves the
         // effective gateway URL exactly once, live-checked.
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const resolutionSites = (codeOnly(mainSource).match(/const resolvedArweaveGatewayUrl\s*=/g) || []).length;
         assert(resolutionSites === 1, n(`C3. resolvedArweaveGatewayUrl is assigned exactly once in ui/main.js (found ${resolutionSites}) — one startup resolution, no second authority`));
         assert(mainSource.includes('(arweaveGatewayConfigurationStore.get() || { gatewayUrl: DEFAULT_ARWEAVE_GATEWAY_URL })'),
@@ -265,7 +256,7 @@ async function run() {
         assert(/NostrRelayConfigurationStore|nostrRelayConfigurationStore|setNostrRelayConfigurationUseCase/i.test(settingsViewSource),
             n('D2. NostrRelaySettingsView.js still targets the Nostr Relay configuration store/use case — Settings -> persist step intact'));
 
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const resolutionSites = (codeOnly(mainSource).match(/const resolvedNostrRelayUrls\s*=/g) || []).length;
         assert(resolutionSites === 1, n(`D3. resolvedNostrRelayUrls is assigned exactly once in ui/main.js (found ${resolutionSites}) — one startup resolution, no second authority`));
         assert(mainSource.includes('(nostrRelayConfigurationStore.get() || { relayUrls: [DEFAULT_NOSTR_RELAY_URL] })'),
@@ -309,7 +300,7 @@ async function run() {
         assert(/IceServerConfigurationStore|iceServerConfigurationStore|setIceServerConfigurationUseCase/i.test(settingsViewSource),
             n('E2. StunSettingsView.js still targets the STUN configuration store/use case'));
 
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const resolutionSites = (codeOnly(mainSource).match(/const resolvedIceServers\s*=/g) || []).length;
         assert(resolutionSites === 1, n(`E3. resolvedIceServers is assigned exactly once in ui/main.js (found ${resolutionSites})`));
         assert(mainSource.includes("(iceServerConfigurationStore.get() || { servers: DEFAULT_ICE_SERVERS }).servers"),
@@ -342,7 +333,7 @@ async function run() {
         assert(/RendezvousConfigurationStore|rendezvousConfigurationStore|setRendezvousConfigurationUseCase/i.test(settingsViewSource),
             n('F2. RendezvousSettingsView.js still targets the Rendezvous configuration store/use case'));
 
-        const mainSource = await source('ui/main.js');
+        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         const resolutionSites = (codeOnly(mainSource).match(/const resolvedRendezvousUrls\s*=/g) || []).length;
         assert(resolutionSites === 1, n(`F3. resolvedRendezvousUrls is assigned exactly once in ui/main.js (found ${resolutionSites})`));
         assert(mainSource.includes('(rendezvousConfigurationStore.get() || { urls: DEFAULT_RENDEZVOUS_URLS }).urls'),

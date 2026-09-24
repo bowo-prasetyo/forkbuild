@@ -13,6 +13,7 @@ import {
 } from '../application/anchoring/bitcoin/BitcoinAnchorObservationConsistencyView.js';
 import { appendBitcoinAnchorConfirmationObservationHistoryEntry } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistory.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.77 — Bitcoin Anchor Observation Consistency Analysis.
 //
@@ -41,10 +42,6 @@ import { PublicationObservationArchive } from '../application/publication/observ
 // Section J: no verdict/cause vocabulary anywhere in this milestone's
 //            output — "reorganization" never appears as an assertion, and
 //            no scored/ranked field (confidence/health/valid/etc.) exists
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function confirmed({ txid, blockHash, blockHeight, confirmationCount, observedAt }) {
     return Object.freeze({

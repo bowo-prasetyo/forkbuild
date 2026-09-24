@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { ContentStore } from '../content/ContentStore.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
@@ -6,11 +5,13 @@ import { IpfsContentStore, ContentUnavailableError } from '../content/IpfsConten
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { SnapshotPlacementCreationCoordinator } from '../application/snapshot/placement/SnapshotPlacementCreationCoordinator.js';
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.505 — Register Arweave as Snapshot Content Store.
 //
@@ -72,10 +73,6 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 //      ui/main.js, and application/snapshot/SnapshotDistributionCommand.js itself,
 //      remain untouched by this wiring.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 let assertionCount = 0;
 function check(condition, message) {
     assertionCount += 1;
@@ -91,14 +88,6 @@ async function expectRejects(promise, message, ErrorType = null) {
         check(error instanceof ErrorType, `${message} (wrong error type: ${error && error.constructor && error.constructor.name})`);
     }
     return error;
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function fakeCid(text) {
@@ -160,20 +149,14 @@ function unreachableFetchImpl() {
     return async () => { throw new Error('network unreachable'); };
 }
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 async function codeOnlySource(relativePath) {
     const text = await rawSource(relativePath);
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
 
 async function run() {
-    const mainSource = await rawSource('ui/main.js');
-    const mainCodeOnly = await codeOnlySource('ui/main.js');
+    const mainSource = (await Promise.all(mainFiles().map((file) => rawSource(file)))).join('\n');
+    const mainCodeOnly = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
 
     // ===============================================================
     // Section A — production construction.
@@ -181,7 +164,7 @@ async function run() {
     {
         const constructionSites = (mainCodeOnly.match(/new ArweaveContentStore\(/g) || []).length;
         check(constructionSites === 1, 'A. ui/main.js constructs exactly one real ArweaveContentStore — never zero, never a second independent one');
-        check(/import \{ ArweaveContentStore \} from '\.\.\/content\/ArweaveContentStore\.js';/.test(mainSource),
+        check(/import \{ ArweaveContentStore \} from '(\.\.\/)+content\/ArweaveContentStore\.js';/.test(mainSource),
             'A. ui/main.js imports the real content/ArweaveContentStore.js, unmodified, rather than a copy or a stand-in');
 
         console.log('✓ A. ui/main.js constructs exactly one real, imported ArweaveContentStore');

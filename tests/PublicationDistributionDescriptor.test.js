@@ -7,14 +7,11 @@ import {
     describeDecentralizedDiscoveryEnvelope,
     parseDecentralizedDiscoveryEnvelope
 } from '../core/DecentralizedDiscoveryEnvelope.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.44 — Publication Discovery Distribution Model.
 // See docs/Roadmap.md, "0.9.44 — Publication Discovery Distribution Model,"
 // for the full milestone story.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function signedPublication(overrides = {}) {
     const publication = new Publication({

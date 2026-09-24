@@ -1,4 +1,5 @@
 import { BaseJsonRpcClient } from '../base/BaseJsonRpcClient.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.462 — Base Transaction Payload RPC Read.
 //
@@ -53,10 +54,6 @@ import { BaseJsonRpcClient } from '../base/BaseJsonRpcClient.js';
 //   Section J: cross-role isolation — this file's own code never mentions
 //              ProofVerifier/PublicationAnchor/anchorType; adding this
 //              method requires no change to any file outside base/BaseJsonRpcClient.js.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const TXID_A = '0x' + '11'.repeat(32);
 const TXID_B = '0x' + '22'.repeat(32);

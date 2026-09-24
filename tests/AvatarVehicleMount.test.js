@@ -5,6 +5,7 @@ import {
     isValidAvatarVehicleMount,
     clearAvatarVehicleMount
 } from '../core/AvatarVehicleMount.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.77 — Avatar-Vehicle Mount Relationship, core/AvatarVehicleMount.js.
 //
@@ -30,10 +31,6 @@ import {
 // only "what relationship, if any, currently holds between an avatar and
 // a vehicle by id" — never how that relationship comes to exist, changes,
 // or ends. See docs/Roadmap.md, 0.9.77.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, message) {
     let threw = false;
