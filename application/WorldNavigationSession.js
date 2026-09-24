@@ -1811,8 +1811,9 @@ export class WorldNavigationSession {
     // it with `null`. Anything else is rejected (returns false).
     //
     // Turning one on re-frames immediately, so choosing "Bird's-Eye" while
-    // standing still moves the camera. Turning it off does NOT snap the camera
-    // anywhere; the orbit camera resumes from where the perspective left it. Independent of
+    // standing still moves the camera. Turning it off
+    // does NOT snap the camera anywhere; the orbit camera resumes from where the
+    // perspective left it. Independent of
     // `_followAvatarEnabled`, but a set perspective always wins.
     setCameraPerspective(perspective) {
         if (perspective !== null && !isValidCameraPerspective(perspective)) {
