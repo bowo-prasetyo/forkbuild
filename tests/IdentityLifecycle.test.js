@@ -46,6 +46,15 @@ function assertThrows(fn, message) {
     }
 }
 
+async function assertRejects(fn, message) {
+    try {
+        await fn();
+        assert(false, message);
+    } catch (e) {
+        if (e.message === `ASSERT FAILED: ${message}`) throw e;
+    }
+}
+
 function wait(ms = 0) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -86,30 +95,30 @@ async function runTests() {
 // ---------------------------------------------------------------------
 {
     const device = makeDevice();
-    const alice = device.createLocalIdentity('Alice', 'old-pass');
-    device.authenticate(alice.identityId, 'old-pass');
+    const alice = await device.createProtectedLocalIdentity('Alice', 'old-pass');
+    await device.unlock(alice.identityId, 'old-pass');
+    device.authenticate(alice.identityId);
     const signatureBefore = device.signCanonical({ type: 'test', id: 'x', revision: 1, payload: {} });
 
-    const updated = device.changePassphrase(alice.identityId, 'old-pass', 'new-pass');
+    const updated = await device.changePassphrase(alice.identityId, 'old-pass', 'new-pass');
     assert(updated.identityId === alice.identityId, 'changePassphrase never changes identityId');
     assert(updated.publicKey === alice.publicKey, 'changePassphrase never changes the public key');
     assert(updated.label === alice.label, 'changePassphrase never changes the label');
     assert(!device.isUnlocked(alice.identityId), 'the vault is forced LOCKED after a passphrase change, like protectIdentity()');
 
-    assertThrows(() => device.unlock(alice.identityId, 'old-pass'), 'the old passphrase no longer unlocks the vault');
-    device.unlock(alice.identityId, 'new-pass');
+    await assertRejects(() => device.unlock(alice.identityId, 'old-pass'), 'the old passphrase no longer unlocks the vault');
+    await device.unlock(alice.identityId, 'new-pass');
     assert(device.isUnlocked(alice.identityId), 'the new passphrase unlocks it');
 
-    device.authenticate(alice.identityId, 'new-pass');
+    device.authenticate(alice.identityId);
     const signatureAfter = device.signCanonical({ type: 'test', id: 'x', revision: 1, payload: {} });
     assert(signatureBefore.signer === signatureAfter.signer, 'a signature produced before and after a passphrase change share the exact same signer identity');
     assert(signatureBefore.signature === signatureAfter.signature, 'signing the identical descriptor before/after produces the identical signature (same key, deterministic Ed25519)');
 
-    assertThrows(() => device.changePassphrase(alice.identityId, 'wrong', 'whatever'), 'the wrong current passphrase is rejected');
-    assertThrows(() => {
-        const unprotected = device.createLocalIdentity('Bob');
-        device.changePassphrase(unprotected.identityId, 'anything', 'new');
-    }, 'changePassphrase refuses an identity that was never protected');
+    await assertRejects(() => device.changePassphrase(alice.identityId, 'wrong', 'whatever-new'), 'the wrong current passphrase is rejected');
+    const unprotected = device.createLocalIdentity('Bob');
+    await assertRejects(() => device.changePassphrase(unprotected.identityId, 'anything', 'new-passphrase'),
+        'changePassphrase refuses an identity that was never protected');
     console.log('✓ changePassphrase: re-protects the same key under a new passphrase, identity and its signatures are untouched');
 }
 
@@ -227,11 +236,12 @@ async function runTests() {
 // ---------------------------------------------------------------------
 {
     const device = makeDevice();
-    const alice = device.createLocalIdentity('Alice', 'alice-pass');
+    const alice = await device.createProtectedLocalIdentity('Alice', 'alice-pass');
 
     assertThrows(() => device.revokeIdentity(alice.identityId), 'revoking a locked, protected identity without a passphrase is refused');
-    const record = device.revokeIdentity(alice.identityId, { passphrase: 'alice-pass' });
-    assert(record.signature, 'the passphrase-gated revocation still produces a real, signed record');
+    await device.unlock(alice.identityId, 'alice-pass');
+    const record = device.revokeIdentity(alice.identityId);
+    assert(record.signature, 'after unlocking with the passphrase, the revocation produces a real, signed record');
     assert(!device.isUnlocked(alice.identityId), 'the vault is evicted again immediately after producing the revocation signature');
     console.log('✓ protected identities: revoke()/declareSuccessor() are gated by the same passphrase discipline as unlock()');
 }
@@ -246,13 +256,13 @@ async function runTests() {
 {
     const device = makeDevice();
     const identityUseCase = new IdentityUseCase(device);
-    const alice = device.createLocalIdentity('Alice', 'alice-pass');
+    const alice = await device.createProtectedLocalIdentity('Alice', 'alice-pass');
     const aliceNew = makeDevice().createLocalIdentity('Alice (rotated)');
     const lockEvents = [];
     identityUseCase.onVaultLockChanged((identityId, lock) => lockEvents.push({ identityId, unlocked: lock.isUnlocked }));
 
     assert(!identityUseCase.isUnlocked(alice.identityId), 'Alice starts locked');
-    identityUseCase.declareSuccessor(alice.identityId, aliceNew.identityId, 'alice-pass');
+    await identityUseCase.declareSuccessor(alice.identityId, aliceNew.identityId, 'alice-pass');
     assert(identityUseCase.isUnlocked(alice.identityId), 'signing the succession with the passphrase left the vault unlocked');
     assert(lockEvents.length === 1 && lockEvents[0].identityId === alice.identityId, 'declareSuccessor() published exactly one VaultLockChanged, for Alice');
     assert(lockEvents[0].unlocked, 'and that event reports the vault as it now is: unlocked');
@@ -267,17 +277,18 @@ async function runTests() {
 // ---------------------------------------------------------------------
 {
     const originDevice = makeDevice();
-    const alice = originDevice.createLocalIdentity('Alice', 'backup-pass');
-    const backupPackage = originDevice.exportLocalIdentity(alice.identityId, 'backup-pass');
+    const alice = await originDevice.createProtectedLocalIdentity('Alice', 'backup-pass');
+    const backupPackage = await originDevice.exportLocalIdentity(alice.identityId, 'backup-pass');
 
     // Alice's ORIGIN device is later compromised; she revokes it there.
-    originDevice.revokeIdentity(alice.identityId, { passphrase: 'backup-pass', reason: 'device compromised' });
+    await originDevice.unlock(alice.identityId, 'backup-pass');
+    originDevice.revokeIdentity(alice.identityId, { reason: 'device compromised' });
     assert(originDevice.isRevoked(alice.identityId), 'the origin device now marks Alice REVOKED');
 
     // Recovery, from the backup made BEFORE the compromise, onto a brand
     // new device — 0.2.48's pipeline, completely unmodified.
     const recoveryDevice = makeDevice();
-    const { status, identity: recovered } = recoveryDevice.importLocalIdentity(backupPackage, 'backup-pass');
+    const { status, identity: recovered } = await recoveryDevice.importLocalIdentity(backupPackage, 'backup-pass');
     assert(status === 'IMPORTED', 'recovery succeeds — the exported package plus its passphrase is all it ever required');
     assert(recovered.identityId === alice.identityId, 'the SAME identity is recovered, not a new one');
     assert(!recoveryDevice.isRevoked(alice.identityId), 'lifecycle state does not travel inside an export package — the recovered copy starts ACTIVE on its own device, an explicit, named limitation, not an oversight');
@@ -285,9 +296,9 @@ async function runTests() {
     // Alice, now holding the key again, can revoke it herself on THIS
     // device too — revocation is self-service, tied to key possession,
     // never to any one specific device.
-    recoveryDevice.unlock(alice.identityId, 'backup-pass');
-    recoveryDevice.authenticate(alice.identityId, 'backup-pass');
-    recoveryDevice.revokeIdentity(alice.identityId, { passphrase: 'backup-pass' });
+    await recoveryDevice.unlock(alice.identityId, 'backup-pass');
+    recoveryDevice.authenticate(alice.identityId);
+    recoveryDevice.revokeIdentity(alice.identityId);
     assert(recoveryDevice.isRevoked(alice.identityId), 'the recovered copy can independently be revoked once its owner knows about the compromise');
     console.log('✓ recovery (0.2.48) composes with revocation (0.2.67): the key travels, lifecycle state stays local until separately re-declared');
 }
@@ -302,9 +313,10 @@ async function runTests() {
     const network = new LocalPeerNetwork();
     const aliceDevice = makeDevice();
     const bobDevice = makeDevice();
-    const alice = aliceDevice.createLocalIdentity('Alice', 'alice-pass');
+    const alice = await aliceDevice.createProtectedLocalIdentity('Alice', 'alice-pass');
     bobDevice.createLocalIdentity('Bob');
-    aliceDevice.authenticate(alice.identityId, 'alice-pass');
+    await aliceDevice.unlock(alice.identityId, 'alice-pass');
+    aliceDevice.authenticate(alice.identityId);
     bobDevice.authenticate(bobDevice.listLocalIdentities()[0].identityId);
 
     let connectionRound = 0;
@@ -336,9 +348,9 @@ async function runTests() {
 
     // Step 2: Alice changes her vault passphrase. Nothing about her
     // identity changed, so nothing downstream needs to know or care.
-    aliceDevice.changePassphrase(alice.identityId, 'alice-pass', 'alice-pass-2');
-    aliceDevice.unlock(alice.identityId, 'alice-pass-2');
-    aliceDevice.authenticate(alice.identityId, 'alice-pass-2');
+    await aliceDevice.changePassphrase(alice.identityId, 'alice-pass', 'alice-pass-2');
+    await aliceDevice.unlock(alice.identityId, 'alice-pass-2');
+    aliceDevice.authenticate(alice.identityId);
     const second = await connectAndAuthenticate();
     assert(second.bobSession.authenticationState === PeerAuthenticationState.AUTHENTICATED, 'after a passphrase change, Bob still recognizes and authenticates the SAME identityId with zero special-casing');
     assert(second.bobSession.remoteIdentity.identityId === alice.identityId, "it is still, provably, Alice's identity");
@@ -348,7 +360,7 @@ async function runTests() {
     // in the same signed act.
     const aliceNewDevice = makeDevice();
     const aliceNew = aliceNewDevice.createLocalIdentity('Alice (rotated)');
-    aliceDevice.revokeIdentity(alice.identityId, { passphrase: 'alice-pass-2', reason: 'planned rotation', successorIdentityId: aliceNew.identityId });
+    aliceDevice.revokeIdentity(alice.identityId, { reason: 'planned rotation', successorIdentityId: aliceNew.identityId });
     assert(aliceDevice.isRevoked(alice.identityId), 'Alice is now REVOKED on her own device');
 
     const verifier = new LocalAuthorizationVerifier();
@@ -358,10 +370,10 @@ async function runTests() {
     // Step 4: a NEW connection attempt using the revoked identity is
     // rejected — not by any change to peer/, but because there is no
     // longer any way for her old identity to produce a valid PROOF.
-    aliceDevice.unlock(alice.identityId, 'alice-pass-2');
+    await aliceDevice.unlock(alice.identityId, 'alice-pass-2');
     // authenticate() itself still succeeds — a revoked identity can
     // still be the app's "logged in" identity, exactly as designed.
-    aliceDevice.authenticate(alice.identityId, 'alice-pass-2');
+    aliceDevice.authenticate(alice.identityId);
     const third = await connectAndAuthenticate();
     assert(third.aliceSession.authenticationState === PeerAuthenticationState.FAILED, "Alice's OWN side fails to even start — no signing identity available");
     assert(third.aliceSession.failureReason.includes('revoked'), `failure reason names revocation, got: ${third.aliceSession.failureReason}`);

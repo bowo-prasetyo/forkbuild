@@ -28,3 +28,5 @@ Tests check behavior. A test imports the real module, runs it, and asserts on wh
 
 Each tests/*.test.js file is a standalone ES module that throws on its first failed assertion. tests/run.mjs runs them under Node with tests/support/NodePreload.mjs, which supplies Vue (a minimal shim) and WebRTC (node-datachannel). A test that needs a real browser (Web Audio, media tracks) starts with the line `// @environment browser` and is run by tests/run-browser.mjs instead; such a file must finish its work before its module finishes evaluating (a top-level `await`).
 
+
+Don't implement cryptographic primitives. Signing and hashing come from the audited noble libraries in vendor/ (regenerate them with `node scripts/vendor-noble.mjs` after changing their pinned versions in package.json; never edit vendor/ by hand), and key derivation and encryption use WebCrypto (`crypto.subtle`).

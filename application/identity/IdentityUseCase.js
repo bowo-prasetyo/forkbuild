@@ -49,8 +49,12 @@ export class IdentityUseCase {
     }
 
     // --- 0.2.46: identity lifecycle ------------------------------------
-    createIdentity(label, passphrase = null) {
-        return this._identityProvider.createLocalIdentity(label, passphrase);
+    // With a passphrase the key is encrypted before it is ever stored.
+    async createIdentity(label, passphrase = null) {
+        if (passphrase) {
+            return this._identityProvider.createProtectedLocalIdentity(label, passphrase);
+        }
+        return this._identityProvider.createLocalIdentity(label);
     }
 
     listIdentities() {
@@ -58,8 +62,10 @@ export class IdentityUseCase {
     }
 
     // --- 0.2.46: authentication session --------------------------------
-    authenticate(identityId, passphrase = null) {
-        const session = this._identityProvider.authenticate(identityId, passphrase);
+    // A passphrase unlocks a locked, protected identity first.
+    async authenticate(identityId, passphrase = null) {
+        await this._unlockIfNeeded(identityId, passphrase);
+        const session = this._identityProvider.authenticate(identityId);
         this._publishChange();
         this._publishLockChange(identityId);
         return session;
@@ -92,8 +98,8 @@ export class IdentityUseCase {
     }
 
     // --- 0.2.47: key protection ------------------------------------------
-    unlock(identityId, passphrase) {
-        const lock = this._identityProvider.unlock(identityId, passphrase);
+    async unlock(identityId, passphrase) {
+        const lock = await this._identityProvider.unlock(identityId, passphrase);
         this._publishLockChange(identityId);
         return lock;
     }
@@ -134,11 +140,11 @@ export class IdentityUseCase {
     // comment). Neither publishes anything: importing an identity never
     // authenticates it, so currentUser()/currentSession() are unchanged,
     // and a caller showing the identities list re-reads it itself.
-    exportIdentity(identityId, passphrase) {
+    async exportIdentity(identityId, passphrase) {
         return this._identityProvider.exportLocalIdentity(identityId, passphrase);
     }
 
-    importIdentity(pkg, passphrase, label = null) {
+    async importIdentity(pkg, passphrase, label = null) {
         return this._identityProvider.importLocalIdentity(pkg, passphrase, { label });
     }
 
@@ -152,22 +158,32 @@ export class IdentityUseCase {
     // AND VaultLockChanged: changePassphrase() and revokeIdentity() force
     // the vault closed afterward, and declareSuccessor() unlocks a locked,
     // protected identity when it is given the passphrase to sign with.
-    changePassphrase(identityId, oldPassphrase, newPassphrase) {
-        const identity = this._identityProvider.changePassphrase(identityId, oldPassphrase, newPassphrase);
+    async protectIdentity(identityId, passphrase) {
+        const identity = await this._identityProvider.protectIdentity(identityId, passphrase);
         this._publishChange();
         this._publishLockChange(identityId);
         return identity;
     }
 
-    declareSuccessor(identityId, successorIdentityId, passphrase = null) {
-        const record = this._identityProvider.declareSuccessor(identityId, successorIdentityId, { passphrase });
+    async changePassphrase(identityId, oldPassphrase, newPassphrase) {
+        const identity = await this._identityProvider.changePassphrase(identityId, oldPassphrase, newPassphrase);
+        this._publishChange();
+        this._publishLockChange(identityId);
+        return identity;
+    }
+
+    // A locked, protected identity is unlocked with the passphrase first.
+    async declareSuccessor(identityId, successorIdentityId, passphrase = null) {
+        await this._unlockIfNeeded(identityId, passphrase);
+        const record = this._identityProvider.declareSuccessor(identityId, successorIdentityId);
         this._publishChange();
         this._publishLockChange(identityId);
         return record;
     }
 
-    revokeIdentity(identityId, { passphrase = null, reason = null, successorIdentityId = null } = {}) {
-        const record = this._identityProvider.revokeIdentity(identityId, { passphrase, reason, successorIdentityId });
+    async revokeIdentity(identityId, { passphrase = null, reason = null, successorIdentityId = null } = {}) {
+        await this._unlockIfNeeded(identityId, passphrase);
+        const record = this._identityProvider.revokeIdentity(identityId, { reason, successorIdentityId });
         this._publishChange();
         this._publishLockChange(identityId);
         return record;
@@ -176,6 +192,18 @@ export class IdentityUseCase {
     getSuccessionRecord(identityId) {
         return this._identityProvider.getSuccessionRecord(identityId);
     }
+
+    async _unlockIfNeeded(identityId, passphrase) {
+        const identity = this._identityProvider.getLocalIdentity(identityId);
+        if (identity && identity.isProtected && !this._identityProvider.isUnlocked(identityId)) {
+            if (!passphrase) {
+                throw new Error('This identity is protected — enter its passphrase to continue');
+            }
+            // The calling action publishes the resulting lock state once.
+            await this._identityProvider.unlock(identityId, passphrase);
+        }
+    }
+
 
     _publishChange() {
         this._eventBus.publish(IDENTITY_EVENT, { user: this.currentUser() });

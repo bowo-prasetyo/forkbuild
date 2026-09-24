@@ -26,7 +26,11 @@ import * as KeyEncryption from './KeyEncryption.js';
 // LocalIdentity.js already documents. IdentityImport never validates it
 // and IdentityRecovery never trusts it for anything but a suggested
 // default; the importing device is always free to relabel.
-export const CURRENT_FORMAT_VERSION = 1;
+// 2: the private key is encrypted with KeyEncryption's current format
+// (PBKDF2-SHA256 + AES-256-GCM). Version 1 files (the legacy key format)
+// can still be imported.
+export const CURRENT_FORMAT_VERSION = 2;
+export const SUPPORTED_FORMAT_VERSIONS = Object.freeze([1, 2]);
 
 // Builds the plain, JSON-safe export package for one LocalIdentity.
 // Pure with respect to storage — it knows nothing about StorageProvider
@@ -37,7 +41,7 @@ export const CURRENT_FORMAT_VERSION = 1;
 // is protected) — this function's only job is re-protecting it for
 // transit, always, regardless of whether the source was protected at
 // rest.
-export function buildExportPackage({
+export async function buildExportPackage({
     identityId,
     publicKey,
     algorithm = 'Ed25519',
@@ -59,7 +63,7 @@ export function buildExportPackage({
     if (!passphrase || typeof passphrase !== 'string' || !passphrase.trim()) {
         throw new Error('IdentityExport: a passphrase is required to protect the exported private key');
     }
-    const encryptedPrivateKey = KeyEncryption.encrypt(
+    const encryptedPrivateKey = await KeyEncryption.encrypt(
         seedBytes,
         passphrase,
         iterations !== undefined ? { iterations } : {}

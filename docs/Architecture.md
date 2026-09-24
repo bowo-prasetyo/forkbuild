@@ -421,8 +421,12 @@ see "Publication presence across restarts" and "Distribution".
 ## Signatures, trust and replication
 
 Hashes establish what an object is; signatures establish who authorized
-it. identity/Ed25519.js is a self-contained Ed25519/SHA-512
-implementation. identity/SigningIdentity.js is a public-key identity
+it. identity/Ed25519.js wraps Ed25519 signing (RFC 8032, verified strictly:
+non-canonical signatures and small-order keys are rejected) and SHA-512 from
+the audited noble-curves and noble-hashes libraries, which are copied into
+vendor/ by scripts/vendor-noble.mjs (a test fails if vendor/ ever differs from
+the pinned npm packages). It has no fallback random source: without
+crypto.getRandomValues no key is created. identity/SigningIdentity.js is a public-key identity
 (did:key). core/Signature.js signs a canonical envelope
 `{ domain: 'forkbuild', type, id, revision, payload }`, so a signature
 for one object type can never be replayed as another.
@@ -481,10 +485,18 @@ top of it.
   separate facts: identity/AuthenticationSession.js
   (ANONYMOUS/AUTHENTICATED) and identity/VaultLock.js (LOCKED/UNLOCKED,
   never serialized). A protected private key is stored encrypted by
-  identity/KeyEncryption.js: PBKDF2-HMAC-SHA512 for the key, a
-  SHA-512 counter-mode keystream, and an HMAC tag checked in constant
-  time before decrypting, so a wrong passphrase and a tampered record
-  fail the same way. VaultTimeoutPolicy bounds how long a vault stays
+  identity/KeyEncryption.js through WebCrypto: PBKDF2-HMAC-SHA256 with
+  600,000 iterations derives an AES-256-GCM key, and the GCM tag makes a
+  wrong passphrase and a tampered record fail the same way. Because
+  WebCrypto is asynchronous, so are the operations that derive a key
+  (creating a protected identity, protect, unlock, change passphrase,
+  export, import); signing stays synchronous and needs the identity
+  unlocked first. Records in the earlier format (PBKDF2-HMAC-SHA512 with
+  600 iterations, a SHA-512 keystream and an HMAC tag) still decrypt, and
+  are re-encrypted in the current format on the next successful unlock or
+  export. New passphrases need at least 8 characters, and the UI creates
+  protected identities unless the user explicitly opts out.
+  VaultTimeoutPolicy bounds how long a vault stays
   unlocked; FailedUnlockTracker adds a time-based lockout after failed
   unlocks (in memory only). Wrong export passphrases count against the
   same lockout.

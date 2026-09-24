@@ -12,14 +12,18 @@ already holds — click one to use it — or create a new one:
 
 1. Type a **display name**. This is what other people see; you can have
    several identities with different names.
-2. Optionally, type a **passphrase**.
+2. Type a **passphrase** (at least 8 characters), then type it again to
+   confirm it.
 3. Click **Create & Log In**.
 
-Leaving the passphrase blank creates an **unprotected** identity: the key
-sits ready to use on this device and never asks you for anything again.
-Typing a passphrase creates a **protected** identity (shown with a 🔒): the
-key is encrypted at rest and only decrypted, in memory, after you enter the
-passphrase.
+This creates a **protected** identity (shown with a 🔒): the key is encrypted
+at rest and only decrypted, in memory, after you enter the passphrase.
+
+You can leave the passphrase blank, but only by ticking **Create without a
+passphrase**. That creates an **unprotected** identity: the key is stored
+unencrypted in this browser, ready to use without ever asking you for
+anything, and anything that can read this site's storage can sign as you.
+You can protect it later from **My Identities**.
 
 > There is no password reset. For a protected identity, the passphrase *is*
 > the only way to decrypt the key — if you lose it, that identity is gone,
@@ -52,6 +56,9 @@ holds, with its own lock state, independent of which one you're currently
 logged in as. From here you can:
 
 - **Create** a new identity (same as the login dialog).
+- **Protect with Passphrase** — shown on an unprotected identity (marked
+  ⚠ Unprotected). It encrypts the existing key; the identity itself doesn't
+  change, and it's locked until you unlock it.
 - **Lock / Unlock** any identity individually.
 - **Change passphrase** — replaces the passphrase of a protected identity
   (only protected identities offer it). The identity itself — its ID,
@@ -81,8 +88,8 @@ produces a downloadable file containing your encrypted private key:
 
 - Exporting always asks for the identity's passphrase, even if it's
   currently unlocked.
-- If the identity is unprotected, export asks you to choose a passphrase on
-  the spot, just to protect the copy in the file.
+- If the identity is unprotected, export asks you to choose a passphrase (at
+  least 8 characters) on the spot, just to protect the copy in the file.
 
 **Import** brings an exported identity onto a different device or browser:
 
@@ -95,6 +102,17 @@ produces a downloadable file containing your encrypted private key:
 An imported identity always lands **locked**, and you are not automatically
 logged in as it — unlock it from My Identities or the login dialog like any
 other protected identity.
+
+Files exported by earlier versions of ForkBuild still import. Files exported
+now use a newer format that earlier versions can't read, so update ForkBuild
+on the other device first.
+
+## Keys from earlier versions
+
+Protected identities created before this version used a weaker encryption
+format. They still unlock with the same passphrase, and the first time you
+unlock one (or export it), ForkBuild re-encrypts it in the current format.
+Nothing about the identity itself changes.
 
 > Keep both the exported file *and* its passphrase safe. Either one alone is
 > useless — and losing both means that identity, and everything only it

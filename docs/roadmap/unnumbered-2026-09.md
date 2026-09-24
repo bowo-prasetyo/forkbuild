@@ -399,3 +399,34 @@ The four voice tests need Web Audio and media tracks, start with `// @environmen
 Chromium through `tests/run-browser.mjs`. `tests.html` is gone. `.github/workflows/tests.yml` runs the Node tests,
 the rendezvous worker's tests and the browser tests on every pull request and on pushes to `main`. Testing rules
 are in docs/CodingConventions.md.
+
+**Key handling on audited and platform cryptography.** Identity keys were signed by a hand-written, BigInt Ed25519
+and SHA-512 (not constant-time and never reviewed), protected by a home-made cipher with 600 PBKDF2 iterations,
+stored unencrypted unless the user typed an optional passphrase, and generated with a silent `Math.random` fallback
+when no secure random source existed.
+
+- `identity/Ed25519.js` keeps its API but delegates to noble-curves 2.4.0 and noble-hashes 2.4.0 (noble-curves was
+  audited by Trail of Bits at 2.3.0; 2.4.0 adds hardening on top). Their ES modules are copied into `vendor/` by
+  `scripts/vendor-noble.mjs`, which only rewrites the package-name imports into relative paths so the browser and
+  Node load the same files; `tests/IdentityCryptography.test.js` fails if `vendor/` differs from the pinned npm
+  packages. Verification is strict RFC 8032 (non-canonical S and small-order keys are rejected), and signatures
+  interoperate with WebCrypto's Ed25519 in both directions. `randomSeed()` throws when `crypto.getRandomValues` is
+  missing.
+- `identity/KeyEncryption.js` uses WebCrypto: PBKDF2-HMAC-SHA256 with 600,000 iterations and AES-256-GCM, records
+  refusing more than 10,000,000 iterations. Legacy records still decrypt (with the same primitives, through WebCrypto)
+  and are re-encrypted in the current format on the next successful unlock or export; a fixture written by the old
+  code (`tests/fixtures/legacy-identity-key-encryption.json`) proves both a stored key and a version 1 export file
+  still open. Identity export files are now `formatVersion: 2`; import accepts 1 and 2.
+- Because WebCrypto is asynchronous, the operations that derive a key are too: `createProtectedLocalIdentity()` (new),
+  `protectIdentity()`, `unlock()`, `changePassphrase()`, export and import. Everything else stays synchronous:
+  `createLocalIdentity()` and `login()` create unprotected identities and now refuse a passphrase instead of taking
+  one; `authenticate()`, `declareSuccessor()`, `revokeIdentity()` and the device grants require a protected identity
+  to be unlocked first. `IdentityUseCase` keeps the UI's one-call shape (it unlocks with the given passphrase when
+  the identity is locked) and publishes the lock state once per action.
+- Passphrases are the default. New passphrases (creating, protecting, changing, and exporting an unprotected
+  identity) need at least 8 characters. The login dialog and My Identities ask for a passphrase and its
+  confirmation, explain that there is no reset, and create an unprotected identity only after the user ticks
+  "Create without a passphrase". Unprotected identities are marked ⚠ Unprotected in My Identities, which gains a
+  Protect with Passphrase action (the provider supported it; no UI offered it). Actions that derive a key show
+  progress. An end-to-end run in Chromium covered the opt-out, a protected identity signing a publication, unlocking
+  after a reload, protecting an existing identity and unlocking a legacy key, which was upgraded in storage.

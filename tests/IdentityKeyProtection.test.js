@@ -32,6 +32,15 @@ function assertThrows(fn, expectedMessage, message) {
     }
 }
 
+async function assertRejects(fn, expectedMessage, message) {
+    try {
+        await fn();
+        assert(false, message);
+    } catch (e) {
+        assert(e.message.includes(expectedMessage), `${message}: ${e.message}`);
+    }
+}
+
 // ---------------------------------------------------------------------
 // 1. KeyEncryption — round-trips, rejects wrong passphrases and
 //    tampered records, never returns wrong-but-plausible bytes.
@@ -40,18 +49,18 @@ function assertThrows(fn, expectedMessage, message) {
     const seed = new Uint8Array(32);
     for (let i = 0; i < 32; i++) seed[i] = i * 7 % 256;
 
-    const record = KeyEncryption.encrypt(seed, 'correct horse battery staple', { iterations: TEST_ITERATIONS });
-    const decrypted = KeyEncryption.decrypt(record, 'correct horse battery staple');
+    const record = await KeyEncryption.encrypt(seed, 'correct horse battery staple', { iterations: TEST_ITERATIONS });
+    const decrypted = await KeyEncryption.decrypt(record, 'correct horse battery staple');
     assert(Array.from(decrypted).every((b, i) => b === seed[i]), 'encrypt/decrypt round-trips the exact seed bytes');
 
-    assertThrows(() => KeyEncryption.decrypt(record, 'wrong passphrase'),
+    await assertRejects(() => KeyEncryption.decrypt(record, 'wrong passphrase'),
         'incorrect passphrase', 'a wrong passphrase is rejected, never silently decrypted to garbage');
 
     const tampered = { ...record, ciphertext: record.ciphertext.slice(0, -2) + (record.ciphertext.slice(-2) === '00' ? '11' : '00') };
-    assertThrows(() => KeyEncryption.decrypt(tampered, 'correct horse battery staple'),
+    await assertRejects(() => KeyEncryption.decrypt(tampered, 'correct horse battery staple'),
         'incorrect passphrase', 'a tampered ciphertext is rejected by the MAC before decryption is trusted');
 
-    const record2 = KeyEncryption.encrypt(seed, 'correct horse battery staple', { iterations: TEST_ITERATIONS });
+    const record2 = await KeyEncryption.encrypt(seed, 'correct horse battery staple', { iterations: TEST_ITERATIONS });
     assert(record.salt !== record2.salt && record.nonce !== record2.nonce,
         'encrypting the same seed twice never reuses salt or nonce');
     console.log('✓ KeyEncryption: round-trips, rejects wrong passphrase and tampering, never reuses salt/nonce');
@@ -79,15 +88,15 @@ function assertThrows(fn, expectedMessage, message) {
 {
     const storage = new InMemoryStorageProvider();
     const provider = new LocalIdentityProvider(storage, { pbkdf2Iterations: TEST_ITERATIONS });
-    const alice = provider.createLocalIdentity('Alice', 'hunter2');
+    const alice = await provider.createProtectedLocalIdentity('Alice', 'hunter2-long');
 
-    assert(alice.isProtected === true, 'createLocalIdentity(label, passphrase) creates a protected identity');
+    assert(alice.isProtected === true, 'createProtectedLocalIdentity(label, passphrase) creates a protected identity');
     const stored = storage.load('local-identity-key:' + alice.identityId);
     assert(!('seed' in stored), 'the plaintext seed is never written to storage for a protected identity');
     assert(stored.encryption && stored.encryption.ciphertext, 'the encrypted record is what gets stored instead');
     assert(provider.vaultLock(alice.identityId).state === VaultLockState.LOCKED,
         'a freshly created protected identity starts LOCKED — creating it does not also unlock it');
-    console.log('✓ createLocalIdentity: protected identity never persists a plaintext seed, starts LOCKED');
+    console.log('✓ createProtectedLocalIdentity: protected identity never persists a plaintext seed, starts LOCKED');
 }
 
 // ---------------------------------------------------------------------
@@ -96,22 +105,24 @@ function assertThrows(fn, expectedMessage, message) {
 // ---------------------------------------------------------------------
 {
     const provider = new LocalIdentityProvider(new InMemoryStorageProvider(), { pbkdf2Iterations: TEST_ITERATIONS });
-    const alice = provider.createLocalIdentity('Alice', 'hunter2');
+    const alice = await provider.createProtectedLocalIdentity('Alice', 'hunter2-long');
     const descriptor = { type: SignatureType.PLACEMENT_RECORD, id: 'p1', revision: 1, payload: { a: 1 } };
 
     assertThrows(() => provider.signCanonical(descriptor), 'no active authentication session',
         'signing before any authentication fails with the session reason, not a lock reason');
 
-    assertThrows(() => provider.authenticate(alice.identityId), 'a passphrase is required',
-        'authenticating a protected identity with no passphrase is refused');
+    assertThrows(() => provider.authenticate(alice.identityId), 'protected and locked',
+        'authenticating a locked, protected identity is refused until it is unlocked');
 
-    assertThrows(() => provider.authenticate(alice.identityId, 'wrong-pass'), 'incorrect passphrase',
-        'authenticating with the wrong passphrase is refused');
+    await assertRejects(() => provider.unlock(alice.identityId, 'wrong-pass'), 'incorrect passphrase',
+        'unlocking with the wrong passphrase is refused');
 
-    provider.authenticate(alice.identityId, 'hunter2');
+    await provider.unlock(alice.identityId, 'hunter2-long');
+
+    provider.authenticate(alice.identityId);
     const signature = provider.signCanonical(descriptor);
     assert(signature instanceof Signature && signature.signer === alice.identityId,
-        'authenticating with the correct passphrase unlocks the vault and signing succeeds');
+        'unlocking with the correct passphrase, then authenticating, makes signing succeed');
 
     const verifier = new LocalAuthorizationVerifier();
     const result = verifier.verifyDescriptor(descriptor, signature, provider.getSigningIdentity().toJSON());
@@ -123,7 +134,7 @@ function assertThrows(fn, expectedMessage, message) {
     assertThrows(() => provider.signCanonical(descriptor), 'identity is locked',
         'signing is refused with a LOCK-specific reason once the vault is locked, even though the session is still authenticated');
 
-    provider.unlock(alice.identityId, 'hunter2');
+    await provider.unlock(alice.identityId, 'hunter2-long');
     const signature2 = provider.signCanonical(descriptor);
     assert(signature2.signer === alice.identityId, 're-unlocking with the correct passphrase restores signing, same identity');
     console.log('✓ signing gated distinctly by session vs. lock state; verifies end-to-end through LocalAuthorizationVerifier');
@@ -138,20 +149,20 @@ function assertThrows(fn, expectedMessage, message) {
     const provider = new LocalIdentityProvider(new InMemoryStorageProvider(), {
         pbkdf2Iterations: TEST_ITERATIONS, maxUnlockAttempts: 3, unlockCooldownMs: 5000, now: () => fakeNow
     });
-    const alice = provider.createLocalIdentity('Alice', 'hunter2');
+    const alice = await provider.createProtectedLocalIdentity('Alice', 'hunter2-long');
 
-    assertThrows(() => provider.unlock(alice.identityId, 'x'), '2 attempt(s) remaining', 'first failure reports remaining attempts');
-    assertThrows(() => provider.unlock(alice.identityId, 'x'), '1 attempt(s) remaining', 'second failure reports remaining attempts');
-    assertThrows(() => provider.unlock(alice.identityId, 'x'), 'temporarily locked out', 'third failure trips the cooldown');
-    assertThrows(() => provider.unlock(alice.identityId, 'hunter2'), 'too many failed unlock attempts',
+    await assertRejects(() => provider.unlock(alice.identityId, 'x'), '2 attempt(s) remaining', 'first failure reports remaining attempts');
+    await assertRejects(() => provider.unlock(alice.identityId, 'x'), '1 attempt(s) remaining', 'second failure reports remaining attempts');
+    await assertRejects(() => provider.unlock(alice.identityId, 'x'), 'temporarily locked out', 'third failure trips the cooldown');
+    await assertRejects(() => provider.unlock(alice.identityId, 'hunter2-long'), 'too many failed unlock attempts',
         'the CORRECT passphrase is still refused during the cooldown window — the lockout is time-based, not passphrase-based');
 
     fakeNow = new Date(fakeNow.getTime() + 6000);
-    const lock = provider.unlock(alice.identityId, 'hunter2');
+    const lock = await provider.unlock(alice.identityId, 'hunter2-long');
     assert(lock.isUnlocked === true, 'after the cooldown elapses, the correct passphrase succeeds again');
 
     provider.lock(alice.identityId);
-    assertThrows(() => provider.unlock(alice.identityId, 'x'), '2 attempt(s) remaining',
+    await assertRejects(() => provider.unlock(alice.identityId, 'x'), '2 attempt(s) remaining',
         'a successful unlock resets the failure counter back to zero');
     console.log('✓ FailedUnlockTracker: attempts counted, cooldown enforced by time not passphrase, success resets it');
 }
@@ -166,8 +177,9 @@ function assertThrows(fn, expectedMessage, message) {
     const provider = new LocalIdentityProvider(new InMemoryStorageProvider(), {
         pbkdf2Iterations: TEST_ITERATIONS, vaultTimeoutMs: 1000, now: () => fakeNow
     });
-    const alice = provider.createLocalIdentity('Alice', 'hunter2');
-    provider.authenticate(alice.identityId, 'hunter2');
+    const alice = await provider.createProtectedLocalIdentity('Alice', 'hunter2-long');
+    await provider.unlock(alice.identityId, 'hunter2-long');
+    provider.authenticate(alice.identityId);
     assert(provider.isUnlocked(alice.identityId) === true, 'unlocked immediately after authenticating');
 
     fakeNow = new Date(fakeNow.getTime() + 500);
@@ -209,7 +221,7 @@ function assertThrows(fn, expectedMessage, message) {
     const signatureBefore = provider.signCanonical({ type: SignatureType.PLACEMENT_RECORD, id: 'b1', revision: 1, payload: {} });
     const keyBefore = signatureBefore.signer;
 
-    const protectedBob = provider.protectIdentity(bob.identityId, 'bobs-secret');
+    const protectedBob = await provider.protectIdentity(bob.identityId, 'bobs-secret');
     assert(protectedBob.isProtected === true, 'protectIdentity flips the identity to protected');
     assert(provider.listLocalIdentities().length === 1, 'protecting migrates in place — it never creates a second identity');
     assert(!('seed' in storage.load('local-identity-key:' + bob.identityId)),
@@ -220,11 +232,11 @@ function assertThrows(fn, expectedMessage, message) {
     assertThrows(() => provider.signCanonical({ type: SignatureType.PLACEMENT_RECORD, id: 'b2', revision: 1, payload: {} }),
         'identity is locked', 'signing is refused right after migration until the new passphrase unlocks it');
 
-    provider.unlock(bob.identityId, 'bobs-secret');
+    await provider.unlock(bob.identityId, 'bobs-secret');
     const signatureAfter = provider.signCanonical({ type: SignatureType.PLACEMENT_RECORD, id: 'b3', revision: 1, payload: {} });
     assert(signatureAfter.signer === keyBefore, 'migration preserves the exact same cryptographic identity — same did:key, same key');
 
-    assertThrows(() => provider.protectIdentity(bob.identityId, 'again'), 'already protected',
+    await assertRejects(() => provider.protectIdentity(bob.identityId, 'again-and-again'), 'already protected',
         'an already-protected identity cannot be protected a second time');
     console.log('✓ protectIdentity: in-place, non-destructive migration preserving the same key, starts LOCKED');
 }
@@ -237,8 +249,9 @@ function assertThrows(fn, expectedMessage, message) {
 {
     const storage = new InMemoryStorageProvider();
     const provider = new LocalIdentityProvider(storage, { pbkdf2Iterations: TEST_ITERATIONS });
-    const alice = provider.createLocalIdentity('Alice', 'hunter2');
-    provider.authenticate(alice.identityId, 'hunter2');
+    const alice = await provider.createProtectedLocalIdentity('Alice', 'hunter2-long');
+    await provider.unlock(alice.identityId, 'hunter2-long');
+    provider.authenticate(alice.identityId);
     assert(provider.isUnlocked(alice.identityId) === true, 'unlocked right after authenticating');
 
     // A brand-new provider instance reading the SAME storage simulates a
@@ -261,14 +274,15 @@ function assertThrows(fn, expectedMessage, message) {
 // ---------------------------------------------------------------------
 {
     const provider = new LocalIdentityProvider(new InMemoryStorageProvider(), { pbkdf2Iterations: TEST_ITERATIONS });
-    const alice = provider.createLocalIdentity('Alice', 'hunter2');
-    provider.authenticate(alice.identityId, 'hunter2');
+    const alice = await provider.createProtectedLocalIdentity('Alice', 'hunter2-long');
+    await provider.unlock(alice.identityId, 'hunter2-long');
+    provider.authenticate(alice.identityId);
     assert(provider.isUnlocked(alice.identityId) === true, 'unlocked after authenticating');
 
     provider.endSession();
     assert(provider.isAuthenticated() === false, 'endSession() ends the session, exactly as 0.2.46 established');
     assert(provider.isUnlocked(alice.identityId) === false, 'endSession() also evicts the vault — no orphaned unlocked key with no active session');
-    assertThrows(() => provider.authenticate(alice.identityId), 'a passphrase is required',
+    assertThrows(() => provider.authenticate(alice.identityId), 'protected and locked',
         'logging back in after logout requires the passphrase again, not a leftover unlock');
     console.log('✓ endSession(): ends the session AND locks the vault, never leaves an orphaned unlock');
 }
@@ -279,7 +293,7 @@ function assertThrows(fn, expectedMessage, message) {
 // ---------------------------------------------------------------------
 {
     const provider = new LocalIdentityProvider(new InMemoryStorageProvider(), { pbkdf2Iterations: TEST_ITERATIONS });
-    const alice = provider.createLocalIdentity('Alice', 'hunter2');
+    const alice = await provider.createProtectedLocalIdentity('Alice', 'hunter2-long');
     const bob = provider.createLocalIdentity('Bob'); // unprotected
 
     assert(provider.vaultLock(bob.identityId).isUnlocked === true, 'an unprotected identity is always unlocked');

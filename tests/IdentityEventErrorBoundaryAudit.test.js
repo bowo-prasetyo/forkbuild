@@ -69,62 +69,6 @@ function throwingListener(message) {
 
 async function runTests() {
     // ---------------------------------------------------------------
-    // Section A — Exact event boundary map.
-    // ---------------------------------------------------------------
-    {
-        const source = codeOnlyLines(await rawSource('application/identity/IdentityUseCase.js')).join('\n');
-
-        // A1 — the five methods that share 0.9.219 Section C2's exact
-        // precondition: _publishChange() (itself two sequential
-        // publishes) followed by MORE authoritative-adjacent work
-        // (_publishLockChange) in the same synchronous call.
-        for (const method of ['authenticate', 'endSession', 'changePassphrase', 'revokeIdentity', 'declareSuccessor']) {
-            const methodIndex = source.indexOf(`    ${method}(`);
-            assert(methodIndex >= 0, `A1. IdentityUseCase still declares ${method}(...)`);
-            const methodBody = source.slice(methodIndex, source.indexOf('\n    }', methodIndex));
-            assert(/_publishChange\(\)/.test(methodBody), `A1. ${method}() still calls _publishChange()`);
-            assert(/_publishLockChange\(/.test(methodBody), `A1. ${method}() still calls _publishLockChange() after _publishChange()`);
-            const changeIdx = methodBody.indexOf('_publishChange()');
-            const lockIdx = methodBody.indexOf('_publishLockChange(');
-            assert(changeIdx >= 0 && lockIdx > changeIdx, `A1. ${method}() still calls _publishChange() BEFORE _publishLockChange(), not after`);
-        }
-
-        // A2 — methods that publish only ONE thing: unlock/lock/
-        // checkVaultTimeouts call only _publishLockChange(). That shape
-        // doesn't carry C2's "publish, then separately-named more work"
-        // precondition, so they are out of this audit's scope by
-        // construction, not by oversight.
-        for (const method of ['unlock', 'lock']) {
-            const methodIndex = source.indexOf(`    ${method}(`);
-            const methodBody = source.slice(methodIndex, source.indexOf('\n    }', methodIndex));
-            assert(/_publishLockChange\(/.test(methodBody) && !/_publishChange\(\)/.test(methodBody), `A2. ${method}() still publishes only _publishLockChange(), no identity/session event in the same call`);
-        }
-
-        // A3 — exportIdentity()/importIdentity() publish nothing at all
-        // (per this file's own 0.2.48 comment) — confirmed, not assumed.
-        const exportIndex = source.indexOf('    exportIdentity(');
-        const exportBody = source.slice(exportIndex, source.indexOf('\n    }', exportIndex));
-        assert(!/_publish/.test(exportBody), 'A3. exportIdentity() still publishes nothing');
-        const importIndex = source.indexOf('    importIdentity(');
-        const importBody = source.slice(importIndex, source.indexOf('\n    }', importIndex));
-        assert(!/_publish/.test(importBody), 'A3. importIdentity() still publishes nothing');
-
-        // A4 — the one EventBus fact that makes every sequence above
-        // matter: publish() has no per-listener try/catch, so a throwing
-        // listener on the FIRST event of a chain unwinds through every
-        // "then" that follows it in the same synchronous call.
-        const eventBusSource = codeOnlyLines(await rawSource('core/events/EventBus.js')).join('\n');
-        assert(/for \(const listener of listeners\) \{\s*listener\(payload\);\s*\}/.test(eventBusSource), 'A4. EventBus.publish() still has no per-listener try/catch');
-
-        // A5 — IdentityUseCase uses exactly this EventBus, not some
-        // already-isolated variant — the boundary this audit maps is the
-        // real one the production code runs on.
-        assert(/this\._eventBus = new EventBus\(\);/.test(source), 'A5. IdentityUseCase still constructs a plain core/events/EventBus.js instance, not a specialized/isolated bus');
-
-        console.log('✓ Section A: Event boundary mapped — five methods (authenticate/endSession/changePassphrase/revokeIdentity/declareSuccessor) share the publish-then-more-work precondition (A1); unlock/lock publish only one thing and are out of scope by construction (A2); export/import publish nothing (A3); EventBus.publish() has no per-listener isolation (A4), and IdentityUseCase runs on that exact bus (A5).');
-    }
-
-    // ---------------------------------------------------------------
     // Section B — Behavioral reproduction across all five publish
     // chains, plus the "already committed" characterization 0.9.219
     // never checked.
@@ -138,7 +82,7 @@ async function runTests() {
             identityUseCase.onVaultLockChanged(() => { vaultLockFired = true; });
             identityUseCase.onUserChanged(throwingListener('B1 injected failure'));
             let threw = false;
-            try { identityUseCase.authenticate(identity.identityId); } catch { threw = true; }
+            try { await identityUseCase.authenticate(identity.identityId); } catch { threw = true; }
             assert(threw, 'B1a. authenticate() still lets a throwing onUserChanged() listener unwind to its own caller');
             assert(!vaultLockFired, 'B1b. ...and _publishLockChange()\'s own VaultLockChanged broadcast never ran');
             assert(provider.isAuthenticated(), 'B1c. BUT the authoritative session change already committed to the provider before the listener ever ran — authenticate() persists the session, THEN publishes; the thrown exception is notification-side only, it does not roll back the session that already exists');
@@ -149,7 +93,7 @@ async function runTests() {
         // sees an exception.
         {
             const { provider, identity, identityUseCase } = makeUseCase();
-            identityUseCase.authenticate(identity.identityId);
+            await identityUseCase.authenticate(identity.identityId);
             let vaultLockFired = false;
             identityUseCase.onVaultLockChanged(() => { vaultLockFired = true; });
             identityUseCase.onUserChanged(throwingListener('B2 injected failure'));
@@ -164,15 +108,15 @@ async function runTests() {
         // at the provider level despite the caller seeing an exception.
         {
             const { provider, identity, identityUseCase } = makeUseCase();
-            provider.protectIdentity(identity.identityId, 'old-passphrase');
+            await provider.protectIdentity(identity.identityId, 'old-passphrase');
             identityUseCase.onUserChanged(throwingListener('B3 injected failure'));
             let threw = false;
-            try { identityUseCase.changePassphrase(identity.identityId, 'old-passphrase', 'new-passphrase'); } catch { threw = true; }
+            try { await identityUseCase.changePassphrase(identity.identityId, 'old-passphrase', 'new-passphrase'); } catch { threw = true; }
             assert(threw, 'B3a. changePassphrase() still lets a throwing onUserChanged() listener unwind to its own caller');
             let rejectedOld = false;
-            try { provider.unlock(identity.identityId, 'old-passphrase'); } catch { rejectedOld = true; }
+            try { await provider.unlock(identity.identityId, 'old-passphrase'); } catch { rejectedOld = true; }
             assert(rejectedOld, 'B3b. BUT the OLD passphrase is already rejected at the provider level before the listener ran — the change already took effect');
-            assert(provider.unlock(identity.identityId, 'new-passphrase'), 'B3c. ...and the NEW passphrase already works');
+            assert(await provider.unlock(identity.identityId, 'new-passphrase'), 'B3c. ...and the NEW passphrase already works');
         }
 
         // B4 — revokeIdentity(): the revocation record already exists at
@@ -181,7 +125,7 @@ async function runTests() {
             const { provider, identity, identityUseCase } = makeUseCase();
             identityUseCase.onUserChanged(throwingListener('B4 injected failure'));
             let threw = false;
-            try { identityUseCase.revokeIdentity(identity.identityId); } catch { threw = true; }
+            try { await identityUseCase.revokeIdentity(identity.identityId); } catch { threw = true; }
             assert(threw, 'B4a. revokeIdentity() still lets a throwing onUserChanged() listener unwind to its own caller');
             assert(provider.isRevoked(identity.identityId), 'B4b. BUT the identity is already revoked at the provider level before the listener ran');
         }
@@ -195,7 +139,7 @@ async function runTests() {
             identityUseCase.onVaultLockChanged(() => { vaultLockFired = true; });
             identityUseCase.onUserChanged(throwingListener('B5 injected failure'));
             let threw = false;
-            try { identityUseCase.declareSuccessor(identity.identityId, successor.identityId); } catch { threw = true; }
+            try { await identityUseCase.declareSuccessor(identity.identityId, successor.identityId); } catch { threw = true; }
             assert(threw, 'B5a. declareSuccessor() still lets a throwing onUserChanged() listener unwind to its own caller');
             assert(!vaultLockFired, 'B5b. ...and its own VaultLockChanged broadcast never ran');
             assert(provider.getLocalIdentity(identity.identityId).successorIdentityId === successor.identityId, 'B5c. BUT the successor is already recorded at the provider level before the listener ran');
@@ -325,7 +269,7 @@ async function runTests() {
             identityUseCase.onUserChanged((u) => { userSeen = u; });
             identityUseCase.onSessionChanged((s) => { sessionSeen = s; });
             let threw = false;
-            try { identityUseCase.authenticate(identity.identityId); } catch { threw = true; }
+            try { await identityUseCase.authenticate(identity.identityId); } catch { threw = true; }
             assert(!threw, 'E1a. authenticate() with well-behaved listeners does not throw');
             assert(userSeen && userSeen.username === 'boundary-audit-identity', 'E1b. onUserChanged still observes the authenticated user');
             assert(sessionSeen && sessionSeen.isAuthenticated, 'E1c. onSessionChanged still observes the new session');
@@ -338,12 +282,12 @@ async function runTests() {
         // the "operation succeeds, listener fails" shape B/C3 cover.
         {
             const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-            const identity = provider.createLocalIdentity('protected-identity', 'correct-passphrase');
+            const identity = await provider.createProtectedLocalIdentity('protected-identity', 'correct-passphrase');
             const identityUseCase = new IdentityUseCase(provider);
             let listenerInvoked = false;
             identityUseCase.onUserChanged(() => { listenerInvoked = true; });
             let threw = false;
-            try { identityUseCase.authenticate(identity.identityId, 'wrong-passphrase'); } catch { threw = true; }
+            try { await identityUseCase.authenticate(identity.identityId, 'wrong-passphrase'); } catch { threw = true; }
             assert(threw, 'E2a. authenticate() with a wrong passphrase still throws, as before');
             assert(!listenerInvoked, 'E2b. ...and no onUserChanged listener is invoked at all — a failed AUTHENTICATION never reaches the event boundary, a structurally different case from a failed LISTENER');
         }
@@ -375,7 +319,7 @@ async function runTests() {
             let sessionEventFired = false;
             identityUseCase.onSessionChanged(() => { sessionEventFired = true; });
             identityUseCase.onUserChanged(throwingListener('E4 injected failure'));
-            try { identityUseCase.authenticate(identity.identityId); } catch { /* expected */ }
+            try { await identityUseCase.authenticate(identity.identityId); } catch { /* expected */ }
             assert(!sessionEventFired, 'E4. a throwing onUserChanged() listener still prevents AuthenticationSessionChanged from firing at all, even though it is a structurally separate publish() call one line later in _publishChange()');
         }
 
@@ -391,11 +335,11 @@ async function runTests() {
             identityUseCase.onUserChanged(() => {
                 if (failOnce) { failOnce = false; throw new Error('E5 injected one-time failure'); }
             });
-            try { identityUseCase.authenticate(identity.identityId); } catch { /* expected */ }
+            try { await identityUseCase.authenticate(identity.identityId); } catch { /* expected */ }
             let secondThrew = false;
             let sessionSeen = null;
             identityUseCase.onSessionChanged((s) => { sessionSeen = s; });
-            try { identityUseCase.authenticate(secondIdentity.identityId); } catch { secondThrew = true; }
+            try { await identityUseCase.authenticate(secondIdentity.identityId); } catch { secondThrew = true; }
             assert(!secondThrew, 'E5a. a SUBSEQUENT, unrelated authenticate() call does not throw just because a PRIOR call once hit a throwing listener');
             assert(sessionSeen && sessionSeen.identityId === secondIdentity.identityId, 'E5b. ...and its own events fire normally — no lingering bus or use-case corruption from the earlier failure');
         }

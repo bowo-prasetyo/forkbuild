@@ -15,6 +15,8 @@
     "test:worker": "node server/rendezvous-worker/worker.test.js"
   },
   "devDependencies": {
+    "@noble/curves": "2.4.0",
+    "@noble/hashes": "2.4.0",
     "node-datachannel": "^0.33.4",
     "playwright-core": "^1.63.0",
     "three": "0.160.0"

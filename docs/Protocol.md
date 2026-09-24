@@ -294,6 +294,19 @@ regardless of which peer relayed them.
 Revocation is permanent; device grants can be revoked and granted again.
 Each record's signature covers every field.
 
+    identity export: { formatVersion: 2, identityId, publicKey, algorithm, label, createdAt,
+                       encryptedPrivateKey }
+    encryptedPrivateKey: { version: 2, kdf: 'PBKDF2-SHA256', iterations, cipher: 'AES-256-GCM',
+                           salt, nonce, ciphertext }            // hex strings
+
+The export file is not signed; it carries the private key seed encrypted
+with AES-256-GCM (additional data `forkbuild-identity-key/v2`) under a key
+derived from the passphrase by PBKDF2-HMAC-SHA256 (600,000 iterations by
+default, at most 10,000,000 accepted). `ciphertext` ends with the 16-byte GCM
+tag. The same record shape stores a protected key on the device. Importing
+still accepts `formatVersion: 1` files, whose key record has
+`kdf: 'PBKDF2-HMAC-SHA512'` and a separate `tag`.
+
 ## Social
 
     friendship:   { actorIdentity, subjectIdentity, action, sequence, inResponseTo,

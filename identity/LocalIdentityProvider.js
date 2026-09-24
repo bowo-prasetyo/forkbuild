@@ -64,8 +64,8 @@ const PROVIDER_ID = 'local';
 // VaultLock.js, "is this identity's private key decrypted in memory
 // right now?" A protected identity's key is stored ONLY as
 // KeyEncryption's encrypted record (`{seed}` is never written to disk
-// for it at all); unlocking it — via `unlock(identityId, passphrase)`
-// or by supplying a passphrase to `authenticate()`/`login()` — decrypts
+// for it at all); unlocking it with `await unlock(identityId, passphrase)`
+// (the only asynchronous step, since key derivation uses WebCrypto) decrypts
 // the seed into a volatile, in-memory-only cache (`_vaultCache`) that a
 // page reload cannot recover, on purpose. An unprotected identity (no
 // passphrase ever set — including every identity created before 0.2.47
@@ -125,6 +125,19 @@ const PROVIDER_ID = 'local';
 // possession of A key, never permission to act for a DIFFERENT one) —
 // see docs/Principles.md, "Identity Authentication Proves A Key;
 // Device Authorization Proves Permission."
+// Minimum length for a new passphrase. The key-derivation cost slows
+// guessing, but only a passphrase with real entropy makes it impractical.
+export const MIN_PASSPHRASE_LENGTH = 8;
+
+function requireNewPassphrase(passphrase) {
+    if (!passphrase || typeof passphrase !== 'string' || !passphrase.trim()) {
+        throw new Error('LocalIdentityProvider: a passphrase is required');
+    }
+    if (passphrase.length < MIN_PASSPHRASE_LENGTH) {
+        throw new Error(`LocalIdentityProvider: a passphrase must be at least ${MIN_PASSPHRASE_LENGTH} characters`);
+    }
+}
+
 export class LocalIdentityProvider extends IdentityProvider {
     constructor(storageProvider, {
         pbkdf2Iterations = KeyEncryption.DEFAULT_ITERATIONS,
@@ -158,38 +171,55 @@ export class LocalIdentityProvider extends IdentityProvider {
     // login flow. Does not authenticate a session by itself; creating an
     // identity and unlocking it are deliberately two different verbs.
     //
-    // 0.2.47: an optional passphrase protects the key from the moment it
-    // is created. Passing one means the plaintext seed is NEVER written
-    // to storage at all — encrypt() runs before the very first save.
+    // Creates an UNPROTECTED identity: its key is stored in plain form on
+    // this device. Protecting a key takes an asynchronous key derivation,
+    // so a passphrase here is refused rather than silently dropped; use
+    // createProtectedLocalIdentity() for that.
     createLocalIdentity(label, passphrase = null) {
+        if (passphrase) {
+            throw new Error('LocalIdentityProvider: createLocalIdentity() creates an unprotected identity; use createProtectedLocalIdentity(label, passphrase)');
+        }
+        const { seed, publicKeyHex, identityId, createdAt } = this._newKeyPair(label);
+        this._storageProvider.save(IDENTITY_KEY_PREFIX + identityId, {
+            seed: Ed25519.bytesToHex(seed),
+            publicKey: publicKeyHex,
+            algorithm: 'Ed25519',
+            createdAt
+        });
+        return this._addIndexEntry({ identityId, publicKeyHex, label, createdAt, isProtected: false });
+    }
+
+    // Creates a passphrase-protected identity: the plaintext key is never
+    // written to storage, and the identity starts locked.
+    async createProtectedLocalIdentity(label, passphrase) {
+        requireNewPassphrase(passphrase);
+        const { seed, publicKeyHex, identityId, createdAt } = this._newKeyPair(label);
+        await this._storeProtectedKey(identityId, seed, publicKeyHex, createdAt, passphrase);
+        return this._addIndexEntry({ identityId, publicKeyHex, label, createdAt, isProtected: true });
+    }
+
+    _newKeyPair(label) {
         if (!label || typeof label !== 'string' || !label.trim()) {
             throw new Error('LocalIdentityProvider: label is required to create a local identity');
         }
         const seed = Ed25519.randomSeed();
         const { publicKey } = Ed25519.seedToKeyPair(seed);
-        const publicKeyHex = Ed25519.bytesToHex(publicKey);
-        const identityId = Ed25519.publicKeyToDidKey(publicKey);
-        const createdAt = new Date().toISOString();
+        return {
+            seed,
+            publicKeyHex: Ed25519.bytesToHex(publicKey),
+            identityId: Ed25519.publicKeyToDidKey(publicKey),
+            createdAt: new Date().toISOString()
+        };
+    }
 
-        if (passphrase) {
-            this._storeProtectedKey(identityId, seed, publicKeyHex, createdAt, passphrase);
-        } else {
-            this._storageProvider.save(IDENTITY_KEY_PREFIX + identityId, {
-                seed: Ed25519.bytesToHex(seed),
-                publicKey: publicKeyHex,
-                algorithm: 'Ed25519',
-                createdAt
-            });
-        }
-
+    _addIndexEntry({ identityId, publicKeyHex, label, createdAt, isProtected }) {
         const entry = {
             identityId, publicKey: publicKeyHex, algorithm: 'Ed25519', label: label.trim(), createdAt,
-            protected: !!passphrase
+            protected: isProtected
         };
         const index = this._loadIndex();
         index.push(entry);
         this._saveIndex(index);
-
         return LocalIdentity.fromJSON(entry);
     }
 
@@ -215,10 +245,8 @@ export class LocalIdentityProvider extends IdentityProvider {
     // The newly protected identity starts LOCKED: having the plaintext
     // seed in hand a moment ago to encrypt it does not carry over into
     // "already unlocked."
-    protectIdentity(identityId, passphrase) {
-        if (!passphrase || typeof passphrase !== 'string' || !passphrase.trim()) {
-            throw new Error('LocalIdentityProvider: passphrase is required to protect an identity');
-        }
+    async protectIdentity(identityId, passphrase) {
+        requireNewPassphrase(passphrase);
         const identity = this.getLocalIdentity(identityId);
         if (!identity) {
             throw new Error('LocalIdentityProvider: cannot protect, no local identity with id ' + identityId);
@@ -230,7 +258,7 @@ export class LocalIdentityProvider extends IdentityProvider {
         if (!stored || !stored.seed) {
             throw new Error('LocalIdentityProvider: cannot protect, no key material found for this identity');
         }
-        this._storeProtectedKey(identityId, Ed25519.hexToBytes(stored.seed), stored.publicKey, stored.createdAt, passphrase);
+        await this._storeProtectedKey(identityId, Ed25519.hexToBytes(stored.seed), stored.publicKey, stored.createdAt, passphrase);
         this._vaultCache.delete(identityId);
 
         const index = this._loadIndex();
@@ -246,7 +274,7 @@ export class LocalIdentityProvider extends IdentityProvider {
     // passphrases exhaust FailedUnlockTracker's attempt budget and start
     // a temporary cooldown, checked BEFORE the (expensive, on purpose)
     // KDF even runs.
-    unlock(identityId, passphrase) {
+    async unlock(identityId, passphrase) {
         const identity = this.getLocalIdentity(identityId);
         if (!identity) {
             throw new Error('LocalIdentityProvider: cannot unlock, no local identity with id ' + identityId);
@@ -258,7 +286,7 @@ export class LocalIdentityProvider extends IdentityProvider {
         if (!stored || !stored.encryption) {
             throw new Error('LocalIdentityProvider: identity is protected but has no encrypted key material');
         }
-        const seedBytes = this._decryptWithAttemptLimit(identityId, stored.encryption, passphrase);
+        const seedBytes = await this._decryptStoredKey(identityId, stored, passphrase);
         const unlockedAt = this._now();
         this._vaultCache.set(identityId, { seedHex: Ed25519.bytesToHex(seedBytes), unlockedAt });
         return VaultLock.unlocked(identityId, unlockedAt);
@@ -322,14 +350,14 @@ export class LocalIdentityProvider extends IdentityProvider {
     // Decrypts identityId's stored key record under FailedUnlockTracker's
     // attempt budget, shared by unlock() and exportLocalIdentity(). The
     // lockout is checked BEFORE the (expensive, on purpose) KDF runs.
-    _decryptWithAttemptLimit(identityId, encryption, passphrase) {
+    async _decryptWithAttemptLimit(identityId, encryption, passphrase) {
         if (this._failedUnlocks.isLockedOut(identityId)) {
             const seconds = Math.ceil(this._failedUnlocks.remainingCooldownMs(identityId) / 1000);
             throw new Error('LocalIdentityProvider: too many failed unlock attempts, try again in ' + seconds + 's');
         }
         let seedBytes;
         try {
-            seedBytes = KeyEncryption.decrypt(encryption, passphrase);
+            seedBytes = await KeyEncryption.decrypt(encryption, passphrase);
         } catch (e) {
             const remaining = this._failedUnlocks.recordFailure(identityId);
             const suffix = remaining > 0
@@ -341,8 +369,19 @@ export class LocalIdentityProvider extends IdentityProvider {
         return seedBytes;
     }
 
-    _storeProtectedKey(identityId, seedBytes, publicKeyHex, createdAt, passphrase) {
-        const encryption = KeyEncryption.encrypt(seedBytes, passphrase, { iterations: this._pbkdf2Iterations });
+    // Decrypts a stored protected key, then re-encrypts it in the current
+    // format if it was written in an older one (or with fewer iterations),
+    // now that the passphrase is known to be right.
+    async _decryptStoredKey(identityId, stored, passphrase) {
+        const seedBytes = await this._decryptWithAttemptLimit(identityId, stored.encryption, passphrase);
+        if (KeyEncryption.needsUpgrade(stored.encryption, { iterations: this._pbkdf2Iterations })) {
+            await this._storeProtectedKey(identityId, seedBytes, stored.publicKey, stored.createdAt, passphrase);
+        }
+        return seedBytes;
+    }
+
+    async _storeProtectedKey(identityId, seedBytes, publicKeyHex, createdAt, passphrase) {
+        const encryption = await KeyEncryption.encrypt(seedBytes, passphrase, { iterations: this._pbkdf2Iterations });
         this._storageProvider.save(IDENTITY_KEY_PREFIX + identityId, {
             protected: true,
             publicKey: publicKeyHex,
@@ -385,7 +424,7 @@ export class LocalIdentityProvider extends IdentityProvider {
     // passphrases without ever hitting the lockout — and a right guess
     // here yields a portable copy of the key, not just a local unlock.
     // An unprotected identity decrypts nothing, so it is never counted.
-    exportLocalIdentity(identityId, passphrase) {
+    async exportLocalIdentity(identityId, passphrase) {
         if (!passphrase || typeof passphrase !== 'string' || !passphrase.trim()) {
             throw new Error('LocalIdentityProvider: a passphrase is required to export an identity');
         }
@@ -398,15 +437,20 @@ export class LocalIdentityProvider extends IdentityProvider {
             throw new Error('LocalIdentityProvider: cannot export, no key material found for this identity');
         }
         let seedBytes;
+        if (!identity.isProtected) {
+            // The export passphrase is new here, and the file it protects can
+            // be attacked offline, so it gets the same minimum as any other.
+            requireNewPassphrase(passphrase);
+        }
         if (identity.isProtected) {
             if (!stored.encryption) {
                 throw new Error('LocalIdentityProvider: identity is protected but has no encrypted key material');
             }
-            seedBytes = this._decryptWithAttemptLimit(identityId, stored.encryption, passphrase);
+            seedBytes = await this._decryptStoredKey(identityId, stored, passphrase);
         } else {
             seedBytes = Ed25519.hexToBytes(stored.seed);
         }
-        return IdentityExport.buildExportPackage({
+        return await IdentityExport.buildExportPackage({
             identityId: identity.identityId,
             publicKey: identity.publicKey,
             algorithm: identity.algorithm,
@@ -453,9 +497,9 @@ export class LocalIdentityProvider extends IdentityProvider {
     // `label` overrides the package's own (untrusted, presentation-only)
     // label hint; if neither is provided, falls back to a generic
     // placeholder rather than silently importing an unlabeled identity.
-    importLocalIdentity(pkg, passphrase, { label } = {}) {
+    async importLocalIdentity(pkg, passphrase, { label } = {}) {
         const existingIndex = this._loadIndex();
-        const result = IdentityRecovery.recoverIdentity({
+        const result = await IdentityRecovery.recoverIdentity({
             package: pkg,
             passphrase,
             existingIdentities: existingIndex
@@ -474,7 +518,7 @@ export class LocalIdentityProvider extends IdentityProvider {
             createdAt: result.createdAt,
             protected: true
         };
-        this._storeProtectedKey(entry.identityId, result.seedBytes, entry.publicKey, entry.createdAt, passphrase);
+        await this._storeProtectedKey(entry.identityId, result.seedBytes, entry.publicKey, entry.createdAt, passphrase);
         existingIndex.push(entry);
         this._saveIndex(existingIndex);
         return { status: 'IMPORTED', identity: LocalIdentity.fromJSON(entry) };
@@ -503,13 +547,11 @@ export class LocalIdentityProvider extends IdentityProvider {
     // passphrase that no longer applies. Requires the identity to
     // already be protected; use protectIdentity() to add a passphrase to
     // one that never had one.
-    changePassphrase(identityId, oldPassphrase, newPassphrase) {
+    async changePassphrase(identityId, oldPassphrase, newPassphrase) {
         if (!oldPassphrase || typeof oldPassphrase !== 'string') {
             throw new Error('LocalIdentityProvider: the current passphrase is required to change it');
         }
-        if (!newPassphrase || typeof newPassphrase !== 'string' || !newPassphrase.trim()) {
-            throw new Error('LocalIdentityProvider: a new passphrase is required');
-        }
+        requireNewPassphrase(newPassphrase);
         const identity = this.getLocalIdentity(identityId);
         if (!identity) {
             throw new Error('LocalIdentityProvider: cannot change passphrase, no local identity with id ' + identityId);
@@ -527,13 +569,13 @@ export class LocalIdentityProvider extends IdentityProvider {
         }
         let seedBytes;
         try {
-            seedBytes = KeyEncryption.decrypt(stored.encryption, oldPassphrase);
+            seedBytes = await KeyEncryption.decrypt(stored.encryption, oldPassphrase);
         } catch (e) {
             this._failedUnlocks.recordFailure(identityId);
             throw new Error('LocalIdentityProvider: incorrect current passphrase');
         }
         this._failedUnlocks.recordSuccess(identityId);
-        this._storeProtectedKey(identityId, seedBytes, stored.publicKey, stored.createdAt, newPassphrase);
+        await this._storeProtectedKey(identityId, seedBytes, stored.publicKey, stored.createdAt, newPassphrase);
         this._vaultCache.delete(identityId);
         return this.getLocalIdentity(identityId);
     }
@@ -553,12 +595,12 @@ export class LocalIdentityProvider extends IdentityProvider {
     // `successorIdentityId` option for the one-call "rotate and revoke
     // together" path, and docs/Principles.md, "Declaring A Successor
     // Does Not Revoke The Predecessor."
-    declareSuccessor(identityId, successorIdentityId, { passphrase = null } = {}) {
+    declareSuccessor(identityId, successorIdentityId) {
         const identity = this.getLocalIdentity(identityId);
         if (!identity) {
             throw new Error('LocalIdentityProvider: cannot declare a successor, no local identity with id ' + identityId);
         }
-        const record = this._signSuccession(identity, successorIdentityId, passphrase);
+        const record = this._signSuccession(identity, successorIdentityId);
         const index = this._loadIndex();
         const entry = index.find((e) => e.identityId === identityId);
         entry.successorIdentityId = successorIdentityId;
@@ -602,7 +644,7 @@ export class LocalIdentityProvider extends IdentityProvider {
     // step (exactly what declareSuccessor() would produce on its own),
     // so the common "I am rotating right now, and the old key stops
     // working right now" gesture is one signed user action, not two.
-    revokeIdentity(identityId, { passphrase = null, reason = null, successorIdentityId = null } = {}) {
+    revokeIdentity(identityId, { reason = null, successorIdentityId = null } = {}) {
         const identity = this.getLocalIdentity(identityId);
         if (!identity) {
             throw new Error('LocalIdentityProvider: cannot revoke, no local identity with id ' + identityId);
@@ -611,9 +653,9 @@ export class LocalIdentityProvider extends IdentityProvider {
             throw new Error('LocalIdentityProvider: identity is already revoked');
         }
         if (successorIdentityId) {
-            this._signSuccession(identity, successorIdentityId, passphrase);
+            this._signSuccession(identity, successorIdentityId);
         }
-        const seedHex = this._resolveOrUnlockSeedHex(identity, passphrase);
+        const seedHex = this._requireUnlockedSeedHex(identity);
         const revokedAt = new Date().toISOString();
         const record = toIdentityRevocationRecord({
             identityId: identity.identityId,
@@ -680,7 +722,7 @@ export class LocalIdentityProvider extends IdentityProvider {
     // device is re-authorized — see core/DeviceAuthorizationEnvelope.js's
     // own header on why that's a deliberate, safe difference from
     // identity revocation's own permanent, one-way latch.
-    authorizeDevice(identityId, deviceIdentityId, devicePublicKey, { deviceLabel = null, passphrase = null } = {}) {
+    authorizeDevice(identityId, deviceIdentityId, devicePublicKey, { deviceLabel = null } = {}) {
         const identity = this.getLocalIdentity(identityId);
         if (!identity) {
             throw new Error('LocalIdentityProvider: cannot authorize a device, no local identity with id ' + identityId);
@@ -695,7 +737,7 @@ export class LocalIdentityProvider extends IdentityProvider {
         if (!devicePublicKeyBytes || Ed25519.bytesToHex(devicePublicKeyBytes) !== devicePublicKey) {
             throw new Error('LocalIdentityProvider: deviceIdentityId does not match devicePublicKey');
         }
-        const seedHex = this._resolveOrUnlockSeedHex(identity, passphrase);
+        const seedHex = this._requireUnlockedSeedHex(identity);
         const record = toDeviceAuthorizationGrant({
             identityId: identity.identityId,
             deviceIdentityId,
@@ -722,7 +764,7 @@ export class LocalIdentityProvider extends IdentityProvider {
     // header). Refuses a device that was never authorized in the first
     // place; revoking an already-revoked device is a no-op that simply
     // re-signs a fresher revocation timestamp.
-    revokeDeviceAuthorization(identityId, deviceIdentityId, { passphrase = null } = {}) {
+    revokeDeviceAuthorization(identityId, deviceIdentityId) {
         const identity = this.getLocalIdentity(identityId);
         if (!identity) {
             throw new Error('LocalIdentityProvider: cannot revoke a device authorization, no local identity with id ' + identityId);
@@ -732,7 +774,7 @@ export class LocalIdentityProvider extends IdentityProvider {
         if (!existing) {
             throw new Error('LocalIdentityProvider: no device authorization on file for ' + deviceIdentityId);
         }
-        const seedHex = this._resolveOrUnlockSeedHex(identity, passphrase);
+        const seedHex = this._requireUnlockedSeedHex(identity);
         const record = toDeviceAuthorizationRevocation({
             identityId: identity.identityId,
             deviceIdentityId,
@@ -796,7 +838,7 @@ export class LocalIdentityProvider extends IdentityProvider {
     // Shared by declareSuccessor() and revokeIdentity()'s own optional
     // successorIdentityId path, so naming a successor is signed and
     // stored identically no matter which call produced it.
-    _signSuccession(predecessorIdentity, successorIdentityId, passphrase) {
+    _signSuccession(predecessorIdentity, successorIdentityId) {
         if (!successorIdentityId || typeof successorIdentityId !== 'string') {
             throw new Error('LocalIdentityProvider: successorIdentityId is required to declare a successor');
         }
@@ -807,7 +849,7 @@ export class LocalIdentityProvider extends IdentityProvider {
         if (!successorPublicKeyBytes) {
             throw new Error('LocalIdentityProvider: successorIdentityId is not a valid did:key');
         }
-        const seedHex = this._resolveOrUnlockSeedHex(predecessorIdentity, passphrase);
+        const seedHex = this._requireUnlockedSeedHex(predecessorIdentity);
         const record = toIdentitySuccessionRecord({
             predecessorIdentityId: predecessorIdentity.identityId,
             predecessorPublicKey: predecessorIdentity.publicKey,
@@ -828,12 +870,11 @@ export class LocalIdentityProvider extends IdentityProvider {
     // isn't already unlocked needs its passphrase supplied right here,
     // an already-unlocked one (or one being acted on within its own
     // vault timeout) does not, and an unprotected one never did.
-    _resolveOrUnlockSeedHex(identity, passphrase) {
+    // Privileged signing stays synchronous; a protected identity must be
+    // unlocked first (await unlock(identityId, passphrase)).
+    _requireUnlockedSeedHex(identity) {
         if (identity.isProtected && !this.isUnlocked(identity.identityId)) {
-            if (!passphrase) {
-                throw new Error('LocalIdentityProvider: this identity is protected, a passphrase is required');
-            }
-            this.unlock(identity.identityId, passphrase);
+            throw new Error('LocalIdentityProvider: this identity is protected and locked — unlock it with its passphrase first');
         }
         return this._resolveSeedHex(identity.identityId);
     }
@@ -874,16 +915,14 @@ export class LocalIdentityProvider extends IdentityProvider {
     // unlock() and authenticate() as two separate steps for the common
     // "log in" gesture. An already-unlocked protected identity (or one
     // being re-authenticated within its own vault timeout) needs none.
-    authenticate(identityId, passphrase = null) {
+    // A protected identity must already be unlocked (await unlock()).
+    authenticate(identityId) {
         const identity = this.getLocalIdentity(identityId);
         if (!identity) {
             throw new Error('LocalIdentityProvider: cannot authenticate, no local identity with id ' + identityId);
         }
         if (identity.isProtected && !this.isUnlocked(identityId)) {
-            if (!passphrase) {
-                throw new Error('LocalIdentityProvider: this identity is protected, a passphrase is required to authenticate');
-            }
-            this.unlock(identityId, passphrase);
+            throw new Error('LocalIdentityProvider: this identity is protected and locked — unlock it with its passphrase before authenticating');
         }
         const session = AuthenticationSession.authenticated(identityId, this._now());
         this._storageProvider.save(SESSION_KEY, session.toJSON());
@@ -923,14 +962,20 @@ export class LocalIdentityProvider extends IdentityProvider {
     // The optional passphrase (0.2.47) flows straight through to
     // createLocalIdentity()/authenticate(): every pre-0.2.47 caller
     // passes none and sees no change in behavior whatsoever.
+    // Finds or creates an unprotected identity by label and authenticates
+    // it. Protected identities go through createProtectedLocalIdentity(),
+    // unlock() and authenticate() instead.
     login(username, passphrase = null) {
+        if (passphrase) {
+            throw new Error('LocalIdentityProvider: login() does not take a passphrase; unlock a protected identity with unlock() first');
+        }
         if (!username || typeof username !== 'string' || !username.trim()) {
             throw new Error('LocalIdentityProvider: username is required to log in');
         }
         const label = username.trim();
         const existing = this._loadIndex().find((entry) => entry.label === label);
-        const identity = existing ? LocalIdentity.fromJSON(existing) : this.createLocalIdentity(label, passphrase);
-        this.authenticate(identity.identityId, passphrase);
+        const identity = existing ? LocalIdentity.fromJSON(existing) : this.createLocalIdentity(label);
+        this.authenticate(identity.identityId);
         this._storageProvider.remove(LEGACY_STORAGE_KEY);
         return new Identity({ username: label, providerId: PROVIDER_ID });
     }

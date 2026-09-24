@@ -50,8 +50,10 @@ models").
   All of it is verified by content hash and signature, never taken on trust.
 
 **Identity, peers and social**
-- Ed25519 identities (did:key) held on the device, with optional passphrase
-  protection, export/import, succession, revocation and multi-device grants.
+- Ed25519 identities (did:key) held on the device, signed with the audited
+  noble-curves library. Private keys are encrypted with a passphrase by default
+  (PBKDF2-SHA256 and AES-256-GCM through the browser's WebCrypto), with
+  export/import, succession, revocation and multi-device grants.
 - Direct WebRTC peer connections found through rendezvous or a manual
   invitation, and authenticated with a challenge–response handshake.
 - Remembered peers, mutual-consent friendships and blocking.
