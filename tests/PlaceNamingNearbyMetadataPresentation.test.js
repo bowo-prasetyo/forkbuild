@@ -15,7 +15,7 @@ import { PlaceNamingClaimExchange } from '../application/PlaceNamingClaimExchang
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, stylesheetFiles } from './support/SourceFileGroups.js';
 
 // 0.9.266 — Nearby Place Naming Claim Metadata Presentation.
 //
@@ -620,7 +620,7 @@ async function runTests() {
         assert(!nearbyBlock.includes('claim.createdAt }}') && !nearbyBlock.includes('claim.createdAt.'),
             '14f. the real template never renders the RAW claim.createdAt directly — only the formatted createdAtLabel');
 
-        assert((await rawSource('css/main.css')).includes('.world-view-place-naming-created'),
+        assert(((await Promise.all(stylesheetFiles().map((file) => rawSource(file)))).join('\n')).includes('.world-view-place-naming-created'),
             '14g. css/main.css styles the new metadata line');
 
         console.log('✓ Section N: ui/views/WorldView.js genuinely contains the createdAtLabel wiring every section above assumes');

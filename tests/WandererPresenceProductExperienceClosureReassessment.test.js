@@ -25,7 +25,7 @@ import WorldMembersPanel from '../ui/components/WorldMembersPanel.js';
 import WorldPresenceIndicator from '../ui/components/WorldPresenceIndicator.js';
 import { buildWorldCollaborationRoster, WorldCollaborationAccess } from '../ui/components/WorldCollaborationRoster.js';
 import { buildSpatialCollaboratorRows } from '../ui/components/WorldCollaboratorIndicator.js';
-import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, stylesheetFiles } from './support/SourceFileGroups.js';
 
 // 0.9.583 — Wanderer Presence Product Experience Closure Reassessment.
 //
@@ -724,7 +724,7 @@ async function main() {
         // K3 — no CSS rule silently did this capitalization instead
         // (which would have made K1's own fix redundant, or masked a
         // real defect as a non-issue) — confirmed directly.
-        const css = await readSource('css/main.css');
+        const css = (await Promise.all(stylesheetFiles().map((file) => readSource(file)))).join('\n');
         const infoValueRuleMatch = css.match(/\.info-value\s*\{[^}]*\}/);
         const nearbyDetailRuleMatch = css.match(/\.nearby-avatars-item-detail\s*\{[^}]*\}/);
         assert(infoValueRuleMatch && !infoValueRuleMatch[0].includes('text-transform'),

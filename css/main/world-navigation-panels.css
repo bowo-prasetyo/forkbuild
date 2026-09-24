@@ -1,0 +1,589 @@
+/* 0.2.94 — World View Location & Navigation: the compass + Home +
+   Locations row. Sits directly under the camera coordinate readout,
+   same placement logic as world-view-actions--explore above — these
+   act on "where the camera is/is going," not the world in general. */
+/* 0.9.655 — flex-wrap:wrap added: same unconditional-overflow gap as
+   .world-view-actions above (0.9.654 Section E), an independent
+   occurrence of the identical missing escape hatch. */
+.world-view-actions--navigation {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.4rem;
+}
+
+.compass-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: #909090;
+}
+
+.compass-indicator-dial {
+    position: relative;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid #3a3a3a;
+    background: #1a1a1a;
+    flex-shrink: 0;
+    /* 0.3.6 — how far a contextual marker (.compass-indicator-marker)
+       sits from the dial's own center; kept as a variable so a scaled-up
+       dial (see .world-view-nav-hud .compass-indicator-dial below) can
+       override just this one number rather than re-deriving every
+       marker's position. */
+    --compass-radius: 11px;
+}
+
+.compass-indicator-tick {
+    position: absolute;
+    font-size: 0.55rem;
+    color: #707070;
+    line-height: 1;
+}
+
+.compass-indicator-tick--n { top: 1px; left: 50%; transform: translateX(-50%); }
+.compass-indicator-tick--s { bottom: 1px; left: 50%; transform: translateX(-50%); }
+.compass-indicator-tick--e { right: 1px; top: 50%; transform: translateY(-50%); }
+.compass-indicator-tick--w { left: 1px; top: 50%; transform: translateY(-50%); }
+
+/* The needle rotates around the dial's own center; its transform-origin
+   stays the dial's midpoint regardless of the needle element's own
+   height, so a heading of 0deg always points to the N tick above. */
+.compass-indicator-needle {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 2px;
+    height: 10px;
+    margin-left: -1px;
+    margin-top: -10px;
+    background: #4caf7d;
+    transform-origin: 50% 10px;
+}
+
+.compass-indicator--unknown .compass-indicator-needle {
+    background: #4a4a4a;
+}
+
+/* 0.3.6 — a contextual marker: a small dot pushed out to the dial's own
+   edge at its direction's angle (see CompassIndicator.js#markerStyle()).
+   Deliberately dot-only, no in-dial label — the dial stays a handful of
+   pixels; the readable label lives in WorldView.js's own text legend
+   next to it. Colors match .world-view-nav-marker's own
+   structure/collaborator distinction so the dial and the legend read as
+   one system. */
+.compass-indicator-marker {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);
+}
+
+.compass-indicator-marker--structure {
+    background: #ffd700;
+}
+
+.compass-indicator-marker--collaborator {
+    background: #4ecdc4;
+}
+
+/* 0.3.7 — World Landmarks & Personal Waypoints. Matches
+   .world-view-nav-marker.landmark .marker-direction's own color above
+   so the dial and its legend read as one system, same as structure/
+   collaborator above. */
+.compass-indicator-marker--landmark {
+    background: #f687b3;
+}
+
+.compass-indicator-label {
+    font-family: monospace;
+    font-size: 0.75rem;
+}
+
+/* 0.2.94 — ui/components/LocationsPanel.js: same modal convention as
+   WorldLocationBrowser just above, minus the diagnostics banner and
+   radius form — a WorldLocation list is never a spatial-region query. */
+.locations-panel-hint {
+    margin: 0 0 0.85rem;
+    font-size: 0.82rem;
+    color: #909090;
+    line-height: 1.5;
+}
+
+.locations-panel-empty {
+    color: #909090;
+    font-size: 0.85rem;
+}
+
+.locations-panel-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-height: 50vh;
+    overflow-y: auto;
+}
+
+.locations-panel-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.5rem 0.6rem;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+}
+
+.locations-panel-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.locations-panel-item-title {
+    font-size: 0.88rem;
+    color: #e0e0e0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 0.3.7 — World Landmarks & Personal Waypoints. Groups the flat
+   locations list into World/Structures/Landmarks sections — see
+   ui/components/LocationsPanel.js's own header on why that grouping
+   matters (derived place vs. intentional content), never merely
+   different icons on one list. */
+.locations-panel-section + .locations-panel-section {
+    margin-top: 0.9rem;
+}
+
+.locations-panel-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.locations-panel-section-title {
+    margin: 0 0 0.4rem;
+    font-size: 0.72rem;
+    color: #707070;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.locations-panel-item-actions {
+    display: flex;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.locations-panel-item-position {
+    font-family: monospace;
+    font-size: 0.72rem;
+    color: #707070;
+}
+
+/* 0.3.9 — ui/components/WorldWelcomePanel.js: same .modal-overlay/
+   .modal-panel convention as .locations-panel above, composing
+   WorldWelcomeContext's own derived reading rather than any new
+   layout idiom — see docs/Principles.md, "Exploration Guides
+   Attention, Never Ownership or Mutation (0.3.9)." */
+.world-welcome-panel-place {
+    margin: 0 0 0.3rem;
+    font-size: 0.9rem;
+    color: #e0e0e0;
+}
+
+.world-welcome-panel-stats {
+    margin: 0 0 0.9rem;
+    font-size: 0.82rem;
+    color: #909090;
+}
+
+.world-welcome-panel-section + .world-welcome-panel-section {
+    margin-top: 0.9rem;
+}
+
+.world-welcome-panel-section-title {
+    margin: 0 0 0.4rem;
+    font-size: 0.72rem;
+    color: #707070;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.world-welcome-panel-activity {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.85rem;
+    color: #b0b0b0;
+}
+
+.world-welcome-panel-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-height: 40vh;
+    overflow-y: auto;
+}
+
+.world-welcome-panel-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.5rem 0.6rem;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+}
+
+.world-welcome-panel-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.world-welcome-panel-item-title {
+    font-size: 0.88rem;
+    color: #e0e0e0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.world-welcome-panel-item-reason {
+    font-size: 0.75rem;
+    color: #707070;
+}
+
+.world-welcome-panel-empty {
+    color: #909090;
+    font-size: 0.85rem;
+}
+
+/* 0.2.99 — ui/components/WorldPresenceIndicator.js: deliberately as
+   understated as .compass-indicator above — a single glanceable fact,
+   never its own panel. */
+.world-presence-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.3rem 0.6rem;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    color: #b0b0b0;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.world-presence-indicator:hover {
+    border-color: #3a3a3a;
+    color: #e0e0e0;
+}
+
+.world-presence-indicator-count {
+    color: #e0e0e0;
+    font-weight: 600;
+}
+
+/* 0.2.99 — ui/components/WorldMembersPanel.js: same modal convention
+   as .locations-panel above. `access` styling is a thin left border
+   only — never a role badge system, matching core/WorldAccessLevel.js's
+   own closed NONE/READ/EDIT vocabulary (there is no fourth "collaborator"
+   look to invent). */
+.world-members-panel-hint {
+    margin: 0 0 0.85rem;
+    font-size: 0.82rem;
+    color: #909090;
+    line-height: 1.5;
+}
+
+.world-members-panel-empty {
+    color: #909090;
+    font-size: 0.85rem;
+}
+
+.world-members-panel-list {
+    list-style: none;
+    margin: 0 0 1rem;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-height: 45vh;
+    overflow-y: auto;
+}
+
+.world-members-panel-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.5rem 0.6rem;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    border-left: 3px solid #3a3a3a;
+    border-radius: 4px;
+}
+
+.world-members-panel-item--owner {
+    border-left-color: #4caf7d;
+}
+
+.world-members-panel-item--editor {
+    border-left-color: #5a9bd8;
+}
+
+.world-members-panel-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.world-members-panel-item-name {
+    font-size: 0.88rem;
+    color: #e0e0e0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.world-members-panel-item-meta {
+    font-size: 0.72rem;
+    color: #909090;
+}
+
+.world-members-panel-online {
+    color: #4caf7d;
+}
+
+.world-members-panel-offline {
+    color: #707070;
+}
+
+.world-members-panel-item-actions {
+    flex-shrink: 0;
+}
+
+.world-members-panel-pending {
+    font-size: 0.78rem;
+    color: #909090;
+    font-style: italic;
+}
+
+.world-members-panel-grant-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #2a2a2a;
+}
+
+.world-members-panel-grant-form label {
+    font-size: 0.78rem;
+    color: #909090;
+}
+
+.world-members-panel-grant-row {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.world-members-panel-grant-row input {
+    flex: 1;
+    min-width: 0;
+}
+
+/* 0.2.29: ui/components/WorldLocationBrowser.js — same modal
+   convention as LocationDocumentsDialog, extended with a re-query
+   radius form and a result list that (unlike LocationDocumentsDialog's
+   exact-position occupants) carries the 0.2.28 spatial-query shape:
+   distance, and the hasPlacement/fallback distinction, per result. */
+.world-location-browser-context {
+    margin: 0 0 0.85rem;
+    font-size: 0.85rem;
+    color: #b0b0b0;
+    line-height: 1.5;
+}
+
+.world-location-browser-radius-form {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.85rem;
+}
+
+.world-location-browser-radius-input {
+    flex: 1;
+}
+
+/* 0.2.30: trust-aware discovery diagnostics banner — see
+   core/DiscoveryDiagnosticsSummary.js. Neutral (no trust layer
+   consulted, today's default) reads as informational, not alarming;
+   complete reuses the same green .action-btn--primary/.spatial-type
+   already means "good" throughout this UI; fatal/warning reuse the
+   same amber/red tokens .editability-notice--blocked and
+   .world-search-item-note already established, so a person doesn't
+   have to learn a new color language for this milestone. */
+.world-location-browser-diagnostics {
+    margin: 0 0 0.85rem;
+    font-size: 0.78rem;
+    line-height: 1.4;
+}
+
+.world-location-browser-diagnostics-line {
+    margin: 0 0 0.2rem;
+}
+
+.world-location-browser-diagnostics-line:last-child {
+    margin-bottom: 0;
+}
+
+.world-location-browser-diagnostics-line--neutral {
+    color: #808080;
+}
+
+.world-location-browser-diagnostics--complete .world-location-browser-diagnostics-line {
+    color: #4caf7d;
+}
+
+.world-location-browser-diagnostics--warning .world-location-browser-diagnostics-line {
+    color: #c9a24a;
+}
+
+.world-location-browser-diagnostics--fatal .world-location-browser-diagnostics-line {
+    color: #e0a0a0;
+}
+
+.world-location-browser-empty {
+    color: #808080;
+    font-size: 0.82rem;
+    padding: 0.5rem 0;
+}
+
+.world-location-browser-count {
+    margin: 0 0 0.5rem;
+    font-size: 0.78rem;
+    color: #909090;
+}
+
+.world-location-browser-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-height: 360px;
+    overflow-y: auto;
+}
+
+.world-location-browser-item {
+    padding: 0.5rem 0.65rem;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+}
+
+.world-location-browser-item-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem 0.6rem;
+}
+
+.world-location-browser-item-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.world-location-browser-item-title {
+    color: #d0d0d0;
+    font-weight: 500;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.world-location-browser-item-author {
+    color: #707070;
+    font-size: 0.75rem;
+}
+
+.world-location-browser-item-distance {
+    color: #808080;
+    font-size: 0.72rem;
+    margin-top: 0.1rem;
+}
+
+.world-location-browser-item-note {
+    color: #c9a24a;
+    font-size: 0.72rem;
+    margin-top: 0.15rem;
+}
+
+.world-location-browser-item-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.world-location-browser-inspect {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #2a2a2a;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.world-location-browser-inspect-note {
+    margin: 0;
+    font-size: 0.78rem;
+    color: #909090;
+    line-height: 1.4;
+}
+
+/* A text-only "button" for a small secondary action inline with text
+   (e.g. PlacementInfoPanel's overlap notice) — not a full .action-btn,
+   which reads as too heavy sitting inside a sentence. */
+.inline-link-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    margin-left: 0.3rem;
+    color: #4caf7d;
+    font-size: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.inline-link-btn:hover {
+    color: #5fc490;
+}

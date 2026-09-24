@@ -2,7 +2,7 @@
 // modules under a sibling folder; source-reading tests read all of them,
 // joined, as one unit. The original file comes last so a view's `template:`
 // still ends the joined text.
-import { readdirSync } from 'fs';
+import { readdirSync, readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -26,4 +26,10 @@ export function worldViewFiles() {
 
 export function worldNavigationSessionFiles() {
     return fileGroup('application/WorldNavigationSession.js', 'application/worldNavigation');
+}
+
+// css/main.css only @imports its parts, in cascade order.
+export function stylesheetFiles() {
+    const entry = readFileSync(join(root, 'css/main.css'), 'utf8');
+    return [...entry.matchAll(/@import url\('([^']+)'\);/g)].map((match) => `css/${match[1]}`);
 }

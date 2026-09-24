@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { stylesheetFiles } from './support/SourceFileGroups.js';
 
 // 0.9.654 — Sidebar Scrollbar Content Occlusion Boundary Audit.
 //
@@ -210,7 +211,7 @@ function styleProp(objText, prop) {
 }
 
 async function run() {
-    const css = await readSource('css/main.css');
+    const css = (await Promise.all(stylesheetFiles().map((file) => readSource(file)))).join('\n');
     const editorViewSrc = await readSource('ui/views/EditorView.js');
     const worldViewSrc = await readSource('ui/views/WorldView.js');
     const editingSidebarSrc = await readSource('ui/components/EditingSidebar.js');
