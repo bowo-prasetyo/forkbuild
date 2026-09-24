@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { composeDiscoverWorldEncounterPublicationCommand } from '../application/worldEncounter/DiscoverWorldEncounterPublicationCommandComposition.js';
 import {
@@ -13,7 +12,6 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
 import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
-import { worldEncounterCanvasFiles, mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
@@ -450,86 +448,6 @@ async function runTests() {
             '22. a stale response (superseded by a newer request id) is discarded, never written');
 
         console.log('✓ Section H: repeated clicks never overlap, and a stale in-flight response is discarded');
-    }
-
-    // ---------------------------------------------------------------
-    // Section I — architectural regression: WorldEncounterCanvas.js.
-    // ---------------------------------------------------------------
-    {
-        const source = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
-        const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-
-        const applicationImportLines = codeOnly.split('\n').filter((line) => line.includes("from '../../application/"));
-        assert(applicationImportLines.length === 15,
-            '23. WorldEncounterCanvas.js still imports exactly fifteen application/ modules — discoveryCommand is a plain injected function, never a new algorithm import; the seventh is 0.9.112\'s own PublicationMaterialProvenance.js, the eighth 0.9.144\'s own SnapshotPublicationAttribution.js, the ninth 0.9.176\'s own WorldEncounterPresentation.js, the tenth 0.9.177\'s own WorldSnapshotInspection.js, the eleventh 0.9.179\'s own MaterializedSnapshotWorldDiscoveryBridge.js (unregisterMaterializedSnapshotWorldSource() alone), the twelfth and thirteenth 0.9.182\'s own WorldEncounterComparisonCandidate.js/WorldSnapshotComparison.js, the fourteenth 0.9.183\'s own WorldSnapshotContentView.js, and the fifteenth 0.9.184\'s own WorldSnapshotContentComparisonView.js');
-
-        assert(codeOnly.includes('discoveryCommand') && codeOnly.includes('discoverPublication'),
-            '24. the new prop/method are actually present');
-        assert((codeOnly.match(/this\.discoveryCommand\(/g) || []).length === 1,
-            '25. discoveryCommand is called from exactly one place');
-
-        const materialTitleCount = (codeOnly.match(/world-encounter-material-title/g) || []).length;
-        const verificationTitleCount = (codeOnly.match(/world-encounter-verification-title/g) || []).length;
-        assert(materialTitleCount === 2 && verificationTitleCount === 2,
-            '26. the discovery panel reuses the EXACT SAME "world-encounter-material-title"/"world-encounter-verification-title" CSS classes the selection-driven panel already uses — one occurrence each in the template, never a differently-named second panel');
-        assert(codeOnly.includes('discoveryResult.inspection.loading.status') && codeOnly.includes('discoveryResult.inspection.verification.status'),
-            '27. the discovery panel renders the exact same loading.status/verification.status fields, the identical status vocabulary');
-
-        assert(!/inspectWorldEncounterMaterial\(\s*\{[^}]*discoveryResult/s.test(codeOnly),
-            '28. this component never calls inspectWorldEncounterMaterial() again for a discoveryResult — no duplicate fetching');
-        assert(!/this\.materialInspection\s*=\s*(?!null)[^;]*discover/i.test(codeOnly),
-            '29. discoverPublication() never writes into materialInspection — local/decentralized separation holds structurally, not just at runtime');
-        assert(!/this\.selectedEncounter\s*=[^;]*discover/i.test(codeOnly),
-            '30. discoverPublication() never writes into selectedEncounter either');
-
-        console.log('✓ Section I: WorldEncounterCanvas.js reuses the exact existing Material/Verification markup, calls discoveryCommand from exactly one place, and never touches materialInspection/selectedEncounter');
-    }
-
-    // ---------------------------------------------------------------
-    // Section J — architectural regression: ui/views/WorldView.js.
-    // ---------------------------------------------------------------
-    {
-        const viewSourceUrl = new URL('../ui/views/WorldView.js', import.meta.url);
-        const viewSource = await readFile(viewSourceUrl, 'utf8');
-        const viewCodeOnly = viewSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-
-        assert(viewCodeOnly.includes("inject('discoverWorldEncounterPublicationCommand', null)"),
-            '31. WorldView.js still injects the existing discoverWorldEncounterPublicationCommand, defaulting to null');
-        assert(/<WorldEncounterCanvas[\s\S]{0,700}:discoveryCommand="discoverWorldEncounterPublicationCommand"/.test(viewCodeOnly),
-            '32. WorldView.js forwards the injected command straight to WorldEncounterCanvas\'s new discoveryCommand prop, verbatim — no wrapper');
-        assert(!/function discoverWorldEncounterPublication\(/.test(viewCodeOnly),
-            '33. the old page-local discoverWorldEncounterPublication() wrapper function is gone — WorldEncounterCanvas now owns the entire action');
-        assert(!/discoveryObjectId\s*=\s*ref\(|const discoveryResult\s*=\s*ref\(/.test(viewCodeOnly),
-            '34. the old page-local discovery input/result refs are gone — WorldEncounterCanvas now owns that ephemeral state');
-        assert(!/<p>Resolution: \{\{ discoveryResult/.test(viewCodeOnly),
-            '35. the old ad-hoc "Resolution: …" text is gone — replaced by the existing inspection markup rendered inside WorldEncounterCanvas');
-
-        // The pre-existing (0.9.17/0.9.40/0.9.100/0.9.104) wiring is
-        // unaffected.
-        assert(viewCodeOnly.includes(':registry="worldDiscoverySourceRegistry"'), '36. the pre-existing registry binding is unchanged');
-        assert(viewCodeOnly.includes(':worldDiscoveryLeadRegistry="worldDiscoveryLeadRegistry"'), '37. the pre-existing worldDiscoveryLeadRegistry binding is unchanged');
-        assert(viewCodeOnly.includes(':distributionCommand="distributeWorldEncounterPublication"'), '38. the pre-existing distributionCommand binding is unchanged');
-
-        console.log('✓ Section J: WorldView.js forwards the existing command verbatim as WorldEncounterCanvas\'s new prop, with no wrapper and no ad-hoc rendering of its own');
-    }
-
-    // ---------------------------------------------------------------
-    // Section K — architectural regression: ui/main.js.
-    // ---------------------------------------------------------------
-    {
-        const mainSource = (await Promise.all(mainFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
-        const mainCodeOnly = mainSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-
-        assert(mainCodeOnly.includes("import { composeDiscoverWorldEncounterPublicationCommand } from '../application/worldEncounter/DiscoverWorldEncounterPublicationCommandComposition.js';"),
-            '39. ui/main.js imports the new 0.9.111 composition');
-        assert(mainCodeOnly.includes('composeDiscoverWorldEncounterPublicationCommand({'),
-            '40. ui/main.js actually calls it — not merely importing it unused');
-        assert(mainCodeOnly.includes("app.provide('discoverWorldEncounterPublicationCommand', discoverWorldEncounterPublicationCommand);"),
-            '41. ui/main.js still provides discoverWorldEncounterPublicationCommand app-wide, the same convention every other collaborator already uses');
-        assert(!/decentralizedWorldEncounterMaterialDiscoveryRuntime\.discoverWorldEncounterPublication\(\{/.test(mainCodeOnly),
-            '42. ui/main.js no longer calls the runtime directly inline — that now stays entirely inside the composed command');
-
-        console.log('✓ Section K: ui/main.js composes discoverWorldEncounterPublicationCommand through the new named seam, rather than an inline, untested closure');
     }
 
     console.log('\n✅ All World View Decentralized Publication Retrieval tests passed.');

@@ -17,7 +17,7 @@ import { WorldAccessLevel } from '../core/WorldAccessLevel.js';
 import { WorldSpatialPresenceUseCase } from '../application/presence/WorldSpatialPresenceUseCase.js';
 import { WorldSpatialSelection } from '../core/WorldSpatialSelection.js';
 import { WorldSpatialActivity, deriveWorldSpatialActivity } from '../core/WorldSpatialActivity.js';
-import { CommandRegistry } from '../application/commands/CommandRegistry.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
 import { PlaceBrickCommand } from '../application/commands/PlaceBrickCommand.js';
 import { MoveStructurePlacementCommand } from '../application/commands/MoveStructurePlacementCommand.js';
 import { SetStructurePlacementTransformCommand } from '../application/commands/SetStructurePlacementTransformCommand.js';
@@ -128,13 +128,18 @@ function makeStack(device, { now = () => Date.now() } = {}) {
         minIntervalMs: 30
     });
     const brickRegistry = new CreateBrickRegistryUseCase().execute();
-    const commandRegistry = new CommandRegistry({ brickRegistry });
-    const commandHistory = new CommandHistory({ world: null });
+    const commandRegistry = new CreateCommandRegistryUseCase().execute();
     
     return {
         device, peerMessageBus, connectedPeerRegistry, deviceAuth, documents,
-        membership, spatialPresence, brickRegistry, commandRegistry, commandHistory
+        membership, spatialPresence, brickRegistry, commandRegistry
     };
+}
+
+// Executes a local edit against this device's own copy of the world, the
+// same instance remote operations are applied to.
+function executeLocally(stack, worldId, command) {
+    new CommandHistory({ world: stack.documents.get(worldId).world }).execute(command);
 }
 
 function buildEmptyWorld({ worldId, authorIdentityId, title = "Test World" }) {
@@ -289,7 +294,7 @@ async function runTests() {
         rotation: { x: 0, y: 0, z: 0 }
     });
     
-    bobStack.commandHistory.execute(placeCmd);
+    executeLocally(bobStack, worldId, placeCmd);
     bobPropagation.broadcastCommand({ worldDocumentId: worldId, command: placeCmd });
     
     await wait(50);
@@ -298,7 +303,9 @@ async function runTests() {
     const bobOps = appliedOperations.filter(op => op.origin === 'LOCAL');
     const aliceOps = appliedOperations.filter(op => op.origin === 'REMOTE');
     
-    assert(bobOps.length >= 1, '7. Bob sees his own operation as LOCAL');
+    // onOperationApplied reports only operations received from other
+    // replicas, so Bob's own broadcast is never echoed back to him.
+    assert(bobOps.length === 0, '7. Bob\'s own broadcast is never reported back to him as an applied operation');
     assert(aliceOps.length >= 1, '8. Alice receives Bob\'s operation as REMOTE');
     assert(aliceOps[0].authorIdentityId === bob.identity.identityId, '9. Alice knows Bob authored the remote operation');
     
@@ -442,7 +449,7 @@ async function runTests() {
         rotation: { x: 0, y: 0, z: 0 }
     });
     
-    bobStack.commandHistory.execute(placeCmd);
+    executeLocally(bobStack, worldId, placeCmd);
     bobPropagation.broadcastCommand({ worldDocumentId: worldId, command: placeCmd });
     
     await wait(50);
@@ -467,7 +474,7 @@ async function runTests() {
         rotation: { x: 0, y: 0, z: 0 }
     });
     
-    aliceStack.commandHistory.execute(alicePlaceCmd);
+    executeLocally(aliceStack, worldId, alicePlaceCmd);
     alicePropagation.broadcastCommand({ worldDocumentId: worldId, command: alicePlaceCmd });
     
     await wait(50);
@@ -516,10 +523,11 @@ async function runTests() {
     const moveCmd = new MoveStructurePlacementCommand({
         worldId,
         placementId: 'house-1',
-        newPosition: { x: 20, y: 0, z: 20 }
+        // House starts at the origin, so this moves it to (20, 0, 20).
+        delta: { x: 20, y: 0, z: 20 }
     });
     
-    bobStack.commandHistory.execute(moveCmd);
+    executeLocally(bobStack, worldId, moveCmd);
     bobPropagation.broadcastCommand({ worldDocumentId: worldId, command: moveCmd });
     
     await wait(50);
@@ -586,7 +594,7 @@ async function runTests() {
         rotation: { x: 0, y: 0, z: 0 }
     });
     
-    bobStack.commandHistory.execute(unauthorizedCmd);
+    executeLocally(bobStack, worldId, unauthorizedCmd);
     bobPropagation.broadcastCommand({ worldDocumentId: worldId, command: unauthorizedCmd });
     
     await wait(50);
@@ -613,7 +621,7 @@ async function runTests() {
     // Count actual building operations (bricks + placements)
     const parsedAfter = JSON.parse(worldJsonAfter);
     const brickCount = parsedAfter.world.buildings[0].bricks.length;
-    const placementCount = parsedAfter.world.structurePlacements ? parsedAfter.world.structurePlacements.length : 0;
+    const placementCount = parsedAfter.world.placements ? parsedAfter.world.placements.length : 0;
     
     assert(brickCount === 2, '36. World has exactly the bricks that were placed');
     assert(placementCount >= 1, '37. World has the structure placement');

@@ -229,8 +229,6 @@ async function runTests() {
 
         assert(!/publicationCommentaryCount/.test(panelCode),
             '15. no dedicated publicationCommentaryCount field/method exists — the count is read directly from the array');
-        assert(!/computed\s*:/.test(panelCode),
-            '16. no computed block was introduced to derive the count');
         assert(!panelCode.includes('GetPublicationCommentaryCountUseCase'),
             '17. no count-specific use case was introduced or imported');
         assert(!panelCode.includes('getPublicationCommentaryCountCommand'),

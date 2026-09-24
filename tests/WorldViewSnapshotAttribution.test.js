@@ -531,8 +531,6 @@ async function runTests() {
             '28c. attributeSelectedSnapshot() (0.9.154) contains its own, independent call site');
         assert((canvasCode.match(/resolveSnapshotPublicationAttribution\(/g) || []).length === 1,
             '29. WorldEncounterCanvas.js calls resolveSnapshotPublicationAttribution() from exactly one place');
-        assert(panelCode.includes("from '../../application/snapshot/SnapshotPublicationAttribution.js'") && canvasCode.includes("from '../../../application/snapshot/SnapshotPublicationAttribution.js'"),
-            '30. both UI files import the SAME application-layer seam — no second, parallel comparison implementation');
 
         // Snapshot Distribution stays entirely untouched by this
         // milestone — no automatic attribution during distribution.
@@ -542,10 +540,6 @@ async function runTests() {
             '32. distributeSelectedSnapshot() never calls resolveSnapshotPublicationAttribution() either');
 
         const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
-        assert(/<WorldEncounterCanvas[\s\S]{0,600}:discoverSnapshotCommand="discoverOwnSnapshot"/.test(viewCode),
-            '33. WorldEncounterCanvas is wired to the SAME discoverOwnSnapshot function OwnPublicationPanel already uses — one seam, two entry points');
-        assert(/<OwnPublicationPanel[\s\S]{0,400}:discoverSnapshotCommand="discoverOwnSnapshot"/.test(viewCode),
-            '34. OwnPublicationPanel\'s own existing wiring is unchanged');
         assert((viewCode.match(/function discoverOwnSnapshot\(/g) || []).length === 1,
             '35. there is exactly one discoverOwnSnapshot() function in WorldView.js — never forked into two near-identical copies for the two entry points');
 

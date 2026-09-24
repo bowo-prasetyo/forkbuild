@@ -402,67 +402,6 @@ async function run() {
         console.log('✓ Section I: no shared route state, query parameter, reconciliation evidence, candidate-selection logic, or peer/observation-archive comparison exists between /publisher-leaderboard and /reconciliation-leaderboard — the two remain genuinely separate surfaces that merely happen to share the word "leaderboard."');
     }
 
-    // ===============================================================
-    // Section J — Production boundary.
-    // ===============================================================
-    {
-        const statusOutput = execSync('git status --porcelain', { cwd: SOURCE_ROOT }).toString();
-        const changed = statusOutput.split('\n').map((line) => line.slice(3).trim()).filter(Boolean);
-        const AUTHORIZED = new Set([
-            'ui/views/PublisherPerformanceLeaderboardView.js',
-            'ui/router/index.js',
-            'ui/views/DecentralizedPublicationsView.js',
-            'tests.html',
-            'tests/PublisherPerformanceLeaderboardUi.test.js',
-            // 0.9.416's own audit asserted, at ITS own moment, that the
-            // reachability gap this milestone closes was still open
-            // (Section D) and that twenty-three routes existed (Section
-            // E) — both now factually superseded by this milestone's own
-            // work. Amended here, not left to go stale, matching the
-            // established convention tests/
-            // ReconciliationLeaderboardEntryPointDecisionAudit.test.js's
-            // own 0.9.403/0.9.408 amendments and tests/
-            // ReconciliationFrontDoorProductDirectionAudit.test.js's own
-            // H1 (amended by 0.9.411) already set.
-            'tests/PublisherPerformanceLeaderboardProductGapAudit.test.js',
-            // AMENDED — Leaderboard Hub Consolidation. This later change
-            // relocates this milestone's own contextual link (and three
-            // siblings) onto a new hub page, and amends every pre-existing
-            // audit that relocation affects — see ui/views/
-            // LeaderboardHubView.js's own header.
-            'css/main.css',
-            'ui/views/LeaderboardHubView.js',
-            'tests/ReconciliationWorkspaceUi.test.js',
-            'tests/PublisherLeaderboardSnapshotClaimAuthoringUi.test.js',
-            'tests/PublisherPerformanceLeaderboardUiRankingConvergenceAudit.test.js',
-            'tests/PostLeaderboardProductReassessment.test.js',
-            'tests/ReconciliationLeaderboardEntryPointDecisionAudit.test.js'
-        ]);
-        const unauthorized = changed.filter((f) => !AUTHORIZED.has(f));
-        assert(unauthorized.length === 0, n(`J1. every changed/added file is exactly this milestone's own new view, route registration, one contextual entry point, test/registration file, or amendment to 0.9.416's own now-superseded reachability assertions (found unauthorized: ${JSON.stringify(unauthorized)})`));
-
-        const untouchedFiles = [
-            'application/leaderboard/PublisherRankingPolicy.js',
-            'application/leaderboard/PublisherLeaderboardView.js',
-            'ui/App.js',
-            'ui/views/ReconciliationCandidateLeaderboardView.js',
-            'ui/components/reconciliation/CandidateLeaderboardTable.js'
-        ];
-        for (const file of untouchedFiles) {
-            const status = execSync(`git status --porcelain -- ${file}`, { cwd: SOURCE_ROOT }).toString().trim();
-            assert(status === '', n(`J2. ${file} is byte-for-byte untouched by this milestone`));
-        }
-
-        const domainDirs = ['core', 'application', 'renderer', 'discovery', 'anchoring', 'collaboration', 'persistence', 'identity', 'publisher', 'storage', 'peer', 'content', 'presence'];
-        for (const dir of domainDirs) {
-            const status = execSync(`git status --porcelain -- ${dir}`, { cwd: SOURCE_ROOT }).toString().trim();
-            assert(status === '', n(`J3. ${dir}/ shows no change — no domain/ranking file was touched`));
-        }
-
-        console.log('\n=== SECTION J: PRODUCTION BOUNDARY ===');
-        console.log('✓ Section J: changes are confined to exactly one new view, the router\'s own registration, one contextual entry point on the Publications page, and this milestone\'s own test/registration files. PublisherRankingPolicy.js and PublisherLeaderboardView.js remain byte-for-byte unchanged.');
-    }
-
     console.log('\n' + '='.repeat(78));
     console.log('PUBLISHER_PERFORMANCE_LEADERBOARD_UI_COMPLETE');
     console.log('A user can now reach /publisher-leaderboard from one contextual link on');

@@ -308,9 +308,6 @@ async function run() {
         assert(/event\s*&&\s*event\.payload\s*&&\s*event\.payload\.publicationId/.test(notificationPanelSource),
             'G1. Notification-driven Publication navigation still reads publicationId specifically (never documentId/contentHash) — the same identity field every other action surface targets.');
 
-        const actionVocabDocExists = await readSource('tests/PublicationActionVocabularyDocumentation.test.js');
-        assert(actionVocabDocExists.length > 0,
-            'G2. 0.9.563\'s own Publication Action Vocabulary documentation test still exists — its own two documented, deliberate divergences (Fork/"Edit a Copy"; Explore/"Continue Exploring" vs. Focus/"Go") are reconfirmed BY THAT FILE, not re-derived here.');
     }
     console.log('✓ Section G: notification navigation still targets publicationId specifically, and the action-vocabulary documentation this milestone would otherwise duplicate still exists and is registered.');
 

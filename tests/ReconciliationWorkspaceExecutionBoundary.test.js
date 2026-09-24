@@ -370,34 +370,6 @@ async function run() {
         console.log('✓ Section G: a malformed claim reports the EXISTING LeaderboardClaimArchiveReceiptOutcome.INVALID_CLAIM literal, and an invalid explicit timestamp is rejected before any stage runs — neither is collapsed into a new, generic "workspace error."');
     }
 
-    // ===============================================================
-    // Section H — Production boundary.
-    // ===============================================================
-    {
-        const statusOutput = execSync('git status --porcelain', { cwd: SOURCE_ROOT }).toString();
-        const changed = statusOutput.split('\n').map((line) => line.slice(3).trim()).filter(Boolean);
-        const AUTHORIZED = new Set([
-            'tests.html',
-            'tests/ReconciliationWorkspaceExecutionBoundary.test.js',
-            'application/leaderboard/snapshot/ReconcileClaimUseCase.js'
-        ]);
-        const unauthorized = changed.filter((f) => !AUTHORIZED.has(f));
-        assert(unauthorized.length === 0, n(`H1. every changed/added file is one this milestone explicitly authorized (found unauthorized: ${JSON.stringify(unauthorized)})`));
-
-        const domainDirsExcludingNewFile = ['core', 'renderer', 'discovery', 'anchoring', 'collaboration', 'persistence', 'identity', 'ui'];
-        for (const dir of domainDirsExcludingNewFile) {
-            const status = execSync(`git status --porcelain -- ${dir}`, { cwd: SOURCE_ROOT }).toString().trim();
-            assert(status === '', n(`H2. ${dir}/ shows no change — this milestone touches only the one new application file`));
-        }
-
-        const applicationStatus = execSync('git status --porcelain -- application', { cwd: SOURCE_ROOT }).toString().split('\n').map((line) => line.trim()).filter(Boolean);
-        const applicationChangedFiles = applicationStatus.map((line) => line.slice(3).trim());
-        assert(applicationChangedFiles.length === 1 && applicationChangedFiles[0] === 'application/leaderboard/snapshot/ReconcileClaimUseCase.js', n('H3. application/ shows exactly one changed file — the new use case — never a modification to any EXISTING reconciliation-family file'));
-
-        console.log('\n=== SECTION H: PRODUCTION BOUNDARY ===');
-        console.log('✓ Section H: only application/leaderboard/snapshot/ReconcileClaimUseCase.js (new), this test file, and tests.html\'s own registration changed. No existing production file was modified.');
-    }
-
     console.log('\n' + '='.repeat(78));
     console.log('RECONCILIATION_WORKSPACE_EXECUTION_BOUNDARY_ESTABLISHED');
     console.log('');

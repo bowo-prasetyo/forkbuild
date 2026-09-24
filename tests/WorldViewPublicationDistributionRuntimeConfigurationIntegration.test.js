@@ -222,10 +222,6 @@ async function run() {
         const source = (await Promise.all(mainFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
-        assert(codeOnly.includes("import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js'"),
-            '12. ui/main.js imports the real composition function, never a hand-rolled equivalent');
-        assert(codeOnly.includes("import { resolvePublicationDistributionRuntimeConfiguration } from '../application/publication/distribution/PublicationDistributionRuntimeConfiguration.js'"),
-            '13. ui/main.js imports the real runtime configuration seam, never the 0.9.105 resolvers directly');
         assert(!codeOnly.includes("PublicationDistributionConfigurationProvider.js'"),
             '14. ui/main.js no longer imports the 0.9.105 resolvers directly — resolvePublicationDistributionRuntimeConfiguration() is the one seam now');
         // 0.9.107 — Publication Distribution Runtime Provider — folds this

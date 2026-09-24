@@ -1,4 +1,3 @@
-import { execSync } from 'node:child_process';
 import util from 'node:util';
 
 import { TurnServerConfiguration, isValidTurnUrl } from '../core/TurnServerConfiguration.js';
@@ -58,8 +57,6 @@ function expectThrows(fn, message) {
     try { fn(); } catch { threw = true; }
     assert(threw, message);
 }
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
 
 class ThrowingStorageProvider extends StorageProvider {
     save() { throw new Error('storage backend unavailable'); }
@@ -362,33 +359,6 @@ async function run() {
 
         console.log('\n=== SECTION J: COMPOSITION PROTOTYPE ===');
         console.log('✓ Section J: TurnServerConfiguration.toIceServerEntry() passes through the real, unmodified WebRtcPeerConnectionProvider unchanged, alongside STUN — zero changes needed to that provider for a future composition step.');
-    }
-
-    // ===============================================================
-    // Section K — Production-change guard.
-    // ===============================================================
-    {
-        const ALLOWED_FILES = new Set([
-            'core/TurnServerConfiguration.js',
-            'storage/TurnServerConfigurationStore.js',
-            'application/settings/TurnServerConfigurationProvider.js',
-            'tests/TurnServerConfiguration.test.js',
-            'tests.html'
-        ]);
-
-        let changedFiles = [];
-        try {
-            const statusOutput = execSync('git status --porcelain', { cwd: SOURCE_ROOT.pathname }).toString();
-            changedFiles = statusOutput.split('\n')
-                .map((line) => line.slice(3).trim())
-                .filter(Boolean);
-        } catch { /* git unavailable — not a failure of this guard */ }
-
-        const unexpected = changedFiles.filter((f) => !ALLOWED_FILES.has(f));
-        assert(unexpected.length === 0, n(`K1. this milestone's own working-tree changes touch only its named files (unexpected: ${JSON.stringify(unexpected)})`));
-
-        console.log('\n=== SECTION K: PRODUCTION-CHANGE GUARD ===');
-        console.log('✓ Section K: only core/TurnServerConfiguration.js, storage/TurnServerConfigurationStore.js, application/settings/TurnServerConfigurationProvider.js, this test file, and tests.html are touched — no UI, no router entry, no WebRTC runtime change.');
     }
 
     console.log('\n✅ All TURN Server Configuration + Persistence + Provider tests passed.');

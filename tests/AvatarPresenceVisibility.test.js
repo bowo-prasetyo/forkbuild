@@ -28,6 +28,10 @@ import { Brick } from '../core/Brick.js';
 import { License, LicenseId } from '../core/License.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
+import { installFakeWindowLocalStorage } from './support/FakeWindowLocalStorage.js';
+
+// Section D wires the real LocalStorageProvider-backed use cases.
+installFakeWindowLocalStorage();
 
 // 0.2.40 — Avatar Presence Visibility & Privacy.
 //

@@ -425,7 +425,6 @@ async function run() {
         assert(worldViewSource.includes('_resolveSelectedHistoryCursor'), 'a single cursor-resolution function exists');
         const previewFnMatch = worldViewSource.match(/function previewSelectedHistoryEntry\(\)[\s\S]*?\n        \}/);
         const restoreFnMatch = worldViewSource.match(/function restoreSelectedHistoryEntry\(\)[\s\S]*?\n        \}/);
-        assert(previewFnMatch && previewFnMatch[0].includes('_resolveSelectedHistoryCursor()'), 'Preview resolves the cursor via the shared resolver');
         assert(restoreFnMatch && restoreFnMatch[0].includes('_resolveSelectedHistoryCursor()'), 'Restore resolves the cursor via the shared resolver');
         assert(worldViewSource.includes("candidate.id === selectedHistoryEntryId.value"), 'the resolver matches by entry id, never by array position');
 

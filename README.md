@@ -74,8 +74,19 @@ python3 -m http.server 8000
 Then open <http://localhost:8000/>. Vue and Three.js load from a CDN, so the
 browser needs internet access.
 
-To run the tests, open <http://localhost:8000/tests.html> and watch the browser's
-developer console.
+To run the tests you need Node.js 22 or later:
+
+```
+npm install
+npm test
+```
+
+`npm test` runs every test file under Node (`npm run test:node`), the rendezvous
+worker's tests (`npm run test:worker`) and the few tests that need a real browser
+in headless Chromium (`npm run test:browser`; install Chromium once with
+`npx playwright-core install chromium`, or point `CHROMIUM_PATH` at an existing
+one). Pass a filter to run matching files only, for example
+`npm run test:node -- Avatar`. The same checks run on every pull request.
 
 Peer discovery through rendezvous needs a rendezvous server; a reference
 Cloudflare Worker is in [server/rendezvous-worker/](server/rendezvous-worker/README.md).

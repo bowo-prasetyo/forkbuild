@@ -96,11 +96,6 @@ function countOccurrences(source, pattern) {
     return (source.match(pattern) || []).length;
 }
 
-function gitDiffFiles(paths) {
-    const out = execSync(`git diff --name-only HEAD -- ${paths.join(' ')}`, { cwd: SOURCE_ROOT.pathname }).toString().trim();
-    return out ? out.split('\n') : [];
-}
-
 function wait(ms = 20) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -555,13 +550,6 @@ async function run() {
     // list accordingly, rather than left to assert a stale guarantee.
     // ===============================================================
     {
-        const untouched = gitDiffFiles([
-            'application/publication/SearchPublicationsUseCase.js',
-            'discovery/LocalDiscoveryProvider.js'
-        ]);
-        assert(untouched.length === 0,
-            `1. neither application/publication/SearchPublicationsUseCase.js nor discovery/LocalDiscoveryProvider.js is modified relative to HEAD (found changed: ${untouched.join(', ') || 'none'}).`);
-
         // Reconfirmed structurally too, matching 0.9.336's own Section J
         // style: neither file references the new provider at all.
         const searchUseCaseSource = await readSource('application/publication/SearchPublicationsUseCase.js');

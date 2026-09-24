@@ -1,3 +1,4 @@
+// @environment browser — needs Web Audio and media tracks over a real RTCPeerConnection.
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';

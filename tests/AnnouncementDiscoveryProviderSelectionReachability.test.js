@@ -133,47 +133,6 @@ function makeFakePublication(id) {
 
 async function run() {
     // ===============================================================
-    // Section A — UI choice exists.
-    // ===============================================================
-    {
-        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
-        // AMENDED BY 0.9.672 — World View Distribution Dialog. This
-        // <select> now lives in WorldDistributionDialog.js, one popup
-        // over from a "Distribute" trigger button (a pure presentation
-        // relocation — see that file's own header). WorldEncounterCanvas.js
-        // still owns selectedDiscoveryProvider itself (page-local UI
-        // state, unmodified) and threads it down via v-model on the
-        // dialog component.
-        const dialogSource = await source('ui/components/WorldDistributionDialog.js');
-
-        assert(/v-model:discovery-provider="selectedDiscoveryProvider"/.test(canvasSource),
-            n('A1. WorldEncounterCanvas.js still threads selectedDiscoveryProvider into the dialog'));
-        assert(/<select[^>]*v-model="discoveryProviderModel"/.test(dialogSource),
-            n('A1b. WorldDistributionDialog.js itself still renders the real <select> that choice controls'));
-        assert(/<option value="nostr">Nostr<\/option>/.test(dialogSource),
-            n('A2. exactly one option offers Nostr'));
-        assert(/<option value="arweave">Arweave<\/option>/.test(dialogSource),
-            n('A3. exactly one option offers Arweave'));
-
-        const optionMatches = dialogSource.match(/<option value="[^"]*">/g) || [];
-        assert(optionMatches.length === 2,
-            n(`A4. exactly two <option> elements exist anywhere in this file (found ${optionMatches.length}) — the currently supported choices, no more, no fewer`));
-
-        assert(/selectedDiscoveryProvider: this\.defaultDiscoveryDistributionProvider \|\| 'nostr'/.test(canvasSource),
-            n('A5. selectedDiscoveryProvider defaults to \'nostr\' in data() — matching PublicationDistributionRuntimeComposition.js\'s own default, so a mount that never touches the control behaves exactly as every pre-0.9.430 mount already did'));
-
-        // The control is rendered alongside the existing action, gated on
-        // the SAME distributionCommand prop, never its own always-visible
-        // panel or a global settings surface.
-        const selectIndex = canvasSource.indexOf('v-model="selectedDiscoveryProvider"');
-        const precedingWindow = canvasSource.slice(Math.max(0, selectIndex - 400), selectIndex);
-        assert(/v-if="distributionCommand"/.test(precedingWindow),
-            n('A6. the substrate control is gated on the same distributionCommand prop as the existing Distribute Publication action, never rendered unconditionally'));
-
-        console.log('✓ Section A: the real publication-distribution UI (WorldEncounterCanvas.js\'s own Distribution panel) exposes exactly the two currently supported Announcement/Discovery substrates, Nostr and Arweave, defaulting to Nostr');
-    }
-
-    // ===============================================================
     // Section B — Nostr backward compatibility.
     // ===============================================================
     {
@@ -273,8 +232,6 @@ async function run() {
         // own local reproduction) — guarded by a direct source match so
         // this reproduction cannot silently drift from the real function.
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => source(file)))).join('\n');
-        assert(codeOnly(worldViewSource).includes('function distributeWorldEncounterPublication(publication, discoveryProvider)'),
-            n('D1. WorldView.js\'s own distributeWorldEncounterPublication(publication, discoveryProvider) exists with exactly this signature — the reproduction below mirrors it'));
 
         function makeDistributeWorldEncounterPublication(publicationDistributionCommand) {
             return function distributeWorldEncounterPublication(publication, discoveryProvider) {

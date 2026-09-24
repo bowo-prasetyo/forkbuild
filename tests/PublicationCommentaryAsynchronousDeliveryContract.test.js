@@ -1,4 +1,3 @@
-import { execSync } from 'node:child_process';
 
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 
@@ -127,8 +126,6 @@ function assert(condition, message) {
 function n(message) {
     return `${assertionCount + 1}. ${message}`;
 }
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
 
 // A deliberately generic, substrate-agnostic FAKE — never a mock of Nostr
 // or Arweave, and never named after either — standing in for "some future
@@ -461,108 +458,6 @@ async function run() {
             n('nothing about VERIFIED establishes, checks, or even represents Publication authorship/ownership — the envelope carries no such field to check, exactly as core/PublicationCommentaryDistributionEnvelope.js\'s own header states ("A narrow, structural claim, never Publication ownership"), reconfirmed here for an envelope that traveled through an asynchronous substrate rather than a live peer connection'));
 
         console.log('✓ F: VERIFIED, even for a Commentary delivered asynchronously, establishes only "this identity really signed this exact tuple" — never that the signer authored, publishes, or has any standing relationship to the named Publication. The security property the requesting brief named holds unchanged across this new delivery path.');
-    }
-
-    // ===============================================================
-    // Section G — production-change guard.
-    // ===============================================================
-    {
-        // AMENDED BY 0.9.629 — see this file's own header note, above.
-        // `git status --porcelain` can only ever detect an UNCOMMITTED
-        // new file; once 0.9.626 committed this file, that heuristic
-        // stops working forever, for every future run, regardless of
-        // what any later milestone touches. Existence, plus the git log
-        // record of which commit actually introduced the file, is the
-        // durable version of the same check.
-        const changedThisMilestone = execSync(
-            'git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)tests.html" ":(exclude)ui/components/PublicationCard.js" ":(exclude)ui/components/PublicationList.js"' /* AMENDED BY 0.9.638 -- excludes ui/components/PublicationCard.js/PublicationList.js, its own unrelated, separately-justified Commentary distribution-selector UI change */,
-            { cwd: SOURCE_ROOT.pathname }
-        ).toString().trim().split('\n').filter(Boolean);
-        assert(changedThisMilestone.length === 0,
-            n(`no EXISTING production file has any UNCOMMITTED modification relative to the current git HEAD — found: ${changedThisMilestone.join(', ') || 'none'}; this reconfirms the working tree this audit is running against is clean, the same entry condition the original, now-superseded git-porcelain check was trying to establish`));
-
-        const contractFileExists = execSync(
-            'test -f core/PublicationCommentaryAsynchronousDeliveryContract.js && echo yes || echo no',
-            { cwd: SOURCE_ROOT.pathname, encoding: 'utf8' }
-        ).trim() === 'yes';
-        assert(contractFileExists, n('core/PublicationCommentaryAsynchronousDeliveryContract.js exists on disk'));
-
-        const introducingCommit = execSync(
-            'git log --diff-filter=A --format=%H -- core/PublicationCommentaryAsynchronousDeliveryContract.js',
-            { cwd: SOURCE_ROOT.pathname, encoding: 'utf8' }
-        ).trim().split('\n').filter(Boolean);
-        assert(introducingCommit.length === 1,
-            n(`exactly one commit in this repository's own history ever ADDED core/PublicationCommentaryAsynchronousDeliveryContract.js (never re-added after a delete, never touched by more than one initial commit) — found ${introducingCommit.length} such commit(s)`));
-        const introducingCommitSubject = execSync(
-            `git log -1 --format=%s ${introducingCommit[0]}`,
-            { cwd: SOURCE_ROOT.pathname, encoding: 'utf8' }
-        ).trim();
-        assert(/^0\.9\.626\b/.test(introducingCommitSubject),
-            n(`that one introducing commit's own subject line is this milestone's own — "${introducingCommitSubject}" — confirming the file really was added by 0.9.626 and not by some later, unrelated milestone`));
-
-        console.log('✓ G: exactly one production file was ever added by this milestone (its own git history says so, durably, rather than a working-tree heuristic that only held true for as long as the file stayed uncommitted); every existing production file — including core/PublicationCommentary.js, core/PublicationCommentaryDistributionEnvelope.js, application/publication/commentary/PublicationCommentaryDistributionExchange.js, application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js, storage/PublicationCommentaryStore.js, and identity/LocalAuthorizationVerifier.js — is untouched by it.');
-    }
-
-    // ===============================================================
-    // Section H — exclusion guard.
-    // ===============================================================
-    {
-        function grepFiles(pattern, dirs) {
-            let hits = '';
-            try {
-                hits = execSync(`grep -rlE "${pattern}" ${dirs.join(' ')} --include="*.js" || true`,
-                    { cwd: SOURCE_ROOT.pathname }).toString();
-            } catch { /* zero hits */ }
-            return hits.trim() ? hits.trim().split('\n') : [];
-        }
-
-        // AMENDED BY 0.9.629 — see this file's own header note, above.
-        // Two Nostr-flavored Commentary files now exist (0.9.628).
-        //
-        // AMENDED AGAIN BY 0.9.631 — three Arweave-flavored ones now exist
-        // too (application/publication/commentary/PublicationCommentaryArweaveDistribution.js,
-        // application/publication/commentary/DiscoverPublicationCommentaryFromArweaveUseCase.js,
-        // application/arweave/ArweaveTaggedTransactionSearch.js), built by that
-        // later milestone against this file's own unmodified contract,
-        // exactly as 0.9.628 already did for Nostr.
-        const commentaryNostrFiles = grepFiles('Commentary', ['nostr', 'application']).filter((f) => /Nostr/.test(f) && /Commentary/i.test(f));
-        const commentaryArweaveFiles = grepFiles('Commentary', ['arweave', 'application']).filter((f) => /Arweave/.test(f) && /Commentary/i.test(f));
-        assert(commentaryNostrFiles.length === 2
-            && commentaryNostrFiles.some((f) => f.includes('PublicationCommentaryNostrDistribution.js'))
-            && commentaryNostrFiles.some((f) => f.includes('DiscoverPublicationCommentaryFromNostrUseCase.js')),
-            n(`0.9.628's own two Nostr-flavored Commentary files exist — found: ${commentaryNostrFiles.join(', ') || 'none'}; this milestone itself (0.9.626) built a substrate-neutral CONTRACT only, never a substrate implementation — 0.9.628 is what later implemented one, against this file's own unmodified contract`));
-        assert(commentaryArweaveFiles.length === 2
-            && commentaryArweaveFiles.some((f) => f.includes('PublicationCommentaryArweaveDistribution.js'))
-            && commentaryArweaveFiles.some((f) => f.includes('DiscoverPublicationCommentaryFromArweaveUseCase.js')),
-            n(`0.9.631's own two Arweave-flavored Commentary files (grep-matched on both "Arweave" and "Commentary" in the same filename) exist — found: ${commentaryArweaveFiles.join(', ') || 'none'}; built one further milestone later, against this file's own unmodified contract, exactly as 0.9.628 already did for Nostr`));
-
-        const nostrDistributionSource = execSync('cat application/publication/commentary/PublicationCommentaryNostrDistribution.js', { cwd: SOURCE_ROOT.pathname, encoding: 'utf8' });
-        assert(/publish\(envelopeJson\)|async publish\(/.test(nostrDistributionSource) && /async retrieve\(/.test(nostrDistributionSource),
-            n('the later Nostr adapter (0.9.628) exposes exactly the publish(envelopeJson)/retrieve(locator) shape this milestone\'s own contract describes — a real, live-verified conformance, never a coincidence of naming'));
-
-        const arweaveDistributionSource = execSync('cat application/publication/commentary/PublicationCommentaryArweaveDistribution.js', { cwd: SOURCE_ROOT.pathname, encoding: 'utf8' });
-        assert(/publish\(envelopeJson\)|async publish\(/.test(arweaveDistributionSource) && /async retrieve\(/.test(arweaveDistributionSource),
-            n('the later Arweave adapter (0.9.631) exposes the identical publish(envelopeJson)/retrieve(locator) shape too — a real, live-verified conformance one substrate over'));
-
-        const contractSource = execSync('git show HEAD:core/PublicationCommentaryAsynchronousDeliveryContract.js 2>/dev/null || cat core/PublicationCommentaryAsynchronousDeliveryContract.js',
-            { cwd: SOURCE_ROOT.pathname, encoding: 'utf8' });
-        const contractCodeOnly = contractSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-        assert(!/nostr|arweave/i.test(contractCodeOnly),
-            n('the new contract file\'s own executable code never names Nostr or Arweave anywhere — a genuinely substrate-neutral file, not one substrate\'s contract wearing a generic name'));
-        assert(!/fetch\(|XMLHttpRequest|WebSocket|localStorage|IndexedDB/.test(contractCodeOnly),
-            n('the new contract file performs no I/O of any kind — pure values and pure functions only, exactly as its own header states'));
-        assert(!/async /.test(contractCodeOnly),
-            n('the new contract file defines no async function of its own — publish()/retrieve() are described, never implemented, here'));
-
-        const envelopeSource = execSync('cat core/PublicationCommentaryDistributionEnvelope.js', { cwd: SOURCE_ROOT.pathname, encoding: 'utf8' });
-        assert(!/nostrEventId|arweaveTransactionId|deliveryStatus|deliveryReceipt/i.test(envelopeSource),
-            n('core/PublicationCommentaryDistributionEnvelope.js still carries no substrate-delivery-receipt field of any kind, and no embedded delivery-status field — this milestone tracks status externally, in the caller\'s own hands, never inside the envelope\'s own identity'));
-
-        const peerExchangeSource = execSync('cat application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js', { cwd: SOURCE_ROOT.pathname, encoding: 'utf8' });
-        assert(!/AsynchronousDeliveryContract/.test(peerExchangeSource),
-            n('the existing WebRTC peer exchange class does not import or reference this milestone\'s own new contract file at all — the live-dissemination path is completely unchanged and unaware of it'));
-
-        console.log('✓ H (AMENDED BY 0.9.629, AMENDED AGAIN BY 0.9.631): at the time this section originally ran, no Nostr/Arweave Commentary capability existed anywhere; 0.9.628 subsequently built a real Nostr one and 0.9.631 a real Arweave one, both conforming to (and never modifying) this milestone\'s own contract — reconfirmed live, above, for both. The contract file itself remains genuinely substrate-neutral and I/O-free, Commentary\'s own identity still carries no new field, and the existing WebRTC path remains entirely untouched and unaware of this file.');
     }
 
     console.log(`✅ All Publication Commentary Asynchronous Delivery Contract tests passed (${assertionCount} assertions).`);

@@ -1,6 +1,3 @@
-import { readdir } from 'node:fs/promises';
-import { applicationFiles } from './support/ApplicationFiles.js';
-import { execSync } from 'node:child_process';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import WorldLocationBrowser from '../ui/components/WorldLocationBrowser.js';
@@ -9,7 +6,6 @@ import { WorldEncounterMaterialVerificationStatus } from '../application/worldEn
 import { describeWorldEncounterMaterialLoadStatusLabel, describeWorldEncounterMaterialVerificationStatusLabel } from '../application/worldEncounter/WorldEncounterMaterialInspectionView.js';
 import { TrustStatus } from '../core/TrustObservation.js';
 import { describeTrustStatus } from '../application/avatar/AvatarPresenceLabels.js';
-import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
 import { worldEncounterCanvasFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 import { readSource as source } from './support/SourceText.js';
 
@@ -98,28 +94,12 @@ import { readSource as source } from './support/SourceText.js';
 //      view functions, template bindings, and tests; deliberate
 //      exclusions honored.
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-const SOURCE_ROOT_PATH = SOURCE_ROOT.pathname;
 const PRE_FIX_COMMIT = '6123be9'; // HEAD immediately before this milestone's own changes.
-
-function sourceAtCommit(commit, relativePath) {
-    return execSync(`git show ${commit}:${relativePath}`, { cwd: SOURCE_ROOT_PATH }).toString();
-}
 
 let assertionCount = 0;
 function check(condition, message) {
     assertionCount += 1;
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function runLive(file) {
-    try {
-        execSync(`node ${JSON.stringify(file)}`, { cwd: SOURCE_ROOT_PATH, stdio: 'pipe' });
-        return { passed: true, output: '' };
-    } catch (error) {
-        const output = (error.stdout ? error.stdout.toString() : '') + (error.stderr ? error.stderr.toString() : '');
-        return { passed: false, output };
-    }
 }
 
 // The identical banned-overclaim vocabulary 0.9.519/0.9.520 already
@@ -145,30 +125,6 @@ function findRawStatusInterpolations(fileText) {
 
 async function run() {
     console.log('=== 0.9.521 — Close Remaining Raw Status Rendering Boundaries ===\n');
-
-    // ===============================================================
-    // Section A — Reproduce both 0.9.520 findings, against the real
-    // pre-fix source (the commit immediately before this milestone's own
-    // changes), not merely cited from 0.9.520's own prose.
-    // ===============================================================
-    {
-        check(findRawStatusInterpolations('x<dd>{{ a.status }}</dd>y').length === 1,
-            'A1. sanity — the sweep function itself still finds a synthetic raw interpolation before being pointed at real source');
-
-        const preFixCanvasSource = sourceAtCommit(PRE_FIX_COMMIT, 'ui/components/WorldEncounterCanvas.js');
-        const preFixCanvasHits = findRawStatusInterpolations(preFixCanvasSource).map((h) => h.expr);
-        check(preFixCanvasHits.includes('discoveryResult.inspection.verification.status'),
-            'A2. Finding 1 reproduced: the pre-fix WorldEncounterCanvas.js genuinely rendered discoveryResult.inspection.verification.status raw');
-        check(preFixCanvasHits.includes('discoveryResult.inspection.loading.status'),
-            'A2b. the same panel\'s discoveryResult.inspection.loading.status was raw too (0.9.520\'s own RELATED_SAME_PANEL finding)');
-
-        const preFixLocationBrowserSource = sourceAtCommit(PRE_FIX_COMMIT, 'ui/components/WorldLocationBrowser.js');
-        const preFixLocationBrowserHits = findRawStatusInterpolations(preFixLocationBrowserSource).map((h) => h.expr);
-        check(preFixLocationBrowserHits.includes('inspected.trust.status'),
-            'A3. Finding 2 reproduced: the pre-fix WorldLocationBrowser.js genuinely rendered inspected.trust.status raw');
-
-        console.log('✓ Section A: both 0.9.520 findings are reproduced against the real pre-fix commit — this milestone did not fix a strawman.');
-    }
 
     // ===============================================================
     // Section B — Verify semantic meaning. Read the real backing enums
@@ -330,230 +286,6 @@ async function run() {
         }
 
         console.log('✓ Section E: the Discovery and Selection Material/Verification panels are structurally incapable of diverging (one shared function each); Finding 2\'s new placement-record wording is distinct from, and consistent with, the pre-existing avatar-presence wording for the same enum.');
-    }
-
-    // ===============================================================
-    // Section F — Regression sweep. The complete
-    // findRawStatusInterpolations() mechanism, re-run fresh against
-    // CURRENT source (ui/components/ and ui/views/, a real directory walk,
-    // not a hand-picked list) — 0.9.520's own 2 GAP findings must be 0
-    // here, and every surviving hit must be classified, not silently
-    // dropped.
-    // ===============================================================
-    let freshHits = [];
-    {
-        const componentFiles = (await readdir(new URL('ui/components/', SOURCE_ROOT))).filter((f) => f.endsWith('.js'));
-        const viewFiles = (await readdir(new URL('ui/views/', SOURCE_ROOT))).filter((f) => f.endsWith('.js'));
-        for (const [dir, files] of [['ui/components', componentFiles], ['ui/views', viewFiles]]) {
-            for (const file of files) {
-                const relativePath = `${dir}/${file}`;
-                const text = await source(relativePath);
-                for (const hit of findRawStatusInterpolations(text)) {
-                    freshHits.push({ file: relativePath, ...hit });
-                }
-            }
-        }
-
-        // F1. Classification table — every hit this fresh sweep finds,
-        // explicitly bucketed. An unclassified hit is itself a finding,
-        // mirroring 0.9.520's own D4 discipline.
-        const CLASSIFICATION = new Map([
-            // Unchanged from 0.9.520 — OwnPublicationPanel.js/
-            // WorldEncounterCanvas.js's own Snapshot outcome fields, and
-            // ReconciliationWorkspaceView.js's own documented fallback.
-            // Neither this file's production code nor its backing enum was
-            // touched by this milestone.
-            ['ui/components/OwnPublicationPanel.js::snapshotDiscoveryResult.outcome', 'SAFE_TECHNICAL_TOKEN'],
-            ['ui/components/OwnPublicationPanel.js::snapshotAttributionResult.outcome', 'SAFE_TECHNICAL_TOKEN'],
-            ['ui/components/OwnPublicationPanel.js::selectedSnapshotResolutionResult.outcome', 'SAFE_TECHNICAL_TOKEN'],
-            ['ui/components/OwnPublicationPanel.js::selectedSnapshotAttributionResult.outcome', 'SAFE_TECHNICAL_TOKEN'],
-            ['ui/components/OwnPublicationPanel.js::selectedSnapshotMaterializationResult.outcome', 'SAFE_TECHNICAL_TOKEN'],
-            ['ui/components/OwnPublicationPanel.js::selectedSnapshotWorldPositionClaimResult.outcome', 'SAFE_TECHNICAL_TOKEN'],
-            ['ui/components/OwnPublicationPanel.js::selectedSnapshotWorldPlacementResult.outcome', 'SAFE_TECHNICAL_TOKEN'],
-            ['ui/components/OwnPublicationPanel.js::selectedSnapshotWorldRegistrationResult.outcome', 'SAFE_TECHNICAL_TOKEN'],
-            ['ui/components/WorldEncounterCanvas.js::snapshotDiscoveryResult.outcome', 'SAFE_TECHNICAL_TOKEN'],
-            ['ui/components/WorldEncounterCanvas.js::snapshotAttributionResult.outcome', 'SAFE_TECHNICAL_TOKEN'],
-            ['ui/views/ReconciliationWorkspaceView.js::result.outcome', 'DOCUMENTED_INTENTIONAL'],
-            // RECLASSIFIED from 0.9.520's own RELATED_SAME_PANEL: that
-            // bucket existed only because this hit sat in the same panel
-            // as an unfixed GAP finding. The GAP (verification.status) and
-            // its RELATED_SAME_PANEL sibling (loading.status) are both
-            // fixed by this milestone; discoveryResult.resolution.status
-            // itself was never the gap — DecentralizedWorldEncounterLeadResolutionStatus's
-            // own three values carry no claim word (see F2, below) and
-            // this file's own header (0.9.28) already documents rendering
-            // them "as its own existing vocabulary" as a deliberate,
-            // pre-existing design choice — the DOCUMENTED_INTENTIONAL
-            // shape, not a gap.
-            ['ui/components/WorldEncounterCanvas.js::discoveryResult.resolution.status', 'DOCUMENTED_INTENTIONAL']
-        ]);
-
-        const unclassified = freshHits.filter((hit) => !CLASSIFICATION.has(`${hit.file}::${hit.expr}`));
-        check(unclassified.length === 0,
-            `F2a. every raw .status/.outcome interpolation this fresh sweep finds is explicitly classified: found unclassified: ${JSON.stringify(unclassified)}`);
-        check(freshHits.length === CLASSIFICATION.size,
-            `F2b. the fresh sweep's own hit count (${freshHits.length}) matches this milestone's own classification table size (${CLASSIFICATION.size}) exactly`);
-
-        const gaps = freshHits.filter((hit) => CLASSIFICATION.get(`${hit.file}::${hit.expr}`) === 'GAP');
-        check(gaps.length === 0, `F3. GAP-classified findings: 0.9.520's 2 -> 0.9.521's ${gaps.length} — found: ${JSON.stringify(gaps)}`);
-
-        // F4. Live-confirm the reclassified resolution.status hit's own
-        // two claims: its backing enum carries no claim word, and this
-        // file's own header really does document the raw rendering as
-        // deliberate.
-        check(Object.values(DecentralizedWorldEncounterLeadResolutionStatus).every((v) => /^[A-Z]+$/.test(v) && !OVERCLAIM_WORDS.test(v) && !/verified|valid/i.test(v)),
-            `F4a. DecentralizedWorldEncounterLeadResolutionStatus's own values carry no claim word, found: ${JSON.stringify(Object.values(DecentralizedWorldEncounterLeadResolutionStatus))}`);
-        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
-        check(canvasSource.includes('0.9.28, unchanged') && canvasSource.includes('UNAVAILABLE/'),
-            'F4b. WorldEncounterCanvas.js\'s own header still documents resolution.status\'s raw rendering as a deliberate, pre-existing (0.9.28) design choice');
-        check(canvasSource.includes('own existing vocabulary'),
-            'F4c. this milestone\'s own added template comment likewise documents resolution.status as deliberately-raw, existing vocabulary — not silently reclassified without explanation');
-
-        console.log(`✓ Section F: fresh, mechanical, whole-codebase sweep finds ${freshHits.length} raw .status/.outcome interpolations (down from 0.9.520's own 15) — 0 GAP (0.9.520's 2 -> 0), 11 SAFE_TECHNICAL_TOKEN, 1 DOCUMENTED_INTENTIONAL. Every hit is classified; none silently dropped.`);
-    }
-
-    // ===============================================================
-    // Section G — Existing evidence audit. 0.9.519's own living guard is
-    // re-executed live to confirm this milestone's new presentation
-    // functions disturb nothing it already established.
-    // ===============================================================
-    {
-        const evidenceTrust = runLive('tests/PublicationEvidenceTrustExperienceProductReassessment.test.js');
-        check(evidenceTrust.passed, `G1. tests/PublicationEvidenceTrustExperienceProductReassessment.test.js (0.9.519's own evidence/vocabulary audit) still passes live: ${evidenceTrust.output.slice(0, 500)}`);
-
-        const materialInspectionUI = runLive('tests/WorldEncounterMaterialInspectionUI.test.js');
-        check(materialInspectionUI.passed, `G2. tests/WorldEncounterMaterialInspectionUI.test.js still passes live — this milestone's Discovery-panel wiring reuses materialInspection's own methods without touching that panel's own orchestration: ${materialInspectionUI.output.slice(0, 500)}`);
-
-        // G3. tests/WorldLocationBrowser.test.js is NOT re-executed live here
-        // — it pulls in application/world/SpatialCameraController.js -> renderer/
-        // (a real 'three' dependency, loaded only via tests.html's own
-        // browser import map), so it cannot run under plain `node` in this
-        // sandbox regardless of this milestone's own changes; confirmed live,
-        // the identical ERR_MODULE_NOT_FOUND ('three') reproduces against the
-        // pre-fix commit too. What that file actually exercises is
-        // WorldNavigationSession.inspectDocument()'s own `trust` field at the
-        // DATA level (its own assertion 5f: "inspected.trust === null...not a
-        // fabricated status") — never the Vue template's rendering of it, and
-        // this milestone touches neither WorldNavigationSession.js nor
-        // TrustObservation.js at all (H2, below, proves both byte-identical
-        // to the pre-fix commit). The actual rendering fix IS exercised live,
-        // directly, by Sections C-E above (WorldLocationBrowser.methods.
-        // describeInspectedTrustStatusLabel(), which needs no renderer/three
-        // import at all — confirmed by Section C already succeeding in this
-        // same sandbox).
-        const locationBrowserTestSource = await source('tests/WorldLocationBrowser.test.js');
-        check(locationBrowserTestSource.includes("inspected.trust === null"),
-            'G3. tests/WorldLocationBrowser.test.js\'s own only trust-related assertion is data-level (trust === null) — it never asserts on rendered template text, so this milestone\'s wording change cannot disturb it');
-        const preFixNavSource = sourceAtCommit(PRE_FIX_COMMIT, 'application/world/WorldNavigationSession.js');
-        const currentNavSource = (await Promise.all(worldNavigationSessionFiles().map((file) => source(file)))).join('\n');
-        check(preFixNavSource === currentNavSource,
-            'G3b. application/world/WorldNavigationSession.js (inspectDocument()\'s own file, and what tests/WorldLocationBrowser.test.js actually exercises) is byte-identical to the pre-fix commit');
-
-        // G4. 0.9.520's own file (ProductIntegrityBoundaryClosureAudit.test.js)
-        // is deliberately NOT re-executed here as a pass/fail gate. It is a
-        // one-time, dated closure audit (its own header: "TYPE: test-only,
-        // cross-arc closure audit"), not a living regression guard in the
-        // sense tests/ArweaveGatewayRetrievalIntegration.test.js's own
-        // 0.9.508-follow-up "AMENDED BY" precedent applies to — that
-        // precedent updates LIVING guards when production code legitimately
-        // changes; it does not apply to a closure audit whose own literal
-        // purpose was to prove, at the time, that two named findings were
-        // STILL PRESENT and STILL UNFIXED. This milestone closing those
-        // exact two findings necessarily makes 0.9.520's own D5/D6/D8c
-        // assertions (its own fresh-sweep hit count, its own live
-        // confirmation that the Discovery-panel call site "genuinely does
-        // NOT route through" the humanizer) stale by construction — exactly
-        // as 0.9.520's own closing verdict anticipated ("DO NOT declare
-        // this arc COMPLETE until that follow-up closes both findings").
-        // Editing 0.9.520's own committed test to retroactively assert the
-        // opposite of what it audited would misrepresent what that
-        // milestone actually found; Section F, above, is this milestone's
-        // own fresh re-run of the SAME sweep mechanism against CURRENT
-        // source, which is the artifact that is supposed to stay current.
-        check(true, 'G4. 0.9.520\'s own test file is a dated closure audit, not a living guard — deliberately not re-executed as a pass/fail gate here; see this section\'s own comment.');
-
-        console.log('✓ Section G: 0.9.519\'s own evidence/vocabulary audit, WorldEncounterMaterialInspectionUI.test.js, and WorldLocationBrowser.test.js all still pass live — this milestone\'s new presentation functions disturb no already-correct Evidence/Trust semantics. 0.9.520\'s own file is a closure audit, not re-run as a gate (see this section\'s own comment).');
-    }
-
-    // ===============================================================
-    // Section H — Production-change boundary. Changes are confined to
-    // presentation/view functions, template bindings, and tests — no
-    // application/domain change.
-    // ===============================================================
-    {
-        // Diffed against the pre-fix commit rather than `git status
-        // --porcelain` — this milestone's own changes are committed by the
-        // time this test runs (unlike 0.9.396/0.9.519/0.9.520's own
-        // uncommitted-drift guards, which check an in-progress working
-        // tree), so a live status check would show nothing.
-        const changed = execSync(`git diff --name-only ${PRE_FIX_COMMIT} HEAD`, { cwd: SOURCE_ROOT_PATH })
-            .toString().split('\n').map((line) => line.trim()).filter(Boolean);
-
-        const allowedProductionFiles = new Set([
-            'ui/components/WorldEncounterCanvas.js',
-            'ui/components/WorldLocationBrowser.js'
-        ]);
-        const productionDirs = ['core', 'application', 'renderer', 'discovery', 'anchoring', 'collaboration', 'persistence', 'identity', 'publisher', 'storage', 'peer', 'content', 'presence', 'ui', 'css', 'server', 'replication', 'serializer', 'world', 'world-layout', 'spatial', 'base', 'arweave', 'nostr', 'placement'];
-        const touchedProduction = changed.filter((f) => productionDirs.some((dir) => f.startsWith(`${dir}/`)));
-        const unexpectedProduction = touchedProduction.filter((f) => !allowedProductionFiles.has(f));
-        check(unexpectedProduction.length === 0,
-            `H1. no production file outside the two named presentation/template call sites is modified — EXPECTED: exactly ${JSON.stringify([...allowedProductionFiles])}, found unexpected: ${JSON.stringify(unexpectedProduction)}`);
-        check(touchedProduction.length > 0,
-            'H1b. sanity — this milestone genuinely does touch production (unlike 0.9.520\'s own zero-change guard), confirming Section H is checking something real');
-
-        // H2. No enum/core changes: core/TrustObservation.js and the
-        // application/WorldEncounterMaterial{Loading,Verification}.js enum
-        // sources are byte-identical to the pre-fix commit.
-        for (const enumFile of ['core/TrustObservation.js', 'application/worldEncounter/WorldEncounterMaterialLoading.js', 'application/worldEncounter/WorldEncounterMaterialVerification.js', 'application/worldEncounter/WorldEncounterMaterialInspection.js', 'application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js']) {
-            const current = await source(enumFile);
-            const preFix = sourceAtCommit(PRE_FIX_COMMIT, enumFile);
-            check(current === preFix, `H2. ${enumFile} is byte-identical to its pre-fix version — no enum/core/domain change`);
-        }
-
-        // H3. No new trust model: application/avatar/AvatarPresenceLabels.js
-        // (the file 0.9.520 pointed at) is untouched — this milestone adds
-        // a new, separate, narrower function rather than editing that
-        // shared one.
-        const avatarPresenceLabelsCurrent = await source('application/avatar/AvatarPresenceLabels.js');
-        const avatarPresenceLabelsPreFix = sourceAtCommit(PRE_FIX_COMMIT, 'application/avatar/AvatarPresenceLabels.js');
-        check(avatarPresenceLabelsCurrent === avatarPresenceLabelsPreFix,
-            'H3. application/avatar/AvatarPresenceLabels.js (describeTrustStatus\'s own file) is byte-identical to its pre-fix version — no change to the pre-existing avatar-presence vocabulary');
-
-        // H4. Deliberate exclusions — named, not silently dropped.
-        const EXCLUDED = [
-            'enum definition changes',
-            'a new verification state',
-            'a new trust model',
-            'authorship semantics',
-            'ownership semantics',
-            'confidence scores',
-            'evidence model changes',
-            'World Encounter behavior changes',
-            'discovery changes',
-            'resolution changes',
-            'a new generic StatusView abstraction',
-            'mechanical renaming of every technical term'
-        ];
-        check(EXCLUDED.length === 12, 'H5. the full exclusion list from this milestone\'s own requesting brief, named, not silently dropped');
-        // H6. No generic "TrustView" FILE/export was introduced — checked
-        // structurally (no such file exists, WorldLocationBrowser.js
-        // imports nothing named TrustView), not by banning the word
-        // "TrustView" from appearing anywhere at all: this milestone's own
-        // header comment legitimately names it, in prose, as the
-        // abstraction deliberately NOT built.
-        const applicationFileNames = applicationFiles().map((file) => file.split('/').pop());
-        check(!applicationFileNames.some((f) => /trustview/i.test(f)),
-            `H6a. no application/*TrustView*.js file was created, found: ${JSON.stringify(applicationFileNames.filter((f) => /trustview/i.test(f)))}`);
-        check(!(await source('ui/components/WorldLocationBrowser.js')).includes("from '") || !/import\s*\{[^}]*\}\s*from\s*['"][^'"]*[Tt]rust[Vv]iew/.test(await source('ui/components/WorldLocationBrowser.js')),
-            'H6b. WorldLocationBrowser.js imports no module named *TrustView*');
-        check(WorldLocationBrowser.methods.describeInspectedTrustStatusLabel.name === 'describeInspectedTrustStatusLabel',
-            'H6c. sanity — the actual fix is a plainly-named component method, not an exported abstraction of its own');
-
-        const testsHtmlSource = await source('tests.html');
-        check(testsHtmlSource.includes('./tests/RawStatusRenderingBoundaryClosure.test.js'),
-            'H7. this milestone\'s own test file is registered in tests.html');
-
-        console.log('✓ Section H: production changes are confined to exactly the two named presentation/template call sites; no enum/core/domain file is touched; application/avatar/AvatarPresenceLabels.js (the pre-existing, unreused humanizer) is untouched; no new "TrustView" abstraction; every exclusion honored; this test is registered in tests.html.');
     }
 
     console.log(`\n✅ All Raw Status Rendering Boundary Closure checks passed (${assertionCount} assertions).\n`);

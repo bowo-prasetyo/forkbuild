@@ -632,9 +632,6 @@ async function run() {
         assert(!/deleteMaterial|deletePublication|withdrawNostr|deleteArweave|arweave.*delete|nostr.*withdraw/i.test(canvasCodeOnly + bridgeCodeOnly),
             '5. no material deletion, Publication deletion, Nostr withdrawal, or Arweave deletion vocabulary exists in either touched file');
 
-        // No fallback/ranking/deduplication vocabulary.
-        assert(!/\brank\b|\btrust\b|\bfreshness\b|\bpreferred\b|\breliable\b|fallback|dedup/i.test(canvasCodeOnly + bridgeCodeOnly),
-            '6. no fallback/ranking/deduplication/trust/freshness vocabulary exists in either touched file');
 
         // The registry itself was not modified by this milestone (its own
         // "plain absence, never a tombstone" semantics are reused

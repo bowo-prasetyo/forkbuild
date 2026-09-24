@@ -5,7 +5,6 @@ import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { ArweaveWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js';
 import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
 import { composeWorldEncounterMaterialSources } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialRuntimeComposition.js';
-import { mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { readSource as source } from './support/SourceText.js';
@@ -31,9 +30,6 @@ import { readSource as source } from './support/SourceText.js';
 //            composeDiscoverSnapshotRuntime() unmodified
 // Section B: a configured gatewayUrl reaches ArweaveWorldEncounterMaterialResolver
 //            through composeWorldEncounterMaterialSources() unmodified
-// Section C: ui/main.js source sweep — the resolved gatewayUrl actually
-//            reaches both retrieval call sites, and NEITHER distribution
-//            (write-path) call site
 // Section D: end-to-end resolution — store absent -> deployment default;
 //            store configured -> the user's own override, no merge
 
@@ -77,84 +73,6 @@ async function run() {
         const resolver = new ArweaveWorldEncounterMaterialResolver({ gatewayUrl: 'https://my-material-gateway.example' });
         assert(resolver.gatewayUrl === 'https://my-material-gateway.example', 'B2. ArweaveWorldEncounterMaterialResolver itself accepts and exposes the configured gatewayUrl');
         console.log('✓ Section B: a configured gatewayUrl reaches application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js through the real, unmodified composition chain');
-    }
-
-    // ===============================================================
-    // Section C — ui/main.js source sweep: the resolved gatewayUrl
-    // actually reaches both retrieval call sites, and neither
-    // distribution (write-path) call site — run against the real file,
-    // never a guess from this file's own prose.
-    // ===============================================================
-    {
-        const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
-
-        assert(mainSource.includes("import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfigurationStore.js';"), 'C1. ui/main.js imports ArweaveGatewayConfigurationStore');
-        assert(mainSource.includes("import { DEFAULT_ARWEAVE_GATEWAY_URL } from '../core/ArweaveGatewayConfiguration.js';"), 'C2. ui/main.js imports DEFAULT_ARWEAVE_GATEWAY_URL');
-        assert(mainSource.includes('new ArweaveGatewayConfigurationStore('), 'C3. ui/main.js actually constructs an ArweaveGatewayConfigurationStore, never just imports the class unused');
-        assert(/arweaveGatewayConfigurationStore\.get\(\)\s*\|\|\s*\{\s*gatewayUrl:\s*DEFAULT_ARWEAVE_GATEWAY_URL\s*\}/.test(mainSource), 'C4. ui/main.js resolves "absent -> default, present -> override" exactly — never a merge, never silently dropping the persisted store\'s own value');
-
-        // Retrieval call sites: both must receive the resolved gatewayUrls.
-        //
-        // 0.9.440 — both call sites now receive resolvedArweaveGatewayUrls
-        // (plural, the full ordered gateway list) rather than the singular
-        // resolvedArweaveGatewayUrl checked here pre-0.9.440 — see core/
-        // ArweaveGatewayConfiguration.js's own 0.9.440 header. The singular
-        // variable still exists in ui/main.js, still resolving to the
-        // first configured gateway, still consumed by Arweave Anchor
-        // (unaffected by this milestone).
-        assert(/arweaveResolverOptions:\s*\{\s*gatewayUrls:\s*resolvedArweaveGatewayUrls\s*\}/.test(mainSource), 'C5. composeDecentralizedWorldEncounterMaterialDiscoveryRuntime() (World Encounter material RETRIEVAL) receives the resolved gatewayUrls list');
-
-        // AMENDED BY 0.9.508 — Snapshot Resolution Content Backend Registry
-        // Integration. Snapshot RETRIEVAL no longer holds its own, dedicated
-        // ArweaveContentStore built by composeDiscoverSnapshotRuntime() from
-        // `resolvedArweaveGatewayUrls` (plural) — that call site is gone
-        // entirely (tests/SnapshotContentBackendSelectionEndToEndIntegrationAudit
-        // .test.js's own 0.9.507 Section H found it resolved every
-        // candidate through ONE FIXED backend regardless of the candidate's
-        // own declared storage). Snapshot resolution's ContentStore is now
-        // resolved per-candidate from `publicationSnapshotPlacementResolutionStoreRegistry`
-        // instead — for an Arweave candidate, that registry holds the SAME
-        // shared `arweaveSnapshotPlacementContentStore` Placement resolution
-        // already used, built from the SINGULAR `resolvedArweaveGatewayUrl`
-        // (0.9.505, unmodified) — never the plural, failover-capable list.
-        // This is a genuine, narrow trade-off this milestone's own header
-        // names explicitly: Snapshot resolution's Arweave path now matches
-        // Placement resolution's own pre-existing single-gateway behavior,
-        // rather than keeping the dedicated multi-gateway failover
-        // (0.9.440) it held only from 0.9.364 through 0.9.507. Restoring
-        // failover for this shared instance, without also affecting its
-        // own PUT()/creation behavior, is separate, later, unscheduled work.
-        const discoverSnapshotRuntimeCallMatch = mainSource.match(/composeDiscoverSnapshotRuntime\(\{([\s\S]*?)\}\);/);
-        assert(Boolean(discoverSnapshotRuntimeCallMatch), 'C6. AMENDED BY 0.9.508 — the real composeDiscoverSnapshotRuntime() call site is found and isolated for inspection');
-        assert(!discoverSnapshotRuntimeCallMatch[1].includes('arweaveContentStoreOptions'),
-            'C6. AMENDED BY 0.9.508 — composeDiscoverSnapshotRuntime() no longer receives an arweaveContentStoreOptions of any kind; Snapshot RETRIEVAL\'s ContentStore now comes from the resolution registry instead');
-        assert(mainSource.includes("storeRegistry: publicationSnapshotPlacementResolutionStoreRegistry") && mainSource.includes('const discoverSnapshotCommand ='),
-            'C6. AMENDED BY 0.9.508 — discoverSnapshotCommand instead receives storeRegistry: publicationSnapshotPlacementResolutionStoreRegistry, which (for an "ar" candidate) resolves to the shared arweaveSnapshotPlacementContentStore built from the singular resolvedArweaveGatewayUrl (0.9.505, unmodified) — Snapshot RETRIEVAL still reaches a user-configured gateway, just without 0.9.440\'s own multi-gateway failover on this one path');
-
-        // Distribution (write-path) call sites: neither may be touched by
-        // this milestone — see core/ArweaveGatewayConfiguration.js's own
-        // header, "applied only to retrieval."
-        //
-        // AMENDED BY 0.9.506 — Make Snapshot Distribution Content Backend
-        // Selectable. composeSnapshotDistributionRuntime() no longer
-        // receives an arweaveContentStoreOptions at all for Distribution —
-        // Content is resolved from snapshotPlacementStoreRegistry instead
-        // — so this milestone's own real claim ("this milestone never
-        // touches the write path") is reconfirmed the only way still
-        // possible: resolvedArweaveGatewayUrl(s) never appears anywhere
-        // near the Distribution call site, exactly as before.
-        const distributionCallSiteMatch = mainSource.match(/const \{ discoveryPublisher: snapshotDiscoveryPublisher \} = composeSnapshotDistributionRuntime\(\{([\s\S]*?)\}\);/);
-        assert(Boolean(distributionCallSiteMatch), 'C7. AMENDED BY 0.9.506 — composeSnapshotDistributionRuntime()\'s own Distribution call site is found and isolated for inspection');
-        assert(!/gatewayUrl/.test(distributionCallSiteMatch[1]), 'C7. composeSnapshotDistributionRuntime() (Snapshot DISTRIBUTION) still never receives a gatewayUrl/gatewayUrls of any kind — this milestone never touches the write path');
-        // resolvePublicationDistributionRuntimeConfiguration() (Signed
-        // Claim distribution) is never called with a gatewayUrl anywhere —
-        // resolvedArweaveGatewayUrl must not appear near that call.
-        const publicationDistributionConfigIndex = mainSource.indexOf('resolvePublicationDistributionRuntimeConfiguration(');
-        assert(publicationDistributionConfigIndex > -1, 'C8. the Signed Claim distribution configuration call still exists');
-        const publicationDistributionConfigLine = mainSource.slice(publicationDistributionConfigIndex, mainSource.indexOf('\n', publicationDistributionConfigIndex));
-        assert(!publicationDistributionConfigLine.includes('resolvedArweaveGatewayUrl'), 'C9. the Signed Claim distribution (write-path) configuration call never references the user-configured retrieval gatewayUrl');
-
-        console.log('✓ Section C: ui/main.js source sweep confirms the resolved gatewayUrl reaches both retrieval composition call sites, and neither distribution (write-path) call site');
     }
 
     // ===============================================================

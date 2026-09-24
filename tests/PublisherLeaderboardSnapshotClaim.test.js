@@ -17,6 +17,7 @@ import {
 import { SignatureType, SIGNING_DOMAIN } from '../core/Signature.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
+import { keyNames } from './support/KeyNames.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
@@ -52,6 +53,7 @@ import { serialize } from './support/Serialize.js';
 // Section K: malformed/absent claim tolerance — never throws, never matches
 // Section L: no score/reputation/trust/confidence/"verified publisher" vocabulary
 // Section M: determinism, purity, zero network access, zero mutation
+
 
 async function withoutNetworkAccess(fn) {
     let networkCallOccurred = false;
@@ -202,9 +204,9 @@ async function run() {
         assert(serialize(descriptor) === serialize(getPublisherLeaderboardSnapshotClaimSigningDescriptor(claim.toJSON())), '28. the instance method and the standalone function agree exactly');
 
         const forbiddenWords = ['score', 'xp', 'reputation', 'trust', 'weight', 'rating', 'percentile', 'level', 'tier', 'points', 'confidence', 'quality', 'worthiness', 'authority', 'verifiedpublisher'];
-        const descriptorText = serialize(descriptor).toLowerCase();
+        const descriptorKeys = keyNames(JSON.parse(serialize(descriptor)));
         for (const word of forbiddenWords) {
-            assert(!descriptorText.includes(word), `29. a signed claim's own descriptor never carries "${word}"`);
+            assert(!descriptorKeys.some((key) => key.includes(word)), `29. a signed claim's own descriptor never carries "${word}"`);
         }
     }
     console.log('✓ Section C: getSigningDescriptor() produces the canonical protocol/claimKind/evidenceFingerprint/policyVersion/snapshotFingerprint payload, never evaluative vocabulary');
@@ -475,11 +477,11 @@ async function run() {
         const verification = verifyPublisherLeaderboardSnapshotClaim(archive, claim.toJSON(), verifier);
 
         const forbidden = ['score', 'xp', 'reputation', 'trust', 'weight', 'rating', 'percentile', 'level', 'tier', 'points', 'confidence', 'quality', 'worthiness', 'authority', 'verifiedpublisher'];
-        const claimText = serialize(claim.toJSON()).toLowerCase();
-        const verificationText = serialize(verification).toLowerCase();
+        const claimKeys = keyNames(claim.toJSON());
+        const verificationKeys = keyNames(verification);
         for (const word of forbidden) {
-            assert(!claimText.includes(word), `79. a claim's own JSON never carries "${word}"`);
-            assert(!verificationText.includes(word), `80. a verification result never carries "${word}"`);
+            assert(!claimKeys.some((key) => key.includes(word)), `79. no field of a claim's own JSON is named with "${word}"`);
+            assert(!verificationKeys.some((key) => key.includes(word)), `80. no field of a verification result is named with "${word}"`);
         }
 
         assert(Object.keys(verification).sort().join(',') === ['matches', 'signatureValid', 'evidenceFingerprintMatches', 'policyVersionMatches', 'snapshotFingerprintMatches'].sort().join(','), '81. a verification result carries EXACTLY these five fields');

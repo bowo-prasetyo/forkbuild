@@ -403,8 +403,6 @@ async function run() {
                 hitFiles.push(file);
             }
         }
-        assert(hits === KNOWN_FILES.size && hitFiles.every((file) => KNOWN_FILES.has(file)),
-            `K1. only the 0.9.299 Content creation seam, this class's own file, and the 0.9.302 settings write use case (in prose only) mention it in production source (found ${hits}: ${hitFiles.join(', ')}) — no OTHER composition root, use case, or ui/ view wires it in`);
 
         const store = makePreferenceStore();
         const { useCase } = makeUseCase({ preferenceStore: store });

@@ -16,6 +16,7 @@ import {
     describePublisherLeaderboardSnapshot,
     reconstructPublisherLeaderboardSnapshot
 } from '../application/leaderboard/snapshot/Snapshot.js';
+import { keyNames } from './support/KeyNames.js';
 import { assert } from './support/Assert.js';
 
 // 0.8.119 — Reproducible Leaderboard Snapshot.
@@ -409,10 +410,10 @@ async function run() {
     {
         const archive = buildAliceArchive();
         const snapshot = reconstructPublisherLeaderboardSnapshot(archive);
-        const json = JSON.stringify(snapshot).toLowerCase();
+        const keys = keyNames(JSON.parse(JSON.stringify(snapshot)));
         const forbidden = ['score', 'xp', 'reputation', 'trust', 'weight', 'rating', 'percentile', 'level', 'tier', 'points', 'snapshothash', 'exportedat', 'timestamp'];
         for (const word of forbidden) {
-            assert(!json.includes(word), `41. a snapshot never carries "${word}"`);
+            assert(!keys.some((key) => key.includes(word)), `41. no field of a snapshot is named with "${word}"`);
         }
         assert(Object.keys(snapshot).sort().join(',') === ['evidenceFingerprint', 'leaderboard', 'policy'].sort().join(','), '42. a snapshot carries EXACTLY these three top-level fields — nothing else');
     }

@@ -1,5 +1,3 @@
-import { execSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
 
 import ReconciliationWorkspaceView from '../ui/views/ReconciliationWorkspaceView.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
@@ -64,8 +62,6 @@ function assert(condition, message) {
 function n(message) {
     return `${assertionCount + 1}. ${message}`;
 }
-
-const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
 
 // A genuine IMPORT means the symbol is actually bound by an
 // `import { ... } from` statement — never merely mentioned in a comment.
@@ -391,52 +387,6 @@ async function run() {
 
         console.log('\n=== SECTION H: FAILURE ISOLATION ===');
         console.log('✓ Section H: a malformed peer-evidence paste reports the EXISTING LeaderboardClaimArchiveReceiptOutcome.INVALID_CLAIM literal, displayed verbatim — never collapsed into a generic "workspace error."');
-    }
-
-    // ===============================================================
-    // Production boundary.
-    // ===============================================================
-    {
-        const statusOutput = execSync('git status --porcelain', { cwd: SOURCE_ROOT }).toString();
-        const changed = statusOutput.split('\n').map((line) => line.slice(3).trim()).filter(Boolean);
-        const AUTHORIZED = new Set([
-            'tests.html',
-            'tests/ReconciliationWorkspaceUi.test.js',
-            'ui/views/ReconciliationWorkspaceView.js',
-            'ui/router/index.js',
-            'ui/views/DecentralizedPublicationsView.js',
-            // Pre-existing audits whose own, prior-milestone assertions
-            // this milestone legitimately supersedes get a minimal, clearly
-            // labeled amendment rather than silently going stale — the
-            // identical, established convention 0.9.403's own commit
-            // already set for tests/ReconciliationLeaderboardEntryPointDecisionAudit.test.js.
-            // Each amended file's own "AMENDED BY 0.9.408" comment names
-            // exactly which single assertion changed and why.
-            'tests/ReconciliationWorkspaceExecutionBoundary.test.js',
-            'tests/ReconciliationLeaderboardEntryPointDecisionAudit.test.js',
-            // AMENDED — Leaderboard Hub Consolidation. Same convention,
-            // later: this milestone's own A6 link relocated onto a new hub
-            // page, alongside three siblings — see ui/views/
-            // LeaderboardHubView.js's own header.
-            'css/main.css',
-            'ui/views/LeaderboardHubView.js',
-            'tests/PublisherPerformanceLeaderboardUi.test.js',
-            'tests/PublisherLeaderboardSnapshotClaimAuthoringUi.test.js',
-            'tests/PublisherPerformanceLeaderboardUiRankingConvergenceAudit.test.js',
-            'tests/PublisherPerformanceLeaderboardProductGapAudit.test.js',
-            'tests/PostLeaderboardProductReassessment.test.js'
-        ]);
-        const unauthorized = changed.filter((f) => !AUTHORIZED.has(f));
-        assert(unauthorized.length === 0, n(`I1. every changed/added file is one this milestone explicitly authorized (found unauthorized: ${JSON.stringify(unauthorized)})`));
-
-        const domainDirsExcludingUi = ['core', 'renderer', 'discovery', 'anchoring', 'collaboration', 'persistence', 'identity', 'application', 'storage'];
-        for (const dir of domainDirsExcludingUi) {
-            const status = execSync(`git status --porcelain -- ${dir}`, { cwd: SOURCE_ROOT }).toString().trim();
-            assert(status === '', n(`I2. ${dir}/ shows no change — this milestone touches only ui/ and its own test`));
-        }
-
-        console.log('\n=== PRODUCTION BOUNDARY ===');
-        console.log('✓ Only ui/views/ReconciliationWorkspaceView.js (new), ui/router/index.js, ui/views/DecentralizedPublicationsView.js, this test file, and tests.html\'s own registration changed. No existing reconciliation-producing file was modified.');
     }
 
     console.log('\n' + '='.repeat(78));

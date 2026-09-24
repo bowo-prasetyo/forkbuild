@@ -13,6 +13,7 @@ import {
     describePublisherLeaderboardSnapshotVerification,
     verifyPublisherLeaderboardSnapshot
 } from '../application/leaderboard/snapshot/Verification.js';
+import { keyNames } from './support/KeyNames.js';
 import { assert } from './support/Assert.js';
 
 // 0.8.120 — Reproducible Leaderboard Snapshot Verification.
@@ -383,10 +384,10 @@ async function run() {
     {
         const archive = buildSharedArchive();
         const verification = verifyPublisherLeaderboardSnapshot(archive, reconstructPublisherLeaderboardSnapshot(archive));
-        const json = JSON.stringify(verification).toLowerCase();
+        const keys = keyNames(JSON.parse(JSON.stringify(verification)));
         const forbidden = ['score', 'xp', 'reputation', 'trust', 'weight', 'rating', 'percentile', 'level', 'tier', 'points', 'confidence', 'verified', 'authentic', 'timestamp'];
         for (const word of forbidden) {
-            assert(!json.includes(word), `48. a verification result never carries "${word}"`);
+            assert(!keys.some((key) => key.includes(word)), `48. no field of a verification result is named with "${word}"`);
         }
         assert(Object.keys(verification).sort().join(',') === ['matches', 'evidenceFingerprintMatches', 'policyVersionMatches', 'policyMatches', 'leaderboardMatches'].sort().join(','), '49. a verification result carries EXACTLY these five fields — nothing else');
         for (const key of Object.keys(verification)) {

@@ -294,29 +294,6 @@ async function run() {
     }
     console.log('✓ Section I: existing Base RPC regression — all nine pre-existing methods behave exactly as before');
 
-    // ---------------------------------------------------------------
-    // Section J — cross-role isolation: this file's own code never
-    // mentions ProofVerifier/PublicationAnchor/anchorType, and this
-    // milestone changes exactly one production file.
-    // ---------------------------------------------------------------
-    {
-        const fs = await import('node:fs/promises');
-        const { fileURLToPath } = await import('node:url');
-        const { execSync } = await import('node:child_process');
-        const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
-
-        const rpcClientSrc = await fs.readFile(SOURCE_ROOT + 'base/BaseJsonRpcClient.js', 'utf8');
-        const rpcClientCode = rpcClientSrc.split('\n').filter((l) => !l.trim().startsWith('//')).join('\n');
-        assert(!/ProofVerifier|PublicationAnchor|anchorType|decodeBasePublicationCommitment/.test(rpcClientCode), '43. base/BaseJsonRpcClient.js\'s own code never references ProofVerifier/PublicationAnchor/anchorType/decode-commitment vocabulary — it stays a pure RPC transport, unaware of verification');
-
-        const statusOutput = execSync('git status --porcelain', { cwd: SOURCE_ROOT }).toString();
-        const changed = statusOutput.split('\n').map((line) => line.slice(3).trim()).filter(Boolean);
-        const AUTHORIZED = new Set(['tests.html', 'base/BaseJsonRpcClient.js', 'tests/BaseTransactionPayloadRpcRead.test.js']);
-        const unauthorized = changed.filter((f) => !AUTHORIZED.has(f));
-        assert(unauthorized.length === 0, `44. every changed/added file is one this milestone's own commit names (found unauthorized: ${JSON.stringify(unauthorized)}) — no anchoring/, no application/CreateBase*ProofVerifier*, no new abstraction`);
-    }
-    console.log('✓ Section J: cross-role isolation — no ProofVerifier/PublicationAnchor vocabulary touched, and exactly the expected files changed');
-
     console.log('\n✅ All BaseTransactionPayloadRpcRead tests passed.');
 }
 

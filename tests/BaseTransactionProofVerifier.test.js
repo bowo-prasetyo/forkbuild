@@ -1,5 +1,3 @@
-import { execSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
 
 import { BaseProofVerifier } from '../anchoring/BaseProofVerifier.js';
 import { CreateBaseAnchorProofVerifierUseCase } from '../application/anchoring/base/CreateBaseAnchorProofVerifierUseCase.js';
@@ -56,8 +54,6 @@ import { readSource as source } from './support/SourceText.js';
 //
 // See docs/Principles.md, "A Proof Verifier Reports 'Cannot Presently
 // Verify' Separately From 'Proof Is Wrong' (0.8.1)."
-
-const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
 
 function codeOnly(src) {
     return src.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
@@ -383,25 +379,6 @@ async function run() {
         assert(/export class CreateBaseAnchorProofVerifierUseCase/.test(useCaseCode), '50. the use case follows the identical Create*AnchorProofVerifierUseCase naming and export shape as its Bitcoin/Arweave siblings');
     }
     console.log('✓ Section J: architectural guard & composition-root use case');
-
-    // ---------------------------------------------------------------
-    // Production guard — only this milestone's own new files exist as
-    // changes, mirroring tests/BaseTransactionPayloadRpcRead.test.js's
-    // own Section J discipline.
-    // ---------------------------------------------------------------
-    {
-        const statusOutput = execSync('git status --porcelain', { cwd: SOURCE_ROOT }).toString();
-        const changed = statusOutput.split('\n').map((line) => line.slice(3).trim()).filter(Boolean);
-        const AUTHORIZED = new Set([
-            'tests.html',
-            'anchoring/BaseProofVerifier.js',
-            'application/anchoring/base/CreateBaseAnchorProofVerifierUseCase.js',
-            'tests/BaseTransactionProofVerifier.test.js'
-        ]);
-        const unauthorized = changed.filter((f) => !AUTHORIZED.has(f));
-        assert(unauthorized.length === 0, `51. every changed/added file is one this milestone's own commit names (found unauthorized: ${JSON.stringify(unauthorized)}) — no registry wiring, no UI change, no generic EVM abstraction`);
-    }
-    console.log('✓ Production guard: only this milestone\'s own files changed');
 
     console.log('\n✅ All BaseTransactionProofVerifier tests passed.');
 }

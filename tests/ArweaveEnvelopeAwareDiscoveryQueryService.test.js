@@ -416,10 +416,6 @@ async function run() {
     // Verdict.
     // ===============================================================
     {
-        const testsHtml = await source('tests.html');
-        check(testsHtml.includes("'./tests/ArweaveEnvelopeAwareDiscoveryQueryService.test.js'"),
-            'V0. this file is registered in tests.html, exactly like every other test in this family');
-
         check(assertionCount > 25, 'V1. sanity: this test is substantive, not a token pass');
 
         console.log(`\n✅ All Arweave Envelope-Aware Discovery URI Resolution tests passed. (${assertionCount} assertions)`);
