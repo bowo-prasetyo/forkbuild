@@ -20,18 +20,8 @@ import { resolveDirectSocialIdentity } from './SocialIdentityResolver.js';
 const MESSAGE_EVENT = 'ChatMessage';
 const READ_RECEIPT_EVENT = 'ChatReadReceipt';
 
-// A per-instance, in-memory-only StorageProvider — ChatUseCase's own
-// default backend for BOTH `chatOutbox` and `conversationStore` when no
-// durable one is injected, the exact same "always constructible with
-// zero required args, non-durable by default" posture this file's own
-// `replayWindow` default (`new ChatReplayWindow()`) already established
-// one field over. Real app wiring (ui/main.js, via
-// application/CreateChatOutboxUseCase.js/CreateConversationStoreUseCase.js)
-// always supplies a genuinely persisted store instead — see this
-// class's own constructor. One class, two independent instances (never
-// shared between the two stores) — see application/ConversationStore.js's
-// own header on why the outbox and the conversation history are never
-// allowed to become the same store.
+// In-memory default backend when no durable store is injected; ui/main.js always
+// injects persisted ones. Each store gets its own instance, never shared.
 class EphemeralStorageProvider extends StorageProvider {
     constructor() { super(); this._data = new Map(); }
     save(name, data) { this._data.set(name, data); }
@@ -40,296 +30,46 @@ class EphemeralStorageProvider extends StorageProvider {
     list() { return Array.from(this._data.keys()); }
 }
 
-// 0.2.61 — Direct Peer Messaging & Live Chat.
+// Peer-to-peer chat: its own `forkbuild:chat` protocol on the shared
+// PeerMessageBus, never folded into presence or friendship.
 //
-// "Chat is a protocol running over authenticated peers, not a feature
-// embedded into the peer transport." This class is that ONE new
-// protocol, `forkbuild:chat`, built the exact same way
-// application/FriendRelationshipUseCase.js (0.2.57) was: its own
-// namespaced channel on the shared peer/PeerMessageBus.js, its own
-// wire vocabulary (core/ChatMessage.js), its own ingestion boundary —
-// never folded into presence/profile/interaction, and never given any
-// special knowledge inside peer/PeerMessageBus.js itself.
+// Friendship authorizes chat; it is never the protocol. Chat is allowed only
+// with an authenticated, unblocked FRIEND, checked fresh on every send and
+// every incoming message in both directions. Unfriending or blocking does not
+// close the connection; it just stops chat (docs/Principles.md, "Friendship
+// Authorizes A Protocol; It Is Never The Protocol").
 //
-// Friendship is an AUTHORIZATION INPUT here, never the protocol. This
-// class never mutates a FriendshipRecord and never sends a friendship
-// advertisement — it only ever ASKS `friendRelationshipUseCase.getState()`,
-// fresh, on every single send and every single incoming message, the
-// same "consult a predicate, never cache it" discipline 0.2.58's
-// isFriend/0.2.60's isBlocked already established one layer down. See
-// docs/Principles.md, "Friendship Authorizes A Protocol; It Is Never
-// The Protocol" (0.2.61):
+// sendMessage() is live delivery only and throws when the peer is not
+// connected. sendOrQueue() is the deliberately durable alternative ("Send
+// Means Live Delivery; SendOrQueue Means Deliberate Durability"): undeliverable
+// messages wait in ChatOutbox, addressed to the recipient's proven identity,
+// never a connection, so a "reconnect" that authenticates as someone else can
+// never receive them. Delivery is QUEUED -> SENT (accepted by the bus) ->
+// DELIVERED (acked by the recipient); "Sent Is Not Delivered". Every accepted
+// message is acked, duplicates included, so resends are harmless.
 //
-//   Authenticated peer + not blocked + FriendshipState.FRIEND -> chat allowed.
-//   Anything else (anonymous, unauthenticated, not friends, blocked,
-//   disconnected) -> chat refused, checked fresh on every message, in
-//   BOTH directions independently — see _requireEligible()/_handleIncoming()
-//   below. A connection staying AUTHENTICATED after Alice unfriends or
-//   blocks Bob does NOT keep chat working; this class never asks the
-//   transport to close the connection over it either — see 0.2.60's own
-//   "friendship/blocking and the peer connection are independent axes"
-//   precedent (core/PeerBlockRecord.js's own header), extended here to
-//   chat specifically.
+// History is kept locally in ConversationStore and written through on every
+// append and state change. The constructor rehydrates conversations before any
+// peer attaches, and re-seeds each peer's outgoing sequence so a reload never
+// restarts at 1 (the recipient's replay window would reject it).
 //
-// 0.2.61 Ships Live Chat, Not A Message Database (docs/Principles.md):
-// no persistence, no store-and-forward, no relay, no server. A message
-// sent to a peer that is not, right now, an AUTHENTICATED ConnectedPeer
-// simply fails to send — peer/PeerMessageBus.js#send() itself throws —
-// there is no queue anywhere in this class for it to wait in. See
-// application/LiveConversation.js's own header for why the in-memory
-// transcript this class keeps is deliberately never named "history."
+// Read receipts (`forkbuild:chat-read`) are computed from this class's own
+// conversations, never transmitted from the local read marker ("A Read Receipt
+// Is Computed Independently From The Local Read Marker, Never Transmitted From
+// It"). They are monotonic high-water marks, coalesced per peer in their own
+// outbox and flushed on the same reconnect trigger as messages.
 //
-// 0.2.63 — Reliable Offline Messaging & Delivery State.
+// Blocking or unfriending never deletes stored history, but it cancels anything
+// still QUEUED for that peer immediately (and once at startup, for changes made
+// in an earlier session), rather than letting it wait to expire. CANCELLED
+// means authorization was withdrawn; EXPIRED means time ran out ("Queued Mail
+// Answers To The Same Eligibility Check As A Fresh Send, Never A Softer One").
 //
-// `sendMessage()` above still means exactly what it meant in 0.2.61:
-// live delivery, refused outright the instant the peer isn't a
-// currently-AUTHENTICATED ConnectedPeer — not one line of it changes
-// here. `sendOrQueue()` is the new, DELIBERATELY separate operation
-// this milestone adds for the question 0.2.61 left open on purpose:
-// "what happens to a message when the recipient isn't connected?" It
-// never redefines `send`'s own meaning — see docs/Principles.md, "Send
-// Means Live Delivery; SendOrQueue Means Deliberate Durability"
-// (0.2.63) — a caller (ui/views/ChatView.js's own compose box) that
-// wants offline messages to wait for the recipient chooses
-// `sendOrQueue()` explicitly; a caller that wants 0.2.61's original,
-// unqueued behavior keeps calling `sendMessage()`.
-//
-// A message `sendOrQueue()` cannot deliver immediately is written to
-// `application/ChatOutbox.js` — a durable store keyed by the
-// RECIPIENT'S PROVEN IDENTITY, never a connectionId, an endpoint, or
-// anything else that could go stale the moment a connection closes.
-// See docs/Principles.md, "A Durable Outbox Is Addressed To An
-// Identity, Never A Connection" (0.2.63): this is what makes flushing
-// the outbox on reconnect (`_attemptFlush()` below, wired into the
-// SAME `connectedPeerRegistry.onChange()` subscription this class
-// already used to attach() every peer to the bus) correct without any
-// bespoke "is this the same connection I queued against" bookkeeping
-// — the only question ever asked is "is THIS identity AUTHENTICATED
-// right now," exactly the question 0.2.62's own `expectedIdentityId`
-// guard already answers honestly. Concretely: if Alice queues a
-// message for Bob and a later "reconnect" attempt authenticates as
-// Charlie instead (0.2.62's own rejected-reconnect scenario), Bob's
-// still-QUEUED entry is never touched — `_attemptFlush()` is invoked
-// with Charlie's own proven identityId, which matches no outbox entry
-// addressed to Bob. No new code enforces this; it falls out of keying
-// by identity in the first place.
-//
-// Delivery is tracked as three genuinely different facts, never
-// conflated — see docs/Principles.md, "Sent Is Not Delivered"
-// (0.2.63): QUEUED (sitting in the outbox), SENT (handed to
-// peer/PeerMessageBus.js#send() over a live connection — the bus
-// ACCEPTED it for transmission, nothing more), and DELIVERED (a
-// core/ChatDeliveryAck.js came back from the recipient's own,
-// already-trusted `_handleIncoming()`). The receiving side acknowledges
-// EVERY chat message it accepts — freshly-accepted or an exact,
-// already-seen duplicate alike (`_handleIncoming()` below) — which is
-// what makes a resend after a dropped connection harmless rather than
-// something a sender needs its own retry/timeout logic for: Bob's
-// replay window (core/ChatReplayWindow.js, 0.2.61, completely
-// unmodified) already rejects the duplicate CONTENT; this milestone
-// only adds that Bob's ack still goes back regardless, so Alice's
-// outbox entry can reach DELIVERED even on a second, retried
-// transmission of the exact same message.
-//
-// 0.2.69 — Reliable Offline Conversations.
-//
-// application/LiveConversation.js (0.2.61) answers "what does this
-// device's owner see right now" and was always meant to be exactly as
-// durable as this ChatUseCase instance — see that file's own header.
-// 0.2.69 finally answers the question 0.2.61 deliberately deferred
-// ("what persistent message history should even mean") for its
-// narrowest, most defensible case: a PURELY LOCAL record of a
-// conversation this device already had, kept by the new
-// application/ConversationStore.js and NOTHING ELSE — no server, no
-// relay, no wire protocol change, no new trust input (see that file's
-// own header, "This Store Is Never An Authorization Mechanism"). Every
-// place this class already appends to a LiveConversation
-// (`_appendMessage`) or transitions a delivery state
-// (`_publishDeliveryState`) now ALSO writes through to the durable
-// store, in the same call, so the two never drift.
-//
-// 0.2.71 — Explicit Read Acknowledgement.
-//
-// `sendReadReceipt()` below is a THIRD, deliberately independent "tell
-// the peer something" operation, alongside `sendMessage()`/`sendOrQueue()`
-// (content) and the automatic delivery-ack machinery (transport). It
-// answers a question 0.2.70's `application/ConversationReadTracker.js`
-// explicitly declined to answer: not "what has THIS device seen" (a
-// local, unsigned, never-transmitted note — see that class's own
-// header) but "what does the OTHER participant know that I have seen."
-// See docs/Principles.md, "A Read Receipt Is Computed Independently
-// From The Local Read Marker, Never Transmitted From It" (0.2.71):
-// `sendReadReceipt()` never reads `ConversationReadTracker` at all — it
-// recomputes "the highest incoming sequence I currently hold for this
-// peer" itself, straight from this class's own `_conversations`, the
-// exact same computation `application/PeerPresenceUseCase.js#markRead()`
-// independently performs against `application/ConversationStore.js` for
-// the local marker. This is deliberate, not an oversight: a local read
-// marker was never "simply transmitted" into a network fact, because no
-// code path anywhere reads one to produce the other.
-//
-// The wire payload, `core/ChatReadReceipt.js`, travels on its own
-// protocol (`READ_PROTOCOL`, `forkbuild:chat-read`) — a separate string
-// from both `DEFAULT_PROTOCOL` and `ACK_PROTOCOL`, the identical
-// reasoning core/ChatDeliveryAck.js's own header already gives for why
-// an acknowledgement never rides the content protocol. `readThroughSequence`
-// is a monotonic high-water mark, exactly like 0.2.70's own read
-// marker, which is what makes it safe to send liberally: `_handleIncomingRead()`
-// applies Math.max on arrival (`application/RemoteReadReceiptStore.js`),
-// so an out-of-order or duplicate receipt is harmless by construction —
-// no replay window is needed for this protocol at all.
-//
-// A read acknowledgement this device cannot deliver immediately is
-// written to `application/ConversationReadOutbox.js` — a FOURTH durable
-// store, deliberately NOT `application/ChatOutbox.js`: that store holds
-// one entry per MESSAGE and prunes on acknowledgement; this one holds
-// at most one entry per PEER and COALESCES on every new value, because
-// "read through 20" already says everything "read through 17, 18, 19,
-// 20" would have — see that class's own header, "A Coalescing Outbox
-// Remembers The Latest Value, Not Every Event." The SAME reconnect-
-// triggered flush this class already wired for the message outbox in
-// 0.2.63 (`_attemptFlush()`, riding `connectedPeerRegistry.onChange()`)
-// now also flushes this one, for the identical reason: "is this
-// identity AUTHENTICATED right now" is the only question either flush
-// ever asks, so the same security property 0.2.63 proved for queued
-// messages — a "reconnect" that genuinely authenticates as the wrong
-// identity can never receive mail addressed to someone else — holds
-// here too, for free, because both outboxes are addressed by
-// peerIdentityId and neither is ever addressed by connection.
-//
-// A Read Marker Is A Local Note And A Read Receipt Is A Network Fact
-// Are Never The Same Object (0.2.71): `core/ConversationReadMarker.js`
-// (0.2.70) stays completely unmodified by this milestone — still never
-// signed, never sent, never read by this class's own ingestion
-// boundary. `core/RemoteReadReceipt.js` is a NEW, separate value object
-// for the opposite-direction question ("what has the PEER told me they
-// have seen of MY OWN messages"), stored in a NEW, separate class
-// (`application/RemoteReadReceiptStore.js`) with zero shared code — see
-// that file's own header on why collapsing the two, despite their
-// structurally identical shape, was considered and rejected.
-//
-// A Reload Continues A Conversation; It Never Starts A New One
-// (0.2.69): the constructor's own `_rehydrateFromStore()` rebuilds
-// every `LiveConversation` this owner has ANY stored history with —
-// message content, direction, and delivery state, verbatim — before a
-// single peer is even attached to the bus. `LiveConversation` itself
-// stays exactly as ephemeral as 0.2.61 left it (still no toJSON/
-// fromJSON of its own); it is simply SEEDED, on construction, from
-// durable state one layer down. Rehydration also re-seeds
-// `_nextSequence` from the highest `sequence` this device has ever sent
-// to each peer — without it, a fresh instance would restart outgoing
-// sequence numbers at 1 after every reload, and the recipient's own
-// (unmodified) core/ChatReplayWindow.js would silently reject the
-// resulting message as stale, since it already accepted a higher
-// sequence from this same sender in a prior session. This is the
-// concrete mechanism behind "reconnection continues the same logical
-// conversation" — nothing about it required touching the wire protocol,
-// core/ChatMessage.js, or core/ChatReplayWindow.js at all.
-//
-// 0.2.72 — Conversation Lifecycle & Message Cancellation.
-//
-// Social authorization controls what may happen NEXT; it never rewrites
-// what already happened. `application/ConversationStore.js` (0.2.69),
-// `application/ConversationReadTracker.js` (0.2.70), and
-// `application/RemoteReadReceiptStore.js` (0.2.71) already, structurally,
-// give this codebase that guarantee for free: nothing block()/unfriend()
-// do anywhere in this file ever deletes a stored message, a local read
-// marker, or a peer's remote read receipt — every write to those three
-// stores happens strictly inside `_appendMessage`/`_publishDeliveryState`/
-// `_handleIncomingRead`, none of which block()/unfriend() ever call. This
-// milestone adds no code to protect that guarantee because there was
-// nothing left unprotected — it only adds a flagship test
-// (tests/ConversationLifecycleAndMessageCancellation.test.js) that proves
-// it directly, the same way 0.2.69's own security flagship proved a
-// property that fell out of keying by identity rather than needing new
-// enforcement code.
-//
-// What WAS genuinely missing is the other half of "authorization at send
-// time is necessary, but not sufficient": a message that entered
-// `application/ChatOutbox.js` while eligible does not stay eligible just
-// because it is already QUEUED. `_attemptFlush()` already re-checks
-// `canChat()` fresh on every reconnect attempt (0.2.63), which already
-// means a blocked or unfriended peer's queued mail can never actually be
-// handed to the wire — but a peer who never reconnects gave that QUEUED
-// entry no opportunity to ever learn that, and it would sit there,
-// misleadingly, until its unrelated 7-day TTL happened to elapse and
-// reported EXPIRED — a fact about time, standing in for a fact that was
-// really about a withdrawn relationship. `_cancelOutboxFor()` below
-// closes that gap PROACTIVELY: this class now subscribes to
-// `peerBlockUseCase.onBlockedChanged()`/`friendRelationshipUseCase
-// .onRelationshipsChanged()` (both already existed for UI reactivity —
-// this is simply a second, independent subscriber) and, the instant a
-// peer's `canChat()` eligibility flips from true to false, cancels
-// whatever is still QUEUED for them in BOTH `application/ChatOutbox.js`
-// and `application/ConversationReadOutbox.js` immediately — never
-// waiting for a reconnect that a permanently-offline peer might never
-// attempt. `_reconcileCancellationsOnStartup()` runs the identical check
-// once, at construction, for the case a block or unfriend happened in a
-// PRIOR session while mail sat QUEUED with no live subscriber around to
-// react to it. See core/ChatDeliveryState.js's own header, "CANCELLED,"
-// for why this is kept a genuinely distinct terminal fact from EXPIRED
-// rather than reusing it: EXPIRED means this device gave up on TIME;
-// CANCELLED means this device gave up on AUTHORIZATION. Deliberately
-// symmetric between block and unfriend, on purpose — both already
-// revoke `canChat()` identically (0.2.61's own "Friendship Authorizes A
-// Protocol; It Is Never The Protocol," re-checked fresh on every send,
-// every incoming message, and every flush), and treating a
-// still-in-flight queued message as a THIRD, special case that survives
-// only an unfriend (never a block) would mean `_attemptFlush()` and
-// `_cancelOutboxFor()` disagreeing about the very same eligibility
-// question for the very same peer — see docs/Principles.md, "Queued
-// Mail Answers To The Same Eligibility Check As A Fresh Send, Never A
-// Softer One" (0.2.72).
-//
-// 0.2.79 — Multi-Device Social State Semantics.
-//
-// "Conversation(Alice, Bob)," Never "Conversation(AlicePhone, Bob)" —
-// see docs/Principles.md. Every place this class already keys its OWN
-// business state by "which peer identity is this about" —
-// `_conversations` (the live transcript Map), `application/ChatOutbox.js`,
-// `application/ConversationStore.js`, `application/ConversationReadOutbox.js`,
-// `application/RemoteReadReceiptStore.js`, and every eligibility check
-// (`canChat`/`_requireEligible`) — now keys by the RESOLVED SOCIAL
-// identity of a connected peer, via the new optional `resolveSocialIdentity`
-// collaborator (default: application/SocialIdentityResolver.js#resolveDirectSocialIdentity,
-// byte-identical to every pre-0.2.79 behavior). Real app wiring
-// (ui/main.js) injects application/DeviceAuthorizationPropagationUseCase.js
-// #resolveConnectionIdentity, so Alice's Phone and Alice's Laptop — two
-// independently authenticated connections — both resolve to the SAME
-// business-state bucket (Alice's own parent identityId), rather than each
-// becoming its own separate conversation.
-//
-// The WIRE-level `conversationId` (core/ChatMessage.js#deriveConversationId)
-// and every AUTHENTICATION check in `_handleIncoming`/`_handleIncomingAck`/
-// `_handleIncomingRead` are deliberately UNCHANGED — still derived from,
-// and checked against, the RAW keys the live connection actually
-// authenticated, exactly as 0.2.61 through 0.2.72 already established.
-// Both ends of a connection independently re-derive that value from their
-// own raw keys, so it MUST stay raw on both sides to keep matching; only
-// AFTER that authentication-level verification passes does this class
-// resolve the SOCIAL identity, one layer up, for business-state keying —
-// the identical "authenticate first, resolve social identity strictly
-// after, never fold the two together" discipline application/
-// FriendRelationshipUseCase.js's own 0.2.79 header describes. See
-// application/LiveConversation.js's own header, "`conversationId` is
-// carried for display/debugging only" — a `LiveConversation` bucket
-// shared by two of Alice's devices keeps whichever raw pairing happened
-// to create it first as its own top-level `conversationId`; every
-// individual stored `message`, from either device, still carries its OWN
-// true wire-level `conversationId` and `senderIdentity` untouched — see
-// `message.senderIdentity` for how DEVICE PROVENANCE survives this
-// change with no schema addition at all: it is simply the raw,
-// authenticated key that actually signed that one message, exactly as
-// it always was, sitting alongside a conversation bucket now keyed by
-// the parent it belongs to.
-//
-// A conversation still belongs to one local device holding one
-// identity's key on the SENDING side — this class's own `myIdentityId`
-// (this device's own signing identity) is NEVER resolved by this
-// milestone; only the REMOTE peer's identity ever is. Unifying Alice's
-// OWN several devices into one shared, synchronized view of her own
-// conversations is real, substantial, deliberately deferred future work
-// — see docs/Roadmap.md, 0.2.79, "Deliberately not in 0.2.79."
+// Multi-device: business state is keyed by the peer's resolved social identity
+// (all of Alice's devices share one conversation), while authentication and the
+// wire-level conversationId stay on the raw authenticated keys, which both ends
+// derive independently. Each message's senderIdentity still records the device.
+// This device's own identity is never resolved.
 export class ChatUseCase {
     constructor(identityProvider, {
         peerMessageBus,
@@ -368,56 +108,24 @@ export class ChatUseCase {
         this._readProtocol = readProtocol;
         this._replayWindow = replayWindow;
         this._resolveSocialIdentity = resolveSocialIdentity;
-        // 0.2.63 — see this class's own header, and
-        // application/ChatOutbox.js's, for why an injected, durable
-        // outbox is what ui/main.js always supplies, while this
-        // in-memory default only ever backs a caller (a test, an
-        // ad-hoc composition) that never asked for one.
         this._outbox = chatOutbox || new ChatOutbox(new EphemeralStorageProvider(), identityProvider);
-        // 0.2.69 — same posture, for the durable conversation-history
-        // store — see this class's own header and
-        // application/ConversationStore.js's own, and note this is a
-        // COMPLETELY SEPARATE default instance from `_outbox` above,
-        // never the same storage.
         this._conversationStore = conversationStore || new ConversationStore(new EphemeralStorageProvider(), identityProvider);
-        // 0.2.71 — same posture, for the two new read-acknowledgement
-        // stores — see this class's own header, and
-        // application/ConversationReadOutbox.js's/
-        // application/RemoteReadReceiptStore.js's own. Two SEPARATE
-        // default instances from `_outbox`/`_conversationStore` above and
-        // from each other, never shared storage.
         this._readOutbox = conversationReadOutbox || new ConversationReadOutbox(new EphemeralStorageProvider(), identityProvider);
         this._remoteReadReceipts = remoteReadReceiptStore || new RemoteReadReceiptStore(new EphemeralStorageProvider(), identityProvider);
-        this._conversations = new Map(); // peerIdentityId -> LiveConversation
-        this._nextSequence = new Map(); // peerIdentityId -> last sequence THIS device used
+        this._conversations = new Map();
+        this._nextSequence = new Map();
         this._eventBus = new EventBus();
-        // 0.2.69 — rebuild every LiveConversation this owner already had,
-        // from durable state, BEFORE a single peer is attached to the bus
-        // below — see this class's own header, "A Reload Continues A
-        // Conversation; It Never Starts A New One."
         this._rehydrateFromStore();
 
-        // 0.2.72 — the two snapshots `_reconcileCancellationsForBlocked()`/
-        // `_reconcileCancellationsForFriends()` diff against on every
-        // subsequent change event — see this class's own header. Seeded
-        // BEFORE the reconciliation pass immediately below, so that pass
-        // reconciles storage against CURRENT eligibility directly rather
-        // than through a synthetic "everything just changed" diff.
+        // Seeded before the startup reconciliation below, so it compares storage with
+        // current eligibility directly.
         this._blockedIds = peerBlockUseCase ? new Set(peerBlockUseCase.getBlocked().map((b) => b.identityId)) : new Set();
         this._friendIds = new Set(friendRelationshipUseCase.getRelationships()
             .filter((r) => r.status === FriendshipState.FRIEND)
             .map((r) => r.identityId));
-        // 0.2.72 — a block or unfriend that happened in a PRIOR session,
-        // while mail sat QUEUED with no live subscriber around to react
-        // to it, gets exactly one reconciliation pass here, before this
-        // instance does anything else — see this class's own header.
         this._reconcileCancellationsOnStartup();
-        // 0.2.72 — both use cases already publish these events purely
-        // for UI reactivity (ui/views/PeerConnectionsView.js); this is
-        // simply a second, independent subscriber that reacts to the
-        // SAME events by proactively cancelling whatever just became
-        // ineligible, rather than waiting for a reconnect that a
-        // permanently-offline peer might never attempt.
+        // A second subscriber to events that exist for the UI: cancels queued mail as
+        // soon as a peer becomes ineligible.
         this._unsubscribeBlocks = peerBlockUseCase
             ? peerBlockUseCase.onBlockedChanged((blocked) => this._reconcileCancellationsForBlocked(blocked))
             : null;
@@ -425,13 +133,8 @@ export class ChatUseCase {
             ? friendRelationshipUseCase.onRelationshipsChanged((relationships) => this._reconcileCancellationsForFriends(relationships))
             : null;
 
-        // Same "attach every already-connected peer, then every future
-        // one" discipline application/FriendRelationshipUseCase.js's own
-        // constructor already established — see its header. 0.2.63
-        // rides the exact same subscription to also flush any QUEUED
-        // outbox mail addressed to a peer identity that is AUTHENTICATED
-        // right now — see `_attemptFlush()` below, and this class's own
-        // header on why "reconnect" needs no separate wiring of its own.
+        // Attaches every current and future peer; each registry change also flushes
+        // queued mail for identities authenticated now.
         for (const peer of this._registry.list()) {
             this._bus.attach(peer);
             this._flushIfAuthenticated(peer);
@@ -447,48 +150,28 @@ export class ChatUseCase {
         this._unsubscribeReadBus = this._bus.subscribe(this._readProtocol, (payload, meta) => this._handleIncomingRead(payload, meta));
     }
 
-    // The live, in-memory transcript with one peer — [] if this device
-    // has exchanged no messages with them yet this session. Never
-    // throws for an unknown peerIdentityId; there is simply nothing
-    // there yet.
     getConversation(peerIdentityId) {
         const conversation = this._conversations.get(peerIdentityId);
         return conversation ? conversation.messages : [];
     }
 
-    // Every conversation with at least one message — this session OR a
-    // prior one, rehydrated from application/ConversationStore.js at
-    // construction (see `_rehydrateFromStore()`) — ordered by
-    // peerIdentityId for a stable render order, mirroring every other
-    // use case's own getX() list convention.
+    // Includes conversations rehydrated from earlier sessions, ordered by
+    // peerIdentityId.
     getConversations() {
         return Array.from(this._conversations.values()).sort((a, b) => a.peerIdentityId.localeCompare(b.peerIdentityId));
     }
 
-    // "Can Alice send/receive chat with this identity RIGHT NOW,
-    // independent of whether they're currently connected?" — the same
-    // predicate _requireEligible()/_handleIncoming() themselves consult,
-    // exposed so a UI can grey out a compose box without an
-    // attempt-and-catch. Deliberately does NOT check connection state —
-    // "eligible to chat" and "reachable right now" are different
-    // questions; sendMessage() itself is where reachability is enforced.
+    // Eligibility only, not reachability: lets the UI disable the compose box.
+    // sendMessage() enforces reachability.
     canChat(identityId) {
         return Boolean(identityId) && !this._isBlocked(identityId) && this._friends.getState(identityId) === FriendshipState.FRIEND;
     }
 
-    // Alice's "Send" gesture. `connectedPeer` MUST be a real, currently
-    // AUTHENTICATED application/ConnectedPeer.js — refused rather than
-    // queued if it is not, exactly like
-    // application/FriendRelationshipUseCase.js#sendFriendRequest's own
-    // header explains. Refused just as firmly against a blocked or
-    // non-friend identity, checked fresh here every call — see this
-    // class's own header.
+    // `connectedPeer` must be authenticated; refused (not queued) otherwise.
     sendMessage(connectedPeer, body) {
         const peerIdentity = this._requireAuthenticatedPeer(connectedPeer);
-        // 0.2.79 — eligibility and business-state bucketing use the
-        // RESOLVED social identity; the wire-level conversationId/sequence
-        // below deliberately stay keyed by the RAW, literally-authenticated
-        // peerIdentity — see this class's own header.
+        // Eligibility and bucketing use the resolved social identity; the wire-level
+        // conversationId and sequence stay on the raw peer identity.
         const social = this._resolvePeerSocialIdentity(connectedPeer);
         this._requireEligible(social.identityId);
         const trimmed = typeof body === 'string' ? body.trim() : '';
@@ -508,20 +191,8 @@ export class ChatUseCase {
         return message;
     }
 
-    // 0.2.63 — Alice's OTHER "Send" gesture: deliberately durable,
-    // addressed to `peerIdentityId` rather than to a specific
-    // `ConnectedPeer` — there may not BE one right now, and that's the
-    // entire point. Eligibility (not blocked, currently FRIEND) is
-    // checked exactly like `sendMessage()` does, and exactly as
-    // strictly — an offline friend can be queued for, a blocked
-    // identity or a stranger still cannot. What differs is
-    // reachability: rather than throwing when no AUTHENTICATED
-    // connection exists, this writes a QUEUED core/ChatOutboxEntry.js
-    // to application/ChatOutbox.js and returns immediately; a
-    // connection that already exists gets an immediate flush attempt
-    // (`_attemptFlush()`) in the SAME call, so the common case — the
-    // peer IS online — still ends up SENT before this method returns,
-    // exactly as promptly as `sendMessage()` always was.
+    // Queues for an eligible peer even when offline, and flushes immediately when a
+    // connection exists, so an online peer still gets SENT before this returns.
     sendOrQueue(peerIdentityId, body, { ttlMs } = {}) {
         this._requireEligible(peerIdentityId);
         const trimmed = typeof body === 'string' ? body.trim() : '';
@@ -542,45 +213,18 @@ export class ChatUseCase {
         return message;
     }
 
-    // The current outbox snapshot for one peer identity — QUEUED/SENT
-    // entries only (a DELIVERED one is removed from
-    // application/ChatOutbox.js the instant it's acknowledged — see
-    // that class's own header), oldest first. A UI reads this to show
-    // "queued, will send once X is back online" without needing to
-    // understand core/ChatOutboxEntry.js's own shape.
+    // QUEUED/SENT entries, oldest first (delivered ones are removed).
     getOutbox(peerIdentityId) {
         return this._outbox.list(peerIdentityId).sort((a, b) => a.message.sequence - b.message.sequence);
     }
 
-    // A caller-driven retry, in addition to the automatic
-    // reconnect-triggered one this class's own constructor already
-    // wires — see `_attemptFlush()`. Harmless to call at any time, for
-    // any identity: it is a no-op unless that identity is both eligible
-    // and AUTHENTICATED right now.
+    // No-op unless the identity is eligible and authenticated now.
     flushOutbox(peerIdentityId) {
         this._attemptFlush(peerIdentityId);
     }
 
-    // 0.2.71 — Alice's "I looked, and I'm telling Bob" gesture. Computes
-    // "the highest incoming sequence I currently hold for this peer"
-    // straight from this instance's OWN `_conversations`, deliberately
-    // WITHOUT ever consulting `application/ConversationReadTracker.js` —
-    // see this class's own header on why that independence is the whole
-    // point. Never throws: an ineligible peer (blocked, not a friend
-    // anymore) or a peer with nothing incoming yet is simply a no-op,
-    // the same "harmless to call repeatedly" posture
-    // `application/PeerPresenceUseCase.js#markRead()` already
-    // established for the local marker one layer over — this is meant
-    // to be called from the same UI moment (opening/refreshing a
-    // conversation), every time, without a caller needing its own
-    // eligibility or "anything to say" check first.
-    //
-    // The computed value is written to `application/ConversationReadOutbox.js`
-    // (coalescing — see that class's own header) and an immediate flush
-    // is attempted, so the common case — the peer IS online — reaches
-    // them promptly; if not, `_attemptFlush()`'s existing
-    // reconnect-triggered wiring (0.2.63) delivers it once they're back,
-    // coalesced with anything newer by the time that happens.
+    // Never throws: an ineligible peer, or nothing incoming yet, is a no-op, so the
+    // UI can call this every time a conversation opens.
     sendReadReceipt(peerIdentityId) {
         if (!this.canChat(peerIdentityId)) {
             return null;
@@ -601,26 +245,11 @@ export class ChatUseCase {
         return highestIncoming;
     }
 
-    // 0.2.71 — "has the PEER told me they've seen my messages, and
-    // through which sequence?" 0, never null/undefined, for a peer this
-    // device has no receipt from at all — reads straight through to
-    // `application/RemoteReadReceiptStore.js#getReadThroughSequence()`,
-    // never cached, so a UI (see ui/views/ChatView.js) can render a
-    // "Seen" mark under its own outgoing messages without holding a
-    // second copy of this fact.
+    // 0 when no receipt exists; read through, never cached.
     getPeerReadThroughSequence(peerIdentityId) {
         return this._remoteReadReceipts.getReadThroughSequence(peerIdentityId);
     }
 
-    // 0.2.83 — the durable-history read side application/
-    // DeviceConversationSyncUseCase.js reads from to build an outgoing
-    // sync batch — every stored entry for one conversation bucket
-    // (oldest first, mirroring getOutbox()'s own ordering), or every
-    // bucket this device has ANY stored history in at all. Deliberately
-    // a THIN pass-through to `this._conversationStore` rather than a
-    // second copy of what it holds — see application/ConversationStore.js's
-    // own header on why nothing in this codebase reaches into it
-    // directly except through ChatUseCase.
     getStoredEntries(peerIdentityId) {
         return this._conversationStore.list(peerIdentityId).sort((a, b) => a.message.sequence - b.message.sequence);
     }
@@ -629,40 +258,12 @@ export class ChatUseCase {
         return this._conversationStore.conversations().map((c) => c.peerIdentityId);
     }
 
-    // 0.2.83 — Multi-Device Conversation & Read-State Synchronization.
-    //
-    // The ONE trusted ingestion entrypoint for a message this device
-    // learned about NOT from `_handleIncoming()`'s own wire-content trust
-    // gate, but from a SIBLING device's own already-trusted copy of it —
-    // see application/DeviceConversationSyncUseCase.js's own header for
-    // the (different, narrower) trust boundary that protocol applies
-    // BEFORE ever calling this. This method itself trusts its caller
-    // completely and re-validates nothing about senderIdentity,
-    // conversationId, or friendship — it is not a second `_handleIncoming`,
-    // it is what `_handleIncoming`/`_appendMessage` already do, exposed
-    // for a caller outside this class that has already done its OWN,
-    // equally real, trust work one layer down.
-    //
-    // Idempotent by (peerIdentityId, message.messageId), exactly like
-    // application/ConversationStore.js#append() already guarantees —
-    // applying the same synced entry any number of times converges to
-    // the same state (`Sync(S, S) = S`, see docs/Roadmap.md, 0.2.83). A
-    // genuinely new message is appended to BOTH the durable store and the
-    // live, in-memory transcript (firing the same MESSAGE_EVENT a locally
-    // sent or received message fires, so an open ChatView re-renders
-    // either way); a message this device already held is never
-    // re-appended to the live transcript a second time (which would
-    // duplicate it on screen) — instead, if the synced copy's own
-    // deliveryState is a genuine ADVANCEMENT over what this device
-    // already recorded (core/ChatDeliveryState.js#isDeliveryStateAdvancement,
-    // never a regression), that advancement is applied through the exact
-    // same `_publishDeliveryState()` a live delivery ack already uses.
-    // Deliberately does NOT send a core/ChatDeliveryAck.js, a
-    // core/ChatReadReceipt.js, or anything else back onto the WIRE — see
-    // docs/Principles.md, "Conversation Synchronization Is A Protocol
-    // Between A Device And Itself, Never A Wider Chat Feature" (0.2.83):
-    // only the device that genuinely received a message live from its
-    // sender ever acknowledges it to THAT sender.
+    // Ingests a message from a sibling device, which has already applied its own
+    // trust checks; nothing is re-validated here. Idempotent by messageId: a known
+    // message is not re-appended, but a genuine delivery-state advancement is
+    // applied. Sends nothing back on the wire: only the device that received a
+    // message live acks it ("Conversation Synchronization Is A Protocol Between A
+    // Device And Itself, Never A Wider Chat Feature").
     ingestSyncedEntry(peerIdentityId, message, direction, deliveryState = null) {
         if (!peerIdentityId || typeof peerIdentityId !== 'string') {
             return;
@@ -680,25 +281,14 @@ export class ChatUseCase {
         }
     }
 
-    // Returns an unsubscribe function. Fires `(peerIdentityId, message)`
-    // for every message this device sends OR accepts, AND every time an
-    // already-appended message's `deliveryState` transitions (0.2.63) —
-    // `message` always carries its own `direction` and (for a
-    // `sendOrQueue()` message) `deliveryState` — a UI subscribes once
-    // and re-renders whichever conversation is currently open.
+    // Returns an unsubscribe function. Fires for every sent or accepted message and
+    // every delivery-state change.
     onMessage(callback) {
         const subscription = this._eventBus.subscribe(MESSAGE_EVENT, ({ peerIdentityId, message }) => callback(peerIdentityId, message));
         return () => subscription.unsubscribe();
     }
 
-    // 0.2.71 — returns an unsubscribe function. Fires
-    // `(peerIdentityId, readThroughSequence)` every time a NEW,
-    // genuinely-newer read receipt is accepted from a peer — never on a
-    // stale/duplicate/lower one, since `application/RemoteReadReceiptStore.js`
-    // is a monotonic high-water mark and simply has nothing new to
-    // report for those. A UI subscribes once to render "Seen" against
-    // its own outgoing messages, the same pattern `onMessage()` above
-    // already established for content.
+    // Returns an unsubscribe function. Fires only for a genuinely newer receipt.
     onReadReceipt(callback) {
         const subscription = this._eventBus.subscribe(READ_RECEIPT_EVENT, ({ peerIdentityId, readThroughSequence }) => callback(peerIdentityId, readThroughSequence));
         return () => subscription.unsubscribe();
@@ -721,7 +311,6 @@ export class ChatUseCase {
             this._unsubscribeReadBus();
             this._unsubscribeReadBus = null;
         }
-        // 0.2.72
         if (this._unsubscribeBlocks) {
             this._unsubscribeBlocks();
             this._unsubscribeBlocks = null;
@@ -730,40 +319,20 @@ export class ChatUseCase {
             this._unsubscribeFriends();
             this._unsubscribeFriends = null;
         }
-        // Deliberately does NOT dispose the injected peerMessageBus,
-        // connectedPeerRegistry, friendRelationshipUseCase, chatOutbox,
-        // conversationStore, conversationReadOutbox, or
-        // remoteReadReceiptStore — all shared collaborators that outlive
-        // this one protocol's use case, exactly like
-        // application/FriendRelationshipUseCase.js's own dispose().
+        // The injected collaborators are shared and outlive this use case, so they are
+        // not disposed.
     }
 
-    // The ingestion boundary — see this class's own header for the
-    // full ordered list. Nothing arriving over the wire is trusted,
-    // let alone displayed, until every one of these holds, IN ORDER:
-    //   1. well-formed shape (core/ChatMessage.js)
-    //   2. the claimed senderIdentity really is who this specific,
-    //      already-AUTHENTICATED connection proved during the 0.2.49
-    //      handshake — never merely whatever the payload itself claims
-    //      (defeats a forged-sender attack: Charlie's authenticated
-    //      connection cannot claim to be Alice)
-    //   3. the actor is not locally BLOCKED
-    //   4. the actor is a FRIEND, right now — not merely once
-    //   5. the conversationId is the one THIS device independently
-    //      derives for (me, sender) — never whatever the payload says
-    //      (defeats a message crafted for a different conversation)
-    //   6. replay/sequence check (core/ChatReplayWindow.js +
-    //      core/ChatMessageIngestion.js)
-    // Only then is it appended to this peer's LiveConversation.
-    //
-    // 0.2.63 — once every trust gate above has passed, this device owes
-    // the sender a core/ChatDeliveryAck.js — see `_sendAck()` below —
-    // whether the message is being accepted for the first time OR is an
-    // exact, already-seen duplicate (a retransmit after the sender's
-    // own connection dropped mid-delivery, say). Only a message that
-    // never clears the trust gates in the first place (forged sender,
-    // blocked, not-yet-friend, wrong conversationId) gets no ack at
-    // all — see this class's own header, "Sent Is Not Delivered."
+    // Nothing from the wire is trusted until, in order:
+    //   1. it is well formed (core/ChatMessage.js)
+    //   2. its senderIdentity is the identity this connection proved, not what the
+    //      payload claims (defeats forged senders)
+    //   3. the sender is not blocked
+    //   4. the sender is a FRIEND right now
+    //   5. the conversationId matches the one derived here for (me, sender)
+    //   6. it passes the replay/sequence check
+    // Anything that clears the gates is acked, duplicates included; anything that
+    // fails them gets no ack.
     _handleIncoming(payload, meta) {
         if (!isValidChatMessage(payload)) {
             return;
@@ -775,11 +344,6 @@ export class ChatUseCase {
         if (payload.senderIdentity !== remoteIdentity.identityId) {
             return;
         }
-        // 0.2.79 — authentication (above) is unchanged; social identity
-        // resolution happens strictly after it, one layer up — see this
-        // class's own header. Eligibility and business-state bucketing
-        // consult `social.identityId`; the conversationId re-derivation
-        // below deliberately stays keyed by the RAW `remoteIdentity`.
         const social = this._resolvePeerSocialIdentity(meta.connectedPeer);
         if (this._isBlocked(social.identityId)) {
             return;
@@ -811,19 +375,8 @@ export class ChatUseCase {
         this._sendAck(meta.connectedPeer, payload, myIdentityId);
     }
 
-    // 0.2.63 — the receiving half of core/ChatDeliveryAck.js. A far
-    // smaller trust boundary than `_handleIncoming()`'s own, on
-    // purpose: an ack carries no content, only a confirmation about a
-    // message THIS device chose to send, so the only things worth
-    // checking are the same "claimed identity matches the proven
-    // connection" and "conversationId is the one I'd derive myself"
-    // rules `_handleIncoming()` already applies to content — see
-    // core/ChatDeliveryAck.js's own header. An ack that doesn't match
-    // any SENT entry (unknown messageId, already acknowledged, or from
-    // an identity this outbox never addressed anything to) is silently
-    // ignored — see application/ChatOutbox.js#acknowledge()'s own
-    // header on why that's the correct, idempotent behavior for a
-    // duplicate or stale ack, never an error.
+    // A smaller boundary: identity must match the connection and the
+    // conversationId must match. An ack for nothing we sent is ignored.
     _handleIncomingAck(payload, meta) {
         if (!isValidChatDeliveryAck(payload)) {
             return;
@@ -844,9 +397,6 @@ export class ChatUseCase {
         if (payload.conversationId !== deriveConversationId(myIdentityId, remoteIdentity.identityId)) {
             return;
         }
-        // 0.2.79 — the outbox/delivery-state store is addressed by the
-        // SAME resolved social identity `sendOrQueue()`/`_appendMessage()`
-        // already key by — see this class's own header.
         const social = this._resolvePeerSocialIdentity(meta.connectedPeer);
         const entry = this._outbox.acknowledge(social.identityId, payload.messageId);
         if (!entry) {
@@ -855,18 +405,8 @@ export class ChatUseCase {
         this._publishDeliveryState(social.identityId, payload.messageId, ChatDeliveryState.DELIVERED);
     }
 
-    // 0.2.71 — the receiving half of core/ChatReadReceipt.js. Applies
-    // the SAME trust gates `_handleIncoming()`/`_handleIncomingAck()`
-    // already established: the claimed `readerIdentity` must match the
-    // connection's own already-proven remoteIdentity, the sender must
-    // not be blocked, the sender must currently be a FRIEND, and
-    // `conversationId` must be the one this device independently
-    // re-derives — never whatever the payload claims. No replay window
-    // is applied or needed: `application/RemoteReadReceiptStore.js#recordReadThrough()`
-    // is itself a monotonic high-water mark, so a stale, duplicate, or
-    // out-of-order receipt is silently absorbed as a no-op rather than
-    // needing to be detected and rejected as a replay — see
-    // core/ChatReadReceipt.js's own header.
+    // Same gates as messages. No replay window is needed: the receipt store keeps a
+    // monotonic maximum, so stale or duplicate receipts are no-ops.
     _handleIncomingRead(payload, meta) {
         if (!isValidChatReadReceipt(payload)) {
             return;
@@ -878,7 +418,6 @@ export class ChatUseCase {
         if (payload.readerIdentity !== remoteIdentity.identityId) {
             return;
         }
-        // 0.2.79 — same resolution ordering as _handleIncoming() above.
         const social = this._resolvePeerSocialIdentity(meta.connectedPeer);
         if (this._isBlocked(social.identityId)) {
             return;
@@ -911,20 +450,9 @@ export class ChatUseCase {
         this._bus.send(connectedPeer, this._ackProtocol, ack);
     }
 
-    // 0.2.63 — the reconnect-triggered delivery trigger this class's
-    // own header describes: prune whatever just expired for this ONE
-    // peer identity (publishing EXPIRED for each — see this class's own
-    // header on why expiry is a fact about THIS device giving up,
-    // checked lazily rather than on a timer), then — only if this
-    // identity is still eligible (friendship/blocking are re-checked
-    // fresh here exactly like `sendMessage()`/`_handleIncoming()`
-    // already do everywhere else in this class) AND AUTHENTICATED right
-    // now — hand every remaining QUEUED entry to the wire, in this
-    // device's own sequence order. Safe to call liberally and
-    // repeatedly (the constructor does, on every registry change,
-    // regardless of which peer actually changed): an entry that is
-    // already SENT or DELIVERED is simply not QUEUED anymore, so a
-    // redundant call finds nothing left to do.
+    // Prunes expired entries, then, only if the identity is eligible and
+    // authenticated now, sends every QUEUED entry in sequence order. Safe to call
+    // repeatedly.
     _attemptFlush(peerIdentityId) {
         const expired = this._outbox.pruneExpired(peerIdentityId);
         for (const entry of expired) {
@@ -945,10 +473,6 @@ export class ChatUseCase {
             this._outbox.markSent(peerIdentityId, entry.message.messageId);
             this._publishDeliveryState(peerIdentityId, entry.message.messageId, ChatDeliveryState.SENT);
         }
-        // 0.2.71 — the SAME reconnect-triggered moment now also flushes
-        // any coalesced, still-PENDING read acknowledgement for this
-        // peer — see this class's own header on why one flush trigger
-        // correctly serves both outboxes.
         const pendingReads = this._readOutbox.pending(peerIdentityId);
         if (pendingReads.length > 0) {
             const myIdentityId = this._identityProvider.getSigningIdentity().id;
@@ -961,13 +485,7 @@ export class ChatUseCase {
         }
     }
 
-    // 0.2.72 — reacts to `peerBlockUseCase.onBlockedChanged()`. Diffs the
-    // freshly-published block list against `_blockedIds`: only an
-    // identity NEWLY blocked since the last event triggers cancellation
-    // — an unblock removes an identity from this set but never restores
-    // anything (unchanged from 0.2.60's own "unblocking restores nothing
-    // but the ability to be heard again"), so it correctly triggers no
-    // cancellation at all.
+    // Only newly blocked identities cancel mail; unblocking restores nothing.
     _reconcileCancellationsForBlocked(blocked) {
         const now = new Set(blocked.map((b) => b.identityId));
         for (const identityId of now) {
@@ -978,13 +496,7 @@ export class ChatUseCase {
         this._blockedIds = now;
     }
 
-    // 0.2.72 — reacts to `friendRelationshipUseCase.onRelationshipsChanged()`.
-    // Diffs the freshly-published relationship list against
-    // `_friendIds`: only an identity that WAS a friend and no longer is
-    // (unfriended by either side, or collapsed to NONE by any other
-    // terminal action) triggers cancellation — a brand-new friendship,
-    // or an identity that was never a friend to begin with, is simply
-    // added to the set with no side effect.
+    // Only a lost friendship cancels mail; new friendships have no side effect.
     _reconcileCancellationsForFriends(relationships) {
         const now = new Set(relationships.filter((r) => r.status === FriendshipState.FRIEND).map((r) => r.identityId));
         for (const identityId of this._friendIds) {
@@ -995,14 +507,6 @@ export class ChatUseCase {
         this._friendIds = now;
     }
 
-    // 0.2.72 — the one-time counterpart to the two reactive handlers
-    // above, run once at construction (see this class's own header):
-    // every peer this device currently has ANY QUEUED mail or PENDING
-    // read acknowledgement for, whose `canChat()` eligibility is
-    // already false right now, gets exactly the same cancellation a
-    // live block()/unfriend() event would have produced — covering a
-    // block or unfriend that happened in a prior session with no live
-    // subscriber around to react to it.
     _reconcileCancellationsOnStartup() {
         const candidates = new Set([
             ...this._outbox.list().map((entry) => entry.peerIdentityId),
@@ -1015,17 +519,8 @@ export class ChatUseCase {
         }
     }
 
-    // 0.2.72 — the shared cancellation operation both reactive handlers
-    // and the startup reconciliation pass above call: cancels every
-    // still-QUEUED core/ChatOutboxEntry.js for this peer (publishing a
-    // durable CANCELLED mark on the conversation history for each one —
-    // see this class's own `_publishDeliveryState()`, the SAME write-
-    // through EXPIRED already uses in `_attemptFlush()`) and discards
-    // any still-PENDING application/ConversationReadOutbox.js entry —
-    // never anything already SENT in either store, which already left
-    // this device and is beyond recall. Harmless to call for a peer with
-    // nothing queued at all: both `ChatOutbox#cancel()`/
-    // `ConversationReadOutbox#cancel()` are no-ops in that case.
+    // Cancels QUEUED messages (recording CANCELLED in history) and any pending read
+    // acknowledgement. Anything already SENT is beyond recall.
     _cancelOutboxFor(peerIdentityId) {
         const cancelled = this._outbox.cancel(peerIdentityId);
         for (const entry of cancelled) {
@@ -1036,41 +531,21 @@ export class ChatUseCase {
 
     _flushIfAuthenticated(connectedPeer) {
         if (connectedPeer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED && connectedPeer.remoteIdentity) {
-            // 0.2.79 — flushes against the RESOLVED social identity, so a
-            // reconnect from ANY of that identity's authorized devices
-            // correctly flushes mail addressed to the parent — see this
-            // class's own header.
             const social = this._resolvePeerSocialIdentity(connectedPeer);
             this._attemptFlush(social.identityId);
         }
     }
 
-    // The live, AUTHENTICATED ConnectedPeer whose RESOLVED social
-    // identity is `identityId`, or null — the same lookup
-    // ui/views/ChatView.js's own `connectedPeer` computed already
-    // performs, reused here so "is this identity reachable right now" is
-    // answered identically everywhere in this codebase. 0.2.79 — matches
-    // by resolved identity rather than the raw connection key, so mail
-    // addressed to Alice (the parent) reaches her over WHICHEVER of her
-    // currently-connected, currently-authorized devices this device finds
-    // first — never a fan-out to more than one, just a resolved-identity
-    // lookup in place of a raw-key one.
+    // Matches by resolved identity, so mail for Alice reaches whichever of her
+    // authorized devices is found first (one device, never a fan-out).
     _findAuthenticatedPeer(identityId) {
         return this._registry.list().find((peer) => peer.remoteIdentity
             && peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED
             && this._resolvePeerSocialIdentity(peer).identityId === identityId) || null;
     }
 
-    // 0.2.69 — rebuilds every LiveConversation this owner has ANY
-    // durable history with, from application/ConversationStore.js,
-    // before this instance does anything else — see this class's own
-    // header, "A Reload Continues A Conversation; It Never Starts A New
-    // One." Also re-seeds `_nextSequence` from the highest `sequence`
-    // this device has ever SENT to each peer (OUTGOING entries only —
-    // an incoming message's sequence belongs to the SENDER's own
-    // namespace, never this device's), so the very next
-    // sendMessage()/sendOrQueue() after a reload continues this
-    // device's own monotonic count rather than restarting it at 1.
+    // Re-seeds the outgoing sequence from OUTGOING entries only: incoming sequences
+    // belong to the sender's namespace.
     _rehydrateFromStore() {
         for (const { peerIdentityId } of this._conversationStore.conversations()) {
             const entries = this._conversationStore.list(peerIdentityId);
@@ -1101,11 +576,6 @@ export class ChatUseCase {
         if (!updated) {
             return;
         }
-        // 0.2.69 — the durable write-through sibling of the in-memory
-        // update above; see application/ConversationStore.js's own
-        // header on why this can never fail to find what LiveConversation
-        // just found (the two are always appended to together, in
-        // `_appendMessage` below).
         this._conversationStore.updateDeliveryState(peerIdentityId, messageId, deliveryState);
         this._eventBus.publish(MESSAGE_EVENT, { peerIdentityId, message: updated });
     }
@@ -1117,9 +587,6 @@ export class ChatUseCase {
             this._conversations.set(peerIdentityId, conversation);
         }
         conversation.append(message, direction, deliveryState);
-        // 0.2.69 — the durable write-through sibling of the in-memory
-        // append above, in the exact same call — see this class's own
-        // header, "0.2.69 — Reliable Offline Conversations."
         this._conversationStore.append(peerIdentityId, message, direction, deliveryState);
         this._eventBus.publish(MESSAGE_EVENT, { peerIdentityId, message: { ...message, direction, deliveryState } });
     }
@@ -1134,21 +601,13 @@ export class ChatUseCase {
         return connectedPeer.remoteIdentity;
     }
 
-    // 0.2.79 — resolves `connectedPeer`'s own SOCIAL identity via the
-    // injected `resolveSocialIdentity` collaborator — see this class's own
-    // header. Falls back to the connection's own raw identity defensively
-    // if the resolver ever returns null (it should not, once a live
-    // remoteIdentity is already confirmed present by every caller).
+    // Falls back to the raw identity if the resolver returns null.
     _resolvePeerSocialIdentity(connectedPeer) {
         return this._resolveSocialIdentity(connectedPeer) || resolveDirectSocialIdentity(connectedPeer);
     }
 
-    // The exact same "authenticated + not blocked + FRIEND" gate the
-    // receiver side (_handleIncoming) applies, applied here to the
-    // SENDER side — see this class's own header. Throws with a
-    // specific, distinguishable reason (unlike the receiver side, which
-    // deliberately drops silently — there is no one on the sending
-    // device's own UI who benefits from an indistinguishable failure).
+    // Throws a specific reason on the sending side; the receiving side drops
+    // silently instead.
     _requireEligible(identityId) {
         if (this._isBlocked(identityId)) {
             throw new Error('ChatUseCase: this identity is blocked');
@@ -1159,19 +618,11 @@ export class ChatUseCase {
     }
 }
 
-// Deliberately the same protocol-name convention every PeerMessageBus
-// consumer uses — see application/FriendRelationshipUseCase.js's own
-// DEFAULT_PROTOCOL.
 ChatUseCase.DEFAULT_PROTOCOL = 'forkbuild:chat';
 
-// 0.2.63 — a SEPARATE protocol string from DEFAULT_PROTOCOL, on
-// purpose — see core/ChatDeliveryAck.js's own header, "Sent Is Not
-// Delivered."
+// Separate protocols for content, delivery acks and read receipts.
 ChatUseCase.ACK_PROTOCOL = 'forkbuild:chat-delivery-ack';
 
-// 0.2.71 — a THIRD, equally separate protocol string — see
-// core/ChatReadReceipt.js's own header on why a read acknowledgement
-// never rides DEFAULT_PROTOCOL or ACK_PROTOCOL either.
 ChatUseCase.READ_PROTOCOL = 'forkbuild:chat-read';
 
 function replayKey(conversationId, senderIdentity) {
