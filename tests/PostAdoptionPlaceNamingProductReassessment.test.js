@@ -206,7 +206,7 @@ async function runTests() {
         }
 
         const worldViewCode = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
-        const nearbyBlock = worldViewCode.match(/<!-- 0\.9\.257 — World View Place Naming Presentation\.[\s\S]*?<\/CollapsibleSection>/)[0];
+        const nearbyBlock = worldViewCode.match(/<CollapsibleSection\s+title="Nearby Place Names"[\s\S]*?<\/CollapsibleSection>/)[0];
         assert(/navigateToNearbyPlaceNamingClaim/.test(nearbyBlock) && />\s*Navigate\s*</i.test(nearbyBlock),
             'A2. The Nearby Place Names row still carries a real, wired Navigate button.');
         assert(/adoptNearbyPlaceNamingClaim/.test(nearbyBlock) && />\s*Adopt\s*</i.test(nearbyBlock),
@@ -396,7 +396,7 @@ async function runTests() {
     {
         const worldViewCode = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
         const rowMapping = worldViewCode.match(/const nearbyPlaceNamingClaimRows = computed\(\(\) => \([\s\S]*?\)\);/)[0];
-        const nearbyBlock = worldViewCode.match(/<!-- 0\.9\.257 — World View Place Naming Presentation\.[\s\S]*?<\/CollapsibleSection>/)[0];
+        const nearbyBlock = worldViewCode.match(/<CollapsibleSection\s+title="Nearby Place Names"[\s\S]*?<\/CollapsibleSection>/)[0];
 
         // D1. The row already CARRIES createdAt/signature (restored at
         // 0.9.263 for Adopt's own sake) but the TEMPLATE never renders

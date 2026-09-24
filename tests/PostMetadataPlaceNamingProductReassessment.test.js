@@ -214,7 +214,7 @@ async function runTests() {
             'A2. importClaim() still runs validate -> construct -> verify -> persist, in that exact order, unchanged since 0.5.3.');
 
         const worldViewCode = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
-        const nearbyBlock = worldViewCode.match(/<!-- 0\.9\.257 — World View Place Naming Presentation\.[\s\S]*?<\/CollapsibleSection>/)[0];
+        const nearbyBlock = worldViewCode.match(/<CollapsibleSection\s+title="Nearby Place Names"[\s\S]*?<\/CollapsibleSection>/)[0];
         assert(/navigateToNearbyPlaceNamingClaim/.test(nearbyBlock) && />\s*Navigate\s*</i.test(nearbyBlock),
             'A3. The Nearby row still carries a real, wired Navigate button.');
         assert(/adoptNearbyPlaceNamingClaim/.test(nearbyBlock) && />\s*Adopt\s*</i.test(nearbyBlock),
@@ -513,7 +513,7 @@ async function runTests() {
         // tests/PostAdoptionPlaceNamingProductReassessment.test.js (0.9.265)
         // was updated at 0.9.266 for createdAtLabel.
         const worldViewCode = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
-        const nearbyBlock = worldViewCode.match(/<!-- 0\.9\.257 — World View Place Naming Presentation\.[\s\S]*?<\/CollapsibleSection>/)[0];
+        const nearbyBlock = worldViewCode.match(/<CollapsibleSection\s+title="Nearby Place Names"[\s\S]*?<\/CollapsibleSection>/)[0];
         assert(/alreadySaved/.test(nearbyBlock) && /Already saved/i.test(nearbyBlock),
             'F3a. UPDATED at 0.9.269 — BUILT: the Nearby row template now renders a passive "Already saved" status in place of Adopt once claim.alreadySaved is true — a viewer can now tell BEFORE clicking Adopt.');
         const sessionSource = codeOnlyLines(await rawSource('application/WorldNavigationSession.js'));

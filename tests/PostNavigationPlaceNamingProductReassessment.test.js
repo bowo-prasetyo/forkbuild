@@ -188,7 +188,7 @@ async function runTests() {
     const matrix = new Map();
     {
         const worldView = await rawSource('ui/views/WorldView.js');
-        const nearbyBlock = worldView.match(/<!-- 0\.9\.257 — World View Place Naming Presentation\.[\s\S]*?<\/CollapsibleSection>/)[0];
+        const nearbyBlock = worldView.match(/<CollapsibleSection\s+title="Nearby Place Names"[\s\S]*?<\/CollapsibleSection>/)[0];
 
         matrix.set('Display', 'COMPLETE');
         assert(/navigateToNearbyPlaceNamingClaim/.test(nearbyBlock), 'B1. Navigate button present on the Nearby row (basis for classifying Navigate COMPLETE).');
@@ -282,7 +282,7 @@ async function runTests() {
         // publication package, no Adopt button. 0.9.263 closed exactly
         // that gap, reusing the existing, unmodified importPlaceNamingClaim()
         // boundary (Section C's own three-step discipline, untouched).
-        const nearbyBlock = worldView.match(/<!-- 0\.9\.257 — World View Place Naming Presentation\.[\s\S]*?<\/CollapsibleSection>/)[0];
+        const nearbyBlock = worldView.match(/<CollapsibleSection\s+title="Nearby Place Names"[\s\S]*?<\/CollapsibleSection>/)[0];
         assert(/adoptNearbyPlaceNamingClaim/.test(nearbyBlock) && />\s*Adopt\s*</i.test(nearbyBlock),
             'D3. UPDATED BY 0.9.263 — the Nearby Place Names block now carries a real Adopt button, wired to adoptNearbyPlaceNamingClaim(), which reshapes the row into a publication package and calls the existing session.importPlaceNamingClaim() — closing the gap this section originally found.');
 

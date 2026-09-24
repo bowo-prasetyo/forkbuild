@@ -533,7 +533,7 @@ async function runTests() {
     // ---------------------------------------------------------------
     {
         const worldViewCode = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
-        const nearbyBlock = worldViewCode.match(/<!-- 0\.9\.257 — World View Place Naming Presentation\.[\s\S]*?<\/CollapsibleSection>/)[0];
+        const nearbyBlock = worldViewCode.match(/<CollapsibleSection\s+title="Nearby Place Names"[\s\S]*?<\/CollapsibleSection>/)[0];
         const formatterBlock = extractBetween(worldViewCode, 'function formatNearbyPlaceNamingCreatedAt(createdAt) {', 'const nearbyPlaceNamingClaimRows = computed(() => (');
 
         assert(!nearbyBlock.includes('claim.signature'), '12a. the Nearby Place Names template still never renders claim.signature');
@@ -613,7 +613,7 @@ async function runTests() {
         assert(rowMapping.includes('createdAt: entry.claim.createdAt') && rowMapping.includes('signature: entry.claim.signature'),
             '14c. the raw createdAt/signature fields (0.9.263) are still carried, unremoved, alongside the new createdAtLabel');
 
-        const nearbyBlock = worldViewCode.match(/<!-- 0\.9\.257 — World View Place Naming Presentation\.[\s\S]*?<\/CollapsibleSection>/)[0];
+        const nearbyBlock = worldViewCode.match(/<CollapsibleSection\s+title="Nearby Place Names"[\s\S]*?<\/CollapsibleSection>/)[0];
         assert(nearbyBlock.includes('claim.createdAtLabel'), '14d. the real template renders claim.createdAtLabel');
         assert(nearbyBlock.includes('Created:'), '14e. the real template labels the rendered date "Created:"');
         assert(!nearbyBlock.includes('claim.createdAt }}') && !nearbyBlock.includes('claim.createdAt.'),

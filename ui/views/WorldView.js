@@ -306,7 +306,8 @@ export default {
         // unmount; the cascade reads it through a closure so a long-running chain sees
         // the current value and stops.
         let automaticCascadeSessionActive = true;
-        // Scoped to this mount, never shared (see ObserverLocalEncounterStore).
+        // Scoped to this mount: a fresh, empty store per session, never surviving a remount or
+        // shared with any other Wanderer's own session (see ObserverLocalEncounterStore).
         const observerLocalEncounterStore = new ObserverLocalEncounterStore();
         const automaticSnapshotEncounterCascade = new AutomaticSnapshotEncounterCascade({
             resolveSelectedSnapshotCommand,
@@ -1832,10 +1833,11 @@ export default {
         }
 
         // "Edit a Copy": the one deliberate way out of World View's no-editing
-        // boundary. Forks the document that contains the focused thing (for a
-        // STRUCTURE, its own content document) via the same /editor?fork= navigation
-        // as PublicationCatalog, carrying the entry context and a return address as
-        // query params.
+        // boundary, and contextual: Only ever offered for a
+        // REGION/LANDMARK/STRUCTURE in the Focus panel. Forks the document that contains the focused thing (for a
+        // STRUCTURE, its own content document) via the /editor?fork= navigation
+        // PublicationCatalog's forkPublication() already uses, never a second fork mechanism,
+        // carrying the entry context and a return address as query params.
         function editFocusedCopyFromFocusPanel() {
             const context = focusContext.value;
             if (!context || !context.source || !context.source.documentId) {

@@ -1219,7 +1219,7 @@ async function runTests() {
         // verification vocabulary, and still renders createdAtLabel
         // (never raw createdAt) — the same boundary 0.9.266 drew, still
         // holding one milestone later.
-        const nearbyBlock = worldViewCode.match(/<!-- 0\.9\.257 — World View Place Naming Presentation\.[\s\S]*?<\/CollapsibleSection>/)[0];
+        const nearbyBlock = worldViewCode.match(/<CollapsibleSection\s+title="Nearby Place Names"[\s\S]*?<\/CollapsibleSection>/)[0];
         assert(!nearbyBlock.includes('claim.signature'), '75a. the template still never renders claim.signature.');
         assert(!/verified|unverified|isVerified|verification-status/i.test(nearbyBlock), '75b. no verification vocabulary of any kind appears in the template.');
         assert(nearbyBlock.includes('claim.createdAtLabel') && !nearbyBlock.includes('claim.createdAt.') && !nearbyBlock.includes('claim.createdAt }}'),

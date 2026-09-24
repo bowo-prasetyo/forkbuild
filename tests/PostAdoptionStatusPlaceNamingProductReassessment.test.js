@@ -200,7 +200,7 @@ async function runTests() {
         }
 
         const worldViewCode = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
-        const nearbyBlock = worldViewCode.match(/<!-- 0\.9\.257 — World View Place Naming Presentation\.[\s\S]*?<\/CollapsibleSection>/)[0];
+        const nearbyBlock = worldViewCode.match(/<CollapsibleSection\s+title="Nearby Place Names"[\s\S]*?<\/CollapsibleSection>/)[0];
         assert(/navigateToNearbyPlaceNamingClaim/.test(nearbyBlock) && />\s*Navigate\s*</i.test(nearbyBlock),
             'A2. The Nearby Place Names row still carries a real, wired Navigate button.');
         assert(/adoptNearbyPlaceNamingClaim/.test(nearbyBlock) && /alreadySaved/.test(nearbyBlock) && /Already saved/i.test(nearbyBlock),
