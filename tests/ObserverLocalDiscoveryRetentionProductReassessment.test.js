@@ -569,7 +569,7 @@ async function runTests() {
         const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
         const panelStart = canvasSource.indexOf('world-encounter-observer-local-inspection-panel');
         const panelBlockStart = canvasSource.indexOf('<div v-if="selectedObserverLocalEncounter"');
-        const panelEnd = canvasSource.indexOf('</div>\n\n            <!-- 0.9.183', panelBlockStart);
+        const panelEnd = canvasSource.indexOf('class="world-snapshot-content-view-panel"', panelBlockStart);
         const panel = canvasSource.slice(panelBlockStart, panelEnd > 0 ? panelEnd : panelBlockStart + 3000);
         assert(panelStart > 0, 'F0. Sanity: the dedicated observer-local inspection panel exists.');
         // F1. AMENDED BY 0.9.558 — Known Publication Encounter

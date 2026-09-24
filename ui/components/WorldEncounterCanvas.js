@@ -142,9 +142,8 @@ import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutc
 // `nostrPublisherOptions`. `distributablePublication` is the Publication
 // material inspection already loaded, never a second fetch. Execution state
 // is ephemeral, never a lifecycle value; a rejection or synchronous throw
-// becomes one PLAIN NOTICE — NEVER A RECLASSIFIED DOMAIN RESULT. A resolved
-// call is never inspected: the lifecycle subscription is the only place
-// results appear. Buttons use
+// becomes one PLAIN NOTICE — NEVER A RECLASSIFIED DOMAIN RESULT. It never inspects a resolved result:
+// the lifecycle subscription is the only place results appear. Buttons use
 // `:disabled="!distributablePublication || distributionExecuting"` plus a
 // method-level re-check, so repeated clicks never start a second call.
 // `selectedDiscoveryProvider` is exactly one of 'nostr'/'arweave': one
@@ -165,6 +164,8 @@ import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutc
 // never a `selectedEncounter`, and never touches `materialInspection`
 // (local/decentralized separation). `discoveryTag` starts from
 // `defaultDiscoveryTag` ('forkbuild-publication') but stays freely editable.
+// None of it is persisted, and none of it is written into any lifecycle
+// vocabulary.
 // Only a VERIFIED result is selectable as `selectedDiscoveredPublication`,
 // which never auto-resets.
 //
@@ -184,9 +185,8 @@ import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutc
 //
 // COMMENTARY. `getPublicationCommentariesCommand`/
 // `addPublicationCommentaryCommand` are the same session-backed functions
-// ui/views/WorldView.js already gives OwnPublicationPanel. The publicationId
-// is the encounter's own objectId, never the loaded material's, so
-// commentary never waits on material loading. Collapsed by default, loaded
+// ui/views/WorldView.js already gives OwnPublicationPanel. THE PUBLICATIONID IS THE ENCOUNTER'S OWN objectId,
+// never the loaded material's, so commentary never waits on material loading. Collapsed by default, loaded
 // only on first expansion; all commentary state resets on each selection.
 // Authorship is never UI-supplied; `viewerIdentityId` only chooses between
 // the compose form and a sign-in hint.
@@ -196,8 +196,9 @@ import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutc
 // never merged into `registry`. Its markers are plain `<g>` elements
 // labelled "Discovered here", never a WorldEncounterMarker and never
 // `selectedEncounter`. `projectedObserverLocalEncounters` carries exactly
-// `publicationId`, `contentHash`, `x`, `y`, never a `documentId`, locator or
-// claimed position; it never claims the publisher's own `claimedPosition` was honored, used,
+// `publicationId`, `contentHash`, `x`, `y`; that identity
+// (`publicationId` + `contentHash`) is deliberately never a `documentId`, a
+// locator or a claimed position, and it never claims the publisher's own `claimedPosition` was honored, used,
 // or trusted. A row is hidden once an authoritative row exists for the same
 // publicationId, and reappears if that row leaves.
 //
@@ -208,8 +209,8 @@ import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutc
 // `materialSources.local` (bytes the cascade already materialized) through
 // the same inspectWorldEncounterMaterial(). Once AVAILABLE + VERIFIED, the
 // resolved Publication feeds Open/Fork/Explore commands (reusing
-// PublicationCatalog.js's routes) and a separate commentary block; it is
-// never the Publication Catalog/Repository browser, and nothing persists it
+// PublicationCatalog.js's routes; NOT A FOURTH ACTION SET) and a separate
+// commentary block; it is never the Publication Catalog/Repository browser, and nothing persists it
 // ("find it again" is a separate product question).
 //
 // REPOSITORY ADMISSION. admitToRepositoryDiscovery() adds a resolved
