@@ -98343,3 +98343,33 @@ Publications page (DOM and every element's computed style, disclosures open) is 
 `publicationsPageFiles()` now includes the template sections after the view, and
 `publicationsViewSourceWithTemplate()` returns the view with its sections expanded for checks that span the whole
 template. Eighteen tests that read the view file alone now read it through one of these.
+
+**WorldEncounterCanvas methods split by concern.** `ui/components/WorldEncounterCanvas.js` (2,464 → 1,708 lines)
+keeps its props, data, computed properties, lifecycle hooks and template, plus `selectEncounter()` and
+`refreshWorldViewFromRegistry()`. Its other 43 methods live in five modules under
+`ui/components/worldEncounterCanvas/` (observer-local encounters; selection outcomes and their labels; material
+inspection, repository admission and distribution; snapshot content views and comparison; publication discovery
+and commentary), spread into `methods`. The label helpers moved with the methods that use them. Comparing the
+component before and after: all 45 methods have the same source text apart from indentation, and props, data,
+computed properties and the template are unchanged.
+
+**WorldView and EditorView `setup()` split further.** `ui/views/WorldView.js` (2,275 → 1,951 lines) moves five
+more concerns into `ui/views/worldView/`: viewport input, Home and Locations, Editor hand-off, document actions and
+World presence sync. `ui/views/EditorView.js` (1,781 → 1,030 lines) moves five into a new `ui/views/editorView/`:
+post-publish distribution, selection actions, the structure library, blueprint export and import, and structure
+inspection. They follow the existing composable convention. Presence sync keeps its subscription bookkeeping
+private and exposes `syncCurrentWorldSpatialPresence()` (the 100 ms interval) and `disposeWorldPresence()`
+(teardown); that is the only change beyond moving code. EditorView's tab-indented section now uses spaces.
+`refreshSpatialUI()` stays in WorldView: it reads 44 of the view's names. Each moved group was checked with a scope
+analysis: every name it reads is passed in or imported, every name the rest of `setup()` uses is returned, no `let`
+is shared across the boundary, and no composable runs before its inputs exist. The names `setup()` returns, the
+templates and the component lists are unchanged, and ESLint's `no-undef`/`no-unused-vars` report nothing new
+(WorldView's nine pre-existing unused destructured names remain). In Chromium, the Editor and a World View render
+identical DOM and computed styles before and after, including after pointer, keyboard and button interaction
+(with marker positions masked, since they vary from run to run).
+
+**Tests read split files as groups.** Source-reading tests now read each split file through its group in
+`tests/support/SourceFileGroups.js`, including tests that still passed reading the file alone, so checks that code
+never does something keep covering the moved code. Other adjustments: method regexes that expected eight-space
+indentation (moved methods now sit at four), inventories that list files (they now name the module holding the
+code), and relative import paths quoted from source.
