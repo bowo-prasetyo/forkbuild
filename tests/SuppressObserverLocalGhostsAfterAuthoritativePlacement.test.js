@@ -13,6 +13,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.570 — Suppress Observer-Local Ghosts After Authoritative Placement.
 //
@@ -409,7 +410,7 @@ async function run() {
             assert(!storeSource.includes(forbidden), `J1. ObserverLocalEncounterStore.js still defines no '${forbidden}' seam — this fix stays purely presentational, exactly as 0.9.569 recommended.`);
         }
 
-        const canvasSource = codeOnly(await readSource('ui/components/WorldEncounterCanvas.js'));
+        const canvasSource = codeOnly((await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n'));
         assert(canvasSource.includes('projectedObserverLocalEncounters()'), 'J2. Sanity — the seam this milestone targets still exists under its own name.');
         const filterBody = canvasSource.split('projectedObserverLocalEncounters() {')[1].split('\n        },')[0];
         assert(filterBody.includes('publicationRows') && filterBody.includes('objectId') && filterBody.includes('publicationId'),

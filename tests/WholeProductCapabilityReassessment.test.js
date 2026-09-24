@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.414 — Whole-Product Capability Reassessment.
 //
@@ -181,7 +182,7 @@ async function run() {
         // reconfirmation that the exact code path they proved still
         // exists unchanged — never assumed unchanged without re-checking.
         const editorViewCode = await readSource('ui/views/EditorView.js');
-        const publicationsViewCode = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const publicationsViewCode = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         const catalogCode = await readSource('ui/components/PublicationCatalog.js');
         const worldViewCode = await readSource('ui/views/WorldView.js');
         const mainCode = await readSource('ui/main.js');
@@ -434,7 +435,7 @@ async function run() {
         // checked live in Section B above already hold — cited, not
         // re-derived a third time).
         assert(
-            (await readSource('ui/views/DecentralizedPublicationsView.js')).includes('admitToRepositoryDiscovery'),
+            ((await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n')).includes('admitToRepositoryDiscovery'),
             n('E4. Publication <-> Repository: the decentralized-discovery admission bridge (0.9.383 Section C2) still exists, reconfirmed')
         );
 

@@ -15,6 +15,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
 import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.113 — World View Discovered Publication Selection.
 //
@@ -442,8 +443,7 @@ async function runTests() {
     // Section G — architectural regression: WorldEncounterCanvas.js.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url);
-        const source = await readFile(sourceUrl, 'utf8');
+        const source = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         const applicationImportLines = codeOnly.split('\n').filter((line) => line.includes("from '../../application/"));
@@ -455,7 +455,7 @@ async function runTests() {
         assert((codeOnly.match(/this\.selectedDiscoveredPublication\s*=/g) || []).length === 1,
             '23. selectedDiscoveredPublication is written from exactly one place');
 
-        const selectMethodMatch = /selectDiscoveredPublication\(\)\s*\{([\s\S]*?)\n {8}\}/.exec(codeOnly);
+        const selectMethodMatch = /selectDiscoveredPublication\(\)\s*\{([\s\S]*?)\n {4}\}/.exec(codeOnly);
         assert(selectMethodMatch, '24. selectDiscoveredPublication() method body is present and matched by this regression\'s own extraction');
         const selectMethodBody = selectMethodMatch[1];
         assert(!selectMethodBody.includes('distributionCommand('),

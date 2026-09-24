@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.361 — Publication Discovery Relocation Convergence Audit.
 //
@@ -167,7 +168,7 @@ function verifiedDiscoveryResult(objectId) {
 async function run() {
     console.log('Running Publication Discovery Relocation Convergence Audit tests...\n');
 
-    const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+    const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
     const canvasCodeOnly = codeOnly(canvasSource);
 
     const mainSource = await rawSource('ui/main.js');
@@ -208,10 +209,13 @@ async function run() {
         // B3. Neither the methods: block nor the computed: block defines a
         // second call site of discoveryCommand — the popup introduced a
         // wrapper, never a parallel path.
+        // Most methods live in ./worldEncounterCanvas/ modules, which come
+        // before the component in canvasSource, so check everything up to the
+        // component's template.
         const methodsStart = canvasSource.indexOf('methods: {');
         const methodsEnd = canvasSource.indexOf('\n    template: `');
         assert(methodsStart !== -1 && methodsEnd > methodsStart, 'sanity: located the methods: block');
-        const methodsBlock = canvasSource.slice(methodsStart, methodsEnd);
+        const methodsBlock = canvasSource.slice(0, methodsEnd);
         const commandCallSites = (methodsBlock.match(/this\.discoveryCommand\(/g) || []).length;
         assert(commandCallSites === 1, `B3. exactly one call site of this.discoveryCommand(...) exists in methods: — found ${commandCallSites}`);
 

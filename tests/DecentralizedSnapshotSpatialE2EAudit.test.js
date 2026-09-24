@@ -38,6 +38,7 @@ import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.173 — Decentralized Snapshot Spatial E2E Audit.
 //
@@ -1045,7 +1046,7 @@ async function run() {
         // technique of scoping a sweep precisely around a file's OTHER,
         // legitimate, unrelated Snapshot-distribution UI.
         const { readFile } = await import('node:fs/promises');
-        const canvasSource = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const markerSource = await readFile(new URL('../ui/components/WorldEncounterMarker.js', import.meta.url), 'utf8');
 
         function extractBetween(source, startMarker, endMarker) {
@@ -1056,7 +1057,7 @@ async function run() {
             return source.slice(start, end);
         }
 
-        const projectToCanvasFn = extractBetween(canvasSource, 'function projectToCanvas(value) {', '\nfunction resolvedEncounterSelectionsEqual');
+        const projectToCanvasFn = extractBetween(canvasSource, 'function projectToCanvas(value) {', '\nexport default {');
         const projectedPublicationsFn = extractBetween(canvasSource, 'projectedPublications() {', 'projectedAvatars() {');
         const projectedAvatarsFn = extractBetween(canvasSource, 'projectedAvatars() {', 'projectedWanderer() {');
         assert(!/snapshot/i.test(projectToCanvasFn), '6. projectToCanvas() itself contains no "snapshot" vocabulary of any kind — it is a plain x/z linear transform');

@@ -9,7 +9,7 @@ import { World } from '../core/World.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { CommandHistory } from '../application/CommandHistory.js';
 import { CreateWorldLandmarkCommand } from '../application/commands/CreateWorldLandmarkCommand.js';
-import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.212 — Post-Undo/Redo Product Reassessment.
 //
@@ -262,7 +262,7 @@ async function runTests() {
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/worldSnapshotDiscoveryMonitor\.observe\(/.test(worldViewSource), 'E1b. WorldView.js still drives worldSnapshotDiscoveryMonitor.observe() on its own refresh tick (automatic discovery)');
         assert(/automaticSnapshotEncounterCascade\.processCandidate\(/.test(worldViewSource), 'E1c. WorldView.js still feeds discovered candidates to automaticSnapshotEncounterCascade.processCandidate() (automatic materialization)');
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(/openSnapshotContentView/.test(canvasSource) && /unregisterSelectedSnapshot/.test(canvasSource), 'E1d. WorldEncounterCanvas.js still lets a materialized Snapshot be viewed and removed — real World participation, not a dead end');
         const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => rawSource(file)))).join('\n');
         assert(/materializePlacement\(/.test(decentralizedViewSource), 'E1e. DecentralizedPublicationsView.js still wires an explicit "Materialize Snapshot" action');

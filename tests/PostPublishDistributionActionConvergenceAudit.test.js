@@ -19,6 +19,7 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.378 — Post-Publish Distribution Action Convergence Audit.
 //
@@ -855,7 +856,7 @@ async function run() {
         }
 
         const ownPanelRaw = await readSource('ui/components/OwnPublicationPanel.js');
-        const canvasRaw = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasRaw = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(!/\bEditor\b/.test(ownPanelRaw), n('OwnPublicationPanel.js contains no reference to "Editor" anywhere — zero leakage of the new EditorView-specific capability into this file'));
         assert(!/\bEditor\b/.test(canvasRaw), n('WorldEncounterCanvas.js contains no reference to "Editor" either — zero leakage'));
 

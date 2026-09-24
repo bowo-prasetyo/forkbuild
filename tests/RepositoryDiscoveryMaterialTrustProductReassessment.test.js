@@ -26,6 +26,7 @@ import {
     describePublicationAuthorNameIdentityConvergence
 } from '../application/PublicationAuthorNameIdentityConvergence.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
+import { stylesheetFiles } from './support/SourceFileGroups.js';
 
 // 0.9.525 — Repository Discovery & Material Trust Product Reassessment.
 //
@@ -441,7 +442,7 @@ async function run() {
         // is "Published vs Editing-fork," i.e. immutability/lifecycle
         // state, never a claim about verification or trustworthiness —
         // confirmed live against the class it actually shares.
-        const cssSource = await readSource('css/main.css');
+        const cssSource = (await Promise.all(stylesheetFiles().map((file) => readSource(file)))).join('\n');
         assert(/0\.2\.22.*Published vs Editing-fork/s.test(cssSource) === false || /Published vs Editing-fork/.test(cssSource),
             '1. sanity: the badge\'s own CSS-side history is on file.');
         assert(!/publication-badge[\s\S]{0,200}(verified|trusted|authentic|safe|guaranteed)/i.test(cssSource),

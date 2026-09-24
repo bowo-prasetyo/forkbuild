@@ -5,6 +5,7 @@ import { ContentReference } from '../core/ContentReference.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.558 — Known Publication Encounter Continuation.
 //
@@ -207,7 +208,7 @@ async function runTests() {
         // C7. Comment reuses the SAME two 0.9.291 props/commands already
         // threaded through for the primary selection — never a new
         // commentary mechanism.
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(canvasSource.includes('this.getPublicationCommentariesCommand(this.observerLocalEncounterCommentaryPublicationId)'), 'C7. refreshObserverLocalEncounterCommentaries() calls the SAME injected getPublicationCommentariesCommand prop the primary panel\'s own refreshEncounterCommentaries() already calls.');
         assert(canvasSource.includes('this.addPublicationCommentaryCommand({ publicationId, content, commentaryId, createdAt });') && (canvasSource.match(/this\.addPublicationCommentaryCommand\(/g) || []).length === 2, 'C8. addPublicationCommentaryCommand is called with the identical shape, from exactly two call sites (primary + observer-local) — never a third, divergent commentary implementation.');
 
@@ -219,7 +220,7 @@ async function runTests() {
     // performs zero Repository searches.
     // ===============================================================
     {
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(!canvasSource.includes('SearchPublicationsUseCase') && !canvasSource.includes('PublicationQuery'), 'D1. WorldEncounterCanvas.js still never imports or references SearchPublicationsUseCase/PublicationQuery — reconfirmed after this milestone\'s own changes.');
 
         // D2. Empirically: resolving and acting on an encounter never
@@ -324,7 +325,7 @@ async function runTests() {
     // session-local encounter store, unmodified by this milestone.
     // ===============================================================
     {
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         // F1. None of this milestone's own new methods write to
         // observerLocalEncounterRegistry/observerLocalEncounters — the
         // store's own destruction lifecycle (0.9.555) is a fact about
@@ -333,7 +334,7 @@ async function runTests() {
         const newMethodNames = ['openObserverLocalEncounterPublication', 'forkObserverLocalEncounterPublication', 'exploreObserverLocalEncounterPublication', 'toggleObserverLocalEncounterCommentary', 'refreshObserverLocalEncounterCommentaries', 'submitObserverLocalEncounterCommentary'];
         for (const name of newMethodNames) {
             const start = canvasSource.indexOf(`${name}(`);
-            const bodyEnd = canvasSource.indexOf('\n        },', start);
+            const bodyEnd = canvasSource.indexOf('\n    },', start);
             const body = canvasSource.slice(start, bodyEnd);
             assert(!body.includes('observerLocalEncounterRegistry') && !body.includes('this.observerLocalEncounters ='), `F1. ${name}() never writes to observerLocalEncounterRegistry/observerLocalEncounters.`);
         }
@@ -411,7 +412,7 @@ async function runTests() {
     // exposed as the primary affordance.
     // ===============================================================
     {
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         const actionsBlockStart = canvasSource.indexOf('world-encounter-observer-local-actions');
         const actionsBlockEnd = canvasSource.indexOf('world-encounter-observer-local-commentary-panel');
         const actionsBlock = canvasSource.slice(actionsBlockStart, actionsBlockEnd);
@@ -478,7 +479,7 @@ async function runTests() {
 
         assert(addCalls === 1, 'J1. AMENDED BY 0.9.595: none of the three new actions themselves EVER calls decentralizedPublicationDiscoveryProvider.add() — addCalls stays at exactly 1 (the one admission from selection/inspection, above) after all three actions run; this section\'s own original point (these actions never trigger a SECOND, independent Repository insertion of their own) still holds, unweakened.');
 
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         const milestoneSectionStart = canvasSource.indexOf('// OBSERVER-LOCAL ENCOUNTERS.');
         const milestoneSectionEnd = canvasSource.indexOf('export default {');
         const milestoneHeader = canvasSource.slice(milestoneSectionStart, milestoneSectionEnd);

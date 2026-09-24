@@ -166,7 +166,8 @@ async function main() {
         );
         const admissionSites = grepRaw.trim().split('\n').filter(Boolean)
             .filter((line) => /discoveryProvider\.add\(|DiscoveryProvider\.add\(/.test(line) && !/^\s*\/\//.test(line.split(':').slice(2).join(':')));
-        const knownAdmissionGateFiles = ['WorldEncounterCanvas.js', 'PublicationExchange.js', 'LocalPublicationCatalog.js', 'DecentralizedPublicationsView.js'];
+        // WorldEncounterCanvas.js's gate lives in its materialAndDistributionMethods.js module.
+        const knownAdmissionGateFiles = ['worldEncounterCanvas/materialAndDistributionMethods.js', 'PublicationExchange.js', 'LocalPublicationCatalog.js', 'DecentralizedPublicationsView.js'];
         assert(admissionSites.length > 0 && admissionSites.every((line) => knownAdmissionGateFiles.some((f) => line.includes(f))),
             `A1. Every real .add() call site is one of the already-audited admission gates (found: ${admissionSites.join(' | ')}).`);
 

@@ -14,6 +14,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.569 — Observer-Local to Authoritative Placement Presentation
 // Convergence Boundary Audit.
@@ -344,7 +345,7 @@ async function run() {
         // re-derive" signal a convergence filter would read from, and
         // needs no new argument (a publicationId, a diff, a reason) added
         // to it to work.
-        const canvasSource = codeOnly(await readSource('ui/components/WorldEncounterCanvas.js'));
+        const canvasSource = codeOnly((await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n'));
         assert(canvasSource.includes('this.unsubscribeWorldRegistry = this.registry.subscribe(() => {'),
             'B4. The real subscription is confirmed, verbatim, against live source: a bare, no-argument listener — exactly the shape a convergence filter (itself a plain computed reading `publicationRows`) needs and nothing more.');
 
@@ -534,7 +535,7 @@ async function run() {
     // is the only change the existing rendering model can express.
     // =======================================================================
     {
-        const canvasSource = codeOnly(await readSource('ui/components/WorldEncounterCanvas.js'));
+        const canvasSource = codeOnly((await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n'));
         // The two rendering surfaces are genuinely separate template
         // blocks (0.9.552's own deliberate architecture boundary) — there
         // is no shared "marker" component, no shared inspection panel, and
@@ -605,7 +606,7 @@ async function run() {
         // Structural confirmation that this independence is not
         // incidental: `selectObserverLocalEncounter()`'s own body never
         // reads `projectedObserverLocalEncounters` or `publicationRows`.
-        const canvasSource = codeOnly(await readSource('ui/components/WorldEncounterCanvas.js'));
+        const canvasSource = codeOnly((await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n'));
         const selectBody = methodBody(canvasSource, 'selectObserverLocalEncounter\\(marker\\)', 8);
         for (const forbidden of ['projectedObserverLocalEncounters', 'publicationRows', 'projectedPublications']) {
             assert(!selectBody.includes(forbidden), `H6. selectObserverLocalEncounter()'s own body never reads '${forbidden}' — the selection is a plain, independent write, structurally incapable of being invalidated by a change to the projected list a future filter would alter.`);
@@ -690,7 +691,7 @@ async function run() {
         // the one place a pure "does this publicationId already have a
         // publicationRows row" computed can be added with zero new props,
         // zero new stores, and zero new subscriptions.
-        const canvasSource = codeOnly(await readSource('ui/components/WorldEncounterCanvas.js'));
+        const canvasSource = codeOnly((await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n'));
         assert(canvasSource.includes('publicationRows()') && canvasSource.includes('observerLocalEncounters:'),
             'J3. WorldEncounterCanvas.js already holds `publicationRows` (registry-derived) and `observerLocalEncounters` (store-derived) as two independent, already-reactive members of the SAME component instance — the only file, of the three swept here, in a position to compute their intersection without any new wiring.');
         assert(canvasSource.includes('projectedObserverLocalEncounters()'),

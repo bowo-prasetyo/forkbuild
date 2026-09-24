@@ -23,6 +23,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.349 — Post-Publish Distribution Product Reassessment.
 //
@@ -649,7 +650,7 @@ async function run() {
             '44. the distribution command/orchestrator import neither publish/unpublish use case');
 
         // No new distribution lifecycle vocabulary in either panel.
-        const canvasCode = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
+        const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
         const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
         for (const code of [canvasCode, panelCode]) {
             assert(!/\bDISPATCHED\b|\bQUEUED\b|\bSCHEDULED\b|\bRETRYING\b|\bCOMMANDED\b/.test(code),

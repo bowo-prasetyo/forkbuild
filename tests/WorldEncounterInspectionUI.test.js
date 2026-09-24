@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.18 — Render Selected Encounter Inspection.
 //
@@ -193,7 +194,7 @@ async function run() {
         const inspection = WorldEncounterCanvas.computed.selectedEncounterInspection.call(ctx);
         assert(inspection.isSigned === true, '13. isSigned is forwarded exactly as 0.9.16 computed it');
 
-        const source = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
+        const source = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n').toLowerCase();
         const forbidden = ['isverified', 'istrusted', 'isauthentic', 'score', 'rank', 'trust', 'reputation', 'confidence', 'distance', 'nearest', 'nearby', 'radius', 'fetch(', 'websocket'];
         for (const term of forbidden) {
@@ -210,7 +211,7 @@ async function run() {
     // count), still no core/ module.
     // ---------------------------------------------------------------
     {
-        const source = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
+        const source = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const importLines = source.split('\n').filter((line) => line.trim().startsWith('import '));
         assert(!importLines.some((line) => line.includes('core/')), '15. WorldEncounterCanvas.js still never imports any core/ module directly');
         const applicationImportLines = importLines.filter((line) => line.includes('application/'));

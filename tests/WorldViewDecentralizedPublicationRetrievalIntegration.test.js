@@ -14,6 +14,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
 import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.111 — World View Decentralized Publication Retrieval.
 //
@@ -466,8 +467,7 @@ async function runTests() {
     // Section I — architectural regression: WorldEncounterCanvas.js.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url);
-        const source = await readFile(sourceUrl, 'utf8');
+        const source = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         const applicationImportLines = codeOnly.split('\n').filter((line) => line.includes("from '../../application/"));

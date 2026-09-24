@@ -23,7 +23,7 @@ import {
 
 import PublicationCard from '../ui/components/PublicationCard.js';
 import PublicationList from '../ui/components/PublicationList.js';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.539 — Publication Selection & Identity Presentation Product
 // Reassessment.
@@ -340,7 +340,7 @@ async function run() {
         // content item; a "Snapshot Content" detail panel shows the real
         // Publication ID field when opened. (0.9.17 onward; reconfirmed
         // structurally here.)
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(/THE PUBLICATIONID IS THE ENCOUNTER'S OWN objectId/i.test(canvasSource),
             'G1a. STRUCTURAL: WorldEncounterCanvas.js\'s own documented invariant that objectId IS the publicationId (never a separately-loaded material\'s own id) is still present, unmodified by this milestone.');
         assert(/Publication ID<\/dt>/.test(canvasSource),

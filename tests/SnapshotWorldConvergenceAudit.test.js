@@ -15,6 +15,7 @@ import { Position } from '../core/Position.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.162 — Snapshot World Convergence Audit.
 //
@@ -452,7 +453,7 @@ async function run() {
         // in this file for an already-selected encounter's own candidate
         // material sources — a different concept this milestone leaves
         // untouched.
-        const canvasSource = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const publicationRowsBody = canvasSource.match(/publicationRows\(\) \{[\s\S]*?\n {8}\},/)[0];
         const projectedPublicationsBody = canvasSource.match(/projectedPublications\(\) \{[\s\S]*?\n {8}\},/)[0];
         assert(!/\.origin\b/.test(publicationRowsBody), '5. WorldEncounterCanvas.js\'s own publicationRows computed never reads a discovery source\'s `.origin` field');

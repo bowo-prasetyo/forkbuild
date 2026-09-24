@@ -1,6 +1,7 @@
 import { readFile, readdir } from 'node:fs/promises';
 
 import { sweepDirectory } from './support/RawStatusInterpolationSweep.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.573 — Publication Journey Surface Inventory & Gap Classification Audit.
 //
@@ -72,7 +73,7 @@ async function runTests() {
         const worldEncounterMarkerSource = await rawSource('ui/components/WorldEncounterMarker.js');
         const notificationHistoryPanelSource = await rawSource('ui/components/NotificationHistoryPanel.js');
         const ownPublicationPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
-        const decentralizedPublicationsViewSource = await rawSource('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedPublicationsViewSource = (await Promise.all(publicationsPageFiles().map((file) => rawSource(file)))).join('\n');
         const authorViewSource = await rawSource('ui/views/AuthorView.js');
         const forkTreeSource = await rawSource('ui/components/ForkTree.js');
         const repositoryViewSource = await rawSource('ui/views/RepositoryView.js');
@@ -140,7 +141,7 @@ async function runTests() {
     // Center — for whether it silently grew a duplicate action surface.
     // ===============================================================
     {
-        const decentralizedPublicationsViewSource = await rawSource('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedPublicationsViewSource = (await Promise.all(publicationsPageFiles().map((file) => rawSource(file)))).join('\n');
         const leaderboardHubViewSource = await rawSource('ui/views/LeaderboardHubView.js');
         const publisherPerformanceLeaderboardViewSource = await rawSource('ui/views/PublisherPerformanceLeaderboardView.js');
         const reconciliationCandidateLeaderboardViewSource = await rawSource('ui/views/ReconciliationCandidateLeaderboardView.js');
@@ -176,7 +177,7 @@ async function runTests() {
     // ===============================================================
     {
         const worldEncounterMarkerSource = await rawSource('ui/components/WorldEncounterMarker.js');
-        const worldEncounterCanvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const worldEncounterCanvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         const notificationHistoryPanelSource = await rawSource('ui/components/NotificationHistoryPanel.js');
 
         // C1. The marker level carries only kind + objectId — never a
@@ -213,7 +214,7 @@ async function runTests() {
         const publicationListSource = await rawSource('ui/components/PublicationList.js');
         const authorViewSource = await rawSource('ui/views/AuthorView.js');
         const forkTreeSource = await rawSource('ui/components/ForkTree.js');
-        const worldEncounterCanvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const worldEncounterCanvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         const worldSearchPanelSource = await rawSource('ui/components/WorldSearchPanel.js');
         const notificationHistoryPanelSource = await rawSource('ui/components/NotificationHistoryPanel.js');
 
@@ -340,7 +341,7 @@ async function runTests() {
     // ObserverLocalEncounter — not re-testing 0.9.565-0.9.571.
     // ===============================================================
     {
-        const worldEncounterCanvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const worldEncounterCanvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         const worldLocationBrowserSource = await rawSource('ui/components/WorldLocationBrowser.js');
         const placementInfoPanelSource = await rawSource('ui/components/PlacementInfoPanel.js');
 
@@ -372,8 +373,8 @@ async function runTests() {
     // unexamined action surface — not re-auditing 0.9.560/0.9.561/0.9.562.
     // ===============================================================
     {
-        const decentralizedPublicationsViewSource = await rawSource('ui/views/DecentralizedPublicationsView.js');
-        const worldEncounterCanvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const decentralizedPublicationsViewSource = (await Promise.all(publicationsPageFiles().map((file) => rawSource(file)))).join('\n');
+        const worldEncounterCanvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
 
         // G1. The Publication Center's own admission gate and World
         // Encounter's own admission gate are INDEPENDENTLY IMPLEMENTED

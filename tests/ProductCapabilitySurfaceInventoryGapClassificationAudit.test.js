@@ -29,6 +29,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalWorldExperienceStore } from '../application/LocalWorldExperienceStore.js';
 import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
 import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.586 — Product Capability Surface Inventory & Gap Classification
 // Audit.
@@ -469,8 +470,8 @@ async function main() {
 
         // I2. Raw internal state rendered to users — the two genuine
         // hits from research, verified live.
-        const worldEncounterSource = await readSource('ui/components/WorldEncounterCanvas.js');
-        const decentralizedPubsSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const worldEncounterSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
+        const decentralizedPubsSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(/<dd>\{\{ observation\.state \}\}<\/dd>/.test(worldEncounterSource) && /<dd>\{\{ observation\.state \}\}<\/dd>/.test(decentralizedPubsSource),
             'I2. Both ui/components/WorldEncounterCanvas.js and ui/views/DecentralizedPublicationsView.js render observation.state (a raw "PRESENT"/"ABSENT" PublicationDistributionState token) directly, with no describe/format wrapper — confirmed live. A real, narrow PRESENTATION_GAP: the values are short, capitalized, plain-English-ish words, not opaque codes or stack traces, but they bypass the labeling discipline the rest of the failure vocabulary (Section F) otherwise follows everywhere else.');
 

@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
 import { CreateStructureRegistryUseCase } from '../application/CreateStructureRegistryUseCase.js';
 import { groupStructuresByCategory } from '../core/groupStructuresByCategory.js';
-import { stylesheetFiles } from './support/SourceFileGroups.js';
+import { stylesheetFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.646 — Unified Application Layout & UI Consistency Boundary Audit.
 //
@@ -124,7 +124,7 @@ async function run() {
     const css = (await Promise.all(stylesheetFiles().map((file) => readSource(file)))).join('\n');
     const editorViewSrc = await readSource('ui/views/EditorView.js');
     const worldViewSrc = await readSource('ui/views/WorldView.js');
-    const publicationsViewSrc = await readSource('ui/views/DecentralizedPublicationsView.js');
+    const publicationsViewSrc = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
     const repositoryViewSrc = await readSource('ui/views/RepositoryView.js');
     const appSrc = await readSource('ui/App.js');
     const buildLibraryPanelSrc = await readSource('ui/components/BuildLibraryPanel.js');

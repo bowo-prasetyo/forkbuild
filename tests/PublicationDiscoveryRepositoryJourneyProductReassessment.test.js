@@ -54,6 +54,7 @@ import { describeObserverLocalPublicationEncounter } from '../core/ObserverLocal
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 
 import { findRawStatusInterpolations, sweepDirectory, OVERCLAIM_WORDS } from './support/RawStatusInterpolationSweep.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.585 — Publication Discovery & Repository Journey Product
 // Reassessment.
@@ -956,7 +957,7 @@ async function main() {
         // actually wired into ui/components/WorldEncounterCanvas.js's
         // own template (never the bare enum word for THIS family
         // either, per 0.9.528's own closure).
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(/describeSnapshotResolutionOutcomeLabel\(/.test(canvasSource) || /describeSnapshotAttributionOutcomeLabel\(/.test(canvasSource),
             'M4. WorldEncounterCanvas.js\'s own template actually calls through the humanizing label functions Section E exercised, not the bare outcome string.');
 

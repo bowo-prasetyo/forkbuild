@@ -3,6 +3,7 @@ import { execSync } from 'node:child_process';
 
 import WorldEncounterCanvasModule from '../ui/components/WorldEncounterCanvas.js';
 import { materializedSnapshotWorldOrigin } from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.516 — World View / Wanderer Product Experience Reassessment.
 //
@@ -109,7 +110,7 @@ async function run() {
         check(!/\borigin\b/.test(markerSource), 'A1. WorldEncounterMarker.js never reads a marker\'s own origin — an unselected encounter never distinguishes LOCAL/PEER/SNAPSHOT');
         check(!/contentHash|txid|announcementId|discoveryTag/.test(markerSource), 'A2. WorldEncounterMarker.js never renders a content hash, transaction id, announcement id, or discovery tag');
 
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
         // The World's own main render loop feeds WorldEncounterMarker
         // exactly `kind`/`objectId`/`x`/`y`/`label` per encounter — a
         // richer per-encounter fact (sourceFamily, snapshot inspection,
@@ -224,7 +225,7 @@ async function run() {
         check(locationBrowserSource.includes('Discovery diagnostics unavailable — showing locally known documents only.'),
             'F3. WorldLocationBrowser.js degrades to a plain, honest product statement when discovery diagnostics are unavailable');
 
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
         check(canvasSource.includes('This content comparison is no longer available.'),
             'F4. WorldEncounterCanvas.js\'s own content-comparison collapse reads as a plain product state');
         check(!/GraphQL|stack trace|providerException|InternalError/i.test(canvasSource),
@@ -241,7 +242,7 @@ async function run() {
     //   INTERNAL ONLY / DEBUG-DIAGNOSTIC
     // ===============================================================
     {
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
 
         // G1 — BEFORE this milestone, `ui/components/WorldEncounterCanvas.js`'s
         // own "Choose Source"/"Source: …" panel (the panel an ORDINARY
@@ -327,7 +328,7 @@ async function run() {
         // STORAGE_TYPE_LABELS/ANCHOR_TYPE_LABELS) at every Publisher-facing
         // surface that renders them; this milestone's own sweep found no
         // NEW unguarded rendering of either.
-        const decentralizedViewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         check(decentralizedViewSource.includes('STORAGE_TYPE_LABELS') && decentralizedViewSource.includes('ANCHOR_TYPE_LABELS'),
             'G10. ui/views/DecentralizedPublicationsView.js still humanizes storage/anchorType codes via 0.9.510/0.9.514\'s own lookups');
         classifications.push(['storage/provider codes', 'USER_VISIBLE_ACCEPTABLE — already humanized (0.9.510 STORAGE_TYPE_LABELS, 0.9.514 ANCHOR_TYPE_LABELS); this sweep found no new unguarded rendering']);
@@ -441,7 +442,7 @@ async function run() {
     // precedent exactly.
     // ===============================================================
     {
-        const canvasSource = codeOnly(await source('ui/components/WorldEncounterCanvas.js'));
+        const canvasSource = codeOnly((await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n'));
         check(!/\b(rank|ranking|trust|trusted|verified|best|score|winner)\b/i.test(
             canvasSource.split('\n').filter((line) => line.includes('describeSelectionOriginLabel') || line.includes('describeDecentralizedLeadUriLabel') || line.includes('shortIdentityId') || line.includes('shortContentHash') || line.includes('CONTENT_URI_SCHEME_LABELS')).join('\n')
         ), 'I1. this milestone\'s own new code introduces no rank/trust/verified/best/score/winner vocabulary');

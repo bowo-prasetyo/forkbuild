@@ -21,6 +21,7 @@ import { ContentReference } from '../core/ContentReference.js';
 import { Publication } from '../publisher/Publication.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.555 — Observer-Local Discovery Retention Product Reassessment.
 //
@@ -374,7 +375,7 @@ async function runTests() {
         // registry-backed channel's own `publicationRows`/`effectiveView`
         // pairing uses — so there is no distance-based culling to trigger
         // in the first place.
-        const computedSource = codeOnlyLines(await rawSource('ui/components/WorldEncounterCanvas.js'));
+        const computedSource = codeOnlyLines((await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n'));
         const computedStart = computedSource.indexOf('projectedObserverLocalEncounters()');
         const computedBody = computedSource.slice(computedStart, computedSource.indexOf('},', computedStart));
         assert(!/wandererPosition|effectiveView|distance/i.test(computedBody), 'B2. Structurally confirmed: the projection has no proximity/distance term of any kind to evaluate.');
@@ -566,7 +567,7 @@ async function runTests() {
     // Section F — Inspection continuity.
     // ===============================================================
     {
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         const panelStart = canvasSource.indexOf('world-encounter-observer-local-inspection-panel');
         const panelBlockStart = canvasSource.indexOf('<div v-if="selectedObserverLocalEncounter"');
         const panelEnd = canvasSource.indexOf('class="world-snapshot-content-view-panel"', panelBlockStart);
@@ -645,7 +646,7 @@ async function runTests() {
         // catalog concept" the milestone brief asked about is real, and its
         // gate is the presentation PATH taken, never a property of the
         // material itself.
-        const canvasSource = codeOnlyLines(await rawSource('ui/components/WorldEncounterCanvas.js'));
+        const canvasSource = codeOnlyLines((await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n'));
         const admitStart = canvasSource.indexOf('admitToRepositoryDiscovery(loading, verification) {');
         const admitBody = canvasSource.slice(admitStart, canvasSource.indexOf('refreshMaterialInspection()', admitStart));
         assert(admitBody.includes("loading.status === 'AVAILABLE'") && admitBody.includes("verification.status === 'VERIFIED'"), 'G3. admitToRepositoryDiscovery()\'s own gate is exactly AVAILABLE+VERIFIED — the identical state G1 just proved an observer-local encounter already reaches.');
@@ -690,7 +691,7 @@ async function runTests() {
             const source = codeOnlyLines(await rawSource(file));
             assert(!/PlacementRecord|PlacementRegistry/.test(source), `H2. ${file} never constructs, imports, or references a PlacementRecord/PlacementRegistry — reconfirmed against live source.`);
         }
-        const canvasSource = codeOnlyLines(await rawSource('ui/components/WorldEncounterCanvas.js'));
+        const canvasSource = codeOnlyLines((await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n'));
         const selectMethodStart = canvasSource.indexOf('selectObserverLocalEncounter(marker)');
         const refreshMethodStart = canvasSource.indexOf('refreshObserverLocalEncounterInspection()');
         const observerLocalMethodsBlock = canvasSource.slice(selectMethodStart, canvasSource.indexOf('dismissObserverLocalEncounterInspection()', refreshMethodStart) + 400);
@@ -817,7 +818,7 @@ async function runTests() {
     // Section K — Product vocabulary.
     // ===============================================================
     {
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         const markerStart = canvasSource.indexOf('world-encounter-observer-local-marker');
         const markerBlock = canvasSource.slice(markerStart, canvasSource.indexOf('</g>', markerStart));
         assert(!/\bpermanent(ly)?\b|\bforever\b|\balways here\b/i.test(markerBlock), 'K1. The marker itself never claims permanence.');

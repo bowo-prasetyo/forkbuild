@@ -17,7 +17,7 @@ import { WorldConflictResolver, WorldOperationOutcome } from '../replication/Wor
 
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
 import { RoleProviderRole, isValidRoleProviderRole } from '../core/RoleProviderRole.js';
-import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.313 — Stable Product Baseline Audit.
 //
@@ -253,7 +253,7 @@ async function runTests() {
             'B1d. PublicationPreview.js still exists — Discovery -> Inspection, the journey\'s own terminus.');
 
         // B2. Encounter -> Commentary -> Notification -> Notification History.
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(/encounterCommentaryPublicationId/.test(canvasSource),
             'B2a. WorldEncounterCanvas.js still gates its commentary panel on the selected encounter — Encounter -> Commentary.');
         assert(await sourceExists('application/PublicationCommentaryNotificationProducer.js'),

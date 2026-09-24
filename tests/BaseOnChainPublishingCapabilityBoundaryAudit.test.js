@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.460 — Base On-Chain Publishing Capability Boundary Audit.
 //
@@ -223,7 +224,7 @@ async function run() {
     // publication, not a generic/disconnected sandbox value.
     // ===============================================================
     {
-        const viewSrc = codeOnly(await source('ui/views/DecentralizedPublicationsView.js'));
+        const viewSrc = codeOnly((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n'));
         assert(/async function constructBasePublicationTransaction\(entry\)/.test(viewSrc), n('D1. the real construction handler takes a specific publication `entry`, not a page-level/global value'));
 
         const callMatch = viewSrc.match(/basePublicationTransactionPlanCoordinator\.construct\(\{([^}]*)\}\)/s);
@@ -297,7 +298,7 @@ async function run() {
         assert(/CALL THIS AT SUCCESSFUL FINALIZATION, NEVER EARLIER/.test(useCaseSrc), n('H1. the intended call site is documented as the FINALIZED boundary, never earlier'));
         assert(/THE TRANSACTION IDENTITY COMES FROM THE FINALIZED ARTIFACT, NEVER FROM/.test(useCaseSrc), n('H2. txid comes from the finalizer\'s own deterministic hash, never a network/RPC lookup'));
 
-        const viewSrc = codeOnly(await source('ui/views/DecentralizedPublicationsView.js'));
+        const viewSrc = codeOnly((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n'));
         assert(/if \(entry\.baseSignedTransactionFinalizationOutcome\.state === BaseSignedTransactionFinalizationState\.FINALIZED\) \{\s*archiveBaseAnchorPublicationRecord\(/.test(viewSrc),
             n('H3. the real, current UI mints the durable record ONLY on a FINALIZED outcome, exactly as the use case\'s own header requires — never on construction, signing, or broadcast alone'));
         assert(/txid:\s*entry\.baseSignedTransactionFinalizationOutcome\.finalizedTransaction\.transactionHash/.test(viewSrc),
@@ -362,7 +363,7 @@ async function run() {
             assert(new RegExp(`app\\.provide\\('${key}', ${key}\\)`).test(mainSrc), n(`J2[${key}]. provided by the real composition root, not left undefined/null`));
         }
 
-        const viewSrc = codeOnly(await source('ui/views/DecentralizedPublicationsView.js'));
+        const viewSrc = codeOnly((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n'));
         const clickHandlers = [
             'constructBasePublicationTransaction(entry)', 'signBaseReviewedTransaction(entry)',
             'finalizeBaseSignedTransaction(entry)', 'broadcastBaseTransaction(entry)', 'observeBaseTransactionInclusion(entry)'
@@ -398,7 +399,7 @@ async function run() {
         const anchorCreationSrc = await source('application/CreatePublicationAnchorUseCase.js');
         assert(/'bitcoin-op-return'/.test(anchorCreationSrc), n('K5. the peer-shareable PublicationAnchor creation path documents bitcoin-op-return as its own example anchorType'));
 
-        const viewSrc = codeOnly(await source('ui/views/DecentralizedPublicationsView.js'));
+        const viewSrc = codeOnly((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n'));
         assert(!/anchorType === 'base/.test(viewSrc), n('K6. the shipped UI never branches on a Base-flavored anchorType for the PublicationAnchor peer-attestation surface — this is a real, current absence, not a name-collision this audit misread'));
 
         // K7. This gap is independent of Sections A-J: nothing in the

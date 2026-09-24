@@ -9,6 +9,7 @@ import { PublicationDistributionState } from '../application/PublicationDistribu
 import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
 import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
 import { ArweaveGraphqlDiscoveryQueryService } from '../application/ArweaveGraphqlDiscoveryQueryService.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.431 — Multi-Substrate Announcement/Discovery Product Reassessment.
 //
@@ -374,7 +375,7 @@ async function run() {
         // fan-out UI, wired to the SAME unmodified lifecycle triple, would
         // produce the identical collapse the moment it recorded a second
         // discovery fact for one publication. See Section J.
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
         assert(/distributionLifecycle\.discovery\.state/.test(canvasSource) || /distributionDiscoveryState/.test(canvasSource), n('D1. WorldEncounterCanvas.js\'s own Distribution panel renders exactly one Discovery state per publication — confirmed structurally, not merely inferred from the lifecycle triple\'s own shape'));
         assert(!/discovery\[.*\]|discoveries\b/i.test(canvasSource), n('D2. ...and never renders a per-substrate list or array of discovery facts — there is no UI surface today that could even display Section C\'s own two independent facts side by side'));
 
@@ -408,8 +409,8 @@ async function run() {
         // from WorldEncounterCanvas.js's own header, which states its own
         // restraint explicitly, and from its own action method, which
         // discards distributionCommand()'s own resolved value entirely.
-        const canvasSource = codeOnly(await source('ui/components/WorldEncounterCanvas.js'));
-        assert(/never inspects a resolved result/.test(await source('ui/components/WorldEncounterCanvas.js')), n('E2. WorldEncounterCanvas.js\'s own header states, explicitly, that it never inspects a resolved distribution result — by design, since 0.9.104'));
+        const canvasSource = codeOnly((await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n'));
+        assert(/never inspects a resolved result/.test((await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n')), n('E2. WorldEncounterCanvas.js\'s own header states, explicitly, that it never inspects a resolved distribution result — by design, since 0.9.104'));
         assert(/\.then\(\(\) => \{[\s\S]{0,200}distributionExecuting = false/.test(canvasSource), n('E3. ...confirmed in the real method: the settled call\'s own resolution value is discarded (the final .then() callback takes no parameter), never read, never displayed'));
 
         console.log('✓ Section E: independent per-call material/discovery facts already give sufficient semantics for a caller that captures them — but the real UI discards every call\'s own result and relies entirely on distributionLifecycleStore\'s own subscription (0.9.100), the exact channel Section C proved collapses to one substrate. No new PARTIAL/SUCCESS/FAILED vocabulary would fix this; it would need to be captured, or the store itself would need to retain more than one discovery fact — see Section F/J')
@@ -505,7 +506,7 @@ async function run() {
     // action?
     // ===============================================================
     {
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
         // AMENDED BY 0.9.672 — World View Distribution Dialog. The
         // substrate <select> H2 checks now lives in
         // WorldDistributionDialog.js, one popup over — see that file's

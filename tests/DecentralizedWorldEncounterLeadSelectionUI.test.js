@@ -6,6 +6,7 @@ import { describeLocalWorldDiscoverySource } from '../application/WorldEncounter
 import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
 import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/DecentralizedWorldDiscoveryLeadRegistry.js';
 import { describeDecentralizedWorldDiscoveryLead } from '../core/DecentralizedWorldDiscoveryLead.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.40 — Decentralized Lead Resolution Integration.
 // See docs/Roadmap.md, "0.9.40 — Decentralized Lead Resolution
@@ -410,7 +411,7 @@ async function run() {
     // Section G — architectural regression.
     // ---------------------------------------------------------------
     {
-        const source = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
+        const source = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         assert(codeOnly.includes('describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry({'), '27. WorldEncounterCanvas.js calls describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry() directly');

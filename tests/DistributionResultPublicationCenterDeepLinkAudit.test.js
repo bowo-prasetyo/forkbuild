@@ -16,6 +16,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.380 — Publication Result -> Publication Center Deep-Link Audit.
 //
@@ -277,7 +278,7 @@ async function run() {
     const toolbarCodeOnly = await codeOnlySource('ui/components/Toolbar.js');
     const publishSource = extractToolbarPublishChain(toolbarCodeOnly);
     const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
-    const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+    const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
 
     // ---------------------------------------------------------------
     // Section A — Result identity.
@@ -324,7 +325,7 @@ async function run() {
     // one of its entries.
     // ---------------------------------------------------------------
     {
-        const publicationsViewSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const publicationsViewSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
 
         // B1 — no selectPublication(id) or route-query mechanism exists
         // (reconfirming 0.9.379 Section D2 fresh).
@@ -429,7 +430,7 @@ async function run() {
         // reconfirmed fresh, never introduced by this milestone.
         assert(/route\.query\.fork/.test(editorViewCodeOnly) && /route\.query\.load/.test(editorViewCodeOnly) && /route\.query\.publication/.test(editorViewCodeOnly),
             n('EditorView.js already reads route.query.fork/load/publication — an established, bare-noun-keyed query-param idiom, pre-existing this milestone'));
-        assert(!/route\.query/.test(await codeOnlySource('ui/views/DecentralizedPublicationsView.js')),
+        assert(!/route\.query/.test((await Promise.all(publicationsPageFiles().map((file) => codeOnlySource(file)))).join('\n')),
             n('that idiom has never been extended to /publications itself — reconfirming Section B1, from the routing-convention side'));
 
         // C3 — the ALREADY-WORKING per-entity destination for exactly

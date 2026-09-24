@@ -32,6 +32,10 @@ export function worldViewFiles() {
     return fileGroup('ui/views/WorldView.js', 'ui/views/worldView');
 }
 
+export function worldEncounterCanvasFiles() {
+    return fileGroup('ui/components/WorldEncounterCanvas.js', 'ui/components/worldEncounterCanvas');
+}
+
 export function worldNavigationSessionFiles() {
     return fileGroup('application/WorldNavigationSession.js', 'application/worldNavigation');
 }

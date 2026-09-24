@@ -21,7 +21,7 @@ import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.216 — Post-Snapshot-Export Product Reassessment.
 //
@@ -273,7 +273,7 @@ async function runTests() {
         // (Section F) — a Publication is DISTRIBUTED (announced) so
         // others can DISCOVER it; nothing here transfers the actual
         // bytes, which is what Section G's Transfer Package is for.
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(/distributionCommand:\s*\{/.test(canvasSource), 'D2a. WorldEncounterCanvas.js still declares a distributionCommand prop');
         assert(/distributeSelectedPublication\(\)\s*\{/.test(canvasSource), 'D2b. ...and still defines distributeSelectedPublication()');
         // AMENDED BY 0.9.672 — World View Distribution Dialog.
@@ -341,7 +341,7 @@ async function runTests() {
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/worldSnapshotDiscoveryMonitor\.observe\(/.test(worldViewSource), 'F2. WorldView.js still drives worldSnapshotDiscoveryMonitor.observe() (automatic discovery)');
         assert(/automaticSnapshotEncounterCascade\.processCandidate\(/.test(worldViewSource), 'F3. ...and still feeds candidates to automaticSnapshotEncounterCascade.processCandidate() (automatic materialization)');
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(/openSnapshotContentView/.test(canvasSource) && /unregisterSelectedSnapshot/.test(canvasSource), 'F4. WorldEncounterCanvas.js still lets a materialized Snapshot be viewed and removed');
         const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => rawSource(file)))).join('\n');
         assert(/materializePlacement\(/.test(decentralizedViewSource) && /importSnapshotContent\(/.test(decentralizedViewSource), 'F5. DecentralizedPublicationsView.js still wires explicit "Materialize"/"Import Snapshot" actions');
@@ -477,7 +477,7 @@ async function runTests() {
         assert(/composeDecentralizedWorldEncounterMaterialDiscoveryRuntime\(/.test(mainSource), 'H1a. ui/main.js still composes the decentralized World Material discovery runtime (Nostr + Arweave)');
         assert(/provide\('discoverWorldEncounterPublicationCommand'/.test(mainSource) || /discoverWorldEncounterPublicationCommand/.test(mainSource), 'H1b. ...and still exposes a discovery command app-wide');
 
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(/discoveryCommand:\s*\{/.test(canvasSource), 'H2a. WorldEncounterCanvas.js still declares a discoveryCommand prop');
         assert(/discoverPublication\(\)\s*\{/.test(canvasSource), 'H2b. ...and still defines discoverPublication()');
         assert(/@click="discoverPublication"/.test(canvasSource), 'H2c. ...wired to a real @click handler — "Discover Publication" stays reachable');
@@ -514,7 +514,7 @@ async function runTests() {
         assert(/composeWorldEncounterMaterialVerifier\(/.test(mainSource), 'I1a. ui/main.js still composes the material verifier (signature -> identity -> inspection chain)');
         assert(/provide\('worldEncounterMaterialVerifier'/.test(mainSource), 'I1b. ...and provides it app-wide');
 
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(/materialInspection\.verification\.status/.test(canvasSource) || /discoveryResult\.inspection\.verification\.status/.test(canvasSource), 'I2a. WorldEncounterCanvas.js still renders a verification status field');
         assert(/resolveSnapshotPublicationAttribution/.test(canvasSource), 'I2b. ...and still resolves Snapshot/Publication attribution');
 

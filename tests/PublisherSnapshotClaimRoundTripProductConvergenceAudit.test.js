@@ -27,6 +27,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 import PublisherLeaderboardSnapshotClaimAuthoringView from '../ui/views/PublisherLeaderboardSnapshotClaimAuthoringView.js';
 import ReconciliationWorkspaceView from '../ui/views/ReconciliationWorkspaceView.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.412 — Publisher Snapshot Claim Round-Trip Product Convergence Audit.
 //
@@ -630,7 +631,7 @@ async function run() {
     {
         const routerSource = await readSource('ui/router/index.js');
         const appSource = await readSource('ui/App.js');
-        const publicationsSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const publicationsSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
 
         assert(/\{ path: '\/publisher-snapshot-claim', name: 'publisher-snapshot-claim', component: PublisherLeaderboardSnapshotClaimAuthoringView \}/.test(routerSource), n('H1. /publisher-snapshot-claim is registered, wired to its real component'));
         assert(/\{ path: '\/reconciliation-workspace', name: 'reconciliation-workspace', component: ReconciliationWorkspaceView \}/.test(routerSource), n('H2. /reconciliation-workspace is registered, wired to its real component'));

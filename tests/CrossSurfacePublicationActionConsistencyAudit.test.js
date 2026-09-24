@@ -24,6 +24,7 @@ import { PublicationCommentaryNotificationProducer } from '../application/Public
 import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
 import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
 import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.560 — Cross-Surface Publication Action Consistency Audit.
 //
@@ -131,7 +132,7 @@ async function runTests() {
         const publicationCardSource = await rawSource('ui/components/PublicationCard.js');
         const publicationListSource = await rawSource('ui/components/PublicationList.js');
         const worldViewSource = await rawSource('ui/views/WorldView.js');
-        const worldEncounterCanvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const worldEncounterCanvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         const worldFocusPanelSource = await rawSource('ui/components/WorldFocusPanel.js');
         const worldSearchPanelSource = await rawSource('ui/components/WorldSearchPanel.js');
         const ownPublicationPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
@@ -448,7 +449,7 @@ async function runTests() {
         const publicationCardSource = await rawSource('ui/components/PublicationCard.js') + await rawSource('ui/components/PublicationCommentarySection.js');
         const publicationListSource = await rawSource('ui/components/PublicationList.js');
         const ownPublicationPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
-        const worldEncounterCanvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const worldEncounterCanvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
 
         // G1. Every commentary-bearing surface reads/writes strictly by
         // publicationId — never documentId/contentHash — reconfirmed

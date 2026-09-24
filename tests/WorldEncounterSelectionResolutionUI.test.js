@@ -4,6 +4,7 @@ import { WorldEncounterSelectionOutcomeStatus } from '../application/WorldEncoun
 import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
 import { describeLocalWorldDiscoverySource } from '../application/WorldEncounterIntegration.js';
 import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.20 — World Encounter Selection Resolution.
 //
@@ -274,7 +275,7 @@ async function run() {
     // Section H — architectural regression on the 0.9.20 additions.
     // ---------------------------------------------------------------
     {
-        const source = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
+        const source = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         // 0.9.182 note — 'compare' was retired from this list. It was

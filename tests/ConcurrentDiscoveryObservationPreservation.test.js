@@ -8,6 +8,7 @@ import { PublicationDistributionState } from '../application/PublicationDistribu
 import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
 import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.433 — Concurrent Discovery Observation Preservation.
 //
@@ -458,7 +459,7 @@ async function run() {
         const forbiddenVocabulary = ['PARTIAL', 'MULTI_SUCCESS', 'FAILED', 'SUCCESS', 'PENDING', 'RETRYING', 'CONFIRMED', 'WITHDRAWN', 'kind/objectId'];
         const storeCode = codeOnly(await source('application/PublicationDistributionLifecycleStore.js'));
         const commandCode = codeOnly(await source('application/PublicationDistributionCommand.js'));
-        const canvasCode = codeOnly(await source('ui/components/WorldEncounterCanvas.js'));
+        const canvasCode = codeOnly((await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n'));
 
         for (const term of forbiddenVocabulary) {
             assert(!storeCode.includes(term), n(`L1[${term}]. PublicationDistributionLifecycleStore.js's own CODE never introduces "${term}"`));

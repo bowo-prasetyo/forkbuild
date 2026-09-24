@@ -7,6 +7,7 @@ import { PublicationDistributionLifecycleMemoryStore } from '../application/Publ
 import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
 import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
 import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.432 — Multi-Substrate Distribution Lifecycle Observation Audit.
 //
@@ -486,7 +487,7 @@ async function run() {
         // still owned by WorldEncounterCanvas.js and passed down as props
         // (`distribution-material-state`/`distribution-discovery-state`/
         // `discovery-observations`) for the dialog to render.
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
         const dialogSource = await source('ui/components/WorldDistributionDialog.js');
         const distributionPanelStart = dialogSource.indexOf('world-distribution-dialog-lifecycle-detail');
         // AMENDED BY 0.9.433 — Concurrent Discovery Observation Preservation.
@@ -525,7 +526,7 @@ async function run() {
         assert(/lifecycleStore\.get\([^)]*\)\s*\|\|\s*BASELINE_LIFECYCLE/.test(commandSource), n('H1. PublicationDistributionCommand.js reads lifecycleStore.get() and falls back to a single-object BASELINE_LIFECYCLE — it would break (or silently misbehave) if get() ever returned an array instead of an object, since it immediately reads `.material.state` off whatever get() returns'));
         assert(/\.material\.state\s*===\s*PublicationDistributionState\.PRESENT/.test(commandSource), n('H2. ...confirmed precisely: the very next line reads `.material.state` directly off the get() result, which requires a single object, never a collection'));
 
-        const canvasSource = codeOnly(await source('ui/components/WorldEncounterCanvas.js'));
+        const canvasSource = codeOnly((await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n'));
         assert(/this\.distributionLifecycleStore\.get\(publicationId\)/.test(canvasSource), n('H3. WorldEncounterCanvas.js also calls store.get(publicationId) directly'));
         assert(/return this\.distributionLifecycle \? this\.distributionLifecycle\.material\.state/.test(canvasSource), n('H4. ...and its own computed property reads `.material.state` off the stored value with a ternary null-check, never a `.map()`/`.find()`/array-index operation — an unambiguous single-object expectation'));
 

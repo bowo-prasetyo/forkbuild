@@ -11,6 +11,7 @@ import {
 import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
 import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.445 — Nostr Multi-Relay Fan-Out Integration Boundary Audit.
 //
@@ -714,7 +715,7 @@ async function run() {
         // new callers.
         const worldViewSource = await source('ui/views/WorldView.js');
         const editorViewSource = await source('ui/views/EditorView.js');
-        const publicationsViewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const publicationsViewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         for (const [label, text] of [['WorldView.js', worldViewSource], ['EditorView.js', editorViewSource], ['DecentralizedPublicationsView.js', publicationsViewSource]]) {
             assert(!/new NostrMultiRelayPublicationDiscoveryPublisher/.test(text) && !/orchestrateMultiRelayNostrPublicationDistribution/.test(text),
                 n(`J4d. ${label} never constructs NostrMultiRelayPublicationDiscoveryPublisher or calls orchestrateMultiRelayNostrPublicationDistribution directly — it only calls the injected multiRelayNostrPublicationDistributionCommand, exactly like every other admitted file`));

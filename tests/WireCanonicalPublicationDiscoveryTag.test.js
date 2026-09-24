@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.357 — Wire Canonical Publication Discovery Tag into World View.
 //
@@ -176,7 +177,7 @@ async function run() {
         // discoverPublication()'s own source is byte-for-byte unchanged
         // from 0.9.356's own audit — this milestone added no branch of any
         // kind to it.
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         const methodStart = canvasSource.indexOf('discoverPublication() {');
         const methodBlock = canvasSource.slice(methodStart, canvasSource.indexOf('\n        },', methodStart));
         assert(methodBlock.includes("const objectId = this.discoveryObjectId.trim();") && methodBlock.includes("const discoveryTag = this.discoveryTag.trim();") && methodBlock.includes('this.discoveryCommand({ objectId, discoveryTag })'),

@@ -6,7 +6,7 @@ import { PlacementRecord } from '../core/PlacementRecord.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { DiscoverPlacementsUseCase } from '../application/DiscoverPlacementsUseCase.js';
-import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.307 — Post-Arc Product Evolution Reassessment.
 //
@@ -188,7 +188,7 @@ async function runTests() {
         // NO for the Snapshot→Place→Observe loop specifically: a placed,
         // Snapshot-sourced encounter can still be re-inspected, re-
         // compared, and removed, indefinitely, by anyone who selects it.
-        assert((await rawSource('ui/components/WorldEncounterCanvas.js')).includes('unregisterSelectedSnapshot'),
+        assert(((await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n')).includes('unregisterSelectedSnapshot'),
             'B3. WorldEncounterCanvas.js still exposes unregisterSelectedSnapshot() — a placed Snapshot-sourced encounter is never a dead end.');
         // But B1's OWN answer shows the sibling question — "placed, but
         // not ALL of it observable, only the newest one" — is a real,
@@ -243,7 +243,7 @@ async function runTests() {
         // milestone's own dedicated Snapshot research pass. Reconfirmed
         // with one signal per stage rather than the full prior sweep.
         assert((await rawSource('ui/components/OwnPublicationPanel.js')).includes('discoverOwnSnapshot') &&
-            (await rawSource('ui/components/WorldEncounterCanvas.js')).includes('armComparisonSelection') &&
+            ((await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n')).includes('armComparisonSelection') &&
             (await rawSource('ui/main.js')).includes("app.provide('exportSnapshotCommand'"),
             'C1. Snapshot discovery, comparison, and export all still have real UI call sites.');
         classifications.push(['Snapshot discovery/compare/materialize/place/observe', 'REACHABLE_AND_COMPLETE']);
@@ -319,7 +319,7 @@ async function runTests() {
         // DecentralizedPublicationsView.js has verification with zero
         // Commentary vocabulary) — a real, but smaller and non-
         // load-bearing, asymmetry than D1's.
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(/encounterCommentaryPublicationId/.test(canvasSource) && /materialInspection/.test(canvasSource),
             'D2a. WorldEncounterCanvas.js still gates both its commentary and verification panels on the same selected-encounter state.');
         const cardSource = await rawSource('ui/components/PublicationCard.js');
@@ -330,7 +330,7 @@ async function runTests() {
         // Observe. Per this milestone's dedicated research pass: every
         // stage has a real, reusable UI action; the loop closes with
         // re-inspection/re-comparison/removal rather than dead-ending.
-        assert((await rawSource('ui/components/WorldEncounterCanvas.js')).includes('worldSnapshotComparisonResult'),
+        assert(((await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n')).includes('worldSnapshotComparisonResult'),
             'D3. The Snapshot chain\'s own comparison stage is still live-computed on selection, not a one-shot snapshot of a snapshot.');
 
         // D4. Collaborate → Recover → Review history → Publish. No
@@ -397,7 +397,7 @@ async function runTests() {
         // placement }. Checked directly: all four already converge on
         // ONE component (WorldEncounterCanvas.js) for a SINGLE selected
         // encounter — this tree has NO missing seam, unlike F1's.
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(/distributionCommand/.test(canvasSource) && /Snapshot Attribution/.test(canvasSource) &&
             /worldSnapshotComparisonResult/.test(canvasSource) && /registerMaterializedSnapshotWorldSource|unregisterSelectedSnapshot/.test(canvasSource),
             'F2. WorldEncounterCanvas.js still converges distribution, attribution, comparison, and World placement/removal on one selected encounter — no missing cross-boundary seam here.');

@@ -18,6 +18,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { readFile } from 'node:fs/promises';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.290 — Publication Commentary Cross-Surface Convergence Audit.
 //
@@ -895,7 +896,7 @@ async function runTests() {
         // reusing WorldView.js's own existing session-backed commands
         // (see WorldEncounterCanvas.js's own "0.9.291" header) rather
         // than a third composition root.
-        const worldEncounterCode = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
+        const worldEncounterCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(worldEncounterCode.includes('getPublicationCommentariesCommand') && worldEncounterCode.includes('addPublicationCommentaryCommand'),
             '70b. ui/components/WorldEncounterCanvas.js now carries commentary wiring — 0.9.291 closed this Section\'s own named candidate');
 

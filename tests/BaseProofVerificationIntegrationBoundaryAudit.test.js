@@ -27,6 +27,7 @@ import { ArweaveTransactionDataProofVerifier } from '../anchoring/ArweaveTransac
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.464 — Base Proof Verification Integration Boundary Audit.
 //
@@ -861,7 +862,7 @@ async function run() {
         // identical slice-and-scan technique tests/
         // ArweaveProofAnchorIntegrationBoundaryAudit.test.js's own
         // Section B already established.
-        const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         const startMarker = 'v-for="anchorType in availableAnchorTypes"';
         const startIndex = viewSource.indexOf(startMarker);
         check(startIndex !== -1, 'K1a. the real view still contains the generic availableAnchorTypes v-for');

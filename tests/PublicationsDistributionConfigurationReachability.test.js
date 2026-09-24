@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.437 — Contextual Distribution Configuration Reachability.
 //
@@ -86,7 +87,7 @@ function countOccurrences(haystack, needle) {
 async function run() {
     console.log('Running Publications Distribution Configuration Reachability tests...\n');
 
-    const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
+    const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
     const routerSource = await source('ui/router/index.js');
 
     // Isolate the Distribution section, and each role's own slice within

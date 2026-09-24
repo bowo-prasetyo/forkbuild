@@ -29,7 +29,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PublicationExchange } from '../application/PublicationExchange.js';
 import { PublicationPeerExchange } from '../application/PublicationPeerExchange.js';
 import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.352 — Remote Publication Fork Journey Product Gap Audit.
 //
@@ -663,7 +663,7 @@ async function run() {
         // the most plausible duplicate candidate. Checked directly: does
         // it import anything from the Explore/Fork chain this milestone
         // audited, or only the unrelated evidence/anchor domain?
-        const decentralizedViewSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(decentralizedViewSource.includes("import { Publication } from '../../publisher/Publication.js';"),
             "1. DecentralizedPublicationsView.js imports publisher/Publication.js for exactly one reason, by its own 0.9.337 comment: an `instanceof Publication` admission check.");
         for (const forbidden of ['ForkDocumentUseCase', 'CreateDiscoveryUseCase', "components/PublicationCatalog.js'", 'forkPublication', 'viewWorld(']) {

@@ -11,6 +11,7 @@ import { GetRecipientNotificationEventsUseCase } from '../application/GetRecipie
 import { NotificationEvent } from '../core/NotificationEvent.js';
 import { NotificationEventStore, NotificationPersistenceOutcome } from '../storage/NotificationEventStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.306 — Notification Awareness Product Reassessment.
 //
@@ -455,7 +456,7 @@ async function runTests() {
     // ===============================================================
     {
         const worldViewSource = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
-        const canvasSource = codeOnlyLines(await rawSource('ui/components/WorldEncounterCanvas.js'));
+        const canvasSource = codeOnlyLines((await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n'));
         const userWidgetSource = codeOnlyLines(await rawSource('ui/components/UserWidget.js'));
 
         // H1. Vehicle-proximity / spatial polling — WorldView.js's own

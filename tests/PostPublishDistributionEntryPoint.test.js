@@ -6,6 +6,7 @@ import { PublicationDistributionLifecycleMemoryStore } from '../application/Publ
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.347 — Post-Publish Distribution Entry Point.
 //
@@ -413,7 +414,7 @@ async function runTests() {
         assert(!panelCode.includes('this.selectedEncounter'),
             '33. distributeOwnPublication() (and every other method in this file) never reads selectedEncounter — reachable with no selection of any kind');
 
-        const canvasCode = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
+        const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(!canvasCode.includes('OwnPublicationPanel'), '34. WorldEncounterCanvas.js is untouched by this milestone — it knows nothing of OwnPublicationPanel');
         assert(!canvasCode.includes('publicationDistributionCommand') && canvasCode.includes('distributionCommand'),
             '35. WorldEncounterCanvas.js keeps its own distinct distributionCommand prop name, unrenamed — this milestone introduces publicationDistributionCommand only on OwnPublicationPanel');

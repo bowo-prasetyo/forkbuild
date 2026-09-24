@@ -28,7 +28,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.603 — Publication World Materialization Boundary Audit.
 //
@@ -191,7 +191,7 @@ async function run() {
         assert(/CONTENT_KEY_PREFIX = 'content:'/.test(contentStoreSrc),
             'B8. Structurally, the two namespaces already coexist safely in the SAME underlying StorageProvider without any bridging work: LocalContentStore always writes under a `content:` prefix, disjoint by construction from the bare documentId keys LoadPublicationDocumentUseCase reads. A future bridge needs no new storage substrate — the substrate is already shared and already collision-free.');
 
-        const encounterCanvasSrc = await readSource('ui/components/WorldEncounterCanvas.js');
+        const encounterCanvasSrc = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(/that identity\s*\n\/\/\s*\(`publicationId` \+ `contentHash`\) is deliberately never a `documentId`/.test(encounterCanvasSrc),
             'B9. This exact identity distinction is already a named, deliberate architectural principle ELSEWHERE in this codebase (ui/components/WorldEncounterCanvas.js, 0.9.552 family) — this audit is not inventing a new rule, only confirming one that already exists is honored consistently.');
 

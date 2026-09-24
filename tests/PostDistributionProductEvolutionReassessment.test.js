@@ -25,6 +25,7 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.379 — Post-Distribution Product Evolution Reassessment.
 //
@@ -405,7 +406,7 @@ async function run() {
         const ipfsCode = await readSource('application/IpfsRemotePublicationCoordinator.js');
         assert(ipfsCode.includes('class IpfsRemotePublicationCoordinator'),
             n('IPFS placement/pinning: application/IpfsRemotePublicationCoordinator.js exists — COMPLETE'));
-        const publicationsViewSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const publicationsViewSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(publicationsViewSource.includes('IpfsRemotePublicationCoordinator') || publicationsViewSource.includes('IpfsRemotePublishingConfiguration'),
             n('IPFS placement/pinning is wired into the real Publication Center view (ui/views/DecentralizedPublicationsView.js), not merely defined and unreached'));
 
@@ -439,7 +440,7 @@ async function run() {
         assert(editorViewCodeOnly.includes('function distributePublishedDocument()'),
             n('post-publish distribution action: EditorView.js (0.9.377) still carries its own action'));
         const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(panelSource.includes('distributeOwnPublication') && canvasSource.includes('distributeSelectedPublication'),
             n('OwnPublicationPanel.js and WorldEncounterCanvas.js still each carry their own pre-existing entry point onto the identical capability'));
 
@@ -547,7 +548,7 @@ async function run() {
         // C5 — user can verify/retrieve it later: the Publication Center
         // genuinely composes real resolution/retrieval machinery, not a
         // static list.
-        const publicationsViewSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const publicationsViewSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(publicationsViewSource.includes('resolvePublicationView') && publicationsViewSource.includes('describeRetrieval'),
             n('user can verify/retrieve it later: the Publication Center composes real resolution-view and retrieval-description logic, not a placeholder list'));
 
@@ -612,7 +613,7 @@ async function run() {
         // narrower, presentation-only question: does landing on that page
         // ever let you jump straight to the Publication you just
         // distributed? It does not, today.
-        const publicationsViewSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const publicationsViewSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(!publicationsViewSource.includes('useRoute') && !/route\.query/.test(publicationsViewSource),
             n('the Publication Center reads no route query parameter — it has no "jump straight to Publication X" mechanism at all, so a link from the distribution result could not target one yet even if added; the finding is real, but it is a build task, not a five-line prop wiring like 0.9.377\'s own'));
 
@@ -739,7 +740,7 @@ async function run() {
         // G2 — structural: no retry/queue/scheduler vocabulary exists in
         // any of the three surfaces, reconfirmed fresh across all three
         // rather than just EditorView.js as 0.9.378 Section J checked.
-        const canvasCodeOnly = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
+        const canvasCodeOnly = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
         const panelCodeOnly = await codeOnlySource('ui/components/OwnPublicationPanel.js');
         for (const [label, code] of [['EditorView.js', editorViewCodeOnly], ['OwnPublicationPanel.js', panelCodeOnly], ['WorldEncounterCanvas.js', canvasCodeOnly]]) {
             for (const term of ['setInterval', 'RetryQueue', 'retryQueue', 'RetryScheduler']) {

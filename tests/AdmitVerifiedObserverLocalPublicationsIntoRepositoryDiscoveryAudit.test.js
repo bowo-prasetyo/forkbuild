@@ -31,6 +31,7 @@ import { DocumentCloneService } from '../application/DocumentCloneService.js';
 import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { readFile } from 'node:fs/promises';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.595 — Admit Verified Observer-Local Publications into Repository
 // Discovery — dedicated flagship audit.
@@ -421,7 +422,7 @@ async function run() {
     // Section H — No duplicate discovery mechanism.
     // ===============================================================
     {
-        const canvasSource = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const addCallSites = (canvasSource.match(/decentralizedPublicationDiscoveryProvider\.add\(/g) || []);
         assert(addCallSites.length === 1, `H1. Exactly one call site invokes .add() on the injected provider — inside admitToRepositoryDiscovery() itself (found ${addCallSites.length}).`);
         const callerCount = (canvasSource.match(/this\.admitToRepositoryDiscovery\(/g) || []).length;
@@ -484,7 +485,7 @@ async function run() {
     // Section J — Production scope guard.
     // ===============================================================
     {
-        const canvasSource = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const otherFilesToCheck = [
             '../application/WorldNavigationSession.js',
             '../application/CreateWorldViewUseCase.js',

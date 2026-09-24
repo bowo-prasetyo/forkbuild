@@ -16,6 +16,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { computeAmbiguousPublishedDateIds, formatPublicationDate } from '../core/PublicationDateAmbiguity.js';
 
 import ForkTree from '../ui/components/ForkTree.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.572 — Decentralized Publication Discovery Presentation Consistency
 // Product Reassessment.
@@ -301,7 +302,7 @@ async function run() {
     // re-running that arc's own, already-passing regression suites.
     // =======================================================================
     {
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         const canvasCode = codeOnly(canvasSource);
         assert(!/from ['"]\.\.\/\.\.\/application\/SnapshotWorldPositionClaim\.js['"]/.test(canvasCode),
             'F1. WorldEncounterCanvas.js still never imports application/SnapshotWorldPositionClaim.js.');

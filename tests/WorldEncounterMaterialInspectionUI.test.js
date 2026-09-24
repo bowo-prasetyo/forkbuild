@@ -5,6 +5,7 @@ import { WorldEncounterMaterialVerificationStatus, WorldEncounterMaterialVerifie
 import { describeLocalWorldDiscoverySource } from '../application/WorldEncounterIntegration.js';
 import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
 import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.39 — World Encounter Material Inspection Orchestration & UI
 // Integration.
@@ -407,7 +408,7 @@ async function run() {
     // Section H — architectural regression.
     // ---------------------------------------------------------------
     {
-        const source = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
+        const source = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         assert(codeOnly.includes('inspectWorldEncounterMaterial({'), '25. WorldEncounterCanvas.js calls inspectWorldEncounterMaterial() directly');

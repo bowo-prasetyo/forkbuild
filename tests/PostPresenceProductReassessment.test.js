@@ -24,6 +24,7 @@ import { WorldAuthorizationService } from '../application/WorldAuthorizationServ
 import { WorldPresenceActivity } from '../core/WorldPresenceActivity.js';
 import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
 import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.219 — Post-Presence Product Reassessment.
 //
@@ -448,7 +449,7 @@ async function runTests() {
         const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
         const clickHandlers = new Set((panelSource.match(/@click="[a-zA-Z]+/g) || []).map((s) => s.replace('@click="', '')));
         assert(clickHandlers.size >= 10, `B5a. OwnPublicationPanel.js still wires at least 10 distinct actions (found ${clickHandlers.size})`);
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(/distributeSelectedPublication\(\)\s*\{/.test(canvasSource) && /@click="distributeSelectedPublication"/.test(canvasSource), 'B5b. WorldEncounterCanvas.js still wires "Distribute Publication"');
 
         // B6 — Snapshot: discovery, materialization, export/import

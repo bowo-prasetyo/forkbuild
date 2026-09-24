@@ -25,7 +25,7 @@ import WorldMembersPanel from '../ui/components/WorldMembersPanel.js';
 import WorldPresenceIndicator from '../ui/components/WorldPresenceIndicator.js';
 import { buildWorldCollaborationRoster, WorldCollaborationAccess } from '../ui/components/WorldCollaborationRoster.js';
 import { buildSpatialCollaboratorRows } from '../ui/components/WorldCollaboratorIndicator.js';
-import { worldNavigationSessionFiles, stylesheetFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, stylesheetFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.583 — Wanderer Presence Product Experience Closure Reassessment.
 //
@@ -365,7 +365,7 @@ async function main() {
         // different fields from a PUBLICATION encounter's Kind/Source/
         // Title/Publisher/Signed/Anchors/Placements, confirmed directly
         // from that file's own template.
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(/<dd>Avatar<\/dd>[\s\S]{0,400}<dt>Name<\/dt>/.test(canvasSource) && /<dd>Publication<\/dd>[\s\S]{0,900}<dt>Title<\/dt>/.test(canvasSource),
             "C2. WorldEncounterCanvas.js's own inspection panel renders AVATAR and PUBLICATION encounters with genuinely different field sets (Name/Owner vs. Title/Publisher/Signed/Anchors/Placements) — a Wanderer can never mistake one kind's detail sheet for the other's.");
 

@@ -9,6 +9,7 @@ import { PublicationDistributionLifecycleMemoryStore } from '../application/Publ
 import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
 import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
 import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.430 — Announcement/Discovery Provider Selection Reachability.
 //
@@ -140,7 +141,7 @@ async function run() {
     // Section A — UI choice exists.
     // ===============================================================
     {
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
         // AMENDED BY 0.9.672 — World View Distribution Dialog. This
         // <select> now lives in WorldDistributionDialog.js, one popup
         // over from a "Distribute" trigger button (a pure presentation
@@ -372,7 +373,7 @@ async function run() {
     // ===============================================================
     {
         const worldViewCode = codeOnly(await source('ui/views/WorldView.js'));
-        const canvasCode = codeOnly(await source('ui/components/WorldEncounterCanvas.js'));
+        const canvasCode = codeOnly((await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n'));
         const forbidden = ['gatewayUrl', 'tagName', 'uploadTaggedTransaction', 'signer', 'publishImpl', 'relayUrl'];
 
         for (const term of forbidden) {

@@ -20,6 +20,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.475 — Wire Peer World Encounter Material Source into Production
 // Composition Root.
@@ -329,7 +330,7 @@ async function run() {
         const peerSourceSrc = await readSource('application/PeerWorldEncounterMaterialSource.js');
         const protocolSrc = await readSource('application/PeerWorldEncounterMaterialProtocol.js');
         const loadingSrc = await readSource('application/WorldEncounterMaterialLoading.js');
-        const canvasSrc = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSrc = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
 
         // These four files each carry their own "0.9.23"/"0.9.21" milestone
         // header naming themselves as the source of truth for their own

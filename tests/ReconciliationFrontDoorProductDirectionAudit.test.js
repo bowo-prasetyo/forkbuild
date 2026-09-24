@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.406 — Reconciliation Front-Door Product Direction Audit.
 //
@@ -198,7 +199,7 @@ async function run() {
     // ===============================================================
     let publicationsSource;
     {
-        publicationsSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        publicationsSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
 
         // D1. Publications' own achievement cards repeatedly, explicitly
         // disclaim leaderboard/rank vocabulary — real, quoted evidence,

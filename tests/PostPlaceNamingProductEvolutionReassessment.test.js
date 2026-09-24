@@ -18,6 +18,7 @@ import { PlaceNamingClaimExchange } from '../application/PlaceNamingClaimExchang
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.272 — Post-Place-Naming Product Evolution Reassessment.
 //
@@ -171,7 +172,7 @@ async function runTests() {
         const createWorldView = await rawSource('application/CreateWorldViewUseCase.js');
         const editorView = await rawSource('ui/views/EditorView.js');
         const mainJs = await rawSource('ui/main.js');
-        const worldEncounterCanvas = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const worldEncounterCanvas = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
 
         // A1. World interaction/navigation — COMPLETE since 0.9.196,
         // reconfirmed every arc since. WorldView reaches
@@ -256,7 +257,7 @@ async function runTests() {
         const createWorldView = await rawSource('application/CreateWorldViewUseCase.js');
         const editorView = await rawSource('ui/views/EditorView.js');
         const mainJs = await rawSource('ui/main.js');
-        const worldEncounterCanvas = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const worldEncounterCanvas = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         const navSession = await rawSource('application/WorldNavigationSession.js');
 
         assert(/new\s+EditorSession\s*\(/.test(editorView), 'B1. Editor: ui/views/EditorView.js still constructs a real EditorSession.');

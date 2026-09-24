@@ -13,6 +13,7 @@ import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.651 — Persist World-Encounter Publication Admissions — Closure Audit.
 //
@@ -434,7 +435,7 @@ async function run() {
     // Section J — Production-change guard.
     // ===============================================================
     {
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         const addCallSites = (canvasSource.match(/this\.publicationAdmissionLog\.add\(/g) || []);
         assert(addCallSites.length === 1, `1. exactly one call site invokes .add() on the new publicationAdmissionLog prop (found ${addCallSites.length}).`);
         assert(!/new LocalWorldEncounterPublicationAdmissionLog\(/.test(canvasSource), '2. WorldEncounterCanvas.js never constructs a log of its own — it only ever receives one via its new prop.');

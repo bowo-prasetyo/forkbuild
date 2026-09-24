@@ -31,6 +31,7 @@ import { ContentReference } from '../core/ContentReference.js';
 import { Position } from '../core/Position.js';
 import { Publication } from '../publisher/Publication.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.195 — Automatic Snapshot Subsystem Boundary & Convergence Audit.
 //
@@ -876,7 +877,7 @@ async function runTests() {
         // the Snapshot PRESENTATION family and the registration BRIDGE
         // (register/unregister — the boundary primitive itself) — but
         // never the acquisition machinery this section actually audits.
-        const canvasSource = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
         for (const moduleName of acquisitionModuleNames) {
             assert(!canvasSource.includes(moduleName), `6. ui/components/WorldEncounterCanvas.js never references ${moduleName} — World rendering consumes an already-registered source, it never discovers, resolves, or cascades one of its own`);
         }
@@ -914,7 +915,7 @@ async function runTests() {
         // system-wide — one automatic, one manual, distinguished only by
         // WHICH CODE calls the shared primitive.
         const registerCallers = ['application/AutomaticSnapshotEncounterCascade.js', 'ui/components/OwnPublicationPanel.js'];
-        const unregisterCallers = ['application/AutomaticSnapshotEncounterRetentionReconciliation.js', 'ui/components/WorldEncounterCanvas.js'];
+        const unregisterCallers = ['application/AutomaticSnapshotEncounterRetentionReconciliation.js', 'ui/components/worldEncounterCanvas/materialAndDistributionMethods.js'];
         for (const file of registerCallers) {
             const source = await codeOnlySource(file);
             assert(/(?<![a-zA-Z])registerMaterializedSnapshotWorldSource\(/.test(source), `2. ${file} calls registerMaterializedSnapshotWorldSource() directly`);

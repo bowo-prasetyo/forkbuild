@@ -15,6 +15,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.600 — Publication First-Placement Action Wiring Fix.
 //
@@ -196,7 +197,7 @@ async function run() {
         assert(placementRegistry.findByPublicationId('c-pub').length === 0,
             'C3. removePlacement() still works unchanged: the placement is gone.');
 
-        const canvasDiff = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasDiff = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(canvasDiff.includes('WorldEncounterCanvas'),
             'C4. Sanity the file still exists/parses as expected.');
         assert(!/placePublicationCommand|placeOwnPublication/.test(canvasDiff),

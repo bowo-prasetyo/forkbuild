@@ -11,7 +11,7 @@ import { DecentralizedSnapshotResolutionOutcome } from '../application/Decentral
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.138 — World View Snapshot Distribution Action.
 //
@@ -262,7 +262,7 @@ async function runTests() {
     // calls only the injected snapshotDistributionCommand.
     // ---------------------------------------------------------------
     {
-        const code = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
+        const code = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
         const forbiddenConstruction = [
             "from '../../content/ArweaveContentStore.js'",
             "from '../../application/NostrSnapshotDiscoveryPublisher.js'",
@@ -505,7 +505,7 @@ async function runTests() {
     // runtime or calls the command directly.
     // ---------------------------------------------------------------
     {
-        const canvasCode = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
+        const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
         const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         const mainCode = await codeOnlySource('ui/main.js');
 

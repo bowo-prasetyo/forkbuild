@@ -10,6 +10,7 @@ import { AnchorVerificationOutcome } from '../application/AnchorVerificationOutc
 import { describeVerificationOutcome } from '../application/PublicationEvidenceView.js';
 import { PublicationResolutionOutcome } from '../application/PublicationResolutionOutcome.js';
 import { describePublicationOutcome } from '../application/PublicationResolutionView.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.520 — Product Integrity Boundary Closure Audit.
 //
@@ -147,7 +148,7 @@ async function run() {
         check(discoverySource.includes('uri: envelope.uri,') && discoverySource.includes('announcementId'),
             'B2. a discovered candidate\'s own claimed material location (uri) and the transaction id that carried the announcement (announcementId) stay two separate fields');
 
-        const decentralizedViewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         check(decentralizedViewSource.includes('<dt>Locator</dt>') && decentralizedViewSource.includes('<dt>Transaction</dt>') && decentralizedViewSource.includes('<dt>Content hash</dt>'),
             'B3. Locator (material location) / Transaction (anchor proof) / Content hash stay three separately-labeled fields on the Publication Center\'s own detail view');
 
@@ -316,7 +317,7 @@ async function run() {
         // this exact call site.
         check(WorldEncounterMaterialVerificationStatus.VERIFIED === 'VERIFIED',
             'D8a. discoveryResult.inspection.verification.status genuinely CAN render the bare word "VERIFIED" — the identical enum 0.9.519 already fixed for this file\'s OTHER (selection-driven) panel');
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
         check(canvasSource.includes('describeMaterialVerificationStatusLabel(materialInspection.verification.status)'),
             'D8b. this file already imports/uses describeWorldEncounterMaterialVerificationStatusLabel() for its OTHER (selection-driven) panel — the exact humanizer this Discovery-modal call site does not use');
         check(!canvasSource.includes('describeMaterialVerificationStatusLabel(discoveryResult.inspection.verification.status)'),
@@ -437,7 +438,7 @@ async function run() {
     // "making a decision" by grammar alone.
     // ===============================================================
     {
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
         check(canvasSource.includes("this.discoveryResult.inspection.verification.status === 'VERIFIED'"),
             'G1. isDiscoveredPublicationSelectable() reads a status the application layer (inspectWorldEncounterMaterial/verifyWorldEncounterMaterial) already computed, to gate whether a "Select Publication" button is enabled — it never calls a verifier, never re-hashes material, and never imports WorldEncounterMaterialVerification.js itself');
         check(!canvasSource.includes("import { verifyWorldEncounterMaterial }") && !canvasSource.includes("import { WorldEncounterMaterialIdentityVerifier }"),

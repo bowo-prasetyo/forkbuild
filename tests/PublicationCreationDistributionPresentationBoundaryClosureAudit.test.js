@@ -11,6 +11,7 @@ import { createNostrPublicationDistributionRuntimeAdapter } from '../application
 import { createArweaveTaggedTransactionUpload } from '../application/ArweaveTaggedTransactionUpload.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
 import { sanitizeDistributionErrorMessage } from '../application/DistributionErrorMessageSanitizer.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.527 — Publication Creation & Distribution Presentation Boundary
 // Closure Audit.
@@ -721,7 +722,7 @@ async function run() {
         assert(crossFileHits.length === 0,
             n(`H5. no file under application/ references normalizeDistributionResultForDisplay — it never became an application-level contract (found: ${JSON.stringify(crossFileHits)})`));
 
-        const worldEncounterCanvasSource = codeOnly(await source('ui/components/WorldEncounterCanvas.js'));
+        const worldEncounterCanvasSource = codeOnly((await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n'));
         const ownPublicationPanelSource = codeOnly(await source('ui/components/OwnPublicationPanel.js'));
         assert(!worldEncounterCanvasSource.includes('normalizeDistributionResultForDisplay') && !ownPublicationPanelSource.includes('normalizeDistributionResultForDisplay'),
             n('H6. neither sibling distribution surface (WorldEncounterCanvas.js, OwnPublicationPanel.js) references this normalization at all — the boundary belongs to EditorView.js alone, never shared, never duplicated'));

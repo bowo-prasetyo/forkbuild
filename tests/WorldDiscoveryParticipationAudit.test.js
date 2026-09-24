@@ -19,6 +19,7 @@ import {
     WorldEncounterMaterialLoadStatus
 } from '../application/WorldEncounterMaterialLoading.js';
 import { Publication } from '../publisher/Publication.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.165 — World Discovery Participation Audit.
 //
@@ -416,7 +417,7 @@ async function run() {
     // this claim.
     // ---------------------------------------------------------------
     {
-        const canvasSource = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const markerSource = await readFile(new URL('../ui/components/WorldEncounterMarker.js', import.meta.url), 'utf8');
 
         // Isolate exactly the computed properties this file's own Section

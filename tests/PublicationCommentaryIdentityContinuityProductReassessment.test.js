@@ -22,6 +22,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 
 import PublicationCard from '../ui/components/PublicationCard.js';
 import PublicationCommentarySection from '../ui/components/PublicationCommentarySection.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.541 — Publication Commentary Product Reassessment.
 //
@@ -220,14 +221,15 @@ async function run() {
         assert(withSubmit.length === 3
             && withSubmit.includes('ui/components/OwnPublicationPanel.js')
             && withSubmit.includes('ui/components/PublicationCommentarySection.js')
-            && withSubmit.includes('ui/components/WorldEncounterCanvas.js'),
+            // WorldEncounterCanvas.js's submit method lives in its own methods module.
+            && withSubmit.includes('ui/components/worldEncounterCanvas/publicationDiscoveryMethods.js'),
             `1. FRESH INVENTORY: exactly three UI files define a real commentary SUBMIT method today (found: ${withSubmit.join(', ')}) — the same three 0.9.248/0.9.289/0.9.291 built and 0.9.305 last confirmed (0.9.289's PublicationCard.js submit now lives in the shared PublicationCommentarySection.js that both catalog views mount), re-verified now rather than assumed still current. (ui/views/WorldView.js and ui/main.js merely wire the command through; ui/components/NotificationHistoryPanel.js only displays the resulting NotificationEvents — none of the three defines a submit method of its own.)`);
 
         ownPanelSource = await readSource('ui/components/OwnPublicationPanel.js');
         // The card view's Commentary is the card plus the shared
         // PublicationCommentarySection.js it mounts while expanded.
         cardSource = await readSource('ui/components/PublicationCard.js') + await readSource('ui/components/PublicationCommentarySection.js');
-        encounterSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        encounterSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
 
         for (const [name, source, prefix] of [
             ['OwnPublicationPanel.js', ownPanelSource, 'publicationCommentar'],

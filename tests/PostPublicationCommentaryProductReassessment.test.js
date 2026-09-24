@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.250 — Post-Publication-Commentary Product Reassessment.
 //
@@ -330,7 +331,7 @@ async function runTests() {
         // C10. Distribution — composePublicationDistributionCommand
         // reached from ui/main.js, executePublicationDistributionCommand
         // reached from a live component.
-        const worldEncounterCanvas = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const worldEncounterCanvas = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(mainJs.includes('composePublicationDistributionCommand') && worldEncounterCanvas.includes('executePublicationDistributionCommand'),
             'C10. ui/main.js still reaches composePublicationDistributionCommand(), and ui/components/WorldEncounterCanvas.js still calls executePublicationDistributionCommand().');
         capabilityRegister.push(['Distribution', 'COMPLETE']);

@@ -8,6 +8,7 @@ import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDis
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.141 — Distribution Entry-Point Convergence Audit.
 //
@@ -615,7 +616,7 @@ async function run() {
     // ===============================================================
     {
         const ownCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
-        const canvasCode = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
+        const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
 
         const forbidden = [
             'window.arweaveWallet', 'window.nostr', 'new WebSocket(', 'crypto.subtle',

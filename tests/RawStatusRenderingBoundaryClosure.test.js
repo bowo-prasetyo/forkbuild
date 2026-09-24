@@ -9,6 +9,7 @@ import { describeWorldEncounterMaterialLoadStatusLabel, describeWorldEncounterMa
 import { TrustStatus } from '../core/TrustObservation.js';
 import { describeTrustStatus } from '../application/AvatarPresenceLabels.js';
 import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/DecentralizedWorldEncounterLeadResolution.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.521 — Close Remaining Raw Status Rendering Boundaries.
 //
@@ -264,7 +265,7 @@ async function run() {
     // offending templates no longer interpolate the raw status directly.
     // ===============================================================
     {
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
         const canvasHits = findRawStatusInterpolations(canvasSource).map((h) => h.expr);
         check(!canvasHits.includes('discoveryResult.inspection.verification.status'),
             'D1. WorldEncounterCanvas.js no longer raw-interpolates discoveryResult.inspection.verification.status');
@@ -292,7 +293,7 @@ async function run() {
     // not merely by comparing two independently-derived strings.
     // ===============================================================
     {
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
         // E1. Both the Selection-driven and Discovery-driven Verification
         // rows call the exact same method name — the strongest form of
         // "cannot contradict": there is only one code path, not two kept
@@ -404,7 +405,7 @@ async function run() {
         // deliberate.
         check(Object.values(DecentralizedWorldEncounterLeadResolutionStatus).every((v) => /^[A-Z]+$/.test(v) && !OVERCLAIM_WORDS.test(v) && !/verified|valid/i.test(v)),
             `F4a. DecentralizedWorldEncounterLeadResolutionStatus's own values carry no claim word, found: ${JSON.stringify(Object.values(DecentralizedWorldEncounterLeadResolutionStatus))}`);
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
         check(canvasSource.includes('0.9.28, unchanged') && canvasSource.includes('UNAVAILABLE/'),
             'F4b. WorldEncounterCanvas.js\'s own header still documents resolution.status\'s raw rendering as a deliberate, pre-existing (0.9.28) design choice');
         check(canvasSource.includes('own existing vocabulary'),

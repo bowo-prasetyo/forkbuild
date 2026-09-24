@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.404 — Reconciliation Workflow Post-Navigation Product Reassessment.
 //
@@ -94,7 +95,7 @@ async function run() {
     // ===============================================================
     {
         routerSource = await readSource('ui/router/index.js');
-        publicationsSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        publicationsSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         leaderboardSource = await readSource('ui/views/ReconciliationCandidateLeaderboardView.js');
         comparisonSource = await readSource('ui/views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js');
         appSource = await readSource('ui/App.js');

@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { describeRoleProviderPreferenceSettings } from '../application/RoleProviderPreferenceSettingsView.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.517 — Decentralized Publication Lifecycle Product Reassessment.
 //
@@ -159,7 +160,7 @@ async function run() {
 
         // B3. The OTHER, already-fixed (0.9.510) Content backend surface
         // stays correct — this milestone touches nothing there.
-        const decentralizedViewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         check(decentralizedViewSource.includes('STORAGE_TYPE_LABELS') && decentralizedViewSource.includes("ar: 'Arweave'"),
             'B3. the Publication Center\'s own Content backend picker (0.9.510\'s own fix) still humanizes ar -> Arweave, unchanged by this milestone');
 
@@ -173,7 +174,7 @@ async function run() {
     // ===============================================================
     {
         const editorSource = await source('ui/views/EditorView.js');
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
         check(editorSource.includes("<option value=\"nostr\">Nostr</option>") && editorSource.includes("<option value=\"arweave\">Arweave</option>"),
             'C1. EditorView.js\'s own post-publish substrate control offers Nostr/Arweave');
         check(canvasSource.includes("value=\"nostr\"") && canvasSource.includes(">Nostr<") && canvasSource.includes("value=\"arweave\"") && canvasSource.includes(">Arweave<"),
@@ -269,7 +270,7 @@ async function run() {
         // 0.9.516's own prose.
         const ownPublicationSource = await source('ui/components/OwnPublicationPanel.js');
         check(ownPublicationSource.includes('<dt>Locator</dt>'), 'G1. OwnPublicationPanel.js still explicitly labels a content locator as "Locator", never a raw `uri`/`locator` field name');
-        const decentralizedViewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         check(decentralizedViewSource.includes('<dt>Transaction</dt>'), 'G2. DecentralizedPublicationsView.js still explicitly labels a proof transaction as "Transaction"');
         check(decentralizedViewSource.includes('<dt>Content hash</dt>'), 'G3. contentHash is still always rendered behind the explicit "Content hash" label, never the bare field name');
         classifications.push(['locator/uri/contentHash (Publisher evidence surfaces)', 'USER_VISIBLE_ACCEPTABLE — explicitly labeled <dt>Locator</dt>/<dt>Transaction</dt>/<dt>Content hash</dt> fields']);

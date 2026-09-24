@@ -5,6 +5,7 @@ import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { Publication } from '../publisher/Publication.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
 import { sanitizeDistributionErrorMessage } from '../application/DistributionErrorMessageSanitizer.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // UX-level distribution unification.
 //
@@ -448,7 +449,7 @@ async function runTests() {
     // fan-out API. The combined action is additive convenience only.
     // ---------------------------------------------------------------
     {
-        const canvasCode = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
+        const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
         const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
         const editorCode = await codeOnlySource('ui/views/EditorView.js');
 

@@ -47,6 +47,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.598 — Publication Actionability Journey Product Reassessment.
 //
@@ -482,7 +483,7 @@ async function run() {
     // Section C — Actionability inventory.
     // ===============================================================
     {
-        const worldEncounterCanvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const worldEncounterCanvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         // C1-C4: Open/Fork/Explore/Comment remain wired to the
         // observer-local encounter family — structural reconfirmation
         // (0.9.554/0.9.558's own live proof; not re-derived here).
@@ -749,7 +750,7 @@ async function run() {
         // Each item below is a live or structural reconfirmation that
         // this reassessment's own findings do not, on their own, create
         // a need for any of the eight items the requesting brief named.
-        const worldEncounterCanvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const worldEncounterCanvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
 
         assert(!/NotificationEvent/.test((await readSource('application/MaterializedSnapshotWorldDiscoveryBridge.js'))),
             'G1. No new notification: admission and the (no-op, per Section D) placement-labeled actions remain silent, exactly as 0.9.595\'s own header already established.');
@@ -765,7 +766,7 @@ async function run() {
             'G6. No new discovery protocol — the same Nostr/Arweave Snapshot Discovery machinery (0.9.150-era) is reused verbatim throughout Sections A/B/E/F.');
         assert(!/rankProviders|providerFallback|providerPriority/.test((await readSource('application/CreateWorldViewUseCase.js'))),
             'G7. No provider ranking/fallback — CreateWorldViewUseCase.js still composes exactly one publicationActionDiscoveryProvider via CompositeDiscoveryProvider, never a ranked list of several.');
-        assert(/an observer-local marker is suppressed[\s\S]{0,120}once an authoritative `PlacementRecord` exists/.test((await readSource('ui/components/WorldEncounterCanvas.js'))),
+        assert(/an observer-local marker is suppressed[\s\S]{0,120}once an authoritative `PlacementRecord` exists/.test(((await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n'))),
             'G8. No automatic reappearance of old encounter markers — ghost suppression stays keyed on a real PlacementRecord (per WorldEncounterCanvas.js\'s own header), which Section D shows still cannot be created for this family through any UI action — so suppression behavior is simply unreachable for P1-shaped Publications today, never newly broken by anything this reassessment does. ' +
             'ONE DISTINCTION THIS SECTION DRAWS EXPLICITLY: Section D\'s own finding — no action creates a FIRST placement, for ANY Publication, outside the moment of a replica\'s own publish — is NOT one of the eight items above, and is not ruled out by confirming none of them are needed. "Wire the already-built, already-tested PlacePublicationUseCase into one new, explicit, narrow action" is a different, smaller kind of change than "build a new persistent surface," a "new database," or a "new protocol" — see Section H.');
 

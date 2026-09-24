@@ -11,6 +11,7 @@ import {
 import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
 import { describeLocalWorldDiscoverySource } from '../application/WorldEncounterIntegration.js';
 import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -317,7 +318,7 @@ function peerSourceOf(origin, { publications = [], placements = [], avatarProfil
 //     marker still produces exactly { kind, objectId }.
 // ---------------------------------------------------------------------
 {
-    const canvasSource = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
+    const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
     const markerSource = await readFile(new URL('../ui/components/WorldEncounterMarker.js', import.meta.url), 'utf8');
 
     assert(!canvasSource.includes('WorldEncounterSelectionIdentity'), '41. WorldEncounterCanvas.js never imports core/WorldEncounterSelectionIdentity.js');

@@ -19,6 +19,7 @@ import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { readFile } from 'node:fs/promises';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.183 — World Snapshot Content View.
 //
@@ -170,7 +171,7 @@ function stripLineComments(source) {
 }
 
 async function run() {
-    const canvasSource = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
+    const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
     const contentViewSource = await readFile(new URL('../application/WorldSnapshotContentView.js', import.meta.url), 'utf8');
 
     // ---------------------------------------------------------------
@@ -413,7 +414,7 @@ async function run() {
         const strippedCanvas = stripLineComments(canvasSource);
         const strippedContentView = stripLineComments(contentViewSource);
 
-        const openMethodMatch = strippedCanvas.match(/openSnapshotContentView\(\)\s*\{[\s\S]*?\n\s{8}\},/);
+        const openMethodMatch = strippedCanvas.match(/openSnapshotContentView\(\)\s*\{[\s\S]*?\n\s{4}\},/);
         assert(openMethodMatch, 'sanity — openSnapshotContentView() body is found');
         const openBody = openMethodMatch[0];
         assert(!/registry\./.test(openBody), '1. openSnapshotContentView() never touches the registry');
@@ -423,7 +424,7 @@ async function run() {
         assert(!/distribut/i.test(openBody), '4. openSnapshotContentView() never distributes');
         assert(!/discover/i.test(openBody), '5. openSnapshotContentView() never discovers');
 
-        const closeMethodMatch = strippedCanvas.match(/closeSnapshotContentView\(\)\s*\{[\s\S]*?\n\s{8}\},/);
+        const closeMethodMatch = strippedCanvas.match(/closeSnapshotContentView\(\)\s*\{[\s\S]*?\n\s{4}\},/);
         assert(closeMethodMatch, 'sanity — closeSnapshotContentView() body is found');
         assert(!/registry\./.test(closeMethodMatch[0]), '6. closeSnapshotContentView() never touches the registry');
 

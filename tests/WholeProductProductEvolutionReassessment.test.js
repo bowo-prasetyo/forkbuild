@@ -17,7 +17,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.383 — Whole-Product Product Evolution Reassessment.
 //
@@ -310,7 +310,7 @@ async function run() {
         // and make it show up in Repository/Explore" path — checked
         // structurally, since it requires live Nostr/Arweave transports
         // to run end-to-end.
-        const publicationsViewSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const publicationsViewSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(publicationsViewSource.includes('function admitToRepositoryDiscovery(view)') && publicationsViewSource.includes('discoveryProvider.add(view.content)'),
             n('Discover -> Resolve -> Retrieve -> Explore: DecentralizedPublicationsView.js admits a resolved Document-kind Publication straight into the SAME discoveryProvider that backs Repository/World — the loop closes, not a dead end'));
         assert(publicationsViewSource.includes('view.content instanceof Publication'),
@@ -386,7 +386,7 @@ async function run() {
         //     resolved in the Publication Center is admitted into the
         //     SAME discoveryProvider (Section B3 above, admitToRepositoryDiscovery).
         // Both bridges are real; there is no third, still-disjoint path.
-        const publicationsViewSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const publicationsViewSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         const editorPostPublishBlock = extractRange(editorViewSource,
             "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
             '// ------------------------- document lifecycle ------------',

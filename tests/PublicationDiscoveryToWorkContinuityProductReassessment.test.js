@@ -20,6 +20,7 @@ import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCo
 import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
 import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.559 — Publication Discovery-to-Work Continuity Product Reassessment.
 //
@@ -672,7 +673,7 @@ async function runTests() {
         // dispatch. Confirmed structurally rather than asserted from
         // this milestone's own prose.
         {
-            const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+            const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
             for (const name of ['openObserverLocalEncounterPublication', 'forkObserverLocalEncounterPublication', 'exploreObserverLocalEncounterPublication', 'submitObserverLocalEncounterCommentary']) {
                 const idx = canvasSource.indexOf(`${name}(`);
                 const precedingSlice = canvasSource.slice(Math.max(0, idx - 30), idx);
@@ -693,7 +694,7 @@ async function runTests() {
         // title and plain verbs (Open/Explore/Fork/Comment) — never
         // publicationId/contentHash/UNVERIFIABLE/storage identifiers as
         // the primary affordance.
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         const actionsBlockStart = canvasSource.indexOf('world-encounter-observer-local-actions');
         const actionsBlockEnd = canvasSource.indexOf('world-encounter-observer-local-commentary-panel');
         const actionsBlock = canvasSource.slice(actionsBlockStart, actionsBlockEnd);

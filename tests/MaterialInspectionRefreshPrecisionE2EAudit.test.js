@@ -53,6 +53,7 @@ import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.170 — Material Inspection Refresh Precision E2E Audit.
 //
@@ -575,9 +576,9 @@ async function run() {
         // Structural confirmation, re-read directly rather than merely
         // cited: neither function this fix touches branches on a
         // source-family string.
-        const source = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
+        const source = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const equalityFunctionMatch = source.match(/function resolvedEncounterSelectionsEqual\([^)]*\)\s*\{[\s\S]*?\n\}/);
-        const refreshSelectionOutcomeMatch = source.match(/refreshSelectionOutcome\(\)\s*\{[\s\S]*?\n {8}\},/);
+        const refreshSelectionOutcomeMatch = source.match(/refreshSelectionOutcome\(\)\s*\{[\s\S]*?\n {4}\},/);
         assert(equalityFunctionMatch && refreshSelectionOutcomeMatch, '21. sanity — both functions this milestone reads are found in the production file');
         const branchPattern = /if\s*\(\s*(origin\s*===\s*['"]local['"]|origin\s*\.startsWith\(\s*['"]peer:|origin\s*\.startsWith\(\s*['"]snapshot:)/;
         for (const body of [equalityFunctionMatch[0], refreshSelectionOutcomeMatch[0]]) {
@@ -998,7 +999,7 @@ async function run() {
     // identity, and no renderer change.
     // ---------------------------------------------------------------
     {
-        const canvasSource = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const registrySource = await readFile(new URL('../application/WorldDiscoverySourceRegistry.js', import.meta.url), 'utf8');
         const loadingSource = await readFile(new URL('../application/WorldEncounterMaterialLoading.js', import.meta.url), 'utf8');
         const bridgeSource = await readFile(new URL('../application/MaterializedSnapshotWorldDiscoveryBridge.js', import.meta.url), 'utf8');
@@ -1043,7 +1044,7 @@ async function run() {
         // No Snapshot-specific refresh code, no source-family branching:
         // re-read directly, mirroring 0.9.169's own Section J/F.
         const equalityFunctionMatch = canvasSource.match(/function resolvedEncounterSelectionsEqual\([^)]*\)\s*\{[\s\S]*?\n\}/);
-        const refreshSelectionOutcomeMatch = canvasSource.match(/refreshSelectionOutcome\(\)\s*\{[\s\S]*?\n {8}\},/);
+        const refreshSelectionOutcomeMatch = canvasSource.match(/refreshSelectionOutcome\(\)\s*\{[\s\S]*?\n {4}\},/);
         assert(equalityFunctionMatch && refreshSelectionOutcomeMatch, '68. sanity — both functions this fix touches are found in the production file');
         const forbiddenInFix = ['Nostr', 'nostr', 'Arweave', 'arweave', 'materialize', 'Materialize', 'ACTIVE', 'EXPIRED', 'STALE', 'SYNCED', 'INACTIVE', 'REVOKED', 'retry', 'Retry', 'rediscover', 'Rediscover'];
         for (const term of forbiddenInFix) {

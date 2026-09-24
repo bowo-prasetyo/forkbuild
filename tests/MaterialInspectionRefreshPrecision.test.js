@@ -32,6 +32,7 @@ import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.169 — Material Inspection Refresh Precision.
 //
@@ -455,9 +456,9 @@ async function run() {
         // `refreshSelectionOutcome()` are read directly, and neither
         // references 'local'/'peer:'/'snapshot:' — the same source-family
         // blindness every other seam in this file already holds.
-        const source = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
+        const source = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const equalityFunctionMatch = source.match(/function resolvedEncounterSelectionsEqual\([^)]*\)\s*\{[\s\S]*?\n\}/);
-        const refreshSelectionOutcomeMatch = source.match(/refreshSelectionOutcome\(\)\s*\{[\s\S]*?\n {8}\},/);
+        const refreshSelectionOutcomeMatch = source.match(/refreshSelectionOutcome\(\)\s*\{[\s\S]*?\n {4}\},/);
         assert(equalityFunctionMatch && refreshSelectionOutcomeMatch, '21. sanity — both functions this milestone touches are found in the production file');
         for (const forbidden of ['\'local\'', '\'peer:', '\'snapshot:', 'startsWith(\'peer', 'startsWith(\'snapshot']) {
             assert(!equalityFunctionMatch[0].includes(forbidden) && !refreshSelectionOutcomeMatch[0].includes(forbidden),
@@ -623,12 +624,12 @@ async function run() {
     // state.
     // ---------------------------------------------------------------
     {
-        const canvasSource = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const registrySource = await readFile(new URL('../application/WorldDiscoverySourceRegistry.js', import.meta.url), 'utf8');
 
         const forbiddenInFix = ['Nostr', 'nostr', 'Arweave', 'arweave', 'materialize', 'Materialize', 'ACTIVE', 'EXPIRED', 'STALE', 'SYNCED', 'INACTIVE', 'REVOKED'];
         const equalityFunctionMatch = canvasSource.match(/function resolvedEncounterSelectionsEqual\([^)]*\)\s*\{[\s\S]*?\n\}/);
-        const refreshSelectionOutcomeMatch = canvasSource.match(/refreshSelectionOutcome\(\)\s*\{[\s\S]*?\n {8}\},/);
+        const refreshSelectionOutcomeMatch = canvasSource.match(/refreshSelectionOutcome\(\)\s*\{[\s\S]*?\n {4}\},/);
         assert(equalityFunctionMatch && refreshSelectionOutcomeMatch, '39. sanity — both functions this milestone touches are found in the production file');
         for (const term of forbiddenInFix) {
             assert(!equalityFunctionMatch[0].includes(term) && !refreshSelectionOutcomeMatch[0].includes(term),

@@ -9,6 +9,7 @@ import { AnchorVerificationOutcome } from '../application/AnchorVerificationOutc
 import { describeVerificationOutcome } from '../application/PublicationEvidenceView.js';
 import { PublicationResolutionOutcome } from '../application/PublicationResolutionOutcome.js';
 import { describePublicationOutcome } from '../application/PublicationResolutionView.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.522 — Product Integrity Audit Baseline Consolidation.
 //
@@ -219,7 +220,7 @@ async function run() {
         check(discoverySource.includes('uri: envelope.uri,') && discoverySource.includes('announcementId'),
             'C2. a discovered candidate\'s own claimed material location (uri) and the transaction id that carried the announcement (announcementId) stay two separate fields');
 
-        const decentralizedViewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         check(decentralizedViewSource.includes('<dt>Locator</dt>') && decentralizedViewSource.includes('<dt>Transaction</dt>') && decentralizedViewSource.includes('<dt>Content hash</dt>'),
             'C3. Locator (material location) / Transaction (anchor proof) / Content hash stay three separately-labeled fields on the Publication Center\'s own detail view');
 
@@ -365,7 +366,7 @@ async function run() {
     // Section G already required of itself).
     // ===============================================================
     {
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
         check(canvasSource.includes("this.discoveryResult.inspection.verification.status === 'VERIFIED'"),
             'G1. isDiscoveredPublicationSelectable() still reads a status the application layer already computed, to gate whether a "Select Publication" button is enabled — it never calls a verifier, never re-hashes material, and never imports WorldEncounterMaterialVerification.js itself');
         check(!canvasSource.includes('import { verifyWorldEncounterMaterial }') && !canvasSource.includes('import { WorldEncounterMaterialIdentityVerifier }'),

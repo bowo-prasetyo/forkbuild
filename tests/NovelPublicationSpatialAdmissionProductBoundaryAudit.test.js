@@ -515,7 +515,9 @@ async function runTests() {
             'application/ObserverLocalEncounterStore.js',
             'core/ObserverLocalPublicationEncounter.js',
             'ui/views/WorldView.js',
-            'ui/components/WorldEncounterCanvas.js'
+            'ui/components/WorldEncounterCanvas.js',
+            // WorldEncounterCanvas.js's own observer-local methods, moved out of it.
+            'ui/components/worldEncounterCanvas/observerLocalEncounterMethods.js'
         ]);
         let hits = '';
         try {

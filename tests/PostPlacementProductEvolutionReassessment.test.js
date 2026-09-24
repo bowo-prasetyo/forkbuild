@@ -10,6 +10,7 @@ import {
 } from '../core/DocumentCollaborationConsistencyPolicy.js';
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
 import { ConflictResolver, ConflictRelation } from '../replication/ConflictResolver.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.311 — Post-Placement Product Evolution Reassessment.
 //
@@ -226,7 +227,7 @@ async function runTests() {
         // encounter (0.9.307 D2a), and Commentary already produces
         // NotificationEvent facts a recipient can follow to History
         // (0.9.306's own closed verdict, reconfirmed with one signal).
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(/encounterCommentaryPublicationId/.test(canvasSource),
             'B2a. WorldEncounterCanvas.js still gates its commentary panel on the selected encounter.');
         assert((await rawSource('ui/components/NotificationHistoryPanel.js')).includes("name: 'NotificationHistoryPanel'"),
@@ -237,7 +238,7 @@ async function runTests() {
         // action (0.9.307's own dedicated Snapshot research pass,
         // reconfirmed with one signal per stage).
         assert((await rawSource('ui/components/OwnPublicationPanel.js')).includes('discoverOwnSnapshot') &&
-            (await rawSource('ui/components/WorldEncounterCanvas.js')).includes('armComparisonSelection') &&
+            ((await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n')).includes('armComparisonSelection') &&
             (await rawSource('ui/main.js')).includes("app.provide('exportSnapshotCommand'"),
             'B3. Snapshot discovery, comparison, and export all still have real UI call sites.');
 
@@ -370,7 +371,7 @@ async function runTests() {
         // D1. Snapshot { Distribution, Attribution, Comparison, World
         // placement } — already fully convergent on ONE component
         // (0.9.307 F2), reconfirmed fresh.
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(/distributionCommand/.test(canvasSource) && /Snapshot Attribution/.test(canvasSource) &&
             /worldSnapshotComparisonResult/.test(canvasSource),
             'D1. WorldEncounterCanvas.js still converges Snapshot distribution, attribution, and comparison on one selected-encounter surface — no missing seam, unchanged since 0.9.307.');
@@ -474,7 +475,7 @@ async function runTests() {
         // finding: every stage has a real, reusable UI action, the loop
         // closes with re-inspection/re-comparison/removal). Reconfirmed
         // with the same live signal.
-        assert((await rawSource('ui/components/WorldEncounterCanvas.js')).includes('unregisterSelectedSnapshot'),
+        assert(((await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n')).includes('unregisterSelectedSnapshot'),
             'F4. WorldEncounterCanvas.js still exposes unregisterSelectedSnapshot() — the Snapshot interaction loop still has no dead end.');
 
         console.log('✓ F: None of the four named World View interaction candidates produces a NEW evidenced gap. Richer Publication interaction is already rich, and no further interaction (rate/bookmark/share) has ever been proposed anywhere in this codebase\'s own vocabulary (F1). Navigation stays document-keyed by construction, unchanged (F2). Placement-specific navigation/management stays correctly DEFERRED against its own still-unmet standing bar (F3). Snapshot interaction stays complete (F4). World View is reassessed here, fresh, and confirmed to have no currently-blocked user journey.');

@@ -15,6 +15,7 @@ import { IpfsContentStore } from '../content/IpfsContentStore.js';
 import { BitcoinOpReturnProofVerifier } from '../anchoring/BitcoinOpReturnProofVerifier.js';
 import { BitcoinAnchorPublisher } from '../anchoring/BitcoinAnchorPublisher.js';
 import { composeDecentralizedWorldEncounterMaterialDiscoveryServices } from '../application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.296 — Role Provider Resolution Integration Readiness Audit.
 //
@@ -539,7 +540,7 @@ async function run() {
 
         // The explicit per-action pattern (real today) is the boundary a
         // future preference control must respect, never silently replace.
-        const decentralizedViewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         assert(/async function createPlacement\(entry, storage\)/.test(decentralizedViewSource), 'H4. the real, explicit, per-action createPlacement(entry, storage) control exists in production today');
         assert(/async function createAnchor\(entry, anchorType\)/.test(decentralizedViewSource), 'H5. the real, explicit, per-action createAnchor(entry, anchorType) control exists in production today');
 

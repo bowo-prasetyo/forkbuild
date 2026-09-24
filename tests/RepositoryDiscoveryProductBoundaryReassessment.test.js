@@ -7,6 +7,7 @@ import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvi
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { SearchPublicationsUseCase } from '../application/SearchPublicationsUseCase.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.523 — Repository / Discovery Product Boundary Reassessment.
 //
@@ -116,7 +117,7 @@ async function run() {
         // .add() call site tests/WorldEncounterRepositoryContinuityIntegrationBoundaryAudit
         // .test.js's own Section G already counted, reconfirmed unchanged
         // in count here.
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         const addCallSites = (canvasSource.match(/decentralizedPublicationDiscoveryProvider\.add\(/g) || []);
         assert(addCallSites.length === 1, `5. still exactly one .add() call site (found ${addCallSites.length}) — no second, parallel admission mechanism was built for this milestone.`);
     }
@@ -225,7 +226,7 @@ async function run() {
         const providerSource = await readSource('discovery/DecentralizedPublicationDiscoveryProvider.js');
         assert(/add\(publication\) \{/.test(providerSource),
             "3. discovery/DecentralizedPublicationDiscoveryProvider.js's own add() takes exactly one argument, `publication` — no origin/source parameter alongside it, structurally confirmed — there is no provenance data being withheld from the UI; none was ever captured.");
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(canvasSource.includes('This file never reads `resolvedLead.origin`, `resolvedLead.discoveryTag`,')
             || (await readSource('application/DecentralizedWorldEncounterMaterialSource.js')).includes('never reads `resolvedLead.origin`'),
             '4. the decentralized material path itself is on record as never even reading a lead\'s own origin — reconfirmed from source, not merely asserted.');
@@ -253,11 +254,11 @@ async function run() {
         // Wanderer browsing Repository has no way to see, because
         // Section D already established Repository shows no provenance
         // at all.
-        const siblingSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const siblingSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(/view\.resolved && view\.content instanceof Publication/.test(siblingSource),
             "1. ui/views/DecentralizedPublicationsView.js's own admitToRepositoryDiscovery() gate still requires `view.resolved` — true only after full PublicationResolver signature verification — confirmed directly from source.");
 
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(/admitToRepositoryDiscovery\(loading, verification\) \{[\s\S]{0,400}verification\.status === 'VERIFIED'/.test(canvasSource),
             "2. THE FIX: ui/components/WorldEncounterCanvas.js's own admitToRepositoryDiscovery() now also requires verification.status === 'VERIFIED', closing the asymmetry Section E1 names.");
         assert(/this\.admitToRepositoryDiscovery\(result\.loading, result\.verification\);/.test(canvasSource),

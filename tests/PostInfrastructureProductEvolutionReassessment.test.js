@@ -6,6 +6,7 @@ import { ArweaveGatewayConfiguration } from '../core/ArweaveGatewayConfiguration
 import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfigurationStore.js';
 import { NostrRelayConfiguration } from '../core/NostrRelayConfiguration.js';
 import { NostrRelayConfigurationStore } from '../storage/NostrRelayConfigurationStore.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.374 — Post-Infrastructure Product Evolution Reassessment.
 //
@@ -281,7 +282,7 @@ async function run() {
         assert(worldViewSource.includes('distributeWorldEncounterPublication'), 'C2. WorldView.js still owns distributeWorldEncounterPublication()');
         const ownPublicationPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
         assert(ownPublicationPanelSource.includes('publicationDistributionCommand'), 'C2. OwnPublicationPanel.js still carries the 0.9.347 publicationDistributionCommand prop, bound to the same function');
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(canvasSource.includes('distributionCommand'), 'C2. WorldEncounterCanvas.js still carries its own distributionCommand prop, bound to the same function');
 
         // C3. Peer connection -> automatic Publication synchronization

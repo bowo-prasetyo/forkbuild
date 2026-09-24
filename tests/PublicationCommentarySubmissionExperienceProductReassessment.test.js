@@ -24,6 +24,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { License, LicenseId } from '../core/License.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.542 — Publication Commentary Submission Experience Product
 // Reassessment.
@@ -314,7 +315,7 @@ async function run() {
         // The card view's submit path now lives in the shared
         // PublicationCommentarySection.js the card mounts.
         cardSource = await readSource('ui/components/PublicationCard.js') + await readSource('ui/components/PublicationCommentarySection.js');
-        canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(/submitPublicationCommentary\(\)\s*\{/.test(panelSource)
             && /submitCommentary\(\)\s*\{/.test(cardSource)
             && /submitEncounterCommentary\(\)\s*\{/.test(canvasSource),

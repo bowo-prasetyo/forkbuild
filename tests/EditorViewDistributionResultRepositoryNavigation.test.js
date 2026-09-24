@@ -16,6 +16,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.381 — EditorView Distribution Result -> Repository Navigation.
 //
@@ -235,7 +236,7 @@ async function run() {
     const editorViewSource = await readSource('ui/views/EditorView.js');
     const editorViewCodeOnly = codeOnlyLines(editorViewSource);
     const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
-    const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+    const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
 
     // ---------------------------------------------------------------
     // Section A — Exact identity.

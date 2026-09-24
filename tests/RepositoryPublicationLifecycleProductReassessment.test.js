@@ -177,7 +177,7 @@ async function main() {
             return !/^\s*\/\//.test(content);
         });
         assert(grep.length === 2
-            && grep.some((l) => l.includes('WorldEncounterCanvas.js'))
+            && grep.some((l) => l.includes('worldEncounterCanvas/materialAndDistributionMethods.js'))
             && grep.some((l) => l.includes('DecentralizedPublicationsView.js')),
             `1. LIVE, repo-wide: exactly two real call sites admit into a discoveryProvider (found ${grep.length}: ${JSON.stringify(grep)}) — both are the already-audited World Encounter / decentralized-Publications-page gates, never Repository's own search/catalog surface.`);
 

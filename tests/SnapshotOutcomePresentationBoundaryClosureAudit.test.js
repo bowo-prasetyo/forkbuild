@@ -9,6 +9,7 @@ import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutc
 import { resolveSnapshotPublicationAttribution } from '../application/SnapshotPublicationAttribution.js';
 import { describeWorldEncounterMaterialVerificationStatusLabel } from '../application/WorldEncounterMaterialInspectionView.js';
 import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.529 — Snapshot Outcome Presentation Boundary Closure Audit.
 //
@@ -120,7 +121,7 @@ async function run() {
     console.log('=== 0.9.529 — Snapshot Outcome Presentation Boundary Closure Audit ===\n');
 
     const panelSource = await source('ui/components/OwnPublicationPanel.js');
-    const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+    const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
     const viewSource = await source('application/SnapshotOutcomeInspectionView.js');
     const panelCode = codeOnly(panelSource);
     const canvasCode = codeOnly(canvasSource);
@@ -242,7 +243,7 @@ async function run() {
     {
         assert(panelCode.includes("import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../../application/SnapshotOutcomeInspectionView.js';"),
             n('C1. OwnPublicationPanel.js imports both presentation functions from the one shared view file'));
-        assert(canvasCode.includes("import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../../application/SnapshotOutcomeInspectionView.js';"),
+        assert(canvasCode.includes("import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../../../application/SnapshotOutcomeInspectionView.js';"),
             n('C2. WorldEncounterCanvas.js imports both presentation functions from the SAME shared view file — not a per-component duplicate'));
 
         // A GENERIC sweep, not merely the six known literal strings: any
@@ -297,8 +298,8 @@ async function run() {
         assert(panelCode.includes('describeSnapshotResolutionLabel(outcome) {\n            return describeSnapshotResolutionOutcomeLabel(outcome);\n        },') &&
             panelCode.includes('describeSnapshotAttributionLabel(outcome) {\n            return describeSnapshotAttributionOutcomeLabel(outcome);\n        }'),
             n('C7. OwnPublicationPanel.js\'s own two wrapper methods remain pure pass-throughs with no logic of their own'));
-        assert(canvasCode.includes('describeSnapshotResolutionLabel(outcome) {\n            return describeSnapshotResolutionOutcomeLabel(outcome);\n        },') &&
-            canvasCode.includes('describeSnapshotAttributionLabel(outcome) {\n            return describeSnapshotAttributionOutcomeLabel(outcome);\n        }'),
+        assert(canvasCode.includes('describeSnapshotResolutionLabel(outcome) {\n        return describeSnapshotResolutionOutcomeLabel(outcome);\n    },') &&
+            canvasCode.includes('describeSnapshotAttributionLabel(outcome) {\n        return describeSnapshotAttributionOutcomeLabel(outcome);\n    }'),
             n('C8. WorldEncounterCanvas.js\'s own two wrapper methods remain pure pass-throughs with no logic of their own'));
 
         console.log('✓ Section C: PRODUCT_COMPLETE — both real production UI paths route every Resolution/Attribution-family outcome exclusively through the shared presentation functions; a generic sweep (not just the six known literal strings) finds no raw, unwrapped render and no local competing label map in either file.');

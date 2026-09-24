@@ -27,6 +27,7 @@ import { PublicationAnchor } from '../core/PublicationAnchor.js';
 import { BitcoinAnchorEvidenceView } from '../anchoring/BitcoinAnchorEvidenceView.js';
 import { ArweaveAnchorEvidenceView } from '../anchoring/ArweaveAnchorEvidenceView.js';
 import { BaseAnchorEvidenceView } from '../anchoring/BaseAnchorEvidenceView.js';
+import { stylesheetFiles } from './support/SourceFileGroups.js';
 
 // 0.9.526 — Publication Creation & Distribution Trust Product
 // Reassessment.
@@ -628,7 +629,7 @@ async function run() {
         // (published vs. an editable fork), never a trust verdict —
         // re-confirmed here rather than re-litigated, since it sits on
         // this milestone's own adjacent surface.
-        const cssSource = await source('css/main.css');
+        const cssSource = (await Promise.all(stylesheetFiles().map((file) => source(file)))).join('\n');
         assert(!/publication-badge[\s\S]{0,200}(verified|trusted|authentic|safe|guaranteed)/i.test(cssSource),
             n('G2. re-confirmed (0.9.525): the "Published" badge\'s own styling still carries no verification/trust vocabulary'));
 

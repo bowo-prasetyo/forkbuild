@@ -11,6 +11,7 @@ import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.346 — Decentralized Distribution Guidance Product Gap Audit.
 //
@@ -154,11 +155,11 @@ async function run() {
         assert(!/PublicationDistributionExecutor|NostrPublicationDistributionRuntimeAdapter|distributeOwnPublication|distributionCommand\s*:/.test(ownPanelSource),
             '3. that same primary screen has NO button for announcing the Publication record itself (as distinct from its Snapshot bytes) — confirmed by the total absence of the Publication-distribution family\'s own vocabulary anywhere in this file.');
 
-        const worldEncounterSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const worldEncounterSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(/>\{\{ distributionExecuting \? 'Distributing…' : 'Distribute Publication' \}\}<\/button>/.test(worldEncounterSource),
             '4. "Distribute Publication" — the actual signed Publication record, via distributionCommand — exists, but on a DIFFERENT component, ui/components/WorldEncounterCanvas.js.');
 
-        const decentralizedPubsSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedPubsSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(/publishToRemoteIpfs\(entry\)/.test(decentralizedPubsSource) && /Publish to Remote IPFS/.test(decentralizedPubsSource),
             '5. remote IPFS pinning ("Publish to Remote IPFS"/"Publish Again") lives in a THIRD file, ui/views/DecentralizedPublicationsView.js — never OwnPublicationPanel.js or WorldEncounterCanvas.js.');
         assert(/createAnchor\(entry, anchorType\)/.test(decentralizedPubsSource) && /Bitcoin Anchor Publications/.test(decentralizedPubsSource) && /Base Anchor Publications/.test(decentralizedPubsSource),
@@ -189,7 +190,7 @@ Capability inventory (Section B):
     // Section C — The asymmetric reachability finding.
     // =======================================================================
     {
-        const worldEncounterSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const worldEncounterSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         const gateMatch = worldEncounterSource.match(/distributablePublication\(\) \{[\s\S]*?\n        \}/);
         assert(gateMatch, '1. the exact gating computed property for "Distribute Publication" exists and is isolable.');
         assert(/if \(!this\.selectedEncounter \|\| this\.selectedEncounter\.kind !== 'PUBLICATION'\) \{/.test(gateMatch[0]),
@@ -319,7 +320,7 @@ Capability inventory (Section B):
     // Section G — UI duplication assessment.
     // =======================================================================
     {
-        const decentralizedPubsSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedPubsSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
 
         // G1 — Snapshot placement (local IPFS daemon) vs. remote IPFS
         // pinning (hosted service): DISTINCT, not duplicative.

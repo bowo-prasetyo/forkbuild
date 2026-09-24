@@ -7,7 +7,7 @@ import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterM
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.104 — World View Publication Distribution Action.
 //
@@ -371,8 +371,7 @@ async function runTests() {
     // Section H — architectural regression: WorldEncounterCanvas.js.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url);
-        const source = await readFile(sourceUrl, 'utf8');
+        const source = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         assert(!/ArweavePublicationMaterialUploader|NostrPublicationDiscoveryPublisher|PublicationDistributionExecutor|PublicationDistributionOrchestrator|PublicationDistributionRuntimeComposition|orchestratePublicationDistribution|executePublicationDistribution\(/.test(codeOnly),

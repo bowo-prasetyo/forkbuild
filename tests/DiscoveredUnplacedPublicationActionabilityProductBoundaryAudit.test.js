@@ -41,6 +41,7 @@ import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js
 import { DocumentCloneService } from '../application/DocumentCloneService.js';
 import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.594 — Discovered-Unplaced Publication Actionability Product Boundary
 // Audit.
@@ -699,7 +700,7 @@ async function run() {
     // Section I — product vocabulary.
     // ===============================================================
     {
-        const canvasSrc = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSrc = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
         const hasOpenForkExplore = /openObserverLocalEncounterPublication|forkObserverLocalEncounterPublication|exploreObserverLocalEncounterPublication/.test(canvasSrc);
         assert(hasOpenForkExplore, n('I1. Sanity: the actionable vocabulary (Open/Fork/Explore/Comment) exists in real source for a Wanderer to be shown once selected.'));
         const hasPlaceCopy = /Place Here|Place This Publication|Claim This Spot/i.test(canvasSrc);

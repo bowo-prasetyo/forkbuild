@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.252 — Post-Commentary-UI Product Reassessment.
 //
@@ -410,7 +411,7 @@ async function runTests() {
         // most recent single distribute-click's own result.
         assert(await sourceExists('application/PublicationDistributionLifecycle.js'),
             'D5a. application/PublicationDistributionLifecycle.js exists as a real distribution-lifecycle domain concept.');
-        const worldEncounterCanvas = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const worldEncounterCanvas = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(worldEncounterCanvas.includes('PublicationDistributionLifecycle') || worldEncounterCanvas.includes('PublicationDistributionState'),
             'D5b. ui/components/WorldEncounterCanvas.js renders PublicationDistributionLifecycle/PublicationDistributionState vocabulary — a real lifecycle view exists.');
         assert(!panel.includes('PublicationDistributionLifecycle') && !panel.includes('PublicationDistributionState'),

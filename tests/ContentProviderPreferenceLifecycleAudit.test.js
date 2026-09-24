@@ -26,6 +26,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.303 — Content Provider Preference Lifecycle Audit.
 //
@@ -305,7 +306,7 @@ async function run() {
         const networkSettingsSource = await source('ui/views/NetworkSettingsView.js');
         assert(/router-link to="\/settings\/content-provider"/.test(networkSettingsSource),
             '3b. the settings page is still linked from the Network Settings hub — establishing a preference is not a URL-only capability');
-        const publicationsViewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const publicationsViewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         assert(/await preferredPlacementCreationCoordinator\.create\(entry\.publication\.id\)/.test(publicationsViewSource),
             '4. the Publication Center\'s own "Use Preferred Provider" trigger is still the one production caller of the preferred coordinator with no explicit storage — the consuming half of the journey');
 

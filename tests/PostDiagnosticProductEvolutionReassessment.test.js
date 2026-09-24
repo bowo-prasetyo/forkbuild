@@ -21,6 +21,7 @@ import { World } from '../core/World.js';
 import { StructurePlacement } from '../core/StructurePlacement.js';
 import { MoveStructurePlacementCommand } from '../application/commands/MoveStructurePlacementCommand.js';
 import { WorldConflictResolver, WorldOperationOutcome } from '../replication/WorldConflictResolver.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.326 — Post-Diagnostic Product Evolution Reassessment.
 //
@@ -349,7 +350,7 @@ async function runTests() {
         const materializeSource = await rawSource('application/MaterializeSnapshotFromPlacementUseCase.js');
         assert(materializeSource.includes('storeSnapshotContentUseCase') && materializeSource.includes('contentHash'),
             'B2b. MaterializeSnapshotFromPlacementUseCase.js still runs a hash-verify (resolution) then-store (materialization) pipeline.');
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(canvasSource.includes('registerMaterializedSnapshotWorldSource') || canvasSource.includes('unregisterSelectedSnapshot'),
             'B2c. WorldEncounterCanvas.js still registers a materialized Snapshot as a World source — Materialization -> World.');
 
@@ -384,7 +385,7 @@ async function runTests() {
         // B6. Provider preference -> Setting -> Preferred Placement.
         const settingsSource = await rawSource('ui/views/ContentProviderSettingsView.js');
         assert(settingsSource.includes('setRoleProviderPreferenceUseCase'), 'B6a. ContentProviderSettingsView.js still saves through the real write use case.');
-        const publicationsViewSource = await rawSource('ui/views/DecentralizedPublicationsView.js');
+        const publicationsViewSource = (await Promise.all(publicationsPageFiles().map((file) => rawSource(file)))).join('\n');
         assert(publicationsViewSource.includes('preferredSnapshotPlacementCreationCoordinator') && publicationsViewSource.includes('createPreferredPlacement'),
             'B6b. DecentralizedPublicationsView.js still exposes "Use Preferred Provider", consuming the SAME store the settings view writes.');
 

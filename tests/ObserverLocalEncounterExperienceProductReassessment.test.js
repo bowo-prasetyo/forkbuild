@@ -27,6 +27,7 @@ import { Publication } from '../publisher/Publication.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { materializedSnapshotWorldOrigin } from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.553 — Observer-Local Encounter Experience Product Reassessment.
 //
@@ -565,7 +566,7 @@ async function runTests() {
     // actually answers.
     // ===============================================================
     {
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         const blockStart = canvasSource.indexOf('world-encounter-observer-local-marker');
         assert(blockStart >= 0, 'F0. The observer-local marker block exists in the real template source.');
         const block = canvasSource.slice(blockStart, canvasSource.indexOf('</g>', blockStart));
@@ -600,7 +601,7 @@ async function runTests() {
     // Section G — The biggest likely product gap: no interaction.
     // ===============================================================
     {
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         const blockStart = canvasSource.indexOf('world-encounter-observer-local-marker');
         const block = canvasSource.slice(blockStart, canvasSource.indexOf('</g>', blockStart));
         // AMENDED BY 0.9.554: the marker now DOES bind a click handler
@@ -651,10 +652,10 @@ async function runTests() {
     // Section H — Interaction with Repository.
     // ===============================================================
     {
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         const methodStart = canvasSource.indexOf('admitToRepositoryDiscovery(loading, verification) {');
         assert(methodStart >= 0, 'H0. admitToRepositoryDiscovery() exists in real source.');
-        const methodEnd = canvasSource.indexOf('\n        refreshMaterialInspection()', methodStart);
+        const methodEnd = canvasSource.indexOf('\n    refreshMaterialInspection()', methodStart);
         const methodBody = canvasSource.slice(methodStart, methodEnd);
         assert(!/observerLocalEncounter/i.test(methodBody),
             'H1. admitToRepositoryDiscovery() never reads or reasons about an observer-local encounter of any kind — its own gate is entirely `decentralizedPublicationDiscoveryProvider` + a resolved, VERIFIED material loading/verification pair, reachable only through the EXISTING selection/material-inspection path (see Section G: never reachable for an observer-local encounter at all today).');

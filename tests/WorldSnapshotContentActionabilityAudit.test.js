@@ -18,6 +18,7 @@ import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.185 — World Snapshot Content Actionability Audit.
 //
@@ -202,9 +203,10 @@ function stripLineComments(source) {
 // own `extractComputedBody()`, generalized to accept either an explicit next
 // marker or fall back to matching the method's own closing brace.
 function extractMethodBody(source, name) {
-    const marker = `        ${name}(`;
-    const startIndex = source.indexOf(marker);
-    assert(startIndex !== -1, `sanity — ${name}() is found verbatim in WorldEncounterCanvas.js`);
+    // Four spaces for methods moved into ./worldEncounterCanvas/ modules.
+    const marker = new RegExp(`\\n( {8}| {4})${name}\\(`).exec(source);
+    assert(marker !== null, `sanity — ${name}() is found verbatim in WorldEncounterCanvas.js`);
+    const startIndex = marker.index + 1;
     const braceOpen = source.indexOf('{', startIndex);
     let depth = 0;
     let index = braceOpen;
@@ -220,7 +222,7 @@ function extractMethodBody(source, name) {
 }
 
 async function run() {
-    const canvasSource = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
+    const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
     const canvasCodeOnly = stripLineComments(canvasSource);
     const contentViewSource = await readFile(new URL('../application/WorldSnapshotContentView.js', import.meta.url), 'utf8');
     const contentComparisonViewSource = await readFile(new URL('../application/WorldSnapshotContentComparisonView.js', import.meta.url), 'utf8');

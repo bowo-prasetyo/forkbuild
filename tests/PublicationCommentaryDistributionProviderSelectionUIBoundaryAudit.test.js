@@ -10,6 +10,7 @@ import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPubli
 import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
 import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
 import { PublicationCommentaryNotificationProducer } from '../application/PublicationCommentaryNotificationProducer.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.637 — Publication Commentary Distribution Provider Selection UI
 // Boundary Audit.
@@ -145,7 +146,7 @@ async function run() {
         assert(/distributeEditorPublication\(publication, selectedDiscoveryProvider\.value\)/.test(editorSource),
             n('the selected value is forwarded verbatim as a second argument — never translated into a different vocabulary before reaching the distribution call'));
 
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(/selectedDiscoveryProvider: 'nostr',/.test(canvasSource),
             n('the ORIGINAL 0.9.430 precedent, WorldEncounterCanvas.js, holds the identical default — EditorView.js\'s own header confirms it "mirrors WorldEncounterCanvas.js\'s own identical... control, one caller over," reconfirmed here against real source rather than taken on the comment\'s word'));
         assert(/v-model="selectedDiscoveryProvider"/.test(canvasSource) && /distributeSelectedPublication/.test(canvasSource),
@@ -217,7 +218,7 @@ async function run() {
         const cardSource = (await rawSource('ui/components/PublicationCard.js') + await rawSource('ui/components/PublicationCommentarySection.js'));
         const listSource = (await rawSource('ui/components/PublicationList.js') + await rawSource('ui/components/PublicationCommentarySection.js'));
         const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
 
         assert(/inject:\s*\{[\s\S]*?addPublicationCommentaryCommand:\s*\{\s*default:\s*null\s*\}/.test(cardSource),
             n('PublicationCard.js declares addPublicationCommentaryCommand under inject — it reads the app-wide instance ui/main.js provides, never a value its own parent must explicitly bind'));
@@ -368,7 +369,7 @@ async function run() {
     // ===============================================================
     {
         const editorSource = await rawSource('ui/views/EditorView.js');
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         const mainSource = codeOnly(await rawSource('ui/main.js'));
 
         const uiDefaultsToNostr = /selectedDiscoveryProvider = ref\('nostr'\)/.test(editorSource)

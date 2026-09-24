@@ -23,6 +23,7 @@ import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.179 — Snapshot World Source Unregistration.
 //
@@ -196,7 +197,7 @@ function mountCanvas(ctx) { WorldEncounterCanvas.mounted.call(ctx); }
 function unmountCanvas(ctx) { WorldEncounterCanvas.beforeUnmount.call(ctx); }
 
 async function run() {
-    const canvasSource = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
+    const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
     const bridgeSource = await readFile(new URL('../application/MaterializedSnapshotWorldDiscoveryBridge.js', import.meta.url), 'utf8');
 
     // ---------------------------------------------------------------

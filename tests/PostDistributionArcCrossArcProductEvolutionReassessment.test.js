@@ -8,6 +8,7 @@ import { NotificationEvent } from '../core/NotificationEvent.js';
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
 import { PUBLICATION_COMMENTED_EVENT_TYPE } from '../application/PublicationCommentaryNotificationProducer.js';
 import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.350 — Cross-Arc Product Evolution Reassessment.
 //
@@ -197,7 +198,7 @@ async function runTests() {
         const mainSource = await rawSource('ui/main.js');
         assert(/CreatePublicationPeerExchangeUseCase/.test(mainSource),
             'B2d. ui/main.js still wires the real PublicationPeerConnectionSync-carrying composition at startup.');
-        const decentralizedViewSource = await rawSource('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => rawSource(file)))).join('\n');
         assert(/admitToRepositoryDiscovery/.test(decentralizedViewSource),
             'B2e. DecentralizedPublicationsView.js still carries the one production admission call (resolve -> admit -> Repository-visible).');
 
@@ -205,7 +206,7 @@ async function runTests() {
         const createWorldViewSource = await rawSource('application/CreateWorldViewUseCase.js');
         assert(/new PublicationCommentaryNotificationProducer\(/.test(createWorldViewSource),
             'B3a. CreateWorldViewUseCase.js still wraps commentary through PublicationCommentaryNotificationProducer, never the raw use case directly.');
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(/addPublicationCommentaryCommand/.test(canvasSource),
             'B3b. WorldEncounterCanvas.js still carries commentary vocabulary — Encounter/Inspect and Comment are the same surface.');
         const worldViewSourceForNotif = await rawSource('ui/views/WorldView.js');

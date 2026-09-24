@@ -23,6 +23,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.348 — Post-Publish Distribution Convergence Audit.
 //
@@ -672,7 +673,7 @@ async function run() {
         // G2 — architectural: WorldEncounterCanvas.js is genuinely
         // untouched by this milestone — it knows nothing of
         // OwnPublicationPanel, and keeps its own distinct prop name.
-        const canvasCode = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
+        const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(!canvasCode.includes('OwnPublicationPanel'), '54. WorldEncounterCanvas.js remains unaware of OwnPublicationPanel');
         assert(!canvasCode.includes('publicationDistributionCommand') && canvasCode.includes('distributionCommand'),
             '55. WorldEncounterCanvas.js keeps its own distinct distributionCommand prop name, unrenamed');
@@ -710,7 +711,7 @@ async function run() {
         // the only two states, exactly as 0.9.104's own regression check
         // already established one milestone earlier, reconfirmed fresh
         // against the canvas AND the panel.
-        const canvasCode = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
+        const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
         const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
         for (const code of [canvasCode, panelCode]) {
             assert(!/\bDISPATCHED\b|\bQUEUED\b|\bSCHEDULED\b|\bRETRYING\b|\bCOMMANDED\b/.test(code),

@@ -4,6 +4,7 @@ import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { composeDiscoverWorldEncounterPublicationCommand } from '../application/DiscoverWorldEncounterPublicationCommandComposition.js';
 import { queryDecentralizedWorldDiscovery } from '../application/DecentralizedWorldDiscoveryQuery.js';
 import { resolveNostrPublisherOptions } from '../application/PublicationDistributionConfigurationProvider.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.356 — Publication Discovery Tag UX Consistency Audit.
 //
@@ -116,7 +117,7 @@ async function run() {
     // proven live rather than assumed.
     // ===============================================================
     {
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         // 0.9.357 note: this milestone's own recommendation has since been
         // implemented — data() now seeds discoveryTag from a new
         // defaultDiscoveryTag prop (itself defaulting to '') rather than an
@@ -188,7 +189,7 @@ async function run() {
         const ownPanelSource = await readSource('ui/components/OwnPublicationPanel.js');
         assert(!/placeholder=["']?[Dd]iscovery tag/.test(ownPanelSource),
             '2. ui/components/OwnPublicationPanel.js — the real Snapshot Discovery UI surface — renders no "Discovery tag" input of any kind; Snapshot discovery is a single button bound to a Publication object, with no tag ever exposed to a Wanderer.');
-        assert(!/placeholder=["']?[Dd]iscovery tag/.test((await readSource('ui/components/WorldEncounterCanvas.js')).split('world-encounter-discovery-panel')[0]),
+        assert(!/placeholder=["']?[Dd]iscovery tag/.test(((await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n')).split('world-encounter-discovery-panel')[0]),
             '3. confirmed on the SAME file the Publication input lives in: everything before the Publication-discovery panel (including the Snapshot Discovery panel, defined earlier in the file) contains no discovery-tag input of its own.');
 
         // Publication: the publish-side composition supplies the literal;
@@ -264,7 +265,7 @@ async function run() {
     // Section F — User-editability semantics of a prefilled field.
     // ===============================================================
     {
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(canvasSource.includes('<input v-model="discoveryTag"'),
             '1. the field is bound with a plain v-model, two-way, on a plain data() field — there is no readonly/disabled-by-default variant of this input anywhere in the template.');
 
@@ -329,7 +330,7 @@ async function run() {
             return source.split('\n').some((line) => !/^\s*\/\//.test(line) && line.includes(literal));
         }
 
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(!codeContainsLiteral(canvasSource, 'forkbuild-publication'),
             '1. WorldEncounterCanvas.js contains no \'forkbuild-publication\' literal in its own CODE today (only in documentation prose, 0.9.357) — confirming a same-named default is INJECTED (a new prop, sourced from ui/main.js\'s own existing constant), never hand-typed a second time inside this file.');
 
@@ -404,7 +405,7 @@ async function run() {
     // live coverage of the fix itself.
     // ===============================================================
     {
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(canvasSource.includes('discoveryTag: this.defaultDiscoveryTag'),
             '1. as of 0.9.357, WorldEncounterCanvas.js seeds discoveryTag from its own new defaultDiscoveryTag prop rather than an unconditional blank string — the fix this audit recommended.');
         const mainSource = await readSource('ui/main.js');
