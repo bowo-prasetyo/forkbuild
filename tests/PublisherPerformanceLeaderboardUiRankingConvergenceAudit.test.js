@@ -14,6 +14,7 @@ import { reconstructDistinctPublisherIdentifiers } from '../application/Publishe
 import { reconstructPublisherAchievementStatistics } from '../application/PublisherAchievementStatisticsView.js';
 import { describePublisherRankingPolicy, reconstructPublisherRanking } from '../application/PublisherRankingPolicy.js';
 import { reconstructPublisherLeaderboard } from '../application/PublisherLeaderboardView.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.418 — Publisher Performance Leaderboard UI/Ranking Convergence Audit.
 //
@@ -195,7 +196,7 @@ async function run() {
     let routerSource, publicationsSource, appSource, viewSource, reconciliationViewSource, leaderboardHubSource;
     {
         routerSource = await readSource('ui/router/index.js');
-        publicationsSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        publicationsSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         appSource = await readSource('ui/App.js');
         viewSource = await readSource('ui/views/PublisherPerformanceLeaderboardView.js');
         reconciliationViewSource = await readSource('ui/views/ReconciliationCandidateLeaderboardView.js');

@@ -10,6 +10,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
 import { SnapshotPlacementCreationCoordinator } from '../application/SnapshotPlacementCreationCoordinator.js';
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.505 — Register Arweave as Snapshot Content Store.
 //
@@ -232,7 +233,7 @@ async function run() {
         registry.register(new ArweaveContentStore({ signer: makeFakeArweaveSigner(), fetchImpl: makeFakeArweaveGateway().fetchImpl }));
         check(coordinator.availableStorageTypes().includes('ar'), 'C. after registering Arweave onto the SAME registry instance, the SAME coordinator now reports "ar" with zero coordinator/registry code change — exactly how ui/main.js wires it');
 
-        const viewSource = await codeOnlySource('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => codeOnlySource(file)))).join('\n');
         check(/v-for="storage in availableStorageTypes"/.test(viewSource), 'C. ui/views/DecentralizedPublicationsView.js still renders one generic button per entry in availableStorageTypes() — the registry\'s own live contents');
 
         // Scoped to the Content storage-picker block itself (from its own

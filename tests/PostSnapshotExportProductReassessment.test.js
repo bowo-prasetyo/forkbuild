@@ -21,7 +21,7 @@ import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.216 — Post-Snapshot-Export Product Reassessment.
 //
@@ -343,7 +343,7 @@ async function runTests() {
         assert(/automaticSnapshotEncounterCascade\.processCandidate\(/.test(worldViewSource), 'F3. ...and still feeds candidates to automaticSnapshotEncounterCascade.processCandidate() (automatic materialization)');
         const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
         assert(/openSnapshotContentView/.test(canvasSource) && /unregisterSelectedSnapshot/.test(canvasSource), 'F4. WorldEncounterCanvas.js still lets a materialized Snapshot be viewed and removed');
-        const decentralizedViewSource = await rawSource('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => rawSource(file)))).join('\n');
         assert(/materializePlacement\(/.test(decentralizedViewSource) && /importSnapshotContent\(/.test(decentralizedViewSource), 'F5. DecentralizedPublicationsView.js still wires explicit "Materialize"/"Import Snapshot" actions');
         console.log('✓ Section F: Snapshot discovery/materialization/World participation — COMPLETE, reconfirmed unchanged.');
     }
@@ -396,7 +396,7 @@ async function runTests() {
         // G4 — import stays an explicit, single action; the coordinator
         // never invents an automatic/background import path (mirrors
         // 0.9.215's own Section C/G for export, now checked for import).
-        const decentralizedViewSource = await rawSource('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => rawSource(file)))).join('\n');
         const importCallSites = (codeOnlyLines(decentralizedViewSource).join('\n').match(/@click="importSnapshotContent\(/g) || []).length;
         assert(importCallSites === 1, `G4a. importSnapshotContent(...) is bound to exactly one @click handler in DecentralizedPublicationsView.js (found ${importCallSites}) — one explicit click handler, no background caller`);
         assert(!/dragover|dragenter|ondrop|@drop=/i.test(decentralizedViewSource), 'G4b. no drag-and-drop import affordance exists — an explicit boundary this milestone observes, not extends');
@@ -499,7 +499,7 @@ async function runTests() {
         // DISTRIBUTION only, never the World-material discovery query
         // family H1/H2 above cover; that half of this assertion still
         // holds unchanged.
-        const decentralizedViewSource = await rawSource('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/DecentralizedWorldDiscoveryQuery/.test(decentralizedViewSource), 'H3. AMENDED BY 0.9.436 — ui/views/DecentralizedPublicationsView.js still contains zero DecentralizedWorldDiscoveryQuery references (the World-material discovery family remains WorldEncounterCanvas.js\'s own, untouched); Nostr/Arweave references now DO exist here, deliberately, as this milestone\'s own Announcement/Discovery distribution wiring — not a naming-assumption violation, but this milestone\'s own explicit scope');
 
         console.log('✓ Section H: AMENDED BY 0.9.436 — Decentralized discovery composition remains exactly as this section originally found it (H1/H2, WorldEncounterCanvas.js untouched); DecentralizedPublicationsView.js now ALSO reaches the same already-composed Nostr/Arweave distribution commands, inside its own contextual "Distribution" section, closing the reachability gap tests/PublicationsDistributionSectionProductAndUIBoundaryAudit.test.js (0.9.435) documented.');

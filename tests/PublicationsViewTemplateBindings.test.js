@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { publicationsViewSourceWithTemplate } from './support/SourceFileGroups.js';
 
 // The Publications page (ui/views/DecentralizedPublicationsView.js) hides
 // many sections behind `v-if="<injected coordinator>"`. A name the template
@@ -18,10 +18,6 @@ let assertionCount = 0;
 function assert(condition, message) {
     assertionCount += 1;
     if (!condition) throw new Error(`ASSERT FAILED: ${assertionCount}. ${message}`);
-}
-
-function source(path) {
-    return readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 }
 
 // Built-ins a template expression may call without setup() returning them.
@@ -46,7 +42,7 @@ function templateExpressions(template) {
 }
 
 async function run() {
-    const { template, returned } = splitView(await source('ui/views/DecentralizedPublicationsView.js'));
+    const { template, returned } = splitView(publicationsViewSourceWithTemplate());
     assert(returned.size > 100 && returned.has('entries'), `setup()'s return object is located (${returned.size} names)`);
 
     // Section A

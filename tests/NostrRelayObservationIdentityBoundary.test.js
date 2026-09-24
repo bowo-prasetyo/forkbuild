@@ -8,6 +8,7 @@ import { PublicationDistributionState } from '../application/PublicationDistribu
 import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
 import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.443 — Nostr Relay Observation Identity Boundary.
 //
@@ -490,7 +491,7 @@ async function run() {
         const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
         const dialogSource = await source('ui/components/WorldDistributionDialog.js');
         assert(/:key="observation\.discoveryProvider \+ ':' \+ observation\.origin"/.test(dialogSource), n('J3. CONFIRMED FROM THE TEMPLATE: WorldDistributionDialog.js\'s own v-for key is (discoveryProvider, origin), not discoveryProvider alone — two Nostr relay rows never share one Vue key'));
-        const publicationsViewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const publicationsViewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         assert(/:key="observation\.discoveryProvider \+ ':' \+ observation\.origin"/.test(publicationsViewSource), n('J4. CONFIRMED FROM THE TEMPLATE: ui/views/DecentralizedPublicationsView.js\'s own v-for key is likewise (discoveryProvider, origin) — the same fix applied at both real UI call sites'));
 
         // No relay list UI was built — the real component's own props/data

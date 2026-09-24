@@ -23,6 +23,7 @@ import {
 
 import PublicationCard from '../ui/components/PublicationCard.js';
 import PublicationList from '../ui/components/PublicationList.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.539 — Publication Selection & Identity Presentation Product
 // Reassessment.
@@ -351,7 +352,7 @@ async function run() {
         // "evidence" components are a distinct, unrelated feature
         // (publisher-claim reconciliation, not anchor->contentHash proof)
         // and were never touched.
-        const decentralizedViewSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(/entry\.evidence\.anchors/.test(decentralizedViewSource),
             'G2a. STRUCTURAL: anchors are still rendered scoped to one Publication\'s own `entry`, never as a global, cross-Publication list that could imply two Publications sharing a contentHash are one.');
         const reconciliationPanelSource = await readSource('ui/components/ReconciliationCandidateEvidenceDetailPanel.js');
