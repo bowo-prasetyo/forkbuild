@@ -7,17 +7,11 @@ import {
     WorldEncounterMaterialSource
 } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.9.34 — Lead-Aware Decentralized Material Loading Boundary.
 // See docs/Roadmap.md, "0.9.34 — Lead-Aware Decentralized Material Loading Boundary."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function selectionOf({ kind, objectId, origin = 'decentralized:nostr' } = {}) {
     return Object.freeze({ kind, objectId, origin });

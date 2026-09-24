@@ -1,9 +1,12 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.294 — Decentralized Role Provider Preference Persistence Boundary.
 // See docs/Roadmap.md, "0.9.294 — Decentralized Role Provider Preference
@@ -25,27 +28,10 @@ import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceSt
 // Section J: no resolution — zero path from providerKey to a real provider
 // Section K: architecture sweep — no provider imports, no registry, no UI
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function expectThrows(fn, message) {
     let threw = false;
     try { fn(); } catch { threw = true; }
     assert(threw, message);
-}
-
-// The identical in-memory StorageProvider fake tests/PublicationCommentaryStorage.test.js
-// and tests/DurableDocuments.test.js already use for the same purpose — a
-// real StorageProvider subclass, so `instanceof StorageProvider` passes,
-// backed by nothing but a Map, round-tripping through JSON exactly like a
-// real serialized backend would.
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 class ThrowingStorageProvider extends StorageProvider {
@@ -53,11 +39,6 @@ class ThrowingStorageProvider extends StorageProvider {
     load() { throw new Error('storage backend unavailable'); }
     remove() {}
     list() { return []; }
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 async function run() {

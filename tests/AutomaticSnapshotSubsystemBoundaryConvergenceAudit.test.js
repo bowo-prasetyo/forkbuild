@@ -1,4 +1,4 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 
 import { AutomaticSnapshotEncounterCascade } from '../application/snapshot/AutomaticSnapshotEncounterCascade.js';
 import { AutomaticSnapshotEncounterCascadeOutcome } from '../application/snapshot/AutomaticSnapshotEncounterCascadeOutcome.js';
@@ -30,8 +30,10 @@ import { PlacementRecord } from '../core/PlacementRecord.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Position } from '../core/Position.js';
 import { Publication } from '../publisher/Publication.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.195 — Automatic Snapshot Subsystem Boundary & Convergence Audit.
 //
@@ -143,10 +145,6 @@ import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileG
 // shipped, composed exactly as `ui/views/WorldView.js` itself composes
 // them. No finding in this audit required a change to any of them.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function pos(x, y, z) {
     return { x, y, z };
 }
@@ -159,10 +157,6 @@ async function flushMicrotasks() {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 // Strips full-line `//` comments AND `<!-- -->` HTML comments (Vue
 // template prose embedded in a `ui/components/*.js` file's own template
@@ -230,13 +224,6 @@ function storedOutcome(contentHash) {
 // gateway/signer, and a real LocalContentStore, composed through the
 // SAME, unmodified application commands ui/main.js itself wires up.
 // ---------------------------------------------------------------------
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function makeFakeArweaveGateway() {
     const network = new Map();

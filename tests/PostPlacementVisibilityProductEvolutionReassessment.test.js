@@ -3,13 +3,15 @@ import { execSync } from 'node:child_process';
 
 import { Position } from '../core/Position.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { DiscoverPlacementsUseCase } from '../application/placement/DiscoverPlacementsUseCase.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.310 — Post-Placement-Visibility Product Evolution Reassessment.
 //
@@ -74,15 +76,7 @@ import { worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles }
 //                            source of     evidenced next
 //                            truth)        placement feature)
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {
@@ -127,14 +121,6 @@ function methodBody(source, signaturePattern, closeIndent) {
     const match = source.match(re);
     assert(match, `method body for ${signaturePattern} could not be located`);
     return match[1];
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeBackend() {

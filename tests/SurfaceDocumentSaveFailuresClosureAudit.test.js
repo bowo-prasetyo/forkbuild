@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -12,6 +11,8 @@ import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { World } from '../core/World.js';
 import { editorViewFiles } from './support/SourceFileGroups.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.653 — Surface Document Save Failures: closure audit.
 //
@@ -55,9 +56,6 @@ function n(message) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 function extractRange(source, startMarker, endMarker, label) {
     const start = source.indexOf(startMarker);
@@ -126,14 +124,6 @@ function freshFixture(title = 'Save Failure Closure Audit Fixture') {
     documentManager.load(document);
     documentManager.markDirty();
     return { document, documentManager, id: world.id };
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 // The same failure corpus shapes tests/DocumentSaveFailureHandlingBoundaryAudit.test.js

@@ -6,7 +6,9 @@ import {
 } from '../storage/PublicationCommentaryStore.js';
 import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
 import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.244 — Publication Commentary Application Command Boundary. Covers
 // application/publication/commentary/AddPublicationCommentaryUseCase.js — the one place user
@@ -38,17 +40,6 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 // Helpers
 // ---------------------------------------------------------------------
 
-// The identical in-memory StorageProvider fake
-// tests/PublicationCommentaryStorage.test.js already uses for the same
-// purpose — a real StorageProvider subclass, backed by nothing but a Map.
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
 // A storage provider whose save() always fails — simulates a real write
 // failure (disk full, quota exceeded, IPC error, ...) rather than a read
 // failure. Never used for load().
@@ -57,18 +48,6 @@ class WriteFailingStorageProvider extends StorageProvider {
     load() { return null; }
     remove() {}
     list() { return []; }
-}
-
-// A real, authenticated LocalIdentityProvider — the same
-// makeIdentity(label) pattern tests/PublicationAnchorCreation.test.js
-// already uses, so this file's own coverage exercises the real
-// identity/ infrastructure this use case now depends on, never a
-// hand-rolled stand-in for it.
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 // A permissive CanCommentOnPublicationUseCase, backed by a discoveryProvider
@@ -86,10 +65,6 @@ function validInput(overrides = {}) {
         content: 'hello world',
         ...overrides
     };
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
 }
 
 async function runTests() {

@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { describeWorldSnapshotInspection } from '../application/snapshot/WorldSnapshotInspection.js';
 import { WorldEncounterPresentationSourceFamily } from '../application/worldEncounter/WorldEncounterPresentation.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.177 — World Snapshot Inspection Detail.
 //
@@ -36,10 +37,6 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 //   Section J: purity — frozen results, no mutation of inputs, repeatable.
 //   Section K: structural sweep — no I/O, no registry access, no discovery/
 //              retrieval/hashing/network calls, no rank/trust vocabulary.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function snapshotPresentation(overrides = {}) {
     return Object.freeze({

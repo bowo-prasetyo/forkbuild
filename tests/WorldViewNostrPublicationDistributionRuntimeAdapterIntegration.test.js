@@ -10,6 +10,7 @@ import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
 import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.108 — Nostr Publication Discovery Runtime Adapter.
 //
@@ -34,10 +35,6 @@ import { mainFiles } from './support/SourceFileGroups.js';
 //              capability, the way ui/main.js builds it TODAY — still ends
 //              in the SAME plain notice 0.9.104-0.9.107 already produce
 //   Section C: architectural regression — ui/main.js wiring
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));

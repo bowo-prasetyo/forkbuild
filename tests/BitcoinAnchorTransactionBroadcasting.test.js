@@ -2,6 +2,7 @@ import { BitcoinAnchorTransactionBuilder } from '../anchoring/BitcoinAnchorTrans
 import { BitcoinAnchorPsbtBuilder } from '../anchoring/BitcoinAnchorPsbtBuilder.js';
 import { BitcoinAnchorSignedPsbtFinalizer } from '../anchoring/BitcoinAnchorSignedPsbtFinalizer.js';
 import { BitcoinAnchorTransactionBroadcaster } from '../anchoring/BitcoinAnchorTransactionBroadcaster.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.52 — Bitcoin Anchor Transaction Broadcasting.
 //
@@ -49,10 +50,6 @@ import { BitcoinAnchorTransactionBroadcaster } from '../anchoring/BitcoinAnchorT
 //
 // See docs/Principles.md, "Broadcasting Submits; It Does Not Decide
 // (0.8.52)."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

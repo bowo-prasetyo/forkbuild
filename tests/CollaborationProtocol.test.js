@@ -11,14 +11,11 @@ import { DeleteBrickCommand } from '../application/commands/DeleteBrickCommand.j
 import { CollaborationSession } from '../collaboration/CollaborationSession.js';
 import { LocalCollaborationTransport } from '../collaboration/LocalCollaborationTransport.js';
 import { CreateCollaborationUseCase } from '../application/document/CreateCollaborationUseCase.js';
+import { assert } from './support/Assert.js';
 
 // ---------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function createWorld() {
     // FIX: Use a deterministic world ID so independently created client 

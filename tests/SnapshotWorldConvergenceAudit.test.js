@@ -14,8 +14,9 @@ import { PlacementRecord } from '../core/PlacementRecord.js';
 import { Position } from '../core/Position.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.162 — Snapshot World Convergence Audit.
 //
@@ -130,18 +131,6 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 //              and that Section A's "three encounters survive" finding is
 //              the CURRENT, intentional behavior of every file involved,
 //              never something this file's own tests work around.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function placeReal(placementRegistry, publicationId, position, owner = 'alice') {
     const record = new PlacementRecord({ publicationId, position, owner });

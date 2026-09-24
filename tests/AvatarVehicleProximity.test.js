@@ -6,6 +6,7 @@ import { AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
 import { VehiclePresence } from '../core/VehiclePresence.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { Position } from '../core/Position.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.73 — Avatar-Vehicle Proximity Detection, core/AvatarVehicleProximity.js.
 //
@@ -22,10 +23,6 @@ import { Position } from '../core/Position.js';
 // only "is this avatar within interaction range of this vehicle" — never
 // whether they physically collide, which vehicle to prefer, or what
 // happens next. See docs/Roadmap.md, 0.9.73.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, message) {
     let threw = false;

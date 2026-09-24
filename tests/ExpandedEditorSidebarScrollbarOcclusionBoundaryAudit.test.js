@@ -1,8 +1,7 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { stylesheetFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.658 — Expanded Editor Sidebar Scrollbar Occlusion Boundary Audit.
 //
@@ -169,10 +168,6 @@ function n(message) {
 }
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
-
-async function readSource(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
 
 // Same convention as tests/SidebarScrollbarContentOcclusionBoundaryAudit.test.js
 // (itself borrowed from tests/EditorSidebarScrollOwnershipClosureAudit.test.js).

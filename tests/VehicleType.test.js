@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { VehicleType, isValidVehicleType } from '../core/VehicleType.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.70 — Vehicle Type Vocabulary, core/VehicleType.js.
 //
@@ -11,10 +12,6 @@ import { VehicleType, isValidVehicleType } from '../core/VehicleType.js';
 // Central architectural claim under test throughout: this milestone
 // introduces a name for what a vehicle IS and nothing about what a
 // vehicle DOES — see docs/Roadmap.md, 0.9.70.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function runTests() {
     const { NONE, BICYCLE, MOTORCYCLE, CAR, DRONE } = VehicleType;

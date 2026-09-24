@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
@@ -14,8 +13,10 @@ import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { worldEncounterCanvasFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.600 — Publication First-Placement Action Wiring Fix.
 //
@@ -46,23 +47,6 @@ import { worldEncounterCanvasFiles, worldViewFiles, worldNavigationSessionFiles,
 // the requesting brief's own lettered acceptance criteria (A-G) against
 // real production classes, wired exactly as CreateWorldViewUseCase.js
 // wires them today.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 if (typeof globalThis.window === 'undefined') {
     const store = new Map();

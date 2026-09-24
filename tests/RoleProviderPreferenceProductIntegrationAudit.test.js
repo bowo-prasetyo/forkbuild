@@ -1,8 +1,7 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
 import { RoleAwareProviderResolver } from '../application/settings/RoleAwareProviderResolver.js';
 import { ResolvePreferredRoleProviderUseCase } from '../application/settings/ResolvePreferredRoleProviderUseCase.js';
@@ -11,6 +10,9 @@ import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placemen
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
 import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.298 — Role Provider Preference Product Integration Audit.
 //
@@ -84,14 +86,7 @@ import { mainFiles } from './support/SourceFileGroups.js';
 //   `PROVIDER_NOT_FOUND` are read here exactly as 0.9.295/0.9.297 already
 //   define them — never remapped, never given an invented fallback.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 function normalizeComment(text) {
     return text.replace(/^\s*\/\/\s?/gm, '').replace(/\s+/g, ' ');
@@ -122,16 +117,6 @@ async function repoWideProductionFiles() {
     const all = [];
     for (const dir of dirs) await listJsFiles(dir, all);
     return [...new Set(all)];
-}
-
-// The identical in-memory StorageProvider fake every earlier milestone in
-// this sequence already uses for the same purpose.
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makePreferenceStore() {

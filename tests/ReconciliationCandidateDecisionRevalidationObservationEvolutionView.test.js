@@ -6,6 +6,8 @@ import {
 } from '../application/claimSnapshotReconciliation/candidate/DecisionRevalidationObservationEvolutionView.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { featureImportLines } from './support/SharedHelperImports.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.172 — Reconciliation Candidate Observation Evolution Projection.
 //
@@ -27,14 +29,6 @@ import { featureImportLines } from './support/SharedHelperImports.js';
 //            exactly once
 // Section L: vocabulary/import boundary — no rediscovery of 0.8.144 or
 //            0.8.157, no interpretive vocabulary, imports only 0.8.171
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function genuineDecisionRecord(candidate, decision, decidedAt) {
     return Object.freeze({ decided: true, candidate: Object.freeze(candidate), decision, decidedAt: decidedAt.toISOString() });

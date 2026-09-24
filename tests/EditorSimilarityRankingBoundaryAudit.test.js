@@ -1,5 +1,3 @@
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { Structure } from '../core/Structure.js';
@@ -7,6 +5,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { compareBlueprintSimilarity, isPossibleLineageCandidate, DEFAULT_SIMILARITY_THRESHOLD } from '../core/BlueprintSimilarity.js';
 import { editorViewFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.592 — Editor Similarity Ranking Boundary Audit.
 //
@@ -77,9 +76,6 @@ function n(message) {
 }
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
-async function source(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
 
 function brick(definitionId, x, y, z, rotation = 0) {
     return new Brick({ definitionId, position: new Position(x, y, z), rotation });

@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { Publication } from '../publisher/Publication.js';
@@ -24,6 +23,8 @@ import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvi
 import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { PublicationQuery } from '../core/PublicationQuery.js';
 import { editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.574 — Repository Publication Lifecycle & Currency Product
 // Reassessment.
@@ -88,16 +89,6 @@ import { editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 // Section D, and are cited, not re-derived, here.
 //
 // FINDING: see the verdict block at the end of this file.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 class InMemoryStorageProvider extends StorageProvider {
     constructor() {

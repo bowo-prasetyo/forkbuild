@@ -7,6 +7,7 @@ import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
 import { worldEncounterCanvasFiles, worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.347 — Post-Publish Distribution Entry Point.
 //
@@ -56,10 +57,6 @@ import { worldEncounterCanvasFiles, worldViewFiles, ownPublicationPanelFiles } f
 //            generic "distribute to" abstraction, or the local-first
 //            publish invariant; PublishDocumentUseCase.js/
 //            UnpublishDocumentUseCase.js remain untouched.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function flushMicrotasks() {
     // Section A's own publicationDistributionCommand runs the real

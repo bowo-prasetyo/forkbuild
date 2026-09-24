@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { World } from '../core/World.js';
 import { Document } from '../core/Document.js';
@@ -30,6 +29,8 @@ import { LocalWorldExperience } from '../core/LocalWorldExperience.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { ObserverLocalEncounterStore } from '../application/worldEncounter/ObserverLocalEncounterStore.js';
 import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.576 — World Lifecycle & Identity Product Reassessment.
 //
@@ -137,16 +138,6 @@ import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFil
 // production code; it is reconnaissance/reassessment only.
 //
 // FINDING: see the verdict block at the end of this file.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 class InMemoryStorageProvider extends StorageProvider {
     constructor() {

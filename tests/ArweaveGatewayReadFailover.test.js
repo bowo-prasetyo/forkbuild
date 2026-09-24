@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { ArweaveGatewayConfiguration } from '../core/ArweaveGatewayConfiguration.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
@@ -10,6 +9,8 @@ import { ArweaveGatewayFailoverWorldEncounterMaterialResolver } from '../applica
 import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
 import { composeArweaveDecentralizedWorldEncounterMaterialSource } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialRuntimeComposition.js';
 import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.440 — Arweave Gateway Read Failover.
 //
@@ -54,10 +55,6 @@ import { mainFiles } from './support/SourceFileGroups.js';
 // Section K: composition wiring — gatewayUrls (plural) picks the failover
 //            class only for 2+ entries; the single-value shape is
 //            unaffected
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;
@@ -127,11 +124,6 @@ function makeMultiGatewayFetch(behaviors) {
 
 function totalRequests(requestsByOrigin, origin) {
     return (requestsByOrigin[origin] || []).length;
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 async function run() {

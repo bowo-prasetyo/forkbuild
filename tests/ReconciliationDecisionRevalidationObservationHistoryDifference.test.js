@@ -5,6 +5,8 @@ import {
 } from '../application/claimSnapshotReconciliation/revalidationObservation/HistoryDifference.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { featureImportLines } from './support/SharedHelperImports.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.166 — Revalidation Observation History Difference Projection.
 //
@@ -37,14 +39,6 @@ import { featureImportLines } from './support/SharedHelperImports.js';
 //            deliberately-empty archive boundary until 0.8.167
 // Section N: architectural/vocabulary regression — zero imports, no
 //            interpretive vocabulary, no dependency on 0.8.164/0.8.165
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function planNaming({ claims = [], snapshots = [], divergent = [] } = {}) {
     return Object.freeze({

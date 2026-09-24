@@ -23,6 +23,7 @@ import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
+import { assert } from './support/Assert.js';
 
 // ---------------------------------------------------------------------
 // Test helpers & stubs
@@ -92,10 +93,6 @@ const stubLayoutProvider = {
     getPosition: () => new WorldPosition(0, 0, 0),
     findVisibleDocuments: () => []
 };
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, expectedMessage, message) {
     try {

@@ -98445,3 +98445,12 @@ the same way. Exported identifiers are unchanged. Imports, source paths in tests
 paths; the two leaderboard family-census tests count the new folders (the family is now 83 files, since the folders
 also hold six claim files the prefix never matched). The Bitcoin and Base anchoring folders keep their names, since
 each file there is named after the class it exports.
+
+**Shared test helpers.** Five helpers that test files each defined for themselves now come from `tests/support/`:
+`assert()` (`Assert.js`, 992 files), `InMemoryStorageProvider` (`InMemoryStorageProvider.js`, 608),
+`makeIdentity()` (`TestIdentity.js`, 165), the one-line source readers `readSource()`/`rawSource()`/`source()`
+(`SourceText.js`, 363 copies; files keep their local names through `import { readSource as rawSource }`) and
+`serialize()` (`Serialize.js`, 100). Only copies whose text matched the shared version exactly were replaced; the
+comment describing a removed copy went with it, and imports and `SOURCE_ROOT` constants that only it used were
+dropped. The counting `assert()` and `n()` stay in each file, since the browser runner loads every test into one
+page and a shared counter would accumulate across files. 1,115 test files lose about 10,700 lines.

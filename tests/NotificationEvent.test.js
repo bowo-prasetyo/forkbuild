@@ -1,9 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { NotificationEvent, isValidEventType, MAX_EVENT_TYPE_LENGTH, MAX_RECIPIENT_ID_LENGTH } from '../core/NotificationEvent.js';
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
+import { assert } from './support/Assert.js';
 
 function throws(fn, message) {
     try {

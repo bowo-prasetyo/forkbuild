@@ -1,5 +1,4 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
@@ -13,6 +12,8 @@ import { ConversationStore, MAX_STORED_MESSAGES_PER_PEER } from '../application/
 import { ConversationEntry, ChatMessageDirection, isValidChatMessageDirection } from '../core/ConversationEntry.js';
 import { toChatMessage, deriveConversationId } from '../core/ChatMessage.js';
 import { ChatDeliveryState } from '../core/ChatDeliveryState.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.69 — Reliable Offline Conversations.
 //
@@ -31,18 +32,6 @@ import { ChatDeliveryState } from '../core/ChatDeliveryState.js';
 // survive the reload too). Built over the exact same
 // peer/LocalPeerConnectionProvider.js harness
 // tests/OfflineMessagingDeliveryState.test.js already established.
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function wait(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));

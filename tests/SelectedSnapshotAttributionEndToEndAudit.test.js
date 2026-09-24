@@ -13,6 +13,7 @@ import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.155 — Selected Snapshot Attribution End-to-End Audit.
 //
@@ -111,10 +112,6 @@ import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 //            announcement. Selecting each in turn, through the real UI,
 //            proves the complete outcome changes accordingly: MATCH,
 //            NO_MATCH, and CONTENT_HASH_MISMATCH.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));

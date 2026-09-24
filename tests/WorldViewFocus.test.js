@@ -14,9 +14,10 @@ import { License, LicenseId } from '../core/License.js';
 import { StructurePlacement } from '../core/StructurePlacement.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { geographicPlaceLocationId } from '../core/GeographicPlaceNavigation.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.5.8 — World View Contextual Focus & Information Hierarchy.
 //
@@ -41,18 +42,6 @@ import { geographicPlaceLocationId } from '../core/GeographicPlaceNavigation.js'
 //            the same context a Locations-panel "Info" click would;
 //            Focus never moves the camera or the map; nothing is ever
 //            mutated.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function region({ id, worldId, authorIdentityId = 'alice', name = 'Unnamed Region', description = '', kind = RegionKind.VILLAGE, x, z, radius }) {
     return new WorldRegion({ id, worldId, authorIdentityId, name, description, kind, position: new Position(x, 0, z), radius });

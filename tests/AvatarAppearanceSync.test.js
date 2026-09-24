@@ -19,7 +19,8 @@ import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLib
 import { LocalAvatarPresenceBroadcastProvider } from '../presence/LocalAvatarPresenceBroadcastProvider.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.41 — Remote Avatar Appearance Synchronization.
 //
@@ -44,18 +45,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // renderer. tests/AvatarPresenceTrust.test.js and
 // tests/AvatarPresenceVisibility.test.js are left completely
 // untouched and still pass unmodified.
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function wait(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));

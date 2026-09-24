@@ -1,11 +1,13 @@
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 import { NotificationEvent } from '../core/NotificationEvent.js';
 import { GetRecipientNotificationEventsUseCase } from '../application/chat/GetRecipientNotificationEventsUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.283 — Recipient Notification Query Boundary.
 //
@@ -47,14 +49,6 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 // Helpers
 // ---------------------------------------------------------------------
 
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
 class ReadFailingStore {
     loadAll() { throw new Error('simulated read failure'); }
 }
@@ -77,20 +71,6 @@ function makeEvent({
         createdAt,
         payload: { commentaryId, ...payload }
     });
-}
-
-// The exact makeIdentity(label) pattern
-// tests/PublicationCommentaryAuthorship.test.js already uses: a real,
-// authenticated LocalIdentityProvider, never a bespoke stand-in.
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);

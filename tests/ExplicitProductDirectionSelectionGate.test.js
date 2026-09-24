@@ -1,5 +1,5 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.397 — Explicit Product Direction Selection Gate.
 //
@@ -68,9 +68,6 @@ function n(message) {
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
 
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 async function sourceExists(relativePath) {
     try {
         await readSource(relativePath);

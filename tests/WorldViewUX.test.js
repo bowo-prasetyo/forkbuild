@@ -1,4 +1,5 @@
 import { WorldViewNavigationState, WorldViewPrimaryMode } from '../application/world/WorldViewNavigationState.js';
+import { assert } from './support/Assert.js';
 
 // 0.5.7 — World View UX & Progressive Exploration.
 //
@@ -19,10 +20,6 @@ import { WorldViewNavigationState, WorldViewPrimaryMode } from '../application/w
 // template is a thin reflection of this state, the same "dumb panel,
 // smart host" split (inverted: here the HOST is the thin layer over a
 // pure module) every other modal in this codebase already follows.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 // ---------------------------------------------------------------------
 // 1. Explore is the default primary mode

@@ -1,5 +1,6 @@
 import { HttpPinningProvider, PinningRejectedError } from '../content/HttpPinningProvider.js';
 import { ContentUnavailableError } from '../content/IpfsContentStore.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.67 — Explicit Remote IPFS Publishing via a Pinning Provider.
 //
@@ -19,10 +20,6 @@ import { ContentUnavailableError } from '../content/IpfsContentStore.js';
 //              already throw
 //   Section E: configuration validation
 //   Section F: field-name configurability (fileFieldName/cidField)
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function expectRejects(promiseFn, message, ErrorType = null) {
     let threw = false;

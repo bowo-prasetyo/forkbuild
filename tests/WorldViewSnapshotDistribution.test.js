@@ -12,6 +12,7 @@ import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { worldViewFiles, worldEncounterCanvasFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.138 — World View Snapshot Distribution Action.
 //
@@ -72,10 +73,6 @@ import { worldViewFiles, worldEncounterCanvasFiles, mainFiles } from './support/
 //            WorldEncounterCanvas.js nor WorldView.js ever touches
 //            window.arweaveWallet/window.nostr, WebSocket, or any
 //            Arweave/Nostr construction of their own.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));

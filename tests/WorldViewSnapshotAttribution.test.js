@@ -15,6 +15,7 @@ import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { worldEncounterCanvasFiles, worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.144 — World View Snapshot Attribution Integration.
 //
@@ -71,10 +72,6 @@ import { worldEncounterCanvasFiles, worldViewFiles, ownPublicationPanelFiles } f
 //            place; both entry points share the exact same
 //            discoverOwnSnapshot() function; Snapshot Distribution stays
 //            entirely untouched by this milestone.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));

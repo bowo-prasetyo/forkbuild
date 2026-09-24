@@ -5,7 +5,6 @@ import { Group } from '../core/Group.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
@@ -40,6 +39,8 @@ import {
     DocumentOperationDeferralOutcome
 } from '../application/document/DocumentOperationDeferralUseCase.js';
 import { DocumentOperationCausalGapDetector } from '../core/DocumentOperationCausalGapDetector.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.226 — Document Collaboration Consistency Policy Boundary.
 //
@@ -60,18 +61,6 @@ import { DocumentOperationCausalGapDetector } from '../core/DocumentOperationCau
 // wired to its own independent receiving replica (Bob, Charlie) so the
 // same operation pair can be delivered in two different orders without
 // one channel's delivery pre-empting the other's.
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function wait(ms = 0) {
     return new Promise((resolve) => setTimeout(resolve, ms));

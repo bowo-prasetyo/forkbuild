@@ -7,6 +7,8 @@ import {
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparison
 } from '../application/claimSnapshotReconciliation/evidenceExportComparison/EvidenceExportComparison.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.191 — Reconciliation Candidate Leaderboard Evidence Export Comparison
 // View.
@@ -23,14 +25,6 @@ import {
 // Section I: deep immutability.
 // Section J: determinism.
 // Section K: architectural import boundary.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function detailOf(shared, sourceOnly, targetOnly) {
     return Object.freeze({

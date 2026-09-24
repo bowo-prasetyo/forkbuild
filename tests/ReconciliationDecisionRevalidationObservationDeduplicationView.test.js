@@ -2,6 +2,8 @@ import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalida
 import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryEntry } from '../application/claimSnapshotReconciliation/revalidationObservation/History.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplication } from '../application/claimSnapshotReconciliation/revalidationObservation/DeduplicationView.js';
 import { featureImportLines } from './support/SharedHelperImports.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.164 — Revalidation Observation History Deduplication Projection.
 //
@@ -20,14 +22,6 @@ import { featureImportLines } from './support/SharedHelperImports.js';
 //            any field
 // Section G: architecture — no imports, no forbidden vocabulary, no
 //            mutation, determinism, zero network access
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function planNaming({ claims = [], snapshots = [] } = {}) {
     return Object.freeze({

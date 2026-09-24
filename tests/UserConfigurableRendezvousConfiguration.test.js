@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { RendezvousConfiguration, isValidRendezvousUrl } from '../core/RendezvousConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -11,6 +10,9 @@ import { DEFAULT_RENDEZVOUS_URLS } from '../peer/RendezvousConfig.js';
 import { DEFAULT_ICE_SERVERS } from '../peer/IceServerConfig.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.388 — User-Configurable Rendezvous Server Configuration.
 //
@@ -73,22 +75,10 @@ import { mainFiles } from './support/SourceFileGroups.js';
 // ui/views/RendezvousSettingsView.js for the full design rationale this
 // milestone carries out.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function expectThrows(fn, message) {
     let threw = false;
     try { fn(); } catch { threw = true; }
     assert(threw, message);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 // Two SEPARATE instances over one externally-owned namespace — the same
@@ -162,11 +152,6 @@ class FakeRendezvousServer {
         }
         return { v: 1, type: 'ERROR', requestId: message.requestId, message: 'unsupported in this fake' };
     }
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 async function run() {

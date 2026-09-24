@@ -4,6 +4,7 @@ import {
     isValidAvatarVehicleDismountIntent,
     deriveAvatarVehicleDismountIntent
 } from '../core/AvatarVehicleDismountIntent.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.79 — Avatar-Vehicle Dismount Intent, core/AvatarVehicleDismountIntent.js.
 //
@@ -24,10 +25,6 @@ import {
 // never mentions a vehicle or a mount. Every assertion below concerns
 // only what DISMOUNT INTENT was just requested, never whether the
 // avatar is actually mounted on anything — see docs/Roadmap.md, 0.9.79.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function runTests() {
     const { NONE, DISMOUNT } = AvatarVehicleDismountIntent;

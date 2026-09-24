@@ -7,6 +7,8 @@ import {
 } from '../application/claimSnapshotReconciliation/candidate/EvidenceAgreementView.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { featureImportLines } from './support/SharedHelperImports.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.176 — Reconciliation Candidate Evidence Agreement Projection.
 //
@@ -29,14 +31,6 @@ import { featureImportLines } from './support/SharedHelperImports.js';
 // Section J: malformed input tolerance
 // Section K: vocabulary/import boundary — no judgment vocabulary, imports
 //            only 0.8.156 and 0.8.174
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function genuineDecisionRecord(candidate, decision, decidedAt) {
     return Object.freeze({ decided: true, candidate: Object.freeze(candidate), decision, decidedAt: decidedAt.toISOString() });

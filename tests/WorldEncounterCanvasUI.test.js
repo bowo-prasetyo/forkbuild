@@ -6,6 +6,8 @@ import { describeWorldEncounterView } from '../application/worldEncounter/WorldE
 import { describeWorldEncounterReadModel } from '../application/worldEncounter/WorldEncounterReadModel.js';
 import { deriveWorldEncounters } from '../core/WorldEncounter.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.9.3 — World View UI / Wanderer Presence.
 //
@@ -123,14 +125,6 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 // tests/WorldEncounterRepositoryContinuityIntegrationBoundaryAudit.test.js;
 // this file's own sections stay focused on 0.9.3/0.9.4's own projection/
 // selection contract, unaffected by that addition.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function publicationRow(overrides = {}) {
     return {

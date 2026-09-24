@@ -4,7 +4,6 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
@@ -21,6 +20,8 @@ import { CreateCommandRegistryUseCase } from '../application/editor/CreateComman
 import { CreateWorldLandmarkCommand } from '../application/commands/CreateWorldLandmarkCommand.js';
 import { UpdateWorldLandmarkCommand } from '../application/commands/UpdateWorldLandmarkCommand.js';
 import { RemoveWorldLandmarkCommand } from '../application/commands/RemoveWorldLandmarkCommand.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.3.7 — World Landmarks & Personal Waypoints.
 //
@@ -34,18 +35,6 @@ import { RemoveWorldLandmarkCommand } from '../application/commands/RemoveWorldL
 //
 // See docs/Principles.md: "A Landmark Is World Content, Not Spatial Presence (0.3.7)"
 // and "Derived Place Describes the World; Landmarks Deliberately Modify Its Meaning (0.3.7)".
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 async function run() {
     // -------------------------------------------------------------

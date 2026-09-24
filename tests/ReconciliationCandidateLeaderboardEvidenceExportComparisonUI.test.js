@@ -21,6 +21,8 @@ import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentity
 } from '../application/claimSnapshotReconciliation/evidenceExportComparison/RecordIdentityView.js';
 import default_ReconciliationCandidateLeaderboardEvidenceExportComparisonTable from '../ui/components/reconciliation/EvidenceExportComparisonTable.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.192/0.8.194 — Reconciliation Candidate Leaderboard Evidence Export
 // Comparison UI, and its Detail extension.
@@ -127,14 +129,6 @@ import default_ReconciliationCandidateLeaderboardEvidenceExportComparisonTable f
 // Section Y: the table component's own source carries no ranking,
 //            correctness, synchronization, or reconciliation vocabulary
 //            anywhere, including in its new 0.8.196 code.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function candidateOf(claimId) {
     return Object.freeze({ type: 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT', claimId });

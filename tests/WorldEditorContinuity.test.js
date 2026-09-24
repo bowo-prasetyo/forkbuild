@@ -7,7 +7,6 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { WorldRegion } from '../core/WorldRegion.js';
 import { RegionKind } from '../core/RegionKind.js';
 import { StructurePlacement } from '../core/StructurePlacement.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
@@ -29,6 +28,8 @@ import {
     editorEntryContextToQuery,
     editorEntryContextFromQuery
 } from '../core/EditorEntryContext.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.6.1 — World ↔ Editor Continuity & Return Navigation.
 //
@@ -71,18 +72,6 @@ import {
 //      selection only, exactly as 0.6.0 left it) yet survive completely
 //      intact on the context object handed back to the Editor's own "←
 //      Back to World" button. Document/World toJSON carry no trace.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function stubRenderSession(extra = {}) {
     let cameraState = { position: { x: 0, y: 0, z: 0 }, target: { x: 0, y: 0, z: 0 }, zoom: 1 };

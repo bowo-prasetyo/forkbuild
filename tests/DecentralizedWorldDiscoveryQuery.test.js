@@ -3,6 +3,7 @@ import {
     DecentralizedDiscoveryQueryService,
     queryDecentralizedWorldDiscovery
 } from '../application/discovery/DecentralizedWorldDiscoveryQuery.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.25 — Decentralized Discovery Query Adapter.
 //
@@ -13,10 +14,6 @@ import {
 // `application/arweave/ArweaveGraphqlDiscoveryQueryService.js` at all (see
 // tests/ArweaveGraphqlDiscoveryQueryService.test.js for that adapter's
 // own, separately-mocked wire coverage).
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 class FakeDiscoveryQueryService extends DecentralizedDiscoveryQueryService {
     constructor(origin, candidates) {

@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { DEFAULT_ICE_SERVERS } from '../peer/IceServerConfig.js';
@@ -9,6 +8,7 @@ import { RendezvousDiscoveryProvider } from '../peer/RendezvousDiscoveryProvider
 import { RendezvousPublication } from '../peer/RendezvousPublication.js';
 import { PeerInvitation } from '../peer/PeerInvitation.js';
 import { mainFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.385 — User-Configurable Infrastructure Endpoint Product Direction
 // Audit.
@@ -87,9 +87,7 @@ function n(message) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
+
 async function sourceExists(relativePath) {
     try { await source(relativePath); return true; } catch { return false; }
 }

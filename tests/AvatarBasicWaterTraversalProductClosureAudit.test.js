@@ -20,6 +20,7 @@ import { buildWaterTileMesh } from '../renderer/WaterTileMesh.js';
 import { TERRAIN_TILE_SIZE, tileCoordinateForPosition } from '../core/TerrainTiling.js';
 import { computeCameraFraming, CameraPerspective } from '../core/CameraPerspective.js';
 import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.616 — Avatar Basic Water Traversal Product Closure Audit.
 //
@@ -63,10 +64,6 @@ import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 //   Section H: closure classification — one of a fixed, closed vocabulary
 //              per finding, never a single verdict standing in for eight
 //              different answers.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function readSource(relativePath) {
     return readFile(new URL(`../${relativePath}`, import.meta.url), 'utf8');

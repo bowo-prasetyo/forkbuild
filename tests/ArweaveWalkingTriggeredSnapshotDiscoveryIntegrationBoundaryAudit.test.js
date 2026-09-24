@@ -9,6 +9,7 @@ import { ArweaveGraphqlDiscoveryQueryService } from '../application/arweave/Arwe
 import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
 import { describeSnapshotDiscoveryEnvelope } from '../core/SnapshotDiscoveryEnvelope.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.496 — Arweave Integration Boundary Audit for Walking-Triggered
 // Snapshot Discovery.
@@ -98,10 +99,6 @@ import { WorldEncounterKind } from '../core/WorldEncounter.js';
 //   Arweave's own per-candidate gateway cost.** Section G measures the
 //   cost; it does not propose a mitigation for a cost the walking cadence
 //   has not yet been shown to make a real problem.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 let assertionCount = 0;
 function check(condition, message) {

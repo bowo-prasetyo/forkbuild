@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { DecentralizedDiscoveryQueryService } from '../application/discovery/DecentralizedWorldDiscoveryQuery.js';
 import { queryDecentralizedWorldDiscoveryIntoRegistry } from '../application/discovery/DecentralizedWorldDiscoveryQueryRegistryBridge.js';
 import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.27 — Decentralized World Discovery Query → Lead Registry Bridge.
 //
@@ -11,10 +12,6 @@ import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discover
 // this bridge's own job is exactly the wiring between two already-tested
 // pieces, so its own coverage exercises that wiring end-to-end rather than
 // re-mocking either half.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 class FakeDiscoveryQueryService extends DecentralizedDiscoveryQueryService {
     constructor(origin, candidates) {

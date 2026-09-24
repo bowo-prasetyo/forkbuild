@@ -22,6 +22,7 @@ import { ArweaveGraphqlDiscoveryQueryService } from '../application/arweave/Arwe
 import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
 import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.497 — Arweave Snapshot Discovery Capability Boundary Audit.
 //
@@ -97,10 +98,6 @@ import { computeContentHash } from '../serializer/contentHash.js';
 // - **A shape-adapting conversion of a Decentralized candidate into a
 //   Snapshot one.** Section I explicitly audits against, and refuses to
 //   build, exactly this shortcut.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 let assertionCount = 0;
 function check(condition, message) {

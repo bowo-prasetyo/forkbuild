@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -17,7 +16,6 @@ import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { DocumentValidator } from '../serializer/DocumentValidator.js';
 import { DocumentSchemaMigrator } from '../serializer/DocumentSchemaMigrator.js';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { DocumentManifest } from '../application/document/DocumentManifest.js';
 import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
@@ -26,6 +24,8 @@ import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase
 import { ExportDocumentUseCase } from '../application/document/ExportDocumentUseCase.js';
 import { ImportDocumentUseCase } from '../application/document/ImportDocumentUseCase.js';
 import { editorViewFiles, editorSessionFiles } from './support/SourceFileGroups.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // Deliberately does NOT import application/editor/EditorSession.js — same reason
 // tests/EditorDocumentExport.test.js gives: that class pulls in the
@@ -76,18 +76,6 @@ function n(message) {
     return `${assertionCount + 1}. ${message}`;
 }
 
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 function codeOnly(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }

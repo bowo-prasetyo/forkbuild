@@ -1,4 +1,3 @@
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
@@ -27,6 +26,8 @@ import {
     describeSnapshotPeerPossessionStateLabel,
     describeSnapshotPeerPossessionObservationHistory
 } from '../application/snapshot/possession/SnapshotPeerPossessionComparisonView.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.8.41 — Peer Snapshot Possession Comparison & Observation History.
 //
@@ -64,20 +65,8 @@ import {
 // See docs/Principles.md, "Peer Possession Observations Describe What
 // Peers Report; They Do Not Become Placement Claims (0.8.41)."
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function wait(ms = 20) {
     return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeIdentity(label) {

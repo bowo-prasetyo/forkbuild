@@ -1,5 +1,4 @@
 import { readFile } from 'node:fs/promises';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
 import { PublicationDistributionLifecyclePersistence } from '../application/publication/distribution/PublicationDistributionLifecyclePersistence.js';
@@ -8,6 +7,8 @@ import { PublicationDistributionLifecycleRestorer } from '../application/publica
 import { hydratePublicationDistributionLifecycles } from '../application/publication/distribution/PublicationDistributionLifecycleHydration.js';
 import { describePublicationDistributionLifecycle, PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
 import { worldEncounterCanvasFiles, worldViewSourceWithTemplate, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.100 — Publication Distribution World View Integration.
 //
@@ -69,18 +70,6 @@ import { worldEncounterCanvasFiles, worldViewSourceWithTemplate, mainFiles } fro
 //            imports Arweave/Nostr/executor/orchestrator/transition, and
 //            invents no TRUSTED/PUBLISHED/POPULAR/SUCCESSFUL/ONLINE/
 //            DECENTRALIZED vocabulary in its new wiring.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function distributedLifecycle(publicationId) {
     return describePublicationDistributionLifecycle({

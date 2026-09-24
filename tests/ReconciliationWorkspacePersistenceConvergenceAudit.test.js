@@ -1,6 +1,4 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
@@ -12,12 +10,14 @@ import { LeaderboardClaimArchiveReceiptOutcome } from '../application/leaderboar
 import { RevalidationObservationArchiveOutcome } from '../application/claimSnapshotReconciliation/revalidationObservation/RecordRevalidationObservationIntoArchiveUseCase.js';
 import { ReconcilePublisherLeaderboardSnapshotClaimOutcome } from '../application/leaderboard/snapshot/ReconcileClaimUseCase.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 import ReconciliationWorkspaceView from '../ui/views/ReconciliationWorkspaceView.js';
 import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.409 — Reconciliation Workspace Persistence Convergence Audit.
 //
@@ -99,10 +99,6 @@ function n(message) {
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
 
-async function readSource(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
-
 // ---------------------------------------------------------------------
 // Fixture helpers — the SAME shape tests/ReconciliationWorkspaceUi.test.js
 // and tests/ReconciliationWorkspaceExecutionBoundary.test.js already use,
@@ -117,14 +113,6 @@ async function readSource(relativePath) {
 // failure, not merely a fake `.save()` method that happens to throw.
 // ---------------------------------------------------------------------
 
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
 // Stands in for a real, exhausted browser storage quota — the identical
 // FAILURE SHAPE `window.localStorage.setItem()` itself throws when full,
 // per storage/LocalStorageProvider.js's own direct pass-through. `load()`
@@ -137,13 +125,6 @@ class FailingStorageProvider extends StorageProvider {
     load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
     remove(name) { this._data.delete(name); }
     list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 function fingerprintOf(snapshot) {

@@ -3,6 +3,7 @@ import {
     shouldRetainAutomaticSnapshotEncounter,
     DEFAULT_AUTOMATIC_SNAPSHOT_RETENTION_RADIUS
 } from '../application/snapshot/AutomaticSnapshotEncounterRetentionPolicy.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.189 — Automatic Snapshot Encounter Retention Policy.
 //
@@ -29,10 +30,6 @@ import {
 //              materialization, no network, entirely synchronous
 //   Section G: boundary behavior — missing/malformed position, non-finite
 //              coordinates, invalid radius: graceful non-removal (KEEP)
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function pos(x, y, z) {
     return { x, y, z };

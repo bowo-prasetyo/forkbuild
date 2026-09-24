@@ -1,7 +1,5 @@
 import { execSync } from 'node:child_process';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
@@ -20,6 +18,8 @@ import {
     describePublicationCommentaryAsynchronousDeliverySubstrateContract,
     describesConformingPublicationCommentaryAsynchronousDeliverySubstrate
 } from '../core/PublicationCommentaryAsynchronousDeliveryContract.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.626 — Publication Commentary Asynchronous Delivery Contract.
 //
@@ -129,21 +129,6 @@ function n(message) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
-}
 
 // A deliberately generic, substrate-agnostic FAKE — never a mock of Nostr
 // or Arweave, and never named after either — standing in for "some future

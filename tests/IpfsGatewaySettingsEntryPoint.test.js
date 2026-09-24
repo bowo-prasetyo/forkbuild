@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { IpfsGatewayConfiguration, DEFAULT_IPFS_GATEWAY_URL, isValidIpfsGatewayUrl } from '../core/IpfsGatewayConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -6,6 +5,9 @@ import { IpfsGatewayConfigurationStore } from '../storage/IpfsGatewayConfigurati
 import { SetIpfsGatewayConfigurationUseCase } from '../application/settings/SetIpfsGatewayConfigurationUseCase.js';
 import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
 import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.665 — IPFS Gateway Settings UI.
 //
@@ -27,22 +29,10 @@ import { mainFiles } from './support/SourceFileGroups.js';
 // reopened the question, and docs/Roadmap.md, "0.9.665," for the full
 // reversal record.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function expectThrows(fn, message) {
     let threw = false;
     try { fn(); } catch { threw = true; }
     assert(threw, message);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 class SharedNamespaceStorageProvider extends StorageProvider {
@@ -62,11 +52,6 @@ function makeFetchSpy({ okPrefix, textBody = 'content bytes' } = {}) {
     }
     fetchImpl.calls = calls;
     return fetchImpl;
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 async function run() {

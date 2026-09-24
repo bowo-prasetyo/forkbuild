@@ -7,9 +7,10 @@ import { IdentityPackageError } from '../identity/IdentityImport.js';
 import { IdentityConflictError } from '../identity/IdentityRecovery.js';
 import { IncorrectPassphraseError } from '../identity/KeyEncryption.js';
 import * as Ed25519 from '../identity/Ed25519.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { Signature, SignatureType } from '../core/Signature.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.48 — Portable Identity, Export, Import & Recovery.
 //
@@ -25,18 +26,6 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 // after import verifies exactly like one produced on the first.
 
 const TEST_ITERATIONS = 25; // fast, deliberately weak KDF cost for tests
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, expectedType, message) {
     try {

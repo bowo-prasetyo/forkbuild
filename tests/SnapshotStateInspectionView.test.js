@@ -11,6 +11,7 @@ import { SnapshotPlacementRelationship } from '../application/snapshot/placement
 import { SnapshotPeerPossessionState } from '../application/snapshot/possession/SnapshotPeerPossessionState.js';
 import { describeSnapshotPeerPossessionComparison } from '../application/snapshot/possession/SnapshotPeerPossessionComparisonView.js';
 import { describeSnapshotStateInspection } from '../application/snapshot/SnapshotStateInspectionView.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.46 — Unified Snapshot State Inspection.
 //
@@ -35,10 +36,6 @@ import { describeSnapshotStateInspection } from '../application/snapshot/Snapsho
 //
 // See docs/Principles.md, "A Snapshot's Independently Observed Facts Are
 // Exposed Side By Side, Never Collapsed Into One Verdict (0.8.46)."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const FORBIDDEN_WORDS = [
     'confidence', 'quality', 'reliability', 'bestsource', 'preferredsource', 'successrate',

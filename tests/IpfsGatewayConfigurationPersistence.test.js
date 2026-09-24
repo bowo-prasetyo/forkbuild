@@ -1,18 +1,16 @@
-import { readFile } from 'node:fs/promises';
 
 import { IpfsGatewayConfiguration, DEFAULT_IPFS_GATEWAY_URL } from '../core/IpfsGatewayConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { IpfsGatewayConfigurationStore } from '../storage/IpfsGatewayConfigurationStore.js';
 import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.665 — User-Configurable IPFS Gateway Configuration Persistence.
 // Mirrors tests/ArweaveGatewayConfigurationPersistence.test.js's own
 // structure exactly, one field instead of a per-role map, no gatewayUrls
 // list (see core/IpfsGatewayConfiguration.js's own header).
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;
@@ -20,24 +18,11 @@ function expectThrows(fn, message) {
     assert(threw, message);
 }
 
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
 class ThrowingStorageProvider extends StorageProvider {
     save() { throw new Error('storage backend unavailable'); }
     load() { throw new Error('storage backend unavailable'); }
     remove() { throw new Error('storage backend unavailable'); }
     list() { return []; }
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 async function run() {

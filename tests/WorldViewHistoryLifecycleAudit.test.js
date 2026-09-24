@@ -21,6 +21,7 @@ import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.208 — World View History Preview/Restore Lifecycle Audit.
 //
@@ -73,10 +74,6 @@ import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFil
 // are genuinely about WorldView's own lifecycle (panel-close cancelling
 // preview, onUnmounted disposing the session) are verified structurally,
 // by reading the source directly, exactly like that file's own Section G.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, message) {
     try {

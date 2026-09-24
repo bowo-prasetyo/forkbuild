@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { Publication } from '../publisher/Publication.js';
 import NotificationHistoryPanel from '../ui/components/NotificationHistoryPanel.js';
@@ -7,7 +6,6 @@ import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { PublicationQuery } from '../core/PublicationQuery.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import {
     verifyWorldEncounterMaterial,
     WorldEncounterMaterialVerificationStatus,
@@ -19,6 +17,9 @@ import {
     PublicationMaterialProvenanceOrigin,
     describePublicationMaterialProvenanceFromInspection
 } from '../application/publication/distribution/PublicationMaterialProvenance.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.532 — Publication Discovery-to-World Continuity Product Reassessment.
 //
@@ -61,16 +62,6 @@ import {
 // FINDING: PRODUCT_COMPLETE. No production change. See the verdict block
 // at the end of this file for why.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 function countOccurrences(haystack, needle) {
     return haystack.split(needle).length - 1;
 }
@@ -87,14 +78,6 @@ function extractTemplate(source) {
     const contentStart = start + 'template: `'.length;
     const end = source.indexOf('`', contentStart);
     return end === -1 ? '' : source.slice(contentStart, end);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeSession(discoveryProvider) {

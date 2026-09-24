@@ -9,6 +9,7 @@ import {
     WorldEncounterMaterialVerifier,
     WorldEncounterMaterialVerificationStatus
 } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.536 — World Encounter Action-State Boundary Product Reassessment.
 //
@@ -96,10 +97,6 @@ import {
 // navigation changes, no new trust vocabulary.
 //
 // FINDING: see the verdict block at the end of this file.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function flush() {
     return new Promise((resolve) => setTimeout(resolve, 0));

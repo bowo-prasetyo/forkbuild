@@ -3,6 +3,7 @@ import { AnimalPresence } from '../core/AnimalPresence.js';
 import { Position } from '../core/Position.js';
 import { animalPresenceInRegion } from '../core/AnimalPlacement.js';
 import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.700 — Animal Runtime Instances, application/world/AnimalRuntimeInstances.js.
 //
@@ -15,10 +16,6 @@ import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
 //   Section F: clear() resets everything
 //   Section G: nearestReleased() — the single nearest RELEASED animal,
 //              scoped away from sync()-discovered ones (0.9.702)
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const SEED = 29;
 

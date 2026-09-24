@@ -22,6 +22,7 @@ import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.635 — Avatar Shallow-Water Traversal Product Closure Audit.
 //
@@ -76,10 +77,6 @@ import { Position } from '../core/Position.js';
 //              recorded as a named product approximation, not a
 //              resolved anatomical fact.
 //   Section P: product parity table + closure classification.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function readSource(relativePath) {
     return readFile(new URL(`../${relativePath}`, import.meta.url), 'utf8');

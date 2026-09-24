@@ -24,13 +24,14 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { TrustPolicy } from '../identity/TrustPolicy.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
 import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
 import { SearchWorldUseCase } from '../application/world/SearchWorldUseCase.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.30 — Trust-Aware Spatial Discovery & Diagnostics.
 //
@@ -55,18 +56,6 @@ import { SearchWorldUseCase } from '../application/world/SearchWorldUseCase.js';
 //      finds through the (separate) local placement registry is never
 //      hidden by what the trust layer says about it; diagnostics only
 //      ever ANNOTATE a result, never filter it.
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function makeDocument(title, author = 'alice') {
     const world = new World();

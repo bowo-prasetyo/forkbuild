@@ -9,6 +9,7 @@ import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { worldEncounterCanvasFiles, worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.141 — Distribution Entry-Point Convergence Audit.
 //
@@ -82,10 +83,6 @@ import { worldEncounterCanvasFiles, worldViewFiles, ownPublicationPanelFiles } f
 // since it was written. Fixing that registration is exactly the kind of
 // "did the solution create an architectural problem" finding this milestone
 // exists to surface, so it is fixed alongside this file.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));

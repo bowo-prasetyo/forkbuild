@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import WorldEncounterMarker from '../ui/components/WorldEncounterMarker.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.9.4 — World Encounter Selection.
 //
@@ -27,14 +29,6 @@ import WorldEncounterMarker from '../ui/components/WorldEncounterMarker.js';
 //            (verified/trusted/nearby/relevant) beyond kind/objectId.
 // Section L: WorldEncounterMarker's `select` emit carries exactly
 //            `{ kind, objectId }` — never the whole marker record.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function markerCtx(overrides = {}) {
     const emitted = [];

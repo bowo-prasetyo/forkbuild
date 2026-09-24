@@ -11,6 +11,8 @@ import {
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
 import { ConflictResolver, ConflictRelation } from '../replication/ConflictResolver.js';
 import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, editorSessionFiles, worldNavigationSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.311 — Post-Placement Product Evolution Reassessment.
 //
@@ -70,15 +72,7 @@ import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, editorSessi
 //                                READY)                      reassess-    reassessment)
 //                                                             ment, STOP)
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {

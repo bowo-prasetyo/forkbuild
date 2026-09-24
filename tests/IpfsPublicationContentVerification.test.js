@@ -4,6 +4,7 @@ import { IpfsPublicationRecord, IpfsPublicationMethod, isValidIpfsPublicationMet
 import { IpfsPublicationContentVerifier } from '../application/ipfs/IpfsPublicationContentVerifier.js';
 import { IpfsPublicationContentVerificationState, isValidIpfsPublicationContentVerificationState } from '../application/ipfs/IpfsPublicationContentVerificationState.js';
 import { CreateIpfsPublicationContentVerifierUseCase } from '../application/ipfs/CreateIpfsPublicationContentVerifierUseCase.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.69 — IPFS Publication Record & Content-Identity Binding.
 //
@@ -40,10 +41,6 @@ import { CreateIpfsPublicationContentVerifierUseCase } from '../application/ipfs
 //
 // See docs/Roadmap.md, "0.8.69 — IPFS Publication Record &
 // Content-Identity Binding."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function expectRejects(promiseFn, message) {
     let threw = false;

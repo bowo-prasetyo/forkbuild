@@ -19,6 +19,7 @@ import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
 import { EditorActionRegistry, createStandardActions } from '../application/editor/EditorActionRegistry.js';
 import { EditorActionContext } from '../application/editor/EditorActionContext.js';
 import { editorSessionFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.213 — Editor Undo/Redo Label Mirrors.
 //
@@ -68,10 +69,6 @@ import { editorSessionFiles } from './support/SourceFileGroups.js';
 //   Section H: Structural audit — no CommandHistory duplication, no
 //              independently generated labels, no second history state,
 //              no new persistence/autosave/publication coupling.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 class InMemoryStorageProvider {
     constructor() { this._data = new Map(); }

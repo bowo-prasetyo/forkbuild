@@ -1,5 +1,6 @@
 import { PreviewService } from '../application/editor/PreviewService.js';
 import { PreviewType } from '../core/DocumentPreview.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.32 — PreviewService's queue/cache/cancellation logic, tested
 // with a FAKE renderer and a FAKE document loader — no real Three.js,
@@ -10,10 +11,6 @@ import { PreviewType } from '../core/DocumentPreview.js';
 // stubbed renderer sessions, WorldLocationBrowser's host-resolves-
 // component-renders convention, etc.) — this file proves the SERVICE
 // behaves correctly regardless of what the renderer actually draws.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 // A fake document loader: documentId -> a trivial "document" object
 // (PreviewService never inspects its shape beyond handing it to the

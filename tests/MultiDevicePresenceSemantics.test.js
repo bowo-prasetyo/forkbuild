@@ -1,5 +1,4 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
@@ -13,6 +12,8 @@ import { ConversationStore } from '../application/chat/ConversationStore.js';
 import { ChatOutbox } from '../application/chat/ChatOutbox.js';
 import { ConversationReadTracker } from '../application/chat/ConversationReadTracker.js';
 import { PeerPresenceUseCase } from '../application/presence/PeerPresenceUseCase.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.85 — Multi-Device Presence Semantics.
 //
@@ -46,18 +47,6 @@ import { PeerPresenceUseCase } from '../application/presence/PeerPresenceUseCase
 //   Section D: without a real resolveSocialIdentity injected (the
 //              default), presence behaves exactly as it always did —
 //              DIRECT-only, byte-identical to pre-0.2.85
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function wait(ms = 0) {
     return new Promise((resolve) => setTimeout(resolve, ms));

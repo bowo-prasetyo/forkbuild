@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { worldViewFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.17 — Integrate World Encounters into the Existing World View.
 //
@@ -63,10 +64,6 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 // Section D: `ui/App.js` no longer carries a separate top-nav "Live World"
 //            link — `/world` is the one canonical, user-facing World
 //            destination from this milestone forward.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function run() {
     const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');

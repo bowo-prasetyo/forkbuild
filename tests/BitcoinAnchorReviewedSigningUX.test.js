@@ -11,6 +11,7 @@ import { BitcoinAnchorTransactionReviewCoordinator } from '../application/anchor
 import { BitcoinAnchorReviewedSigningCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorReviewedSigningCoordinator.js';
 import { BitcoinAnchorReviewedSigningState, isValidBitcoinAnchorReviewedSigningState } from '../application/anchoring/bitcoin/BitcoinAnchorReviewedSigningState.js';
 import { describeBitcoinAnchorReviewedSigning } from '../application/anchoring/bitcoin/BitcoinAnchorReviewedSigningView.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.62 — Explicit Reviewed Bitcoin Anchor Signing UI.
 //
@@ -64,10 +65,6 @@ import { describeBitcoinAnchorReviewedSigning } from '../application/anchoring/b
 //
 // See docs/Principles.md, "Review Is An Authorization Boundary; Signing Is
 // An External Capability Invocation (0.8.62)."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function expectThrowsAsync(fn, message) {
     let threw = false;

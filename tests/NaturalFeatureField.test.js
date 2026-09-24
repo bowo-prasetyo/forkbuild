@@ -5,6 +5,7 @@ import { ecologyZoneAt, ECOLOGY_ZONE, moistureAt } from '../core/TerrainEcology.
 import { isRiverAt } from '../core/Hydrology.js';
 import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { TERRAIN_TILE_SIZE, tileCoordinateForPosition } from '../core/TerrainTiling.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.88 — Deterministic World Ecology, core/NaturalFeatureField.js.
 //
@@ -22,10 +23,6 @@ import { TERRAIN_TILE_SIZE, tileCoordinateForPosition } from '../core/TerrainTil
 // arguments — no Math.random, no persisted TreeRecord, nothing that
 // depends on WHICH tiles happened to load first or in what order. Two
 // replicas querying the same region always get back the identical array.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function tileBounds(tx, tz, tileSize = TERRAIN_TILE_SIZE) {
     const minX = tx * tileSize;

@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { ArweaveSnapshotDiscoveryQueryService } from '../application/arweave/ArweaveSnapshotDiscoveryQueryService.js';
 import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
@@ -9,6 +8,8 @@ import { executeDiscoverSnapshotCandidatesCommandWithOutcome } from '../applicat
 import { SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.591 — Arweave Snapshot Discovery Outcome Parity.
 //
@@ -51,20 +52,11 @@ import { ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.
 //      Repository, provider selection, Arweave announcement publishing,
 //      or gateway retry/failover.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));
     for (let i = 0; i < 10; i++) {
         await Promise.resolve();
     }
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 function graphqlResponse(ids) {

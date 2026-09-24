@@ -5,6 +5,7 @@ import { AnimalDecoration } from '../core/AnimalDecoration.js';
 import { CreateWorldAnimalDecorationCommand } from '../application/commands/CreateWorldAnimalDecorationCommand.js';
 import { RemoveWorldAnimalDecorationCommand } from '../application/commands/RemoveWorldAnimalDecorationCommand.js';
 import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.703 — World Animal Decorations: Removal, application/commands/
 // RemoveWorldAnimalDecorationCommand.js. The direct structural twin of
@@ -16,10 +17,6 @@ import { CreateCommandRegistryUseCase } from '../application/editor/CreateComman
 //   Section D: worldId mismatch guard
 //   Section E: toJSON()/fromJSON() serialization
 //   Section F: registered in CreateCommandRegistryUseCase's registry
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function runTests() {
     // -------------------------------------------------------------

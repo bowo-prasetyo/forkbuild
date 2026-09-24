@@ -5,6 +5,7 @@ import { PublicationDistributionState } from '../application/publication/distrib
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.103 — Publication Distribution Command Boundary.
 // See docs/Roadmap.md, "0.9.103 — Publication Distribution Command
@@ -30,10 +31,6 @@ import { Signature } from '../core/Signature.js';
 //   Section H: repeated execution introduces no new semantics — the stored
 //              lifecycle stays exactly 0.9.50's/0.9.51's own shape
 //   Section I: architectural regression
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function expectRejects(promise, message) {
     let threw = false;

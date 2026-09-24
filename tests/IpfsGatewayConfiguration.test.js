@@ -1,6 +1,7 @@
-import { readFile } from 'node:fs/promises';
 
 import { IpfsGatewayConfiguration, isValidIpfsGatewayUrl, DEFAULT_IPFS_GATEWAY_URL } from '../core/IpfsGatewayConfiguration.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.665 — User-Configurable IPFS Gateway Configuration Boundary.
 // 0.9.666 — IPFS Gateway Read Failover. Mirrors tests/
@@ -9,19 +10,10 @@ import { IpfsGatewayConfiguration, isValidIpfsGatewayUrl, DEFAULT_IPFS_GATEWAY_U
 // class came to mirror Arweave Gateway's own 0.9.440 gatewayUrls/failover
 // shape one axis over.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function expectThrows(fn, message) {
     let threw = false;
     try { fn(); } catch { threw = true; }
     assert(threw, message);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 async function run() {

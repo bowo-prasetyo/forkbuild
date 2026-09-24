@@ -4,6 +4,8 @@ import { AnimalRuntimeInstances } from '../application/world/AnimalRuntimeInstan
 import { AnimalPresence } from '../core/AnimalPresence.js';
 import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
 import { Position } from '../core/Position.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.701 — World View Persistence, storage/AnimalRuntimeInstancePersistenceStore.js.
 // The direct structural twin of tests/VehicleRuntimeInstancePersistenceStore.test.js
@@ -14,18 +16,6 @@ import { Position } from '../core/Position.js';
 // discard()'s own required `position` argument made necessary for
 // seeding, never queuing a drainRecentlyCaught() notification for an
 // animal nothing this session ever rendered in the first place.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 class ThrowingStorageProvider extends StorageProvider {
     save() { throw new Error('storage is unavailable'); }

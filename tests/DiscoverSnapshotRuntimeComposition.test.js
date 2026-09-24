@@ -9,6 +9,7 @@ import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSn
 import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
 import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.142 — World View Snapshot Discovery Command.
 // See docs/Roadmap.md, "0.9.142 — World View Snapshot Discovery Command,"
@@ -34,10 +35,6 @@ import { computeContentHash } from '../serializer/contentHash.js';
 //              executeDiscoverSnapshotCommand() alone
 //   Section I: architectural regression — no browser API, no
 //              orchestration entry point, no summary availability flag
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

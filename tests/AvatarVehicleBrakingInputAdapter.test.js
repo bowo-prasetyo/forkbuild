@@ -4,6 +4,7 @@ import {
     AvatarVehicleBrakingIntent,
     deriveAvatarVehicleBrakingIntent
 } from '../core/AvatarVehicleBrakingIntent.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.95 — Vehicle Braking Input Adapter,
 // core/AvatarVehicleBrakingInputAdapter.js.
@@ -29,10 +30,6 @@ import {
 // and — the one property this milestone insists on above every other —
 // never once mentions a specific key, mouse button, or gamepad control.
 // See docs/Roadmap.md, 0.9.95.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function runTests() {
     // -------------------------------------------------------------

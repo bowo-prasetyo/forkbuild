@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { applicationPath } from './support/ApplicationFiles.js';
 import { execSync } from 'node:child_process';
 
@@ -26,11 +25,13 @@ import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStor
 import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
 import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
 import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalWorldExperienceStore } from '../application/world/LocalWorldExperienceStore.js';
 import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.586 — Product Capability Surface Inventory & Gap Classification
 // Audit.
@@ -86,15 +87,7 @@ import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, worl
 // abstractions, modifying production code, reopening a closed arc
 // without concrete new evidence.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {
@@ -118,13 +111,6 @@ class InMemoryStorageProvider extends StorageProvider {
     load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
     remove(name) { this._data.delete(name); }
     list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 async function main() {

@@ -5,6 +5,7 @@ import { EditorEvent } from '../core/events/EditorEvent.js';
 import { CompositionPreviewRenderer } from '../renderer/CompositionPreviewRenderer.js';
 import { CompositionPreviewState } from '../application/editor-state/CompositionPreviewState.js';
 import { TransformMath } from '../application/editor/TransformMath.js';
+import { assert } from './support/Assert.js';
 
 // 0.4.1 — Interactive Structure Composition UX: the rendering half.
 // tests/StructureCompositionPlacement.test.js covers everything that
@@ -26,10 +27,6 @@ import { TransformMath } from '../application/editor/TransformMath.js';
 //   Section D: hiding the preview removes every ghost mesh
 //   Section E: graceful absence — no transformMath still renders
 //              (unrotated), never throws
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function makeFakeRenderer() {
     const meshes = new Set();

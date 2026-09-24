@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
 import { PublicationCommentaryStore, PublicationCommentaryConflictError } from '../storage/PublicationCommentaryStore.js';
@@ -23,6 +22,9 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import PublicationCard from '../ui/components/PublicationCard.js';
 import PublicationCommentarySection from '../ui/components/PublicationCommentarySection.js';
 import { worldEncounterCanvasFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.541 — Publication Commentary Product Reassessment.
 //
@@ -97,10 +99,6 @@ import { worldEncounterCanvasFiles, ownPublicationPanelFiles } from './support/S
 //
 // FINDING: see the verdict block at the end of this file.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function wait(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -110,9 +108,6 @@ function codeOnlyLines(source) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 // Mirrors tests/PostPublicationCommentaryProductReassessment.test.js's own
 // helper — the one grep-verifiable signal this reassessment lineage uses
@@ -125,14 +120,6 @@ async function grepFiles(pattern, dirs) {
             { cwd: SOURCE_ROOT.pathname }).toString();
     } catch { /* grep exits non-zero on no match; treated as zero hits */ }
     return hits.trim() ? hits.trim().split('\n').sort() : [];
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 // Reused verbatim from tests/PublicationCatalogActionSafetyProductReassessment.test.js

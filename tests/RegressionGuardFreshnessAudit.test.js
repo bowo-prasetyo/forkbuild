@@ -1,5 +1,5 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.393 — Regression Guard Freshness Audit.
 //
@@ -62,9 +62,7 @@ function n(message) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
+
 async function sourceExists(relativePath) {
     try { await source(relativePath); return true; } catch { return false; }
 }

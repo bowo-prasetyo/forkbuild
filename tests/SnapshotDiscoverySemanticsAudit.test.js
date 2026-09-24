@@ -10,6 +10,7 @@ import { SnapshotPublicationAttributionOutcome } from '../application/snapshot/S
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.149 — Snapshot Discovery Semantics Audit & API Boundary.
 //
@@ -96,10 +97,6 @@ import { ContentReference } from '../core/ContentReference.js';
 //   Snapshots" (browsing) affordance would sit next to today's "Discover
 //   Snapshot" (attribution-check) action is an unscheduled, later
 //   decision.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function envelopeOf(overrides = {}) {
     return {

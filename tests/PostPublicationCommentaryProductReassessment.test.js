@@ -1,5 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.250 — Post-Publication-Commentary Product Reassessment.
 //
@@ -46,15 +48,7 @@ import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNaviga
 //                     baseline)                 picks                                  re-rank, no pick)
 //                                                Commentary)
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {

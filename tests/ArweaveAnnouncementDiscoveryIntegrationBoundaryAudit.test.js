@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
 import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
@@ -14,6 +13,8 @@ import { executePublicationDistribution } from '../application/publication/distr
 import { composePublicationDistributionRuntime } from '../application/publication/distribution/PublicationDistributionRuntimeComposition.js';
 import { orchestratePublicationDistribution } from '../application/publication/distribution/PublicationDistributionOrchestrator.js';
 import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.429 — Arweave Announcement/Discovery Integration Boundary Audit.
 //
@@ -89,10 +90,6 @@ import { mainFiles } from './support/SourceFileGroups.js';
 //   `ExternalAnchorPublisherRegistry`. Section I documents the gap
 //   precisely enough for a future milestone to close it, and stops there.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 let assertionCount = 0;
 function check(condition, message) {
     assertionCount += 1;
@@ -103,11 +100,6 @@ async function expectThrowsAsync(fn, message) {
     let threw = false;
     try { await fn(); } catch { threw = true; }
     assert(threw, message);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 // A window of `length` characters starting at `marker`'s own first

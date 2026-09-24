@@ -5,7 +5,6 @@ import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
 import { RoleProviderResolutionStatus } from '../application/settings/RoleAwareProviderResolver.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
 import { CreateExternalPublicationAnchorOrchestratorUseCase } from '../application/anchoring/CreateExternalPublicationAnchorOrchestratorUseCase.js';
@@ -13,7 +12,9 @@ import { CreatePublicationAnchorCreationCoordinatorUseCase } from '../applicatio
 import { CreatePreferredPublicationAnchorCreationCoordinatorUseCase } from '../application/anchoring/CreatePreferredPublicationAnchorCreationCoordinatorUseCase.js';
 import { PreferredPublicationAnchorCreationCoordinator } from '../application/anchoring/PreferredPublicationAnchorCreationCoordinator.js';
 import { ExternalAnchorCreationOutcome } from '../application/anchoring/ExternalAnchorCreationOutcome.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // Preferred Proof & Anchoring Provider Creation Integration.
 //
@@ -52,31 +53,12 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 //               byte-for-byte unchanged when driven through the wrapping
 //               coordinator.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 async function expectThrowsAsync(fn, message) {
     let threw = false;
     let errorMessage = null;
     try { await fn(); } catch (e) { threw = true; errorMessage = e.message; }
     assert(threw, message);
     return errorMessage;
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 function publishContent(publicationCatalog, { id = 'pub-1', hash = 'hash-1' } = {}) {

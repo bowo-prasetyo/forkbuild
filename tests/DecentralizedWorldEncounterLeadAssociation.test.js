@@ -4,15 +4,12 @@ import {
     decentralizedWorldEncounterLeadAssociationMatchesLead
 } from '../core/DecentralizedWorldEncounterLeadAssociation.js';
 import { describeDecentralizedWorldDiscoveryLead } from '../core/DecentralizedWorldDiscoveryLead.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.28 — Decentralized Lead → Encounter Resolution Boundary.
 //
 // See docs/Roadmap.md, "0.9.28 — Decentralized Lead → Encounter
 // Resolution Boundary," for the full milestone story.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function associationOf(overrides = {}) {
     return {

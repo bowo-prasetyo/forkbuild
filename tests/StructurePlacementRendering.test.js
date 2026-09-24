@@ -11,7 +11,8 @@ import { TransformMath } from '../application/editor/TransformMath.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.2.90 — Structure Placement & World Instances: the rendering half.
 // tests/StructurePlacement.test.js covers everything that never touches
@@ -42,18 +43,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //              correctly transformed instances, matching
 //              tests/StructurePlacement.test.js's own Section H at the
 //              domain level
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function makeFakeRenderer(terrainHeightAt = null) {
     const meshes = new Set();

@@ -1,4 +1,6 @@
 import default_ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector from '../ui/components/reconciliation/EvidenceExportComparisonRecordPairSelector.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.201 — Explicit Record-Pair Selection UI.
 //
@@ -50,14 +52,6 @@ import default_ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordP
 //            `comparison`/`comparisonDetail`/`comparisonIdentity`), and
 //            wires the new component's four pair events to its own
 //            add/remove handlers.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function candidateOf(claimId) {
     return Object.freeze({ type: 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT', claimId });

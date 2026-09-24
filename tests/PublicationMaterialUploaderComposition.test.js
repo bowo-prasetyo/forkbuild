@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { composePublicationMaterialUploader } from '../application/publication/distribution/PublicationMaterialUploaderComposition.js';
 import { ArweavePublicationMaterialUploader } from '../application/arweave/ArweavePublicationMaterialUploader.js';
 import { ContentStorePublicationMaterialUploader } from '../application/publication/distribution/ContentStorePublicationMaterialUploader.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.670 — Publication Material Uploader Composition.
 // See application/publication/distribution/PublicationMaterialUploaderComposition.js's own header
@@ -19,10 +20,6 @@ import { ContentStorePublicationMaterialUploader } from '../application/publicat
 //   Section F: selection, never fan-out — exactly one uploader per call
 //   Section G: no I/O at construction time
 //   Section H: architectural regression
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

@@ -1,6 +1,6 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.514 — Proof/Anchoring Product Completion Reassessment.
 //
@@ -86,10 +86,6 @@ import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js'
 // changes. Both fixes above are presentation-only: zero coordinators,
 // zero publishers, zero use cases added or changed.
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 function codeOnly(src) {
     return src.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }

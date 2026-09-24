@@ -22,6 +22,7 @@ import { appendBitcoinAnchorConfirmationObservationHistoryEntry, latestBitcoinAn
 import { describeBitcoinAnchorConfirmationObservationHistoryDetails } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistoryDetailView.js';
 import { BitcoinAnchorProofReconciliationView } from '../application/anchoring/bitcoin/BitcoinAnchorProofReconciliationView.js';
 import { BitcoinAnchorContentProofState } from '../application/anchoring/bitcoin/BitcoinAnchorContentProofState.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.65 — Explicit Bitcoin Anchor Confirmation UI.
 //
@@ -66,10 +67,6 @@ import { BitcoinAnchorContentProofState } from '../application/anchoring/bitcoin
 // Does Not Decide What It Means (0.8.54)," extended here to the explicit
 // UI action that binds it to a specific broadcast transaction's own
 // identity.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

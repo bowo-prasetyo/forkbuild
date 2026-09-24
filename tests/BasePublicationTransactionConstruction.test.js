@@ -18,6 +18,7 @@ import { BaseAccountObservation } from '../application/anchoring/base/BaseAccoun
 import { BitcoinAnchorTransactionBuilder } from '../anchoring/BitcoinAnchorTransactionBuilder.js';
 import { BitcoinAnchorTransactionConstructionCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionCoordinator.js';
 import { BitcoinAnchorTransactionConstructionState } from '../application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionState.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.91 — Explicit Base Publication Transaction Construction.
 //
@@ -44,10 +45,6 @@ import { BitcoinAnchorTransactionConstructionState } from '../application/anchor
 //              anything
 //   Section H: FLAGSHIP — a constructed plan is frozen; an unrelated,
 //              later Base construction never mutates an earlier one
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function expectThrowsAsync(fn, message) {
     let threw = false;

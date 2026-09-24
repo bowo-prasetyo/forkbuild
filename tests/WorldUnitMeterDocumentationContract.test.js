@@ -1,4 +1,5 @@
-import { readFile } from 'node:fs/promises';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.548 — Adopt World Unit As Meter Documentation Contract.
 //
@@ -34,15 +35,6 @@ import { readFile } from 'node:fs/promises';
 //       and none claims avatar/eye-height geometry changed.
 //   F — Production guard: only documentation + this test file + its
 //       tests.html registration changed.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function main() {
     let principlesSrc, protocolSrc, architectureSrc, worldViewUserDocSrc;

@@ -6,6 +6,7 @@ import { wildlifeCollisionGeometryInRegion, ANIMAL_COLLISION_RADIUS } from '../c
 import { wildlifeInRegion, WILDLIFE_FEATURE_TYPE } from '../core/WildlifeField.js';
 import { AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { assert } from './support/Assert.js';
 
 // Deterministic Wildlife Collision Spatial Query, core/AvatarWildlifeCollisionQuery.js
 // — the direct structural twin of tests/AvatarTreeCollisionQuery.test.js.
@@ -22,10 +23,6 @@ import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 //   Section F: variable avatarRadius — a larger radius never shrinks the
 //              candidate set
 //   Section G: architectural regression
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function runTests() {
     // -------------------------------------------------------------

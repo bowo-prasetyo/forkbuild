@@ -5,7 +5,6 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { SpatialBounds } from '../core/SpatialBounds.js';
 import { Structure } from '../core/Structure.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
 import { CopyStructureIntoDocumentUseCase } from '../application/editor/CopyStructureIntoDocumentUseCase.js';
@@ -13,6 +12,8 @@ import { CreateStructureFromSelectionUseCase } from '../application/editor/Creat
 import { LocalStructureLibraryStore } from '../application/editor/LocalStructureLibraryStore.js';
 import { EditorSession } from '../application/editor/EditorSession.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.4.3 — Personal Blueprint Library.
 //
@@ -39,18 +40,6 @@ import { CommandHistory } from '../application/editor/CommandHistory.js';
 //
 // See docs/Principles.md, "A Personal Library Persists What Extraction
 // Only Returns (0.4.3)."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function bricksSnapshot(bricks) {
     return bricks

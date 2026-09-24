@@ -4,6 +4,8 @@ import { VehicleRuntimeInstances } from '../application/world/VehicleRuntimeInst
 import { VehicleInstance } from '../core/VehicleInstance.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { Position } from '../core/Position.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.701 — World View Persistence, storage/VehicleRuntimeInstancePersistenceStore.js.
 //
@@ -18,18 +20,6 @@ import { Position } from '../core/Position.js';
 //              seeding, even though its deterministic spawn slot is
 //              still there for nearbyVehicleInstances() to find
 //   Section F: storage failure propagates out of save()
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 class ThrowingStorageProvider extends StorageProvider {
     save() { throw new Error('storage is unavailable'); }

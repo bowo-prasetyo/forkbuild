@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
@@ -13,6 +12,8 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.588 — Silent Fallback Semantics Product Boundary Audit.
 //
@@ -96,15 +97,7 @@ import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 // smallest possible correction, per the requesting brief's own closing
 // paragraph. It did not: see Section K.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 // Strips leading `//` comment markers so a prose regex spanning several
 // wrapped comment lines can match against plain whitespace, exactly as a

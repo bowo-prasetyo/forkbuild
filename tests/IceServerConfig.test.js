@@ -1,5 +1,6 @@
 import { DEFAULT_ICE_SERVERS, fetchIceServers } from '../peer/IceServerConfig.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.3.7 — fetchIceServers(): the dynamic counterpart to
 // DEFAULT_ICE_SERVERS, fetching this deployment's Metered TURN
@@ -11,10 +12,6 @@ import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvid
 // already known" degradation this codebase already applies elsewhere
 // (peer/RendezvousDiscoveryProvider.js's own lookup-failure handling,
 // peer/WebRtcPeerConnection.js's own 0.3.6 ICE-gathering timeout).
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function wait(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { PickingService } from '../renderer/PickingService.js';
 import { PlacementMeshRegistry } from '../renderer/PlacementMeshRegistry.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.611 — Add Structure Relative Face Snapping: the renderer half.
 // tests/StructureRelativeFaceSnapping.test.js covers everything that
@@ -23,10 +24,6 @@ import { PlacementMeshRegistry } from '../renderer/PlacementMeshRegistry.js';
 //      placements along the same ray — only the nearer is ever reported,
 //      the same "one ray, one nearest hit" determinism pickRich() and
 //      pickPlacement()'s placementId resolution already rely on.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 // Looking straight down -Z at the origin — screen center maps to NDC
 // (0,0), the same setup tests/WorldEntityInteraction.test.js and

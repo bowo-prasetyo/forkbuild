@@ -5,6 +5,7 @@ import { ContentUnavailableError } from '../content/IpfsContentStore.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.132 — Arweave Snapshot Content Store.
 // See docs/Roadmap.md, "0.9.132 — Arweave Snapshot Content Store."
@@ -40,10 +41,6 @@ import { computeContentHash } from '../serializer/contentHash.js';
 //   Section SEQUENCE: one continuous flagship placement/retrieval, plus
 //              failure independence — a failed second put() never
 //              disturbs the first, already-resolvable placement
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function expectRejects(promise, message, ErrorType = null) {
     let rejected = false;

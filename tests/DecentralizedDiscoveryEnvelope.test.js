@@ -5,15 +5,12 @@ import {
     DECENTRALIZED_DISCOVERY_ENVELOPE_PROTOCOL,
     DECENTRALIZED_DISCOVERY_ENVELOPE_VERSION
 } from '../core/DecentralizedDiscoveryEnvelope.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.30 — Decentralized Discovery Envelope.
 //
 // See docs/Roadmap.md, "0.9.30 — Decentralized Discovery Envelope," for
 // the full milestone story.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function envelopeOf(overrides = {}) {
     return {

@@ -1,8 +1,9 @@
-import { readFile } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { WorldViewNavigationState, WorldViewPrimaryMode } from '../application/world/WorldViewNavigationState.js';
 import { worldEncounterCanvasFiles, worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.359 — World View Main-Screen Clutter Product Audit.
 //
@@ -49,10 +50,6 @@ import { worldEncounterCanvasFiles, worldViewFiles, ownPublicationPanelFiles } f
 //   I. Candidate decision matrix.
 //   J. Final UX decision, per candidate, plus this milestone's own verdict.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function escapeRegExp(literal) {
     return literal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -70,12 +67,6 @@ function escapeRegExp(literal) {
 function divGatedOn(source, condition, cssClass) {
     const pattern = new RegExp(`<div v-if="${escapeRegExp(condition)}" class="${escapeRegExp(cssClass)}">`);
     return pattern.test(source);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 async function codeOnlySource(relativePath) {

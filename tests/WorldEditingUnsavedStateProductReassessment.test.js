@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { World } from '../core/World.js';
 import { Document } from '../core/Document.js';
@@ -30,6 +29,8 @@ import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { ForkPublishedWorldUseCase } from '../application/publication/ForkPublishedWorldUseCase.js';
 import { LifecycleStatus, computeLifecycleStatus, describeLifecycleStatus } from '../application/document/DocumentLifecycleStatus.js';
 import { worldNavigationSessionFiles, editorViewFiles, editorSessionFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.579 — World Editing & Unsaved-State Product Reassessment.
 //
@@ -102,16 +103,6 @@ import { worldNavigationSessionFiles, editorViewFiles, editorSessionFiles } from
 // is reconnaissance/reassessment only.
 //
 // FINDING: see the verdict block at the end of this file.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));

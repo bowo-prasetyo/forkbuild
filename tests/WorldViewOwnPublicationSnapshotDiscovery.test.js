@@ -11,6 +11,7 @@ import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.142 — World View Snapshot Discovery Command.
 //
@@ -44,10 +45,6 @@ import { worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/S
 //            discoverOwnSnapshot/discoverSnapshotCommand the same way it
 //            already wires distributeWorldEncounterSnapshot, and
 //            OwnPublicationPanel.js never touches Arweave/Nostr directly.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));

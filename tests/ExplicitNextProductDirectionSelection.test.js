@@ -1,5 +1,5 @@
 import { execFileSync, execSync } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.384 — Explicit Next Product Direction Selection.
 //
@@ -53,10 +53,6 @@ function n(message) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {

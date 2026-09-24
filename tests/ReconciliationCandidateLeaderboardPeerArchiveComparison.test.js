@@ -8,6 +8,8 @@ import {
     importPublicationObservationArchive,
     PublicationObservationArchiveImportOutcome
 } from '../application/publication/observationArchive/PublicationObservationArchiveExport.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.181 — Explicit Peer Archive Leaderboard Comparison.
 //
@@ -36,14 +38,6 @@ import {
 //            the peer archive, never imports a networking/peer-discovery
 //            module, calls 0.8.179's reconstructXxx() exactly once, and
 //            carries no ranking/synchronization vocabulary in its code.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function genuineDecisionRecord(candidate, decision, decidedAt) {
     return Object.freeze({ decided: true, candidate: Object.freeze(candidate), decision, decidedAt: decidedAt.toISOString() });

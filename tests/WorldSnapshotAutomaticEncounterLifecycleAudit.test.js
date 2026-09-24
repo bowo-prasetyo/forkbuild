@@ -31,7 +31,8 @@ import { PlacementRecord } from '../core/PlacementRecord.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Position } from '../core/Position.js';
 import { Publication } from '../publisher/Publication.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.188 — Automatic Snapshot Encounter Lifecycle Audit.
 //
@@ -108,10 +109,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //   Section Q: structural sweep — no retry/backoff/persistence/ranking
 //              vocabulary has crept into the audited files since 0.9.187
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));
     for (let i = 0; i < 10; i++) {
@@ -123,14 +120,6 @@ const SOURCE_ROOT = new URL('../', import.meta.url);
 async function codeOnlySource(relativePath) {
     const text = await readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeFakeArweaveGateway() {

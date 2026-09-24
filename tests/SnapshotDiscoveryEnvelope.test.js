@@ -5,13 +5,10 @@ import {
     SNAPSHOT_DISCOVERY_ENVELOPE_VERSION
 } from '../core/SnapshotDiscoveryEnvelope.js';
 import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.133 — Snapshot Discovery Envelope.
 // See docs/Roadmap.md, "0.9.133 — Snapshot Location Discovery via Nostr."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function envelopeOf(overrides = {}) {
     return {

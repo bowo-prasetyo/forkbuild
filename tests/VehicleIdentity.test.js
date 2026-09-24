@@ -4,6 +4,7 @@ import { vehiclePresenceInRegion, BICYCLE_LATTICE_SPACING } from '../core/Vehicl
 import { VehiclePresence } from '../core/VehiclePresence.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.74 — Deterministic Vehicle Identity, core/VehicleIdentity.js.
 //
@@ -23,10 +24,6 @@ import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 // Central architectural claim under test throughout: vehicleIdFor(seed,
 // cellX, cellZ) is a PURE function of exactly its own three arguments —
 // see docs/Roadmap.md, 0.9.74.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, message) {
     let threw = false;

@@ -5,6 +5,8 @@ import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
 import { describeLocalWorldDiscoverySource } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.9.20 — World Encounter Selection Resolution.
 //
@@ -34,14 +36,6 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 // Section H: architectural regression — no score/rank/trust/"preferred"
 //            vocabulary, and no `.find()`/array-position default, in the
 //            0.9.20 additions to WorldEncounterCanvas.js.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function peerSourceOf(origin, { publications = [], placements = [] } = {}) {
     return describeWorldDiscoverySource({ origin, publications, placements, avatarProfiles: [], avatarPresences: [] });

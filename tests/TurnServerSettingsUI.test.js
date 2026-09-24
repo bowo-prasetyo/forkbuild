@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { register } from 'node:module';
 import util from 'node:util';
 
@@ -8,6 +7,8 @@ import { TurnServerConfigurationStore } from '../storage/TurnServerConfiguration
 import { SetTurnServerConfigurationUseCase } from '../application/settings/SetTurnServerConfigurationUseCase.js';
 import { IceServerConfigurationStore } from '../storage/IceServerConfigurationStore.js';
 import { mainFiles } from './support/SourceFileGroups.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.456 — TURN Server Settings UI.
 //
@@ -65,14 +66,6 @@ function n(message) {
     return `${assertionCount + 1}. ${message}`;
 }
 
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
 // A storage provider whose own save() records the RAW payload, unmodified —
 // used to plant deliberately malformed bytes, mirroring every sibling
 // configuration store's own malformed-persistence test convention.
@@ -82,11 +75,6 @@ class RawStorageProvider extends StorageProvider {
     load(name) { return this._data.has(name) ? this._data.get(name) : null; }
     remove(name) { this._data.delete(name); }
     list() { return Array.from(this._data.keys()); }
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 async function run() {

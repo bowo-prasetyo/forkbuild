@@ -4,6 +4,7 @@ import { BitcoinOpReturnProofVerifier } from '../anchoring/BitcoinOpReturnProofV
 import { BitcoinAnchorProofReconciliationView } from '../application/anchoring/bitcoin/BitcoinAnchorProofReconciliationView.js';
 import { BitcoinAnchorConfirmationState } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationState.js';
 import { BitcoinAnchorContentProofState } from '../application/anchoring/bitcoin/BitcoinAnchorContentProofState.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.55 — Bitcoin Anchor Proof Reconciliation.
 //
@@ -41,10 +42,6 @@ import { BitcoinAnchorContentProofState } from '../application/anchoring/bitcoin
 //              confirmation observation from succeeding
 //
 // See docs/Roadmap.md, "0.8.55 — Bitcoin Anchor Proof Reconciliation."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function expectRejects(promise, message) {
     let threw = false;

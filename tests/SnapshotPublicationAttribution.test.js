@@ -12,6 +12,7 @@ import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnaps
 import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
 import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.143 — Snapshot–Publication Attribution.
 // See docs/Roadmap.md, "0.9.143 — Snapshot–Publication Attribution," for
@@ -31,10 +32,6 @@ import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 //   Section G: no I/O — architectural regression
 //   Section H: full vertical sequence — distribution -> Nostr discovery ->
 //              retrieval -> verification -> attribution, end to end
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function makePublication(hash) {
     return new Publication({

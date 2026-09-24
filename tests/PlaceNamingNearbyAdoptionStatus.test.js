@@ -1,11 +1,9 @@
-import { readFile } from 'node:fs/promises';
 import { World } from '../core/World.js';
 import { WorldRegion } from '../core/WorldRegion.js';
 import { RegionKind } from '../core/RegionKind.js';
 import { Position } from '../core/Position.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
 import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/LocalPlaceNamingPublicationLog.js';
 import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
@@ -22,6 +20,9 @@ import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNam
 import { composePlaceNamingDiscoveryRuntime } from '../application/placeNaming/PlaceNamingDiscoveryRuntimeComposition.js';
 import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
 import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.269 — Nearby Place Naming Claim Adoption Status Indicator.
 //
@@ -67,18 +68,6 @@ import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFil
 //   Section Q — FLAGSHIP: Nostr -> discovery -> proximity -> status
 //               presentation -> adoption, end to end
 //   Section R — source-level regression: no second source of truth
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function makeIdentity(label) {
     const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
@@ -207,12 +196,6 @@ function navigateToNearbyPlaceNamingClaim(session, row, feedback, refreshSpatial
     session.focusLocation(row.regionId);
     refreshSpatialUI();
     return true;
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 function codeOnlyLines(source) {

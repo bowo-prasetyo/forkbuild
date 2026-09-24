@@ -2,13 +2,10 @@ import {
     selectNearbyPlaceNamingClaims,
     isValidPlaceNamingProximityRadius
 } from '../core/PlaceNamingProximitySelection.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.255 — Place Naming Proximity Selection.
 // See docs/Roadmap.md, "0.9.255 — Place Naming Proximity Selection."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function claimAt(id, x, z, overrides = {}) {
     return { id, name: `Claim ${id}`, position: { x, z }, ...overrides };

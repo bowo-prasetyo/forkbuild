@@ -11,8 +11,9 @@ import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.83 — Avatar-Vehicle Mount/Dismount Runtime Integration,
 // application/world/WorldNavigationSession.js's own wiring of
@@ -38,18 +39,6 @@ import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickReg
 // same animation frame, and forwards the 'E' key through the same
 // avatarKeyDown/avatarKeyUp methods W/A/S/D already flow through. See
 // docs/Roadmap.md, 0.9.83, for the full milestone story.
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function buildRegistry() {
     const registry = new AvatarTemplateRegistry();

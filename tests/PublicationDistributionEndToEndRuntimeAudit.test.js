@@ -14,6 +14,7 @@ import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.122 — Publication Distribution End-to-End Runtime Audit.
 //
@@ -62,10 +63,6 @@ import { Signature } from '../core/Signature.js';
 //   Section H: the "host adapter vs. Arweave protocol implementation"
 //              boundary question — confirmed, not merely asserted, against
 //              the uploader's own already-published contract
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function signedPublication(overrides = {}) {
     const publication = new Publication({

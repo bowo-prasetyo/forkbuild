@@ -9,13 +9,10 @@ import {
 import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
 import { Signature } from '../core/Signature.js';
 import { describeSnapshotDiscoveryEnvelope } from '../core/SnapshotDiscoveryEnvelope.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.253 — Place Naming Discovery Boundary.
 // See docs/Roadmap.md, "0.9.253 — Place Naming Discovery Boundary."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

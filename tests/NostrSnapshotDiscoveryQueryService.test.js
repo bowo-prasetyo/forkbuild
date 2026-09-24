@@ -1,4 +1,5 @@
 import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.133 — Nostr Snapshot Discovery Query Service.
 // See docs/Roadmap.md, "0.9.133 — Snapshot Location Discovery via Nostr."
@@ -25,10 +26,6 @@ import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSn
 //              null when none matches; multiple candidates for the same
 //              contentHash are all still reported by search() — no ranking
 //   Section I: a constructor with no queryImpl throws immediately
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

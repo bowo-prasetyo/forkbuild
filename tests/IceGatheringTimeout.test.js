@@ -1,6 +1,7 @@
 import { WebRtcPeerConnection } from '../peer/WebRtcPeerConnection.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
 import { PeerConnectionOffer } from '../peer/PeerConnectionOffer.js';
+import { assert } from './support/Assert.js';
 
 // 0.3.6 — bounds a real, network-dependent failure mode that shipped
 // silently for as long as WebRTC has existed in this codebase (0.2.51):
@@ -27,10 +28,6 @@ import { PeerConnectionOffer } from '../peer/PeerConnectionOffer.js';
 // this file does NOT touch (SDP semantics, real candidate gathering,
 // real connectivity) is still proven against a real RTCPeerConnection
 // in tests/WebRtcPeerTransport.test.js, unmodified by this milestone.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function wait(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));

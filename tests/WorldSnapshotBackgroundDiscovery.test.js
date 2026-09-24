@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { shouldRefreshSnapshotDiscovery, DEFAULT_DISCOVERY_REFRESH_RADIUS } from '../application/snapshot/ShouldRefreshSnapshotDiscovery.js';
 import { WorldSnapshotDiscoveryMonitor } from '../application/snapshot/WorldSnapshotDiscoveryMonitor.js';
 import { worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.186 — World Snapshot Background Discovery.
 //
@@ -38,10 +39,6 @@ import { worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
 //   Section L: architectural regression — ui/main.js and
 //              ui/views/WorldView.js wire the monitor the same way every
 //              other Snapshot discovery capability is already wired
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function flushMicrotasks() {
     for (let i = 0; i < 10; i++) {

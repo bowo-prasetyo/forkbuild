@@ -7,6 +7,7 @@ import { SnapshotContentTransferOutcome } from '../application/snapshot/material
 import { SnapshotPeerPossessionState } from '../application/snapshot/possession/SnapshotPeerPossessionState.js';
 import { toSnapshotPeerPossessionObservation } from '../application/snapshot/possession/SnapshotPeerPossessionObservation.js';
 import { describeSnapshotPeerPossessionComparison } from '../application/snapshot/possession/SnapshotPeerPossessionComparisonView.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.42 — Explicit Snapshot Source Selection & Materialization UX.
 //
@@ -35,10 +36,6 @@ import { describeSnapshotPeerPossessionComparison } from '../application/snapsho
 //
 // See docs/Principles.md, "A Source Selection Is A Person's Own Action,
 // Never An Application Recommendation (0.8.42)."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 // A minimal fake standing in for any of the three already-existing,
 // already-tested *MaterializationCoordinator.js classes — this test file

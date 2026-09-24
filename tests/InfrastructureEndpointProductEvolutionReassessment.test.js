@@ -1,5 +1,6 @@
-import { readFile } from 'node:fs/promises';
 import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.368 — Infrastructure Endpoint Product Evolution Reassessment.
 //
@@ -49,16 +50,6 @@ import { mainFiles } from './support/SourceFileGroups.js';
 //      generic abstraction, and that a Nostr relay boundary would not either.
 //   J. Final decision, per candidate: STABLE_STOP / BUILD_NEXT / DEFER /
 //      SEPARATE_PRODUCT.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 function countOccurrences(text, literal) {
     return text.split(literal).length - 1;

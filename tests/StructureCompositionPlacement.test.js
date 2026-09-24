@@ -20,6 +20,7 @@ import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { EditorEvent } from '../core/events/EditorEvent.js';
 import { ToolId } from '../application/editor-state/ToolId.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.4.1 — Interactive Structure Composition UX.
 //
@@ -59,10 +60,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //              restores the SAME bricks, Escape cancels with zero
 //              Document mutation, and the composition preview
 //              contributes nothing to Document/command serialization
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 class InMemoryStorageProvider extends StorageProvider {
     constructor() {

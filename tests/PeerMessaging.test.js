@@ -1,5 +1,4 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
@@ -12,6 +11,8 @@ import {
     MAX_PEER_MESSAGE_BYTES
 } from '../peer/PeerMessage.js';
 import { toHelloMessage } from '../core/PeerAuthenticationEnvelope.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.52 — Authenticated Peer Messaging & Protocol Multiplexing.
 //
@@ -34,17 +35,6 @@ import { toHelloMessage } from '../core/PeerAuthenticationEnvelope.js';
 // one implementation underneath. The WebRTC half only runs where a real
 // `RTCPeerConnection` exists (a browser via tests.html); it is skipped,
 // not failed, under a plain Node.js run.
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function wait(ms = 10) {
     return new Promise((resolve) => setTimeout(resolve, ms));

@@ -1,5 +1,4 @@
 import { execSync } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -21,8 +20,9 @@ import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase
 import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
 
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.645 — Editor Document Portability Post-Fix Closure Audit.
 //
@@ -77,14 +77,6 @@ function n(message) {
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
 
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
 const stubIdentityProvider = {
     currentUser: () => ({ username: 'alice', displayName: 'alice', providerId: 'stub' }),
     sign: (data) => ({ signedBy: 'alice', providerId: 'stub', data })
@@ -123,9 +115,6 @@ function totalBrickCount(document) {
     return document.world.getBuildings().reduce((sum, b) => sum + b.getBricks().length, 0);
 }
 
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 function codeOnly(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }

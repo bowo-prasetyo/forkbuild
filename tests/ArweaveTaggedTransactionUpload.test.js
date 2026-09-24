@@ -1,11 +1,12 @@
 import { featureImportLines } from './support/SharedHelperImports.js';
-import { readFile } from 'node:fs/promises';
 
 import { createArweaveTaggedTransactionUpload } from '../application/arweave/ArweaveTaggedTransactionUpload.js';
 import { createArweaveInjectedProviderSigner } from '../arweave/ArweaveInjectedProviderSigner.js';
 import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
 import { ArweaveGraphqlDiscoveryQueryService } from '../application/arweave/ArweaveGraphqlDiscoveryQueryService.js';
 import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.490 — Arweave Tagged Transaction Upload Implementation.
 //
@@ -25,20 +26,11 @@ import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDis
 //              wired to a REAL (fake-wallet-backed) ArweaveInjectedProviderSigner,
 //              publishes, and the real, unmodified ArweaveGraphqlDiscoveryQueryService finds it
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 async function expectThrowsAsync(fn, message) {
     let error = null;
     try { await fn(); } catch (e) { error = e; }
     assert(error !== null, message);
     return error;
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 function fakeOkResponse(text = 'accepted') {

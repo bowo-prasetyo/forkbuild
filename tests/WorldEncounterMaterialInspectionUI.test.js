@@ -6,6 +6,8 @@ import { describeLocalWorldDiscoverySource } from '../application/worldEncounter
 import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
 import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.9.39 — World Encounter Material Inspection Orchestration & UI
 // Integration.
@@ -51,14 +53,6 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 // throughout this file's own sections, exactly as before 0.9.40; that
 // wiring is covered separately, in
 // tests/DecentralizedWorldEncounterLeadSelectionUI.test.js.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function flush() {
     return new Promise((resolve) => setTimeout(resolve, 0));

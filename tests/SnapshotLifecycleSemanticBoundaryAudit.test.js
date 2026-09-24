@@ -1,4 +1,4 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 
 import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
 import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
@@ -20,6 +20,8 @@ import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.156 — Snapshot Lifecycle & Semantic Boundary Audit.
 //
@@ -95,10 +97,6 @@ import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 // reuses the identical composed runtime to ask a NEW question that
 // milestone's own brief never asked, or performs a repository-wide
 // structural sweep no single-feature audit was ever positioned to run.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -184,10 +182,6 @@ async function placeAndAnnounce(host, bytes) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 // Strips full-line `//` comments (and, for a leading block, the file's own
 // header prose) so a structural sweep matches genuine code, never a

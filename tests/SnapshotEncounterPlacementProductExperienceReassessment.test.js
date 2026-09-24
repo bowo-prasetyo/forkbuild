@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
@@ -10,6 +9,7 @@ import { WorldEncounterMaterialVerificationStatus } from '../application/worldEn
 import { shouldRefreshSnapshotDiscovery, DEFAULT_DISCOVERY_REFRESH_RADIUS } from '../application/snapshot/ShouldRefreshSnapshotDiscovery.js';
 import { materializedSnapshotWorldOrigin } from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
 import { worldViewFiles, worldEncounterCanvasFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.528 — Snapshot Encounter & Placement Product Experience
 // Reassessment.
@@ -58,10 +58,6 @@ import { worldViewFiles, worldEncounterCanvasFiles, ownPublicationPanelFiles } f
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
 const SOURCE_ROOT_PATH = SOURCE_ROOT.pathname;
-
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 let assertionCount = 0;
 function check(condition, message) {

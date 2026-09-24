@@ -5,14 +5,15 @@ import {
     canonicalizeBlueprint, deriveBlueprintFingerprint, blueprintFingerprintsEqual, describeBlueprintFingerprint
 } from '../core/BlueprintFingerprint.js';
 import { BlueprintAttribution, getBlueprintAttributionSigningDescriptor } from '../core/BlueprintAttribution.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalBlueprintAttributionStore } from '../application/blueprint/LocalBlueprintAttributionStore.js';
 import { BlueprintAttributionUseCase } from '../application/blueprint/BlueprintAttributionUseCase.js';
 import { buildBlueprintPackage } from '../application/blueprint/BlueprintPackage.js';
 import { ExportBlueprintUseCase } from '../application/blueprint/ExportBlueprintUseCase.js';
 import { ImportBlueprintUseCase } from '../application/blueprint/ImportBlueprintUseCase.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.6.5 — Blueprint Identity & Attribution.
 //
@@ -31,28 +32,6 @@ import { ImportBlueprintUseCase } from '../application/blueprint/ImportBlueprint
 // Design Content, Never From Local Identity (0.6.5)" and "Attribution Is
 // An External Assertion About A Fingerprint, Never Structure State
 // (0.6.5)."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-// Mirrors tests/PlaceNamingClaims.test.js's own makeIdentity() — one
-// independent, authenticated LocalIdentityProvider standing in for one
-// distinct identity.
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
-}
 
 function brick(definitionId, x, y, z, rotation = 0) {
     return new Brick({ definitionId, position: new Position(x, y, z), rotation });

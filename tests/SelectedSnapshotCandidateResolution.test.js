@@ -14,6 +14,7 @@ import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.152 — Selected Snapshot Candidate Resolution.
 //
@@ -55,10 +56,6 @@ import { worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/S
 //   Section M: architectural regression — one candidate->retrieval->
 //              verification path, never two; the UI never substitutes a
 //              bare contentHash for the candidate object
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

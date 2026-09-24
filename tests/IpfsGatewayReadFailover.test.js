@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { IpfsGatewayConfiguration } from '../core/IpfsGatewayConfiguration.js';
 import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
@@ -6,6 +5,8 @@ import { IpfsGatewayFailoverContentStore } from '../content/IpfsGatewayFailoverC
 import { ContentUnavailableError } from '../content/IpfsContentStore.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.666 — IPFS Gateway Read Failover.
 //
@@ -35,10 +36,6 @@ import { mainFiles } from './support/SourceFileGroups.js';
 //            operation; put() never fails over either
 // Section K: composition wiring — ui/main.js's own composeIpfsGatewayContentStore()
 //            picks the failover class only for 2+ entries
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function expectRejects(promise, message, ErrorType = null) {
     let rejected = false;
@@ -77,11 +74,6 @@ function makeMultiGatewayFetch(behaviors) {
 
 function totalRequests(requestsByOrigin, origin) {
     return (requestsByOrigin[origin] || []).length;
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 async function run() {

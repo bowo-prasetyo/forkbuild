@@ -1,5 +1,4 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { PeerInvitation } from '../peer/PeerInvitation.js';
 import { PeerDiscoveryRecord } from '../peer/PeerDiscoveryRecord.js';
@@ -8,6 +7,8 @@ import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeer
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerRelationshipUseCase } from '../application/peer/PeerRelationshipUseCase.js';
 import { FindPeerUseCase } from '../application/peer/FindPeerUseCase.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.64 — Decentralized Peer Discovery.
 //
@@ -41,18 +42,6 @@ import { FindPeerUseCase } from '../application/peer/FindPeerUseCase.js';
 // LocalPeerDiscoveryProvider pair, so application/peer/FindPeerUseCase.js's own
 // real logic runs against genuine authentication, not a mock pretending to
 // authenticate.
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function wait(ms = 30) {
     return new Promise((resolve) => setTimeout(resolve, ms));

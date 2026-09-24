@@ -12,6 +12,7 @@ import { surfaceCategoryAt, SURFACE_CATEGORY, WATER_LEVEL } from '../core/Terrai
 import { hydrologyFeatureAt, HYDROLOGY_FEATURE, LAKE_SURFACE_HEIGHT, isRiverAt } from '../core/Hydrology.js';
 import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
 import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.614 — Avatar Basic Water Traversal Boundary Audit.
 //
@@ -78,10 +79,6 @@ import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 // tests/AvatarBasicWaterSurfaceConstraint.test.js for the dedicated
 // proof that the REAL, shipped function (extracted from its own source,
 // never re-typed) satisfies the same invariants.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 // Identical scanning discipline to 0.9.613's own findShoreline() — a
 // genuine, deterministic WATER cell with a dry neighbor exactly 1 unit

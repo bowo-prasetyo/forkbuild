@@ -8,6 +8,7 @@ import {
     AvatarContinuousMovementMode,
     deriveAvatarContinuousMovementMode
 } from '../core/AvatarContinuousMovementMode.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.65 / 0.9.68 — Avatar Continuous Movement Input Adapter,
 // core/AvatarContinuousMovementInputAdapter.js.
@@ -40,10 +41,6 @@ import {
 // know how to interpret — it never calls either transition function
 // itself, never decides what a transition MEANS, and never moves
 // anything. See docs/Roadmap.md, 0.9.65 and 0.9.68.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function runTests() {
     const { NONE, FORWARD, BACKWARD } = AvatarContinuousMovementIntent;

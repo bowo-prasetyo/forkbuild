@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
@@ -7,7 +6,6 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { License, LicenseId } from '../core/License.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
@@ -36,6 +34,9 @@ import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js'
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { toWorldOperationEnvelope } from '../core/WorldOperationEnvelope.js';
 import { editorViewFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.546 — Document Lifecycle Product Reassessment.
 //
@@ -83,10 +84,6 @@ import { editorViewFiles, worldViewFiles, worldNavigationSessionFiles } from './
 //
 // FINDING: see the verdict block at the end of this file.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function assertThrows(fn, message) {
     try {
         fn();
@@ -98,19 +95,6 @@ function assertThrows(fn, message) {
 
 function wait(ms = 0) {
     return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function stubRenderer() {

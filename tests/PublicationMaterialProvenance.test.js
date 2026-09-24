@@ -5,6 +5,8 @@ import {
     describePublicationMaterialProvenance,
     describePublicationMaterialProvenanceFromInspection
 } from '../application/publication/distribution/PublicationMaterialProvenance.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.9.112 — Publication Provenance in World View.
 // See docs/Roadmap.md, "0.9.112 — Publication Provenance in World View."
@@ -19,14 +21,6 @@ import {
 //              non-reference) outputs
 //   Section F: architectural regression — no trust/rank vocabulary, no
 //              import of any kind
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 async function run() {
     // ---------------------------------------------------------------------

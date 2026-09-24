@@ -4,6 +4,7 @@ import { describeIpfsRemotePublication, describeIpfsRemotePublicationStateLabel,
 import { IpfsRemotePublishingConfiguration } from '../application/ipfs/IpfsRemotePublishingConfiguration.js';
 import { CreateIpfsRemotePublicationCoordinatorUseCase } from '../application/ipfs/CreateIpfsRemotePublicationCoordinatorUseCase.js';
 import { HttpPinningProvider } from '../content/HttpPinningProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.68 — Explicit Remote IPFS Publishing Configuration & UX.
 //
@@ -48,10 +49,6 @@ import { HttpPinningProvider } from '../content/HttpPinningProvider.js';
 //              verdict word, and no undocumented state.
 //   Section L: CreateIpfsRemotePublicationCoordinatorUseCase produces a
 //              real, usable coordinator.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

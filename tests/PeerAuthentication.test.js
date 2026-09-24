@@ -1,6 +1,5 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerConnectionState } from '../peer/PeerConnectionState.js';
 import { PeerAuthenticationState } from '../peer/PeerAuthenticationState.js';
@@ -8,6 +7,8 @@ import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js'
 import { PeerIdentity } from '../peer/PeerIdentity.js';
 import { toProofMessage, getPeerAuthenticationSigningDescriptor } from '../core/PeerAuthenticationEnvelope.js';
 import { getAvatarPresenceSigningDescriptor } from '../core/AvatarPresenceAdvertisement.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.49 — Authenticated Peer Connection Model.
 //
@@ -31,17 +32,6 @@ import { getAvatarPresenceSigningDescriptor } from '../core/AvatarPresenceAdvert
 // test via `handleIncomingMessage()`. That isolates each rejection to
 // the one thing being tested rather than to incidental transport
 // timing.
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function wait(ms = 0) {
     return new Promise((resolve) => setTimeout(resolve, ms));

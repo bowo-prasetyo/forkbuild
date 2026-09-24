@@ -43,7 +43,6 @@ import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStor
 import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
 import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
 import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 
 import { computeAmbiguousPublishedDateIds, formatPublicationDate } from '../core/PublicationDateAmbiguity.js';
 import { ContentReference } from '../core/ContentReference.js';
@@ -55,6 +54,9 @@ import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 
 import { findRawStatusInterpolations, sweepDirectory, OVERCLAIM_WORDS } from './support/RawStatusInterpolationSweep.js';
 import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.585 — Publication Discovery & Repository Journey Product
 // Reassessment.
@@ -134,14 +136,7 @@ import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileG
 // verification mechanisms, new Repository storage, new navigation
 // mechanisms, new social features.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 class InMemoryStorageProvider extends StorageProvider {
     constructor() {
@@ -187,16 +182,6 @@ function makeRepositoryDiscoveryProvider(storage, decentralizedDiscoveryProvider
 function search(discoveryProvider, options = {}) {
     return new SearchPublicationsUseCase(discoveryProvider)
         .execute(new PublicationQuery({ page: 1, pageSize: 50, ...options }));
-}
-
-// A real, authenticated identity — the same construction
-// tests/PublicationCommentaryAuthorization.test.js's own makeIdentity()
-// already established.
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 // Mirrors tests/WorldNavigationReturnJourneyProductReassessment.test.js's

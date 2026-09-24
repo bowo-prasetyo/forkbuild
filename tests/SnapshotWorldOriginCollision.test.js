@@ -10,6 +10,7 @@ import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDisc
 import { describeWorldFromDiscoveryRegistry } from '../application/discovery/WorldDiscoveryRegistryProjection.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.163 — Snapshot World Origin Collision Fix.
 //
@@ -68,10 +69,6 @@ import { ContentReference } from '../core/ContentReference.js';
 //              `materializedSnapshotWorldOrigin()`'s own derivation; no
 //              deduplication, reconciliation, merging, trust/ranking, or
 //              new identity type was introduced anywhere.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function placedResult(contentHash, publicationId, position, placementId = 'placement-x') {
     return { outcome: SnapshotWorldPlacementOutcome.PLACED, contentHash, publicationId, placementId, position, reason: null };

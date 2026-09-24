@@ -6,6 +6,8 @@ import {
     findPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationsByDecisionId,
     findPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationsByCandidateType
 } from '../application/claimSnapshotReconciliation/revalidationObservation/History.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.163 — Historical Decision Revalidation Observation History.
 //
@@ -25,14 +27,6 @@ import {
 //            never a synthetic fourth category
 // Section G: architecture — no imports, no forbidden vocabulary, no
 //            mutation, determinism, zero network access
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function divergentEntry(claimId, snapshotIndex, overrides = {}) {
     return Object.freeze({

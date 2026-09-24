@@ -7,10 +7,8 @@ import {
     getBlueprintLineageClaimSigningDescriptor
 } from '../core/BlueprintLineageClaim.js';
 import { claimsForFingerprint, lineageView, detectLocalLineageCycle, describeLineageView } from '../core/BlueprintLineageView.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalBlueprintLineageClaimStore } from '../application/blueprint/LocalBlueprintLineageClaimStore.js';
 import { BlueprintLineageUseCase } from '../application/blueprint/BlueprintLineageUseCase.js';
 import { BlueprintLineageExchange } from '../application/blueprint/BlueprintLineageExchange.js';
@@ -22,6 +20,9 @@ import { ImportBlueprintUseCase } from '../application/blueprint/ImportBlueprint
 import { buildBlueprintPackage } from '../application/blueprint/BlueprintPackage.js';
 import { BlueprintAttributionUseCase } from '../application/blueprint/BlueprintAttributionUseCase.js';
 import { LocalBlueprintAttributionStore } from '../application/blueprint/LocalBlueprintAttributionStore.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.6.8 — Blueprint Lineage & Revision Discovery.
 //
@@ -54,25 +55,6 @@ import { LocalBlueprintAttributionStore } from '../application/blueprint/LocalBl
 //              claim asserting the reverse relationship is then
 //              introduced, and both replicas independently detect the
 //              same local cycle warning.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
-}
 
 function brick(definitionId, x, y, z, rotation = 0) {
     return new Brick({ definitionId, position: new Position(x, y, z), rotation });

@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { IpfsRemotePublicationCoordinator } from '../application/ipfs/IpfsRemotePublicationCoordinator.js';
 import { IpfsRemotePublicationState } from '../application/ipfs/IpfsRemotePublicationState.js';
@@ -15,6 +14,7 @@ import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlaceme
 import { describeSnapshotDiscoveryEnvelope, SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.662 — Remote IPFS Distribution Integration Boundary Audit.
 //
@@ -86,11 +86,6 @@ function assert(condition, message) {
 }
 function n(message) {
     return `${assertionCount + 1}. ${message}`;
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 // A tiny fake content/PinningProvider.js — mirrors tests/

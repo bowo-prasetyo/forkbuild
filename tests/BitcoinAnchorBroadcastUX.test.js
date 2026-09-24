@@ -16,6 +16,7 @@ import { BitcoinAnchorSignedPsbtFinalizationState } from '../application/anchori
 import { BitcoinAnchorBroadcastCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorBroadcastCoordinator.js';
 import { BitcoinAnchorBroadcastState, isValidBitcoinAnchorBroadcastState } from '../application/anchoring/bitcoin/BitcoinAnchorBroadcastState.js';
 import { describeBitcoinAnchorBroadcast } from '../application/anchoring/bitcoin/BitcoinAnchorBroadcastView.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.64 — Explicit Bitcoin Anchor Broadcast UI.
 //
@@ -58,10 +59,6 @@ import { describeBitcoinAnchorBroadcast } from '../application/anchoring/bitcoin
 // See docs/Principles.md, "Broadcasting Submits; It Does Not Decide
 // (0.8.52)," extended here to the explicit UI action that finally reaches
 // it.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

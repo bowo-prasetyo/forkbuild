@@ -4,10 +4,7 @@ import {
     describeWorldDiscoverySource
 } from '../core/WorldDiscoverySource.js';
 import { deriveWorldEncounters } from '../core/WorldEncounter.js';
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
+import { assert } from './support/Assert.js';
 
 function publicationOf(overrides = {}) {
     return { id: 'pub-1', title: 'Untitled', publisherIdentity: { username: 'alice' }, signature: { signedBy: 'alice' }, ...overrides };

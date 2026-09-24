@@ -3,6 +3,7 @@ import { AvatarAnimalReleaseIntent } from '../core/AvatarAnimalReleaseIntent.js'
 import { emptyAvatarInventory, withEntryAdded, createAvatarInventoryEntry, InventoryEntryKind } from '../core/AvatarInventory.js';
 import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
 import { VehicleType } from '../core/VehicleType.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.700 — Avatar Animal Release Transition, core/AvatarAnimalReleaseTransition.js.
 //
@@ -13,10 +14,6 @@ import { VehicleType } from '../core/VehicleType.js';
 //   Section D: FLAGSHIP — carrying a vehicle AND an animal, releasing
 //              never touches the vehicle, whatever the mount state would
 //              have been (this file takes no currentMount at all)
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function runTests() {
     const { NONE, RELEASE } = AvatarAnimalReleaseIntent;

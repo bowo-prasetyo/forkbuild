@@ -33,7 +33,8 @@ import { PlacementRecord } from '../core/PlacementRecord.js';
 import { Position } from '../core/Position.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.164 — Snapshot World Source Identity Audit.
 //
@@ -111,18 +112,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //              class exists anywhere in this codebase; no dedup/
 //              reconciliation/merge/trust/ranking vocabulary was added;
 //              this milestone adds no production file.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function placeReal(placementRegistry, publicationId, position, owner = 'alice') {
     const record = new PlacementRecord({ publicationId, position, owner });

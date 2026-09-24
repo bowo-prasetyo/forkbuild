@@ -12,6 +12,7 @@ import {
     isDocumentOperationApplicationEligibility,
     evaluateApplicationEligibility
 } from '../core/DocumentOperationApplicationEligibility.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.232 — Causal Application Eligibility Boundary.
 //
@@ -35,10 +36,6 @@ import {
 // CRDT, OT, conflict resolution, synchronized undo, or a convergence
 // guarantee. `application/editor/CommandHistory.js` is untouched by this
 // milestone.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, message) {
     let threw = false;

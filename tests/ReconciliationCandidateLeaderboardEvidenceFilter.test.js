@@ -3,6 +3,8 @@ import {
     ReconciliationCandidateLeaderboardReplicaRelation,
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceFilter
 } from '../application/claimSnapshotReconciliation/leaderboard/EvidenceFilter.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.184 — Reconciliation Candidate Evidence Filter Projection.
 //
@@ -32,14 +34,6 @@ import {
 //            own describeXxx(), driven by two dropdowns, and handed to the
 //            table as its own `page` prop instead of the raw, unfiltered
 //            page — without touching any existing reconstructXxx() call.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function evidence(sharedCount, sourceOnlyCount, targetOnlyCount) {
     return Object.freeze({ sharedCount, sourceOnlyCount, targetOnlyCount });

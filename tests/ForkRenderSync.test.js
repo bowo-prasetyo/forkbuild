@@ -22,8 +22,9 @@ import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { SpatialSelectionState } from '../application/spatial-state/SpatialSelectionState.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // Hardening, post-0.2.22 — a fork's bricks kept updating correctly in the DOMAIN MODEL
 // after a mutation, but the RENDERED MESH froze at wherever it was
@@ -38,18 +39,6 @@ import { SpatialSelectionState } from '../application/spatial-state/SpatialSelec
 // add()/remove() — real Three.js meshes, no WebGL/browser needed) so
 // a mesh's actual position can be asserted, the same way the deployed
 // app's viewport would show it.
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function makeDocument(title) {
     const world = new World();

@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { Publication } from '../publisher/Publication.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
@@ -11,7 +10,6 @@ import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { License, LicenseId } from '../core/License.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { describePublicationDistributionResult } from '../application/publication/distribution/PublicationDistributionResult.js';
 import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
 import { ArweaveGraphqlDiscoveryQueryService } from '../application/arweave/ArweaveGraphqlDiscoveryQueryService.js';
@@ -39,6 +37,9 @@ import {
 } from '../application/publication/distribution/PublicationMaterialProvenance.js';
 import { ArweaveGatewayFailoverWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js';
 import { worldEncounterCanvasFiles, publicationsPageFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.533 — Publication Lifecycle Seam Product Reassessment.
 //
@@ -88,16 +89,6 @@ import { worldEncounterCanvasFiles, publicationsPageFiles, worldNavigationSessio
 //
 // FINDING: see the verdict block at the end of this file.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 // Extracts a Vue SFC-shaped module's own `template: \`...\`` literal —
 // what actually reaches a Wanderer's screen — stripping HTML comments
 // (`<!-- ... -->`) so a vocabulary check never false-positives on this
@@ -112,14 +103,6 @@ function extractRenderedTemplate(source) {
     const end = source.indexOf('`', contentStart);
     const raw = end === -1 ? '' : source.slice(contentStart, end);
     return raw.replace(/<!--[\s\S]*?-->/g, '');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 // Publishes a real, minimal one-brick Document through the SAME

@@ -1,16 +1,13 @@
 import { EditorActionRegistry, createStandardActions } from '../application/editor/EditorActionRegistry.js';
 import { EditorActionContext } from '../application/editor/EditorActionContext.js';
 import { InputRouter } from '../application/editor/InputRouter.js';
+import { assert } from './support/Assert.js';
 
 // 0.1.50 — Editor action architecture tests. Deliberately architectural
 // rather than visual: unique ids, unique shortcuts, shared definitions
 // across surfaces, disabled actions never executing, actions invoking
 // the correct existing session APIs, selection-only actions leaving
 // history untouched, and the explicit Escape priority chain.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 // A session implementing the full documented editing surface, recording
 // every call. Group/clipboard included so those action paths are

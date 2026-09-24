@@ -6,7 +6,8 @@ import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingC
 import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.316 — Place Naming Claim Publication Boundary.
 // See docs/Roadmap.md, "0.9.316 — Place Naming Claim Publication Boundary."
@@ -36,10 +37,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //   Section I: no caching — two calls issue two fresh publish exchanges
 //   Section J: architectural regression — no forbidden imports/vocabulary
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function expectThrows(fn, message) {
     let threw = false;
     try { fn(); } catch { threw = true; }
@@ -50,14 +47,6 @@ async function expectRejects(promise, message) {
     let rejected = false;
     try { await promise; } catch { rejected = true; }
     assert(rejected, message);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeSignedClaim({ worldId = 'world-1', regionId = 'region-1', name = 'Riverbend' } = {}) {

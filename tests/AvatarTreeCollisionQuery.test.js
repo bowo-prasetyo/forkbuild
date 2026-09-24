@@ -6,6 +6,7 @@ import { treeCollisionGeometryInRegion, TREE_TRUNK_COLLISION_RADIUS } from '../c
 import { naturalFeaturesInRegion, FEATURE_TYPE } from '../core/NaturalFeatureField.js';
 import { AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.62 — Deterministic Tree Collision Spatial Query, core/AvatarTreeCollisionQuery.js.
 //
@@ -48,10 +49,6 @@ import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 // treeCollisionGeometryInRegion() about — it never re-derives tree
 // placement or geometry, never detects a collision, and never resolves a
 // movement. See docs/Roadmap.md, 0.9.62, for the full milestone story.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function runTests() {
     // -------------------------------------------------------------

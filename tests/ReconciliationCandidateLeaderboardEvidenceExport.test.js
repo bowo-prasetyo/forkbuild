@@ -10,6 +10,8 @@ import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport,
     reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport
 } from '../application/claimSnapshotReconciliation/leaderboard/EvidenceExport.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.186 — Reconciliation Candidate Leaderboard Evidence Export Projection.
 //
@@ -37,14 +39,6 @@ import {
 //            ranking/dedup/sort/timestamp/transmission vocabulary.
 // Section L: reconstructXxx() composes 0.8.185's own reconstructXxx() and
 //            0.8.183's own describeXxx() exactly once each.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function detailOf(shared, sourceOnly, targetOnly) {
     return Object.freeze({

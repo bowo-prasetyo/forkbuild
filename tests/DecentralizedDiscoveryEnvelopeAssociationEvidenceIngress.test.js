@@ -10,6 +10,7 @@ import {
     resolveDecentralizedWorldEncounterLead,
     DecentralizedWorldEncounterLeadResolutionStatus
 } from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.32 — Decentralized Discovery Envelope Association Evidence.
 //
@@ -32,10 +33,6 @@ import {
 // Section 7: architectural regression — no verification, ranking,
 //            retrieval, or merge into 0.9.29's own ingress; no second
 //            validation algorithm.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function envelopeOf(overrides = {}) {
     return {

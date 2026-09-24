@@ -12,6 +12,7 @@ import {
     WorldExplorationSuggestion, 
     deriveWorldWelcomeContext 
 } from '../core/WorldWelcomeContext.js';
+import { assert } from './support/Assert.js';
 
 // 0.3.9 — World Welcome & Guided Exploration.
 //
@@ -25,10 +26,6 @@ import {
 //
 // See docs/Principles.md: "Exploration Guides Attention, Never Ownership or Mutation (0.3.9)"
 // and "A Welcome Context Describes the World; It Does Not Become Part of the World (0.3.9)".
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertDeepEqual(actual, expected, message) {
     const actualStr = JSON.stringify(actual);

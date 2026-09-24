@@ -8,6 +8,7 @@ import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
 import { animalPresenceInRegion } from '../core/AnimalPlacement.js';
 import { Position } from '../core/Position.js';
 import { InventoryEntryKind } from '../core/AvatarInventory.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.700 — Mixed Vehicle/Animal Shared Inventory Integration.
 //
@@ -27,10 +28,6 @@ import { InventoryEntryKind } from '../core/AvatarInventory.js';
 //              and vice versa for releasing the animal
 //   Section D: FLAGSHIP — after both are gone, both controllers agree
 //              the shared inventory is empty
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function buildAvatarPresenceSession(startPosition) {
     return new AvatarPresenceSession(

@@ -12,6 +12,7 @@ import { SelectionState } from '../application/editor-state/SelectionState.js';
 import { TransformMath } from '../application/editor/TransformMath.js';
 import { TransformSnap } from '../application/editor/TransformSnap.js';
 import { TransformSettings } from '../application/editor/TransformSettings.js';
+import { assert } from './support/Assert.js';
 
 // 0.1.47 — Transform Precision, Snapping & Editing Polish tests.
 //
@@ -24,10 +25,6 @@ import { TransformSettings } from '../application/editor/TransformSettings.js';
 // between Editor and World View — and the flagship keyboard/gizmo
 // parity: a keyboard transform must be byte-identical to an
 // equivalently-snapped gizmo gesture.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function close(actual, expected, message) {
     assert(Math.abs(actual - expected) < 1e-9, `${message}: expected ${expected}, got ${actual}`);

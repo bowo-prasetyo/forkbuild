@@ -9,6 +9,8 @@ import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidati
 import { describePublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceAgreement } from '../application/claimSnapshotReconciliation/candidate/EvidenceAgreementView.js';
 import { reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage } from '../application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.180 — Reconciliation Candidate Leaderboard UI Integration.
 //
@@ -36,14 +38,6 @@ import { PublicationObservationArchive } from '../application/publication/observ
 // Section F: the route is registered in ui/router/index.js
 // Section G: no mutation of either archive through the full pipeline;
 //            determinism
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function genuineDecisionRecord(candidate, decision, decidedAt) {
     return Object.freeze({ decided: true, candidate: Object.freeze(candidate), decision, decidedAt: decidedAt.toISOString() });

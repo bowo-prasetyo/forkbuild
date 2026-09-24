@@ -4,6 +4,7 @@ import {
     isValidAvatarVehicleBrakingIntent,
     deriveAvatarVehicleBrakingIntent
 } from '../core/AvatarVehicleBrakingIntent.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.95 — Vehicle Braking Intent, core/AvatarVehicleBrakingIntent.js.
 //
@@ -24,10 +25,6 @@ import {
 // never mentions a vehicle, a capability, or a braking RATE. Every
 // assertion below concerns only what braking was just requested, never
 // how fast anything actually slows down — see docs/Roadmap.md, 0.9.95.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function runTests() {
     const { NONE, BRAKE } = AvatarVehicleBrakingIntent;

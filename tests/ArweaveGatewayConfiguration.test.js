@@ -1,6 +1,7 @@
-import { readFile } from 'node:fs/promises';
 
 import { ArweaveGatewayConfiguration, isValidArweaveGatewayUrl, DEFAULT_ARWEAVE_GATEWAY_URL } from '../core/ArweaveGatewayConfiguration.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.364 — User-Configurable Arweave Gateway Configuration Boundary.
 // See docs/Roadmap.md, "0.9.364 — User-Configurable Arweave Gateway," and
@@ -18,19 +19,10 @@ import { ArweaveGatewayConfiguration, isValidArweaveGatewayUrl, DEFAULT_ARWEAVE_
 // Section H: architecture sweep — no persistence, no network, no ui/, no
 //            extra fields, no IPFS/generic-endpoint abstraction
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function expectThrows(fn, message) {
     let threw = false;
     try { fn(); } catch { threw = true; }
     assert(threw, message);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 async function run() {

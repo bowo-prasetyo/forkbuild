@@ -16,6 +16,7 @@ import {
     describePublisherLeaderboardSnapshot,
     reconstructPublisherLeaderboardSnapshot
 } from '../application/leaderboard/snapshot/Snapshot.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.119 — Reproducible Leaderboard Snapshot.
 //
@@ -40,10 +41,6 @@ import {
 //            archive or introduces a new collection
 // Section K: no new ranking vocabulary anywhere on a snapshot
 // Section L: shape, defaults, malformed-input tolerance, zero network
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function withoutNetworkAccess(fn) {
     let networkCallOccurred = false;

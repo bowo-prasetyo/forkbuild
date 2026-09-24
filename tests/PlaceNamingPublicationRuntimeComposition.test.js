@@ -6,6 +6,7 @@ import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
 import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
 import { createNostrInjectedProviderPublisher } from '../nostr/NostrInjectedProviderPublisher.js';
 import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.320 — Explicit Place Naming Publication Action.
 // See docs/Roadmap.md, "0.9.320 — Explicit Place Naming Publication
@@ -28,10 +29,6 @@ import { mainFiles } from './support/SourceFileGroups.js';
 //              entry point, no coupling to Snapshot/Signed Claim
 //              distribution, and (as of this same milestone) composed into
 //              ui/main.js through the composition function only
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

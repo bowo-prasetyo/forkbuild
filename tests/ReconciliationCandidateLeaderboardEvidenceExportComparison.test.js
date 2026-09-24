@@ -1,6 +1,8 @@
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparison
 } from '../application/claimSnapshotReconciliation/evidenceExportComparison/EvidenceExportComparison.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.189 — Reconciliation Candidate Leaderboard Evidence Export Comparison.
 //
@@ -26,14 +28,6 @@ import {
 // Section K: determinism, no mutation, frozen output.
 // Section L: vocabulary/import boundary — no archive import, no
 //            reconciliation/ranking vocabulary, no top-level "same".
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function detailOf(shared, sourceOnly, targetOnly) {
     return Object.freeze({

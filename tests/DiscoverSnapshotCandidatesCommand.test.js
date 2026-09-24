@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.150 — Snapshot Candidate Discovery Command.
 // See docs/Roadmap.md, "0.9.150 — Snapshot Candidate Discovery Command,"
@@ -25,10 +26,6 @@ import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapsho
 //              DecentralizedSnapshotResolver, or
 //              SnapshotPublicationAttribution; search() called from
 //              exactly one place
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

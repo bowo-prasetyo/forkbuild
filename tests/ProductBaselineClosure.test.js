@@ -6,6 +6,8 @@ import { StructurePlacement } from '../core/StructurePlacement.js';
 import { Position } from '../core/Position.js';
 import { MoveStructurePlacementCommand } from '../application/commands/MoveStructurePlacementCommand.js';
 import { WorldConflictResolver, WorldOperationOutcome } from '../replication/WorldConflictResolver.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.314 — Product Baseline Closure Record.
 //
@@ -58,15 +60,7 @@ import { WorldConflictResolver, WorldOperationOutcome } from '../replication/Wor
 //               be modernized," "this could be generalized").
 //   Section G — Final closure statement.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {

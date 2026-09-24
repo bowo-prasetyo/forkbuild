@@ -4,6 +4,8 @@ import {
     PublicationCommentaryStore,
     PublicationCommentaryConflictError
 } from '../storage/PublicationCommentaryStore.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.243 — Publication Commentary Storage Boundary. Covers
 // storage/PublicationCommentaryStore.js — the sole bridge between the pure
@@ -15,21 +17,6 @@ import {
 // ---------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------
-
-// The identical in-memory StorageProvider fake tests/DurableDocuments.test.js
-// already uses for the same purpose — a real StorageProvider subclass, so
-// `instanceof StorageProvider` passes, backed by nothing but a Map.
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function makeCommentary(overrides = {}) {
     return new PublicationCommentary({

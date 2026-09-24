@@ -6,6 +6,7 @@ import { surfaceCategoryAt, SURFACE_CATEGORY, WATER_LEVEL, HIGHLAND_ELEVATION } 
 import { ecologyGroundColorAt } from '../core/TerrainEcology.js';
 import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.89 — World Water & Hydrology Foundation, core/Hydrology.js.
 //
@@ -30,10 +31,6 @@ import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
 // feature or color at a fixed coordinate (the exact channel shape is an
 // implementation detail); every assertion is about determinism,
 // correlation with the terrain underneath, continuity, and layering.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function runTests() {
     // -------------------------------------------------------------

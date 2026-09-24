@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { applicationPath } from './support/ApplicationFiles.js';
 import { execSync } from 'node:child_process';
 
@@ -13,9 +12,11 @@ import { createPublicationContentKind } from '../application/publication/Publica
 import { DiscoveryProvider } from '../discovery/DiscoveryProvider.js';
 import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.334 — Federated Repository Discovery Seam Audit.
 //
@@ -73,10 +74,6 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 //   Section L — No UI change; no production file touched.
 //   Section M — Final classification.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function expectThrows(fn, message) {
     let threw = false;
     try { fn(); } catch { threw = true; }
@@ -84,10 +81,6 @@ function expectThrows(fn, message) {
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {
@@ -114,21 +107,6 @@ function normalizeProse(text) {
 
 function proseIncludes(haystack, needle) {
     return normalizeProse(haystack).includes(normalizeProse(needle));
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 // Mirrors publisher/LocalPublisherProvider.js's own real construction shape

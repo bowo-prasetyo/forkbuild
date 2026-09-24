@@ -3,6 +3,7 @@ import { BitcoinEsploraWalletFundingSource } from '../anchoring/BitcoinEsploraWa
 import { BitcoinAnchorTransactionBuilder } from '../anchoring/BitcoinAnchorTransactionBuilder.js';
 import { BitcoinAnchorFundingObservationState } from '../application/anchoring/bitcoin/BitcoinAnchorFundingObservationState.js';
 import { describeBitcoinAnchorFundingStateLabel, describeBitcoinAnchorFunding } from '../application/anchoring/bitcoin/BitcoinAnchorFundingView.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.60 — Explicit Bitcoin Anchor Funding & Address Preparation.
 //
@@ -44,10 +45,6 @@ import { describeBitcoinAnchorFundingStateLabel, describeBitcoinAnchorFunding } 
 //
 // See docs/Principles.md, "A Funding Observation Is Not A Funding
 // Commitment (0.8.60)."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function expectThrowsAsync(fn, message) {
     let threw = false;

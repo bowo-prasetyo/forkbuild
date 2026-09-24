@@ -6,10 +6,11 @@ import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSessi
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalAvatarPresenceBroadcastProvider } from '../presence/LocalAvatarPresenceBroadcastProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
 import { SpatialSelectionState } from '../application/spatial-state/SpatialSelectionState.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.43 — Avatar-Avatar Proximity & Interaction Targets.
 //
@@ -25,18 +26,6 @@ import { SpatialSelectionState } from '../application/spatial-state/SpatialSelec
 // and being NEAR another avatar never authorizes touching it: nothing
 // exercised here ever mutates a remote avatar's own presence or
 // profile, because no such API exists at all.
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function wait(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));

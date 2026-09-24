@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
@@ -30,6 +29,8 @@ import { PublicationExchange } from '../application/publication/PublicationExcha
 import { PublicationPeerExchange } from '../application/publication/PublicationPeerExchange.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { worldViewFiles, publicationsPageFiles, editorViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.352 — Remote Publication Fork Journey Product Gap Audit.
 //
@@ -87,16 +88,6 @@ import { worldViewFiles, publicationsPageFiles, editorViewFiles, ownPublicationP
 //       OwnPublicationPanel.js checked directly and confirmed NOT an
 //       alternate Explore/Fork surface.
 //   J — Decision matrix and final verdict.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 function wait(ms = 20) {
     return new Promise((resolve) => setTimeout(resolve, ms));

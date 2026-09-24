@@ -6,6 +6,8 @@ import {
 } from '../application/claimSnapshotReconciliation/revalidationObservation/HistoryTimelineView.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { featureImportLines } from './support/SharedHelperImports.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.165 — Revalidation Observation History Timeline Projection.
 //
@@ -24,14 +26,6 @@ import { featureImportLines } from './support/SharedHelperImports.js';
 // Section K: determinism, and reconstruct()'s thin, deliberately-empty
 //            archive boundary
 // Section L: architectural regression — forbidden vocabulary, zero imports
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function planNaming({ divergent = [], claims = [], snapshots = [] } = {}) {
     return Object.freeze({

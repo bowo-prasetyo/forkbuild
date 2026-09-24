@@ -17,6 +17,7 @@ import { DocumentManager } from '../application/document/DocumentManager.js';
 import { SelectionUseCase } from '../application/editor/SelectionUseCase.js';
 import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
+import { assert } from './support/Assert.js';
 
 // 0.4.7 — Advanced Building & Structural Editing. This milestone's own
 // concrete deliverable: "Duplicate a composed selection" (Ctrl/Cmd+D)
@@ -35,10 +36,6 @@ import { SelectionState } from '../application/editor-state/SelectionState.js';
 // clipboard). 0.5.9 retired WorldNavigationSession's own
 // _duplicateBrickSelection()/duplicateSelection() entirely — see
 // Sections 5-6's own removal note below.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function createWorldWithBricks(count) {
     const world = new World();

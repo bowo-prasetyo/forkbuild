@@ -6,6 +6,8 @@ import {
 } from '../application/claimSnapshotReconciliation/candidate/DecisionRevalidationObservationEvolutionAgreementView.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { featureImportLines } from './support/SharedHelperImports.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.174 — Reconciliation Candidate Observation Evolution Agreement
 // Projection.
@@ -31,14 +33,6 @@ import { featureImportLines } from './support/SharedHelperImports.js';
 // Section I: reconstruct()'s archive-reading boundary
 // Section J: malformed input tolerance
 // Section K: vocabulary/import boundary
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function genuineDecisionRecord(candidate, decision, decidedAt) {
     return Object.freeze({ decided: true, candidate: Object.freeze(candidate), decision, decidedAt: decidedAt.toISOString() });

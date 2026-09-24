@@ -11,6 +11,7 @@ import {
     describeIpfsPublicationRecordHistoryEntry,
     describeIpfsPublicationRecordHistory
 } from '../application/ipfs/IpfsPublicationRecordHistoryView.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.71 — IPFS Publication Record History & Inspection.
 //
@@ -51,10 +52,6 @@ import {
 //
 // See docs/Roadmap.md, "0.8.71 — IPFS Publication Record History &
 // Inspection."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertNeverScored(obj, path) {
     if (!obj || typeof obj !== 'object') return;

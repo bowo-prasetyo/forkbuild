@@ -11,6 +11,7 @@ import { SpatialSelectionState } from '../application/spatial-state/SpatialSelec
 import { SelectionState } from '../application/editor-state/SelectionState.js';
 import { TransformInput } from '../application/editor/TransformInput.js';
 import { TransformMath } from '../application/editor/TransformMath.js';
+import { assert } from './support/Assert.js';
 
 // 0.1.49 — Numeric Transform Input tests.
 //
@@ -21,10 +22,6 @@ import { TransformMath } from '../application/editor/TransformMath.js';
 // Apply, exact undo/redo/replay, and byte-identical parity with
 // equivalent keyboard and gizmo transforms — without a new command,
 // entity, transform model, or persistent editing mode.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function close(actual, expected, message) {
     assert(Math.abs(actual - expected) < 1e-9, `${message}: expected ${expected}, got ${actual}`);

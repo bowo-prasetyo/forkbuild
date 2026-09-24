@@ -5,6 +5,7 @@ import {
 import { SnapshotPlacementRelationship } from '../application/snapshot/placement/SnapshotPlacementRelationship.js';
 import { createResolutionObservation } from '../application/snapshot/placement/SnapshotPlacementResolutionObservation.js';
 import { SnapshotPlacementResolutionOutcome } from '../application/snapshot/placement/SnapshotPlacementResolutionOutcome.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.23 — Multi-Placement Convergence & Relationship UX.
 //
@@ -28,10 +29,6 @@ import { SnapshotPlacementResolutionOutcome } from '../application/snapshot/plac
 // See docs/Principles.md, "Evidence Comparison Is Not Adjudication
 // (0.8.13)," and "Multi-Placement Convergence Is Independent Of
 // Resolution Observation (0.8.23)."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

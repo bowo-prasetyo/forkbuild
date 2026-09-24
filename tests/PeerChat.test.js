@@ -1,5 +1,4 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
@@ -16,6 +15,8 @@ import {
 } from '../core/ChatMessage.js';
 import { ChatReplayWindow } from '../core/ChatReplayWindow.js';
 import { resolveIncomingChatMessage } from '../core/ChatMessageIngestion.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.61 — Direct Peer Messaging & Live Chat.
 //
@@ -31,18 +32,6 @@ import { resolveIncomingChatMessage } from '../core/ChatMessageIngestion.js';
 // real, in-process, bidirectional transport every other flagship in
 // this suite (tests/FriendshipRevocationAndBlocking.test.js included)
 // already trusts for this purpose.
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function wait(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));

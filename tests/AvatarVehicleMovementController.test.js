@@ -7,6 +7,7 @@ import { VehicleInstance } from '../core/VehicleInstance.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
 import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/TerrainHeightField.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.116 — Mounted Vehicle Movement, application/avatar/AvatarVehicleMovementController.js.
 //
@@ -76,10 +77,6 @@ const BACKWARD_INTENT = Object.freeze({ direction: -1, turnAxis: 0, running: fal
 const BRAKE_INTENT = Object.freeze({ direction: 0, turnAxis: 0, running: false, brakingRequested: true });
 
 const bicycleCapability = resolveAvatarVehicleMovementCapability(VehicleType.BICYCLE);
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function runTests() {
     // -------------------------------------------------------------

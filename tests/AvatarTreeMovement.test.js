@@ -4,6 +4,7 @@ import { AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
 import { treeCollisionCircleFor, treeCollisionGeometryInRegion } from '../core/TreeCollisionGeometry.js';
 import { FEATURE_TYPE } from '../core/NaturalFeatureField.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.61 — Avatar-Tree Collision Resolution, core/AvatarTreeMovement.js.
 //
@@ -36,10 +37,6 @@ import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 // "where may the avatar move," never "should the avatar move" (0.9.60's
 // own job) or "which trees are nearby" (a later milestone's own job). See
 // docs/Roadmap.md, 0.9.61, for the full milestone story.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function distance(a, b) {
     return Math.hypot(a.x - b.x, a.z - b.z);

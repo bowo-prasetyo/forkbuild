@@ -1,8 +1,8 @@
-import { readFile } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { ownPublicationPanelSource, worldEncounterCanvasSource } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.360 — Relocate Publication Discovery to a Secondary Diagnostic Surface.
 //
@@ -44,16 +44,6 @@ import { ownPublicationPanelSource, worldEncounterCanvasSource } from './support
 // J. Final UX convergence — the trigger/overlay/modal markup exists with
 //    the expected shape, and the relocated panel's own markup is
 //    byte-for-byte identical to what 0.9.111-0.9.113/0.9.357 already wrote.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 // The same "extract methods/props straight off the exported options object
 // and call them with a hand-built ctx" technique 0.9.357's own test already

@@ -4,7 +4,6 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
@@ -19,6 +18,8 @@ import { WorldMembershipUseCase } from '../application/identity/WorldMembershipU
 import { WorldPresenceUseCase } from '../application/presence/WorldPresenceUseCase.js';
 import { WorldPresenceActivity } from '../core/WorldPresenceActivity.js';
 import { buildWorldCollaborationRoster, WorldCollaborationAccess } from '../ui/components/WorldCollaborationRoster.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.99 — World Collaboration UX.
 //
@@ -53,17 +54,6 @@ import { buildWorldCollaborationRoster, WorldCollaborationAccess } from '../ui/c
 //              panel only ever REFLECTS authorization, never decides
 //              it. See docs/Principles.md, "The UI Displays
 //              Authorization; It Never Decides It (0.2.99)."
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function wait(ms = 0) {
     return new Promise((resolve) => setTimeout(resolve, ms));

@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
@@ -14,7 +13,6 @@ import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvi
 import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { PublicationQuery } from '../core/PublicationQuery.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import {
@@ -27,6 +25,9 @@ import {
 } from '../application/publication/PublicationAuthorNameIdentityConvergence.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { stylesheetFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.525 — Repository Discovery & Material Trust Product Reassessment.
 //
@@ -80,15 +81,6 @@ import { stylesheetFiles } from './support/SourceFileGroups.js';
 // VERDICT MODEL: PRODUCT_COMPLETE / PRODUCT_GAP / PRODUCT_AMBIGUITY /
 // DELIBERATE_ASYMMETRY / REGRESSION — Section H.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
 function flush() {
     return new Promise((resolve) => setTimeout(resolve, 0));
 }
@@ -96,14 +88,6 @@ function flush() {
 function tamperHex(hex) {
     const flipped = hex[0] === '0' ? '1' : '0';
     return flipped + hex.slice(1);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeIdentity(label) {

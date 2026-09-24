@@ -4,7 +4,6 @@ import { StructurePlacement } from '../core/StructurePlacement.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
@@ -40,6 +39,8 @@ import {
     deriveWorldSpatialAnchor
 } from '../core/WorldSpatialAnchor.js';
 import { buildSpatialCollaboratorRows } from '../ui/components/WorldCollaboratorIndicator.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.3.1 — Collaborative Spatial Awareness.
 //
@@ -71,18 +72,6 @@ import { buildSpatialCollaboratorRows } from '../ui/components/WorldCollaborator
 //              stay byte-identical — Follow is never a mutation, and
 //              nothing a WorldSpatialAnchor computes ever reaches
 //              SpatialSelectionState or any application/commands/ class.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function wait(ms = 0) {
     return new Promise((resolve) => setTimeout(resolve, ms));

@@ -12,6 +12,7 @@ import {
     PublicationObservationTimelineEntryKind,
     describePublicationObservationTimeline
 } from '../application/publication/observationArchive/PublicationObservationTimelineView.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.74 — Cross-Domain Publication Observation Timeline.
 //
@@ -59,10 +60,6 @@ import {
 //
 // See docs/Roadmap.md, "0.8.74 — Cross-Domain Publication Observation
 // Timeline."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertNeverScored(obj, path) {
     if (!obj || typeof obj !== 'object') return;

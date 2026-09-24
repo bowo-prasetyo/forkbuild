@@ -5,6 +5,8 @@ import {
 } from '../application/claimSnapshotReconciliation/revalidationObservation/AgreementView.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { featureImportLines } from './support/SharedHelperImports.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.170 — Revalidation Observation Agreement Projection.
 //
@@ -25,14 +27,6 @@ import { featureImportLines } from './support/SharedHelperImports.js';
 // Section I: reconstruct()'s archive-reading boundary
 // Section J: malformed input tolerance
 // Section K: vocabulary/import boundary
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function planNaming({ claims = [], snapshots = [], divergent = [] } = {}) {
     return Object.freeze({

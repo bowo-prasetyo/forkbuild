@@ -6,6 +6,7 @@ import {
 } from '../core/TerrainSurface.js';
 import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.88 — Deterministic World Ecology, core/TerrainEcology.js.
 //
@@ -25,10 +26,6 @@ import { TERRAIN_TILE_SIZE } from '../core/TerrainTiling.js';
 // or color at a fixed coordinate (the exact thresholds are an
 // implementation detail); every assertion is about determinism,
 // correlation with the terrain underneath, continuity, and layering.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function runTests() {
     // -------------------------------------------------------------

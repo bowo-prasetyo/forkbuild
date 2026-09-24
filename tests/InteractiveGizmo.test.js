@@ -12,6 +12,7 @@ import { SelectionState } from '../application/editor-state/SelectionState.js';
 import { TransformMath } from '../application/editor/TransformMath.js';
 import { TransformGizmoUseCase } from '../application/editor/TransformGizmoUseCase.js';
 import { TransformSelectionCommand } from '../application/commands/TransformSelectionCommand.js';
+import { assert } from './support/Assert.js';
 
 // 0.1.46 — Interactive Transform Gizmo tests.
 //
@@ -26,10 +27,6 @@ import { TransformSelectionCommand } from '../application/commands/TransformSele
 // The simulated gestures use TransformMath.projectDeltaOntoAxis /
 // rotationDeltaFromPoints — the exact functions the real
 // TransformGizmoController calls between its raycasts.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function close(actual, expected, message) {
     assert(Math.abs(actual - expected) < 1e-9, `${message}: expected ${expected}, got ${actual}`);

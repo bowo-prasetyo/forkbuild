@@ -20,13 +20,11 @@ import {
     MALFORMED_BAD_SCHEMA_VERSION,
     MALFORMED_WRONG_PROTOCOL
 } from './fixtures/historicalDocuments.js';
+import { assert } from './support/Assert.js';
 
 // ---------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, expectedMessage, message) {
     try {

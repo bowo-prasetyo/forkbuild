@@ -15,6 +15,7 @@ import { CreateBaseAnchorPublicationRecordUseCase } from '../application/anchori
 import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
 import { BaseTransactionInclusionObservationState } from '../application/anchoring/base/BaseTransactionInclusionObservationState.js';
 import { publicationsViewSourceWithTemplate, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.327 — Bitcoin Anchor Observation Product Gap Audit.
 //
@@ -84,10 +85,6 @@ import { publicationsViewSourceWithTemplate, mainFiles } from './support/SourceF
 //               classifier, reused verbatim.
 //   Section I — Candidate classification.
 //   Section J — Production-change guard.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
 

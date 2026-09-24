@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { RendezvousConfiguration, isValidRendezvousUrl } from '../core/RendezvousConfiguration.js';
 import { IceServerConfiguration } from '../core/IceServerConfiguration.js';
@@ -18,6 +17,9 @@ import { DEFAULT_RENDEZVOUS_URLS } from '../peer/RendezvousConfig.js';
 import { DEFAULT_ICE_SERVERS } from '../peer/IceServerConfig.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.389 — Rendezvous Configuration Lifecycle & Convergence Audit.
 //
@@ -90,18 +92,6 @@ import { mainFiles } from './support/SourceFileGroups.js';
 // rendezvous protocol change, and no production code change of any kind —
 // this file exists to confirm 0.9.388's own architecture is closed, never
 // to extend it.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 // Two or more SEPARATE instances over one externally-owned namespace — the
 // same "restart" shape every sibling convergence audit in this codebase
@@ -203,10 +193,6 @@ class UnreachableRendezvousTransport extends RendezvousTransport {
     async remove() { throw new Error(`UnreachableRendezvousTransport(${this.url}): unreachable`); }
 }
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 function executableOf(src) {
     return src.replace(/\/\/.*$/gm, '');
 }

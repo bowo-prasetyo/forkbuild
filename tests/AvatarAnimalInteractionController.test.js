@@ -5,6 +5,7 @@ import { animalPresenceInRegion } from '../core/AnimalPlacement.js';
 import { Position } from '../core/Position.js';
 import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
 import { InventoryEntryKind } from '../core/AvatarInventory.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.700 — Avatar-Animal Catch/Release Runtime Integration,
 // application/avatar/AvatarAnimalInteractionController.js.
@@ -24,10 +25,6 @@ import { InventoryEntryKind } from '../core/AvatarInventory.js';
 //              discipline
 //   Section E: Catch takes priority over release when both are possible
 //              at once
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function buildAvatarPresenceSession(startPosition) {
     return new AvatarPresenceSession(

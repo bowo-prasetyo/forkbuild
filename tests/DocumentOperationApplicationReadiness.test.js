@@ -13,6 +13,7 @@ import {
     isDocumentOperationApplicationReadiness,
     evaluateApplicationReadiness
 } from '../core/DocumentOperationApplicationReadiness.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.234 — Causal Application Readiness Boundary.
 //
@@ -37,10 +38,6 @@ import {
 // milestone — the one new method that appears in this file
 // (`executionHistoryFromCommandHistories()`, below) is TEST-ONLY glue, not
 // a change to `CommandHistory`'s own class.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, message) {
     let threw = false;

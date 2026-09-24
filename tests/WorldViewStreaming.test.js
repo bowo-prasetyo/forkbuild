@@ -12,6 +12,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { Publication } from '../publisher/Publication.js';
+import { assert } from './support/Assert.js';
 
 // ---------------------------------------------------------------------
 // Mocks
@@ -46,10 +47,6 @@ class MockContentResolver {
         return this.snapshots.get(id); 
     }
     verify() { return true; }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
 }
 
 function createTestDocument(title = 'Test World') {

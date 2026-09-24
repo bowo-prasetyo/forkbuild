@@ -1,13 +1,14 @@
 import { Structure } from '../core/Structure.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { sortStructures, STRUCTURE_SORT_OPTIONS } from '../core/sortStructures.js';
 import { buildCategoryOptions, matches, normalize } from '../ui/components/BuildLibraryPanel.js';
 import { LibraryUsageHistoryStore } from '../application/editor/LibraryUsageHistoryStore.js';
 import { LocalStructureLibraryStore } from '../application/editor/LocalStructureLibraryStore.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.6.4 — Blueprint Discovery, Search & Library Organization.
 //
@@ -40,18 +41,6 @@ import { CreateStructureRegistryUseCase } from '../application/editor/CreateStru
 //              ui/components/BuildLibraryPanel.js do it, entirely
 //              headlessly; a removed personal Structure silently drops
 //              out of a stale Recent list rather than throwing
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function makeStructure({ id, name, category = 'uncategorized', description = '', brickCount = 1 }) {
     const bricks = [];

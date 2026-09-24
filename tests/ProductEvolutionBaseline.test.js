@@ -1,5 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { editorViewFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.221 — Product Evolution Selection / Architecture Baseline.
 //
@@ -40,15 +42,7 @@ import { editorViewFiles, worldViewFiles, worldNavigationSessionFiles, ownPublic
 //    (arc start)   (arc closes)   (DEFERRED       (freeze + register +
 //                                  characterized)   seam menu, no pick)
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {

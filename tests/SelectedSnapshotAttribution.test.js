@@ -8,6 +8,7 @@ import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.154 — Selected Snapshot Attribution.
 //
@@ -59,10 +60,6 @@ import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 // Section J: structural sweep — exactly one call site in
 //            attributeSelectedSnapshot(), the pure function is imported
 //            (never reimplemented), and no new outcome vocabulary exists.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
 

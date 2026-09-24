@@ -4,6 +4,8 @@ import { describePublisherLeaderboardSnapshotFingerprint } from '../application/
 import { describePublisherLeaderboardSnapshotDifference } from '../application/leaderboard/snapshot/Difference.js';
 import * as PublisherLeaderboardSnapshotTimelineViewModule from '../application/leaderboard/snapshot/TimelineView.js';
 import { describePublisherLeaderboardSnapshotTimeline } from '../application/leaderboard/snapshot/TimelineView.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.136 — Historical Leaderboard Snapshot Timeline Projection.
 //
@@ -33,14 +35,6 @@ import { describePublisherLeaderboardSnapshotTimeline } from '../application/lea
 //            no reconstructXxx() entry point
 // Section N: never a second comparison engine — no diff logic duplicated
 //            in this file's own source
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function identity(publisherId) {
     return new PublisherIdentityRecord({ publisherId });

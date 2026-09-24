@@ -1,4 +1,5 @@
 import { decodeP2wpkhScriptPubKey } from '../anchoring/BitcoinSegwitAddressScriptPubKey.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.62 — Explicit Reviewed Bitcoin Anchor Signing UI.
 //
@@ -24,10 +25,6 @@ import { decodeP2wpkhScriptPubKey } from '../anchoring/BitcoinSegwitAddressScrip
 //              refused.
 //   Section G: an unrecognized human-readable prefix is refused.
 //   Section H: malformed/non-string input never throws.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 // ---------------------------------------------------------------------
 // A wholly independent bech32 ENCODER — duplicated, not imported, from

@@ -7,10 +7,7 @@ import {
 import { describeWorldFromDiscoveryRegistry } from '../application/discovery/WorldDiscoveryRegistryProjection.js';
 import { describePeerWorldDiscoverySource } from '../peer/PeerWorldDataIngress.js';
 import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
+import { assert } from './support/Assert.js';
 
 function connectedPeerOf(identityId) {
     return { remoteIdentity: identityId ? { identityId } : null };

@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { deriveAvatarVehicleMount } from '../core/AvatarVehicleMountTransition.js';
 import { AvatarVehicleMount, createAvatarVehicleMount } from '../core/AvatarVehicleMount.js';
 import { AvatarVehicleInteractionIntent } from '../core/AvatarVehicleInteractionIntent.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.78 — Avatar-Vehicle Mount Transition, core/AvatarVehicleMountTransition.js.
 //
@@ -30,10 +31,6 @@ import { AvatarVehicleInteractionIntent } from '../core/AvatarVehicleInteraction
 // avatar from unmounted to mounted on that target — mounting only, no
 // dismounting, no vehicle switching, no movement changes. See
 // docs/Roadmap.md, 0.9.78.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, message) {
     let threw = false;

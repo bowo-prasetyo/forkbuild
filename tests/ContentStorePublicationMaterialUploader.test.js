@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { ContentStorePublicationMaterialUploader } from '../application/publication/distribution/ContentStorePublicationMaterialUploader.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.670 — Content-Store-Backed Publication Material Uploader.
 // See application/publication/distribution/ContentStorePublicationMaterialUploader.js's own header
@@ -19,10 +20,6 @@ import { ContentStorePublicationMaterialUploader } from '../application/publicat
 //              storage throws synchronously
 //   Section G: no caching — two calls issue two fresh put() calls
 //   Section H: architectural regression — duck-typed, no content/ import
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function expectRejects(promise, message) {
     let rejected = false;

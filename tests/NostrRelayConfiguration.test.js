@@ -1,6 +1,7 @@
-import { readFile } from 'node:fs/promises';
 
 import { NostrRelayConfiguration, isValidNostrRelayUrl, DEFAULT_NOSTR_RELAY_URL } from '../core/NostrRelayConfiguration.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.369 — Nostr Relay Configuration Boundary.
 // See docs/Roadmap.md, "0.9.369 — Nostr Relay Configuration Boundary," and
@@ -24,19 +25,10 @@ import { NostrRelayConfiguration, isValidNostrRelayUrl, DEFAULT_NOSTR_RELAY_URL 
 //            extra fields, no shared abstraction with
 //            ArweaveGatewayConfiguration
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function expectThrows(fn, message) {
     let threw = false;
     try { fn(); } catch { threw = true; }
     assert(threw, message);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 async function run() {

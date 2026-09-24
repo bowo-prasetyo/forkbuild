@@ -1,6 +1,7 @@
 import default_ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector, {
     pairDifferenceKey
 } from '../ui/components/reconciliation/EvidenceExportComparisonRecordPairSelector.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.202 — Paired Record Difference Inspection UI.
 //
@@ -34,10 +35,6 @@ import default_ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordP
 //            0.8.199's/0.8.200's own describeXxx() functions, and still
 //            carries no sorting/ranking/verdict vocabulary, even after the
 //            0.8.202 extension.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function candidateOf(claimId) {
     return Object.freeze({ type: 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT', claimId });

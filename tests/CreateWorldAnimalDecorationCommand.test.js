@@ -3,6 +3,7 @@ import { Position } from '../core/Position.js';
 import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
 import { CreateWorldAnimalDecorationCommand } from '../application/commands/CreateWorldAnimalDecorationCommand.js';
 import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.702 — World Animal Decorations, application/commands/
 // CreateWorldAnimalDecorationCommand.js. The direct structural twin of
@@ -14,10 +15,6 @@ import { CreateCommandRegistryUseCase } from '../application/editor/CreateComman
 //   Section C: worldId mismatch guard
 //   Section D: toJSON()/fromJSON() serialization
 //   Section E: registered in CreateCommandRegistryUseCase's registry
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function runTests() {
     // -------------------------------------------------------------

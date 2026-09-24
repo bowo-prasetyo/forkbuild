@@ -1,9 +1,9 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import WorldEncounterCanvasModule from '../ui/components/WorldEncounterCanvas.js';
 import { materializedSnapshotWorldOrigin } from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
 import { worldEncounterCanvasFiles, publicationsPageFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.516 — World View / Wanderer Product Experience Reassessment.
 //
@@ -69,9 +69,6 @@ import { worldEncounterCanvasFiles, publicationsPageFiles, ownPublicationPanelFi
 const SOURCE_ROOT = new URL('../', import.meta.url);
 const SOURCE_ROOT_PATH = SOURCE_ROOT.pathname;
 
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 function codeOnly(src) {
     return src.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }

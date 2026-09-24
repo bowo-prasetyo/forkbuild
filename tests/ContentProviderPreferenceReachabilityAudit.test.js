@@ -1,5 +1,7 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.300 — Content Provider Preference Reachability Audit.
 //
@@ -67,14 +69,7 @@ import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js'
 // - **No change to any concrete store, the resolver, or
 //   `RoleProviderPreferenceStore`.**
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 function normalizeComment(text) {
     return text.replace(/^\s*\/\/\s?/gm, '').replace(/\s+/g, ' ');

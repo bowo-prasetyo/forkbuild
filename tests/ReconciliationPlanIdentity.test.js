@@ -2,6 +2,7 @@ import {
     PublisherLeaderboardClaimSnapshotReconciliationPlanIdentityAlgorithm,
     describePublisherLeaderboardClaimSnapshotReconciliationPlanIdentity
 } from '../application/claimSnapshotReconciliation/PlanIdentity.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.160 — Explicit Reconciliation Plan Identity Projection.
 //
@@ -23,10 +24,6 @@ import {
 //            hand-rolled implementation, not merely self-consistency
 // Section J: architectural boundary — no imports but core/Sha256.js, no reconstructXxx(), no
 //            candidate-selection/verification/decision/archive vocabulary
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const HEX64_PATTERN = /^[0-9a-f]{64}$/;
 

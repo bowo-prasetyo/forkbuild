@@ -7,21 +7,15 @@ import {
 } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 import { WorldEncounterMaterialIdentityVerifier } from '../application/worldEncounter/WorldEncounterMaterialIdentityVerifier.js';
 import { WorldEncounterMaterialSignatureVerifier } from '../application/worldEncounter/WorldEncounterMaterialSignatureVerifier.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.42 — World Encounter Material Verification Composition.
 // See docs/Roadmap.md, "0.9.42 — World Encounter Material Verification Composition."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function selectionOf({ kind = WorldEncounterKind.PUBLICATION, objectId = 'P123', origin = 'decentralized:nostr' } = {}) {
     return Object.freeze({ kind, objectId, origin });
@@ -42,14 +36,6 @@ class FakeVerifier extends WorldEncounterMaterialVerifier {
         this.calls += 1;
         return this.outcome;
     }
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function buildRealSigner(username) {

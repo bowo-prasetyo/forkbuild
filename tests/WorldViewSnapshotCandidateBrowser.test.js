@@ -7,6 +7,7 @@ import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnaps
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.151 — World View Snapshot Candidate Browser.
 //
@@ -44,10 +45,6 @@ import { worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/S
 //            Nostr/ContentStore/crypto/Arweave directly, and
 //            WorldView.js/ui/main.js wire the new command the same way
 //            every sibling capability in this family already is.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));

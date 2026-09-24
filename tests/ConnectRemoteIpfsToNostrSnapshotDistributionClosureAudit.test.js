@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { IpfsRemotePublicationCoordinator } from '../application/ipfs/IpfsRemotePublicationCoordinator.js';
 import { IpfsRemotePublicationState } from '../application/ipfs/IpfsRemotePublicationState.js';
@@ -9,6 +8,7 @@ import { executeSnapshotDistributionCommand } from '../application/snapshot/Snap
 import { IpfsPublicationRecord, IpfsPublicationMethod } from '../application/ipfs/IpfsPublicationRecord.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.663 — Connect Remote IPFS to Nostr Snapshot Distribution — Closure
 // Audit.
@@ -60,11 +60,6 @@ function assert(condition, message) {
 }
 function n(message) {
     return `${assertionCount + 1}. ${message}`;
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 // Mirrors tests/RemoteIpfsDistributionIntegrationBoundaryAudit.test.js's own

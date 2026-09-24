@@ -20,6 +20,9 @@ import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { readFile } from 'node:fs/promises';
 import { worldEncounterCanvasFiles, worldViewFiles, worldViewTemplateFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.290 — Publication Commentary Cross-Surface Convergence Audit.
 //
@@ -51,10 +54,6 @@ import { worldEncounterCanvasFiles, worldViewFiles, worldViewTemplateFiles, ownP
 //
 // Sections A-L below map directly onto this milestone's own brief.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 // ---------------------------------------------------------------------
 // A StorageProvider that proxies a SHARED backing Map, passed in at
 // construction — the honest Node-runnable analog of two independently
@@ -76,14 +75,6 @@ class SharedNamespaceStorageProvider extends StorageProvider {
     load(name) { return this._backing.has(name) ? JSON.parse(JSON.stringify(this._backing.get(name))) : null; }
     remove(name) { this._backing.delete(name); }
     list() { return Array.from(this._backing.keys()); }
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeDocument(title, author) {
@@ -216,10 +207,6 @@ function cardCtx(overrides = {}) {
     };
 }
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 async function codeOnlySource(relativePath) {
     const text = await rawSource(relativePath);
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');

@@ -1,14 +1,11 @@
 import { readFile } from 'node:fs/promises';
 import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.26 — Decentralized World Discovery Lead Registry.
 //
 // See docs/Roadmap.md, "0.9.26 — Decentralized World Discovery Lead
 // Registry," for the full milestone story.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function leadOf(overrides = {}) {
     return {

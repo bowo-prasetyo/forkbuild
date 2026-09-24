@@ -8,6 +8,7 @@ import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { VehiclePresence } from '../core/VehiclePresence.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { Position } from '../core/Position.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.81 — Vehicle Dismount Destination Clearance, core/AvatarVehicleDismountClearance.js.
 //
@@ -32,10 +33,6 @@ import { Position } from '../core/Position.js';
 // beyond composing core/AvatarTreeCollision.js's own existing
 // avatarCollisionCircleAt()/avatarTreeCollision() primitives. See
 // docs/Roadmap.md, 0.9.81.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, message) {
     let threw = false;

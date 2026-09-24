@@ -1,6 +1,7 @@
 import { BitcoinAnchorTransactionBuilder } from '../anchoring/BitcoinAnchorTransactionBuilder.js';
 import { BitcoinAnchorPsbtBuilder } from '../anchoring/BitcoinAnchorPsbtBuilder.js';
 import { BitcoinAnchorPsbtSerializer } from '../anchoring/BitcoinAnchorPsbtSerializer.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.49 — Real BIP-174 PSBT Serialization.
 //
@@ -39,10 +40,6 @@ import { BitcoinAnchorPsbtSerializer } from '../anchoring/BitcoinAnchorPsbtSeria
 //              rejected rather than silently misread.
 //
 // See docs/Principles.md, "Real Bytes Are Still Not A Signature (0.8.49)."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

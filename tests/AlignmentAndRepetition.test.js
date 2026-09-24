@@ -32,8 +32,8 @@ import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase
 import { ReplayDocumentUseCase } from '../application/document/ReplayDocumentUseCase.js';
 import { RestoreHistoryStateUseCase } from '../application/document/RestoreHistoryStateUseCase.js';
 import { WorldPosition } from '../core/WorldPosition.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
+import { assert } from './support/Assert.js';
 
 // 0.4.9 — Alignment, Snapping & Repetition.
 //
@@ -76,9 +76,6 @@ import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 //              -> import -> place — the full 0.4.x creation chain, one
 //              more time, over freshly REPEATED content
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 function close(actual, expected, message) {
     assert(Math.abs(actual - expected) < 1e-9, `${message}: expected ${expected}, got ${actual}`);
 }
@@ -87,14 +84,6 @@ const stubLayoutProvider = {
     getPosition: () => new WorldPosition(0, 0, 0),
     findVisibleDocuments: () => []
 };
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function createWorldWithBricks(specs, worldId, buildingId) {
     const world = new World(worldId ? { id: worldId } : undefined);

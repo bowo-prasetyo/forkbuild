@@ -11,8 +11,9 @@ import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlac
 import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.320 — Explicit Place Naming Publication Action.
 // See docs/Roadmap.md, "0.9.320 — Explicit Place Naming Publication
@@ -57,10 +58,6 @@ import { worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
 //              ui/components/PlaceNamingPanel.js actually contain the
 //              wiring every section above assumes
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 async function flushMicrotasks() {
     for (let i = 0; i < 10; i++) {
         await Promise.resolve();
@@ -72,14 +69,6 @@ const SOURCE_ROOT = new URL('../', import.meta.url);
 async function codeOnlySource(relativePath) {
     const text = await readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function makeIdentity(label) {

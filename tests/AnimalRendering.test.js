@@ -5,6 +5,7 @@ import { AnimalFieldRenderer } from '../renderer/AnimalFieldRenderer.js';
 import { AnimalPresence } from '../core/AnimalPresence.js';
 import { Position } from '../core/Position.js';
 import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.701 — Released Animal Rendering.
 //
@@ -25,10 +26,6 @@ import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
 //
 // No real WebGL/<canvas> anywhere — the same posture
 // tests/VehicleRendering.test.js's own header already establishes.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function countMeshes(object3D) {
     let count = 0;

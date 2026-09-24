@@ -13,6 +13,7 @@ import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.153 — Selected Snapshot Resolution End-to-End Audit.
 //
@@ -98,10 +99,6 @@ import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 //            identical resolved Snapshot attributed against A's hash
 //            reports NO_MATCH — proving selection materially changes the
 //            answer, not merely the label on an unchanged result.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));

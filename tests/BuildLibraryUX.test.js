@@ -11,6 +11,7 @@ import { EditorSession } from '../application/editor/EditorSession.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { Brick } from '../core/Brick.js';
 import { BrickRenderer } from '../renderer/BrickRenderer.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.84 — Building Library & Palette UX.
 //
@@ -47,10 +48,6 @@ import { BrickRenderer } from '../renderer/BrickRenderer.js';
 //              a brick never touches the active tool or opens a
 //              document; forking a structure never touches the active
 //              brick or the active tool
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const stubIdentityProvider = {
     currentUser: () => ({ username: 'alice', displayName: 'alice', providerId: 'stub' })

@@ -16,6 +16,7 @@ import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { worldEncounterCanvasFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.145 — End-to-End Snapshot Attribution Audit.
 //
@@ -104,10 +105,6 @@ import { worldEncounterCanvasFiles, ownPublicationPanelFiles } from './support/S
 //            vocabulary, the resolver carries no Publication/ownership
 //            vocabulary, and distribution remains a separate command
 //            path from discovery/attribution in both directions.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));

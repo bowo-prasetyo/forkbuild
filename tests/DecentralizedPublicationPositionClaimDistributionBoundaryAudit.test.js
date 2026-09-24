@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { resolveSnapshotWorldPositionClaim } from '../application/snapshot/placement/SnapshotWorldPositionClaim.js';
 import { SnapshotWorldPositionClaimOutcome } from '../application/snapshot/placement/SnapshotWorldPositionClaimOutcome.js';
@@ -8,6 +7,8 @@ import { ArweaveSnapshotDiscoveryPublisher } from '../application/arweave/Arweav
 import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
 import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
 import { worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.565 — Decentralized Publication Position Claim Distribution Boundary
 // Audit.
@@ -82,15 +83,6 @@ import { worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles, 
 //       strong structural evidence the gap is upstream wiring, not a
 //       missing subsystem.
 //   I — Classification and the smallest closing seam, named precisely.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 function freezePosition(x, y, z) {
     return Object.freeze({ x, y, z });

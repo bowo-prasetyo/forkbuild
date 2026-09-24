@@ -5,7 +5,6 @@ import { Group } from '../core/Group.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
@@ -22,6 +21,8 @@ import {
     DocumentOperationRejectionReason
 } from '../application/document/DocumentCommandPropagationUseCase.js';
 import { RemoteDocumentOperationApplicationUseCase } from '../application/document/RemoteDocumentOperationApplicationUseCase.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.225 — Concurrent Document Operation Behavior Audit.
 //
@@ -69,17 +70,6 @@ import { RemoteDocumentOperationApplicationUseCase } from '../application/docume
 // for whichever document is that replica's CURRENT target right now
 // (never a Map of every document ever seen) — the same "one document
 // open at a time" characterization 0.9.224 named for the real Editor.
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function wait(ms = 0) {
     return new Promise((resolve) => setTimeout(resolve, ms));

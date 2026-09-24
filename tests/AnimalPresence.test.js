@@ -1,13 +1,10 @@
 import { AnimalPresence, isValidAnimalSpecies } from '../core/AnimalPresence.js';
 import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
 import { Position } from '../core/Position.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.700 — Animal Presence Descriptor, core/AnimalPresence.js.
 // Mirrors tests/VehiclePresence.test.js's own shape.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function runTests() {
     assert(isValidAnimalSpecies(ANIMAL_SPECIES.DEER) && isValidAnimalSpecies(ANIMAL_SPECIES.RABBIT), '1. both real species are valid');

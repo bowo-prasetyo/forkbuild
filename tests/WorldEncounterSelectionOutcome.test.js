@@ -7,14 +7,8 @@ import {
 import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
 import { describeLocalWorldDiscoverySource } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 function peerSourceOf(origin, { publications = [], placements = [], avatarProfiles = [], avatarPresences = [] } = {}) {
     return describeWorldDiscoverySource({ origin, publications, placements, avatarProfiles, avatarPresences });

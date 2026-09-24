@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
@@ -8,7 +7,6 @@ import { Building } from '../core/Building.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
 import { LoadFailureReason } from '../application/document/LoadFailureReason.js';
 import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
@@ -21,6 +19,9 @@ import { CanCommentOnPublicationUseCase } from '../application/publication/CanCo
 import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.559 — Publication Discovery-to-Work Continuity Product Reassessment.
 //
@@ -61,10 +62,6 @@ import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNaviga
 // established restraint (0.9.555 F/G, 0.9.556 D, 0.9.553 H) is to name
 // such gaps rather than expand scope to fix them.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function assertThrows(fn, messageIncludes, description) {
     try {
         fn();
@@ -73,19 +70,6 @@ function assertThrows(fn, messageIncludes, description) {
         return;
     }
     throw new Error(`ASSERT FAILED: ${description} — expected a throw, got none.`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 // Mirrors tests/KnownPublicationEncounterContinuation.test.js's own

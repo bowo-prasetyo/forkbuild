@@ -1,5 +1,7 @@
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryRevalidationDifference } from '../application/claimSnapshotReconciliation/decision/HistoryRevalidationDifferenceView.js';
 import { featureImportLines } from './support/SharedHelperImports.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.159 — Reconciliation Decision History Revalidation Difference
 // Projection.
@@ -37,14 +39,6 @@ import { featureImportLines } from './support/SharedHelperImports.js';
 //            0.8.149), no archive/plan-reconstruction/candidate-selection/
 //            decision-generation import, no state-machine vocabulary, no
 //            reconstructXxx() entry point
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function genuineDecisionRecord(candidate, decision, decidedAt) {
     return Object.freeze({ decided: true, candidate: Object.freeze(candidate), decision, decidedAt: decidedAt.toISOString() });

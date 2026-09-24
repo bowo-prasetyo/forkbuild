@@ -16,6 +16,7 @@ import { Position } from '../core/Position.js';
 import { PreviewState } from '../application/editor-state/PreviewState.js';
 import { EventBus } from '../core/events/EventBus.js';
 import { EditorEvent } from '../core/events/EditorEvent.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.76 — World Ground & Terrain Foundation.
 //
@@ -33,10 +34,6 @@ import { EditorEvent } from '../core/events/EditorEvent.js';
 // determinism, continuity, boundedness, and streaming correctness —
 // properties that hold regardless of how the noise function itself is
 // tuned.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function runTests() {
     // -------------------------------------------------------------

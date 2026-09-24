@@ -1,6 +1,5 @@
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
 import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
@@ -14,6 +13,8 @@ import {
     describeSnapshotMaterializationHistoryEntry,
     describeSnapshotMaterializationHistoryDetails
 } from '../application/snapshot/materialization/SnapshotMaterializationHistoryDetailView.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.8.44 — Explicit Snapshot Acquisition Attempt Inspection.
 //
@@ -45,18 +46,6 @@ import {
 // See docs/Principles.md, "Materialization History Describes Byte
 // Acquisition, Not Source Trust (0.8.38)" and "Current Snapshot Possession
 // Is Independent Of How The Snapshot Was Acquired (0.8.43)."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 // The identical evaluative-vocabulary scan tests/
 // PublicationSnapshotAcquisitionView.test.js's own

@@ -26,6 +26,7 @@ import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase
 import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.92 — World Instance Transform UX.
 //
@@ -61,9 +62,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //              source Document and documentId/placementId are untouched
 //              by any of it; save/reload preserves everything.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 function close(actual, expected, message) {
     assert(Math.abs(actual - expected) < 1e-9, `${message}: expected ${expected}, got ${actual}`);
 }

@@ -10,6 +10,7 @@ import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placemen
 import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
 import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.134 — Snapshot Retrieval from Decentralized Discovery.
 //
@@ -70,10 +71,6 @@ import { mainFiles } from './support/SourceFileGroups.js';
 //   Section SEQUENCE — the flagship scenario: create a snapshot, place it
 //     on Arweave, publish discovery to Nostr, resolve it end to end via
 //     ONE call — then break each of the four layers independently.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function expectThrows(fn, message) {
     let threw = false;

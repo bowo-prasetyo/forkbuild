@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import NotificationHistoryPanel from '../ui/components/NotificationHistoryPanel.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
@@ -24,6 +23,10 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.286 — Notification End-to-End Lifecycle Audit.
 //
@@ -110,14 +113,8 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 // See docs/Roadmap.md, 0.9.286, for the full milestone entry, and
 // docs/Principles.md for the invariant Section O closes.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
+
 async function codeOnlySource(relativePath) {
     const text = await rawSource(relativePath);
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
@@ -144,14 +141,6 @@ async function grepCount(pattern, dirs, { excludeSuffix = null } = {}) {
 // pattern than production actually uses.
 // ---------------------------------------------------------------------
 
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
 // Fails writes to exactly one named storage key while every other key
 // (routed through the SAME underlying instance) keeps succeeding — lets
 // Sections J and M fail one specific collaborator's persistence without
@@ -170,13 +159,6 @@ class PartiallyFailingStorageProvider extends StorageProvider {
     load(name) { return this._inner.load(name); }
     remove(name) { return this._inner.remove(name); }
     list() { return this._inner.list(); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 // Deliberately never authenticated — createLocalIdentity() alone leaves

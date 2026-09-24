@@ -6,6 +6,8 @@ import {
 } from '../application/claimSnapshotReconciliation/revalidationObservation/CandidateCorrespondenceView.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { featureImportLines } from './support/SharedHelperImports.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.171 — Revalidation Observation Candidate Correspondence Projection.
 //
@@ -27,14 +29,6 @@ import { featureImportLines } from './support/SharedHelperImports.js';
 // Section J: malformed input tolerance
 // Section K: determinism, and reconstruct()'s archive-reading boundary
 // Section L: vocabulary/import boundary
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function genuineDecisionRecord(candidate, decision, decidedAt) {
     return Object.freeze({ decided: true, candidate: Object.freeze(candidate), decision, decidedAt: decidedAt.toISOString() });

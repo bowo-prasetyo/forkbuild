@@ -1,6 +1,4 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { Publication } from '../publisher/Publication.js';
@@ -9,7 +7,6 @@ import { PublishDocumentUseCase } from '../application/publication/PublishDocume
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
@@ -28,6 +25,8 @@ import { BitcoinAnchorEvidenceView } from '../anchoring/BitcoinAnchorEvidenceVie
 import { ArweaveAnchorEvidenceView } from '../anchoring/ArweaveAnchorEvidenceView.js';
 import { BaseAnchorEvidenceView } from '../anchoring/BaseAnchorEvidenceView.js';
 import { stylesheetFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.526 — Publication Creation & Distribution Trust Product
 // Reassessment.
@@ -106,10 +105,6 @@ function n(message) {
     return `${assertionCount + 1}. ${message}`;
 }
 
-const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
-async function source(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
 function codeOnly(text) {
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
@@ -133,14 +128,6 @@ function gatewayResponse(body, { status = 200 } = {}) {
 // system actually established — every hit below is manually reasoned
 // through in the section that finds it, never auto-flagged as a failure.
 const OVERCLAIM_WORDS = /\b(verified|trusted|permanent(?:ly)?|authentic|owned|official(?:ly)?|secured|confirmed|guaranteed)\b/i;
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function makeFakePublication(id, overrides = {}) {
     const record = { id, documentId: `doc-${id}`, contentHash: `hash-${id}`, signature: `sig-${id}`, ...overrides };

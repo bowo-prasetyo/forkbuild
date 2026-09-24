@@ -11,8 +11,9 @@ import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.98 — Vehicle Mount/Dismount World View Integration.
 //
@@ -54,10 +55,6 @@ import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickReg
 // (ui/components/VehicleInteractionPrompt.js, not exercised here — see
 // that file's own header) that decides nothing about eligibility itself.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 // The exact seed/fixture discipline tests/AvatarVehicleInteractionController.test.js
 // already established: real, deterministically-placed vehicles, found by
 // direct computation rather than guessed at.
@@ -95,14 +92,6 @@ function pressInteractionKeyOnce(controller) {
 // WorldNavigationSession fixture — mirrors
 // tests/AvatarVehicleRuntimeIntegration.test.js exactly, for Section G.
 // -------------------------------------------------------------
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function buildRegistry() {
     const registry = new AvatarTemplateRegistry();

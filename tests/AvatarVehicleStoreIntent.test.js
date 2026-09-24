@@ -3,14 +3,11 @@ import {
     isValidAvatarVehicleStoreIntent,
     deriveAvatarVehicleStoreIntent
 } from '../core/AvatarVehicleStoreIntent.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.670 — Avatar Vehicle Store Intent, core/AvatarVehicleStoreIntent.js.
 // Mirrors tests/AvatarVehicleDismountIntent.test.js's own shape: vocabulary,
 // activation, one-shot consumption, defensive input, purity.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function runTests() {
     const { NONE, STORE } = AvatarVehicleStoreIntent;

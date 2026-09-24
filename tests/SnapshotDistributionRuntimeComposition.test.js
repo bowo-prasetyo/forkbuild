@@ -13,6 +13,7 @@ import { createArweaveInjectedProviderSigner } from '../arweave/ArweaveInjectedP
 import { createNostrInjectedProviderPublisher } from '../nostr/NostrInjectedProviderPublisher.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.137 — Snapshot Distribution Runtime Composition.
 // See docs/Roadmap.md, "0.9.137 — Snapshot Distribution Runtime
@@ -39,10 +40,6 @@ import { mainFiles } from './support/SourceFileGroups.js';
 //   Section I: architectural regression — no browser API, no orchestration
 //              entry point, no summary availability flag, still unwired
 //              into ui/main.js
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

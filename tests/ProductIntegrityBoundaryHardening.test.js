@@ -1,7 +1,8 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.396 — Product Integrity Boundary Hardening.
 //
@@ -64,10 +65,6 @@ function n(message) {
 }
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
-
-async function readSource(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
 
 function listJsFiles(relativeDir) {
     // Real filesystem walk, not a maintained list — `find` is used the

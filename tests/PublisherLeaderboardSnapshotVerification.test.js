@@ -13,6 +13,7 @@ import {
     describePublisherLeaderboardSnapshotVerification,
     verifyPublisherLeaderboardSnapshot
 } from '../application/leaderboard/snapshot/Verification.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.120 — Reproducible Leaderboard Snapshot Verification.
 //
@@ -40,10 +41,6 @@ import {
 // Section J: determinism, purity, zero network, zero mutation
 // Section K: no new trust/score vocabulary; exactly five result fields
 // Section L: describe()/verify() agree over equivalent inputs
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function withoutNetworkAccess(fn) {
     let networkCallOccurred = false;

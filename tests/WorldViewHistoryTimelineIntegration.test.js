@@ -21,6 +21,7 @@ import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.207 — World View History Timeline UI Integration.
 //
@@ -47,10 +48,6 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 // structural read of both new/changed source files confirming that
 // sequence, the id-based stale-selection guard, and the "dumb
 // presentation" boundary are actually there.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, message) {
     try {

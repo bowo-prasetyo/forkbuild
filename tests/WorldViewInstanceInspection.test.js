@@ -7,7 +7,6 @@ import { StructurePlacement } from '../core/StructurePlacement.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { StructureDocumentResolver } from '../application/editor/StructureDocumentResolver.js';
@@ -25,6 +24,8 @@ import { PlacementMeshRegistry } from '../renderer/PlacementMeshRegistry.js';
 import { SpatialSelectionRenderer } from '../renderer/SpatialSelectionRenderer.js';
 import { TransformMath } from '../application/editor/TransformMath.js';
 import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.2.93 — World View Instance Inspection.
 //
@@ -62,18 +63,6 @@ import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.
 //              touches the World document, the placement, or command
 //              history — selection in World View is purely local UI
 //              state.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function buildOneBrickWorld(position = new Position(0, 0.5, 0)) {
     const world = new World({});

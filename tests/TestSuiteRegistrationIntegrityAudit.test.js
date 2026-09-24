@@ -1,7 +1,8 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.399 — Test-Suite Registration Integrity Audit.
 //
@@ -79,10 +80,6 @@ function n(message) {
 }
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
-
-async function readSource(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
 
 // ===================================================================
 // Section B's parser, defined up front so Sections B, C, and D (which

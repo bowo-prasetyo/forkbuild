@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import NotificationHistoryPanel from '../ui/components/NotificationHistoryPanel.js';
@@ -13,7 +12,6 @@ import { NotificationEvent } from '../core/NotificationEvent.js';
 import { GetRecipientNotificationEventsUseCase } from '../application/chat/GetRecipientNotificationEventsUseCase.js';
 import { notificationDeduplicationIdentity } from '../core/NotificationDeduplicationPolicy.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -24,6 +22,10 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.285 — Wire Publication Commentary Notification Producer.
 //
@@ -91,14 +93,8 @@ import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFil
 //
 // See docs/Roadmap.md, 0.9.285, for the full milestone entry.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
+
 async function codeOnlySource(relativePath) {
     const text = await rawSource(relativePath);
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
@@ -141,14 +137,6 @@ async function grepCount(pattern, dirs, { excludeSuffix = null } = {}) {
 // Fixtures
 // ---------------------------------------------------------------------
 
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
 // Wraps a real InMemoryStorageProvider but fails writes to one specific
 // storage key only — used by Section J to fail the notification write
 // SPECIFICALLY while the Commentary write, through the exact same shared
@@ -169,13 +157,6 @@ class PartiallyFailingStorageProvider extends StorageProvider {
     load(name) { return this._inner.load(name); }
     remove(name) { return this._inner.remove(name); }
     list() { return this._inner.list(); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 function makeDocument(title, author) {

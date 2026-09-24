@@ -19,31 +19,24 @@ import { RotateBrickCommand } from '../application/commands/RotateBrickCommand.j
 import { DeleteBrickCommand } from '../application/commands/DeleteBrickCommand.js';
 import { CompositeCommand } from '../application/commands/CompositeCommand.js';
 import { CreateGroupCommand } from '../application/commands/CreateGroupCommand.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { LocalContentStore } from '../content/LocalContentStore.js'; // Add import at top
 import { LoadPublishedSnapshotUseCase } from '../application/snapshot/LoadPublishedSnapshotUseCase.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // ---------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
+
 const stubIdentityProvider = {
     currentUser: () => ({ username: 'alice', displayName: 'alice', providerId: 'stub' }),
     sign: (data) => ({ signedBy: 'alice', providerId: 'stub', data })
 };
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
+
 function createTestDocument(brickCount = 3) {
     const world = new World();
     const building = new Building({ creator: 'tester' });

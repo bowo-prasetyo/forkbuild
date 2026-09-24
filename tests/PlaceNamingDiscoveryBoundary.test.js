@@ -2,6 +2,7 @@ import { PlaceNamingDiscoveryQueryService } from '../application/placeNaming/Pla
 import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNaming/DiscoverPlaceNamingClaimsCommand.js';
 import { composePlaceNamingDiscoveryRuntime } from '../application/placeNaming/PlaceNamingDiscoveryRuntimeComposition.js';
 import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.253 — Place Naming Discovery Boundary.
 // See docs/Roadmap.md, "0.9.253 — Place Naming Discovery Boundary."
@@ -13,10 +14,6 @@ import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvel
 //            roster, and composing over real sources
 // Section D: CAPSTONE — a discovery candidate is a candidate, never
 //            adopted, never placed, never ranked
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

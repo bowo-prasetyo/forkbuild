@@ -1,16 +1,13 @@
 import { animalPresenceInRegion } from '../core/AnimalPlacement.js';
 import { wildlifeInRegion, WILDLIFE_FEATURE_TYPE } from '../core/WildlifeField.js';
 import { AnimalPresence } from '../core/AnimalPresence.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.700 — Animal Placement Adapter, core/AnimalPlacement.js.
 //
 //   Section A: wraps wildlifeInRegion() into real AnimalPresence objects
 //   Section B: deterministic — same call, same result
 //   Section C: agrees with wildlifeInRegion() exactly (id, species, position)
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const SEED = 29;
 

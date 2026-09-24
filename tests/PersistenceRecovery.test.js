@@ -21,27 +21,18 @@ import { PublishDocumentUseCase } from '../application/publication/PublishDocume
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { computeContentHash } from '../serializer/contentHash.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // ---------------------------------------------------------------------
 // Helpers & stubs
 // ---------------------------------------------------------------------
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 const stubIdentityProvider = {
     currentUser: () => ({ username: 'alice', displayName: 'alice', providerId: 'stub' }),
     sign: (data) => ({ signedBy: 'alice', providerId: 'stub', data })
 };
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 function assertThrows(fn, expectedMessage, message) {
     try { fn(); assert(false, message); }
     catch (e) { assert(e.message.includes(expectedMessage), `${message}: ${e.message}`); }

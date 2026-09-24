@@ -1,5 +1,4 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { PeerConnectionState } from '../peer/PeerConnectionState.js';
 import { LocalRendezvousNetwork } from '../peer/LocalRendezvousNetwork.js';
 import { RendezvousDiscoveryProvider } from '../peer/RendezvousDiscoveryProvider.js';
@@ -7,6 +6,8 @@ import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvid
 import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
 import { PeerSessionManager } from '../application/peer/PeerSessionManager.js';
 import { FindPeerUseCase } from '../application/peer/FindPeerUseCase.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // Two pieces of state ui/views/PeerConnectionsView.js used to keep on its
 // own, and lose on every remount, now read from app-wide objects instead:
@@ -20,18 +21,6 @@ import { FindPeerUseCase } from '../application/peer/FindPeerUseCase.js';
 //     one inbound connection consumes it (one publication answers at most
 //     one — see publishSelf()'s own header), it closes, it expires, or
 //     stopPublishing() withdraws it.
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function wait(ms = 30) {
     return new Promise((resolve) => setTimeout(resolve, ms));

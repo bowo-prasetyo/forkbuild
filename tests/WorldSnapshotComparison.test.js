@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { compareSnapshotWorldPublications, WorldSnapshotContentComparison } from '../application/snapshot/WorldSnapshotComparison.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.181 — World Snapshot Comparison.
 //
@@ -29,10 +30,6 @@ import { compareSnapshotWorldPublications, WorldSnapshotContentComparison } from
 //   Section K: structural audit — no discovery/retrieval/materialization/
 //              registry calls, no new World Encounter kind, no ranking/
 //              trust/duplicate-detection vocabulary.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function descriptor(overrides = {}) {
     return Object.freeze({

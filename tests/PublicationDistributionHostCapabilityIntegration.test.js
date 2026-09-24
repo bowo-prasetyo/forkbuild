@@ -13,6 +13,7 @@ import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.121 — Publication Distribution Host Capability Integration.
 //
@@ -43,10 +44,6 @@ import { Signature } from '../core/Signature.js';
 //   Section D: source audit — ui/main.js's own new wiring never
 //              reimplements any wallet/relay/upload/signing/publishing
 //              algorithm itself
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 // The real chain this file exercises includes crypto.subtle.digest() calls
 // (inside arweave/ArweaveInjectedProviderSigner.js), which round-trip

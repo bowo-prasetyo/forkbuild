@@ -8,6 +8,7 @@ import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discover
 import { describeDecentralizedWorldDiscoveryLead } from '../core/DecentralizedWorldDiscoveryLead.js';
 import { composeWorldEncounterLeadAssociationsQuery } from '../application/worldEncounter/WorldEncounterLeadAssociationsQueryComposition.js';
 import { worldEncounterCanvasFiles, worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // Connects WorldEncounterCanvas's "Location" / "Choose Location" panel to
 // real association evidence.
@@ -37,10 +38,6 @@ import { worldEncounterCanvasFiles, worldViewFiles, mainFiles } from './support/
 //            query degrades to UNAVAILABLE without breaking selection.
 // Section H: production wiring — main.js shares one provider between the
 //            command and the query; WorldView injects and binds it.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function flush() {
     return new Promise((resolve) => setTimeout(resolve, 0));

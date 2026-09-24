@@ -8,6 +8,7 @@ import {
     comparePublicationObservationArchiveFingerprint
 } from '../application/publication/observationArchive/PublicationObservationArchiveFingerprintComparison.js';
 import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.85 — Explicit Publication Archive Fingerprint Comparison.
 //
@@ -39,10 +40,6 @@ import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anch
 //              trimmed, nothing more
 //   Section J: no mutation, no network, no capability access, determinism
 //   Section K: no verification/trust vocabulary anywhere near the result
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const O = PublicationObservationArchiveProvenanceOrigin;
 const R = PublicationObservationArchiveFingerprintComparisonResult;

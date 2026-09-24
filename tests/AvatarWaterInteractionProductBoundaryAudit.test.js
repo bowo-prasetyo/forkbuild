@@ -5,7 +5,6 @@ import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLib
 import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 
 import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { surfaceCategoryAt, SURFACE_CATEGORY, WATER_LEVEL } from '../core/TerrainSurface.js';
@@ -14,6 +13,8 @@ import { hydrologyFeatureAt, HYDROLOGY_FEATURE, LAKE_SURFACE_HEIGHT, isRiverAt, 
 import { buildWaterTileMesh } from '../renderer/WaterTileMesh.js';
 import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
 import { deriveSpatialContext } from '../core/WorldSpatialContext.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.613 — Avatar-Water Interaction Product Boundary Audit.
 //
@@ -72,18 +73,6 @@ import { deriveSpatialContext } from '../core/WorldSpatialContext.js';
 // exactly as this audit's own classification said they would remain. See
 // tests/AvatarBasicWaterSurfaceConstraint.test.js for the dedicated
 // coverage of what 0.9.615 actually closes.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function buildAvatarStack(registry, username) {
     const storage = new InMemoryStorageProvider();

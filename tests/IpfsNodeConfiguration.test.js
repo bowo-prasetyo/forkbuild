@@ -1,13 +1,10 @@
 import { IpfsNodeConfiguration, isValidIpfsNodeApiUrl, DEFAULT_IPFS_NODE_API_URL } from '../core/IpfsNodeConfiguration.js';
+import { assert } from './support/Assert.js';
 
 // User-Configurable IPFS Node API URL Boundary.
 // Mirrors tests/IpfsGatewayConfiguration.test.js's own structure, one field
 // instead of a gatewayUrl(s) list — content/IpfsContentStore.js only ever
 // talks to a single Kubo node per instance.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

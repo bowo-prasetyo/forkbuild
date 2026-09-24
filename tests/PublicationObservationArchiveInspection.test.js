@@ -13,6 +13,7 @@ import {
     PublicationObservationArchiveInspectionOutcome,
     inspectPublicationObservationArchive
 } from '../application/publication/observationArchive/PublicationObservationArchiveInspection.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.86 — Non-Replacing External Publication Archive Inspection.
 //
@@ -49,10 +50,6 @@ import {
 //   Section L: no trust/verdict vocabulary anywhere in the outcome enum
 //   Section M: both a raw JSON string and an already-parsed value are
 //              accepted
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const O = PublicationObservationArchiveProvenanceOrigin;
 

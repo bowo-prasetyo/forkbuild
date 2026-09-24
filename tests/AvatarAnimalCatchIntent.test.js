@@ -3,13 +3,10 @@ import {
     isValidAvatarAnimalCatchIntent,
     deriveAvatarAnimalCatchIntent
 } from '../core/AvatarAnimalCatchIntent.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.700 — Avatar Animal Catch Intent, core/AvatarAnimalCatchIntent.js.
 // Mirrors tests/AvatarVehicleStoreIntent.test.js's own shape.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function runTests() {
     const { NONE, CATCH } = AvatarAnimalCatchIntent;

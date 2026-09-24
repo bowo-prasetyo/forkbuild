@@ -11,6 +11,7 @@ import { SnapshotPublicationAttributionOutcome } from '../application/snapshot/S
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { ownPublicationPanelSource } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.157 — Snapshot Candidate Interaction Completion Audit.
 //
@@ -99,10 +100,6 @@ import { ownPublicationPanelSource } from './support/SourceFileGroups.js';
 //            unrelated, deliberately invalid), driven end to end through
 //            the real UI actions, with every invariant proven in Sections
 //            A-H holding simultaneously in one run.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));

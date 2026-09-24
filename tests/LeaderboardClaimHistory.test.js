@@ -22,9 +22,10 @@ import {
     describePublisherLeaderboardClaimHistory
 } from '../application/leaderboard/claim/HistoryView.js';
 import { PublicationObservationArchiveProvenanceOrigin } from '../application/publication/observationArchive/PublicationObservationArchiveProvenance.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { assert } from './support/Assert.js';
+import { makeIdentity } from './support/TestIdentity.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.123 — Signed Leaderboard Claim Archive.
 //
@@ -46,25 +47,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //            no trusted/valid/current/authoritative/verified/score/rank
 //            vocabulary anywhere in its output
 // Section G: no archive touching; determinism; zero network access
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
-}
 
 async function withoutNetworkAccess(fn) {
     let networkCallOccurred = false;
@@ -130,10 +112,6 @@ function buildSharedArchive() {
     archive = associationUseCase.execute(archive, { publisherId: 'Dave', publicationIdentity: identityC, createdAt: CREATED_AT.daveC });
 
     return archive;
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
 }
 
 function signedClaimFor(identityProvider, verifier, archive) {

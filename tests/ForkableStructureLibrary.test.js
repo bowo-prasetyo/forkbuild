@@ -11,6 +11,7 @@ import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { BrickRenderer } from '../renderer/BrickRenderer.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.81 — Forkable Structure Library.
 //
@@ -42,10 +43,6 @@ import { BrickRenderer } from '../renderer/BrickRenderer.js';
 //              the fork -> save -> reload -> fork stays modified ->
 //              the ORIGINAL Village House (and a second, independent
 //              fork taken afterward) remain byte-for-byte unaffected
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 // 0.4.4 (Village Library Expansion) grew this list from six to twenty —
 // tests/VillageLibraryExpansion.test.js is the flagship coverage for the

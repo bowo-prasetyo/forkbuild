@@ -13,9 +13,10 @@ import {
 } from '../application/leaderboard/claim/HistoryTimelineView.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
+import { assert } from './support/Assert.js';
+import { makeIdentity } from './support/TestIdentity.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.129 — Claim History Timeline Projection.
 //
@@ -37,10 +38,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // Section L: vocabulary boundary — no trust/verification/scoring/ranking
 //            vocabulary anywhere in the result or either function's source
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 // 0.8.130 — reconstructPublisherLeaderboardClaimHistoryTimeline() now
 // reads its history from an archive rather than accepting one directly
 // (see application/leaderboard/claim/HistoryTimelineView.js's own
@@ -55,26 +52,7 @@ function archiveFromClaimHistory(history) {
     return archive;
 }
 
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
-}
-
 const NETWORK = 'mainnet';
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 function anchor(archive, letter, txid, createdAt) {
     const useCase = new CreateBitcoinAnchorPublicationRecordUseCase();

@@ -24,6 +24,7 @@ import {
     reconstructAchievementEvidenceExchangeResponse,
     applyAchievementEvidenceExchange
 } from '../application/achievement/AchievementEvidenceExchange.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.118 — Portable Evidence Synchronization Exchange.
 //
@@ -60,10 +61,6 @@ import {
 //              leaderboard are byte-identical to the other's — without
 //              either of those conclusions ever once appearing in an
 //              exchanged message
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function withoutNetworkAccess(fn) {
     let networkCallOccurred = false;

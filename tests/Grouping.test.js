@@ -27,14 +27,11 @@ import { EditorContext } from '../application/editor/EditorContext.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { SelectionUseCase } from '../application/editor/SelectionUseCase.js';
 import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
+import { assert } from './support/Assert.js';
 
 // ---------------------------------------------------------------------
 // Helpers & stubs
 // ---------------------------------------------------------------------
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, expectedMessage, message) {
     try {

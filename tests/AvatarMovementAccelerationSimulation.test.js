@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { resolveMovementSpeed } from '../core/AvatarMovementAccelerationSimulation.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.90 — Vehicle Acceleration Capability: core/AvatarMovementAccelerationSimulation.js,
 // the pure mathematical half (see that file's own header). This suite
@@ -39,10 +40,6 @@ import { resolveMovementSpeed } from '../core/AvatarMovementAccelerationSimulati
 // involved" or "should a rate even apply here" — see
 // core/AvatarMovementAccelerationSimulation.js's own header. See
 // docs/Roadmap.md, 0.9.90 and 0.9.92.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function runTests() {
     // -------------------------------------------------------------

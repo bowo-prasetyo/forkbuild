@@ -5,6 +5,7 @@ import {
     bootstrapWorldDiscoveryRuntime,
     WORLD_DISCOVERY_PEER_PROTOCOL
 } from '../application/discovery/WorldDiscoveryRuntimeBootstrap.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.14 — World Discovery Runtime Bootstrap.
 //
@@ -37,10 +38,6 @@ import {
 //            never silently replaced by a second instance.
 // Section H: architectural regression sweep of
 //            application/discovery/WorldDiscoveryRuntimeBootstrap.js's own source.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function fakePeerMessageBus() {
     const handlersByProtocol = new Map();

@@ -2,6 +2,7 @@ import { AvatarVehicleInteractionController } from '../application/avatar/Avatar
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
 import { Position } from '../core/Position.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.83 — Avatar-Vehicle Mount/Dismount Runtime Integration,
 // application/avatar/AvatarVehicleInteractionController.js.
@@ -31,10 +32,6 @@ import { Position } from '../core/Position.js';
 // core/AvatarVehicleDismountTransition.js (0.9.82) — to a real
 // AvatarPresenceSession and a real, deterministic vehicle field. See
 // docs/Roadmap.md, 0.9.83, for the full milestone story.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function buildAvatarPresenceSession(startPosition) {
     return new AvatarPresenceSession(

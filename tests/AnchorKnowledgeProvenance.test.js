@@ -13,10 +13,11 @@ import { AnchorAcquisitionKind, isValidAnchorAcquisitionKind } from '../applicat
 import { createAnchorKnowledgeRecord, anchorKnowledgeRecordFromJSON, anchorKnowledgeRecordToJSON } from '../application/anchoring/AnchorKnowledgeRecord.js';
 import { LocalAnchorKnowledgeStore } from '../application/anchoring/LocalAnchorKnowledgeStore.js';
 import { describeAnchorKnowledge } from '../application/anchoring/PublicationAnchorKnowledgeView.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.8.17 — Evidence Provenance & Observation Boundary.
 //
@@ -65,29 +66,10 @@ import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 // See docs/Principles.md, "Acquisition Provenance Is Not Evidence Rank
 // (0.8.17)."
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function expectThrows(fn, message) {
     let threw = false;
     try { fn(); } catch (e) { threw = true; }
     assert(threw, message);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
 }
 
 function signAnchor(identityProvider, fields) {

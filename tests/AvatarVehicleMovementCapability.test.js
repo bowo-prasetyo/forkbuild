@@ -26,6 +26,7 @@ import {
     AvatarMovementSteeringCapability,
     isValidAvatarMovementSteeringCapability
 } from '../core/AvatarMovementSteeringCapability.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.84 — Avatar-Vehicle Movement Capability Resolution,
 // core/AvatarVehicleMovementCapability.js.
@@ -107,10 +108,6 @@ import {
 // reuses; BICYCLE/MOTORCYCLE/CAR are each `RATE_LIMITED`, with their own
 // strictly positive, independently chosen radians/second rates — never
 // derived from `movementSpeed`/`acceleration`/`braking` (see Section D).
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function assertThrows(fn, message) {
     let threw = false;

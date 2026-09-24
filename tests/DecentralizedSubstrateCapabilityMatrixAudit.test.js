@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { readdir } from 'node:fs/promises';
 
 import { DiscoveryProvider } from '../discovery/DiscoveryProvider.js';
@@ -27,6 +26,8 @@ import { ExternalProofVerifierRegistry } from '../application/anchoring/External
 import { ExternalAnchorEvidenceViewRegistry } from '../application/anchoring/ExternalAnchorEvidenceViewRegistry.js';
 import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { SnapshotPlacementViewRegistry } from '../application/snapshot/placement/SnapshotPlacementViewRegistry.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.292 — Decentralized Substrate Capability Matrix Audit.
 //
@@ -129,15 +130,7 @@ import { SnapshotPlacementViewRegistry } from '../application/snapshot/placement
 //   `ui/` is touched, read for behavior, or asserted against beyond the
 //   substrate-branching sweep in Section F.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 // Recursively lists every `.js` file under `relativeDir` (excluding
 // `tests/`, which is never part of a production-capability sweep), for the

@@ -10,6 +10,7 @@ import { DecentralizedSnapshotResolver } from '../application/snapshot/Decentral
 import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.136 — Snapshot Distribution Command.
 //
@@ -44,10 +45,6 @@ import { mainFiles } from './support/SourceFileGroups.js';
 //     through executeSnapshotDistributionCommand(), then discover,
 //     resolve, retrieve, and verify it end to end through the already-
 //     existing decentralized Snapshot retrieval path.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function expectRejects(promise, message) {
     let threw = false;

@@ -1,4 +1,4 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 import { applicationFiles } from './support/ApplicationFiles.js';
 import { execSync } from 'node:child_process';
 
@@ -11,6 +11,7 @@ import { TrustStatus } from '../core/TrustObservation.js';
 import { describeTrustStatus } from '../application/avatar/AvatarPresenceLabels.js';
 import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
 import { worldEncounterCanvasFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.521 — Close Remaining Raw Status Rendering Boundaries.
 //
@@ -100,10 +101,6 @@ import { worldEncounterCanvasFiles, worldNavigationSessionFiles } from './suppor
 const SOURCE_ROOT = new URL('../', import.meta.url);
 const SOURCE_ROOT_PATH = SOURCE_ROOT.pathname;
 const PRE_FIX_COMMIT = '6123be9'; // HEAD immediately before this milestone's own changes.
-
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 function sourceAtCommit(commit, relativePath) {
     return execSync(`git show ${commit}:${relativePath}`, { cwd: SOURCE_ROOT_PATH }).toString();

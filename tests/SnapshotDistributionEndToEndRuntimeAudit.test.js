@@ -12,6 +12,7 @@ import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { worldEncounterCanvasFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.139 — Snapshot Distribution End-to-End Runtime & UI Audit.
 //
@@ -115,10 +116,6 @@ import { worldEncounterCanvasFiles, mainFiles } from './support/SourceFileGroups
 // EVERY FILE THIS TEST TOUCHES IS READ-ONLY. This milestone adds no
 // production code — only this test file, its `tests.html` registration,
 // and `docs/Roadmap.md`.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function flushMicrotasks() {
     await new Promise((resolve) => setTimeout(resolve, 0));

@@ -1,7 +1,8 @@
-import { readFile } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { worldEncounterCanvasFiles, worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource } from './support/SourceText.js';
 
 // 0.9.357 — Wire Canonical Publication Discovery Tag into World View.
 //
@@ -29,16 +30,6 @@ import { worldEncounterCanvasFiles, worldViewFiles, mainFiles } from './support/
 // no change to discoverPublication()'s own logic, and the field remains
 // exactly as freely editable as before — all proven live below, not merely
 // read from source.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function readSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 // The same "extract methods/props straight off the exported options object
 // and call them with a hand-built ctx" technique

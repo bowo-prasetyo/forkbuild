@@ -1,4 +1,5 @@
 import { BitcoinEsploraTransactionConfirmationObserver } from '../anchoring/BitcoinEsploraTransactionConfirmationObserver.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.54 — Bitcoin Anchor Confirmation Observation.
 //
@@ -26,10 +27,6 @@ import { BitcoinEsploraTransactionConfirmationObserver } from '../anchoring/Bitc
 //              directly by wiring the two together, end to end
 //
 // See docs/Roadmap.md, "0.8.54 — Bitcoin Anchor Confirmation Observation."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const TXID = 'a'.repeat(64);
 

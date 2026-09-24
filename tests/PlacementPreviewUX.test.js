@@ -9,6 +9,7 @@ import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { PlacementTool } from '../application/tools/PlacementTool.js';
 import { PreviewState } from '../application/editor-state/PreviewState.js';
 import { SpatialPlacementState } from '../application/spatial-state/SpatialPlacementState.js';
+import { assert } from './support/Assert.js';
 
 // 0.2.87 — World Building Interaction & Placement UX.
 //
@@ -33,10 +34,6 @@ import { SpatialPlacementState } from '../application/spatial-state/SpatialPlace
 // application/world/WorldNavigationSession.js#_presentPlacementPreview(), never
 // part of PreviewState/SpatialPlacementState's own position field — see
 // those two files' own headers.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function buildTool({ occupied = [] } = {}) {
     const registry = new CreateBrickRegistryUseCase().execute();

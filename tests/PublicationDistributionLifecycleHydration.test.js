@@ -4,6 +4,7 @@ import { PublicationDistributionLifecycleRestorer } from '../application/publica
 import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
 import { PublicationDistributionLifecyclePersistence } from '../application/publication/distribution/PublicationDistributionLifecyclePersistence.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.57 — Publication Distribution Lifecycle Hydration Composition.
 // See docs/Roadmap.md, "0.9.57 — Publication Distribution Lifecycle
@@ -24,10 +25,6 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //   Section H: constructor-style validation of the restorer argument
 //   Section I: no discovery — restorer is duck-typed to restore() only
 //   Section J: architectural regression
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 class InMemoryStorageProvider extends StorageProvider {
     constructor() {

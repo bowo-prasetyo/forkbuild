@@ -5,7 +5,6 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
 import { StructurePlacement } from '../core/StructurePlacement.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
@@ -20,6 +19,8 @@ import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
 import { EditorActionRegistry, createStandardActions } from '../application/editor/EditorActionRegistry.js';
 import { EditorActionContext } from '../application/editor/EditorActionContext.js';
 import { LocalStructureLibraryStore } from '../application/editor/LocalStructureLibraryStore.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.6.2 — Editor UX Consolidation.
 //
@@ -61,18 +62,6 @@ import { LocalStructureLibraryStore } from '../application/editor/LocalStructure
 //              — the same one-brick-selection, one-instance-selection
 //              split every prior milestone already established, now
 //              proven to hold through this milestone's own additions.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 function createWorldWithBricks(specs) {
     const world = new World();

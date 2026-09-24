@@ -9,6 +9,8 @@ import {
     importPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory,
     applyPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryExchange
 } from '../application/claimSnapshotReconciliation/revalidationObservation/HistoryExchange.js';
+import { assert } from './support/Assert.js';
+import { serialize } from './support/Serialize.js';
 
 // 0.8.168 — Portable Revalidation Observation History Exchange.
 //
@@ -35,14 +37,6 @@ import {
 // Section H: determinism, immutability, zero network access, frozen results
 // Section I: no verify/authorize/approve/re-evaluate vocabulary anywhere;
 //            architecture boundary — exactly one import
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function serialize(value) {
-    return JSON.stringify(value);
-}
 
 async function withoutNetworkAccess(fn) {
     let networkCallOccurred = false;

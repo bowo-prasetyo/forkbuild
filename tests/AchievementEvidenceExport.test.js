@@ -15,6 +15,7 @@ import {
     exportAchievementEvidence,
     importAchievementEvidence
 } from '../application/achievement/AchievementEvidenceExport.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.114 — Portable Achievement & Leaderboard Evidence Export.
 //
@@ -55,10 +56,6 @@ import {
 //   Section G: export requires a genuine archive instance and never
 //              mutates it; import accepts both a raw string and an
 //              already-parsed value
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const CONCLUSION_KEYS = [
     'rank', 'score', 'points', 'badgecount', 'achievementcount', 'leaderboard',

@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 
 import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
 import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
@@ -14,6 +13,8 @@ import { executePublicationDistribution } from '../application/publication/distr
 import { composePublicationDistributionRuntime } from '../application/publication/distribution/PublicationDistributionRuntimeComposition.js';
 import { resolveArweaveAnnouncementPublisherOptions } from '../application/publication/distribution/PublicationDistributionConfigurationProvider.js';
 import { worldEncounterCanvasFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.489 — Arweave Announcement/Discovery Capability Boundary Audit.
 //
@@ -107,10 +108,6 @@ import { worldEncounterCanvasFiles, mainFiles } from './support/SourceFileGroups
 //   against CURRENT source, or to add a genuinely new assertion — never to
 //   pad the count.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 let assertionCount = 0;
 function check(condition, message) {
     assertionCount += 1;
@@ -128,11 +125,6 @@ function expectThrowsSync(fn, message) {
     try { fn(); } catch (e) { error = e; }
     assert(error !== null, message);
     return error;
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function source(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
 function fakeOkTextResponse(text = '') {

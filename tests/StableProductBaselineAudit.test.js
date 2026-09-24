@@ -7,7 +7,6 @@ import { PlacementRecord } from '../core/PlacementRecord.js';
 import { Position } from '../core/Position.js';
 import { WorldPosition } from '../core/WorldPosition.js';
 import { SpatialBounds } from '../core/SpatialBounds.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 
 import { World } from '../core/World.js';
@@ -18,6 +17,9 @@ import { WorldConflictResolver, WorldOperationOutcome } from '../replication/Wor
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
 import { RoleProviderRole, isValidRoleProviderRole } from '../core/RoleProviderRole.js';
 import { worldNavigationSessionFiles, worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.313 — Stable Product Baseline Audit.
 //
@@ -62,15 +64,7 @@ import { worldNavigationSessionFiles, worldEncounterCanvasFiles, editorViewFiles
 //               "interesting API"/"unused class"/"future enhancement."
 //   Section J — Final baseline verdict.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function sourceExists(relativePath) {
     try {
@@ -100,14 +94,6 @@ function grepFiles(pattern, dirs, { ignoreCase = false } = {}) {
 
 async function grepCount(pattern, dirs, opts = {}) {
     return grepFiles(pattern, dirs, opts).length;
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 function createIdentity(username) {

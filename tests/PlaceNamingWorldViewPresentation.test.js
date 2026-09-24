@@ -5,6 +5,7 @@ import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvel
 import { composePlaceNamingDiscoveryRuntime } from '../application/placeNaming/PlaceNamingDiscoveryRuntimeComposition.js';
 import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
 import { worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.257 — World View Place Naming Presentation.
 // See docs/Roadmap.md, "0.9.257 — World View Place Naming Presentation."
@@ -49,10 +50,6 @@ import { worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
 //              itself composes
 //   Section Q: architectural regression — ui/main.js/ui/views/WorldView.js
 //              actually contain the wiring every section above assumes
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 async function flushMicrotasks() {
     for (let i = 0; i < 10; i++) {

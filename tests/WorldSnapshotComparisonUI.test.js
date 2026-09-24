@@ -11,7 +11,6 @@ import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placem
 import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
 import { WorldSnapshotContentComparison } from '../application/snapshot/WorldSnapshotComparison.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
@@ -21,6 +20,8 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { readFile } from 'node:fs/promises';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.182 — World Snapshot Comparison UI.
 //
@@ -55,18 +56,6 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 //              second click handler), exactly one call site of
 //              `compareSnapshotWorldPublications()`, and no registry
 //              mutation from any of this milestone's own new methods.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
 
 const stubIdentityProvider = {
     currentUser: () => ({ username: 'alice', displayName: 'alice', providerId: 'stub' }),

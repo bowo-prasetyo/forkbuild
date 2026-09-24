@@ -9,6 +9,8 @@ import { PublicationObservationArchive } from '../application/publication/observ
 import { describePublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchiveView.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
+import { assert } from './support/Assert.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.8.75 — Durable Publication Observation Records.
 //
@@ -43,10 +45,6 @@ import { LocalStoragePublicationObservationArchive } from '../storage/LocalStora
 // See docs/Roadmap.md, "0.8.75 — Durable Publication Observation
 // Records."
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 function assertNeverScored(obj, path) {
     if (!obj || typeof obj !== 'object') return;
     const forbidden = [
@@ -75,19 +73,6 @@ function assertNoCapabilityOrCredential(value, path) {
         );
         assertNoCapabilityOrCredential(child, `${path}.${key}`);
     }
-}
-
-// In-memory StorageProvider that round-trips every value through
-// JSON.stringify/JSON.parse, exactly like tests/DurableDocuments.test.js's
-// own InMemoryStorageProvider — this is what proves the archive survives
-// a REAL serialization boundary, not merely an object reference held
-// across a reload.
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
 }
 
 // A StorageProvider whose load() throws — simulating storage/

@@ -1,5 +1,5 @@
-import { readFile } from 'node:fs/promises';
 import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.509 — Snapshot Content Backend Selection Product Reassessment.
 //
@@ -46,10 +46,6 @@ import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js'
 // infrastructure. None of that is implied by the completed architecture,
 // and none of it is touched here.
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 function codeOnlyLines(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//'));
 }

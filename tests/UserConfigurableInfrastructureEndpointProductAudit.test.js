@@ -1,5 +1,6 @@
-import { readFile } from 'node:fs/promises';
 import { worldViewTemplateFiles, mainFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.363 — User-Configurable Infrastructure Endpoint Product Audit.
 //
@@ -46,16 +47,6 @@ import { worldViewTemplateFiles, mainFiles } from './support/SourceFileGroups.js
 //      one place this codebase already has BOTH (TURN's fetchIceServers).
 //   I. Credential/security boundary — which candidates carry secrets.
 //   J. Final candidate matrix and this milestone's own verdict.
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 function countOccurrences(source, literal) {
     return source.split(literal).length - 1;

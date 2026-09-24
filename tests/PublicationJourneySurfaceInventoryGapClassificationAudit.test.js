@@ -2,6 +2,8 @@ import { readFile, readdir } from 'node:fs/promises';
 
 import { sweepDirectory } from './support/RawStatusInterpolationSweep.js';
 import { worldEncounterCanvasFiles, publicationsPageFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
+import { assert } from './support/Assert.js';
+import { readSource as rawSource } from './support/SourceText.js';
 
 // 0.9.573 — Publication Journey Surface Inventory & Gap Classification Audit.
 //
@@ -51,14 +53,7 @@ import { worldEncounterCanvasFiles, publicationsPageFiles, ownPublicationPanelFi
 // re-check per section rather than a re-derivation. Full classification
 // table: Section I. Coverage map: Section J. Overall verdict: Section J.
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
 const SOURCE_ROOT = new URL('../', import.meta.url);
-async function rawSource(relativePath) {
-    return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-}
 
 async function runTests() {
     console.log('Running Publication Journey Surface Inventory & Gap Classification Audit tests...\n');

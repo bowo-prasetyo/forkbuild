@@ -1,7 +1,6 @@
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
-import { StorageProvider } from '../storage/StorageProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
@@ -19,7 +18,9 @@ import {
     haveSameNotificationDeduplicationIdentity,
     classifyNotificationCollision
 } from '../core/NotificationDeduplicationPolicy.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
+import { makeIdentity } from './support/TestIdentity.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.280 — Notification Deduplication Policy Boundary.
 //
@@ -98,21 +99,6 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 // tests/NotificationDeduplicationCollisionSemanticsAudit.test.js
 // ---------------------------------------------------------------------
 
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-function makeIdentity(label) {
-    const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
-    const identity = provider.createLocalIdentity(label);
-    provider.authenticate(identity.identityId);
-    return provider;
-}
-
 function makePublication({ id, publisherProvider }) {
     const publication = new Publication({
         id,
@@ -130,10 +116,6 @@ function buildProducer({ discoveryProvider, commentaryStore, commentAuthorProvid
     const canComment = new CanCommentOnPublicationUseCase(discoveryProvider);
     const addUseCase = new AddPublicationCommentaryUseCase(commentaryStore, commentAuthorProvider, canComment);
     return new PublicationCommentaryNotificationProducer(addUseCase, discoveryProvider, sink);
-}
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
 }
 
 const SOURCE_ROOT = new URL('../', import.meta.url);

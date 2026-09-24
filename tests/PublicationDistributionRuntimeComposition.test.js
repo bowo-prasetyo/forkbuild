@@ -4,6 +4,7 @@ import { ArweavePublicationMaterialUploader } from '../application/arweave/Arwea
 import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
 import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
 import { parseDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
+import { assert } from './support/Assert.js';
 
 // 0.9.47 — Publication Distribution Runtime Composition.
 // See docs/Roadmap.md, "0.9.47 — Publication Distribution Runtime Composition."
@@ -25,10 +26,6 @@ import { parseDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscov
 //              facts throughout
 //   Section G: architectural regression — no semantic duplication, no
 //              orchestration entry point, no forbidden vocabulary
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;

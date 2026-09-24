@@ -1,5 +1,3 @@
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
 
@@ -12,6 +10,7 @@ import { validatePublicationSnapshotTransferPackage } from '../application/snaps
 import { buildPublicationSnapshotTransferPackage } from '../application/snapshot/PublicationSnapshotTransferPackage.js';
 import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
 import { StoreSnapshotContentOutcome } from '../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
+import { readSource as source } from './support/SourceText.js';
 
 // 0.9.593 — Content Hash Validation Boundary Audit.
 //
@@ -83,9 +82,7 @@ function n(message) {
 }
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
-async function source(relativePath) {
-    return readFile(path.join(SOURCE_ROOT, relativePath), 'utf8');
-}
+
 function grep(pattern, dir) {
     return execSync(`grep -rn "${pattern}" ${dir} --include="*.js" || true`, { cwd: SOURCE_ROOT }).toString().split('\n').filter(Boolean);
 }

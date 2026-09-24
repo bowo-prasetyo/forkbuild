@@ -14,6 +14,7 @@ import {
     describeAchievementEvidenceDifference,
     reconstructAchievementEvidenceDifference
 } from '../application/achievement/AchievementEvidenceDifference.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.117 — Achievement Evidence Difference Projection.
 //
@@ -47,10 +48,6 @@ import {
 //   Section O: shape, defaults, and vocabulary — describe()/reconstruct()
 //              defaults, non-archive degradation, and no achievement/
 //              badge/statistics/ranking/leaderboard vocabulary anywhere
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 const NETWORK = 'mainnet';
 const TXID_A = 'a'.repeat(64);

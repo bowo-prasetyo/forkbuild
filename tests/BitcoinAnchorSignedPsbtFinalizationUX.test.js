@@ -13,6 +13,7 @@ import { BitcoinAnchorReviewedSigningState } from '../application/anchoring/bitc
 import { BitcoinAnchorSignedPsbtFinalizationCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorSignedPsbtFinalizationCoordinator.js';
 import { BitcoinAnchorSignedPsbtFinalizationState, isValidBitcoinAnchorSignedPsbtFinalizationState } from '../application/anchoring/bitcoin/BitcoinAnchorSignedPsbtFinalizationState.js';
 import { describeBitcoinAnchorSignedPsbtFinalization } from '../application/anchoring/bitcoin/BitcoinAnchorSignedPsbtFinalizationView.js';
+import { assert } from './support/Assert.js';
 
 // 0.8.63 — Explicit Signed PSBT Verification & Transaction Finalization UI.
 //
@@ -64,10 +65,6 @@ import { describeBitcoinAnchorSignedPsbtFinalization } from '../application/anch
 //
 // See docs/Principles.md, "Cryptographic Failure Terminates This Signing
 // Attempt (0.8.63)."
-
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
 
 function expectThrows(fn, message) {
     let threw = false;
