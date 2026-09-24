@@ -17,6 +17,7 @@ import { WorldConflictResolver, WorldOperationOutcome } from '../replication/Wor
 import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, editorSessionFiles, mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.323 — Post-Place-Naming-Publication-Arc Product Evolution Reassessment.
@@ -314,7 +315,7 @@ async function runTests() {
     {
         const candidates = [
             ['Placement navigation / management ("go to placement" / "remove this placement")', async () => {
-                const roadmap = await rawSource('docs/Roadmap.md');
+                const roadmap = await readDoc('docs/Roadmap.md');
                 assert(roadmap.includes('once there is real evidence that visibility alone is\ninsufficient, never on inertia'),
                     'C. The standing evidence bar for placement navigation is still on file, unmet.');
             }],

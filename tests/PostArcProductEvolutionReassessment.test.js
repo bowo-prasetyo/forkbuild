@@ -8,6 +8,7 @@ import { DiscoverPlacementsUseCase } from '../application/placement/DiscoverPlac
 import { worldNavigationSessionFiles, worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, editorSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.307 — Post-Arc Product Evolution Reassessment.
@@ -153,7 +154,7 @@ async function runTests() {
         // Wanderer manage/see more than the single most-recently-updated
         // one. This is Section G's own finding; recorded here as this
         // section's own B1 answer, not re-derived twice.
-        const principlesFlat = (await rawSource('docs/Principles.md')).replace(/\s+/g, ' ');
+        const principlesFlat = (await readDoc('docs/Principles.md')).replace(/\s+/g, ' ');
         assert(principlesFlat.includes('an exhibition copy here, a personal copy of the same publication there') &&
             principlesFlat.includes('placeable in more than one location'),
             'B1. docs/Principles.md still names multi-location placement of one Publication as a deliberate, intended scenario.');
@@ -401,7 +402,7 @@ async function runTests() {
         // names it directly: "a single published work placeable in more
         // than one location — an exhibition copy here, a personal copy
         // of the same publication there."
-        const principles = await rawSource('docs/Principles.md');
+        const principles = await readDoc('docs/Principles.md');
         assert(principles.includes('A Publication Is What; A Placement Is Where'),
             'G1. docs/Principles.md still carries this named design principle.');
 

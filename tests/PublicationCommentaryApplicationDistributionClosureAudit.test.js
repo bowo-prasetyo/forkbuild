@@ -825,7 +825,7 @@ async function run() {
         // live, point-in-time guard, amended to except 0.9.638's own,
         // separately-justified UI-only files.
         const changedNonTestFiles = execSync(
-            'git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)tests.html"',
+            'git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)docs/roadmap" ":(exclude)tests.html"',
             { cwd: SOURCE_ROOT.pathname }
         ).toString().trim();
         const expectedLaterMilestoneFiles = new Set(['ui/components/PublicationCard.js', 'ui/components/PublicationList.js']);

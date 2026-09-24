@@ -13,6 +13,7 @@ import { RendezvousDiscoveryProvider } from '../peer/RendezvousDiscoveryProvider
 import { RendezvousTransport } from '../peer/RendezvousTransport.js';
 import { worldViewFiles, editorViewFiles, mainFiles } from './support/SourceFileGroups.js';
 import { readSource as source } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.392 — Post-Infrastructure-Arc Product Evolution Reassessment.
@@ -141,7 +142,7 @@ async function run() {
     // Section A — Entry-state reconfirmation.
     // ===============================================================
     {
-        const roadmap = await source('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         assert(roadmap.includes('## 0.9.383 — Whole-Product Product Evolution Reassessment'),
             n('A1. 0.9.383\'s entry is on record in docs/Roadmap.md'));
         assert(roadmap.includes('## 0.9.391 — Infrastructure Configuration Product Reassessment'),

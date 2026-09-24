@@ -11,6 +11,7 @@ import { PublicationDistributionState } from '../application/publication/distrib
 import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 
 // 0.9.350 — Cross-Arc Product Evolution Reassessment.
 //
@@ -494,7 +495,7 @@ async function runTests() {
         // are needed — but 0.9.346 was actually spent on Distribution
         // Guidance instead, and that specific reassessment was never
         // run. Checked here, honestly, rather than left silently open.
-        const roadmapSource = await rawSource('docs/Roadmap.md');
+        const roadmapSource = await readDoc('docs/Roadmap.md');
         const knownPeerReassessmentRan = /## 0\.9\.3\d\d — Known-Peer Auto-Connection Product Reassessment/.test(roadmapSource);
         assert(!knownPeerReassessmentRan,
             'G5a. Confirmed: no milestone titled "Known-Peer Auto-Connection Product Reassessment" was ever actually run — 0.9.345\'s own named follow-up question was superseded by the Distribution Guidance arc, not answered.');

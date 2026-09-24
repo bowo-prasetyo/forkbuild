@@ -4,6 +4,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { readSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 
 // 0.9.398 — Stable Plateau Closure Audit.
 //
@@ -334,7 +335,7 @@ async function run() {
         assert(productionTouched.length === 0,
             n(`G1. no production file has changed since 0.9.397's own closing commit (${PRE_MILESTONE_COMMIT}) — checked fresh against real git state, not assumed (found: ${JSON.stringify(productionTouched)})`));
 
-        const roadmap = await readSource('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         const forwardCandidateMarkers = (roadmap.match(/NEW_DOMAIN_CANDIDATE|PROPOSED_DIRECTION\s*=/g) || []).length;
         assert(forwardCandidateMarkers === 0,
             n('G2. no forward-looking, concretely-named new-domain candidate exists anywhere in docs/Roadmap.md today — reconfirmed fresh, same check 0.9.397 Section J ran, same result'));
@@ -350,7 +351,7 @@ async function run() {
     // reopened.
     // ===============================================================
     {
-        const roadmap = await readSource('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         const tenDeferredFiles = [
             'PostCollaborationProductReassessment', 'PostCommentaryUIProductReassessment',
             'PostPlaceNamingProductEvolutionReassessment', 'PostPlaceNamingProductReassessment',

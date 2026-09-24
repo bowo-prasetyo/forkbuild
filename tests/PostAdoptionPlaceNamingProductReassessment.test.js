@@ -16,6 +16,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.265 — Post-Adoption Place Naming Product Reassessment.
@@ -217,7 +218,7 @@ async function runTests() {
         assert(importBody.includes('return this._placeNamingClaimExchange.importClaim(pkg);'),
             'A5. WorldNavigationSession#importPlaceNamingClaim() still does nothing but forward to PlaceNamingClaimExchange#importClaim(pkg) — testing the exchange directly is testing the real adoption boundary, not a simplification of it.');
 
-        const principles = await rawSource('docs/Principles.md');
+        const principles = await readDoc('docs/Principles.md');
         for (const heading of [
             '### A Discovered Naming Claim Is Still Just A Claim (0.9.253)',
             '### Automatic Discovery Is Not Automatic Adoption (0.9.256)',
@@ -499,7 +500,7 @@ async function runTests() {
         assert(await sourceExists('tests/PlaceNamingNearbyAdoptionLifecycleAudit.test.js'),
             'F1. sanity: the file whose Section D already proved "Riverside"/"Old River" both remain independently adoptable, live, across repeated observation cycles, still exists.');
 
-        const principles = await rawSource('docs/Principles.md');
+        const principles = await readDoc('docs/Principles.md');
         assert(principles.includes('### Naming Exchange Distributes Claims; It Never Establishes Truth (0.5.3)'),
             'F2. docs/Principles.md still carries the founding principle this behavior descends from, unretracted.');
 

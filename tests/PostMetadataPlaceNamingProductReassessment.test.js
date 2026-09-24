@@ -16,6 +16,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.268 — Post-Metadata Place Naming Product Reassessment.
@@ -209,7 +210,7 @@ async function runTests() {
         assert(nearbyBlock.includes('claim.authorDisplayName') && nearbyBlock.includes('claim.createdAtLabel'),
             'A5. The Nearby row still renders author and createdAtLabel — the metadata this whole reassessment is downstream of.');
 
-        const principles = await rawSource('docs/Principles.md');
+        const principles = await readDoc('docs/Principles.md');
         for (const heading of [
             '### A Discovered Naming Claim Is Still Just A Claim (0.9.253)',
             '### Automatic Discovery Is Not Automatic Adoption (0.9.256)',
@@ -311,7 +312,7 @@ async function runTests() {
 
         // B4. docs/Principles.md still states this reasoning directly —
         // reconfirmed rather than restated from memory.
-        const principles = await rawSource('docs/Principles.md');
+        const principles = await readDoc('docs/Principles.md');
         assert(principles.includes('This codebase\'s only real verification lives inside a mutating\nboundary, not a query one.'),
             'B4. docs/Principles.md ("Displaying Metadata Is Not Verifying It," 0.9.266) still states the exact boundary this section reconfirms against fresh evidence.');
 
@@ -464,8 +465,8 @@ async function runTests() {
         // planning documents demands that adoption become observable to
         // others — checked directly against docs/Roadmap.md and
         // docs/Principles.md rather than assumed absent.
-        const roadmap = await rawSource('docs/Roadmap.md');
-        const principles = await rawSource('docs/Principles.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
+        const principles = await readDoc('docs/Principles.md');
         assert(!/adoption must (be|become) (visible|observable|synchronized)/i.test(roadmap + principles),
             'E4. Neither docs/Roadmap.md nor docs/Principles.md states any requirement for adoption to become observable by others.');
 

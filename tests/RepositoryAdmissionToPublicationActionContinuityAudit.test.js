@@ -39,6 +39,7 @@ import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.596 — Repository Admission to Publication Action Continuity Audit.
@@ -544,7 +545,7 @@ async function run() {
         // D1: rule out "existing shared authority" for WorldNavigationSession
         // specifically — already proven structurally in Section A.
         // D2: is the separation an intentional, documented boundary?
-        const principlesSource = await readSource('docs/Principles.md');
+        const principlesSource = await readDoc('docs/Principles.md');
         assert(/Discovery Is One Path, Not Two/.test(principlesSource),
             'D2-0. Sanity: this codebase has a standing, named principle about discovery having exactly one path.');
         assert(/the same source every other discovery-driven surface \(Repository View, Author View, fork-\s*policy checks\) already reads/.test(principlesSource.replace(/\n/g, ' ')),

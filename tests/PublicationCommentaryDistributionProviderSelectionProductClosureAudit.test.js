@@ -22,6 +22,7 @@ import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.639 — Publication Commentary Distribution Provider Selection Product
@@ -568,7 +569,7 @@ async function run() {
         // Repository/Author catalog, already closed by PATH 1). Absence
         // of a documented need, not merely absence of a control, is the
         // basis for NOT auto-classifying this a defect.
-        const roadmapText = await rawSource('docs/Roadmap.md');
+        const roadmapText = await readDoc('docs/Roadmap.md');
         const ownPanelDistributionRequestPattern = /OwnPublicationPanel[\s\S]{0,200}(commentary|comment)[\s\S]{0,200}(discoveryProvider|choose (nostr|a substrate)|select (nostr|arweave|a substrate))/i;
         assert(!ownPanelDistributionRequestPattern.test(roadmapText),
             n('no prior milestone in docs/Roadmap.md documents a requested or specified user journey asking to choose a Commentary substrate from World View (OwnPublicationPanel.js/WorldEncounterCanvas.js) specifically'));

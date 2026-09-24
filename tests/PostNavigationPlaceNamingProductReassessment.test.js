@@ -14,6 +14,7 @@ import { namingView as deriveNamingView } from '../core/PlaceNamingView.js';
 import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.262 — Post-Navigation Place Naming Product Reassessment.
@@ -151,7 +152,7 @@ async function runTests() {
         assert(worldView.includes('session.focusLocation(row.regionId);') && worldView.includes("navigateToNearbyPlaceNamingClaim(claim)"),
             'A3. The Nearby Place Names row still calls navigateToNearbyPlaceNamingClaim(), still reusing session.focusLocation() — the same navigation machinery, not a bespoke one.');
 
-        const principles = await rawSource('docs/Principles.md');
+        const principles = await readDoc('docs/Principles.md');
         assert(principles.includes('### Navigation Is Not Adoption (0.9.260)'),
             'A4. docs/Principles.md still carries "Navigation Is Not Adoption" (0.9.260), unretracted.');
 

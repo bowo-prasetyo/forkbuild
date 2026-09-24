@@ -9,6 +9,7 @@ import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 
 // 0.9.523 — Repository / Discovery Product Boundary Reassessment.
 //
@@ -331,7 +332,7 @@ async function run() {
         // this codebase's own product vocabulary (docs/Principles.md)
         // promises Repository will ever tell a Wanderer "you are seeing
         // a duplicate."
-        const principles = await readSource('docs/Principles.md');
+        const principles = await readDoc('docs/Principles.md');
         assert(!principles.includes('Repository warns of duplicate'),
             "3. no standing product promise exists that Repository will surface a duplicate-candidate warning — confirming Section C's own experience gap, if any, is not a broken promise.");
     }
@@ -388,7 +389,7 @@ async function run() {
         let changedFiles = [];
         try {
             changedFiles = execSync(
-                'git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)tests.html"',
+                'git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)docs/roadmap" ":(exclude)tests.html"',
                 { cwd: SOURCE_ROOT.pathname }
             ).toString().trim().split('\n').filter(Boolean);
         } catch {

@@ -19,6 +19,7 @@ import { RoleProviderRole, isValidRoleProviderRole } from '../core/RoleProviderR
 import { worldNavigationSessionFiles, worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.313 — Stable Product Baseline Audit.
@@ -201,7 +202,7 @@ async function runTests() {
 
         // DEFERRED — the standing, named candidates every reassessment
         // since 0.9.307 has re-confirmed unaddressed, still on record.
-        assert((await rawSource('docs/Roadmap.md')).includes('once there is real evidence that visibility alone is\ninsufficient, never on inertia'),
+        assert((await readDoc('docs/Roadmap.md')).includes('once there is real evidence that visibility alone is\ninsufficient, never on inertia'),
             'A. Placement navigation/management still carries its own standing DEFER bar in docs/Roadmap.md, unmet.');
         inventory.push(['Placement navigation / placement management ("go to placement" / "remove this placement")', 'DEFERRED']);
         inventory.push(['Discovery-level Commentary-activity count', 'DEFERRED']);
@@ -648,7 +649,7 @@ async function runTests() {
                 assert(hits === 0, `H. Zero automatic-switching vocabulary anywhere (found ${hits}).`);
             }, 'core/RoleProviderPreference.js: a resolver, never an automatic-switching runtime.'],
             ['Placement navigation ("go to placement")', async () => {
-                const roadmap = await rawSource('docs/Roadmap.md');
+                const roadmap = await readDoc('docs/Roadmap.md');
                 assert(roadmap.includes('once there is real evidence that visibility alone is\ninsufficient, never on inertia'),
                     'H. docs/Roadmap.md still carries the standing, unmet evidence bar for placement navigation.');
             }, 'Standing DEFER, reconfirmed unchanged by 0.9.310/0.9.311 and again here (Section A).'],
@@ -708,7 +709,7 @@ async function runTests() {
         // Recorded here as the smallest possible seam, per this
         // milestone's own instruction, WITHOUT selecting it — that
         // remains Section J's call.
-        const roadmapFull = await rawSource('docs/Roadmap.md');
+        const roadmapFull = await readDoc('docs/Roadmap.md');
         assert(roadmapFull.includes('0.9.311'),
             'I3. The one candidate closest to a genuine gap (collaboration conflict/divergence UI) is the SAME one 0.9.311 already found and correctly declined to select absent user-facing evidence — not a new discovery this milestone invents to justify a verdict.');
 

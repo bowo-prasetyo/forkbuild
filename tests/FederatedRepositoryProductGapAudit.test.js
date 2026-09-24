@@ -5,6 +5,7 @@ import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 
 // 0.9.329 — Federated Repository Product Gap Audit.
 //
@@ -97,7 +98,7 @@ async function run() {
         assert(searchSource.includes('no position, no camera, no placement concept at all'),
             '2. the same header explicitly excludes any World/spatial concept from what Repository search answers.');
 
-        principles = await readSource('docs/Principles.md');
+        principles = await readDoc('docs/Principles.md');
         assert(principles.includes('### Repository Search Is Not World Search (0.2.31)'),
             '3. this distinction is a named, standing architectural principle, not a one-off code comment.');
         assert(proseIncludes(principles, 'Whether that swap ever needs to happen is a separate, later decision (see docs/Roadmap.md)'),
@@ -298,7 +299,7 @@ async function run() {
 
         // A decentralized "lead" is explicitly a rumor, not a fact — in
         // its own Roadmap entry's own words.
-        const roadmap = await readSource('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         assert(proseIncludes(roadmap, 'what it hands back is, at best, a rumor about where material MIGHT live'),
             '3. 0.9.24\'s own Roadmap entry names a decentralized discovery result a "rumor," explicitly not yet a fact a stable list() could honestly return.');
 
@@ -438,7 +439,7 @@ async function run() {
         // deployment or telemetry, so operational evidence can only ever
         // mean what is recorded on file, exactly as 0.9.328 Section F
         // already established.
-        const roadmap = await readSource('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         const repositoryComplaintHits = grepCount('cannot find.*[Rr]epository|Repository.*cannot find|users report.*Repository', ['docs']);
         assert(repositoryComplaintHits === 0,
             '4. no on-file record of a user, workflow, or deployment constraint that could not find a publication through Repository specifically — checked honestly, not merely asserted.');
@@ -498,7 +499,7 @@ async function run() {
             'application/world/WorldNavigationSession.js',
             'ui/views/WorldView.js'
         ]);
-        const changedNonTestFiles = execSync('git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)tests.html" ":(exclude)ui/components/PublicationCard.js" ":(exclude)ui/components/PublicationList.js"' /* AMENDED BY 0.9.638 -- excludes ui/components/PublicationCard.js/PublicationList.js, its own unrelated, separately-justified Commentary distribution-selector UI change */,
+        const changedNonTestFiles = execSync('git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)docs/roadmap" ":(exclude)tests.html" ":(exclude)ui/components/PublicationCard.js" ":(exclude)ui/components/PublicationList.js"' /* AMENDED BY 0.9.638 -- excludes ui/components/PublicationCard.js/PublicationList.js, its own unrelated, separately-justified Commentary distribution-selector UI change */,
             { cwd: SOURCE_ROOT.pathname }).toString().trim()
             .split('\n').filter(Boolean)
             .filter((f) => !expectedLaterMilestoneFiles.has(f));

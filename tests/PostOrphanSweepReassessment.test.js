@@ -8,6 +8,7 @@ import {
 } from '../application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js';
 import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 
 // 0.9.328 — Post-Orphan-Sweep Product Evolution Reassessment.
 //
@@ -226,7 +227,7 @@ async function run() {
     // ===============================================================
     {
         const changedSinceB326 = execSync(
-            'git diff --name-only cd30d76 HEAD -- . ":(exclude)tests" ":(exclude)tests.html" ":(exclude)docs/Roadmap.md"',
+            'git diff --name-only cd30d76 HEAD -- . ":(exclude)tests" ":(exclude)tests.html" ":(exclude)docs/Roadmap.md" ":(exclude)docs/roadmap"',
             { cwd: SOURCE_ROOT.pathname }
         ).toString().trim();
         assert(changedSinceB326 === '',
@@ -320,7 +321,7 @@ async function run() {
     // promoted merely for remaining absent; none has new evidence.
     // ===============================================================
     {
-        const roadmap = await rawSource('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         assert(roadmap.includes('once there is real evidence that visibility alone is\ninsufficient, never on inertia'),
             'D1. Placement navigation/management: the standing evidence bar is still on file, unmet.');
         assert(await grepCount('commentaryCount\\|activityCount', ['ui/views/DecentralizedPublicationsView.js']) === 0,
@@ -467,7 +468,7 @@ async function run() {
         // whether any GENUINE evidence exists in the actual historical
         // record. What matters is what earlier milestones reported, not
         // what this one is currently reporting about itself.
-        const fullRoadmap = await rawSource('docs/Roadmap.md');
+        const fullRoadmap = await readDoc('docs/Roadmap.md');
         const ownEntryIndex = fullRoadmap.indexOf('## 0.9.328 — Post-Orphan-Sweep Product Evolution Reassessment');
         const roadmapTail = fullRoadmap.slice(0, ownEntryIndex > 0 ? ownEntryIndex : fullRoadmap.length).slice(-20000);
         const OPERATIONAL_PROBLEM_PATTERNS = [

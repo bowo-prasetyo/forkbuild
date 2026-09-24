@@ -15,6 +15,7 @@ import {
 } from '../core/DocumentCollaborationConsistencyPolicy.js';
 import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 
 // 0.9.241 — Post-Collaboration Product Reassessment.
 //
@@ -318,7 +319,7 @@ async function runTests() {
         // — supporting evidence this is a genuinely legacy design this
         // codebase moved on from, not a deliberately dormant escape
         // hatch nothing has needed yet.
-        const architectureDoc = await rawSource('docs/Architecture.md');
+        const architectureDoc = await readDoc('docs/Architecture.md');
         assert(architectureDoc.includes('Collaboration Protocol Foundation (0.2.7)') && architectureDoc.includes('Multi-client Synchronization (0.2.9)'),
             'B2d. docs/Architecture.md still documents the legacy protocol under its own unedited 0.2.7/0.2.9 historical section headers.');
 

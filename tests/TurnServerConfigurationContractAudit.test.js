@@ -4,6 +4,7 @@ import { DEFAULT_ICE_SERVERS, fetchIceServers } from '../peer/IceServerConfig.js
 import { IceServerConfiguration, isValidStunUrl } from '../core/IceServerConfiguration.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
 import { readSource as source } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 
 // 0.9.453 — TURN Server Configuration Contract Audit.
 //
@@ -315,7 +316,7 @@ async function run() {
     // Section E — Security-boundary resolution for the SELECTED shape.
     // ===============================================================
     {
-        const principlesSource = await source('docs/Principles.md');
+        const principlesSource = await readDoc('docs/Principles.md');
         assert(principlesSource.includes('STUN Is Free Public Infrastructure; TURN Is Transport Infrastructure, Never A Trusted Application Server'),
             n('E1. this codebase\'s own recorded principle distinguishing STUN from TURN is present, live, in docs/Principles.md — TURN "carries the actual DataChannel bytes," never establishes identity'));
         assert(/whichever path a connection actually takes[\s\S]{0,400}PeerAuthenticationSession\.js`'s\s*\nhandshake runs identically either way/.test(principlesSource),

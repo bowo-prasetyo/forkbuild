@@ -2,6 +2,7 @@ import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 
 // 0.9.415 — Product Direction Reopening Gate.
 //
@@ -224,7 +225,7 @@ async function run() {
         const classification = activeSignal ? activeSignal[0] : 'NONE';
         assert(classification === 'NONE', n('C3. this milestone\'s own product-intent record carries no active signal — classified NONE'));
 
-        const roadmap = await readSource('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         const forwardMarkers = (roadmap.match(/NEW_DOMAIN_CANDIDATE|PROPOSED_DIRECTION\s*=/g) || []).length;
         assert(forwardMarkers === 0, n('C4. no forward-looking, concretely-named new-product-direction marker exists anywhere in docs/Roadmap.md — reconfirmed fresh, the same check 0.9.397 Section J made before its own NONE-equivalent conclusion'));
 

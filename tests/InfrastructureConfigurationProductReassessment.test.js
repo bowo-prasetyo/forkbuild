@@ -15,6 +15,7 @@ import { RendezvousTransport } from '../peer/RendezvousTransport.js';
 import { RendezvousDiscoveryProvider } from '../peer/RendezvousDiscoveryProvider.js';
 import { mainFiles } from './support/SourceFileGroups.js';
 import { readSource as source } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.391 — Infrastructure Configuration Product Reassessment.
@@ -133,7 +134,7 @@ async function run() {
     // Section A — Requirement reconfirmation.
     // ===============================================================
     {
-        const roadmap = await source('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
 
         // A1. The exact requirement 0.9.385 recorded, verbatim, still on
         // record and unchanged by anything shipped since.
@@ -215,7 +216,7 @@ async function run() {
     // Section C — Completed configuration journey: Arweave Gateway.
     // ===============================================================
     {
-        const roadmap = await source('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         assert(roadmap.includes('## 0.9.365') && roadmap.includes('## 0.9.367'),
             n('C1. Arweave Gateway\'s own convergence audit (0.9.365) and lifecycle reassessment (0.9.367) are both on record — this section does not re-derive what they already proved, only re-confirms the chain still stands'));
 
@@ -248,7 +249,7 @@ async function run() {
     // Section D — Completed configuration journey: Nostr Relay.
     // ===============================================================
     {
-        const roadmap = await source('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         assert(roadmap.includes('## 0.9.370') && roadmap.includes('## 0.9.372'),
             n('D1. Nostr Relay\'s own convergence audit (0.9.370) and lifecycle reassessment (0.9.372) are both on record'));
 
@@ -293,7 +294,7 @@ async function run() {
     // Section E — Completed configuration journey: STUN.
     // ===============================================================
     {
-        const roadmap = await source('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         assert(roadmap.includes('## 0.9.387'), n('E1. STUN\'s own convergence audit (0.9.387) is on record'));
 
         const settingsViewSource = await source('ui/views/StunSettingsView.js');
@@ -326,7 +327,7 @@ async function run() {
     // Section F — Completed configuration journey: Rendezvous.
     // ===============================================================
     {
-        const roadmap = await source('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         assert(roadmap.includes('## 0.9.389'), n('F1. Rendezvous\'s own convergence audit (0.9.389) is on record'));
 
         const settingsViewSource = await source('ui/views/RendezvousSettingsView.js');
@@ -350,7 +351,7 @@ async function run() {
     // semantically unresolved, proven directly, never merely asserted.
     // ===============================================================
     {
-        const roadmap = await source('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         assert(roadmap.includes('## 0.9.390'), n('G1. 0.9.390\'s own TURN Configuration Product Decision Audit is on record'));
 
         // G2. Technically possible: the existing fetchIceServers() seam
@@ -518,7 +519,7 @@ async function run() {
         // I4. IPFS Gateway, Base RPC, and Bitcoin Esplora remain
         // unconfigurable and unchanged — each still backs an explicitly
         // optional/deferred/non-default capability, reconfirmed fresh.
-        const roadmap = await source('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         assert(roadmap.includes('IPFS Gateway  | Deliberately not user-configurable') || roadmap.includes('IPFS Gateway      | Deliberately not user-configurable') || /IPFS Gateway\s*\|\s*Deliberately not user-configurable/.test(roadmap),
             n('I4. IPFS Gateway is on record, unchanged, as deliberately not user-configurable'));
         for (const path of ['base/BaseJsonRpcClient.js', 'anchoring/BitcoinEsploraTransactionBroadcaster.js', 'anchoring/BitcoinEsploraWalletFundingSource.js', 'anchoring/BitcoinEsploraTransactionConfirmationObserver.js']) {

@@ -466,7 +466,7 @@ async function run() {
         // tests/PublicationCommentaryCrossDeviceProductClosureAudit.test.js's
         // own identical 0.9.638 amendment for the full rationale.
         const changedNonTestFiles = execSync(
-            'git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)tests.html"',
+            'git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)docs/roadmap" ":(exclude)tests.html"',
             { cwd: SOURCE_ROOT.pathname }
         ).toString().trim();
         const expectedLaterMilestoneFiles = new Set(['ui/components/PublicationCard.js', 'ui/components/PublicationList.js']);

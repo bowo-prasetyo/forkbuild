@@ -17,6 +17,7 @@ import { RecoveryObserver } from '../application/document/RecoveryObserver.js';
 import { worldViewFiles, worldNavigationSessionFiles, editorViewFiles, editorSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 
 // 0.9.206 — Post-Recovery Product Reassessment.
 //
@@ -263,7 +264,7 @@ async function runTests() {
         // authorities, exactly as C5a's rationale and 0.9.209's own
         // classification both anticipated — neither was folded into the
         // other.
-        assert(/a viewer's landmark edit needs to be undoable too/.test(await rawSource('docs/Principles.md')), 'C5a. 0.5.9\'s own documented rationale for keeping undo/redo + history/replay is still on record');
+        assert(/a viewer's landmark edit needs to be undoable too/.test(await readDoc('docs/Principles.md')), 'C5a. 0.5.9\'s own documented rationale for keeping undo/redo + history/replay is still on record');
         for (const identifier of ['undo', 'redo']) {
             assert(new RegExp(`session\\.${identifier}\\(\\)`).test(worldViewSource), `C5b. (post-0.9.210) WorldView.js now calls session.${identifier}() — 0.9.210 wired plain Undo/Redo UI Integration`);
         }

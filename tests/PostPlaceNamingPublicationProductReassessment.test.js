@@ -19,6 +19,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 import { worldViewFiles, worldViewTemplateFiles, mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.322 — Post-Place-Naming Publication Product Reassessment.
@@ -341,7 +342,7 @@ async function run() {
         // word, and this milestone finds no evidence contradicting it: no
         // support request, bug report, or user complaint anywhere in this
         // codebase's own record asks for automatic publication.
-        const roadmap = await rawSource('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         assert(roadmap.includes('publishing to Nostr stays **never automatic**'),
             'B4. docs/Roadmap.md still carries the exact, explicit "never automatic" product decision — not silently dropped or reworded by any milestone since.');
         const placeNamingFamilyForB4 = ['application/placeNaming/PlaceNamingClaimUseCase.js', 'application/placeNaming/PlaceNamingPublicationRuntimeComposition.js',
@@ -408,7 +409,7 @@ async function run() {
         // own four failure classes (decline, transport rejection, timeout,
         // malformed id) were manufactured to prove ISOLATION, never
         // reported as a real operational problem this product has hit.
-        const roadmap = await rawSource('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         assert(roadmap.includes('0.9.321'), 'C6a. sanity: docs/Roadmap.md carries 0.9.321\'s own record, the milestone that manufactured those four failure classes.');
         assert(!/relay outage|relay went down|users reported|support ticket/i.test(roadmap),
             'C6b. docs/Roadmap.md carries no report anywhere of an actual relay outage, user complaint, or support ticket about publication reliability — every failure scenario on file was constructed by a test, to prove isolation, never observed in operation.');
@@ -666,7 +667,7 @@ async function run() {
         // record: this milestone's own initiating brief explicitly warns
         // against inferring one from architectural similarity alone, and
         // no other milestone entry describes such a request.
-        const roadmap = await rawSource('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         assert(!/notify.*place naming|comment on.*place name|collaborate.*naming claim/i.test(roadmap),
             'F5. docs/Roadmap.md carries no recorded request to connect Place Naming publication to Notifications, Commentary, or Collaboration — no such seam is evidenced.');
 

@@ -29,6 +29,7 @@ import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSessi
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 import { readSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // NOTE: application/world/WorldNavigationSession.js is deliberately never
@@ -643,7 +644,7 @@ async function run() {
     // true, still unaddressed by anything in the water arc.
     // ===============================================================
     {
-        const roadmapSrc = await readSource('docs/Roadmap.md');
+        const roadmapSrc = await readDoc('docs/Roadmap.md');
         assert(roadmapSrc.includes('building placement and\nbuilding/terrain interaction') || roadmapSrc.includes('building/terrain interaction'),
             n('docs/Roadmap.md still names "building placement and building/terrain interaction" as an explicitly unstarted design question (0.2.77) — this milestone did not invent it'));
 
@@ -691,7 +692,7 @@ async function run() {
     {
         const { execSync } = await import('node:child_process');
         const changedNonTestFiles = execSync(
-            'git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)tests.html" ":(exclude)ui/components/PublicationCard.js" ":(exclude)ui/components/PublicationList.js"' /* AMENDED BY 0.9.638 -- excludes ui/components/PublicationCard.js/PublicationList.js, its own unrelated, separately-justified Commentary distribution-selector UI change */,
+            'git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)docs/roadmap" ":(exclude)tests.html" ":(exclude)ui/components/PublicationCard.js" ":(exclude)ui/components/PublicationList.js"' /* AMENDED BY 0.9.638 -- excludes ui/components/PublicationCard.js/PublicationList.js, its own unrelated, separately-justified Commentary distribution-selector UI change */,
             { cwd: SOURCE_ROOT.pathname }
         ).toString().trim();
         assert(changedNonTestFiles === '', n(`no production file is modified by this milestone — found: ${changedNonTestFiles || 'none'}`));

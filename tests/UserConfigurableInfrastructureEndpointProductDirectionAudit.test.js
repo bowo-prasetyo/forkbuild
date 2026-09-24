@@ -9,6 +9,7 @@ import { RendezvousPublication } from '../peer/RendezvousPublication.js';
 import { PeerInvitation } from '../peer/PeerInvitation.js';
 import { mainFiles } from './support/SourceFileGroups.js';
 import { readSource as source } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 
 // 0.9.385 — User-Configurable Infrastructure Endpoint Product Direction
 // Audit.
@@ -217,7 +218,7 @@ async function run() {
     // Section A — Requirement confirmation.
     // ===============================================================
     {
-        const roadmap = await source('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         assert(roadmap.includes('## 0.9.384 — Explicit Next Product Direction Selection'),
             n('A1. 0.9.384\'s entry is on record — this milestone builds on a real prior gate result, not an invented one'));
         assert(roadmap.includes('`NO_DIRECTION_SELECTED = true`') || roadmap.includes('NO_DIRECTION_SELECTED = true'),
@@ -309,7 +310,7 @@ async function run() {
     // ===============================================================
     const criticality = {};
     {
-        const roadmap = await source('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         assert(roadmap.includes('Peer → Sync → Repository → Explore → Fork'),
             n('C1. "Peer → Sync → Repository → Explore → Fork" is on record as one of 0.9.383\'s own eight named primary journeys'));
 

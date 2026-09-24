@@ -31,6 +31,7 @@ import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { worldViewFiles, worldNavigationSessionFiles, mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.602 — Post-Placement World Visibility Product Boundary Audit.
@@ -232,7 +233,7 @@ async function run() {
         assert(!/worldLayout|WorldView|render(?!ed)/i.test(spatialSrc),
             'B3. spatial/LocalSpatialIndexProvider.js — the durable spatial-truth store PlacementRecord/WorldPlacement both write through — likewise never references rendering or World View.');
 
-        const principles = await readSource('docs/Principles.md');
+        const principles = await readDoc('docs/Principles.md');
         assert(/PlacementRecord is the durable, discoverable truth of where a publication\s*\nexists\. LoadedWorld is the ephemeral runtime state of that placement in\s*\na specific client's memory\./.test(principles),
             'B4. docs/Principles.md (0.2.12) explicitly and deliberately distinguishes PlacementRecord (durable, decentralized truth) from LoadedWorld (ephemeral, per-client runtime rendering state) — this is a documented architectural principle, not this audit\'s own inference.');
         assert(/The World View discovers placements first; publications and snapshots\s*\nare resolved only for spatially relevant placements/.test(principles),

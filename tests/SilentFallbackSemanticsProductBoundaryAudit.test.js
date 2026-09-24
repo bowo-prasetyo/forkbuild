@@ -14,6 +14,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 
 // 0.9.588 — Silent Fallback Semantics Product Boundary Audit.
 //
@@ -443,8 +444,8 @@ async function main() {
     // Section J — Documentation.
     // ===============================================================
     {
-        const principles = await readSource('docs/Principles.md');
-        const roadmap = await readSource('docs/Roadmap.md');
+        const principles = await readDoc('docs/Principles.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
 
         // J1. I3b IS documented, live, in docs/Principles.md's own 0.2.90
         // section, AND has a dedicated live test (tests/StructurePlacement.test.js)

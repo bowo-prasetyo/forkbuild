@@ -1,5 +1,6 @@
 import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 
 // 0.9.548 — Adopt World Unit As Meter Documentation Contract.
 //
@@ -43,7 +44,7 @@ async function main() {
     // Section A — docs/Principles.md
     // ===================================================================
     {
-        principlesSrc = await readSource('docs/Principles.md');
+        principlesSrc = await readDoc('docs/Principles.md');
 
         assert(/### A World Unit Is One Meter/.test(principlesSrc),
             '1. LIVE: docs/Principles.md carries the new "A World Unit Is One Meter" section header.');
@@ -67,7 +68,7 @@ async function main() {
     // Section B — docs/Protocol.md
     // ===================================================================
     {
-        protocolSrc = await readSource('docs/Protocol.md');
+        protocolSrc = await readDoc('docs/Protocol.md');
 
         assert(/one World Unit\s+represents one meter of real-world length/.test(protocolSrc),
             '1. LIVE: docs/Protocol.md\'s coordinate-system section affirms the meter contract.');
@@ -83,7 +84,7 @@ async function main() {
     // Section C — docs/Architecture.md
     // ===================================================================
     {
-        architectureSrc = await readSource('docs/Architecture.md');
+        architectureSrc = await readDoc('docs/Architecture.md');
 
         assert(/one coordinate unit named a\s+\*\*World Unit\*\*, equal to one meter of real-world length/.test(architectureSrc),
             '1. LIVE: docs/Architecture.md\'s coordinate-system statement affirms the meter contract.');
