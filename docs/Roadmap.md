@@ -98322,3 +98322,24 @@ shape, `this` and `instanceof` are unchanged; defining a name twice throws. Veri
 member (name, flags and source text) before and after: all 264 are identical. Source-reading tests read the class
 with its modules through `tests/support/SourceFileGroups.js` (renamed from `ViewSourceFiles.js`); three checks that
 it imports exactly one CommandHistory class now count distinct modules rather than import statements.
+
+**Stylesheet split into parts.** `css/main.css` (6,436 lines) is now an entry point that `@import`s eleven parts
+under `css/main/` (app shell, editor, repository and account, World View, World navigation panels, spatial
+panels, tools and settings, identity/publications/peers, World map and places, publication evidence, World
+encounters and history; 108–789 lines each). The parts are contiguous slices of the old file imported in their
+original order, so the cascade is unchanged: joined back together they match the old file line for line, and
+Chromium parses the old and new stylesheets into the same 877 rules in the same order. `index.html` is untouched.
+The nine source-reading tests that read `css/main.css` now read its parts through `stylesheetFiles()` in
+`tests/support/SourceFileGroups.js`.
+
+**Publications template split into sections.** `ui/views/DecentralizedPublicationsView.js` (4,389 → 1,188 lines)
+keeps the page's outer template, but its largest sections now live as template strings in nine modules under
+`ui/views/decentralizedPublications/templates/`: the three tools tabs (Blockchain Anchoring, Archive Tools,
+References & Achievements) and, per publication, the Distribution section and the Snapshot, Evidence and
+Placements tabs (the Evidence tab further split into its anchor transaction plans and per-anchor evidence list).
+They are interpolated back into `template`, so they render in the view's own scope with no new props or
+components. The assembled template string is identical to the old one (269,631 characters), and the rendered
+Publications page (DOM and every element's computed style, disclosures open) is identical before and after.
+`publicationsPageFiles()` now includes the template sections after the view, and
+`publicationsViewSourceWithTemplate()` returns the view with its sections expanded for checks that span the whole
+template. Eighteen tests that read the view file alone now read it through one of these.
