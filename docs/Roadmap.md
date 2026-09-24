@@ -98313,7 +98313,7 @@ now read each view together with its modules through `tests/support/ViewSourceFi
 regexes were adjusted for the composables' indentation, and three single-file checks now accept the view's own
 modules.
 
-**WorldNavigationSession split by concern.** `application/WorldNavigationSession.js` (5,573 → 1,806 lines) keeps
+**WorldNavigationSession split by concern.** `application/WorldNavigationSession.js` (5,573 → 1,805 lines) keeps
 its constructor, lifecycle (`start()`, `dispose()`), frame-loop setup, navigation, selection and streaming. Its
 other 210 methods now live in ten modules under `application/worldNavigation/`: local avatar, avatar presence,
 place queries, world experience, collaboration, placements, fork-on-write, World content, place naming and document
