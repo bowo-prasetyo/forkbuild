@@ -87,9 +87,9 @@ camera back toward them and they reappear.
 
 ## Walking your avatar
 
-World View's camera fly-around ([The Editor](02-TheEditor.md#camera-controls)
-and [World View](03-WorldView.md#flying-around)) is one way to move, but you
-can also walk your avatar directly with **Avatar Control Mode**:
+Flying the camera ([World View](03-WorldView.md#flying-around)) is one way
+to move, but you can also walk your avatar directly with **Avatar Control
+Mode**:
 
 | Key | Action |
 |---|---|
@@ -102,7 +102,7 @@ can also walk your avatar directly with **Avatar Control Mode**:
 Walking respects collision against nearby loaded buildings, trees, and
 wildlife — you can't walk through structures streamed in around you, through
 the trees generated as part of the terrain, or through a deer or rabbit
-grazing nearby (see [World View](03-WorldView.md#opening-world-view)).
+grazing nearby (see [World View](03-WorldView.md#flying-around)).
 Wildlife only ever blocks your path like a tree does — it doesn't move,
 react, or take damage, and a vehicle drives straight through it; only
 walking on foot is stopped. Your avatar can walk across placed structures,
@@ -209,8 +209,8 @@ out next; it never spawns or removes anything by itself.
 
 ### Animals
 
-Some worlds have wildlife roaming — deer in forests, rabbits on open
-grassland. Walk close enough to one and a prompt appears telling you to
+Some worlds have wildlife — deer in forests, rabbits on open grassland.
+Wild animals stay where the world placed them. Walk close enough to one and a prompt appears telling you to
 press **F** to catch it. Catching adds it to your inventory (the same
 inventory a stored vehicle lives in) and removes it from the world.
 
@@ -236,7 +236,7 @@ removed from the World and becomes a live, catchable animal again. When
 both are nearby, **G** decorates a fresh released animal first, just as
 **F** prefers catching over releasing. Only animals you released can be
 decorated — wildlife the world placed by itself can't — and there's no
-on-screen prompt for **G** yet. Like adding a
+on-screen prompt for **G**. Like adding a
 [landmark](03-WorldView.md#landmarks--marking-a-place-worth-remembering),
 decorating needs you signed in with EDIT access to the World you're in.
 On someone else's published World, the decoration goes into your own
@@ -263,12 +263,9 @@ they're doing:
 These activity indicators are derived from spatial presence data and help you
 understand what others are looking at without needing explicit communication.
 
-> **Presence describes activity; it never changes anything on its own.**
-> The activity indicator shows what someone is *doing*, but World View itself
-> is read-only — only an actual mutation, always in the Editor now (except
-> Region/Landmark naming and animal decorations), changes the shared
-> environment. See
-> [World View](03-WorldView.md#world-view-is-read-only--building-happens-in-the-editor).
+Activity indicators only describe what someone is doing; they never
+change anything — see
+[Seeing other collaborators](03-WorldView.md#seeing-other-collaborators).
 
 ## What's next?
 

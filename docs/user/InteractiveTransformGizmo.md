@@ -1,6 +1,6 @@
 # Interactive Transform Gizmo
 
-*New in 0.1.46.* Whenever bricks are selected in the Editor, a gizmo
+Whenever bricks are selected in the Editor, a gizmo
 appears at the selection's pivot. Dragging its handles moves or rotates
 the selection with a live preview; releasing commits the change as
 **one undo step**. Selecting a single
@@ -9,10 +9,9 @@ in the Editor shows the exact same gizmo, with one difference: the green
 Y-axis handle is inert. A placement's elevation always follows the terrain
 underneath it — it's never a handle you drag or a value you type.
 
-The gizmo is Editor-only (see [World View](03-WorldView.md) — as of 0.5.9
-it's a read-only exploration surface, with no gizmo, no transform, and no
-brick editing of any kind; find something worth building on and use its
-Focus panel's **Edit a Copy** button to open it here, in the Editor).
+The gizmo is Editor-only. [World View](03-WorldView.md) is a read-only
+exploration surface; to build on something you find there, use its
+**Edit a Copy** button to open it here, in the Editor.
 
 ## The gizmo
 
@@ -49,14 +48,13 @@ The white marker at the gizmo's center is the **pivot**:
 
 ```
 ┌───────────────┐
-│ ■ ■ │
-│ │
-│ + │ ← pivot (selection bounds center)
-│ │
-│ ■ ■ │
+│ ■           ■ │
+│               │
+│       +       │ ← pivot (selection bounds center)
+│               │
+│ ■           ■ │
 └───────────────┘
 ```
-
 
 - Select one brick → the pivot sits at that brick's center.
 - Select several bricks → the pivot sits at the center of the box
@@ -116,11 +114,11 @@ them exactly like any multi-selection:
 
 ## Snapping
 
-Drags snap by default — 1 World Unit for movement, 15° for rotation — the
-same increments keyboard nudging (`R`, arrow keys) uses, so a drag and a
-keyboard move land in exactly the same place. Hold **Shift** while dragging
-(or nudging) for **precision mode**: 0.1× the normal increment, for fine
-adjustments the default grid is too coarse for.
+Drags snap by default — 1 World Unit for movement (the same step an arrow
+key nudges by) and 15° for rotation (finer than the 90° turn `R` makes).
+Hold **Shift** while dragging for **precision mode**: 0.1× the normal
+increment (0.1 World Units, 1.5°), for fine adjustments the default grid is
+too coarse for.
 
 The **numeric transform panel** and **alignment/distribution** are the
 exception on purpose — they always apply the exact value or exact geometric
@@ -141,16 +139,13 @@ rotation alike; alignment, distribution, and the numeric transform panel
 are not gated by it, since those compute an exact, deliberate result
 rather than a free-form move.
 
-## Not in there yet
+## What the gizmo doesn't do
 
-Deliberately — these are planned for upcoming milestones:
-
-- **Scale handles** — the engine has no scale semantics yet; the gizmo
-  will not pretend otherwise.
-- **Drag-duplicate** — hold a modifier and drag to copy, coming later.
-  `Ctrl/Cmd+D` already duplicates the current selection in place (see
-  [The Editor](02-TheEditor.md#copy-paste-and-duplicate)) — this item is
-  specifically about doing it as part of a drag gesture.
+- **Scale** — bricks can't be resized, so there are no scale handles.
+- **Drag-duplicate** — there's no modifier for copying while dragging; use
+  `Ctrl/Cmd+D` to duplicate the selection in place first (see
+  [The Editor](02-TheEditor.md#copy-paste-and-duplicate)), then drag the
+  copy.
 
 ## Tips
 
@@ -159,7 +154,7 @@ Deliberately — these are planned for upcoming milestones:
   measured as an angle, not a distance.
 - Use an axis handle when you want to keep two coordinates perfectly
   fixed — the constraint is exact, not visual.
-- Combine surfaces: nudge with arrow keys for grid-aligned steps, then
-  finish with a gizmo drag for free positioning. Both are the same
-  operation under the hood, so undo/redo treats them uniformly.
+- Combine surfaces: nudge with arrow keys for whole-unit steps, then
+  finish with a Shift-drag for fine positioning. Undo/redo treats both the
+  same way — one step per gesture.
 

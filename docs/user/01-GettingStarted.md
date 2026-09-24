@@ -10,7 +10,7 @@ URL), and you'll land on the **Home** screen.
 
 The bar at the top is always visible:
 
-`ForkBuild Home Editor Repository My Worlds My Avatar My Identities Peers Conversations Publications About [Login]`
+`ForkBuild Home Editor Repository My Worlds My Avatar My Identities Peers Conversations Publications Network Settings About [Login]`
 
 - **Home** — the landing page
 - **Editor** — where you build
@@ -28,6 +28,9 @@ The bar at the top is always visible:
 - **Publications** — signed authorship/place-name claims and their
   external evidence, see
   [Publications & External Evidence](09-PublicationsAndEvidence.md)
+- **Network Settings** — gateways, relays, providers, and peer-connection
+  servers, see
+  [Network Settings](09-PublicationsAndEvidence.md#network-settings)
 - **About** — version info
 
 ## Logging in
@@ -38,19 +41,15 @@ stored on this device**. The Log In dialog lists every identity this browser
 already holds; click one to use it, or create a new one:
 
 1. Type a **display name** — this is what other people will see.
-2. Optionally, type a **passphrase** to protect it (see below). Leave it
-   blank and you'll never be asked for a passphrase on this device.
+2. Optionally, type a **passphrase** to protect it. Leave it blank and
+   you'll never be asked for a passphrase on this device.
 3. Click **Create & Log In**.
 
 That's it — you're now signed in, and everything you build, publish, or send
 is signed with this identity.
 
-> **Note:** A passphrase-protected identity is called "protected" and shows
-> a 🔒 next to its name. An identity created without one is "unprotected" —
-> it works immediately, every time, on this device, with nothing to type or
-> forget. Full detail — including what a passphrase actually protects, the
-> vault, and backing your identity up — lives in
-> [Identity & Login](05-IdentityAndLogin.md).
+What a passphrase protects, locking and unlocking, and backing your
+identity up are all covered in [Identity & Login](05-IdentityAndLogin.md).
 
 ## Taking the tour
 

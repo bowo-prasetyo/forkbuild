@@ -1,14 +1,12 @@
 # Controls Reference
 
-Every mouse and keyboard interaction in ForkBuild. As of 0.5.9, only
-camera/navigation controls and World Region/Landmark naming work in both
-Editor and World View — see docs/Principles.md, "World View Observes and
-Navigates; Editor Mutates and Builds." Everything under **Editing shortcuts**
-below (selection-for-mutation, transform, groups, clipboard, placement,
-the command palette) is Editor-only now: **Editing shortcuts come from the
-same EditorActionRegistry that drives the command palette and the
-sidebar** — if this document and the palette ever disagree, the registry is
-the source of truth and this page is a bug.
+Every mouse and keyboard interaction in ForkBuild. World View is for
+looking around and navigating; every building control (selection for
+editing, transforms, groups, clipboard, placement, and the Command
+Palette) works only in the Editor. The Editor's shortcuts are the same
+ones listed in its Command Palette and **⌨ Shortcuts** overlay — if this
+page and the palette ever disagree, the palette is right and this page has
+a bug.
 
 Open the **Command Palette** with `Ctrl/Cmd+K` in the Editor to search
 every editing operation below by name.
@@ -27,7 +25,7 @@ every editing operation below by name.
 | Input | Action |
 |---|---|
 | `Ctrl/Cmd+K` | Command Palette |
-| `?` | Keyboard Shortcuts overlay (also reachable from the toolbar's "⌨ Shortcuts" button) — every shortcut on this page, read live off the SAME EditorActionRegistry |
+| `?` | Keyboard Shortcuts overlay (also reachable from the toolbar's "⌨ Shortcuts" button) — every Editor shortcut |
 
 ## Discovery (World View)
 
@@ -53,7 +51,7 @@ selection, or edit anything. See
 |---|---|
 | Compass indicator | Read-only heading with contextual markers for nearby structures and terrain features |
 | **Home** | Return camera and avatar to your own current world (falls back to the shared origin if you haven't focused one of your own yet this session) — see [World View](03-WorldView.md#orientation-and-locations) |
-| **Locations** | Open a list of Home plus every structure known this session, each with a **Focus** button |
+| **Locations** | Open a list of the World, its structures, landmarks, and places, each with a **Focus** button |
 | **Notifications** | Open your **Notification History** — a read-only log, not a camera action; see [World View](03-WorldView.md#orientation-and-locations) |
 | **Camera**: Free / First Person / Third Person / Bird's-Eye | Lock the camera to a fixed offset from your own avatar instead of flying it yourself; click the active one again to return to Free — see [Avatars & Presence](06-AvatarsAndPresence.md#camera-perspective) |
 
@@ -75,7 +73,7 @@ Walking your avatar directly, instead of flying the camera — see
 
 | Input | Action | Notes |
 |---|---|---|
-| `W` / `A` / `S` / `D` | Move / turn | Blocked by nearby buildings and trees, same as a wall |
+| `W` / `A` / `S` / `D` | Move / turn | Blocked by nearby buildings, trees, and wildlife, same as a wall |
 | `Shift` (held) | Run | |
 | `Space` | Jump | |
 | `Alt` + `W` / `S` | Start continuous walk forward/backward | Keeps moving after keys are released; an ordinary `W`/`S` tap without Alt cancels it |
@@ -91,7 +89,7 @@ vehicle to mount it.
 |---|---|---|
 | `E` | Mount the nearby vehicle, or dismount the one you're on | Only shown/active when a vehicle is in range or you're mounted |
 | `W` / `S` | Accelerate / reverse | Replaces on-foot walking while mounted |
-| `A` / `D` | Steer | Turn rate depends on the vehicle |
+| `A` / `D` | Turn your avatar's own facing | Same turn as on foot — not vehicle steering |
 | `←` / `→` (press) | Turn the vehicle's own attempted travel direction left/right | A single 45° turn per press — holding the key does not keep turning |
 | `Ctrl` (held) | Brake | |
 | `Q` (while mounted) | Store the vehicle you're on in your inventory | Removes it from the world; dismounts you at the same time |
@@ -108,20 +106,21 @@ nearby or you're carrying one.
 |---|---|---|
 | `F` (near a catchable animal) | Catch it | Adds it to your inventory and removes it from the world |
 | `F` (not near a catchable animal, carrying one) | Release the most recently caught animal | Spawns it at your current position, catchable again |
-| `G` (near an animal you released) | Decorate the World with it | Saves it into the World's content as a decoration — no longer catchable; needs EDIT access; no on-screen prompt yet |
+| `G` (near an animal you released) | Decorate the World with it | Saves it into the World's content as a decoration — no longer catchable; needs EDIT access; no on-screen prompt |
 | `G` (near an animal decoration, no released animal nearby) | Undo the decoration | Removes it from the World and turns it back into a live, catchable animal |
 
 Your inventory, placed vehicles, and released animals are saved on this
 device and survive a reload — see
 [Avatars & Presence](06-AvatarsAndPresence.md#what-survives-a-reload).
 
-## Selection (click/marquee work in both views; only the Editor mutates)
+## Selection (Editor; clicking a brick in World View only inspects it)
 
 | Input | Action | Notes |
 |---|---|---|
-| Click a brick | Select it | in World View this is INSPECTION/focus only — see [World View](03-WorldView.md#world-view-is-read-only--building-happens-in-the-editor) |
-| `Ctrl/Cmd/Shift`-click | Toggle brick in/out of selection | |
-| Drag on empty space | Marquee-select | additive with `Ctrl/Cmd/Shift` |
+| Click a brick | Select it (replaces the selection) | in World View this opens the Inspection panel only — see [World View](03-WorldView.md#world-view-is-read-only--building-happens-in-the-editor) |
+| `Shift`-click | Add brick to selection | |
+| `Ctrl/Cmd`-click | Toggle brick in/out of selection | |
+| `Shift`-drag | Marquee-select (replaces the selection) | `Ctrl/Cmd+Shift`-drag adds to the selection; a plain drag orbits the camera |
 | `Ctrl/Cmd+A` | Select All | |
 | `Esc` | Clear Selection | Editor's own Escape chain, below — World View's own Escape only ever closes whichever panel is open |
 | `Delete` / `Backspace` | Delete Selection — **Editor only** | one undo step; no keyboard binding at all in World View |
@@ -136,7 +135,7 @@ device and survive a reload — see
 | `PgUp` / `PgDn` | Move selection along world Y |
 | `R` | Rotate +90° around the selection pivot |
 | `Shift+R` | Rotate −90° |
-| `Shift` while gizmo-dragging or nudging | Precision mode (0.1× increments) |
+| `Shift` while gizmo-dragging | Precision mode (0.1× increments) |
 
 ## Transform — gizmo (Editor only)
 
@@ -258,8 +257,8 @@ immediately.
 | `Ctrl/Cmd+Shift+Z` or `Ctrl/Cmd+Y` | Redo | Editor only — no keyboard binding in World View |
 
 World View still HAS undo/redo — a Region/Landmark naming edit is a real
-command, and its own Timeline (see
-[World View](03-WorldView.md#the-operation-timeline)) can preview and
+command, and its own History panel (see
+[World View](03-WorldView.md#history--previewing-and-restoring-earlier-states)) can preview and
 restore it — there is simply no keyboard shortcut wired to it there.
 
 ## Editor-only
@@ -271,13 +270,9 @@ restore it — there is simply no keyboard shortcut wired to it there.
 
 ## Placement (Editor only)
 
-0.2.87 — owned by the active Place tool itself
-(`application/tools/PlacementTool.js`), not by EditorActionRegistry —
-`R`/`Shift+R` already name Rotate Clockwise/Counter-Clockwise for a
-SELECTION above, disabled while placing, so this table is the one
-deliberate exception to this page's own "registry is the source of truth"
-rule stated at the top. World View has no Place tool at all — see
-[World View](03-WorldView.md#world-view-is-read-only--building-happens-in-the-editor).
+These keys belong to the Place tool, so they don't appear in the Command
+Palette (there, `R`/`Shift+R` rotate a *selection*). World View has no
+Place tool at all.
 
 | Input | Action | Notes |
 |---|---|---|
@@ -303,8 +298,6 @@ Escape is context-sensitive, in exactly this order:
 
 ### Escape in World View
 
-World View's own `onKeyDown` no longer has an editing chain to prioritize
-at all (0.5.9) — an active text input still owns Escape the same way, and
-otherwise Escape simply closes whichever World View panel is currently
-open (the Focus panel, a naming panel, and so on), each closing its own
-overlay independently rather than through one shared priority chain.
+An active text input still owns Escape the same way; otherwise Escape
+closes whichever World View panel is open (the Focus panel, a naming
+panel, and so on).

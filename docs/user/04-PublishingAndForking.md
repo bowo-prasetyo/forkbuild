@@ -19,20 +19,12 @@ also automatically given a position in the shared world, so **Explore**
 always has somewhere to take people — see
 [Finding worlds](03-WorldView.md#finding-worlds).
 
-> **Note:** Publishing here stores your Document/World locally on this
-> device (and on any peer's device it later reaches) so the full
-> publish → discover → fork flow works end to end. A real, backend-agnostic
-> decentralized storage network for this specific flow is still on the
-> roadmap — but ForkBuild does already have a separate, working
-> decentralized-publication system for a different kind of content:
-> signed authorship and place-name claims, exchanged directly between
-> peers with independently checkable external evidence — and, as of
-> recently, a real (if not yet reachable end-to-end) path for a Repository
-> creation's own signed record to travel that same way too, described in
-> [that guide's own "A third kind" section](09-PublicationsAndEvidence.md#a-third-kind-a-repository-creation-decentralized).
-> See [Publications & External Evidence](09-PublicationsAndEvidence.md) if
-> you're curious — it's optional depth, not required for anything in this
-> guide.
+> **Note:** Publishing stores your Document/World on this device (and on
+> any peer's device it later reaches). Publishing never uploads anything to
+> a decentralized network by itself — that's the separate, optional
+> **Distribute** step described next, which pushes the publication to
+> Arweave or IPFS and announces it on Nostr or Arweave so other people can
+> find it without being connected to you.
 
 ## Distributing straight from the Editor
 
@@ -45,34 +37,14 @@ in a while; closing it again (**Close**, clicking outside it, or Escape)
 never loses anything it produced — reopening it shows the exact same
 result, error, or in-flight state you left it in.
 
-The dialog opens with one set of settings, used for everything it
-distributes: a **Storage** (**Arweave**, **IPFS (Local Kubo)**, or **IPFS
-(Remote Pinning)** — the last needs a fresh Endpoint and Credential typed
-in every time; nothing about it is ever saved) and an **Announcement /
-Discovery substrate** (**Nostr** or **Arweave**). Both open on your saved
-provider preferences, and Storage only lists the backends this device can
-actually place a Snapshot on (plus Remote Pinning).
-
-If both sections below are available, a combined **Distribute** button
-sits right under those settings — the main action, which distributes the
-Snapshot and the Publication together with the settings above. It changes
-nothing about either protocol: each still runs independently, each still
-reports into its own section, and a failure in one is never hidden by,
-or blocks, the other. Specifically, it runs them one after another —
-Snapshot first, then Publication — never at the same time, since both can
-end up asking the same connected wallet extension to sign, and two
-signing requests fired at once is a real extension failure mode.
-
-A **Snapshot** section comes first, then a **Publication** section for
-the Publication's own Signed Claim. Each has its own smaller **Distribute
-Snapshot only** / **Distribute Publication only** button, using the same
-settings — handy if you only want one, or want to retry just the half
-that failed. Clicking either does exactly what World View's own
-equivalent button does for a publication you're inspecting there (see
-[World Encounters](03-WorldView.md#world-encounters--publications-and-avatars-your-peers-are-sharing)):
-a real attempt at an upload and an announcement, for the exact Publication
-your Publish click just produced — never a separate lookup by title or
-id.
+The dialog is the same one World View uses — its **Storage** and
+**Announcement / Discovery substrate** settings, the combined
+**Distribute** button, and the separate **Distribute Snapshot only** /
+**Distribute Publication only** buttons all work as described in
+[World Encounters](03-WorldView.md#world-encounters--publications-and-avatars-your-peers-are-sharing).
+Two things differ here: it always acts on the exact Publication your
+Publish click just produced, and the **Snapshot** section comes first,
+so the combined button runs the Snapshot first, then the Publication.
 
 The Publication's result appears in its own section:
 
@@ -80,7 +52,7 @@ The Publication's result appears in its own section:
 |---|---|
 | **Publication** | The publication's own id — confirms which publication this result is about. |
 | **Material** | The location the upload produced, or "Not yet uploaded" if it didn't complete. |
-| **Discovery** | The announcement id, or "Not yet announced" if it didn't complete. |
+| **Discovery** | The announcement id, or "Not yet announced" if it didn't complete — one row per relay when several are configured. |
 | **Repository** | An **Explore** button that jumps straight to this publication's page in World View — shown whenever the publication carries somewhere to explore, which in practice is always. |
 
 The Snapshot's own result — a **Content hash**, a **Locator**,
@@ -90,11 +62,11 @@ and discovered independently of Signed Claim distribution; see
 [Local Snapshot](09-PublicationsAndEvidence.md#local-snapshot) for what
 that distinction means.
 
-Like every other distribution button in this app, on a device with no
-wallet or relay connection configured either action always ends in a
-plain "…could not be completed" notice — the button and the attempt are
-real, the missing piece is host capability, not app plumbing. Publishing
-itself never distributes anything on its own: distribution only ever
+Like every other distribution button in this app, distributing needs a
+signing browser extension — an Arweave wallet (such as Wander) or a Nostr
+extension (such as nos2x); without one, it ends in a plain "…could not be
+completed" notice. Publishing itself never distributes anything on its
+own: distribution only ever
 happens on this later, separate, explicit click. Publishing again
 replaces the whole overlay with a fresh one for the new publication;
 dismissing it, or leaving the page, clears it — neither the notice nor
@@ -120,14 +92,14 @@ they just can't fork it until you pick a license that allows it.
 
 ## Editing a published creation
 
-A published creation is **immutable** — it can never change after the fact.
-So what happens when you edit one? The moment you make your **first change**
-(move a brick, edit the metadata, anything), ForkBuild automatically creates
-your own editable copy for you, titled *"Fork of &lt;original name&gt;"* — the
-same thing **Fork** does explicitly (see below), just triggered by the act of
-editing instead of a button. You'll see a small confirmation
-("Created your own editable copy — … is unchanged") the moment it happens, so
-you're never left wondering why the title on screen changed.
+A published creation is **immutable** — it can never change after the
+fact. To build on one, **Fork** it (below), or use **Edit a Copy** in World
+View. In World View, making your first change to a published world — its
+metadata, a landmark or region name, or an animal decoration —
+automatically creates your own copy, titled *"Fork of &lt;original
+name&gt;"*, with a short confirmation ("Created your own editable copy — …
+is unchanged"); see
+[Save and publish here, too](03-WorldView.md#save-and-publish-here-too).
 
 The original is never touched, no matter how much you change your copy.
 
@@ -173,7 +145,7 @@ Every creation offers three actions:
 
 | Button | What it does |
 |---|---|
-| **Open** | Load it into the Editor to look around (read‑only browsing) |
+| **Open** | Load that document into the Editor |
 | **Fork** | Copy it into your own editable creation |
 | **Explore** | Fly to it in World View |
 
@@ -192,8 +164,8 @@ discovered outright, either: a decentralized Repository creation a peer
 showed you in World View's own
 [World Encounters](03-WorldView.md#world-encounters--publications-and-avatars-your-peers-are-sharing)
 map, once its content actually resolves, joins this same search and its
-author's Author view too — see that section for the details. It's shown
-no differently from anything else here once it's in.
+author's Author view too, and stays there after a reload. It's shown no
+differently from anything else here.
 
 ## Forking: make it your own
 
@@ -204,22 +176,14 @@ no differently from anything else here once it's in.
 - The copy **remembers where it came from**, so credit is never lost.
 
 It works just like forking a project in Git: you branch off, do your own thing,
-and the family tree keeps track of everyone. (It also happens automatically
-the moment you edit a published creation directly — see
+and the family tree keeps track of everyone. (In World View it also happens automatically the moment you change a
+published world — see
 [Editing a published creation](#editing-a-published-creation) above.)
 
-> **Also called "Edit a Copy" in World View.** When you're looking at
-> something specific in World View — a region, a landmark, a placed
-> structure, a brick — its info panel offers this exact same action under
-> the label **Edit a Copy** instead of **Fork**. It's the same underlying
-> operation either way: a brand-new, independent copy; the original left
-> untouched; the same license rules above; and the same
-> [Fork Unavailable](#when-a-fork-cant-complete) handling if it can't go
-> through. The label just changes with where you're standing — Repository
-> and Author show you a *list* to pick a creation from, so "Fork" reads as
-> an action on a listed item; World View already has you looking at one
-> specific thing, so "Edit a Copy" describes what you're about to get
-> instead. See [Edit a Copy](03-WorldView.md#edit-a-copy--taking-something-into-the-editor)
+> **Also called "Edit a Copy" in World View.** It's the same underlying
+> operation either way, with the same license rules and the same
+> [Fork Unavailable](#when-a-fork-cant-complete) handling. See
+> [Edit a Copy](03-WorldView.md#edit-a-copy--taking-something-into-the-editor)
 > for World View's own walkthrough of it.
 
 ### How to fork

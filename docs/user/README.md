@@ -10,186 +10,35 @@ top-level [docs/](..) folder.
 1. **[Getting Started](01-GettingStarted.md)** — open the app, log in,
    and place your first brick.
 2. **[The Editor](02-TheEditor.md)** — the building toolkit: tools,
-   selection, transforms, choosing brick colors (before placing, or
-   recoloring placed bricks), groups, composing and forking ready-made
-   structures from the Build Library, saving your own builds to a
-   personal blueprint library and sharing them as files, placing
-   reusable structure instances, and a creation's title/description/
-   license.
-3. **[World View](03-WorldView.md)** — the shared 3D space every
-   published creation lives in: flying around, orienting yourself and
-   finding places, searching and exploring to find things, inspecting
-   bricks and placed structures, taking something into the Editor with
-   **Edit a Copy**, the operation timeline, and a **World Encounters**
-   map of publications and avatars your connected peers are sharing
-   nearby, including each publication's current material/verification
-   status (now also reachable through a resolved decentralized lead, not
-   only content this device already holds), where that material actually
-   came from, its distribution status and a **Distribute** trigger — tucked
-   behind its own dialog, like Publication Discovery below, rather than
-   left inline — opening onto a **Distribute Publication** action, a
-   separate, independent **Snapshot Distribution** section with its own
-   **Distribute Snapshot** action for that publication's Snapshot
-   protocol, and a combined one-click **Distribute** for firing both
-   (sequentially, never at once, so both never end up racing the same
-   signing extension) — all three also reachable straight from **My
-   Publication**'s own identical dialog for your own current world, with
-   no marker selection required — a
-   **Publication Discovery** popup, tucked behind its own trigger to keep
-   the main screen uncluttered, holding a **Discover Publication** search
-   that queries Arweave/Nostr directly by publication id and a discovery
-   tag prefilled with ForkBuild's own shared campaign tag — independent of
-   any marker or connected peer — letting you inspect and explicitly
-   select a verified result found that way, and, once a peer-shown
-   publication's material genuinely resolves this way, quietly admitting
-   it into the same [Repository](04-PublishingAndForking.md#the-repository)
-   search and Author-page catalog everything else lives in, for the rest
-   of that browser session, a **Nearby Place Names** group that
-   discovers signed place-naming claims from a decentralized network for
-   regions around you (again with no connected peer required), lets you
-   **Navigate** to one or **Adopt** it onto your own device, and never
-   picks a winner when two claims name the same ground, an open
-   **Commentary** thread on your own published world reachable from **My
-   Publication**, letting any signed-in identity leave a permanent,
-   unremovable comment, a **Notifications** button opening a durable,
-   cross-session **Notification History** of who commented on what and
-   when, My Publication's own unreduced **Placements** list of every
-   location that publication is actually placed at, and a **Diagnostic
-   Tools** popup gathering its manual, step-by-step Snapshot
-   discover/resolve/materialize/place/register recovery tools in one
-   place for when the automatic path doesn't produce what you expect —
-   increasingly automatic itself, since Snapshot candidates now also
-   surface passively, from local storage, connected peers, and Nostr
-   alike, simply by walking around, appearing as ordinary World
-   Encounter markers with no Diagnostic Tools click required.
-4. **[Publishing & Forking](04-PublishingAndForking.md)** — sharing
-   your work, licenses, how forking works (including the automatic
-   fork that happens the moment you edit a published creation), a
-   **Fork Unavailable** dialog naming exactly why a fork couldn't
-   complete — a denying license or currently-unavailable material —
-   with a **Back to Publication** way out instead of a blank, stranded
-   Editor document, browsing the Repository's searchable, sortable,
-   paginated catalog, and, the instant a publish succeeds, a **Distribute**
-   trigger right there in the Editor opening its own dialog — mirroring
-   World View's own — for pushing that exact publication (and,
-   independently or together in one click, its Snapshot) onto
-   Arweave/Nostr without a trip to World View, including a **Repository**
-   link straight back to it once distributed.
+   selection, transforms, brick colors, groups, the Build Library's
+   structures and your own blueprints, structure instances, and a
+   creation's title/description/license.
+3. **[World View](03-WorldView.md)** — the shared, read-only 3D space
+   every published creation lives in: flying around, finding and
+   inspecting things, **Edit a Copy** to take something into the Editor,
+   World Encounters shared by your peers, distributing your own
+   publication from **My Publication**, commentary and notifications.
+4. **[Publishing & Forking](04-PublishingAndForking.md)** — publishing,
+   licenses, forking, the Repository catalog, and distributing a
+   publication straight from the Editor.
 5. **[Identity & Login](05-IdentityAndLogin.md)** — your cryptographic
-   identity, the vault (locking/unlocking), and backing it up with
-   export/import, and managing every identity on the device from **My
-   Identities**.
-6. **[Avatars & Presence](06-AvatarsAndPresence.md)** — customizing how
-   you look, controlling who can see you, seeing (and walking among,
-   including a hands-free continuous-movement mode, and around trees the
-   same as buildings) everyone else in World View — noting that whether
-   someone else appears at all tracks where your camera is looking, not
-   which way you're walking, so a camera left pointed elsewhere can hide
-   someone standing right in your path — mounting and riding a vehicle
-   (bicycle, motorcycle, car, or drone) instead of walking, carrying
-   vehicles and caught animals in an inventory that survives a reload,
-   baking a released animal into a World as a lasting decoration with
-   **G** (and undoing it the same way), a locked **Camera Perspective** (Free/First
-   Person/Third Person/Bird's-Eye, purely local, sitting right beside
-   Follow Avatar) for seeing through your own avatar's eyes instead of
-   flying the camera yourself, coherent with your avatar's own heading
-   while a Perspective is locked on and deliberately orientation-blind
-   while Free, and understanding what they're doing through spatial
-   awareness.
+   identity, the vault (locking/unlocking), backing it up with
+   export/import, and managing identities from **My Identities**.
+6. **[Avatars & Presence](06-AvatarsAndPresence.md)** — customizing your
+   avatar, who can see you, walking, camera perspectives, vehicles,
+   animals, and your inventory.
 7. **[Peer Connections & Friends](07-PeerConnectionsAndFriends.md)** —
-   connecting directly to other people, remembering, friending, and
-   blocking, plus automatic reconnection to any Known Peer who is
-   currently discoverable, with no manual Reconnect click required, and a
-   **TURN Server** settings page for supplying your own relay so peer
-   connections behind a restrictive NAT — the ones plain STUN can't find a
-   direct path for — can still get through.
+   connecting directly to other people, remembering, friending, blocking,
+   automatic reconnection, and your own TURN relay.
 8. **[Chat & Conversations](08-ChatAndConversations.md)** — direct,
    friends-only messaging, offline delivery, read receipts, and voice
    calls.
 9. **[Publications & External Evidence](09-PublicationsAndEvidence.md)** —
-   signed authorship and place-name claims — the latter now explicitly
-   publishable to a decentralized network (Nostr), independent of and
-   alongside announcing to peers — catalog status (connecting to a peer
-   now automatically catalogs everything they've already published, not
-   only what they publish from then on), retrieving
-   content from peers, optional external evidence: creating, discovering
-   from peers, verifying, and inspecting anchors like a Bitcoin timestamp,
-   optional snapshot placements: creating, inspecting, resolving,
-   materializing, and comparing locators like an IPFS node that can
-   currently serve a claim's content (resolving now works through a
-   public, user-overridable IPFS gateway, with no local node required), a
-   standing **Content Provider** preference (its own settings page) so a
-   **Use Preferred Provider** button can create a placement on your saved
-   backend without naming one each time — now also offering **IPFS
-   (Remote Pinning)** as a savable Content default even on a replica with
-   no content backend registered at all, so the Editor's, World View's,
-   and My Publication's own Distribute dialogs open pre-selected on it too
-   without you having to run a Kubo node, local or remote — a matching
-   **Proof / Anchoring Provider** preference for a one-click anchoring
-   **Use Preferred Provider** button, an **Announcement / Discovery
-   Provider** default (Nostr or Arweave), and standing endpoint overrides
-   — **Arweave Gateway**, **IPFS Gateway**, **Bitcoin Endpoint**, and one
-   **Nostr Relays** list used everywhere Nostr is — all gathered on one
-   **Network Settings** hub, an **IPFS
-   Publishing** section for explicitly publishing content to a
-   configured remote pinning provider — a successful publish there now
-   also announces itself for Nostr Snapshot discovery, the same way a
-   local Kubo node's own Distribute Snapshot already does, so it's
-   findable by peers without ever running an IPFS node — independently
-   verifying it's still retrievable, and inspecting the full history of
-   both, a
-   **Local Snapshot** section for checking, importing, and pulling in
-   the actual bytes this device holds (from a placement, a peer, or an
-   offline file), a **Decentralization** overview comparing your
-   evidence and placements, synchronizing knowledge with peers, and
-   seeing how each claim was learned, two
-   independent, mirrored **Anchor Pipelines** — one for **Bitcoin**, one
-   for **Base** — each connecting a real browser wallet and walking a real
-   transaction through funding/observation, construction, review, signing,
-   cryptographic verification, broadcast, and confirmation/inclusion, the
-   Base pipeline also offering a one-click **Create Base Anchor** action
-   that signs, finalizes, broadcasts, and catalogs an anchor in a single
-   step as a deliberate alternative to its own granular flow, with each
-   pipeline minting its own durable publication identity and
-   lifecycle timeline, and the durable, cross-chain **Publication
-   Observation Archive** underlying all of it — a persisted record of
-   IPFS, Bitcoin, and Base facts alike, with its own combined timeline,
-   export/import, non-replacing inspection and comparison of another
-   device's archive, provenance, and a fingerprint you can check
-   against a peer's, plus, built on top of those durable publication
-   identities, an explicit **Publication References** relationship
-   between two publications with a **Reference Graph** view over all of
-   them, an **Achievements** system that badges a publication's own
-   milestones (and a per-publication **Achievement Profile**), and a
-   **Publisher Identity** layer for explicitly associating a
-   self-declared publisher label with your publications and inspecting
-   that publisher's own achievement profile, badges, and statistics, a
-   **Leaderboard** hub page — reached from a link right on this page,
-   no longer only by typing a URL — consolidating every leaderboard-
-   related page (Reconciliation Workspace, Publisher Snapshot Claim,
-   Publisher Performance Leaderboard, and the Publisher Achievement
-   cards) in one place, including a read-only
-   **Reconciliation Candidate Leaderboard** page that
-   summarizes this replica's own recorded reconciliation-decision and
-   revalidation-observation evidence per candidate, including a way to
-   import and inspect a previously exported evidence document on its own,
-   and a second, separate **Evidence Export Comparison** page (reached
-   from its own **Compare Exported Evidence** link, or by URL) that
-   compares two previously exported evidence
-   documents against each other across three independent Source-only/
-   Shared/Target-only tables with per-record and per-field identity
-   inspection, plus an **Explicit Record Pairing** tool for hand-picking
-   two records and seeing exactly which named fields differ between them,
-   a third publication content kind — a Repository creation's own signed
-   record, decentralized — that, once resolved, now feeds straight into
-   the Repository's own search results, Author pages, and World View
-   exploration for the rest of that browser session, and, orthogonal to
-   all of it, an open **[Commentary](09-PublicationsAndEvidence.md#commentary)**
-   system letting any signed-in identity comment on any publication —
-   reached from the Repository's cards and list rows, World Encounters,
-   and World View's own **My Publication** panel — which
-   notifies that publication's publisher through a durable **Notification
-   History**.
+   the technical, optional layer: signed authorship and place-name
+   claims, commentary, local snapshots, external evidence and the
+   Bitcoin/Base anchor pipelines, snapshot placements, Network Settings,
+   IPFS publishing, the observation archive, references, achievements,
+   publisher identities, and the Leaderboard pages.
 
 ## Reference
 
