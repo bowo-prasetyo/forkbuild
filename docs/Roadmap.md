@@ -98281,4 +98281,5 @@ dependency-free. Fingerprints are unchanged; the plan-identity boundary test now
 `isPlainObject()` (`utils/typeGuards.js`), `parseJSONOrNull()` (`utils/parseJsonOrNull.js`) and `withTimeout()`
 (`utils/withTimeout.js`, which takes the timeout message as a third argument so each caller keeps its own). This
 removed 61 definitions across 55 files. The eight validators whose copy trimmed whitespace now call
-`isNonBlankString()`, so both behaviors are kept.
+`isNonBlankString()`, so both behaviors are kept. Five source-pinning tests that counted imports or `setTimeout()`
+calls now allow the `utils/` helpers.

@@ -1097,8 +1097,9 @@ async function runTests() {
         for (const file of ['application/NostrSnapshotDiscoveryQueryService.js', 'application/NostrSnapshotDiscoveryPublisher.js']) {
             const source = await codeOnlySource(file);
             assert(!/setInterval\(|\.subscribe\(|requestAnimationFrame\(/.test(source), `5. ${file} owns no recurring cadence of any kind`);
+            // The per-call network timeout guard is the shared utils/withTimeout.js.
             const timeoutCount = (source.match(/setTimeout\(/g) || []).length;
-            assert(timeoutCount === 1, `6. ${file} carries exactly one setTimeout() — the single documented per-call network timeout guard, never a second, cadence-shaped timer — got ${timeoutCount}`);
+            assert(timeoutCount === 0 && source.includes("from '../utils/withTimeout.js'"), `6. ${file} owns no setTimeout() of its own — its single per-call network timeout guard is utils/withTimeout.js, never a second, cadence-shaped timer — got ${timeoutCount}`);
         }
 
         console.log('✓ Section J: ui/views/WorldView.js still declares exactly three intervals total, discovery observation and retention reconciliation both fire from inside the SAME refreshSpatialUI() function body, and no Snapshot-automatic application file owns a timer, subscription, or animation-frame loop of its own — one spatial cadence, never a second, Snapshot-specific one');

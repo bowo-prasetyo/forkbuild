@@ -173,8 +173,8 @@ import { isPlainObject } from '../utils/typeGuards.js';
 // reads a clock, touches storage, or performs any I/O. Calling any of them
 // twice with byte-identical arguments returns a byte-identical result.
 //
-// ARCHITECTURAL BOUNDARY — EXACTLY ONE IMPORT, 0.8.163's OWN APPEND
-// BOUNDARY, NOTHING ELSE. This file imports nothing from `application/
+// ARCHITECTURAL BOUNDARY — BESIDES utils/ HELPERS, EXACTLY ONE IMPORT,
+// 0.8.163's OWN APPEND BOUNDARY. This file imports nothing from `application/
 // PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation.js`
 // (0.8.162), `application/
 // PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplicationView.js`
