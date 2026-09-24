@@ -360,7 +360,7 @@ export default {
         },
         // Optional `(publication, discoveryProvider) -> Promise<PublicationDistributionResult
         // | null>`, called with the selected Publication and the Wanderer's
-        // `selectedDiscoveryProvider` (AMENDED BY 0.9.430: the second argument).
+        // `selectedDiscoveryProvider` as the second argument.
         // Everything else a distribution needs (`serializedMaterial`,
         // `materialStorage`, `arweaveUploaderOptions`, `nostrPublisherOptions`,
         // `arweaveAnnouncementPublisherOptions`) is the caller's concern.
@@ -1359,7 +1359,7 @@ export default {
         },
         // The only caller of `distributionCommand`. No-op without a publication or
         // command, or while a call is in flight. Passes `selectedDiscoveryProvider`
-        // (AMENDED BY 0.9.430) as given. `Promise.resolve().then(...)` turns a
+        // as given. `Promise.resolve().then(...)` turns a
         // synchronous throw into the same plain notice as a rejection. The resolved
         // value is never inspected; results arrive through the lifecycle
         // subscription.
