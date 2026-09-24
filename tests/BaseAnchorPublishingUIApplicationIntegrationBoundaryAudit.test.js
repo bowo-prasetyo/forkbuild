@@ -19,7 +19,7 @@ import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAn
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { publicationsPageFiles } from './support/PublicationsPageFiles.js';
+import { publicationsPageFiles } from './support/ViewSourceFiles.js';
 
 // 0.9.472 — Expose Review-Preserving Base Anchor Action.
 //

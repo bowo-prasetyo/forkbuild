@@ -9,6 +9,7 @@ import { World } from '../core/World.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { CommandHistory } from '../application/CommandHistory.js';
 import { CreateWorldLandmarkCommand } from '../application/commands/CreateWorldLandmarkCommand.js';
+import { worldViewFiles } from './support/ViewSourceFiles.js';
 
 // 0.9.212 — Post-Undo/Redo Product Reassessment.
 //
@@ -85,7 +86,7 @@ async function runTests() {
     // Undo/Redo arc this milestone reassesses is now closed end to end.
     // ---------------------------------------------------------------
     {
-        const worldView = await rawSource('ui/views/WorldView.js');
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const componentTags = new Set((worldView.match(/<[A-Z][A-Za-z]+/g) || []).map((tag) => tag.slice(1)));
         for (const name of ['PlacementInfoPanel', 'OwnPublicationPanel', 'HistoryTimelinePanel', 'VehicleInteractionPrompt', 'WorldEncounterCanvas']) {
             assert(componentTags.has(name), `A1. WorldView.js still composes ${name}`);
@@ -186,7 +187,7 @@ async function runTests() {
             const source = await rawSource(file);
             assert(!/passenger|multi-?rider/i.test(codeOnlyLines(source).join('\n')), `B3. ${file} still carries no passenger/multi-rider vocabulary in code`);
         }
-        const worldView = await rawSource('ui/views/WorldView.js');
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/VehicleInteractionPrompt/.test(worldView), 'B4. Vehicle mount/dismount/movement stays UI-reachable via VehicleInteractionPrompt — the narrowness is scope, not dead code');
         console.log('✓ Section B: Vehicle system — INTENTIONAL_BOUNDARY, unchanged since 0.9.196. Multi-passenger capacity, fuel/range, and rental/ownership remain undocumented requirements, not missing implementations; existing interaction/movement remains fully wired.');
     }
@@ -205,7 +206,7 @@ async function runTests() {
         }
         assert(/<RecoveryBanner/.test(editorViewSource), 'C1c. RecoveryBanner is still in the template');
 
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         for (const identifier of ['getTimeline', 'restoreHistoryAt', 'beginHistoryPreview', 'previewHistoryAt', 'cancelHistoryPreview']) {
             assert(countReferences(worldViewSource, identifier) > 0, `C2a. WorldView.js still references ${identifier}`);
         }
@@ -258,7 +259,7 @@ async function runTests() {
         // paths — regression-checked directly against source.
         const ownPublicationPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
         assert(/discoverOwnSnapshot\s*\(\)\s*\{/.test(ownPublicationPanelSource) || /discoverOwnSnapshot\(/.test(ownPublicationPanelSource), 'E1a. OwnPublicationPanel.js still defines/calls discoverOwnSnapshot (manual discovery)');
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/worldSnapshotDiscoveryMonitor\.observe\(/.test(worldViewSource), 'E1b. WorldView.js still drives worldSnapshotDiscoveryMonitor.observe() on its own refresh tick (automatic discovery)');
         assert(/automaticSnapshotEncounterCascade\.processCandidate\(/.test(worldViewSource), 'E1c. WorldView.js still feeds discovered candidates to automaticSnapshotEncounterCascade.processCandidate() (automatic materialization)');
         const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
@@ -333,7 +334,7 @@ async function runTests() {
         // F4 — HistoryTimelinePanel (browse/preview/restore) and the
         // Undo/Redo buttons/shortcut are genuinely separate UI surfaces
         // over the SAME CommandHistory, neither superseding the other.
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/undoAction|session\.undo\(\)/.test(worldViewSource), 'F4a. WorldView.js still has its own Undo affordance');
         assert(countReferences(worldViewSource, 'HistoryTimelinePanel') > 0, 'F4b. WorldView.js still composes HistoryTimelinePanel separately');
         const timelinePanelSource = await rawSource('ui/components/HistoryTimelinePanel.js');

@@ -35,6 +35,7 @@ import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { worldViewFiles } from './support/ViewSourceFiles.js';
 
 // 0.9.567 — Distributed Publication Position Claim End-to-End Product
 // Reassessment.
@@ -460,11 +461,11 @@ async function run() {
         // own amended header, above.
         assert(/const snapshotDistributionCommand = \(bytes, storage = 'ar', publicationId, claimedPosition, discoveryProvider\) => executeSnapshotDistributionCommand\(\{\s*\n\s*bytes,\s*\n\s*contentStore: resolveSnapshotDistributionContentStore\(snapshotPlacementStoreRegistry, storage\),\s*\n\s*discoveryPublisher: resolveSnapshotDiscoveryPublisher\(discoveryProvider\),\s*\n\s*publicationId,\s*\n\s*claimedPosition\s*\n\s*\}\);/.test(mainSource),
             'B1. AMENDED BY 0.9.669 — ui/main.js\'s own real `snapshotDistributionCommand` wrapper genuinely has this exact shape — makeRealSnapshotDistributionCommand() above reproduces it faithfully, minus per-substrate resolution (see that function\'s own amended header).');
-        const worldViewSource = await readSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         // AMENDED BY 0.9.669 — `discoveryProvider` joined `publication`/
         // `storage`/`remotePinningConfiguration` as a new, optional fourth
         // parameter — still exactly one `distributeWorldEncounterSnapshot`.
-        const distributeFnMatch = worldViewSource.match(/function distributeWorldEncounterSnapshot\(publication, storage, remotePinningConfiguration, discoveryProvider\)\s*\{[\s\S]*?\n        \}/);
+        const distributeFnMatch = worldViewSource.match(/function distributeWorldEncounterSnapshot\(publication, storage, remotePinningConfiguration, discoveryProvider\)\s*\{[\s\S]*?\n    \}/);
         assert(distributeFnMatch && /session\.getPlacementInfoForPublication\(publication\.id\)/.test(distributeFnMatch[0])
             && /placementInfo \? placementInfo\.publicationId : undefined/.test(distributeFnMatch[0]),
             'B2. ui/views/WorldView.js\'s own real distributeWorldEncounterSnapshot() genuinely has this exact shape — makeDistributeWorldEncounterSnapshotAction() above reproduces it faithfully.');

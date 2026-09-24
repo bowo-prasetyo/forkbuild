@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { sortOptionsByLabel, sortLabels, compareOptionLabels } from '../utils/sortOptionsByLabel.js';
-import { publicationsPageFiles } from './support/PublicationsPageFiles.js';
+import { publicationsPageFiles } from './support/ViewSourceFiles.js';
 
 // Choice lists are shown alphabetically unless their order carries meaning.
 //

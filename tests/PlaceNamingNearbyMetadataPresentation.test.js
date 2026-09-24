@@ -15,6 +15,7 @@ import { PlaceNamingClaimExchange } from '../application/PlaceNamingClaimExchang
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldViewFiles } from './support/ViewSourceFiles.js';
 
 // 0.9.266 — Nearby Place Naming Claim Metadata Presentation.
 //
@@ -514,7 +515,7 @@ async function runTests() {
         assert(regionRecord.name === 'Original Region Name', '11a. computing rows never renames the WorldRegion the claim describes');
 
         const computedRowsBlock = extractBetween(
-            codeOnlyLines(await rawSource('ui/views/WorldView.js')),
+            codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n')),
             'const nearbyPlaceNamingClaimRows = computed(() => (',
             'function navigateToNearbyPlaceNamingClaim(row) {'
         );
@@ -532,7 +533,7 @@ async function runTests() {
     // the new code.
     // ---------------------------------------------------------------
     {
-        const worldViewCode = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
+        const worldViewCode = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         const nearbyBlock = worldViewCode.match(/<CollapsibleSection\s+title="Nearby Place Names"[\s\S]*?<\/CollapsibleSection>/)[0];
         const formatterBlock = extractBetween(worldViewCode, 'function formatNearbyPlaceNamingCreatedAt(createdAt) {', 'const nearbyPlaceNamingClaimRows = computed(() => (');
 
@@ -603,7 +604,7 @@ async function runTests() {
     // genuinely matches what ui/views/WorldView.js contains.
     // ---------------------------------------------------------------
     {
-        const worldViewCode = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
+        const worldViewCode = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
 
         assert(worldViewCode.includes('function formatNearbyPlaceNamingCreatedAt(createdAt) {'),
             '14a. WorldView.js defines the real formatNearbyPlaceNamingCreatedAt() formatter');

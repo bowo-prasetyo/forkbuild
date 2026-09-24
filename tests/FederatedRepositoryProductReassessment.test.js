@@ -23,6 +23,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PublicationExchange } from '../application/PublicationExchange.js';
 import { PublicationPeerExchange } from '../application/PublicationPeerExchange.js';
 import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
+import { worldViewFiles } from './support/ViewSourceFiles.js';
 
 // 0.9.340 — Federated Repository Product Reassessment.
 //
@@ -647,7 +648,7 @@ async function run() {
         // World Search itself stays entirely separate — reconfirmed,
         // not merely assumed, since this is exactly the seam a
         // careless widening could have crossed.
-        const worldViewSource = await readSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(worldViewSource.includes('session.searchWorld(options)'),
             '2. WorldView.js\'s own World Search still goes through session.searchWorld(), never CreateDiscoveryUseCase.');
         // AMENDED BY 0.9.597 — Publication Action Provider Continuity Fix.

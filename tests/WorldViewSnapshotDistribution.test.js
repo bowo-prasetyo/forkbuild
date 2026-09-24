@@ -11,6 +11,7 @@ import { DecentralizedSnapshotResolutionOutcome } from '../application/Decentral
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
+import { worldViewFiles } from './support/ViewSourceFiles.js';
 
 // 0.9.138 — World View Snapshot Distribution Action.
 //
@@ -505,7 +506,7 @@ async function runTests() {
     // ---------------------------------------------------------------
     {
         const canvasCode = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
-        const viewCode = await codeOnlySource('ui/views/WorldView.js');
+        const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         const mainCode = await codeOnlySource('ui/main.js');
 
         const forbiddenInUi = [

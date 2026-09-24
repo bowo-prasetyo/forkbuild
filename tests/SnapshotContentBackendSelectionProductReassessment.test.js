@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { publicationsPageFiles } from './support/PublicationsPageFiles.js';
+import { publicationsPageFiles } from './support/ViewSourceFiles.js';
 
 // 0.9.509 — Snapshot Content Backend Selection Product Reassessment.
 //

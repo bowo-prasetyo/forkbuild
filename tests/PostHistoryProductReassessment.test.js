@@ -12,6 +12,7 @@ import { CommandHistory } from '../application/CommandHistory.js';
 import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
 import { PlaceBrickCommand } from '../application/commands/PlaceBrickCommand.js';
 import { CreateWorldLandmarkCommand } from '../application/commands/CreateWorldLandmarkCommand.js';
+import { worldViewFiles } from './support/ViewSourceFiles.js';
 
 // 0.9.209 — Post-History Product Reassessment.
 //
@@ -91,7 +92,7 @@ async function runTests() {
     // right next to that stack in the same class: undo()/redo().
     // ---------------------------------------------------------------
     {
-        const worldView = await rawSource('ui/views/WorldView.js');
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const componentTags = new Set((worldView.match(/<[A-Z][A-Za-z]+/g) || []).map((tag) => tag.slice(1)));
         const expectedFamilies = [
             'AvatarInfoPanel', 'NearbyAvatarsPanel', 'CompassIndicator',
@@ -228,7 +229,7 @@ async function runTests() {
 
         // C2 — the 0.9.206 finding stays closed (history timeline/
         // replay/restore), including 0.9.208's three lifecycle fixes.
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         for (const identifier of ['getTimeline', 'restoreHistoryAt', 'beginHistoryPreview', 'previewHistoryAt', 'cancelHistoryPreview']) {
             assert(countReferences(worldViewSource, identifier) > 0, `C2a. WorldView.js still references ${identifier}`);
         }
@@ -274,7 +275,7 @@ async function runTests() {
         // deliberately excluded from this list and filed under Section A
         // instead — it is a missing UI caller for a capability that was
         // never uncomposed, not a missing composition.
-        const worldViewSourceForC = await rawSource('ui/views/WorldView.js');
+        const worldViewSourceForC = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         for (const method of ['createLandmarkHere', 'createRegionHere', 'movePlacement', 'removePlacement', 'unpublishDocument', 'searchWorld']) {
             assert(countReferences(worldViewSourceForC, method) > 0, `C4. WorldView.js still calls session.${method}(...) — the document/placement/publication-lifecycle surface has no new orphaned method`);
         }

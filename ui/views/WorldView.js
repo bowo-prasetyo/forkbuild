@@ -7,8 +7,6 @@ import { InputRouter } from '../../application/InputRouter.js';
 import { WorldSpatialContextService } from '../../application/WorldSpatialContextService.js';
 import { AutomaticSnapshotEncounterCascade } from '../../application/AutomaticSnapshotEncounterCascade.js';
 import { AutomaticSnapshotEncounterRetentionReconciliation } from '../../application/AutomaticSnapshotEncounterRetentionReconciliation.js';
-import { IpfsRemotePublicationState } from '../../application/IpfsRemotePublicationState.js';
-import { sanitizeDistributionErrorMessage } from '../../application/DistributionErrorMessageSanitizer.js';
 import { SnapshotWorldRegistrationOutcome } from '../../application/SnapshotWorldRegistrationOutcome.js';
 import { ObserverLocalEncounterStore } from '../../application/ObserverLocalEncounterStore.js';
 import ActionFeedback from '../components/ActionFeedback.js';
@@ -43,25 +41,25 @@ import AnimalInteractionPrompt from '../components/AnimalInteractionPrompt.js';
 import HistoryTimelinePanel from '../components/HistoryTimelinePanel.js';
 import NotificationHistoryPanel from '../components/NotificationHistoryPanel.js';
 import { CameraPerspective } from '../../core/CameraPerspective.js';
-import { geographicPlaceLocationId } from '../../core/GeographicPlaceNavigation.js';
 import { WorldFocusKind } from '../../core/WorldFocusContext.js';
-import { EditorEntryContext, EditorEntryReason, editorEntryContextToQuery, withReturnWorld } from '../../core/EditorEntryContext.js';
+import { EditorEntryContext, EditorEntryReason, editorEntryContextToQuery } from '../../core/EditorEntryContext.js';
 import { WorldViewNavigationState, WorldViewPrimaryMode } from '../../application/WorldViewNavigationState.js';
 import { PlaceNamingDiscoveryMonitor } from '../../application/PlaceNamingDiscoveryMonitor.js';
 import { executeDiscoverPlaceNamingClaimsCommand } from '../../application/DiscoverPlaceNamingClaimsCommand.js';
 import { derivePlaceNamingDiscoveryTag } from '../../core/PlaceNamingDiscoveryEnvelope.js';
-import { buildPlaceNamingClaimPublication } from '../../application/PlaceNamingClaimPublication.js';
-import { PlaceNamingClaim } from '../../core/PlaceNamingClaim.js';
+import { usePlaceNamingPanel } from './worldView/usePlaceNamingPanel.js';
+import { useWorldHistoryPanel } from './worldView/useWorldHistoryPanel.js';
+import { useLandmarkAndRegionForms } from './worldView/useLandmarkAndRegionForms.js';
+import { useLocationBrowser } from './worldView/useLocationBrowser.js';
+import { useAvatarControls } from './worldView/useAvatarControls.js';
+import { useWelcomePanel } from './worldView/useWelcomePanel.js';
+import { usePlacesAndFocus } from './worldView/usePlacesAndFocus.js';
+import { useNearbySections } from './worldView/useNearbySections.js';
+import { useWorldMembersPanel } from './worldView/useWorldMembersPanel.js';
+import { useWorldEncounterCommands } from './worldView/useWorldEncounterCommands.js';
+import { useOwnPublicationActions } from './worldView/useOwnPublicationActions.js';
 
 const DRAG_THRESHOLD_PX = 6;
-
-// Display defaults only: the session decides the real radius.
-const DEFAULT_EXPLORE_RADIUS = 25;
-const NEARBY_RADIUS = 5;
-
-// Same shape exploreLocation returns, so callers never special-case a call
-// that did not happen.
-const EMPTY_DISCOVERY_ENVELOPE = { documents: [], diagnostics: { available: false, fatal: null, complete: false, warnings: [] } };
 
 // World View observes and navigates; brick editing lives in the Editor (see
 // docs/Principles.md, "World View Observes and Navigates; Editor Mutates and
@@ -123,20 +121,6 @@ export default {
         const placementEditTarget = ref(null);
         // Set only when a move hits an occupied destination under a WARN policy.
         const placementOverlapWarning = ref(null);
-        const searchResults = ref([]);
-        const showLocationDocuments = ref(false);
-        const locationDocumentsPosition = ref(null);
-        const locationDocumentsOccupants = ref([]);
-        // Cleared on every open/re-query: an expansion from an earlier query need not
-        // match a row in the new results.
-        const showLocationBrowser = ref(false);
-        const locationBrowserCenter = ref(null);
-        const locationBrowserRadius = ref(DEFAULT_EXPLORE_RADIUS);
-        const locationBrowserDocuments = ref([]);
-        // Defaults to the "unavailable" shape so the banner always has well-formed
-        // data.
-        const locationBrowserDiagnostics = ref(EMPTY_DISCOVERY_ENVELOPE.diagnostics);
-        const locationBrowserInspected = ref(null);
         const cameraPosition = ref(null);
         // The location list is re-read each time the panel opens, never cached.
         const compassHeading = ref(null);
@@ -163,62 +147,8 @@ export default {
         });
         const showLocationsPanel = ref(false);
         const worldLocations = ref([]);
-        // Re-read on open and on every spatial-presence update. Opens automatically once
-        // per World per session; `welcomeIsArrival` only changes the framing.
-        const showWelcomePanel = ref(false);
-        const welcomeContext = ref(null);
-        const welcomeIsArrival = ref(true);
-        // Null on a first visit, else the PRIOR visit's time (read before this visit is
-        // saved). Presentational only.
-        const worldReturnInfo = ref(null);
         // Mirrors session.canEditDocument(); gates the landmark affordances.
         const canEditActiveWorld = ref(false);
-        const showLandmarkForm = ref(false);
-        const landmarkFormTarget = ref(null);
-        const showRegionForm = ref(false);
-        const regionFormTarget = ref(null);
-        // The panel's data is re-derived from the session on open and after every
-        // action, never cached.
-        const showNamingPanel = ref(false);
-        const namingPanelRegionId = ref(null);
-        const namingPanelClaims = ref([]);
-        const namingPanelView = ref([]);
-        const namingPanelPreferredName = ref(null);
-        // Every known region that candidate-matches this region's geometry, and their
-        // combined naming view.
-        const namingPanelGeographicRegions = ref([]);
-        const namingPanelGeographicView = ref([]);
-        // Per-panel state for announcing a claim to Nostr. The claim id lets the result
-        // show beside the right row. Reset (and in-flight calls invalidated) when the
-        // panel opens or closes.
-        const namingPanelPublishToNostrClaimId = ref(null);
-        const namingPanelPublishToNostrExecuting = ref(false);
-        const namingPanelPublishToNostrError = ref(null);
-        const namingPanelPublishToNostrResult = ref(null);
-        const namingPanelPublishToNostrRequestId = ref(0);
-        const myIdentityId = computed(() => session.getMyIdentityId());
-        // Refreshed every tick while open, so collaborators keep moving on the map.
-        // Pan/zoom are not reset by the refresh.
-        const showMapPanel = ref(false);
-        const mapContent = ref({ regions: [], landmarks: [], structures: [], collaborators: [], viewerPosition: null });
-        // Re-read each time the directory opens. "Show on Map" only highlights regions
-        // already drawn.
-        const showGeographicPlaceDirectory = ref(false);
-        const geographicPlaces = ref([]);
-        const showGeographicPlacePanel = ref(false);
-        const geographicPlace = ref(null);
-        const mapHighlightRegionKeys = ref([]);
-        const nearbyGeographicPlaces = ref([]);
-        // Exactly placeNamingDiscoveryMonitor's last result: never re-ranked,
-        // deduplicated or reduced to one name per place. Written only from the
-        // monitor's callback; this view does no discovery of its own. The error is a
-        // small indicator and never clears the claims.
-        const nearbyPlaceNamingClaims = ref([]);
-        const placeNamingDiscoveryError = ref(null);
-        // Rebuilt on each inspection. Its own overlay, so it can open from Explore or
-        // Locations without leaving either.
-        const showFocusPanel = ref(false);
-        const focusContext = ref(null);
         // A plain non-reactive object, like `session`: call its methods, then mirror the
         // changes into refs.
         const worldViewNav = new WorldViewNavigationState();
@@ -476,372 +406,38 @@ export default {
 
         // Recipient-scoped, unlike the document-scoped History panel.
         const showNotificationHistoryPanel = ref(false);
-        const showHistoryPanel = ref(false);
-        const historyPanelDocumentId = ref(null);
-        const historyTimeline = ref([]);
-        const selectedHistoryEntryId = ref(null);
-        // Mirrored only for highlighting; the session's own preview state is the source
-        // of truth.
-        const historyPreviewCursor = ref(null);
+        const {
+            showHistoryPanel, historyPanelDocumentId, historyTimeline, selectedHistoryEntryId,
+            historyPreviewCursor, canUndo, canRedo, undoLabel, redoLabel, openHistoryPanel, closeHistoryPanel,
+            selectHistoryEntry, _resolveSelectedHistoryCursor, previewSelectedHistoryEntry,
+            cancelHistoryPreviewAction, restoreSelectedHistoryEntry, undoAction, redoAction
+        } = useWorldHistoryPanel({
+            activeDocumentInfo, feedback, guarded, refreshSpatialUI, session
+        });
 
-        // Re-read every refresh from the session, never computed here.
-        const canUndo = ref(false);
-        const canRedo = ref(false);
-        const undoLabel = ref(null);
-        const redoLabel = ref(null);
-
-        function openHistoryPanel() {
-            const info = activeDocumentInfo.value;
-            if (!info) return;
-            historyPanelDocumentId.value = info.documentId;
-            selectedHistoryEntryId.value = null;
-            historyPreviewCursor.value = null;
-            historyTimeline.value = session.getTimeline(info.documentId);
-            showHistoryPanel.value = true;
-        }
-
-        function closeHistoryPanel() {
-            // Always cancel a preview before its panel closes, or the replay world would
-            // stay rendered with no way to end it.
-            if (historyPreviewCursor.value !== null) {
-                guarded(() => session.cancelHistoryPreview());
-            }
-            showHistoryPanel.value = false;
-            historyPanelDocumentId.value = null;
-            historyTimeline.value = [];
-            selectedHistoryEntryId.value = null;
-            historyPreviewCursor.value = null;
-        }
-
-        function selectHistoryEntry(entryId) {
-            selectedHistoryEntryId.value = entryId;
-        }
-
-        // Re-reads the timeline and resolves the selected entry's id (never a
-        // remembered index): edits made while the panel was open can move or remove
-        // it. A missing entry clears the selection and is reported. The cursor is
-        // entry.index + 1 ("this entry applied").
-        function _resolveSelectedHistoryCursor() {
-            const docId = historyPanelDocumentId.value;
-            if (!docId || !selectedHistoryEntryId.value) return null;
-            const fresh = session.getTimeline(docId);
-            historyTimeline.value = fresh;
-            const entry = fresh.find((candidate) => candidate.id === selectedHistoryEntryId.value);
-            if (!entry) {
-                selectedHistoryEntryId.value = null;
-                feedback.show('That history entry no longer exists — the timeline has changed');
-                return null;
-            }
-            return entry.index + 1;
-        }
-
-        function previewSelectedHistoryEntry() {
-            const docId = historyPanelDocumentId.value;
-            if (!docId || docId !== session.getActiveDocumentId()) {
-                feedback.show('The active document changed — reopen History to preview it');
-                return;
-            }
-            const cursor = _resolveSelectedHistoryCursor();
-            if (cursor === null) return;
-            guarded(() => {
-                if (historyPreviewCursor.value === null) {
-                    session.beginHistoryPreview();
-                }
-                session.previewHistoryAt(cursor);
-                historyPreviewCursor.value = cursor;
-            });
-        }
-
-        function cancelHistoryPreviewAction() {
-            guarded(() => session.cancelHistoryPreview());
-            historyPreviewCursor.value = null;
-        }
-
-        function restoreSelectedHistoryEntry() {
-            const docId = historyPanelDocumentId.value;
-            const cursor = _resolveSelectedHistoryCursor();
-            if (cursor === null) return;
-            // restoreHistoryAt() ends any preview itself.
-            const restored = guarded(() => {
-                session.restoreHistoryAt(cursor, docId);
-                return true;
-            });
-            if (!restored) return;
-            feedback.show('Restored to an earlier point in history');
-            closeHistoryPanel();
-            refreshSpatialUI();
-        }
-
-        // Thin wrappers over the session's undo()/redo(), sharing the History panel's
-        // CommandHistory. canUndo/canRedo already read false during a preview.
-        function undoAction() {
-            const performed = guarded(() => session.undo());
-            if (performed) {
-                feedback.show('Undone');
-            }
-            refreshSpatialUI();
-        }
-
-        function redoAction() {
-            const performed = guarded(() => session.redo());
-            if (performed) {
-                feedback.show('Redone');
-            }
-            refreshSpatialUI();
-        }
-
-        // Adds serializedMaterial (this replica's signed JSON record of the
-        // Publication) to the distribution request; everything else is the injected
-        // commands' business. 'arweave' calls the single-relay command with
-        // `discoveryProvider`; anything else (including omitted) calls the multi-relay
-        // Nostr command, which resolves one result per relay. `materialStorage`
-        // ('ar' default | 'ipfs' | 'remote-pinning') and remotePinningConfiguration
-        // are forwarded as given; storage and announcement substrate are independent
-        // choices. Never builds a client or calls the orchestrator itself.
-        function distributeWorldEncounterPublication(publication, discoveryProvider, materialStorage, remotePinningConfiguration) {
-            const remotePinningProviderOptions = materialStorage === 'remote-pinning' && remotePinningConfiguration
-                ? {
-                    endpoint: remotePinningConfiguration.endpoint,
-                    credential: remotePinningConfiguration.credential || null,
-                    ...(remotePinningConfiguration.requestField ? { fileFieldName: remotePinningConfiguration.requestField } : {}),
-                    ...(remotePinningConfiguration.responseField ? { cidField: remotePinningConfiguration.responseField } : {})
-                }
-                : undefined;
-
-            if (discoveryProvider === 'arweave') {
-                if (!publicationDistributionCommand) {
-                    return Promise.reject(new Error('Publication distribution is not available.'));
-                }
-                return publicationDistributionCommand({
-                    publication,
-                    serializedMaterial: JSON.stringify(publication.toJSON()),
-                    discoveryProvider,
-                    materialStorage,
-                    remotePinningProviderOptions
-                });
-            }
-            if (!multiRelayNostrPublicationDistributionCommand) {
-                return Promise.reject(new Error('Publication distribution is not available.'));
-            }
-            return multiRelayNostrPublicationDistributionCommand({
-                publication,
-                serializedMaterial: JSON.stringify(publication.toJSON()),
-                materialStorage,
-                remotePinningProviderOptions
-            });
-        }
-
-        // Turns "which publication" into "which bytes": reads the stored snapshot bytes
-        // via publicationContentStore.get(publication.contentReference), exactly as
-        // published (never re-serialized; the content store is the only place a hash
-        // is computed). Forwards the Publication's authoritative placement as
-        // claimedPosition, or nothing if it was never placed (never a substitute
-        // position). `storage` is forwarded explicitly; 'remote-pinning' is a separate
-        // path through ipfsRemotePublicationCoordinator, with a per-attempt
-        // configuration, normalized to the same `{ contentReference, announcement }`
-        // shape. `discoveryProvider` applies to every storage path.
-        function distributeWorldEncounterSnapshot(publication, storage, remotePinningConfiguration, discoveryProvider) {
-            if (!publicationContentStore || !publication.contentReference) {
-                return Promise.reject(new Error('Snapshot distribution is not available.'));
-            }
-            const snapshotBytes = publicationContentStore.get(publication.contentReference);
-            if (snapshotBytes === null || snapshotBytes === undefined) {
-                return Promise.reject(new Error('Snapshot distribution is not available.'));
-            }
-            if (storage === 'remote-pinning') {
-                if (!ipfsRemotePublicationCoordinator) {
-                    return Promise.reject(new Error('Snapshot distribution is not available.'));
-                }
-                return ipfsRemotePublicationCoordinator.publish({ bytes: snapshotBytes, configuration: remotePinningConfiguration })
-                    .then((outcome) => {
-                        if (outcome.state !== IpfsRemotePublicationState.PUBLISHED) {
-                            throw new Error(outcome.reason || 'Remote IPFS publish failed.');
-                        }
-                        const contentReference = { hash: outcome.contentHash, uri: outcome.locator, storage: 'ipfs' };
-                        const discoveryPublisher = resolveSnapshotDiscoveryPublisher ? resolveSnapshotDiscoveryPublisher(discoveryProvider) : null;
-                        if (!discoveryPublisher) {
-                            return { contentReference, announcement: null, announcementError: 'Snapshot distribution is not available.' };
-                        }
-                        return discoveryPublisher.publish({ contentHash: outcome.contentHash, locator: outcome.locator, storage: 'ipfs' })
-                            .then((announcement) => ({ contentReference, announcement }))
-                            .catch((error) => {
-                                // An announcement failure never fails the attempt (the content is already
-                                // pinned); announcementError carries the sanitized cause.
-                                console.error('Snapshot Nostr announcement failed:', error);
-                                return {
-                                    contentReference,
-                                    announcement: null,
-                                    announcementError: sanitizeDistributionErrorMessage(error) || 'Announcement could not be completed.'
-                                };
-                            });
-                    });
-            }
-            if (!snapshotDistributionCommand) {
-                return Promise.reject(new Error('Snapshot distribution is not available.'));
-            }
-            const placementInfo = session.getPlacementInfoForPublication(publication.id);
-            return snapshotDistributionCommand(
-                snapshotBytes,
-                storage,
-                placementInfo ? placementInfo.publicationId : undefined,
-                placementInfo ? placementInfo.position : undefined,
-                discoveryProvider
-            );
-        }
-
-        // Turns "which publication" into "which contentHash", using the Publication's
-        // own contentReference.hash, never a search. An unplaced Publication rejects.
-        // Also bound to WorldEncounterCanvas: it works for any Publication despite the
-        // name.
-        function discoverOwnSnapshot(publication) {
-            if (!discoverSnapshotCommand || !publication || !publication.contentReference) {
-                return Promise.reject(new Error('Snapshot discovery is not available.'));
-            }
-            return discoverSnapshotCommand(publication.contentReference.hash);
-        }
-
-        // Passes publication.id; the use case resolves what to export. Resolves to a
-        // transfer package or rejects; the panel handles display.
-        function exportOwnSnapshot(publication) {
-            if (!exportSnapshotCommand || !publication) {
-                return Promise.reject(new Error('Snapshot export is not available.'));
-            }
-            return exportSnapshotCommand(publication.id);
-        }
+        const {
+            distributeWorldEncounterPublication, distributeWorldEncounterSnapshot, discoverOwnSnapshot,
+            exportOwnSnapshot
+        } = useWorldEncounterCommands({
+            discoverSnapshotCommand, exportSnapshotCommand, ipfsRemotePublicationCoordinator,
+            multiRelayNostrPublicationDistributionCommand, publicationContentStore,
+            publicationDistributionCommand, resolveSnapshotDiscoveryPublisher, session,
+            snapshotDistributionCommand
+        });
 
         // The discovery command's shape already matches WorldEncounterCanvas's prop, so
         // it is passed through unwrapped.
 
-        // Moving a placement is not a document mutation (docs/Principles.md, "Moving A
-        // Placement Is Not Editing A Document"), so it skips fork-on-write; guarded()
-        // only turns failures into messages.
-        function openPlacementEditor(info) {
-            if (!info) return;
-            placementEditTarget.value = info;
-            placementOverlapWarning.value = null;
-            showPlacementEditor.value = true;
-        }
-
-        function closePlacementEditor() {
-            showPlacementEditor.value = false;
-            placementEditTarget.value = null;
-            placementOverlapWarning.value = null;
-        }
-
-        // Two-step for an occupied destination: check first, and move only once clear
-        // or after the warning was confirmed by a second click. The check never
-        // mutates (docs/Principles.md, "Overlap Is A Fact; Collision Is A Policy
-        // Decision").
-        function onMovePlacement(position) {
-            const info = placementEditTarget.value;
-            if (!info) return;
-
-            // A warning only confirms the exact position it was computed for.
-            const pending = placementOverlapWarning.value;
-            const pendingPosition = pending && pending.overlap ? pending.overlap.position : null;
-            const warningMatchesRequest = !!pendingPosition
-                && pendingPosition.x === position.x && pendingPosition.y === position.y && pendingPosition.z === position.z;
-
-            if (!warningMatchesRequest) {
-                const check = guarded(() => session.checkPlacementOverlap(info.documentId, position));
-                if (check && check.requiresConfirmation) {
-                    placementOverlapWarning.value = check;
-                    return;
-                }
-                placementOverlapWarning.value = null;
-                if (check && !check.allowed) {
-                    feedback.show('This position is not available.');
-                    return;
-                }
-            }
-
-            guarded(() => {
-                session.movePlacement(info.documentId, position);
-                feedback.show('Placement moved');
-            });
-            closePlacementEditor();
-            refreshSpatialUI();
-        }
-
-        // Passes placementId as a compare-and-swap guard, so a placement replaced
-        // since the panel rendered is never removed by mistake. No local state: the
-        // next refresh derives placementInfo as null.
-        function removePlacementFromPanel(info) {
-            if (!info) return;
-            guarded(() => {
-                session.removePlacement(info.documentId, info.placementId);
-                feedback.show('Placement removed from World');
-            });
-            refreshSpatialUI();
-        }
-
-        // Passes publication.id as the same compare-and-swap guard. No local state:
-        // the next refresh derives ownPublication as null.
-        function unpublishOwnPublication(publication) {
-            if (!publication) return;
-            guarded(() => {
-                const removed = session.unpublishDocument(publication.documentId, publication.id);
-                if (removed) {
-                    feedback.show('Publication unpublished');
-                }
-            });
-            refreshSpatialUI();
-        }
-
-        // Resolves only where "here" is: avatar position, else camera position, else
-        // the World origin.
-        function placeOwnPublication(publication) {
-            if (!publication) return;
-            guarded(() => {
-                const position = session.getAvatarPosition() || session.getCameraPosition() || { x: 0, y: 0, z: 0 };
-                session.placePublication(publication.id, position);
-                feedback.show('Publication placed in World');
-            });
-            refreshSpatialUI();
-        }
-
-        // Errors are deliberately not caught here: the panels render them as their
-        // own error state. Also bound to WorldEncounterCanvas.
-        function getPublicationCommentariesCommand(publicationId) {
-            return session.getPublicationCommentaries(publicationId);
-        }
-
-        // Forwards commentaryId/createdAt for idempotent retries.
-        function addPublicationCommentaryCommand({ publicationId, content, commentaryId, createdAt }) {
-            return session.addPublicationCommentary({ publicationId, content, commentaryId, createdAt });
-        }
-
-        // Errors are left for OwnPublicationPanel to show, distinct from an empty [].
-        function getPublicationPlacementsCommand(publicationId) {
-            return session.getPlacementsForPublication(publicationId);
-        }
-
-        // Errors are left for NotificationHistoryPanel to show.
-        function getRecipientNotificationEventsCommand() {
-            return session.getRecipientNotificationEvents();
-        }
-
-        function openNotificationHistoryPanel() {
-            showNotificationHistoryPanel.value = true;
-        }
-
-        function closeNotificationHistoryPanel() {
-            showNotificationHistoryPanel.value = false;
-        }
-
-        // Navigates via focusWorld(), the one mechanism that changes the active
-        // document inside a live WorldView; a bare router.push() would do nothing here
-        // because route changes follow session state, not the reverse. An unknown
-        // Publication returns false.
-        function viewNotificationPublicationCommand(publicationId) {
-            const publication = session.findPublicationById(publicationId);
-            if (!publication || !publication.documentId) {
-                return false;
-            }
-            focusWorld(publication.documentId);
-            closeNotificationHistoryPanel();
-            return true;
-        }
+        const {
+            openPlacementEditor, closePlacementEditor, onMovePlacement, removePlacementFromPanel,
+            unpublishOwnPublication, placeOwnPublication, getPublicationCommentariesCommand,
+            addPublicationCommentaryCommand, getPublicationPlacementsCommand,
+            getRecipientNotificationEventsCommand, openNotificationHistoryPanel, closeNotificationHistoryPanel,
+            viewNotificationPublicationCommand
+        } = useOwnPublicationActions({
+            feedback, focusWorld, guarded, placementEditTarget, placementOverlapWarning, refreshSpatialUI,
+            session, showNotificationHistoryPanel, showPlacementEditor
+        });
 
         // -----------------------------------------------------------------
         // Spatial UI refresh
@@ -1122,46 +718,12 @@ export default {
             }
         }
 
-        function refreshWelcomeContext() {
-            const context = session.getWelcomeContext((identityId) => resolveIdentityDisplayName(identityId));
-            welcomeContext.value = context ? context.toJSON() : null;
-        }
-
-        // "Welcome back" only for the automatic arrival showing of a world visited
-        // before; reopening via "Explore" always uses the plain framing.
-        const welcomeIsReturning = computed(() => welcomeIsArrival.value && Boolean(worldReturnInfo.value));
-
-        function openWelcomePanel(isArrival) {
-            refreshWelcomeContext();
-            welcomeIsArrival.value = Boolean(isArrival);
-            showWelcomePanel.value = true;
-            // The Welcome panel is Explore mode's content, so primaryMode must agree.
-            syncPrimaryMode(WorldViewPrimaryMode.EXPLORE);
-        }
-
-        function closeWelcomePanel() {
-            showWelcomePanel.value = false;
-        }
-
-        // Maps a suggestion's kind to a navigation primitive: places move the camera
-        // only (never the avatar), collaborators go through focusCollaborator(). Never
-        // mutates the World.
-        function exploreWelcomeSuggestion(suggestion) {
-            const location = suggestion && suggestion.location;
-            if (!location) {
-                return;
-            }
-            if (suggestion.kind === 'collaborator' && location.collaborator && location.collaborator.deviceId) {
-                session.focusCollaborator(location.collaborator.deviceId);
-            } else if (suggestion.kind === 'landmark' && location.landmark) {
-                session.focusLocation(location.landmark.id);
-            } else if (suggestion.kind === 'structure' && location.structure) {
-                session.focusLocation(location.structure.id);
-            } else if (suggestion.kind === 'place' && location.place && location.place.landmark) {
-                session.focusPlace(location.place.landmark.id);
-            }
-            refreshSpatialUI();
-        }
+        const {
+            showWelcomePanel, welcomeContext, welcomeIsArrival, worldReturnInfo, refreshWelcomeContext,
+            welcomeIsReturning, openWelcomePanel, closeWelcomePanel, exploreWelcomeSuggestion
+        } = useWelcomePanel({
+            refreshSpatialUI, resolveIdentityDisplayName, session, syncPrimaryMode
+        });
 
         // The one handler for every "go to this person" entry point. Only moves the
         // camera; sends nothing.
@@ -1187,51 +749,12 @@ export default {
             return identityId.length > 14 ? '…' + identityId.slice(-12) : identityId;
         }
 
-        function openMembersPanel() {
-            if (activeDocumentInfo.value) {
-                refreshCollaborationRoster(activeDocumentInfo.value.documentId);
-            }
-            showMembersPanel.value = true;
-        }
-
-        function closeMembersPanel() {
-            showMembersPanel.value = false;
-        }
-
-        // Shows "Granting…"/"Revoking…" inline, then a success message or the error.
-        function grantWorldMember(identityId) {
-            const documentId = activeDocumentInfo.value ? activeDocumentInfo.value.documentId : null;
-            if (!documentId || !identityId) {
-                return;
-            }
-            collaborationPendingIdentityId.value = identityId;
-            try {
-                session.grantWorldEdit(documentId, identityId);
-                feedback.show('Grant propagated — now an Editor');
-            } catch (err) {
-                feedback.show(err.message);
-            } finally {
-                collaborationPendingIdentityId.value = null;
-                refreshCollaborationRoster(documentId);
-            }
-        }
-
-        function revokeWorldMember(identityId) {
-            const documentId = activeDocumentInfo.value ? activeDocumentInfo.value.documentId : null;
-            if (!documentId || !identityId) {
-                return;
-            }
-            collaborationPendingIdentityId.value = identityId;
-            try {
-                session.revokeWorldEdit(documentId, identityId);
-                feedback.show('Revocation propagated — now Read only');
-            } catch (err) {
-                feedback.show(err.message);
-            } finally {
-                collaborationPendingIdentityId.value = null;
-                refreshCollaborationRoster(documentId);
-            }
-        }
+        const {
+            openMembersPanel, closeMembersPanel, grantWorldMember, revokeWorldMember
+        } = useWorldMembersPanel({
+            activeDocumentInfo, collaborationPendingIdentityId, feedback, refreshCollaborationRoster, session,
+            showMembersPanel
+        });
 
         // The parent is a Publication, so its title is available from the publications
         // list even when not loaded.
@@ -1323,260 +846,25 @@ export default {
             worldLocations.value = session.getWorldLocations().map((loc) => loc.toJSON());
         }
 
-        function openAddLandmarkForm() {
-            landmarkFormTarget.value = null;
-            showLandmarkForm.value = true;
-        }
+        const {
+            showLandmarkForm, landmarkFormTarget, showRegionForm, regionFormTarget, openAddLandmarkForm,
+            openEditLandmarkForm, closeLandmarkForm, onSaveLandmarkForm, removeLandmarkFromPanel,
+            openAddRegionForm, openEditRegionForm, closeRegionForm, onSaveRegionForm, removeRegionFromPanel
+        } = useLandmarkAndRegionForms({
+            feedback, guarded, refreshLocationsPanel, refreshSpatialUI, session
+        });
 
-        function openEditLandmarkForm(landmarkId) {
-            const landmark = session.getLandmark(landmarkId);
-            if (!landmark) {
-                feedback.show('That landmark is no longer available');
-                return;
-            }
-            landmarkFormTarget.value = landmark;
-            showLandmarkForm.value = true;
-        }
-
-        function closeLandmarkForm() {
-            showLandmarkForm.value = false;
-            landmarkFormTarget.value = null;
-        }
-
-        function onSaveLandmarkForm({ title, description }) {
-            const target = landmarkFormTarget.value;
-            guarded(() => {
-                if (target) {
-                    session.updateLandmark(target.id, { title, description });
-                    feedback.show(`Updated "${title}"`);
-                } else {
-                    session.createLandmarkHere(title, description);
-                    feedback.show(`Added landmark "${title}"`);
-                }
-            });
-            closeLandmarkForm();
-            refreshLocationsPanel();
-            refreshSpatialUI();
-        }
-
-        function removeLandmarkFromPanel(landmarkId) {
-            guarded(() => {
-                session.removeLandmark(landmarkId);
-                feedback.show('Landmark removed');
-            });
-            refreshLocationsPanel();
-            refreshSpatialUI();
-        }
-
-        // -----------------------------------------------------------------
-        // Regions & Place Naming
-        // -----------------------------------------------------------------
-        function openAddRegionForm() {
-            regionFormTarget.value = null;
-            showRegionForm.value = true;
-        }
-
-        function openEditRegionForm(regionId) {
-            const region = session.getRegion(regionId);
-            if (!region) {
-                feedback.show('That region is no longer available');
-                return;
-            }
-            regionFormTarget.value = region;
-            showRegionForm.value = true;
-        }
-
-        function closeRegionForm() {
-            showRegionForm.value = false;
-            regionFormTarget.value = null;
-        }
-
-        function onSaveRegionForm({ name, description, kind, radius }) {
-            const target = regionFormTarget.value;
-            guarded(() => {
-                if (target) {
-                    session.updateRegion(target.id, { name, description, kind, radius });
-                    feedback.show(`Updated "${name}"`);
-                } else {
-                    session.createRegionHere(name, { description, kind, radius });
-                    feedback.show(`Named "${name}"`);
-                }
-            });
-            closeRegionForm();
-            refreshLocationsPanel();
-            refreshSpatialUI();
-        }
-
-        function removeRegionFromPanel(regionId) {
-            guarded(() => {
-                session.removeRegion(regionId);
-                feedback.show('Region removed');
-            });
-            refreshLocationsPanel();
-            refreshSpatialUI();
-        }
-
-        // -----------------------------------------------------------------
-        // Place Naming Claims
-        // -----------------------------------------------------------------
-        //
-        // Not gated by canEditActiveWorld: naming claims need no World edit authority
-        // (see core/PlaceNamingClaim.js).
-        function refreshNamingPanel() {
-            const regionId = namingPanelRegionId.value;
-            if (!regionId) return;
-            namingPanelClaims.value = session.getPlaceNamingClaims(regionId);
-            namingPanelView.value = session.getPlaceNamingView(regionId);
-            namingPanelPreferredName.value = session.getPreferredPlaceName(regionId);
-            // Additive: never changes what the region-scoped fields show.
-            const geographic = session.getGeographicNamingView(regionId);
-            namingPanelGeographicRegions.value = geographic.regions;
-            namingPanelGeographicView.value = geographic.namingView;
-        }
-
-        function openNamingPanel(regionId) {
-            namingPanelRegionId.value = regionId;
-            refreshNamingPanel();
-            resetNamingPanelPublishToNostr();
-            showNamingPanel.value = true;
-        }
-
-        function closeNamingPanel() {
-            showNamingPanel.value = false;
-            namingPanelRegionId.value = null;
-            resetNamingPanelPublishToNostr();
-        }
-
-        // Clears the last "Publish to Nostr" result and bumps the request id, so an
-        // in-flight call for a previous panel can never write into this one.
-        function resetNamingPanelPublishToNostr() {
-            namingPanelPublishToNostrRequestId.value += 1;
-            namingPanelPublishToNostrClaimId.value = null;
-            namingPanelPublishToNostrExecuting.value = false;
-            namingPanelPublishToNostrError.value = null;
-            namingPanelPublishToNostrResult.value = null;
-        }
-
-        function publishNamingClaim(name) {
-            guarded(() => {
-                session.publishPlaceNamingClaim(namingPanelRegionId.value, name);
-                feedback.show(`Published "${name}"`);
-            });
-            refreshNamingPanel();
-        }
-
-        function retractNamingClaim(claimId) {
-            guarded(() => {
-                session.retractPlaceNamingClaim(namingPanelRegionId.value, claimId);
-                feedback.show('Claim retracted');
-            });
-            refreshNamingPanel();
-        }
-
-        function setPreferredNamingName(name) {
-            guarded(() => {
-                session.setPreferredPlaceName(namingPanelRegionId.value, name);
-            });
-            refreshNamingPanel();
-        }
-
-        function clearPreferredNamingName() {
-            guarded(() => {
-                session.clearPreferredPlaceName(namingPanelRegionId.value);
-            });
-            refreshNamingPanel();
-        }
-
-        function exportNamingClaim(claimId) {
-            const pkg = guarded(() => session.exportPlaceNamingClaim(namingPanelRegionId.value, claimId));
-            if (!pkg) return;
-            const json = JSON.stringify(pkg, null, 2);
-            const slug = pkg.claim.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'place-name';
-            const link = document.createElement('a');
-            link.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
-            link.download = `forkbuild-place-naming-claim-${slug}.json`;
-            link.click();
-            feedback.show(`Exported "${pkg.claim.name}"`);
-        }
-
-        // `rawText` is untrusted; parsing and import (validation plus signature
-        // verification) are reported separately. A duplicate claim is an ordinary
-        // outcome with its own message.
-        function importNamingClaim(rawText) {
-            let parsed;
-            try {
-                parsed = JSON.parse(rawText);
-            } catch (e) {
-                feedback.show('That is not valid JSON — choose a file exported with "Export Claim."');
-                return;
-            }
-            const result = guarded(() => session.importPlaceNamingClaim(parsed));
-            if (!result) return;
-            const { claim, isNew } = result;
-            if (!isNew) {
-                feedback.show(`"${claim.name}" was already known — nothing changed`);
-                return;
-            }
-            if (claim.regionId === namingPanelRegionId.value) {
-                refreshNamingPanel();
-                feedback.show(`Imported "${claim.name}"`);
-            } else {
-                feedback.show(`Imported "${claim.name}" for a different place — open its Names panel to see it`);
-            }
-        }
-
-        // Announces an existing, already-signed claim; creating a claim is a separate
-        // step. Reads the claim through the session, not the panel's cached copy. A
-        // failed announcement never changes the local claim.
-        function publishNamingClaimToNostr(claimId) {
-            if (!publishPlaceNamingClaimToNostrCommand) return;
-            const regionId = namingPanelRegionId.value;
-            if (!regionId) return;
-            const claim = session.getPlaceNamingClaims(regionId).find((c) => c.id === claimId);
-            if (!claim) return;
-
-            namingPanelPublishToNostrRequestId.value += 1;
-            const requestId = namingPanelPublishToNostrRequestId.value;
-            namingPanelPublishToNostrClaimId.value = claimId;
-            namingPanelPublishToNostrExecuting.value = true;
-            namingPanelPublishToNostrError.value = null;
-            namingPanelPublishToNostrResult.value = null;
-
-            Promise.resolve()
-                .then(() => publishPlaceNamingClaimToNostrCommand(claim))
-                .then((result) => {
-                    if (namingPanelPublishToNostrRequestId.value !== requestId) return;
-                    namingPanelPublishToNostrExecuting.value = false;
-                    namingPanelPublishToNostrResult.value = result;
-                })
-                .catch((error) => {
-                    if (namingPanelPublishToNostrRequestId.value !== requestId) return;
-                    namingPanelPublishToNostrExecuting.value = false;
-                    namingPanelPublishToNostrError.value = (error && error.message) ? error.message : 'Publish to Nostr failed.';
-                });
-        }
-
-        // -----------------------------------------------------------------
-        // World Map
-        // -----------------------------------------------------------------
-        //
-        // Re-reads mapContent on open so the first paint is current. Marker clicks use
-        // the same focusLocation()/followCollaborator() as everything else.
-        function openMapPanel() {
-            refreshMapContent();
-            showMapPanel.value = true;
-        }
-
-        function refreshMapContent() {
-            mapContent.value = session.getMapContent((identityId) => resolveIdentityDisplayName(identityId));
-        }
-
-        function closeMapPanel() {
-            showMapPanel.value = false;
-            // A highlight is one-shot: cleared on close.
-            mapHighlightRegionKeys.value = [];
-            syncPrimaryMode(WorldViewPrimaryMode.EXPLORE);
-        }
+        const {
+            showNamingPanel, namingPanelRegionId, namingPanelClaims, namingPanelView, namingPanelPreferredName,
+            namingPanelGeographicRegions, namingPanelGeographicView, namingPanelPublishToNostrClaimId,
+            namingPanelPublishToNostrExecuting, namingPanelPublishToNostrError,
+            namingPanelPublishToNostrResult, namingPanelPublishToNostrRequestId, myIdentityId,
+            refreshNamingPanel, openNamingPanel, closeNamingPanel, resetNamingPanelPublishToNostr,
+            publishNamingClaim, retractNamingClaim, setPreferredNamingName, clearPreferredNamingName,
+            exportNamingClaim, importNamingClaim, publishNamingClaimToNostr
+        } = usePlaceNamingPanel({
+            feedback, guarded, publishPlaceNamingClaimToNostrCommand, session
+        });
 
         // -----------------------------------------------------------------
         // Primary navigation: Explore / Map / Places
@@ -1621,348 +909,31 @@ export default {
             }
         }
 
-        // -----------------------------------------------------------------
-        // Explore mode: collapsible "Nearby" groups
-        // -----------------------------------------------------------------
-        //
-        // Each group reuses data already computed each tick. Collapsed state lives in
-        // worldViewNav and is mirrored into a ref.
-        const NEARBY_PLACES_SECTION = 'explore:nearby-places';
-        const NEARBY_LANDMARKS_SECTION = 'explore:nearby-landmarks';
-        const NEARBY_PEOPLE_SECTION = 'explore:nearby-people';
-        // Defaults expanded.
-        const WORLD_ENCOUNTERS_SECTION = 'explore:world-encounters';
-        // Defaults collapsed: an unverified discovered claim should not demand
-        // attention.
-        const NEARBY_PLACE_NAMING_SECTION = 'explore:nearby-place-naming';
-        const nearbySectionsCollapsed = ref({
-            places: worldViewNav.isSectionCollapsed(NEARBY_PLACES_SECTION, false),
-            landmarks: worldViewNav.isSectionCollapsed(NEARBY_LANDMARKS_SECTION, true),
-            people: worldViewNav.isSectionCollapsed(NEARBY_PEOPLE_SECTION, true),
-            worldEncounters: worldViewNav.isSectionCollapsed(WORLD_ENCOUNTERS_SECTION, false),
-            placeNaming: worldViewNav.isSectionCollapsed(NEARBY_PLACE_NAMING_SECTION, true)
+        const {
+            nearbyPlaceNamingClaims, placeNamingDiscoveryError, NEARBY_PLACES_SECTION,
+            NEARBY_LANDMARKS_SECTION, NEARBY_PEOPLE_SECTION, WORLD_ENCOUNTERS_SECTION,
+            NEARBY_PLACE_NAMING_SECTION, nearbySectionsCollapsed, setNearbySectionCollapsed,
+            nearbyLandmarkRows, nearbyPeopleRows, formatNearbyPlaceNamingCreatedAt, nearbyPlaceNamingClaimRows,
+            navigateToNearbyPlaceNamingClaim, adoptNearbyPlaceNamingClaim
+        } = useNearbySections({
+            feedback, guarded, refreshSpatialUI, resolveIdentityDisplayName, session, spatialCollaboratorRows,
+            spatialContext, worldViewNav
         });
 
-        function setNearbySectionCollapsed(key, sectionId, collapsed) {
-            worldViewNav.setSectionCollapsed(sectionId, collapsed);
-            nearbySectionsCollapsed.value = { ...nearbySectionsCollapsed.value, [key]: collapsed };
-        }
-
-        const nearbyLandmarkRows = computed(() => (
-            (spatialContext.value && spatialContext.value.nearbyLandmarks) || []
-        ));
-
-        // Joins nearby collaborators with their device ids so "Go" can use
-        // followCollaborator().
-        const nearbyPeopleRows = computed(() => {
-            const contextCollaborators = (spatialContext.value && spatialContext.value.nearbyCollaborators) || [];
-            const deviceByIdentity = new Map(spatialCollaboratorRows.value.map((row) => [row.identityId, row.primaryDeviceId]));
-            return contextCollaborators.map((c) => ({
-                identityId: c.identityId,
-                displayName: c.displayName,
-                distance: c.distance,
-                direction: c.direction,
-                deviceId: deviceByIdentity.get(c.identityId) || null
-            }));
+        const {
+            showMapPanel, mapContent, showGeographicPlaceDirectory, geographicPlaces, showGeographicPlacePanel,
+            geographicPlace, mapHighlightRegionKeys, nearbyGeographicPlaces, showFocusPanel, focusContext,
+            openMapPanel, refreshMapContent, closeMapPanel, openFocusForLocation, openFocusForGeographicPlace,
+            openFocusForCollaborator, closeFocusPanel, goFromFocusPanel, showFocusOnMap,
+            openNamesFromFocusPanel, currentReturnWorld, editFocusedCopyFromFocusPanel,
+            openGeographicPlaceDirectory, showGeographicPlaceDirectoryList, goToGeographicPlace,
+            closeGeographicPlaceDirectory, openGeographicPlace, restoreGeographicPlaceDetail,
+            closeGeographicPlacePanel, goBackInPlaces, openNamesFromPlace, showGeographicPlaceOnMap
+        } = usePlacesAndFocus({
+            closeWelcomePanel, feedback, focusedDocumentTitle, openNamingPanel, refreshLocationsPanel,
+            refreshSpatialUI, resolveIdentityDisplayName, route, router, session, setPrimaryMode,
+            showWelcomePanel, syncPrimaryMode, title, worldViewNav
         });
-
-        // Presentation only, one row per claim in the monitor's order, duplicates of
-        // the same place included. Position comes from the monitor; no distance is
-        // computed here. An unparseable createdAt formats as ''.
-        function formatNearbyPlaceNamingCreatedAt(createdAt) {
-            const date = createdAt instanceof Date ? createdAt : new Date(createdAt);
-            return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString();
-        }
-
-        // Carries every field the claim publication validator needs (regionId,
-        // worldId, authorIdentityId, createdAt, signature) so adoption can build a
-        // package from a row. The signature is deliberately not displayed: nothing can
-        // verify a not-yet-adopted claim without importing it, so showing it would
-        // imply assurance nothing backs. `alreadySaved` comes from
-        // session.hasPlaceNamingClaim(), keyed by claim id per world.
-        const nearbyPlaceNamingClaimRows = computed(() => (
-            nearbyPlaceNamingClaims.value.map((entry) => ({
-                claimId: entry.claim.id,
-                name: entry.claim.name,
-                authorDisplayName: resolveIdentityDisplayName(entry.claim.authorIdentityId),
-                createdAtLabel: formatNearbyPlaceNamingCreatedAt(entry.claim.createdAt),
-                position: entry.position,
-                regionId: entry.claim.regionId,
-                worldId: entry.claim.worldId,
-                authorIdentityId: entry.claim.authorIdentityId,
-                createdAt: entry.claim.createdAt,
-                signature: entry.claim.signature,
-                alreadySaved: session.hasPlaceNamingClaim(entry.claim.worldId, entry.claim.id)
-            }))
-        ));
-
-        // Moves the camera to the claim's region; navigating is not adopting. Checks
-        // the claim's worldId so a stale claim is never sent to another world's region
-        // with the same id; a missing region gives feedback, never a fallback.
-        function navigateToNearbyPlaceNamingClaim(row) {
-            const regionStillExists = session.getRegions()
-                .some((region) => region.id === row.regionId && region.worldId === row.worldId);
-            if (!regionStillExists) {
-                feedback.show('That place no longer exists in this World');
-                return false;
-            }
-            session.focusLocation(row.regionId);
-            refreshSpatialUI();
-            return true;
-        }
-
-        // Adopting a nearby claim: rebuilds the claim from the row's own fields (never
-        // the current identity) into the same publication package a manual export
-        // produces, and imports it through session.importPlaceNamingClaim(), which
-        // does all validation and verification. Only ever an explicit click; a
-        // duplicate is an ordinary outcome.
-        function adoptNearbyPlaceNamingClaim(row) {
-            const rowClaim = PlaceNamingClaim.fromJSON({
-                id: row.claimId,
-                worldId: row.worldId,
-                regionId: row.regionId,
-                name: row.name,
-                authorIdentityId: row.authorIdentityId,
-                createdAt: row.createdAt,
-                signature: row.signature
-            });
-            const pkg = buildPlaceNamingClaimPublication(rowClaim);
-            const result = guarded(() => session.importPlaceNamingClaim(pkg));
-            if (!result) return;
-            const { claim, isNew } = result;
-            // Reached only after a successful import. Assigning a new array makes the rows
-            // recompute alreadySaved all at once.
-            nearbyPlaceNamingClaims.value = [...nearbyPlaceNamingClaims.value];
-            if (!isNew) {
-                feedback.show(`"${claim.name}" was already known — nothing changed`);
-                return;
-            }
-            feedback.show(`Adopted "${claim.name}"`);
-        }
-
-        // -----------------------------------------------------------------
-        // Contextual Focus
-        // -----------------------------------------------------------------
-        //
-        // The "Info" entry points only read the focus context and show the panel; they
-        // never move the camera or map. The panel's actions reuse the same session
-        // calls as every other navigation entry point.
-        function openFocusForLocation(locationId) {
-            const context = session.getFocusContextForLocation(locationId);
-            if (!context) {
-                feedback.show('That is no longer available');
-                return;
-            }
-            focusContext.value = context.toJSON();
-            showFocusPanel.value = true;
-        }
-
-        // The row only has a fingerprintKey; this builds the `place:` location id.
-        function openFocusForGeographicPlace(fingerprintKey) {
-            openFocusForLocation(geographicPlaceLocationId(fingerprintKey));
-        }
-
-        function openFocusForCollaborator(deviceId) {
-            const context = session.getFocusContextForCollaborator(deviceId, (identityId) => resolveIdentityDisplayName(identityId));
-            if (!context) {
-                feedback.show('That person is no longer nearby');
-                return;
-            }
-            focusContext.value = context.toJSON();
-            showFocusPanel.value = true;
-        }
-
-        function closeFocusPanel() {
-            showFocusPanel.value = false;
-            focusContext.value = null;
-        }
-
-        function goFromFocusPanel() {
-            const context = focusContext.value;
-            if (!context || !context.source) {
-                return;
-            }
-            const { kind, id } = context.source;
-            const moved = kind === WorldFocusKind.COLLABORATOR
-                ? session.focusCollaborator(id)
-                : session.focusLocation(kind === WorldFocusKind.GEOGRAPHIC_PLACE ? geographicPlaceLocationId(id) : id);
-            if (!moved) {
-                feedback.show('That is no longer available');
-                closeFocusPanel();
-                return;
-            }
-            refreshSpatialUI();
-            closeFocusPanel();
-        }
-
-        // Moves the camera first so the map opens looking at the focused thing. Only
-        // offered for kinds whose availableActions include 'map'.
-        function showFocusOnMap() {
-            const context = focusContext.value;
-            if (!context || !context.source) {
-                return;
-            }
-            const { kind, id } = context.source;
-            session.focusLocation(kind === WorldFocusKind.GEOGRAPHIC_PLACE ? geographicPlaceLocationId(id) : id);
-            refreshSpatialUI();
-            closeFocusPanel();
-            setPrimaryMode(WorldViewPrimaryMode.MAP);
-        }
-
-        // Only offered for a REGION; opens the same PlaceNamingPanel as everywhere
-        // else.
-        function openNamesFromFocusPanel() {
-            const context = focusContext.value;
-            if (!context || !context.source || context.source.kind !== WorldFocusKind.REGION) {
-                return;
-            }
-            const regionId = context.source.id;
-            closeFocusPanel();
-            refreshLocationsPanel();
-            openNamingPanel(regionId);
-        }
-
-        // Where "Back to World" returns: the FOCUSED (camera) document, else this
-        // route's world. Never context.source.documentId, which for a STRUCTURE is the
-        // fork target, not the world the viewer stood in.
-        function currentReturnWorld() {
-            const id = session.getFocusedDocumentId()
-                || route.params.documentId
-                || null;
-            return { id, title: (id && focusedDocumentTitle.value) || title.value || '' };
-        }
-
-        // "Edit a Copy": the one deliberate way out of World View's no-editing
-        // boundary, and contextual: Only ever offered for a
-        // REGION/LANDMARK/STRUCTURE in the Focus panel. Forks the document that contains the focused thing (for a
-        // STRUCTURE, its own content document) via the /editor?fork= navigation
-        // PublicationCatalog's forkPublication() already uses, never a second fork mechanism,
-        // carrying the entry context and a return address as query params.
-        function editFocusedCopyFromFocusPanel() {
-            const context = focusContext.value;
-            if (!context || !context.source || !context.source.documentId) {
-                return;
-            }
-            const documentId = context.source.documentId;
-            const publication = session.getPublicationIdForDocument(documentId);
-            const returnWorld = currentReturnWorld();
-            const entryContext = withReturnWorld(context.editCopyContext, { returnWorldId: returnWorld.id, returnWorldTitle: returnWorld.title });
-            const entryQuery = editorEntryContextToQuery(entryContext);
-            closeFocusPanel();
-            router.push({
-                path: '/editor',
-                query: { fork: documentId, ...(publication ? { publication } : {}), ...entryQuery }
-            });
-        }
-
-        // -----------------------------------------------------------------
-        // Geographic Place Directory
-        // -----------------------------------------------------------------
-        //
-        // Read-only; openNamesFromPlace() hands off to the existing PlaceNamingPanel.
-        // A fresh open resets Places to its list screen.
-        function openGeographicPlaceDirectory() {
-            worldViewNav.openPlacesDirectory();
-            showGeographicPlaceDirectoryList();
-        }
-
-        function showGeographicPlaceDirectoryList() {
-            geographicPlaces.value = session.getGeographicPlaceDirectory().map((place) => place.toJSON());
-            showGeographicPlaceDirectory.value = true;
-        }
-
-        // -----------------------------------------------------------------
-        // Geographic Place Navigation
-        // -----------------------------------------------------------------
-        //
-        // The one entry point for going to a geographic place, from every surface that
-        // shows one: session.focusLocation() with its `place:` id. false (unknown
-        // place) gives the same feedback as a stale directory row.
-        function goToGeographicPlace(fingerprintKey) {
-            const moved = session.focusLocation(geographicPlaceLocationId(fingerprintKey));
-            if (!moved) {
-                feedback.show('That geographic place is no longer available');
-                return;
-            }
-            refreshSpatialUI();
-            showGeographicPlaceDirectory.value = false;
-            showGeographicPlacePanel.value = false;
-            geographicPlace.value = null;
-            if (showWelcomePanel.value) {
-                closeWelcomePanel();
-            }
-            // Arriving resets Places to its list and returns to Explore.
-            worldViewNav.openPlacesDirectory();
-            syncPrimaryMode(WorldViewPrimaryMode.EXPLORE);
-        }
-
-        // Returns primaryMode to Explore but keeps the Places back-stack.
-        function closeGeographicPlaceDirectory() {
-            showGeographicPlaceDirectory.value = false;
-            syncPrimaryMode(WorldViewPrimaryMode.EXPLORE);
-        }
-
-        function openGeographicPlace(fingerprintKey) {
-            const place = session.getGeographicPlace(fingerprintKey);
-            if (!place) {
-                feedback.show('That geographic place is no longer available');
-                return;
-            }
-            geographicPlace.value = place.toJSON();
-            worldViewNav.openPlaceDetail(fingerprintKey);
-            showGeographicPlaceDirectory.value = false;
-            showGeographicPlacePanel.value = true;
-        }
-
-        // Only restores a detail screen after switching modes; an unresolvable place
-        // falls back to the directory.
-        function restoreGeographicPlaceDetail(fingerprintKey) {
-            const place = session.getGeographicPlace(fingerprintKey);
-            if (!place) {
-                openGeographicPlaceDirectory();
-                return;
-            }
-            geographicPlace.value = place.toJSON();
-            showGeographicPlacePanel.value = true;
-        }
-
-        function closeGeographicPlacePanel() {
-            showGeographicPlacePanel.value = false;
-            geographicPlace.value = null;
-        }
-
-        // Back always returns to the directory (the back-stack is two screens deep).
-        function goBackInPlaces() {
-            worldViewNav.goBackInPlaces();
-            showGeographicPlacePanel.value = false;
-            geographicPlace.value = null;
-            showGeographicPlaceDirectoryList();
-        }
-
-        function openNamesFromPlace(regionId) {
-            closeGeographicPlacePanel();
-            // The Names panel reads its region name from worldLocations, which may not have
-            // been loaded yet.
-            refreshLocationsPanel();
-            openNamingPanel(regionId);
-        }
-
-        // Highlights the place's existing regions and centers on its representative
-        // region so the map opens on relevant ground.
-        function showGeographicPlaceOnMap() {
-            const place = geographicPlace.value;
-            if (!place) return;
-            mapHighlightRegionKeys.value = place.regions.map((region) => `${region.worldId}:${region.id}`);
-            if (place.representativeRegion) {
-                session.focusLocation(place.representativeRegion.id);
-                refreshSpatialUI();
-            }
-            showGeographicPlacePanel.value = false;
-            openMapPanel();
-            // The Map tab becomes active; the Places back-stack is left on this place so
-            // switching back returns here.
-            syncPrimaryMode(WorldViewPrimaryMode.MAP);
-        }
 
         // "Open Source" loads the structure's document directly in the Editor (no
         // fork), so edits affect every placed instance. Contrast "Edit a Copy".
@@ -2038,103 +1009,16 @@ export default {
         // Other present participants plus the viewer, whenever a world is active.
         const worldOnlineCount = computed(() => worldPresenceRoster.value.length + (activeDocumentInfo.value ? 1 : 0));
 
-        function performSearch(options) {
-            searchResults.value = guarded(() => session.searchWorld(options)) || [];
-        }
-
-        // Search's Focus is exactly focusWorld (docs/Principles.md, "Focus Is
-        // Navigation, Not Discovery").
-
-        // Turns the overlap count into a choosable list (docs/Principles.md, "Overlap Is
-        // A Fact; Collision Is A Policy Decision").
-        function openLocationDocuments(position) {
-            if (!position) return;
-            locationDocumentsPosition.value = position;
-            locationDocumentsOccupants.value = guarded(() => session.getDocumentsAtPosition(position)) || [];
-            showLocationDocuments.value = true;
-        }
-
-        function closeLocationDocuments() {
-            showLocationDocuments.value = false;
-            locationDocumentsPosition.value = null;
-            locationDocumentsOccupants.value = [];
-        }
-
-        function focusLocationDocument(documentId) {
-            focusWorld(documentId);
-            closeLocationDocuments();
-        }
-
-        // -----------------------------------------------------------------
-        // World Location Browser: "Explore Here" / "What's Here?"
-        // -----------------------------------------------------------------
-
-
-        function openLocationBrowser(radius, envelope) {
-            locationBrowserCenter.value = cameraPosition.value;
-            locationBrowserRadius.value = radius;
-            locationBrowserDocuments.value = envelope.documents || [];
-            locationBrowserDiagnostics.value = envelope.diagnostics || EMPTY_DISCOVERY_ENVELOPE.diagnostics;
-            locationBrowserInspected.value = null;
-            showLocationBrowser.value = true;
-        }
-
-        // Centered on the CAMERA, not the active document's placement: the camera may
-        // look at empty space with no active document.
-        function exploreHere() {
-            if (!cameraPosition.value) return;
-            const envelope = guarded(() => session.exploreHere(DEFAULT_EXPLORE_RADIUS)) || EMPTY_DISCOVERY_ENVELOPE;
-            openLocationBrowser(DEFAULT_EXPLORE_RADIUS, envelope);
-        }
-
-        // A small tolerance radius: camera coordinates almost never land exactly on a
-        // placement.
-        function whatsHere() {
-            if (!cameraPosition.value) return;
-            const envelope = guarded(() => session.whatsHere()) || EMPTY_DISCOVERY_ENVELOPE;
-            openLocationBrowser(NEARBY_RADIUS, envelope);
-        }
-
-        // Clears any expanded Inspect row: it belonged to the old results.
-        function reExploreLocationBrowser(radius) {
-            if (!locationBrowserCenter.value) return;
-            const envelope = guarded(() => session.exploreLocation({
-                center: locationBrowserCenter.value,
-                radius
-            })) || EMPTY_DISCOVERY_ENVELOPE;
-            openLocationBrowser(radius, envelope);
-        }
-
-        function closeLocationBrowser() {
-            showLocationBrowser.value = false;
-            locationBrowserCenter.value = null;
-            locationBrowserDocuments.value = [];
-            locationBrowserDiagnostics.value = EMPTY_DISCOVERY_ENVELOPE.diagnostics;
-            locationBrowserInspected.value = null;
-        }
-
-        // Moves the camera (and makes the document active by default), so the browser
-        // closes.
-        function focusLocationBrowserResult(documentId) {
-            focusWorld(documentId);
-            closeLocationBrowser();
-        }
-
-        // Makes the result active without moving the camera, so browsing continues.
-        function selectLocationBrowserResult(documentId) {
-            guarded(() => session.setActiveDocument(documentId));
-            refreshSpatialUI();
-        }
-
-        // Toggles; never navigates or loads.
-        function inspectLocationBrowserResult(documentId) {
-            if (locationBrowserInspected.value && locationBrowserInspected.value.documentId === documentId) {
-                locationBrowserInspected.value = null;
-                return;
-            }
-            locationBrowserInspected.value = guarded(() => session.inspectDocument(documentId))
-                || { documentId, documentInfo: null, placementInfo: null, trust: null };
-        }
+        const {
+            searchResults, showLocationDocuments, locationDocumentsPosition, locationDocumentsOccupants,
+            showLocationBrowser, locationBrowserCenter, locationBrowserRadius, locationBrowserDocuments,
+            locationBrowserDiagnostics, locationBrowserInspected, performSearch, openLocationDocuments,
+            closeLocationDocuments, focusLocationDocument, openLocationBrowser, exploreHere, whatsHere,
+            reExploreLocationBrowser, closeLocationBrowser, focusLocationBrowserResult,
+            selectLocationBrowserResult, inspectLocationBrowserResult
+        } = useLocationBrowser({
+            cameraPosition, focusWorld, guarded, refreshSpatialUI, session
+        });
 
         // -----------------------------------------------------------------
         // Pointer interaction: pick/hover for focus and inspection only
@@ -2220,100 +1104,14 @@ export default {
             }
         }
 
-        function toggleShowMyAvatar(event) {
-            showMyAvatar.value = !showMyAvatar.value;
-            session.setLocalAvatarVisible(showMyAvatar.value);
-            blurCheckbox(event);
-        }
-
-        // An explicit toggle, never implied by clicks or focus, so typing never walks
-        // the avatar away. Turning it off releases held keys.
-        function toggleAvatarControlMode(event) {
-            avatarControlMode.value = !avatarControlMode.value;
-            session.setAvatarControlMode(avatarControlMode.value);
-            blurCheckbox(event);
-        }
-
-        function toggleFollowAvatar(event) {
-            followAvatar.value = !followAvatar.value;
-            session.setFollowAvatar(followAvatar.value);
-            // Following your own avatar and a remote one are mutually exclusive.
-            if (followAvatar.value) {
-                followedRemoteAvatarId.value = null;
-            }
-            blurCheckbox(event);
-        }
-
-        // `perspective` is a CameraPerspective or null ("Free"); the session decides.
-        function setCameraPerspective(perspective) {
-            const next = cameraPerspective.value === perspective ? null : perspective;
-            if (session.setCameraPerspective(next)) {
-                cameraPerspective.value = next;
-            }
-        }
-
-        // Follows the targeted REMOTE avatar, a separate capability from following your
-        // own.
-        function followAvatarFromPanel(avatarId) {
-            if (session.followAvatarId(avatarId)) {
-                followedRemoteAvatarId.value = avatarId;
-                followAvatar.value = false;
-            }
-        }
-
-        function stopFollowingAvatarFromPanel() {
-            session.stopFollowingRemoteAvatar();
-            followedRemoteAvatarId.value = null;
-        }
-
-        // The session owns every decision (docs/Principles.md, "Observation Does Not
-        // Imply Authority, And Interaction Does Not Imply Control").
-        function performAvatarInteraction(kind) {
-            session.performAvatarInteraction(kind);
-        }
-
-        // Opens the same Avatar Info panel as clicking the avatar in the viewport.
-        function selectNearbyAvatar(avatarId) {
-            session.targetAvatar(avatarId);
-            refreshSpatialUI();
-        }
-
-        function toggleShowOtherAvatars(event) {
-            showOtherAvatars.value = !showOtherAvatars.value;
-            session.setRemoteAvatarsVisible(showOtherAvatars.value);
-            blurCheckbox(event);
-        }
-
-        // -----------------------------------------------------------------
-        // Avatar movement keys
-        // -----------------------------------------------------------------
-        //
-        // Only while Avatar Control Mode is on, and only after text inputs have been
-        // excluded, so fields never fight the avatar for keys.
-        function onAvatarKeyDown(event) {
-            if (!avatarControlMode.value) {
-                return false;
-            }
-            if (session.avatarKeyDown(event.key)) {
-                event.preventDefault();
-                return true;
-            }
-            return false;
-        }
-
-        function onAvatarKeyUp(event) {
-            // Always forwarded, so a captured key still releases after the mode changes or
-            // focus moves.
-            if (session.avatarKeyUp(event.key)) {
-                event.preventDefault();
-            }
-        }
-
-        // A blur can swallow a keyup, so release every held key. The mode itself stays
-        // on: losing focus is not the user turning it off.
-        function onWindowBlur() {
-            session.releaseAvatarMovementKeys();
-        }
+        const {
+            toggleShowMyAvatar, toggleAvatarControlMode, toggleFollowAvatar, setCameraPerspective,
+            followAvatarFromPanel, stopFollowingAvatarFromPanel, performAvatarInteraction, selectNearbyAvatar,
+            toggleShowOtherAvatars, onAvatarKeyDown, onAvatarKeyUp, onWindowBlur
+        } = useAvatarControls({
+            avatarControlMode, blurCheckbox, cameraPerspective, followAvatar, followedRemoteAvatarId,
+            refreshSpatialUI, session, showMyAvatar, showOtherAvatars
+        });
 
         onMounted(() => {
             allPublications.value = listPublicationsUseCase.execute();

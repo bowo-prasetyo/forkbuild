@@ -21,6 +21,7 @@ import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
+import { worldViewFiles } from './support/ViewSourceFiles.js';
 
 // 0.9.216 — Post-Snapshot-Export Product Reassessment.
 //
@@ -172,7 +173,7 @@ async function runTests() {
     // Undo/Redo arc stays closed).
     // ---------------------------------------------------------------
     {
-        const worldView = await rawSource('ui/views/WorldView.js');
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const componentTags = new Set((worldView.match(/<[A-Z][A-Za-z]+/g) || []).map((tag) => tag.slice(1)));
         for (const name of ['PlacementInfoPanel', 'OwnPublicationPanel', 'HistoryTimelinePanel', 'VehicleInteractionPrompt', 'WorldEncounterCanvas']) {
             assert(componentTags.has(name), `A1. WorldView.js still composes ${name}`);
@@ -215,7 +216,7 @@ async function runTests() {
         assert(/<RecoveryBanner/.test(editorViewSource), 'C1c. RecoveryBanner is still in the template');
         assert(/autosaveScheduler\.stop\(\)/.test(editorViewSource), 'C1d. EditorView.js still stops the autosave scheduler on teardown — no cross-document/orphaned autosave writer');
 
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         for (const identifier of ['getTimeline', 'restoreHistoryAt', 'beginHistoryPreview', 'previewHistoryAt', 'cancelHistoryPreview']) {
             assert(countReferences(worldViewSource, identifier) > 0, `C2. WorldView.js still references ${identifier}`);
         }
@@ -289,7 +290,7 @@ async function runTests() {
         assert(/composePublicationDistributionCommand\(/.test(mainSource), 'D2d. ui/main.js still composes publicationDistributionCommand via composePublicationDistributionCommand()');
         assert(/provide\('publicationDistributionCommand'/.test(mainSource), 'D2e. ...and still provides it app-wide');
 
-        const worldViewSourceForDistribution = await rawSource('ui/views/WorldView.js');
+        const worldViewSourceForDistribution = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/inject\('publicationDistributionCommand'/.test(worldViewSourceForDistribution), 'D2f. WorldView.js still injects the composed publicationDistributionCommand');
         assert(/publicationDistributionCommand\(\{/.test(worldViewSourceForDistribution), 'D2g. ...and still genuinely calls it (not merely re-injecting it downward unused)');
 
@@ -337,7 +338,7 @@ async function runTests() {
     {
         const ownPublicationPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
         assert(/discoverOwnSnapshot\(/.test(ownPublicationPanelSource), 'F1. OwnPublicationPanel.js still calls discoverOwnSnapshot (manual discovery)');
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/worldSnapshotDiscoveryMonitor\.observe\(/.test(worldViewSource), 'F2. WorldView.js still drives worldSnapshotDiscoveryMonitor.observe() (automatic discovery)');
         assert(/automaticSnapshotEncounterCascade\.processCandidate\(/.test(worldViewSource), 'F3. ...and still feeds candidates to automaticSnapshotEncounterCascade.processCandidate() (automatic materialization)');
         const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
@@ -586,7 +587,7 @@ async function runTests() {
     // ---------------------------------------------------------------
     {
         const navigationSessionSource = await rawSource('application/WorldNavigationSession.js');
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
 
         // UPDATE (0.9.217): refreshWorldPresenceActivity now HAS a
         // caller (see Section L5 below) — excluded from this "still has
@@ -721,7 +722,7 @@ async function runTests() {
         const placementRegistryUseCaseSource = await rawSource('application/CreatePlacementRegistryUseCase.js');
         assert(/class CreatePlacementRegistryUseCase/.test(placementRegistryUseCaseSource), 'M3b. CreatePlacementRegistryUseCase.js still exists, fully implemented');
         assert(await repoWideInstantiationCount('CreatePlacementRegistryUseCase') === 0, 'M3c. ...and is instantiated NOWHERE in application/ or ui/');
-        assert(/new CreateWorldViewUseCase\(/.test((await rawSource('ui/views/WorldView.js'))), 'M3d. ...while the replacement, CreateWorldViewUseCase, is genuinely composed by WorldView.js — the replacement is reachable, not merely claimed');
+        assert(/new CreateWorldViewUseCase\(/.test(((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'))), 'M3d. ...while the replacement, CreateWorldViewUseCase, is genuinely composed by WorldView.js — the replacement is reachable, not merely claimed');
 
         // M4 — OBSOLETE CANDIDATES (pipeline stage: no production caller
         // + replacement reachable, confirmed here directly; "confirmed
@@ -749,7 +750,7 @@ async function runTests() {
         // the functional territory these four candidates covered is not
         // itself missing, only these specific composition roots are dead.
         assert(/bootstrapWorldDiscoveryRuntime\(/.test(mainSource), 'M4c. the replacement world-discovery runtime (WorldDiscoveryRuntimeBootstrap.js) is genuinely composed in ui/main.js');
-        assert(/new CreateWorldViewUseCase\(/.test((await rawSource('ui/views/WorldView.js'))), 'M4d. ...and the replacement world-view backend (CreateWorldViewUseCase.js) is genuinely composed in WorldView.js');
+        assert(/new CreateWorldViewUseCase\(/.test(((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'))), 'M4d. ...and the replacement world-view backend (CreateWorldViewUseCase.js) is genuinely composed in WorldView.js');
 
         console.log(`✓ Section M: Obsolete components / superseded application paths — repository-wide sweep. Two known findings reconfirmed unchanged (GroupsPanel.js, CreatePublicationSnapshotPlacementCatalogUseCase.js). TWO NEW full OBSOLETE findings, each with an explicit in-repo supersession record (CreatePublicationAnchorCatalogUseCase.js, CreatePlacementRegistryUseCase.js). FOUR NEW OBSOLETE CANDIDATES (${candidateFiles.join(', ')}) — confirmed zero production callers and a confirmed reachable replacement, held one pipeline stage short of hard OBSOLETE pending an explicit supersession record or a human confirming intent. Nothing in this section is deleted.`);
     }
@@ -802,7 +803,7 @@ async function runTests() {
         assert(privateMethodCount >= 20, `O1a. WorldNavigationSession.js still declares many (${privateMethodCount}) private, underscore-prefixed internal methods`);
         for (const method of ['_refreshInspection', '_refreshEditingContext', '_refreshGizmo', '_setSpatialSelection']) {
             assert(new RegExp(`^[ \\t]+${method}\\(`, 'm').test(navigationSessionSource), `O1b. ${method} is still declared`);
-            assert(countReferences(await rawSource('ui/views/WorldView.js'), method) === 0, `O1c. ...and still has no caller in WorldView.js — correctly so, this is Infrastructure/Application-internal state maintenance, not a product capability with a missing UI terminus`);
+            assert(countReferences((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'), method) === 0, `O1c. ...and still has no caller in WorldView.js — correctly so, this is Infrastructure/Application-internal state maintenance, not a product capability with a missing UI terminus`);
         }
 
         // O2 — the closure table itself: every finding from Sections

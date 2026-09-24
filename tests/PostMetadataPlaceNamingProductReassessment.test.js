@@ -14,6 +14,7 @@ import { LocalNamePreferenceStore } from '../application/LocalNamePreferenceStor
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldViewFiles } from './support/ViewSourceFiles.js';
 
 // 0.9.268 — Post-Metadata Place Naming Product Reassessment.
 //
@@ -213,7 +214,7 @@ async function runTests() {
         assert(validateIdx > -1 && constructIdx > validateIdx && verifyIdx > constructIdx && saveIdx > verifyIdx,
             'A2. importClaim() still runs validate -> construct -> verify -> persist, in that exact order, unchanged since 0.5.3.');
 
-        const worldViewCode = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
+        const worldViewCode = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         const nearbyBlock = worldViewCode.match(/<CollapsibleSection\s+title="Nearby Place Names"[\s\S]*?<\/CollapsibleSection>/)[0];
         assert(/navigateToNearbyPlaceNamingClaim/.test(nearbyBlock) && />\s*Navigate\s*</i.test(nearbyBlock),
             'A3. The Nearby row still carries a real, wired Navigate button.');
@@ -418,7 +419,7 @@ async function runTests() {
         // ranking, signature-based ranking) exists anywhere in the row
         // construction or metadata-formatting code the last two
         // milestones actually touched.
-        const worldViewCode = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
+        const worldViewCode = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         const rowMapping = worldViewCode.match(/const nearbyPlaceNamingClaimRows = computed\(\(\) => \([\s\S]*?\)\);/)[0];
         const forbiddenRankingTerms = [
             'newestFirst', 'oldestFirst', 'sortByCreatedAt', 'authorPreference',
@@ -512,7 +513,7 @@ async function runTests() {
         // reconfirm the built shape, mirroring exactly how Section D1 of
         // tests/PostAdoptionPlaceNamingProductReassessment.test.js (0.9.265)
         // was updated at 0.9.266 for createdAtLabel.
-        const worldViewCode = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
+        const worldViewCode = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         const nearbyBlock = worldViewCode.match(/<CollapsibleSection\s+title="Nearby Place Names"[\s\S]*?<\/CollapsibleSection>/)[0];
         assert(/alreadySaved/.test(nearbyBlock) && /Already saved/i.test(nearbyBlock),
             'F3a. UPDATED at 0.9.269 — BUILT: the Nearby row template now renders a passive "Already saved" status in place of Adopt once claim.alreadySaved is true — a viewer can now tell BEFORE clicking Adopt.');

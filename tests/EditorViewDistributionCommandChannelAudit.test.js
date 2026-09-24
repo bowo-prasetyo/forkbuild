@@ -16,6 +16,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { worldViewFiles } from './support/ViewSourceFiles.js';
 
 // 0.9.376 — EditorView Distribution Command Channel Audit.
 //
@@ -171,7 +172,7 @@ async function run() {
         assert(compositionCode.includes("return (request) => executePublicationDistributionCommand({") && compositionCode.includes('...request,'),
             '3. composePublicationDistributionCommand() forwards its own request verbatim into the SAME executePublicationDistributionCommand() 0.9.103 already established, plus the three composition-root collaborators');
 
-        const worldViewCode = await codeOnlySource('ui/views/WorldView.js');
+        const worldViewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(worldViewCode.includes("inject('publicationDistributionCommand', null)"),
             '4. WorldView.js injects the app-wide command via inject(key, null) — the standard Vue provide/inject channel, not a bespoke one');
         // AMENDED BY 0.9.430 — Announcement/Discovery Provider Selection
@@ -221,7 +222,7 @@ async function run() {
         assert(/function publish\(\)\s*\{[\s\S]*?const publication = props\.publishDocumentUseCase\.execute\(props\.documentManager\);/.test(toolbarCode),
             '7. Toolbar.js\'s publish() — the Editor\'s own Publish button — holds the just-published Publication in a LOCAL variable, the direct return value of execute(), never a subsequent lookup');
 
-        const worldViewRaw = await rawSource('ui/views/WorldView.js');
+        const worldViewRaw = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(worldViewRaw.includes('session.getPublicationForDocument(activeId)'),
             '8. by contrast, WorldView.js\'s own path re-DERIVES ownPublication through session.getPublicationForDocument(activeId) inside refreshSpatialUI() — a real, working, but indirect "find latest publication for this document" step Toolbar.js\'s own path does not need at all');
 
@@ -444,7 +445,7 @@ async function run() {
         // never called from inside toolbarPublish()/publish() anywhere
         // above in this file, by construction — the same restraint,
         // live-demonstrated rather than merely asserted.
-        const worldViewCode = await codeOnlySource('ui/views/WorldView.js');
+        const worldViewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         const publishActiveDocumentFn = worldViewCode.match(/function publishActiveDocument\(\)[\s\S]*?\n {8}\}/)[0];
         assert(!publishActiveDocumentFn.includes('distributeWorldEncounterPublication('),
             '32. WorldView.js\'s own publishActiveDocument() never calls distributeWorldEncounterPublication() itself — distribution only ever happens on a LATER, separate, explicit user action');
@@ -462,7 +463,7 @@ async function run() {
         assert(provideCount === 1,
             '33. publicationDistributionCommand is provided exactly once, at the app root — a SECOND injector (EditorView) reads the SAME already-constructed instance, it cannot cause a second one to be built or the first to be reconstructed');
 
-        const worldViewRaw = await rawSource('ui/views/WorldView.js');
+        const worldViewRaw = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/\n {8}provide\('publicationDistributionCommand'/.test(worldViewRaw),
             '34. WorldView.js never locally re-provides publicationDistributionCommand under its own scope — it only ever injects the SAME app-level value, so nothing about WorldView\'s own supply of this capability could be shadowed or altered by another component injecting the identical key elsewhere in the tree');
 

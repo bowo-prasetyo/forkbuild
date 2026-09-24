@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { worldViewFiles } from './support/ViewSourceFiles.js';
 
 // 0.9.587 — World Navigation History Documentation Closure Audit.
 //
@@ -92,7 +93,7 @@ async function main() {
     // ===============================================================
     let worldViewSource, editorViewSource, publicationCatalogSource, routerSource;
     {
-        worldViewSource = codeOnly(await readSource('ui/views/WorldView.js'));
+        worldViewSource = codeOnly((await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n'));
         editorViewSource = codeOnly(await readSource('ui/views/EditorView.js'));
         publicationCatalogSource = codeOnly(await readSource('ui/components/PublicationCatalog.js'));
         routerSource = codeOnly(await readSource('ui/router/index.js'));

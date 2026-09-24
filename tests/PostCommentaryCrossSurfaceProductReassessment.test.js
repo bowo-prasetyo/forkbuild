@@ -12,7 +12,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { publicationsPageFiles } from './support/PublicationsPageFiles.js';
+import { publicationsPageFiles } from './support/ViewSourceFiles.js';
 
 // 0.9.305 — Cross-Surface Publication Commentary Reassessment.
 //

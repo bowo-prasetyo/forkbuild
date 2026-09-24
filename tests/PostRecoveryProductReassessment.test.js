@@ -15,6 +15,7 @@ import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import { ReplayDocumentUseCase } from '../application/ReplayDocumentUseCase.js';
 import { RestoreHistoryStateUseCase } from '../application/RestoreHistoryStateUseCase.js';
 import { RecoveryObserver } from '../application/RecoveryObserver.js';
+import { worldViewFiles } from './support/ViewSourceFiles.js';
 
 // 0.9.206 — Post-Recovery Product Reassessment.
 //
@@ -80,7 +81,7 @@ async function runTests() {
     // added, remain wired.
     // ---------------------------------------------------------------
     {
-        const worldView = await rawSource('ui/views/WorldView.js');
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const componentTags = new Set((worldView.match(/<[A-Z][A-Za-z]+/g) || []).map((tag) => tag.slice(1)));
         const expectedFamilies = [
             'AvatarInfoPanel', 'NearbyAvatarsPanel', 'CompassIndicator',
@@ -241,7 +242,7 @@ async function runTests() {
                 assert(countReferences(source, identifier) === 0, `C4. ${file} still never references ${identifier}`);
             }
         }
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         for (const identifier of ['getTimeline', 'restoreHistoryAt', 'beginHistoryPreview', 'previewHistoryAt', 'cancelHistoryPreview']) {
             assert(countReferences(worldViewSource, identifier) > 0, `C4a. (post-0.9.207) WorldView.js now references ${identifier}`);
         }

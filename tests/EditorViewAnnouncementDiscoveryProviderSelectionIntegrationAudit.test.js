@@ -13,6 +13,7 @@ import { PublicationDistributionLifecycleMemoryStore } from '../application/Publ
 import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
 import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
 import { sanitizeDistributionErrorMessage } from '../application/DistributionErrorMessageSanitizer.js';
+import { worldViewFiles } from './support/ViewSourceFiles.js';
 
 // 0.9.503 — Editor Announcement/Discovery Provider Selection Integration
 // Audit.
@@ -790,7 +791,7 @@ async function run() {
     // single-gateway Arweave) is intentional, not a defect.
     // ===============================================================
     {
-        const worldViewCode = codeOnly(await source('ui/views/WorldView.js'));
+        const worldViewCode = codeOnly((await Promise.all(worldViewFiles().map((file) => source(file)))).join('\n'));
 
         // The entire distribute*Publication(publication, discoveryProvider)
         // function body is byte-for-byte the SAME shape WorldView.js's own
@@ -804,7 +805,7 @@ async function run() {
         // are updated to match; the byte-for-byte parity this section
         // exists to protect is otherwise unchanged.
         const editorFnBody = extractRange(editorViewCode, 'function distributeEditorPublication(publication, discoveryProvider, materialStorage, remotePinningConfiguration) {', '\n        }\n', 'EditorView distribute function');
-        const worldFnBody = extractRange(worldViewCode, 'function distributeWorldEncounterPublication(publication, discoveryProvider, materialStorage, remotePinningConfiguration) {', '\n        }\n', 'WorldView distribute function');
+        const worldFnBody = extractRange(worldViewCode, 'function distributeWorldEncounterPublication(publication, discoveryProvider, materialStorage, remotePinningConfiguration) {', '\n    }\n', 'WorldView distribute function');
         const normalize = (body) => body
             .replace('distributeEditorPublication', 'DISTRIBUTE_FN')
             .replace('distributeWorldEncounterPublication', 'DISTRIBUTE_FN')

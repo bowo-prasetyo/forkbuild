@@ -17,6 +17,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { worldViewFiles } from './support/ViewSourceFiles.js';
 
 // 0.9.383 — Whole-Product Product Evolution Reassessment.
 //
@@ -338,7 +339,7 @@ async function run() {
         const placeNamingViewSource = await readSource('core/PlaceNamingView.js');
         assert(placeNamingViewSource.includes('export function claimsForRegion') || placeNamingViewSource.includes('namingView'),
             n('Discover -> Adopt: core/PlaceNamingView.js derives a consensus reading from whatever claims a replica knows about — a discovered claim genuinely becomes the adopted, displayed name via distinct-author confidence scoring, not merely stored inert'));
-        const worldViewCodeOnly = codeOnlyLines(await readSource('ui/views/WorldView.js'));
+        const worldViewCodeOnly = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n'));
         assert(worldViewCodeOnly.includes('function adoptNearbyPlaceNamingClaim(row)'),
             n('Discover -> Adopt: ui/views/WorldView.js carries a real, literally-named adoptNearbyPlaceNamingClaim() action — "adopt" is not this audit\'s own paraphrase, it is the production function name'));
 
@@ -452,8 +453,8 @@ async function run() {
         // published/fork-provenance status, not a bare canvas with no
         // information about what was just distributed.
         const worldViewTemplateSection = editorViewCodeOnly.includes('viewDistributedPublicationInRepository')
-            ? await readSource('ui/views/WorldView.js')
-            : await readSource('ui/views/WorldView.js');
+            ? (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n')
+            : (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(worldViewTemplateSection.includes('<h2>{{ title }}</h2>') && worldViewTemplateSection.includes('<p v-if="author">by {{ author }}</p>'),
             n('D3. Context: WorldView.js\'s own template renders the title and author for the loaded document — the destination is not context-free'));
         assert(worldViewTemplateSection.includes('parentTitle(activeDocumentInfo.parentDocumentId)'),

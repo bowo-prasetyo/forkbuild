@@ -17,7 +17,7 @@ import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.j
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 import ReconciliationWorkspaceView from '../ui/views/ReconciliationWorkspaceView.js';
-import { publicationsPageFiles } from './support/PublicationsPageFiles.js';
+import { publicationsPageFiles } from './support/ViewSourceFiles.js';
 
 // 0.9.409 — Reconciliation Workspace Persistence Convergence Audit.
 //

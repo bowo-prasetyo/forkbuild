@@ -30,6 +30,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PublicationExchange } from '../application/PublicationExchange.js';
 import { PublicationPeerExchange } from '../application/PublicationPeerExchange.js';
 import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
+import { worldViewFiles } from './support/ViewSourceFiles.js';
 
 // 0.9.339 — Merge Decentralized Publication Discovery into Repository
 // Discovery.
@@ -564,7 +565,7 @@ async function run() {
         // stays entirely separate (session.searchWorld(), built inside
         // application/CreateWorldViewUseCase.js's own independent
         // LocalDiscoveryProvider). Reconfirmed both ways.
-        const worldViewSource = await readSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(worldViewSource.includes("inject('decentralizedPublicationDiscoveryProvider', null)"),
             '2. WorldView.js now merges in the shared provider for its own title/author enrichment.');
         assert(worldViewSource.includes('session.searchWorld(options)'),

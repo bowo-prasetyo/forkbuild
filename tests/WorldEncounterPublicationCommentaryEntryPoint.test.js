@@ -19,6 +19,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { readFile } from 'node:fs/promises';
+import { worldViewFiles } from './support/ViewSourceFiles.js';
 
 // 0.9.291 — Publication Commentary on the World Encounter Surface.
 //
@@ -641,7 +642,7 @@ async function runTests() {
         // WorldView.js binds the SAME already-existing session-backed
         // commands to BOTH OwnPublicationPanel and WorldEncounterCanvas —
         // never a second construction of either function.
-        const viewCode = await codeOnlySource('ui/views/WorldView.js');
+        const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         const getBindings = (viewCode.match(/:getPublicationCommentariesCommand="getPublicationCommentariesCommand"/g) || []).length;
         const addBindings = (viewCode.match(/:addPublicationCommentaryCommand="addPublicationCommentaryCommand"/g) || []).length;
         assert(getBindings === 2 && addBindings === 2,

@@ -8,6 +8,7 @@ import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPubli
 import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
 import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
+import { worldViewFiles } from './support/ViewSourceFiles.js';
 
 // 0.9.288 — Cross-Arc Product Evolution Reassessment.
 //
@@ -237,7 +238,7 @@ async function runTests() {
         // at the domain/application layer needs to change for a SECOND
         // UI surface to call the exact same commands with a DIFFERENT
         // publication's id.
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/function getPublicationCommentariesCommand\(publicationId\)/.test(worldViewSource),
             'B5. getPublicationCommentariesCommand(publicationId) is already parameterized by an arbitrary publicationId, not hardcoded to "the current Wanderer\'s own publication" — the gap is integration, not capability.');
 
@@ -400,7 +401,7 @@ async function runTests() {
         // E3. The ONE production wiring site — the same command,
         // already parameterized by an arbitrary publicationId, not by
         // "the current Wanderer's own publication."
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/function getPublicationCommentariesCommand\(publicationId\)\s*\{\s*return session\.getPublicationCommentaries\(publicationId\);/.test(worldViewSource),
             'E3a. getPublicationCommentariesCommand(publicationId) still forwards WHATEVER publicationId it is given — no implicit "own publication" narrowing.');
         assert(/getPublicationCommentaries\(publicationId\)\s*\{/.test(await rawSource('application/WorldNavigationSession.js')),
