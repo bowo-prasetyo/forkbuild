@@ -1,4 +1,5 @@
 import { BitcoinAnchorPsbtSerializer } from './BitcoinAnchorPsbtSerializer.js';
+import { bytesToHex, hexToBytes, reverseBytes } from '../utils/bytes.js';
 
 const HEX_PATTERN = /^[0-9a-f]+$/i;
 const BASE64_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
@@ -327,22 +328,6 @@ function readVarBytes(bytes, offset) {
 // (e.g. BitcoinAnchorPsbtBuilder.js duplicates HEX_PATTERN/TXID_PATTERN
 // from BitcoinAnchorTransactionBuilder.js rather than importing them).
 // ---------------------------------------------------------------------
-
-function hexToBytes(hex) {
-    const bytes = new Uint8Array(hex.length / 2);
-    for (let i = 0; i < bytes.length; i++) {
-        bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
-    }
-    return bytes;
-}
-
-function bytesToHex(bytes) {
-    return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
-}
-
-function reverseBytes(bytes) {
-    return Uint8Array.from(bytes).reverse();
-}
 
 function readUInt32LE(bytes, offset) {
     return new DataView(bytes.buffer, bytes.byteOffset + offset, 4).getUint32(0, true);

@@ -1,4 +1,5 @@
 import { avatarCollisionCircleAt, avatarTreeCollision } from './AvatarTreeCollision.js';
+import { isFiniteCoordinate, isFiniteXZPosition } from './FiniteCoordinates.js';
 
 // 0.9.81 — Vehicle Dismount Destination Clearance.
 //
@@ -104,17 +105,6 @@ import { avatarCollisionCircleAt, avatarTreeCollision } from './AvatarTreeCollis
 // never changes an avatar's stored position — only whether a given
 // candidate position is safe to move an avatar to, if some future
 // transition ever decides to.
-
-function isFiniteCoordinate(value) {
-    return typeof value === 'number' && Number.isFinite(value);
-}
-
-function isFiniteXZPosition(position) {
-    return position !== null
-        && typeof position === 'object'
-        && isFiniteCoordinate(position.x)
-        && isFiniteCoordinate(position.z);
-}
 
 // The one entry point. See this file's own header for the exact
 // reasoning behind every deliberate choice below.

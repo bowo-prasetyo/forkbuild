@@ -1,3 +1,4 @@
+import { SHARED_RECONCILIATION_HELPER_FILES } from './support/SharedHelperImports.js';
 import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
@@ -153,8 +154,11 @@ async function run() {
         // reconfirmed fresh, the identical methodology 0.9.414 Section C
         // and 0.9.415 Section A10 already used. The claim-snapshot
         // reconciliation part of it now lives in its own folder, which also
-        // holds the two Record*IntoArchiveUseCase files the prefix never matched.
-        const inReconciliationFolder = (f) => f.startsWith('application/claimSnapshotReconciliation/') && !path.basename(f).endsWith('IntoArchiveUseCase.js');
+        // holds the two Record*IntoArchiveUseCase files the prefix never matched
+        // and three shared record helpers.
+        const inReconciliationFolder = (f) => f.startsWith('application/claimSnapshotReconciliation/')
+            && !path.basename(f).endsWith('IntoArchiveUseCase.js')
+            && !SHARED_RECONCILIATION_HELPER_FILES.includes(path.basename(f));
         leaderboardFamilyFiles = listFiles(['application']).filter((f) => path.basename(f).startsWith('PublisherLeaderboard') || inReconciliationFolder(f));
         assert(leaderboardFamilyFiles.length === 77, n(`A9. the PublisherLeaderboard* name-prefix family still numbers seventy-seven files, recomputed fresh (found ${leaderboardFamilyFiles.length})`));
         assert(leaderboardFamilyFiles.includes('application/leaderboard/PublisherLeaderboardView.js'), n('A10. PublisherLeaderboardView.js — the genuine performance-ranking presentation file — is itself swept into that same seventy-seven-file, name-prefix-defined family'));

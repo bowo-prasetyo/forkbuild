@@ -1,4 +1,5 @@
 import { distanceXZ } from './WorldSpatialAnchor.js';
+import { isFiniteXZPosition } from './FiniteCoordinates.js';
 
 // 0.9.255 — Place Naming Proximity Selection.
 //
@@ -112,13 +113,6 @@ import { distanceXZ } from './WorldSpatialAnchor.js';
 //
 // See docs/Roadmap.md, "0.9.255 — Place Naming Proximity Selection," for
 // the full milestone entry.
-
-function isFiniteXZPosition(position) {
-    return Boolean(position)
-        && typeof position === 'object'
-        && Number.isFinite(position.x)
-        && Number.isFinite(position.z);
-}
 
 // A valid radius is a finite, non-negative number — a radius of `0`
 // (only a claim positioned exactly at `currentPosition` is relevant) is

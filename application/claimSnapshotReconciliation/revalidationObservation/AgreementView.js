@@ -1,5 +1,6 @@
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference } from './HistoryDifference.js';
 import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory } from './HistoryView.js';
+import { isGenuineObservation, canonicalObservationKey } from './ObservationRecord.js';
 
 // 0.8.170 — Revalidation Observation Agreement Projection.
 //
@@ -341,25 +342,6 @@ function extractShared(from, remove) {
     return shared;
 }
 
-// Complete structural observation identity — decision + planIdentity +
-// candidatePresent + candidateType + candidateMatchesPlan + observedAt —
-// duplicated from 0.8.166's own `canonicalObservationKey()` for the
-// identical reason this whole family already duplicates it: this file must
-// apply the exact same identity rule without importing a module that itself
-// carries decision/plan/history vocabulary beyond 0.8.166's own difference
-// entry point. Never a narrower or wider key — see this file's own header,
-// "Use 0.8.166's exact six-field observation identity."
-function canonicalObservationKey(entry) {
-    return JSON.stringify({
-        decision: entry.decision,
-        planIdentity: entry.planIdentity,
-        candidatePresent: entry.candidatePresent,
-        candidateType: entry.candidateType,
-        candidateMatchesPlan: entry.candidateMatchesPlan,
-        observedAt: entry.observedAt
-    });
-}
-
 // The complete structural identity key for a plan identity object —
 // `algorithm` + `planFingerprint` + `candidateCount`, 0.8.160's own three
 // fields. `JSON.stringify()` of the whole object already captures this
@@ -372,17 +354,4 @@ function canonicalObservationKey(entry) {
 // `algorithm`, or `planFingerprint` independently.
 function canonicalPlanIdentityKey(planIdentity) {
     return JSON.stringify(planIdentity);
-}
-
-// A genuine 0.8.162 observation record — duplicated from 0.8.163's/
-// 0.8.164's/0.8.165's/0.8.166's own private genuineness check for the
-// identical reason those files each duplicate it: this file must apply the
-// exact same rule without importing a module that itself carries decision/
-// plan/archive vocabulary beyond 0.8.166's own difference entry point.
-function isGenuineObservation(entry) {
-    return (
-        entry !== null && typeof entry === 'object'
-        && entry.observed === true
-        && typeof entry.observedAt === 'string'
-    );
 }

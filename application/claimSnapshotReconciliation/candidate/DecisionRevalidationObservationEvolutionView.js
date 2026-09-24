@@ -2,6 +2,7 @@ import {
     describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationCandidateCorrespondence,
     reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationCandidateCorrespondence
 } from '../revalidationObservation/CandidateCorrespondenceView.js';
+import { candidateIdentityKey } from '../CandidateIdentityKey.js';
 
 // 0.8.172 — Reconciliation Candidate Observation Evolution Projection.
 //
@@ -313,21 +314,4 @@ function buildEvolution(correspondence) {
         distinctCandidateCount: candidateEvolutions.length,
         candidateEvolutions: Object.freeze(candidateEvolutions)
     });
-}
-
-// The complete structural candidate identity key — 0.8.147's, 0.8.153's,
-// and 0.8.171's own key, reused unchanged. `type` is always part of the
-// key; `claimId`/`snapshotIndex` are included only when 0.8.144's own
-// shape for that `type` actually carries them.
-function candidateIdentityKey(candidate) {
-    if (candidate.type === 'DIVERGENT_CORRESPONDENCE') {
-        return `DIVERGENT_CORRESPONDENCE:${candidate.claimId}:${candidate.snapshotIndex}`;
-    }
-    if (candidate.type === 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT') {
-        return `CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT:${candidate.claimId}`;
-    }
-    if (candidate.type === 'SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM') {
-        return `SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM:${candidate.snapshotIndex}`;
-    }
-    return `UNKNOWN:${JSON.stringify(candidate)}`;
 }

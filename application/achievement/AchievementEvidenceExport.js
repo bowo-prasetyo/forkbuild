@@ -13,6 +13,7 @@ import { PublicationReferenceRecord } from '../publication/PublicationReferenceR
 import { PublisherPublicationAssociationRecord } from '../publisher/PublisherPublicationAssociationRecord.js';
 import { parseJSONOrNull } from '../../utils/parseJsonOrNull.js';
 import { isPlainObject } from '../../utils/typeGuards.js';
+import { hasOnlyKeys } from '../../utils/typeGuards.js';
 
 const SCHEMA_VERSION = 1;
 
@@ -277,10 +278,6 @@ export function importAchievementEvidence(payload) {
 
 function stampImported(records) {
     return Object.freeze(records.map(() => PublicationObservationArchiveProvenanceOrigin.IMPORTED));
-}
-
-function hasOnlyKeys(value, allowedKeys) {
-    return Object.keys(value).every((key) => allowedKeys.includes(key));
 }
 
 // Strict, whole-payload validation — returns the validated collections or

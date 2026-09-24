@@ -1,4 +1,5 @@
 import { VehiclePresence } from './VehiclePresence.js';
+import { isFiniteCoordinate, isFiniteXZPosition } from './FiniteCoordinates.js';
 
 // 0.9.73 — Avatar-Vehicle Proximity Detection.
 //
@@ -54,17 +55,6 @@ import { VehiclePresence } from './VehiclePresence.js';
 // milestone to answer, exactly as this file's own milestone brief
 // requires. "Spatially close enough" is the entire question this seam
 // answers.
-
-function isFiniteCoordinate(value) {
-    return typeof value === 'number' && Number.isFinite(value);
-}
-
-function isFiniteXZPosition(position) {
-    return position !== null
-        && typeof position === 'object'
-        && isFiniteCoordinate(position.x)
-        && isFiniteCoordinate(position.z);
-}
 
 // How close an avatar must be to a vehicle, on the horizontal X/Z
 // plane, to be within interaction range of it — the ONE constant this

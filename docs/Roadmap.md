@@ -98373,3 +98373,15 @@ identical DOM and computed styles before and after, including after pointer, key
 never does something keep covering the moved code. Other adjustments: method regexes that expected eight-space
 indentation (moved methods now sit at four), inventories that list files (they now name the module holding the
 code), and relative import paths quoted from source.
+
+**More shared helpers.** 102 identical local copies of 17 small helpers across 64 files now come from shared
+modules: `lerp()`/`smoothstep()` (`utils/interpolation.js`), `isFiniteCoordinate()`/`isFiniteXZPosition()`
+(`core/FiniteCoordinates.js`), `responseContentLength()`/`byteLength()` (`utils/responseSize.js`),
+`bytesToHex()`/`hexToBytes()`/`concatBytes()`/`reverseBytes()` for the Bitcoin and Base codecs (`utils/bytes.js`;
+`identity/Ed25519.js` keeps its stricter versions), `hasOnlyKeys()` (`utils/typeGuards.js`), `normalizeRelayUrls()`
+(`application/nostr/NostrRelayUrls.js`), and, in `application/claimSnapshotReconciliation/`, `candidateIdentityKey()`
+(`CandidateIdentityKey.js`), `isGenuineDecision()`/`canonicalDecisionKey()` (`decision/DecisionRecord.js`) and
+`isGenuineObservation()`/`canonicalObservationKey()` (`revalidationObservation/ObservationRecord.js`). The
+reconciliation helpers are import-free leaf modules, so the views that use them still import no plan or discovery
+code. Copies whose bodies differ were left alone. Source-pinning tests that count import lines now skip these
+shared-helper imports, through `tests/support/SharedHelperImports.js`.

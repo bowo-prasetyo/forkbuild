@@ -19,6 +19,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { featureImportLines } from './support/SharedHelperImports.js';
 
 // 0.8.151 — Portable Reconciliation Decision History Exchange.
 //
@@ -460,8 +461,8 @@ async function run() {
             assert(!codeOnly.includes(term), `71. this file's own code never carries "${term}"`);
         }
 
-        const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import ') && !line.includes("from '../../../utils/"));
-        assert(importLines.length === 1, '72. besides utils/ helpers, this file imports exactly one module');
+        const importLines = featureImportLines(moduleSource);
+        assert(importLines.length === 1, '72. besides shared helpers, this file imports exactly one module');
         assert(importLines[0].includes('./History.js') && !importLines[0].includes('Difference') && !importLines[0].includes('View'), '73. the one import is 0.8.146\'s own append boundary, never the plan/candidate/decision/difference/archive modules');
 
         // Sanity — the two exported functions genuinely require no verifier

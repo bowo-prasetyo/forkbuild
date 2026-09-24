@@ -15,6 +15,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { featureImportLines } from './support/SharedHelperImports.js';
 
 // 0.8.156 — Reconciliation Candidate Decision Agreement Projection.
 //
@@ -472,8 +473,8 @@ async function run() {
         // difference), 0.8.150's own archive-reading seam, and 0.8.154 (the
         // candidate grouping) — nothing from 0.8.144/0.8.145/0.8.146/0.8.151
         // through 0.8.153, 0.8.155.
-        const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
-        assert(importLines.length === 3, '78. this file imports from exactly three modules');
+        const importLines = featureImportLines(moduleSource);
+        assert(importLines.length === 3, '78. besides shared helpers, this file imports from exactly three modules');
         const importBlock = moduleSource.slice(0, moduleSource.indexOf('function describePublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionAgreement'));
         assert(importBlock.includes('../decision/HistoryDifference.js'), '79. one import is 0.8.149\'s own decision history difference module');
         assert(importBlock.includes('./DecisionEvolutionView.js'), '80. one import is 0.8.154\'s own candidate decision evolution module');

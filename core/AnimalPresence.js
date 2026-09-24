@@ -1,5 +1,6 @@
 import { Position } from './Position.js';
 import { ANIMAL_SPECIES } from './WildlifeField.js';
+import { isFiniteCoordinate } from './FiniteCoordinates.js';
 
 // 0.9.700 — Animal Presence Descriptor.
 //
@@ -23,10 +24,6 @@ import { ANIMAL_SPECIES } from './WildlifeField.js';
 // input; collision; terrain interaction; deterministic placement itself
 // (core/AnimalPlacement.js's own job); deriving or validating an id's
 // FORMAT (core/AnimalIdentity.js's own job).
-
-function isFiniteCoordinate(value) {
-    return typeof value === 'number' && Number.isFinite(value);
-}
 
 function toPosition(position) {
     if (position instanceof Position) {

@@ -1,4 +1,5 @@
 import { distanceXZ } from '../../core/WorldSpatialAnchor.js';
+import { isFiniteXZPosition } from '../../core/FiniteCoordinates.js';
 
 // 0.9.256 — Automatic Place Naming Discovery Orchestration.
 //
@@ -47,11 +48,6 @@ import { distanceXZ } from '../../core/WorldSpatialAnchor.js';
 // no longer describes what's actually around them" — without either file
 // importing the other's constant.
 export const DEFAULT_PLACE_NAMING_DISCOVERY_REFRESH_RADIUS = 100;
-
-function isFiniteXZPosition(position) {
-    return Boolean(position) && typeof position === 'object'
-        && Number.isFinite(position.x) && Number.isFinite(position.z);
-}
 
 // shouldRefreshPlaceNamingDiscovery(previousPosition, currentPosition, radius)
 //   -> boolean.

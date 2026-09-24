@@ -5,6 +5,7 @@ import {
     reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionRevalidationObservationEvolution
 } from '../application/claimSnapshotReconciliation/candidate/DecisionRevalidationObservationEvolutionView.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { featureImportLines } from './support/SharedHelperImports.js';
 
 // 0.8.172 — Reconciliation Candidate Observation Evolution Projection.
 //
@@ -402,9 +403,9 @@ async function run() {
         // own history-storage module — this file imports exactly ONE
         // module: 0.8.171's own correspondence projection, used by both
         // describeXxx() and reconstructXxx().
-        const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
+        const importLines = featureImportLines(moduleSource);
         const importBlock = moduleSource.slice(0, moduleSource.indexOf('\n\n'));
-        assert(importLines.length === 1, '79. this file imports from exactly one module');
+        assert(importLines.length === 1, '79. besides shared helpers, this file imports from exactly one module');
         assert(importBlock.includes('../revalidationObservation/CandidateCorrespondenceView.js'), '80. the one import is 0.8.171\'s own correspondence projection, never 0.8.144\'s own candidate-selection boundary, 0.8.157\'s own revalidation module, or any plan/discovery/history-storage module');
         assert(!codeOnly.includes('reconciliationplanview') && !codeOnly.includes('describepublisherleaderboardclaimsnapshotreconciliationcandidate(') && !codeOnly.includes('candidaterevalidationview') && !codeOnly.includes('observationhistory.js') && !codeOnly.includes('observationhistoryview'), '81. this file never calls 0.8.144\'s own candidate-selection function, 0.8.157\'s own revalidation function, and never imports 0.8.163\'s own observation-history storage module or 0.8.167\'s own reconstruction seam directly');
     }

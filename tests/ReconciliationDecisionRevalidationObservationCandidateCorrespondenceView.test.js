@@ -5,6 +5,7 @@ import {
     reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationCandidateCorrespondence
 } from '../application/claimSnapshotReconciliation/revalidationObservation/CandidateCorrespondenceView.js';
 import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { featureImportLines } from './support/SharedHelperImports.js';
 
 // 0.8.171 — Revalidation Observation Candidate Correspondence Projection.
 //
@@ -379,8 +380,8 @@ async function run() {
         // candidate — this file's own describeXxx() has zero imports, and
         // its reconstructXxx() imports exactly ONE module: the 0.8.167
         // observation-history archive reconstruction seam.
-        const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
-        assert(importLines.length === 1, '69. this file imports exactly one module');
+        const importLines = featureImportLines(moduleSource);
+        assert(importLines.length === 1, '69. besides shared helpers, this file imports exactly one module');
         assert(importLines[0].includes('./HistoryView.js'), '70. the one import is the 0.8.167 observation-history archive reconstruction seam, never 0.8.144\'s own candidate-selection boundary or 0.8.157\'s own revalidation module');
         assert(!codeOnly.includes('reconciliationplanview') && !codeOnly.includes('describepublisherleaderboardclaimsnapshotreconciliationcandidate') && !codeOnly.includes('candidaterevalidationview'), '71. this file never calls 0.8.144\'s own candidate-selection function or 0.8.157\'s own revalidation function to rediscover anything');
     }

@@ -1,4 +1,5 @@
 import { ProofVerifier } from './ProofVerifier.js';
+import { responseContentLength, byteLength } from '../utils/responseSize.js';
 
 const TRANSACTION_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
 const DEFAULT_GATEWAY_URL = 'https://arweave.net';
@@ -152,17 +153,3 @@ export class ArweaveTransactionDataProofVerifier extends ProofVerifier {
 
 ArweaveTransactionDataProofVerifier.DEFAULT_GATEWAY_URL = DEFAULT_GATEWAY_URL;
 ArweaveTransactionDataProofVerifier.DEFAULT_MAX_RESPONSE_BYTES = DEFAULT_MAX_RESPONSE_BYTES;
-
-function responseContentLength(response) {
-    const headers = response && response.headers;
-    if (!headers || typeof headers.get !== 'function') {
-        return null;
-    }
-    const raw = headers.get('content-length');
-    const parsed = raw === null ? NaN : Number(raw);
-    return Number.isFinite(parsed) ? parsed : null;
-}
-
-function byteLength(text) {
-    return new TextEncoder().encode(text).byteLength;
-}

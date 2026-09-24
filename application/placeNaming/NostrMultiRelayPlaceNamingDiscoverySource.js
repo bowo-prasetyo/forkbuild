@@ -1,4 +1,5 @@
 import { NostrPlaceNamingDiscoverySource } from './NostrPlaceNamingDiscoverySource.js';
+import { normalizeRelayUrls } from '../nostr/NostrRelayUrls.js';
 
 // Nostr Multi-Relay Place Naming Discovery Source.
 //
@@ -99,19 +100,4 @@ export class NostrMultiRelayPlaceNamingDiscoverySource {
         }
         return payloads;
     }
-}
-
-// De-duplicates `relayUrls` by trimmed string equality, preserving the
-// order each distinct value first appears in.
-function normalizeRelayUrls(relayUrls) {
-    const seen = new Set();
-    const normalized = [];
-    for (const relayUrl of relayUrls) {
-        if (typeof relayUrl !== 'string') continue;
-        const trimmed = relayUrl.trim();
-        if (trimmed.length === 0 || seen.has(trimmed)) continue;
-        seen.add(trimmed);
-        normalized.push(trimmed);
-    }
-    return normalized;
 }

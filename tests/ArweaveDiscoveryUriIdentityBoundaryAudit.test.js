@@ -1,3 +1,4 @@
+import { isSharedHelperImport } from './support/SharedHelperImports.js';
 import { readFile } from 'node:fs/promises';
 
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -444,9 +445,9 @@ async function run() {
         // content store, Nostr, a new URI type, or an attribution/signature
         // primitive.
         const fixedSourceForImports = await source('application/arweave/ArweaveGraphqlDiscoveryQueryService.js');
-        const fixedImportLines = fixedSourceForImports.split('\n').filter((line) => line.trim().startsWith('import'));
+        const fixedImportLines = fixedSourceForImports.split('\n').filter((line) => line.trim().startsWith('import') && !isSharedHelperImport(line));
         check(fixedImportLines.length === 2 && /DecentralizedDiscoveryQueryService/.test(fixedImportLines[0]) && /parseDecentralizedDiscoveryEnvelope/.test(fixedImportLines[1]),
-            'H1. the real fix\'s own import list is exactly two lines: the base contract it implements, and the envelope parser it reuses — nothing else');
+            'H1. besides shared utils/ helpers, the real fix\'s own import list is exactly two lines: the base contract it implements, and the envelope parser it reuses — nothing else');
 
         const publisherSource = await source('application/arweave/ArweaveAnnouncementPublisher.js');
         const uploadSource = await source('application/arweave/ArweaveTaggedTransactionUpload.js');

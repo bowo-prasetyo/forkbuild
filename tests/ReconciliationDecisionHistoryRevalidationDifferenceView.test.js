@@ -1,4 +1,5 @@
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryRevalidationDifference } from '../application/claimSnapshotReconciliation/decision/HistoryRevalidationDifferenceView.js';
+import { featureImportLines } from './support/SharedHelperImports.js';
 
 // 0.8.159 — Reconciliation Decision History Revalidation Difference
 // Projection.
@@ -416,8 +417,8 @@ async function run() {
         // Exactly two imports — 0.8.158's own decision-history revalidation
         // projection and 0.8.149's own decision-history difference
         // projection, nothing else.
-        const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
-        assert(importLines.length === 2, '100. this file imports exactly two modules');
+        const importLines = featureImportLines(moduleSource);
+        assert(importLines.length === 2, '100. besides shared helpers, this file imports exactly two modules');
         assert(
             importLines.some((line) => line.includes('./HistoryRevalidationView.js')),
             '101. one import is 0.8.158\'s own decision-history revalidation projection'

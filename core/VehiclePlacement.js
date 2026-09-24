@@ -81,6 +81,7 @@ import { terrainHeightAt } from './TerrainHeightField.js';
 import { ecologyZoneAt, ECOLOGY_ZONE } from './TerrainEcology.js';
 import { isRiverAt } from './Hydrology.js';
 import { TERRAIN_TILE_SIZE } from './TerrainTiling.js';
+import { lerp, smoothstep } from '../utils/interpolation.js';
 
 // One candidate cell per terrain tile — see this file's own header for
 // why this stays an exact multiple of TERRAIN_TILE_SIZE rather than a
@@ -163,14 +164,6 @@ const VEHICLE_TYPE_SEED_OFFSET = 0x4d435459; // 'MCTY'
 const VEHICLE_TYPE_DRONE_SHARE = 0.02;
 const VEHICLE_TYPE_CAR_SHARE = 0.08;
 const VEHICLE_TYPE_MOTORCYCLE_SHARE = 0.25;
-
-function smoothstep(t) {
-    return t * t * (3 - 2 * t);
-}
-
-function lerp(a, b, t) {
-    return a + (b - a) * t;
-}
 
 // A small, fast, deterministic 32-bit avalanche hash — independently
 // reimplemented per core/NaturalFeatureField.js's own header precedent:

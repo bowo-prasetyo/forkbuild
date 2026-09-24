@@ -15,6 +15,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { featureImportLines } from './support/SharedHelperImports.js';
 
 // 0.8.153 — Historical Reconciliation Decision-to-Candidate Correspondence
 // Projection.
@@ -370,8 +371,8 @@ async function run() {
         // this file imports exactly ONE module: the archive reconstruction
         // seam, used only by reconstructXxx(). It never imports the plan,
         // candidate-selection, or reconciliation-discovery modules.
-        const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
-        assert(importLines.length === 1, '57. this file imports exactly one module');
+        const importLines = featureImportLines(moduleSource);
+        assert(importLines.length === 1, '57. besides shared helpers, this file imports exactly one module');
         assert(importLines[0].includes('./HistoryView.js'), '58. the one import is the 0.8.150 archive reconstruction seam, never 0.8.144\'s own candidate-selection boundary or any plan/discovery module');
         assert(!codeOnly.includes('reconciliationplanview') && !codeOnly.includes('describepublisherleaderboardclaimsnapshotreconciliationcandidate'), '59. this file never calls 0.8.144\'s own candidate-selection function to rediscover a candidate');
     }

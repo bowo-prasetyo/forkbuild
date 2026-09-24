@@ -1,3 +1,5 @@
+import { bytesToHex } from '../utils/bytes.js';
+
 const TXID_PATTERN = /^[0-9a-f]{64}$/i;
 const HEX_PATTERN = /^[0-9a-f]+$/i;
 
@@ -167,8 +169,4 @@ function validateRawTransaction(rawTransaction) {
         throw new Error('BitcoinAnchorTransactionBroadcaster: rawTransaction.bytes and rawTransaction.hex do not agree — internal inconsistency, refusing to broadcast');
     }
     return hex.toLowerCase();
-}
-
-function bytesToHex(bytes) {
-    return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
 }

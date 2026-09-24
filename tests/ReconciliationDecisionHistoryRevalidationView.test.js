@@ -10,6 +10,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { featureImportLines } from './support/SharedHelperImports.js';
 
 // 0.8.158 — Reconciliation Decision History Revalidation Projection.
 //
@@ -471,8 +472,8 @@ async function run() {
         // boundary, reused whole. No plan-projection, decision-history
         // archive, decision-generation, candidate-selection, or
         // verification module is ever imported.
-        const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
-        assert(importLines.length === 1, '73. this file imports exactly one module');
+        const importLines = featureImportLines(moduleSource);
+        assert(importLines.length === 1, '73. besides shared helpers, this file imports exactly one module');
         assert(
             importLines[0].includes('./CandidateRevalidationView.js'),
             '74. the one import is 0.8.157\'s own decision-to-plan revalidation boundary'

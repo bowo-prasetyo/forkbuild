@@ -1,6 +1,7 @@
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference } from '../decision/HistoryDifference.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionEvolution } from './DecisionEvolutionView.js';
 import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory } from '../decision/HistoryView.js';
+import { isGenuineDecision, canonicalDecisionKey } from '../decision/DecisionRecord.js';
 
 // 0.8.156 — Reconciliation Candidate Decision Agreement Projection.
 //
@@ -297,30 +298,4 @@ function extractShared(from, remove) {
 // no separate type-prefixed key construction is needed.
 function candidateKey(candidate) {
     return JSON.stringify(candidate);
-}
-
-// The one, uniform decision identity 0.8.149 already established — exact
-// structural equality of `candidate` + `decision` + `decidedAt` — reused
-// unchanged (never imported, since 0.8.149 keeps it private; duplicating it
-// here is the identical discipline 0.8.154's own `candidateIdentityKey()`
-// already holds for 0.8.147's/0.8.153's own candidate key).
-function canonicalDecisionKey(record) {
-    return JSON.stringify({ candidate: record.candidate, decision: record.decision, decidedAt: record.decidedAt });
-}
-
-// A genuine 0.8.145 decision record — duplicated from 0.8.149's own private
-// `isGenuineDecision()` for the identical reason `canonicalDecisionKey()`
-// is duplicated, above: this file's own multiset subtraction must filter
-// `sourceHistory` by the EXACT same rule 0.8.149 already applied internally
-// to produce `difference.sourceOnly`/`difference.sourceCount`, or the two
-// multisets would not line up.
-function isGenuineDecision(entry) {
-    return (
-        entry !== null && typeof entry === 'object'
-        && entry.decided === true
-        && entry.candidate !== null && typeof entry.candidate === 'object'
-        && typeof entry.candidate.type === 'string'
-        && (entry.decision === 'OBSERVE' || entry.decision === 'DEFER')
-        && typeof entry.decidedAt === 'string'
-    );
 }

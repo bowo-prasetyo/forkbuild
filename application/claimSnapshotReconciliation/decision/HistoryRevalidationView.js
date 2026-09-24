@@ -1,4 +1,6 @@
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionCandidateRevalidation } from './CandidateRevalidationView.js';
+import { candidateIdentityKey } from '../CandidateIdentityKey.js';
+import { isGenuineDecision } from './DecisionRecord.js';
 
 // 0.8.158 — Reconciliation Decision History Revalidation Projection.
 //
@@ -97,9 +99,8 @@ import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionCandidat
 // AN EMPTY OR ENTIRELY MALFORMED `decisionHistory` IS AN EXPLICIT, EMPTY
 // OUTCOME, NEVER A THROW. `null`, `undefined`, a non-array, or an array
 // containing only entries that are not genuine `{ decided: true, candidate,
-// decision, decidedAt }` records (0.8.157's/0.8.153's/0.8.156's own,
-// duplicated `isGenuineDecision()` rule, applied here once more for the
-// identical reason those files each duplicate it) produces
+// decision, decidedAt }` records (the shared `isGenuineDecision()` rule in
+// decision/DecisionRecord.js) produces
 // `{ decisionCount: 0, presentCandidateCount: 0, absentCandidateCount: 0,
 // revalidations: [] }`. A non-genuine entry mixed into an otherwise genuine
 // `decisionHistory` is silently excluded from every count and from
@@ -194,39 +195,4 @@ export function describePublisherLeaderboardClaimSnapshotReconciliationDecisionH
         absentCandidateCount,
         revalidations: Object.freeze(revalidations)
     });
-}
-
-// A genuine 0.8.145 decision record — duplicated from 0.8.153's/0.8.156's/
-// 0.8.157's own private `isGenuineDecision()` for the identical reason
-// those files each duplicate it: this file must apply the exact same
-// genuineness rule without importing a module that itself carries
-// plan/discovery vocabulary.
-function isGenuineDecision(entry) {
-    return (
-        entry !== null && typeof entry === 'object'
-        && entry.decided === true
-        && entry.candidate !== null && typeof entry.candidate === 'object'
-        && typeof entry.candidate.type === 'string'
-        && (entry.decision === 'OBSERVE' || entry.decision === 'DEFER')
-        && typeof entry.decidedAt === 'string'
-    );
-}
-
-// The complete structural candidate identity key — 0.8.147's own rule,
-// duplicated here for the identical reason `isGenuineDecision()` is:
-// `type` is always part of the key; `claimId`/`snapshotIndex` are included
-// only when 0.8.144's own shape for that `type` actually carries them, so a
-// candidate lacking a field is never coerced into matching one that
-// legitimately carries `undefined`.
-function candidateIdentityKey(candidate) {
-    if (candidate.type === 'DIVERGENT_CORRESPONDENCE') {
-        return `DIVERGENT_CORRESPONDENCE:${candidate.claimId}:${candidate.snapshotIndex}`;
-    }
-    if (candidate.type === 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT') {
-        return `CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT:${candidate.claimId}`;
-    }
-    if (candidate.type === 'SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM') {
-        return `SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM:${candidate.snapshotIndex}`;
-    }
-    return `UNKNOWN:${JSON.stringify(candidate)}`;
 }

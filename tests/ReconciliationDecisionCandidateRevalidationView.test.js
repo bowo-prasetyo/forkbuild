@@ -10,6 +10,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { featureImportLines } from './support/SharedHelperImports.js';
 
 // 0.8.157 — Historical Reconciliation Decision-to-Plan Candidate
 // Revalidation Projection.
@@ -410,8 +411,8 @@ async function run() {
         // Exactly one import — 0.8.144's own candidate-selection boundary,
         // reused whole. No plan-projection, decision-history, archive, or
         // verification module is ever imported.
-        const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
-        assert(importLines.length === 1, '56. this file imports exactly one module');
+        const importLines = featureImportLines(moduleSource);
+        assert(importLines.length === 1, '56. besides shared helpers, this file imports exactly one module');
         assert(importLines[0].includes('../ReconciliationCandidate.js') && !importLines[0].includes('PlanView') && !importLines[0].includes('Decision.js') && !importLines[0].includes('History'), '57. the one import is 0.8.144\'s own candidate-selection boundary, never a plan/history/archive module');
         assert(!codeOnly.includes('archive'), '58. this file never mentions an archive of any kind — it never reads current archive state to manufacture a plan');
 

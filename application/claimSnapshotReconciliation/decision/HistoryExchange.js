@@ -1,6 +1,8 @@
 import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry } from './History.js';
 import { parseJSONOrNull } from '../../../utils/parseJsonOrNull.js';
 import { isPlainObject } from '../../../utils/typeGuards.js';
+import { hasOnlyKeys } from '../../../utils/typeGuards.js';
+import { canonicalDecisionKey } from './DecisionRecord.js';
 
 // 0.8.151 — Portable Reconciliation Decision History Exchange.
 //
@@ -358,18 +360,6 @@ export function applyPublisherLeaderboardClaimSnapshotReconciliationDecisionHist
         rejectedCount: importResult.rejectedCount,
         rejections: importResult.rejections
     });
-}
-
-// The one, uniform decision identity this file uses for deduplication —
-// see this file's own header, "Decision Identity Governs Deduplication."
-// Reuses 0.8.149's own formula exactly (exact structural equality of
-// `candidate` + `decision` + `decidedAt`), never a narrower key.
-function canonicalDecisionKey(record) {
-    return JSON.stringify({ candidate: record.candidate, decision: record.decision, decidedAt: record.decidedAt });
-}
-
-function hasOnlyKeys(value, allowedKeys) {
-    return Object.keys(value).every((key) => allowedKeys.includes(key));
 }
 
 function hasAllKeys(value, requiredKeys) {

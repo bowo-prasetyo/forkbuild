@@ -1,3 +1,5 @@
+import { responseContentLength, byteLength } from '../../utils/responseSize.js';
+
 const ARWEAVE_URI_PREFIX = 'ar://';
 const TRANSACTION_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
 const DEFAULT_GATEWAY_URL = 'https://arweave.net';
@@ -261,26 +263,4 @@ function transactionIdFromUri(uri) {
         return null;
     }
     return id;
-}
-
-// Pure. Reads a `Content-Length` header off a fetch Response, or `null`
-// when the response carries no headers object, no such header, or a
-// non-numeric value — the cheap first line of defense against an
-// oversized body; see this file's own header.
-function responseContentLength(response) {
-    const headers = response && response.headers;
-    if (!headers || typeof headers.get !== 'function') {
-        return null;
-    }
-    const raw = headers.get('content-length');
-    const parsed = raw === null ? NaN : Number(raw);
-    return Number.isFinite(parsed) ? parsed : null;
-}
-
-// Pure. The actual decoded byte length of a string — the always-enforced
-// second line of defense against an oversized body, independent of
-// whatever (or whether) a `Content-Length` header claimed; see this
-// file's own header.
-function byteLength(text) {
-    return new TextEncoder().encode(text).byteLength;
 }

@@ -6,6 +6,7 @@ import {
 } from './PublisherLeaderboardSnapshotClaimExchange.js';
 import { parseJSONOrNull } from '../../utils/parseJsonOrNull.js';
 import { isPlainObject } from '../../utils/typeGuards.js';
+import { hasOnlyKeys } from '../../utils/typeGuards.js';
 
 // 0.8.126 — Portable Claim History Exchange.
 //
@@ -399,10 +400,6 @@ export function applyPublisherLeaderboardClaimHistoryExchange(history, payload, 
 // own `canonicalRecordKey()`.
 function canonicalReceiptKey(record) {
     return JSON.stringify(record.toJSON());
-}
-
-function hasOnlyKeys(value, allowedKeys) {
-    return Object.keys(value).every((key) => allowedKeys.includes(key));
 }
 
 // The top-level envelope is valid only when it is EXACTLY `{ protocolVersion,

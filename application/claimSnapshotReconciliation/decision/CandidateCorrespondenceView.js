@@ -1,4 +1,6 @@
 import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory } from './HistoryView.js';
+import { candidateIdentityKey } from '../CandidateIdentityKey.js';
+import { isGenuineDecision } from './DecisionRecord.js';
 
 // 0.8.153 — Historical Reconciliation Decision-to-Candidate Correspondence
 // Projection.
@@ -206,37 +208,4 @@ export function reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisi
     return describePublisherLeaderboardClaimSnapshotReconciliationDecisionCandidateCorrespondence(
         reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory(archive)
     );
-}
-
-// A genuine 0.8.145 decision record: `{ decided: true, candidate, decision,
-// decidedAt }`, with `candidate` one of 0.8.144's own three shapes and
-// `decision` one of 0.8.145's own two-value vocabulary. Anything else —
-// including a genuine-looking `{ decided: false, ... }` outcome — is
-// excluded, mirroring every other projection in this family exactly.
-function isGenuineDecision(entry) {
-    return (
-        entry !== null && typeof entry === 'object'
-        && entry.decided === true
-        && entry.candidate !== null && typeof entry.candidate === 'object'
-        && typeof entry.candidate.type === 'string'
-        && (entry.decision === 'OBSERVE' || entry.decision === 'DEFER')
-        && typeof entry.decidedAt === 'string'
-    );
-}
-
-// The complete structural candidate identity key — 0.8.147's own key,
-// reused unchanged. `type` is always part of the key; `claimId`/
-// `snapshotIndex` are included only when 0.8.144's own shape for that
-// `type` actually carries them.
-function candidateIdentityKey(candidate) {
-    if (candidate.type === 'DIVERGENT_CORRESPONDENCE') {
-        return `DIVERGENT_CORRESPONDENCE:${candidate.claimId}:${candidate.snapshotIndex}`;
-    }
-    if (candidate.type === 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT') {
-        return `CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT:${candidate.claimId}`;
-    }
-    if (candidate.type === 'SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM') {
-        return `SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM:${candidate.snapshotIndex}`;
-    }
-    return `UNKNOWN:${JSON.stringify(candidate)}`;
 }

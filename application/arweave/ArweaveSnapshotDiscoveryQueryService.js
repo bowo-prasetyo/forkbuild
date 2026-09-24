@@ -1,5 +1,6 @@
 import { parseSnapshotDiscoveryEnvelope } from '../../core/SnapshotDiscoveryEnvelope.js';
 import { SnapshotCandidateDiscoveryOutcome } from '../snapshot/SnapshotCandidateDiscoveryOutcome.js';
+import { responseContentLength, byteLength } from '../../utils/responseSize.js';
 
 const DEFAULT_GRAPHQL_URL = 'https://arweave.net/graphql';
 // Deliberately the same host application/arweave/ArweaveGraphqlDiscoveryQueryService.js's
@@ -537,23 +538,4 @@ function parseTransactionIds(body) {
 // byte, by this milestone.
 function hasWellFormedTransactionsShape(body) {
     return Boolean(body && body.data && body.data.transactions && Array.isArray(body.data.transactions.edges));
-}
-
-// Pure. Byte-for-byte the same private helper `application/
-// ArweaveGraphqlDiscoveryQueryService.js` already defines for itself — not
-// imported from it; see this file's own header, "a standalone class"
-// convention this whole family already follows.
-function responseContentLength(response) {
-    const headers = response && response.headers;
-    if (!headers || typeof headers.get !== 'function') {
-        return null;
-    }
-    const raw = headers.get('content-length');
-    const parsed = raw === null ? NaN : Number(raw);
-    return Number.isFinite(parsed) ? parsed : null;
-}
-
-// Pure. The actual decoded byte length of a string.
-function byteLength(text) {
-    return new TextEncoder().encode(text).byteLength;
 }

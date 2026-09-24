@@ -15,6 +15,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { featureImportLines } from './support/SharedHelperImports.js';
 
 // 0.8.147 — Reconciliation Decision History Statistics Projection.
 //
@@ -392,8 +393,8 @@ async function run() {
         // application/claimSnapshotReconciliation/decision/HistoryView.js),
         // used only by reconstructXxx() below. It still imports nothing from
         // the reconciliation FAMILY itself (plan/candidate/decision).
-        const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
-        assert(importLines.length === 1, '63. this file imports exactly one module');
+        const importLines = featureImportLines(moduleSource);
+        assert(importLines.length === 1, '63. besides shared helpers, this file imports exactly one module');
         assert(importLines[0].includes('./HistoryView.js'), '64. the one import is the 0.8.150 archive reconstruction seam, never the reconciliation family itself');
     }
     console.log('✓ Section J: the result carries no interpreted-state, trust, or ranking vocabulary, and the module imports only the 0.8.150 archive reconstruction seam');

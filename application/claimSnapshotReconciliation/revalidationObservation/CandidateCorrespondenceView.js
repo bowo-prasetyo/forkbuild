@@ -1,4 +1,6 @@
 import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory } from './HistoryView.js';
+import { candidateIdentityKey } from '../CandidateIdentityKey.js';
+import { isGenuineObservation } from './ObservationRecord.js';
 
 // 0.8.171 — Revalidation Observation Candidate Correspondence Projection.
 //
@@ -228,36 +230,4 @@ export function reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisi
     return describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationCandidateCorrespondence(
         reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory(archive)
     );
-}
-
-// A genuine 0.8.162 observation record — duplicated from 0.8.164's/
-// 0.8.165's/0.8.166's/0.8.170's own private genuineness check for the
-// identical reason those files each duplicate it: this file must apply the
-// exact same minimal marker without importing a module that itself carries
-// decision/plan/archive vocabulary. `entry.decision.candidate` is read
-// directly below, trusting the `observed: true` marker exactly as the rest
-// of this family trusts it, and nothing deeper.
-function isGenuineObservation(entry) {
-    return (
-        entry !== null && typeof entry === 'object'
-        && entry.observed === true
-        && typeof entry.observedAt === 'string'
-    );
-}
-
-// The complete structural candidate identity key — 0.8.147's/0.8.153's own
-// key, reused unchanged. `type` is always part of the key; `claimId`/
-// `snapshotIndex` are included only when 0.8.144's own shape for that
-// `type` actually carries them.
-function candidateIdentityKey(candidate) {
-    if (candidate.type === 'DIVERGENT_CORRESPONDENCE') {
-        return `DIVERGENT_CORRESPONDENCE:${candidate.claimId}:${candidate.snapshotIndex}`;
-    }
-    if (candidate.type === 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT') {
-        return `CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT:${candidate.claimId}`;
-    }
-    if (candidate.type === 'SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM') {
-        return `SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM:${candidate.snapshotIndex}`;
-    }
-    return `UNKNOWN:${JSON.stringify(candidate)}`;
 }

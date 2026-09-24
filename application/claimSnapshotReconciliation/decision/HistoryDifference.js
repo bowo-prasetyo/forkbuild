@@ -1,4 +1,5 @@
 import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory } from './HistoryView.js';
+import { isGenuineDecision, canonicalDecisionKey } from './DecisionRecord.js';
 
 // 0.8.149 — Reconciliation Decision History Difference Projection.
 //
@@ -218,32 +219,4 @@ function extractUnmatched(from, against) {
         }
     }
     return unmatched;
-}
-
-// The one, uniform decision identity this file uses for comparison — exact
-// structural equality of the record's complete content (`candidate` +
-// `decision` + `decidedAt`). A genuine 0.8.145 decision record is already a
-// plain object with no methods of its own, so its own `JSON.stringify()`
-// output already IS its complete structural content — no `toJSON()` call
-// needed, unlike 0.8.127's own `LeaderboardClaimRecord` instances.
-function canonicalDecisionKey(record) {
-    return JSON.stringify({ candidate: record.candidate, decision: record.decision, decidedAt: record.decidedAt });
-}
-
-// A genuine 0.8.145 decision record: `{ decided: true, candidate, decision,
-// decidedAt }`, with `candidate` one of 0.8.144's own three shapes and
-// `decision` one of 0.8.145's own two-value vocabulary. Anything else —
-// including a genuine-looking `{ decided: false, ... }` outcome — is
-// silently excluded, mirroring
-// `application/claimSnapshotReconciliation/decision/HistoryTimelineView.js`'s
-// own `isGenuineDecision()` exactly.
-function isGenuineDecision(entry) {
-    return (
-        entry !== null && typeof entry === 'object'
-        && entry.decided === true
-        && entry.candidate !== null && typeof entry.candidate === 'object'
-        && typeof entry.candidate.type === 'string'
-        && (entry.decision === 'OBSERVE' || entry.decision === 'DEFER')
-        && typeof entry.decidedAt === 'string'
-    );
 }

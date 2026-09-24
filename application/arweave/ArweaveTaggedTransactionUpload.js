@@ -1,3 +1,5 @@
+import { responseContentLength, byteLength } from '../../utils/responseSize.js';
+
 const TRANSACTION_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
 const DEFAULT_GATEWAY_URL = 'https://arweave.net';
 const DEFAULT_TIMEOUT_MS = 15000;
@@ -246,23 +248,4 @@ function isWellFormedTag(tag) {
     return Boolean(tag)
         && typeof tag.name === 'string' && tag.name.length > 0
         && typeof tag.value === 'string' && tag.value.length > 0;
-}
-
-// Pure. Byte-for-byte the same private helper application/
-// ArweavePublicationMaterialUploader.js already defines for itself — not
-// imported from it; see this file's own header, "a new adapter, never a
-// shared base class."
-function responseContentLength(response) {
-    const headers = response && response.headers;
-    if (!headers || typeof headers.get !== 'function') {
-        return null;
-    }
-    const raw = headers.get('content-length');
-    const parsed = raw === null ? NaN : Number(raw);
-    return Number.isFinite(parsed) ? parsed : null;
-}
-
-// Pure. The actual decoded byte length of a string.
-function byteLength(text) {
-    return new TextEncoder().encode(text).byteLength;
 }

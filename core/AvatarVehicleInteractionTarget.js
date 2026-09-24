@@ -2,6 +2,7 @@ import { VehiclePresence } from './VehiclePresence.js';
 import { VehicleInstance } from './VehicleInstance.js';
 import { withinRadiusXZ, VEHICLE_INTERACTION_RADIUS } from './AvatarVehicleProximity.js';
 import { AvatarVehicleInteractionIntent } from './AvatarVehicleInteractionIntent.js';
+import { isFiniteCoordinate, isFiniteXZPosition } from './FiniteCoordinates.js';
 
 // 0.9.76 — Avatar-Vehicle Interaction Target Resolution.
 //
@@ -120,17 +121,6 @@ import { AvatarVehicleInteractionIntent } from './AvatarVehicleInteractionIntent
 // uniformly across whichever shape each candidate happens to be. Still no
 // vehicle id / registry lookup, still no mount-state awareness, still no
 // selection-policy change — a widened INPUT TYPE, never a new rule.
-
-function isFiniteCoordinate(value) {
-    return typeof value === 'number' && Number.isFinite(value);
-}
-
-function isFiniteXZPosition(position) {
-    return position !== null
-        && typeof position === 'object'
-        && isFiniteCoordinate(position.x)
-        && isFiniteCoordinate(position.z);
-}
 
 function squaredDistanceXZ(a, b) {
     const dx = a.x - b.x;

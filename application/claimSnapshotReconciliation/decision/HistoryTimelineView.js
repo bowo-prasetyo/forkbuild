@@ -1,4 +1,5 @@
 import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory } from './HistoryView.js';
+import { isGenuineDecision } from './DecisionRecord.js';
 
 // 0.8.148 — Reconciliation Decision History Timeline Projection.
 //
@@ -220,24 +221,6 @@ export function describePublisherLeaderboardClaimSnapshotReconciliationDecisionH
 export function reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryTimeline(archive) {
     return describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryTimeline(
         reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory(archive)
-    );
-}
-
-// A genuine 0.8.145 decision record: `{ decided: true, candidate, decision,
-// decidedAt }`, with `candidate` one of 0.8.144's own three shapes and
-// `decision` one of 0.8.145's own two-value vocabulary. Anything else —
-// including a genuine-looking `{ decided: false, ... }` outcome — is not
-// timelined, mirroring
-// `application/claimSnapshotReconciliation/decision/HistoryStatisticsView.js`'s
-// own `isGenuineDecision()` exactly.
-function isGenuineDecision(entry) {
-    return (
-        entry !== null && typeof entry === 'object'
-        && entry.decided === true
-        && entry.candidate !== null && typeof entry.candidate === 'object'
-        && typeof entry.candidate.type === 'string'
-        && (entry.decision === 'OBSERVE' || entry.decision === 'DEFER')
-        && typeof entry.decidedAt === 'string'
     );
 }
 

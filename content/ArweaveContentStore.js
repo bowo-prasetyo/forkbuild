@@ -2,6 +2,7 @@ import { ContentStore } from './ContentStore.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { ContentUnavailableError } from './IpfsContentStore.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { responseContentLength, byteLength } from '../utils/responseSize.js';
 
 const ARWEAVE_URI_PREFIX = 'ar://';
 const TRANSACTION_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
@@ -105,13 +106,8 @@ const DEFAULT_MAX_RESPONSE_BYTES = 256 * 1024;
 // same "transaction-shape knowledge lives with whoever signs" restraint
 // held one layer earlier. DEFAULT_MAX_RESPONSE_BYTES, above, only bounds
 // what this file will ever read back on the RETRIEVAL side — a value
-// chosen to match that exact ceiling, not imported from it, for the
-// identical reason application/arweave/ArweavePublicationMaterialUploader.js's
-// own `responseContentLength`/`byteLength` helpers are byte-identical to,
-// yet never imported from, application/
-// ArweaveWorldEncounterMaterialResolver.js's own private helpers of the
-// same name: two different concerns at two different layers, kept
-// deliberately separate rather than cross-imported.
+// chosen to match that exact ceiling, not imported from it: the write
+// and read ceilings are two different concerns at two different layers.
 //
 // `put()` NEVER RETURNS null OR A FAKE ContentReference — IT SUCCEEDS OR
 // THROWS. Mirrors content/IpfsContentStore.js's own put() exactly, and
@@ -347,32 +343,6 @@ export class ArweaveContentStore extends ContentStore {
         const id = uri.slice(ARWEAVE_URI_PREFIX.length);
         return TRANSACTION_ID_PATTERN.test(id) ? id : null;
     }
-}
-
-// Pure. Reads a `Content-Length` header off a fetch Response, or `null`
-// when the response carries no headers object, no such header, or a
-// non-numeric value — the cheap first line of defense against an
-// oversized response body. Deliberately NOT imported from application/
-// ArweavePublicationMaterialUploader.js or application/
-// ArweaveWorldEncounterMaterialResolver.js's own byte-identical private
-// helpers of the same name; see this file's own header, "no cross-import
-// of the write-side ceiling," for why this codebase keeps these small
-// per-file rather than shared.
-function responseContentLength(response) {
-    const headers = response && response.headers;
-    if (!headers || typeof headers.get !== 'function') {
-        return null;
-    }
-    const raw = headers.get('content-length');
-    const parsed = raw === null ? NaN : Number(raw);
-    return Number.isFinite(parsed) ? parsed : null;
-}
-
-// Pure. The actual decoded byte length of a string — the always-enforced
-// second line of defense against an oversized body, independent of
-// whatever (or whether) a `Content-Length` header claimed.
-function byteLength(text) {
-    return new TextEncoder().encode(text).byteLength;
 }
 
 ArweaveContentStore.DEFAULT_GATEWAY_URL = DEFAULT_GATEWAY_URL;

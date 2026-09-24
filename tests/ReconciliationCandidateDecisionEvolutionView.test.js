@@ -15,6 +15,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { featureImportLines } from './support/SharedHelperImports.js';
 
 // 0.8.154 — Reconciliation Candidate Decision Evolution Projection.
 //
@@ -445,9 +446,9 @@ async function run() {
         // or read decision records via 0.8.146's own history module — this
         // file imports exactly ONE module: 0.8.153's own correspondence
         // projection, used by both describeXxx() and reconstructXxx().
-        const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
+        const importLines = featureImportLines(moduleSource);
         const importBlock = moduleSource.slice(0, moduleSource.indexOf('\n\n'));
-        assert(importLines.length === 1, '75. this file imports from exactly one module');
+        assert(importLines.length === 1, '75. besides shared helpers, this file imports from exactly one module');
         assert(importBlock.includes('../decision/CandidateCorrespondenceView.js'), '76. the one import is 0.8.153\'s own correspondence projection, never 0.8.144\'s own candidate-selection boundary or any plan/discovery/history-storage module');
         assert(!codeOnly.includes('reconciliationplanview') && !codeOnly.includes('describepublisherleaderboardclaimsnapshotreconciliationcandidate(') && !codeOnly.includes('decisionhistoryview') && !codeOnly.includes('decisionhistory.js'), '77. this file never calls 0.8.144\'s own candidate-selection function and never imports 0.8.146\'s own decision-history storage module');
     }

@@ -1,3 +1,5 @@
+import { lerp } from '../../utils/interpolation.js';
+
 // 0.2.94 — World View Location & Navigation.
 //
 // A pure, stateless interpolation: given a starting and ending camera
@@ -23,9 +25,6 @@
 // conversation named and deliberately postponed; this class only
 // guarantees the camera never TELEPORTS, not that its path never
 // clips geometry.
-function lerp(a, b, t) {
-    return a + (b - a) * t;
-}
 
 function lerpPoint(a, b, t) {
     return { x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t), z: lerp(a.z, b.z, t) };

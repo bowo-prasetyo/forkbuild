@@ -1,5 +1,6 @@
 import { Position } from './Position.js';
 import { VehicleType, isValidVehicleType } from './VehicleType.js';
+import { isFiniteCoordinate } from './FiniteCoordinates.js';
 
 // 0.9.71 — Vehicle Presence Descriptor.
 // Extended by 0.9.74 — Deterministic Vehicle Identity.
@@ -88,9 +89,6 @@ import { VehicleType, isValidVehicleType } from './VehicleType.js';
 // core/VehicleIdentity.js's own job (see docs/Roadmap.md, 0.9.74). This
 // file answers only "what vehicle is present, and where — and by what
 // name," nothing else.
-function isFiniteCoordinate(value) {
-    return typeof value === 'number' && Number.isFinite(value);
-}
 
 function toPosition(position) {
     if (position instanceof Position) {

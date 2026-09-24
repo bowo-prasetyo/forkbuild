@@ -5,6 +5,7 @@ import {
 } from '../../core/PublisherLeaderboardSnapshotClaim.js';
 import { parseJSONOrNull } from '../../utils/parseJsonOrNull.js';
 import { isPlainObject } from '../../utils/typeGuards.js';
+import { hasOnlyKeys } from '../../utils/typeGuards.js';
 
 // 0.8.122 — Portable Signed Leaderboard Claim Exchange.
 //
@@ -254,10 +255,6 @@ export function importPublisherLeaderboardSnapshotClaim(payload, verifier) {
     }
 
     return Object.freeze({ outcome: PublisherLeaderboardSnapshotClaimImportOutcome.IMPORTED, claim, reason: null });
-}
-
-function hasOnlyKeys(value, allowedKeys) {
-    return Object.keys(value).every((key) => allowedKeys.includes(key));
 }
 
 // A candidate payload is shape-valid only when it is EXACTLY the nine

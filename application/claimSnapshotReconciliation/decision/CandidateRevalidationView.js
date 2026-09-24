@@ -1,4 +1,5 @@
 import { describePublisherLeaderboardClaimSnapshotReconciliationCandidate } from '../ReconciliationCandidate.js';
+import { isGenuineDecision } from './DecisionRecord.js';
 
 // 0.8.157 — Historical Reconciliation Decision-to-Plan Candidate
 // Revalidation Projection.
@@ -95,9 +96,8 @@ import { describePublisherLeaderboardClaimSnapshotReconciliationCandidate } from
 //
 // AN INVALID DECISION RECORD IS AN EXPLICIT OUTCOME, NEVER A THROW. A
 // `decisionRecord` that is not a genuine `{ decided: true, candidate,
-// decision, decidedAt }` record (see `isGenuineDecision()` below, duplicated
-// from 0.8.153's/0.8.156's own private helper for the identical reason those
-// files duplicate it) produces `{ decision: null, candidatePresent: false,
+// decision, decidedAt }` record (see `isGenuineDecision()` in
+// decision/DecisionRecord.js) produces `{ decision: null, candidatePresent: false,
 // candidateType: null, candidateMatchesPlan: false }` — never an exception.
 // A malformed `plan` is handed straight to 0.8.144's own call, which already
 // degrades a non-object `plan`, a `plan` missing the relevant list, or a
@@ -221,19 +221,4 @@ function selectionFor(candidate) {
         return { type: 'SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM', snapshotIndex: candidate.snapshotIndex };
     }
     return { type: candidate.type };
-}
-
-// A genuine 0.8.145 decision record — duplicated from 0.8.153's/0.8.156's
-// own private `isGenuineDecision()` for the identical reason those files
-// duplicate it: this file must apply the exact same genuineness rule
-// without importing a module that itself carries plan/discovery vocabulary.
-function isGenuineDecision(entry) {
-    return (
-        entry !== null && typeof entry === 'object'
-        && entry.decided === true
-        && entry.candidate !== null && typeof entry.candidate === 'object'
-        && typeof entry.candidate.type === 'string'
-        && (entry.decision === 'OBSERVE' || entry.decision === 'DEFER')
-        && typeof entry.decidedAt === 'string'
-    );
 }

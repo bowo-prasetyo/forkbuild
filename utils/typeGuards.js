@@ -13,3 +13,9 @@ export function isNonBlankString(value) {
 export function isPlainObject(value) {
     return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
+
+// True when every own key of `value` is listed in `allowedKeys`; used to
+// reject imported records that carry unexpected fields.
+export function hasOnlyKeys(value, allowedKeys) {
+    return Object.keys(value).every((key) => allowedKeys.includes(key));
+}

@@ -1,3 +1,5 @@
+import { lerp, smoothstep } from '../utils/interpolation.js';
+
 // Deterministic, seeded ground elevation for World View — see
 // docs/Roadmap.md, 0.2.76, "World Ground & Terrain Foundation," and
 // docs/Principles.md, "Terrain Is A Pure Function Of World Coordinates
@@ -60,18 +62,6 @@ function hash2D(seed, latticeX, latticeZ) {
     h = Math.imul(h, 0xc2b2ae35);
     h ^= h >>> 16;
     return (h >>> 0) / 4294967296;
-}
-
-// Smoothstep (3t^2 - 2t^3): zero first derivative at both lattice
-// corners, so neighboring lattice cells interpolate into each other with
-// no visible seam — plain linear interpolation would leave a visible
-// crease at every integer boundary.
-function smoothstep(t) {
-    return t * t * (3 - 2 * t);
-}
-
-function lerp(a, b, t) {
-    return a + (b - a) * t;
 }
 
 // Bilinear value noise on the unit lattice, in [0, 1). One octave's

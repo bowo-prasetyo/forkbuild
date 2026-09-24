@@ -1,3 +1,4 @@
+import { featureImportLines } from './support/SharedHelperImports.js';
 import { readFile } from 'node:fs/promises';
 
 import { createArweaveTaggedTransactionUpload } from '../application/arweave/ArweaveTaggedTransactionUpload.js';
@@ -241,7 +242,7 @@ async function run() {
         assert(!/WorldEncounterMaterialResolver|retrieveByUri/.test(codeOnly), 'F5. never resolves/retrieves content of any kind');
         assert(!/retry|setTimeout.*retry|attempt\s*\+\+/i.test(codeOnly.replace(/setTimeout\(\(\) => controller\.abort/g, '')), 'F6. never retries on its own — one signer call, one POST, per invocation');
         assert(!/new Set\(|new Map\(|_published|_seen|_history/.test(codeOnly), 'F7. no deduplication/idempotency bookkeeping of any kind');
-        assert(!/\bimport\s/.test(codeOnly), 'F8. zero dependencies — a pure adapter over whatever signer/fetchImpl it is handed, no coupling to any other file in this codebase');
+        assert(featureImportLines(adapterSource).length === 0, 'F8. no dependencies besides shared utils/ helpers — a pure adapter over whatever signer/fetchImpl it is handed, no coupling to any other file in this codebase');
 
         console.log('✓ Section F: no application logic — source sweep confirms a pure I/O translation adapter with zero coupling to discovery, hashing, Nostr, or content resolution');
     }

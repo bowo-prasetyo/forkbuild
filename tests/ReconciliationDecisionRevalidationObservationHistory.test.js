@@ -1,3 +1,4 @@
+import { featureImportLines } from './support/SharedHelperImports.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation } from '../application/claimSnapshotReconciliation/revalidationObservation/RevalidationObservation.js';
 import {
     appendPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryEntry,
@@ -237,8 +238,8 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/claimSnapshotReconciliation/revalidationObservation/History.js', import.meta.url), 'utf8');
-        const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
-        assert(importLines.length === 0, '32. this file imports nothing at all');
+        const importLines = featureImportLines(moduleSource);
+        assert(importLines.length === 0, '32. besides shared helpers, this file imports nothing at all');
 
         const codeOnly = moduleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         const forbiddenVocabulary = ['resolved', 'pending', 'stale', 'approved', 'rejected', 'fraud', 'conflict', 'trusted', 'confidence', 'reputation', 'severity', 'authoritative', 'repair', 'replace', 'accept', 'reject', 'merge', 'delete', 'apply', 'winner', 'execute', 'mutate', 'timeline', 'statistics', 'superseded'];

@@ -1,4 +1,5 @@
 import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory } from './HistoryView.js';
+import { canonicalObservationKey } from './ObservationRecord.js';
 
 // 0.8.164 — Revalidation Observation History Deduplication Projection.
 //
@@ -181,19 +182,4 @@ export function reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisi
     return describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplication(
         reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory(archive)
     );
-}
-
-// Complete observation identity — decision + planIdentity + candidatePresent
-// + candidateType + candidateMatchesPlan + observedAt — never decision ID or
-// plan fingerprint alone. Two observations sharing everything else but
-// differing in `observedAt` remain two distinct observations.
-function canonicalObservationKey(entry) {
-    return JSON.stringify({
-        decision: entry.decision,
-        planIdentity: entry.planIdentity,
-        candidatePresent: entry.candidatePresent,
-        candidateType: entry.candidateType,
-        candidateMatchesPlan: entry.candidateMatchesPlan,
-        observedAt: entry.observedAt
-    });
 }

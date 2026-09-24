@@ -1,6 +1,7 @@
 import { AnimalPresence } from './AnimalPresence.js';
 import { withinRadiusXZ } from './AvatarVehicleProximity.js';
 import { AvatarAnimalCatchIntent } from './AvatarAnimalCatchIntent.js';
+import { isFiniteCoordinate, isFiniteXZPosition } from './FiniteCoordinates.js';
 
 // 0.9.700 — Avatar Animal Catch Target Resolution.
 //
@@ -36,17 +37,6 @@ import { AvatarAnimalCatchIntent } from './AvatarAnimalCatchIntent.js';
 // reasoning core/AvatarVehicleInteractionTarget.js's own header gives,
 // restated here for core/AnimalIdentity.js's own ids.
 export const ANIMAL_INTERACTION_RADIUS = 1.5;
-
-function isFiniteCoordinate(value) {
-    return typeof value === 'number' && Number.isFinite(value);
-}
-
-function isFiniteXZPosition(position) {
-    return position !== null
-        && typeof position === 'object'
-        && isFiniteCoordinate(position.x)
-        && isFiniteCoordinate(position.z);
-}
 
 function squaredDistanceXZ(a, b) {
     const dx = a.x - b.x;
