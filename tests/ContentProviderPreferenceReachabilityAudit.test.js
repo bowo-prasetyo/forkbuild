@@ -1,4 +1,5 @@
 import { readFile, readdir } from 'node:fs/promises';
+import { publicationsPageFiles } from './support/PublicationsPageFiles.js';
 
 // 0.9.300 — Content Provider Preference Reachability Audit.
 //
@@ -131,7 +132,7 @@ async function run() {
         // unchanged) but now ALSO injects the preference-aware coordinator
         // under its own key, for its own new, separate "Use Preferred
         // Provider" action. Read directly, never inferred.
-        const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         assert(/inject\('snapshotPlacementCreationCoordinator',\s*null\)/.test(viewSource),
             'A2a. DecentralizedPublicationsView.js still injects the pre-existing (0.8.25) coordinator, unchanged');
         assert(/inject\('preferredSnapshotPlacementCreationCoordinator',\s*null\)/.test(viewSource),
@@ -181,7 +182,7 @@ async function run() {
     // Section B — the existing storage-selection UI, classified.
     // ===============================================================
     {
-        const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
 
         // B1. One card is rendered PER storage type this replica can
         // place onto — never a single form field with a default.
@@ -240,7 +241,7 @@ async function run() {
     // Section C — the smallest preference-aware entry point.
     // ===============================================================
     {
-        const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
 
         // C1. There is exactly ONE call site anywhere in production that
         // invokes a snapshot-placement-creation coordinator's own
@@ -253,7 +254,7 @@ async function run() {
             const text = await source(file);
             if (/placementCreationCoordinator\.create\(/.test(text)) { createCallSites += 1; createCallFiles.push(file); }
         }
-        assert(createCallSites === 1 && createCallFiles[0] === 'ui/views/DecentralizedPublicationsView.js',
+        assert(createCallSites === 1 && publicationsPageFiles().includes(createCallFiles[0]),
             `C1a. exactly one production call site invokes a placement-creation coordinator's own create() (found ${createCallSites}: ${createCallFiles.join(', ')}) — the narrowest possible transition point`);
 
         // C2. Naming the transition precisely, from real source: today's
@@ -297,7 +298,7 @@ async function run() {
     // Section D — is "no explicit choice" a legitimate current state?
     // ===============================================================
     {
-        const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
 
         // D1. Read every argument ever passed as the second parameter to
         // createPlacement() in the real template — there is exactly one,
@@ -431,15 +432,15 @@ async function run() {
             const text = await source(file);
             if (/placementCreationCoordinator/.test(text)) consumers.push(file);
         }
-        assert(consumers.length === 1 && consumers[0] === 'ui/views/DecentralizedPublicationsView.js',
-            `G1a. exactly one ui/ file references a placement-creation coordinator at all (found ${consumers.length}: ${consumers.join(', ')})`);
+        assert(consumers.length > 0 && consumers.every((file) => publicationsPageFiles().includes(file)),
+            `G1a. only the Publications page (its view and its own modules) references a placement-creation coordinator at all (found ${consumers.length}: ${consumers.join(', ')})`);
 
         // G2. That one view's own placement-creation section operates on
         // `entry.publication` — the SAME `entries` list this whole view
         // renders for browsing/inspecting Publications, never a second,
         // separately-loaded "Snapshot" list rendered by a different
         // component.
-        const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         assert(/await placementCreationCoordinator\.create\(entry\.publication\.id, storage\)/.test(viewSource),
             'G2a. the one real call passes entry.publication.id — a Publication\'s own id — confirming there is no separate "Snapshot entry" object or view driving this action');
 

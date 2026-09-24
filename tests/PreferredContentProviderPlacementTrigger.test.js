@@ -22,6 +22,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { readFile } from 'node:fs/promises';
+import { publicationsPageFiles } from './support/PublicationsPageFiles.js';
 
 // 0.9.301 — Preferred Content Provider Placement Trigger.
 //
@@ -225,7 +226,7 @@ async function run() {
     // Section A — trigger reachability.
     // ===============================================================
     {
-        const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
 
         // A1. The view now injects the preference-aware coordinator, under
         // its OWN key, alongside the pre-existing one — never in place of it.

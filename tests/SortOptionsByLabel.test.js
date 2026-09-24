@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { sortOptionsByLabel, sortLabels, compareOptionLabels } from '../utils/sortOptionsByLabel.js';
+import { publicationsPageFiles } from './support/PublicationsPageFiles.js';
 
 // Choice lists are shown alphabetically unless their order carries meaning.
 //
@@ -87,7 +88,7 @@ async function run() {
                 `${name} renders its shared storage choices through sortOptionsByLabel()`);
         }
 
-        const publications = await source('ui/views/DecentralizedPublicationsView.js');
+        const publications = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         assert(/snapshotDistributionStorageOptions = sortOptionsByLabel\(snapshotDistributionStorageTypes, humanizeStorageType\)/.test(publications)
             && /v-for="storage in snapshotDistributionStorageOptions"/.test(publications),
             'the Publication Center Content select is sorted by its displayed label');

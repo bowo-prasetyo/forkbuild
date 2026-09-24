@@ -17,6 +17,7 @@ import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.j
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 import ReconciliationWorkspaceView from '../ui/views/ReconciliationWorkspaceView.js';
+import { publicationsPageFiles } from './support/PublicationsPageFiles.js';
 
 // 0.9.409 — Reconciliation Workspace Persistence Convergence Audit.
 //
@@ -189,7 +190,7 @@ async function run() {
     // Section A — Existing persistence semantics.
     // ===============================================================
     {
-        const publicationsSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const publicationsSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         const workspaceSource = await readSource('ui/views/ReconciliationWorkspaceView.js');
 
         // The EXISTING, pre-0.9.408 precedent: `persistPublicationObservationArchive()`

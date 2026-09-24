@@ -14,6 +14,7 @@ import { describeCreationAttempt } from '../application/PublicationAnchorCreatio
 import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
 import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
 import { describeWorldEncounterMaterialLoadStatusLabel, describeWorldEncounterMaterialVerificationStatusLabel } from '../application/WorldEncounterMaterialInspectionView.js';
+import { publicationsPageFiles } from './support/PublicationsPageFiles.js';
 
 // 0.9.519 — Publication Evidence & Trust Experience Product Reassessment.
 //
@@ -259,7 +260,7 @@ async function run() {
         // C6. The one identity anchor evidence ever names on screen — the
         // signing identity behind an anchor claim — is labeled "Attested
         // by," never "Owner"/"Author," in the one place it is rendered.
-        const decentralizedViewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         check(decentralizedViewSource.includes('<dt>Attested by</dt>'), 'C6a. the anchor identity field is labeled "Attested by"');
         check(!/<dt>\s*(Owner|Owned by|Author|Authored by)\s*<\/dt>/i.test(decentralizedViewSource),
             'C6b. no anchor-evidence field anywhere on this page is ever labeled Owner/Owned by/Author/Authored by');
@@ -275,7 +276,7 @@ async function run() {
     // milestones' own prose.
     // ===============================================================
     {
-        const decentralizedViewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         check(decentralizedViewSource.includes('<dt>Locator</dt>'), 'D1a. content/placement location is explicitly labeled "Locator"');
         check(decentralizedViewSource.includes('<dt>Transaction</dt>'), 'D1b. an anchor\'s own proof transaction is explicitly labeled "Transaction" — a DIFFERENT label than "Locator"');
         check(decentralizedViewSource.includes('<dt>External locator</dt>'), 'D1c. an inspection detail\'s own external reference is explicitly labeled "External locator"');
@@ -361,7 +362,7 @@ async function run() {
 
         // F3. Three separate label maps exist for the three axes — never
         // one shared lookup a future change could accidentally couple.
-        const decentralizedViewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         check(decentralizedViewSource.includes('STORAGE_TYPE_LABELS') && decentralizedViewSource.includes('ANCHOR_TYPE_LABELS'),
             'F3a. STORAGE_TYPE_LABELS (content backend) and ANCHOR_TYPE_LABELS (anchor destination) stay two separate maps in the same file');
         // AMENDED BY 0.9.672 — this picker now lives in
@@ -448,7 +449,7 @@ async function run() {
     // ===============================================================
     {
         const classifications = [];
-        const decentralizedViewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
 
         classifications.push(['contentHash', 'USER_VISIBLE_ACCEPTABLE — always explicitly labeled "Content hash", never a bare field name']);

@@ -21,6 +21,7 @@ import { DecentralizedSnapshotResolutionOutcome } from '../application/Decentral
 import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
 import { executeDiscoverSnapshotCommand } from '../application/DiscoverSnapshotCommand.js';
 import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
+import { publicationsPageFiles } from './support/PublicationsPageFiles.js';
 
 // 0.9.507 — Snapshot Content Backend Selection End-to-End Integration Audit.
 //
@@ -383,7 +384,7 @@ async function run() {
     // Section C — UI selection & configuration route reachability.
     // ===============================================================
     {
-        const uiSource = await codeOnlySource('ui/views/DecentralizedPublicationsView.js');
+        const uiSource = (await Promise.all(publicationsPageFiles().map((file) => codeOnlySource(file)))).join('\n');
 
         check(uiSource.includes('v-for="storage in snapshotDistributionStorageOptions"')
             && uiSource.includes('snapshotDistributionStorageOptions = sortOptionsByLabel(snapshotDistributionStorageTypes, humanizeStorageType)'),

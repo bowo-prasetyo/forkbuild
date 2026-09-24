@@ -32,6 +32,7 @@ import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAn
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { publicationsPageFiles } from './support/PublicationsPageFiles.js';
 
 // 0.9.512 — Bitcoin Granular Pipeline Anchor Publication Integration Audit.
 //
@@ -486,7 +487,7 @@ async function run() {
     // -------------------------------------------------------------
     {
         const mainSrc = codeOnly(await source('ui/main.js'));
-        const viewSrc = codeOnly(await source('ui/views/DecentralizedPublicationsView.js'));
+        const viewSrc = codeOnly((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n'));
 
         assert(mainSrc.includes("import { CreateBitcoinAnchorPublicationCoordinatorUseCase } from '../application/CreateBitcoinAnchorPublicationCoordinatorUseCase.js';"),
             n('ui/main.js imports CreateBitcoinAnchorPublicationCoordinatorUseCase'));
@@ -505,7 +506,7 @@ async function run() {
         // outcome — never inside a `function bitcoin...View(` pure
         // projection, which would mean repeated rendering could mint
         // duplicate anchors (see Section H).
-        const broadcastFnMatch = viewSrc.match(/async function broadcastBitcoinAnchorTransaction\(\) \{[\s\S]*?\n {8}\}\n/);
+        const broadcastFnMatch = viewSrc.match(/async function broadcastBitcoinAnchorTransaction\(\) \{[\s\S]*?\n {4}\}\n/);
         assert(broadcastFnMatch, n('broadcastBitcoinAnchorTransaction() is a locatable, self-contained function'));
         assert(broadcastFnMatch[0].includes('publishBroadcastedAnchor('),
             n('publishBroadcastedAnchor() is called from inside broadcastBitcoinAnchorTransaction() itself'));
@@ -787,7 +788,7 @@ async function run() {
     // -------------------------------------------------------------
     {
         const mainSrc = codeOnly(await source('ui/main.js'));
-        const viewSrc = codeOnly(await source('ui/views/DecentralizedPublicationsView.js'));
+        const viewSrc = codeOnly((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n'));
 
         assert(!/BitcoinAnchorPublicationCoordinator/.test(await source('anchoring/BaseAnchorPublisher.js')),
             n('anchoring/BaseAnchorPublisher.js was never touched by this Bitcoin-only integration'));

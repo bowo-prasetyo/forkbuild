@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
+import { publicationsPageFiles } from './support/PublicationsPageFiles.js';
 
 // 0.9.514 — Proof/Anchoring Product Completion Reassessment.
 //
@@ -107,7 +108,7 @@ async function run() {
     // normal publication workflow, not a separate hidden surface.
     // ===============================================================
     {
-        const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         // AMENDED — the Distribution section's own heading later became a
         // <summary> inside a <details open> (collapsible, exactly like
         // every other disclosure on this page, but open by default) —
@@ -140,7 +141,7 @@ async function run() {
     // substrate names, INSIDE that one reusable card).
     // ===============================================================
     {
-        const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
 
         check(/const ANCHOR_TYPE_LABELS = \{\s*\n\s*'bitcoin-op-return': 'Bitcoin',\s*\n\s*base: 'Base',\s*\n\s*arweave: 'Arweave'\s*\n\s*\};/.test(viewSource),
             "B1. a real, closed name map exists: 'bitcoin-op-return' -> 'Bitcoin', 'base' -> 'Base', 'arweave' -> 'Arweave'");
@@ -187,7 +188,7 @@ async function run() {
     // Bitcoin/Base are wallet-guided and multi-step; Arweave is one-shot.
     // ===============================================================
     {
-        const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
 
         // Bitcoin: an explicit multi-step, wallet-guided sequence is
         // described in the UI's own copy, not merely implied by which
@@ -225,7 +226,7 @@ async function run() {
     // represents it, which network, and how to inspect it.
     // ===============================================================
     {
-        const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
 
         check(/<dt>Transaction<\/dt><dd>\{\{ creationView\(entry, anchorType\)\.anchor\.locator \}\}<\/dd>/.test(viewSource),
             'D1. a freshly created anchor shows its own real external "Transaction" locator, labeled in plain English, never a raw field name like "txid"');
@@ -270,7 +271,7 @@ async function run() {
         check(/verificationLabel: checking \? 'Checking…' : \(verified \? describeVerificationOutcome\(verification\.outcome\) : 'Not yet verified'\)/.test(evidenceViewSrc),
             'E3. an anchor this replica has not yet run verification against at all reads "Not yet verified" — a third, honestly distinct state from both "verified" and "invalid"');
 
-        const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         check(/'Hide Details' : 'Inspect Evidence'/.test(viewSource) && /anchorView\.checking \? 'Verifying…' : \(anchorView\.verified \? 'Verify Again' : 'Verify Evidence'\)/.test(viewSource),
             'E4. two SEPARATE buttons exist — "Inspect Evidence" (presentation) and "Verify Evidence"/"Verify Again" (independent check) — a person is never asked to infer verification happened merely because they looked at evidence');
         check(/\{\{ anchorView\.verificationLabel \}\}/.test(viewSource),
@@ -286,7 +287,7 @@ async function run() {
     // regression-guards the boundary this fix had to respect).
     // ===============================================================
     {
-        const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
 
         const roleHeadingIndex = viewSource.indexOf('<span class="evidence-convergence-title">Proof / Anchoring</span>');
         const noteIndex = viewSource.indexOf('Bitcoin anchoring is wallet-guided and multi-step');
@@ -331,7 +332,7 @@ async function run() {
         check(!/fallback|tryNext|otherPublisher|switchSubstrate/i.test(codeOnly(coordinatorSrc)),
             'G2. the creation use case contains no fallback/retry-on-another-substrate logic of any kind — a failed substrate stays failed, never silently retried elsewhere');
 
-        const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         check(/entry\.creationAttempts\[anchorType\] = \{ creating: false, outcome: null, anchor: null, reason: null, error: error\.message \};/.test(viewSource),
             'G3. a thrown creation error is caught at the UI boundary and turned into an honest per-anchorType failure state — never a crash, never a silent no-op');
         check(/The external system could not currently be reached\. No anchor was created\./.test(viewSource) || /message: 'The external system could not currently be reached/.test(await source('application/PublicationAnchorCreationView.js')),
@@ -389,7 +390,7 @@ async function run() {
     // change, both presentation-only.
     // ===============================================================
     {
-        const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         check(!/BaseAnchorPublisherRegistry|BitcoinTransactionAbstraction|GenericAnchorPublisher/.test(viewSource),
             'I1. no generic cross-substrate transaction abstraction was introduced');
         check(!/tryArweaveIfBitcoinFails|fallbackToBase|fallbackToArweave/i.test(viewSource),

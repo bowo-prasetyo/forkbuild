@@ -12,6 +12,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { publicationsPageFiles } from './support/PublicationsPageFiles.js';
 
 // 0.9.305 — Cross-Surface Publication Commentary Reassessment.
 //
@@ -301,8 +302,8 @@ async function runTests() {
     // ---------------------------------------------------------------
     let decentralizedDecision;
     {
-        const code = await rawSource('ui/views/DecentralizedPublicationsView.js');
-        const codeOnly = await codeOnlySource('ui/views/DecentralizedPublicationsView.js');
+        const code = (await Promise.all(publicationsPageFiles().map((file) => rawSource(file)))).join('\n');
+        const codeOnly = (await Promise.all(publicationsPageFiles().map((file) => codeOnlySource(file)))).join('\n');
 
         // E1. Publication object available AND genuinely inspected —
         // this is not a thin discovery list. Each `entry` carries the
