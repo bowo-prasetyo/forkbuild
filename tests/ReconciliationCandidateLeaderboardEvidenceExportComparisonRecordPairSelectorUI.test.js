@@ -317,10 +317,10 @@ async function main() {
         new URL('../ui/views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js', import.meta.url), 'utf8'
     );
     for (const requiredImport of [
-        "from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairsView.js'",
-        "from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifferenceView.js'",
-        "from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifferenceReadModel.js'",
-        "from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonPairedRecordDifferenceView.js'",
+        "from '../../application/claimSnapshotReconciliation/evidenceExportComparison/RecordPairsView.js'",
+        "from '../../application/claimSnapshotReconciliation/evidenceExportComparison/RecordDifferenceView.js'",
+        "from '../../application/claimSnapshotReconciliation/evidenceExportComparison/RecordDifferenceReadModel.js'",
+        "from '../../application/claimSnapshotReconciliation/evidenceExportComparison/PairedRecordDifferenceView.js'",
         "from '../components/ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector.js'"
     ]) {
         assert(viewModuleSource.includes(requiredImport), `39. the view imports the new 0.8.201 module (${requiredImport})`);

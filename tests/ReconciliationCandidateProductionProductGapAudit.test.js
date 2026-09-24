@@ -13,18 +13,18 @@ import {
     ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase,
     LeaderboardClaimArchiveReceiptOutcome
 } from '../application/ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js';
-import { describePublisherLeaderboardClaimSnapshotReconciliationPlan } from '../application/PublisherLeaderboardClaimSnapshotReconciliationPlanView.js';
-import { describePublisherLeaderboardClaimSnapshotReconciliationDecision } from '../application/PublisherLeaderboardClaimSnapshotReconciliationDecision.js';
+import { describePublisherLeaderboardClaimSnapshotReconciliationPlan } from '../application/claimSnapshotReconciliation/PlanView.js';
+import { describePublisherLeaderboardClaimSnapshotReconciliationDecision } from '../application/claimSnapshotReconciliation/decision/Decision.js';
 import {
     RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionIntoArchiveUseCase,
     ReconciliationDecisionArchiveOutcome
-} from '../application/RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionIntoArchiveUseCase.js';
-import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation } from '../application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation.js';
+} from '../application/claimSnapshotReconciliation/decision/RecordDecisionIntoArchiveUseCase.js';
+import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation } from '../application/claimSnapshotReconciliation/revalidationObservation/RevalidationObservation.js';
 import {
     RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationIntoArchiveUseCase,
     RevalidationObservationArchiveOutcome
-} from '../application/RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationIntoArchiveUseCase.js';
-import { reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage } from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage.js';
+} from '../application/claimSnapshotReconciliation/revalidationObservation/RecordRevalidationObservationIntoArchiveUseCase.js';
+import { reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage } from '../application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
 import { PublisherIdentityRecord } from '../application/PublisherIdentityRecord.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -201,13 +201,13 @@ async function run() {
             'application/ReceivePublisherLeaderboardSnapshotClaimUseCase.js',
             'application/ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js',
             'application/PublisherLeaderboardView.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationPlanView.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliation.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecision.js',
-            'application/RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionIntoArchiveUseCase.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation.js',
-            'application/RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationIntoArchiveUseCase.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage.js'
+            'application/claimSnapshotReconciliation/PlanView.js',
+            'application/claimSnapshotReconciliation/ReconciliationCandidate.js',
+            'application/claimSnapshotReconciliation/decision/Decision.js',
+            'application/claimSnapshotReconciliation/decision/RecordDecisionIntoArchiveUseCase.js',
+            'application/claimSnapshotReconciliation/revalidationObservation/RevalidationObservation.js',
+            'application/claimSnapshotReconciliation/revalidationObservation/RecordRevalidationObservationIntoArchiveUseCase.js',
+            'application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js'
         ];
         for (const file of backendFiles) {
             const source = await readSource(file);

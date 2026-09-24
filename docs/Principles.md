@@ -19443,7 +19443,7 @@ easiest to quietly extend into "and also check it's the right choice."
 counterpart.** `application/ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js`
 (0.8.130) delegates to an existing use case
 (`ReceivePublisherLeaderboardSnapshotClaimUseCase`) and adds only the
-archive append. `application/RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionIntoArchiveUseCase.js`
+archive append. `application/claimSnapshotReconciliation/decision/RecordDecisionIntoArchiveUseCase.js`
 delegates to nothing, because there is nothing to delegate to — 0.8.145 is
 a pure function a caller calls for itself, not a class-shaped use case this
 file could wrap. Its entire flow is four steps: accept an
@@ -19521,7 +19521,7 @@ disposition field instead.
 
 **Exchange-level deduplication is a deliberate, narrow departure from
 0.8.146's own append rule — governing a different question, not
-overriding the old answer.** `application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js`'s
+overriding the old answer.** `application/claimSnapshotReconciliation/decision/History.js`'s
 own header is unambiguous: recording the byte-identical decision twice,
 LOCALLY, is always two independent entries, never collapsed. 0.8.151's own
 `applyXxx()` still never collapses what a replica already, genuinely
@@ -19550,9 +19550,9 @@ a `candidate` is genuinely one of 0.8.144's own three, closed outcome
 shapes, that `decision` is `'OBSERVE'` or `'DEFER'`, and that `decidedAt`
 parses as a genuine timestamp — never whether that candidate exists in
 any replica's own current reconciliation plan. It imports nothing from
-`PublisherLeaderboardClaimSnapshotReconciliation.js`,
-`PublisherLeaderboardClaimSnapshotReconciliationDecision.js`,
-`PublisherLeaderboardClaimSnapshotReconciliationPlanView.js`, or
+`application/claimSnapshotReconciliation/ReconciliationCandidate.js`,
+`application/claimSnapshotReconciliation/decision/Decision.js`,
+`application/claimSnapshotReconciliation/PlanView.js`, or
 `PublicationObservationArchive.js` — a decision record arriving through
 this file is checked for genuine SHAPE alone, exactly as true or false
 after that check as it was before transport.
@@ -19574,7 +19574,7 @@ candidate does each decision correspond to? — a question so close to
 was most at risk of quietly answering the wrong way.
 
 **The correct implementation of "which candidate" is a projection, never a
-re-selection.** `application/PublisherLeaderboardClaimSnapshotReconciliationDecisionCandidateCorrespondenceView.js`
+re-selection.** `application/claimSnapshotReconciliation/decision/CandidateCorrespondenceView.js`
 answers its own question by reading `candidate` off each stored 0.8.145
 decision record and handing it back, unchanged — it does not accept a
 plan, a claim history, or a snapshot list as an argument at all, because
@@ -19645,7 +19645,7 @@ authoritative than an earlier one, that the sequence represents a single
 evolving judgment rather than three separate judgments that happen to
 concern the same candidate, or that "current" is even a coherent question
 to ask of a decision log. `application/
-PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionEvolutionView.js`
+application/claimSnapshotReconciliation/candidate/DecisionEvolutionView.js`
 reports the sequence and stops: `{ candidate, decisionCount, decisions:
 [{ decision, decidedAt }] }`, ordered by `decidedAt`, and nothing about
 what the ordering implies.

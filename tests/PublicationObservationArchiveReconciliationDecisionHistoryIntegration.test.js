@@ -2,26 +2,26 @@ import { PublicationObservationArchive } from '../application/PublicationObserva
 import { describePublisherLeaderboardSnapshot } from '../application/PublisherLeaderboardSnapshot.js';
 import { describePublisherLeaderboardSnapshotFingerprint } from '../application/PublisherLeaderboardSnapshotFingerprint.js';
 import { LeaderboardClaimRecord } from '../application/LeaderboardClaimRecord.js';
-import { describePublisherLeaderboardClaimSnapshotReconciliationPlan } from '../application/PublisherLeaderboardClaimSnapshotReconciliationPlanView.js';
-import { describePublisherLeaderboardClaimSnapshotReconciliationDecision } from '../application/PublisherLeaderboardClaimSnapshotReconciliationDecision.js';
-import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry } from '../application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js';
+import { describePublisherLeaderboardClaimSnapshotReconciliationPlan } from '../application/claimSnapshotReconciliation/PlanView.js';
+import { describePublisherLeaderboardClaimSnapshotReconciliationDecision } from '../application/claimSnapshotReconciliation/decision/Decision.js';
+import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry } from '../application/claimSnapshotReconciliation/decision/History.js';
 import {
     RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionIntoArchiveUseCase,
     ReconciliationDecisionArchiveOutcome
-} from '../application/RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionIntoArchiveUseCase.js';
-import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory } from '../application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryView.js';
+} from '../application/claimSnapshotReconciliation/decision/RecordDecisionIntoArchiveUseCase.js';
+import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory } from '../application/claimSnapshotReconciliation/decision/HistoryView.js';
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatistics,
     reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatistics
-} from '../application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatisticsView.js';
+} from '../application/claimSnapshotReconciliation/decision/HistoryStatisticsView.js';
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryTimeline,
     reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryTimeline
-} from '../application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryTimelineView.js';
+} from '../application/claimSnapshotReconciliation/decision/HistoryTimelineView.js';
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference,
     reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference
-} from '../application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference.js';
+} from '../application/claimSnapshotReconciliation/decision/HistoryDifference.js';
 import { describePublicationObservationArchiveDifference } from '../application/PublicationObservationArchiveDifference.js';
 import { describePublicationObservationArchiveReplacementReview } from '../application/PublicationObservationArchiveReplacementReview.js';
 import {
@@ -349,16 +349,16 @@ async function run() {
         // recomputes a plan, never reselects a candidate, and never
         // interprets OBSERVE/DEFER. Proven by construction: this use
         // case's own module imports nothing from
-        // PublisherLeaderboardClaimSnapshotReconciliationPlanView.js,
-        // PublisherLeaderboardClaimSnapshotReconciliation.js, or
-        // PublisherLeaderboardClaimSnapshotReconciliationDecision.js.
+        // application/claimSnapshotReconciliation/PlanView.js,
+        // application/claimSnapshotReconciliation/ReconciliationCandidate.js, or
+        // application/claimSnapshotReconciliation/decision/Decision.js.
         const moduleSource = await (await import('node:fs/promises')).readFile(
-            new URL('../application/RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionIntoArchiveUseCase.js', import.meta.url), 'utf8'
+            new URL('../application/claimSnapshotReconciliation/decision/RecordDecisionIntoArchiveUseCase.js', import.meta.url), 'utf8'
         );
         const importLines = moduleSource.split('\n').filter((line) => line.trim().startsWith('import ')).join('\n');
         assert(!importLines.includes('PublisherLeaderboardClaimSnapshotReconciliationPlanView'), '41. the use case never imports the plan boundary');
-        assert(!importLines.includes('PublisherLeaderboardClaimSnapshotReconciliationDecision.js'), '42. the use case never imports 0.8.145\'s own decision boundary');
-        assert(!importLines.includes('PublisherLeaderboardClaimSnapshotReconciliation.js'), '43. the use case never imports the candidate-selection boundary');
+        assert(!importLines.includes('application/claimSnapshotReconciliation/decision/Decision.js'), '42. the use case never imports 0.8.145\'s own decision boundary');
+        assert(!importLines.includes('application/claimSnapshotReconciliation/ReconciliationCandidate.js'), '43. the use case never imports the candidate-selection boundary');
     }
     console.log('✓ Section G: RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionIntoArchiveUseCase records genuine decisions and rejects non-genuine ones, with no verification, plan reconstruction, or execution of any kind');
 

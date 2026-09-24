@@ -244,7 +244,7 @@ async function run() {
         // non-judgmental subsystem. `reconciliationDecisionHistoryDifference`
         // (0.8.150) is the NOUN naming 0.8.145-0.8.149's own established
         // "reconciliation decision" vocabulary — the identical noun/verb
-        // distinction `application/PublisherLeaderboardClaimSnapshotReconciliationDecision.js`'s
+        // distinction `application/claimSnapshotReconciliation/decision/Decision.js`'s
         // own header already draws throughout that whole family. The verb
         // forms stay forbidden because THIS file performing "reconciliation"
         // (an action) would violate that header's own restraint; a field

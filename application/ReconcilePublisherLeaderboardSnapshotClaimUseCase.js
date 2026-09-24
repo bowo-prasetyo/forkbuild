@@ -5,18 +5,18 @@ import {
     LeaderboardClaimArchiveReceiptOutcome
 } from './ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js';
 import { reconstructPublisherLeaderboardSnapshot } from './PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardClaimSnapshotReconciliationPlan } from './PublisherLeaderboardClaimSnapshotReconciliationPlanView.js';
-import { describePublisherLeaderboardClaimSnapshotReconciliationCandidate } from './PublisherLeaderboardClaimSnapshotReconciliation.js';
-import { describePublisherLeaderboardClaimSnapshotReconciliationDecision } from './PublisherLeaderboardClaimSnapshotReconciliationDecision.js';
+import { describePublisherLeaderboardClaimSnapshotReconciliationPlan } from './claimSnapshotReconciliation/PlanView.js';
+import { describePublisherLeaderboardClaimSnapshotReconciliationCandidate } from './claimSnapshotReconciliation/ReconciliationCandidate.js';
+import { describePublisherLeaderboardClaimSnapshotReconciliationDecision } from './claimSnapshotReconciliation/decision/Decision.js';
 import {
     RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionIntoArchiveUseCase,
     ReconciliationDecisionArchiveOutcome
-} from './RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionIntoArchiveUseCase.js';
-import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation } from './PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation.js';
+} from './claimSnapshotReconciliation/decision/RecordDecisionIntoArchiveUseCase.js';
+import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation } from './claimSnapshotReconciliation/revalidationObservation/RevalidationObservation.js';
 import {
     RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationIntoArchiveUseCase,
     RevalidationObservationArchiveOutcome
-} from './RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationIntoArchiveUseCase.js';
+} from './claimSnapshotReconciliation/revalidationObservation/RecordRevalidationObservationIntoArchiveUseCase.js';
 
 // 0.9.407 — Reconciliation Workspace Execution Boundary.
 //

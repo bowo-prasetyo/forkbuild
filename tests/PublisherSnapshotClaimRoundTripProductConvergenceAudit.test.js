@@ -14,8 +14,8 @@ import {
     importPublisherLeaderboardSnapshotClaim,
     PublisherLeaderboardSnapshotClaimImportOutcome
 } from '../application/PublisherLeaderboardSnapshotClaimExchange.js';
-import { RevalidationObservationArchiveOutcome } from '../application/RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationIntoArchiveUseCase.js';
-import { reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage } from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage.js';
+import { RevalidationObservationArchiveOutcome } from '../application/claimSnapshotReconciliation/revalidationObservation/RecordRevalidationObservationIntoArchiveUseCase.js';
+import { reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage } from '../application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js';
 import {
     PublisherLeaderboardSnapshotClaim,
     PUBLISHER_LEADERBOARD_SNAPSHOT_CLAIM_KIND,
@@ -419,13 +419,13 @@ async function run() {
         // negative lookahead excludes every one of those.
         const CANDIDATE_FN = /describePublisherLeaderboardClaimSnapshotReconciliationCandidate(?![A-Za-z])\s*\(/;
         const candidateDefinitions = grepFilesRegex(new RegExp('export function ' + CANDIDATE_FN.source), ['application']);
-        assert(candidateDefinitions.length === 1 && candidateDefinitions[0] === 'application/PublisherLeaderboardClaimSnapshotReconciliation.js', n(`C10. describePublisherLeaderboardClaimSnapshotReconciliationCandidate is defined in exactly one file (found: ${JSON.stringify(candidateDefinitions)})`));
-        const candidateCallSites = grepFilesRegex(CANDIDATE_FN, ['application']).filter((f) => f !== 'application/PublisherLeaderboardClaimSnapshotReconciliation.js');
+        assert(candidateDefinitions.length === 1 && candidateDefinitions[0] === 'application/claimSnapshotReconciliation/ReconciliationCandidate.js', n(`C10. describePublisherLeaderboardClaimSnapshotReconciliationCandidate is defined in exactly one file (found: ${JSON.stringify(candidateDefinitions)})`));
+        const candidateCallSites = grepFilesRegex(CANDIDATE_FN, ['application']).filter((f) => f !== 'application/claimSnapshotReconciliation/ReconciliationCandidate.js');
         assert(
             candidateCallSites.length === 3 &&
             candidateCallSites.includes('application/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js') &&
-            candidateCallSites.includes('application/PublisherLeaderboardClaimSnapshotReconciliationDecision.js') &&
-            candidateCallSites.includes('application/PublisherLeaderboardClaimSnapshotReconciliationDecisionCandidateRevalidationView.js'),
+            candidateCallSites.includes('application/claimSnapshotReconciliation/decision/Decision.js') &&
+            candidateCallSites.includes('application/claimSnapshotReconciliation/decision/CandidateRevalidationView.js'),
             n(`C11. every call site of the ONE candidate-construction function is a pre-existing, legitimate reuse (production selection, the decision function it composes, and an unrelated historical read model) — never a second implementation of candidate selection logic (found: ${JSON.stringify(candidateCallSites)})`)
         );
         assert(!/function\s+describePublisherLeaderboardClaimSnapshotReconciliationCandidate\b/.test(codeOnly(await readSource('application/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js'))), n('C12. ReconcilePublisherLeaderboardSnapshotClaimUseCase.js itself never REDEFINES candidate construction — it only calls the one, imported implementation'));

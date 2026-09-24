@@ -1,11 +1,11 @@
 import {
     ReconciliationCandidateLeaderboardComparisonState,
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardComparisonState
-} from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardComparisonState.js';
-import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry } from '../application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js';
-import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation } from '../application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation.js';
-import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryEntry } from '../application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory.js';
-import { reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage } from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage.js';
+} from '../application/claimSnapshotReconciliation/leaderboard/ComparisonState.js';
+import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry } from '../application/claimSnapshotReconciliation/decision/History.js';
+import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation } from '../application/claimSnapshotReconciliation/revalidationObservation/RevalidationObservation.js';
+import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryEntry } from '../application/claimSnapshotReconciliation/revalidationObservation/History.js';
+import { reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage } from '../application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js';
 import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
 
 // 0.8.183 — Reconciliation Candidate Leaderboard Comparison State.
@@ -246,7 +246,7 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const moduleSource = await (await import('node:fs/promises')).readFile(
-            new URL('../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardComparisonState.js', import.meta.url), 'utf8'
+            new URL('../application/claimSnapshotReconciliation/leaderboard/ComparisonState.js', import.meta.url), 'utf8'
         );
         const codeOnly = moduleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n').toLowerCase();
 
@@ -269,7 +269,7 @@ async function run() {
         );
         const codeOnly = moduleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
-        assert(codeOnly.includes("from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardComparisonState.js'"), '22. the view imports 0.8.183\'s own comparison-state module');
+        assert(codeOnly.includes("from '../../application/claimSnapshotReconciliation/leaderboard/ComparisonState.js'"), '22. the view imports 0.8.183\'s own comparison-state module');
         assert((codeOnly.match(/describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardComparisonState\(/g) || []).length === 1,
             '23. the view calls 0.8.183\'s own describeXxx() exactly once');
         assert(/comparisonState\s*=\s*computed/.test(codeOnly), '24. comparisonState is its own reactive computed value, recomputed whenever hasPeerArchive/targetArchive change');

@@ -144,7 +144,7 @@ async function run() {
             { area: 'Bitcoin anchoring', evidence: ['application/CreateBitcoinAnchorPublisherUseCase.js'], classification: 'COMPLETE' },
             { area: 'Base anchoring', evidence: ['application/BlockchainKind.js'], classification: 'DEFERRED', note: 'BlockchainKind.BASE remains named, reserved, unimplemented' },
             { area: 'Reconciliation (candidate production, workspace, claim authoring/export, leaderboard, evidence export comparison)', evidence: ['ui/views/ReconciliationCandidateLeaderboardView.js', 'ui/views/ReconciliationWorkspaceView.js', 'ui/views/PublisherLeaderboardSnapshotClaimAuthoringView.js', 'ui/views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js'], classification: 'COMPLETE', note: '0.9.400-0.9.403 closed both entry points; 0.9.405-0.9.413 closed the whole arc, STABLE_STOP' },
-            { area: 'Reconciliation-decision analytics/history family (agreement, evolution, divergence, correspondence, verification, timeline, statistics)', evidence: ['application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js'], classification: 'PARKED', note: 'THIS MILESTONE\'S OWN Section C centerpiece — see below' }
+            { area: 'Reconciliation-decision analytics/history family (agreement, evolution, divergence, correspondence, verification, timeline, statistics)', evidence: ['application/claimSnapshotReconciliation/decision/History.js'], classification: 'PARKED', note: 'THIS MILESTONE\'S OWN Section C centerpiece — see below' }
         ];
         const CLASSIFICATIONS = Object.freeze(['COMPLETE', 'DEFERRED', 'INTERNAL', 'PARKED', 'BROKEN']);
         for (const row of inventory) {
@@ -316,21 +316,21 @@ async function run() {
         // this section extends, rather than contradicts or duplicates,
         // that prior finding.
         const twelveFrom413 = [
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryTimelineView.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatisticsView.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistorySynchronization.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryExchange.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryTimelineView.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistorySynchronization.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryExchange.js'
+            'application/claimSnapshotReconciliation/decision/History.js',
+            'application/claimSnapshotReconciliation/decision/HistoryTimelineView.js',
+            'application/claimSnapshotReconciliation/decision/HistoryStatisticsView.js',
+            'application/claimSnapshotReconciliation/decision/HistoryDifference.js',
+            'application/claimSnapshotReconciliation/decision/HistorySynchronization.js',
+            'application/claimSnapshotReconciliation/decision/HistoryExchange.js',
+            'application/claimSnapshotReconciliation/revalidationObservation/History.js',
+            'application/claimSnapshotReconciliation/revalidationObservation/HistoryTimelineView.js',
+            'application/claimSnapshotReconciliation/revalidationObservation/HistoryDifference.js',
+            'application/claimSnapshotReconciliation/revalidationObservation/HistorySynchronization.js',
+            'application/claimSnapshotReconciliation/revalidationObservation/HistoryExchange.js'
         ];
         const unreachedSet = new Set(unreached);
         assert(twelveFrom413.every((f) => unreachedSet.has(f)), n('C10. all eleven of 0.9.413\'s own twelve named files (the twelfth, HistoryView.js, reconfirmed separately below) remain members of this fresh fifty-eight-file set'));
-        assert(unreachedSet.has('application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryView.js'), n('C10b. the twelfth file (HistoryView.js) is also confirmed a member'));
+        assert(unreachedSet.has('application/claimSnapshotReconciliation/decision/HistoryView.js'), n('C10b. the twelfth file (HistoryView.js) is also confirmed a member'));
 
         // The underlying DATA is not missing — the archive's own real,
         // shared append-only store is built through this family's own
@@ -338,8 +338,8 @@ async function run() {
         // fresh here rather than trusted from that file's own header).
         const archiveSource = await readSource('application/PublicationObservationArchive.js');
         assert(
-            archiveSource.includes("from './PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js'") &&
-            archiveSource.includes("from './PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory.js'"),
+            archiveSource.includes("from './claimSnapshotReconciliation/decision/History.js'") &&
+            archiveSource.includes("from './claimSnapshotReconciliation/revalidationObservation/History.js'"),
             n('C11. PublicationObservationArchive.js — the same shared archive the Leaderboard and Workspace both read/write live (Section E below) — imports its append functions directly from this family; the underlying reconciliation-decision data is genuinely persisted, only the timeline/statistics/agreement/evolution/divergence READ surfaces over it have no UI')
         );
 
@@ -414,7 +414,7 @@ async function run() {
             "from './BaseTransactionInclusionObservationHistory.js'",
             "from './PublicationReferenceRecordHistory.js'",
             "from './LeaderboardClaimHistory.js'",
-            "from './PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js'"
+            "from './claimSnapshotReconciliation/decision/History.js'"
         ];
         for (const marker of spannedFamilies) {
             assert(archiveSource.includes(marker), n(`E1. PublicationObservationArchive.js genuinely imports ${marker} — this is one real, already-shared archive across six distinct product arcs, not six isolated stores merely capable of being unified`));

@@ -516,7 +516,7 @@ async function run() {
         // application/, always to say the OPPOSITE of what a seam here
         // would need — e.g. application/AchievementEvent.js's own
         // "NEVER CONTENT SIMILARITY" and application/
-        // PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentityView.js's
+        // application/claimSnapshotReconciliation/evidenceExportComparison/RecordIdentityView.js's
         // own "[never] a similarity score... between" two records. These
         // are corroborating evidence, not counter-evidence: the pattern
         // "identity/ranking decisions in application/ deliberately avoid

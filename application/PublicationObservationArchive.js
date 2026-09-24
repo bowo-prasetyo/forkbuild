@@ -14,8 +14,8 @@ import { PublisherPublicationAssociationRecord } from './PublisherPublicationAss
 import { appendPublisherPublicationAssociationRecordHistoryEntry } from './PublisherPublicationAssociationRecordHistory.js';
 import { LeaderboardClaimRecord } from './LeaderboardClaimRecord.js';
 import { appendLeaderboardClaimHistoryEntry } from './LeaderboardClaimHistory.js';
-import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry } from './PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js';
-import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryEntry } from './PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory.js';
+import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry } from './claimSnapshotReconciliation/decision/History.js';
+import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryEntry } from './claimSnapshotReconciliation/revalidationObservation/History.js';
 import {
     PublicationObservationArchiveProvenanceOrigin,
     isValidPublicationObservationArchiveProvenanceOrigin

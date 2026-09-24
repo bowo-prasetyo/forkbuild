@@ -7,11 +7,11 @@ import {
     buildLeaderboardRows,
     default as ReconciliationCandidateLeaderboardTable
 } from '../ui/components/ReconciliationCandidateLeaderboardTable.js';
-import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry } from '../application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js';
-import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation } from '../application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation.js';
-import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryEntry } from '../application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory.js';
-import { reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage } from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage.js';
-import { reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetail } from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetailView.js';
+import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry } from '../application/claimSnapshotReconciliation/decision/History.js';
+import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation } from '../application/claimSnapshotReconciliation/revalidationObservation/RevalidationObservation.js';
+import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryEntry } from '../application/claimSnapshotReconciliation/revalidationObservation/History.js';
+import { reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage } from '../application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js';
+import { reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetail } from '../application/claimSnapshotReconciliation/candidate/EvidenceDetailView.js';
 import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
 
 // 0.8.182 — Reconciliation Candidate Evidence Detail View (UI layer).
@@ -316,12 +316,12 @@ async function run() {
         // once above) and the table — the table now receives
         // filteredEvidenceDetail, which is evidenceDetail unchanged
         // whenever the Evidence Filter is at its ALL/ALL default. See
-        // PublisherLeaderboardClaimSnapshotReconciliationCandidateFilteredEvidenceDetailView.test.js
+        // ReconciliationCandidateFilteredEvidenceDetailView.test.js
         // for that projection's own dedicated coverage.
         assert(moduleSource.includes(':evidence-detail="filteredEvidenceDetail"'), '45. the view hands filteredEvidenceDetail (0.8.185\'s own projection over evidenceDetail) down to the table as a prop');
 
         const importedModules = [...moduleSource.matchAll(/^import\s[\s\S]*?from '([^']+)';/gm)].map((match) => match[1]);
-        assert(importedModules.some((m) => m.endsWith('PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetailView.js')), '46. imports 0.8.182\'s own evidence detail module');
+        assert(importedModules.some((m) => m.endsWith('application/claimSnapshotReconciliation/candidate/EvidenceDetailView.js')), '46. imports 0.8.182\'s own evidence detail module');
         assert(!importedModules.some((m) => m.toLowerCase().includes('evidenceagreementview') || m.toLowerCase().includes('leaderboardreadmodel') || m.toLowerCase().includes('leaderboardview.js')),
             '47. the view never imports 0.8.176/0.8.177/0.8.178 directly — 0.8.179 and 0.8.182 remain the only two projection seams it touches');
     }

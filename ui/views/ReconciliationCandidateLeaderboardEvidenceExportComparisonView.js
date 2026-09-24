@@ -2,34 +2,34 @@ import { ref, computed } from 'vue';
 import {
     ReconciliationCandidateLeaderboardEvidenceImportOutcome,
     importPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport
-} from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceImport.js';
+} from '../../application/claimSnapshotReconciliation/leaderboard/EvidenceImport.js';
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparison
-} from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparison.js';
+} from '../../application/claimSnapshotReconciliation/evidenceExportComparison/EvidenceExportComparison.js';
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonReadModel
-} from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonReadModel.js';
+} from '../../application/claimSnapshotReconciliation/evidenceExportComparison/EvidenceExportComparisonReadModel.js';
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonView
-} from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonView.js';
+} from '../../application/claimSnapshotReconciliation/evidenceExportComparison/EvidenceExportComparisonView.js';
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetail
-} from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetailView.js';
+} from '../../application/claimSnapshotReconciliation/evidenceExportComparison/DetailView.js';
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentity
-} from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentityView.js';
+} from '../../application/claimSnapshotReconciliation/evidenceExportComparison/RecordIdentityView.js';
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairs
-} from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairsView.js';
+} from '../../application/claimSnapshotReconciliation/evidenceExportComparison/RecordPairsView.js';
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifference
-} from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifferenceView.js';
+} from '../../application/claimSnapshotReconciliation/evidenceExportComparison/RecordDifferenceView.js';
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifferenceReadModel
-} from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifferenceReadModel.js';
+} from '../../application/claimSnapshotReconciliation/evidenceExportComparison/RecordDifferenceReadModel.js';
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonPairedRecordDifferenceView
-} from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonPairedRecordDifferenceView.js';
+} from '../../application/claimSnapshotReconciliation/evidenceExportComparison/PairedRecordDifferenceView.js';
 import ReconciliationCandidateLeaderboardEvidenceExportComparisonTable from '../components/ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js';
 import ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector from '../components/ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector.js';
 

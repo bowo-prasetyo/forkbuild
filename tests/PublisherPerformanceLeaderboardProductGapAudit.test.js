@@ -149,11 +149,14 @@ async function run() {
 
         // The seventy-seven-file family a naive name-prefix scan finds —
         // reconfirmed fresh, the identical methodology 0.9.414 Section C
-        // and 0.9.415 Section A10 already used.
-        leaderboardFamilyFiles = listFiles(['application']).filter((f) => path.basename(f).startsWith('PublisherLeaderboard'));
+        // and 0.9.415 Section A10 already used. The claim-snapshot
+        // reconciliation part of it now lives in its own folder, which also
+        // holds the two Record*IntoArchiveUseCase files the prefix never matched.
+        const inReconciliationFolder = (f) => f.startsWith('application/claimSnapshotReconciliation/') && !path.basename(f).endsWith('IntoArchiveUseCase.js');
+        leaderboardFamilyFiles = listFiles(['application']).filter((f) => path.basename(f).startsWith('PublisherLeaderboard') || inReconciliationFolder(f));
         assert(leaderboardFamilyFiles.length === 77, n(`A9. the PublisherLeaderboard* name-prefix family still numbers seventy-seven files, recomputed fresh (found ${leaderboardFamilyFiles.length})`));
         assert(leaderboardFamilyFiles.includes('application/PublisherLeaderboardView.js'), n('A10. PublisherLeaderboardView.js — the genuine performance-ranking presentation file — is itself swept into that same seventy-seven-file, name-prefix-defined family'));
-        const reconciliationFamilyCount = leaderboardFamilyFiles.filter((f) => path.basename(f).includes('Reconciliation') || path.basename(f).includes('Snapshot') || path.basename(f).includes('Claim')).length;
+        const reconciliationFamilyCount = leaderboardFamilyFiles.filter((f) => inReconciliationFolder(f) || path.basename(f).includes('Reconciliation') || path.basename(f).includes('Snapshot') || path.basename(f).includes('Claim')).length;
         assert(reconciliationFamilyCount >= 70, n(`A11. at least seventy of the seventy-seven are, by their own filenames, reconciliation-evidence/snapshot/claim machinery, not ranking machinery (found ${reconciliationFamilyCount})`));
 
         // PublisherRankingPolicy.js — the actual ranking ENGINE — does not

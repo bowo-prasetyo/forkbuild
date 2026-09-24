@@ -2,7 +2,7 @@ import {
     ReconciliationCandidateLeaderboardEvidenceKind,
     ReconciliationCandidateLeaderboardReplicaRelation,
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceFilter
-} from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceFilter.js';
+} from '../application/claimSnapshotReconciliation/leaderboard/EvidenceFilter.js';
 
 // 0.8.184 — Reconciliation Candidate Evidence Filter Projection.
 //
@@ -232,7 +232,7 @@ async function run() {
         assert(serialize(ReconciliationCandidateLeaderboardReplicaRelation) === serialize({ ALL: 'ALL', SHARED: 'SHARED', SOURCE_ONLY: 'SOURCE_ONLY', TARGET_ONLY: 'TARGET_ONLY' }), '30. ReconciliationCandidateLeaderboardReplicaRelation carries exactly its documented four values');
         assert(Object.isFrozen(ReconciliationCandidateLeaderboardEvidenceKind) && Object.isFrozen(ReconciliationCandidateLeaderboardReplicaRelation), '31. both enums are frozen');
 
-        const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceFilter.js', import.meta.url), 'utf8');
+        const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/claimSnapshotReconciliation/leaderboard/EvidenceFilter.js', import.meta.url), 'utf8');
         const codeOnly = moduleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n').toLowerCase();
 
         const importLines = moduleSource.split('\n').filter((line) => line.trim().startsWith('import '));
@@ -254,7 +254,7 @@ async function run() {
         );
         const codeOnly = moduleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
-        assert(codeOnly.includes("from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceFilter.js'"), '34. the view imports 0.8.184\'s own evidence-filter module');
+        assert(codeOnly.includes("from '../../application/claimSnapshotReconciliation/leaderboard/EvidenceFilter.js'"), '34. the view imports 0.8.184\'s own evidence-filter module');
         assert((codeOnly.match(/describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceFilter\(/g) || []).length === 1,
             '35. the view calls 0.8.184\'s own describeXxx() exactly once');
         assert(/filteredPage\s*=\s*computed/.test(codeOnly), '36. filteredPage is its own reactive computed value');

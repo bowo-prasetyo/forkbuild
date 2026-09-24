@@ -363,18 +363,18 @@ async function run() {
         // this arc's Workspace produces. Investigated fresh, not assumed
         // away.
         const historyFiles = [
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryView.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryTimelineView.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatisticsView.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistorySynchronization.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryExchange.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryTimelineView.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistorySynchronization.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryExchange.js'
+            'application/claimSnapshotReconciliation/decision/History.js',
+            'application/claimSnapshotReconciliation/decision/HistoryView.js',
+            'application/claimSnapshotReconciliation/decision/HistoryTimelineView.js',
+            'application/claimSnapshotReconciliation/decision/HistoryStatisticsView.js',
+            'application/claimSnapshotReconciliation/decision/HistoryDifference.js',
+            'application/claimSnapshotReconciliation/decision/HistorySynchronization.js',
+            'application/claimSnapshotReconciliation/decision/HistoryExchange.js',
+            'application/claimSnapshotReconciliation/revalidationObservation/History.js',
+            'application/claimSnapshotReconciliation/revalidationObservation/HistoryTimelineView.js',
+            'application/claimSnapshotReconciliation/revalidationObservation/HistoryDifference.js',
+            'application/claimSnapshotReconciliation/revalidationObservation/HistorySynchronization.js',
+            'application/claimSnapshotReconciliation/revalidationObservation/HistoryExchange.js'
         ];
         for (const file of historyFiles) {
             const source = await readSource(file);
@@ -482,7 +482,7 @@ async function run() {
     {
         // Within the reconciliation family itself: "selected" is a
         // mechanical candidate-selection outcome, not an endorsement.
-        const reconciliationSource = await readSource('application/PublisherLeaderboardClaimSnapshotReconciliation.js');
+        const reconciliationSource = await readSource('application/claimSnapshotReconciliation/ReconciliationCandidate.js');
         assert(
             reconciliationSource.includes('INVALID_SELECTION') && /selected:\s*true/.test(reconciliationSource),
             n('H1. `selected` on a reconciliation candidate is a plain boolean produced by mechanical selection logic (a candidate either matches the plan\'s own selection rule or it produces INVALID_SELECTION) — never a trust or endorsement flag')

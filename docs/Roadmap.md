@@ -40052,7 +40052,7 @@ own, so `fromJSON()`'s own strict validation is inlined
 rather than delegated to a constructor — checking exactly the shape
 0.8.144/0.8.145 already define, never re-deriving their semantic rules.
 
-**New `PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryView.js`**
+**New `application/claimSnapshotReconciliation/decision/HistoryView.js`**
 gains `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory(archive)`
 — the ONE seam that reads the archive's own collection. The three
 previously future-proofed `reconstructXxx()` functions (Statistics/
@@ -40107,7 +40107,7 @@ Updated existing tests for the schema bump, the three changed
 `reconstructXxx()` signatures (now archive-aware, matching 0.8.130's own
 precedent), one independently-recomputed SHA-256 fingerprint vector, and
 one pre-existing test-suite registration gap
-(`PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference.test.js`
+(`ReconciliationDecisionHistoryDifference.test.js`
 was never added to `tests.html` by 0.8.149); `docs/Roadmap.md` and
 `docs/Principles.md` updated.
 
@@ -40118,7 +40118,7 @@ archive-backed home, but never let one replica hand its history to
 another — the identical gap 0.8.122 once left for a single signed claim,
 closed one layer up by 0.8.126's own `PublisherLeaderboardClaimHistoryExchange.js`.
 This milestone is that same missing step, one subject over: a new
-`application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryExchange.js`
+`application/claimSnapshotReconciliation/decision/HistoryExchange.js`
 with three functions —
 `exportPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory()`,
 `importPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory()`,
@@ -40148,7 +40148,7 @@ carries no `currentState`, `resolved`, `superseded`, `effective`, or
 **Decision identity, reused from 0.8.149, never reinvented.** A decision's
 identity for exchange purposes is the exact structural content of
 `candidate` + `decision` + `decidedAt` — the identical formula
-`PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference.js`'s
+`application/claimSnapshotReconciliation/decision/HistoryDifference.js`'s
 own `canonicalDecisionKey()` already established. `applyXxx()` folds every
 genuinely new decision onto the target history via
 `appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry()`
@@ -40183,7 +40183,7 @@ structurally malformed entry is reported by index and reason in
 a malformed top-level envelope (`protocolVersion`/`decisions` shape)
 rejects the whole payload atomically.
 
-**New flagship test** (`PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryExchange.test.js`,
+**New flagship test** (`ReconciliationDecisionHistoryExchange.test.js`,
 8 sections) proves the milestone's own three-replica worked example: Alice
 holds `OBSERVE D1, DEFER D2, DEFER D2` (a genuine, independently-recorded
 LOCAL duplicate); Bob holds `DEFER D2, OBSERVE D3`; Carol holds
@@ -40210,7 +40210,7 @@ own, separately sized, later question. No verification, authorization, or
 re-evaluation of any transported decision's own disposition.
 
 `docs/Roadmap.md` and `docs/Principles.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryExchange.test.js`
+`ReconciliationDecisionHistoryExchange.test.js`
 registered in `tests.html`.
 
 ## 0.8.152 — Reconciliation Decision History Synchronization
@@ -40224,7 +40224,7 @@ LEARN exactly which decisions differ, but purely as a read — it never
 moves anything itself. This milestone is the missing connective layer,
 composing the two, mirroring 0.8.131's own claim-history synchronization
 exactly, one subject over: a new `application/
-PublisherLeaderboardClaimSnapshotReconciliationDecisionHistorySynchronization.js`
+application/claimSnapshotReconciliation/decision/HistorySynchronization.js`
 with four thin functions —
 `describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistorySynchronization()`,
 `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistorySynchronization()`,
@@ -40261,7 +40261,7 @@ exchange-level deduplication alone governs what a receiving side folds
 in. Synchronization is never a hidden history-cleanup mechanism.
 
 **New flagship test**
-(`PublisherLeaderboardClaimSnapshotReconciliationDecisionHistorySynchronization.test.js`,
+(`ReconciliationDecisionHistorySynchronization.test.js`,
 8 sections) proves a four-replica worked example: Alice holds
 `[D1, D2, D2]` (a genuine local duplicate), Bob holds `[D2, D3]`, Carol
 holds `[D1, D3, D4]`, Dave holds `[D4]`. A directional forward ring
@@ -40301,7 +40301,7 @@ Deliberately no `docs/Principles.md` entry — like 0.8.131's own claim-
 history synchronization counterpart, this milestone introduces no new
 principle of its own; it composes two already-documented ones. `docs/
 Roadmap.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationDecisionHistorySynchronization.test.js`
+`ReconciliationDecisionHistorySynchronization.test.js`
 registered in `tests.html`.
 
 ## 0.8.153 — Historical Reconciliation Decision-to-Candidate Correspondence Projection
@@ -40313,7 +40313,7 @@ downstream reader of a decision history reaches for first: which
 reconciliation candidate does each historical decision refer to? This is
 deliberately narrower than "was the decision correct?" or "what should
 happen now?" — a new `application/
-PublisherLeaderboardClaimSnapshotReconciliationDecisionCandidateCorrespondenceView.js`
+application/claimSnapshotReconciliation/decision/CandidateCorrespondenceView.js`
 with two functions,
 `describePublisherLeaderboardClaimSnapshotReconciliationDecisionCandidateCorrespondence()`
 and
@@ -40394,7 +40394,7 @@ synchronization of any kind beyond the one archive-read seam
 `reconstructXxx()` already uses.
 
 `docs/Roadmap.md` and `docs/Principles.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationDecisionCandidateCorrespondenceView.test.js`
+`ReconciliationDecisionCandidateCorrespondenceView.test.js`
 registered in `tests.html`.
 
 ## 0.8.154 — Reconciliation Candidate Decision Evolution Projection
@@ -40404,7 +40404,7 @@ candidate, in `history`'s own existing order — and deliberately stopped
 there, naming "decision evolution by candidate, or narrating decisions
 grouped by the candidate they share over time" in its own "Deliberately
 excluded" list as later work. This milestone is that later work: a new
-`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionEvolutionView.js`
+`application/claimSnapshotReconciliation/candidate/DecisionEvolutionView.js`
 with two functions,
 `describePublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionEvolution()`
 and
@@ -40486,7 +40486,7 @@ persistence or synchronization of any kind beyond the one 0.8.153 seam
 `reconstructXxx()` already uses.
 
 `docs/Roadmap.md` and `docs/Principles.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionEvolutionView.test.js`
+`ReconciliationCandidateDecisionEvolutionView.test.js`
 registered in `tests.html`.
 
 ## 0.8.155 — Reconciliation Candidate Decision Evolution Difference Projection
@@ -40497,7 +40497,7 @@ concerning each candidate evolve over time?" This milestone answers the
 question neither one does alone: given two replicas' decision histories,
 which candidate-specific decision events exist on one replica but not the
 other? A new
-`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionEvolutionDifferenceView.js`
+`application/claimSnapshotReconciliation/candidate/DecisionEvolutionDifferenceView.js`
 with two functions,
 `describePublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionEvolutionDifference()`
 and
@@ -40587,7 +40587,7 @@ No persistence or synchronization of any kind. No reconciliation ACTION,
 applying anything, or execution of any kind.
 
 `docs/Roadmap.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionEvolutionDifferenceView.test.js`
+`ReconciliationCandidateDecisionEvolutionDifferenceView.test.js`
 registered in `tests.html`.
 
 ## 0.8.156 — Reconciliation Candidate Decision Agreement Projection
@@ -40599,7 +40599,7 @@ milestone exists to make observable: given two replicas' decision
 histories, which decision-history facts are SHARED by both replicas, and —
 separately — which candidates are represented on both, or only one, of
 them? A new
-`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionAgreementView.js`
+`application/claimSnapshotReconciliation/candidate/DecisionAgreementView.js`
 with two functions,
 `describePublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionAgreement()`
 and
@@ -40697,7 +40697,7 @@ No persistence or synchronization of any kind. No reconciliation ACTION,
 applying anything, or execution of any kind.
 
 `docs/Roadmap.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionAgreementView.test.js`
+`ReconciliationCandidateDecisionAgreementView.test.js`
 registered in `tests.html`.
 
 ## 0.8.157 — Reconciliation Decision Candidate Revalidation Projection
@@ -40709,7 +40709,7 @@ candidate still occurs in any particular plan. This milestone asks
 exactly the question 0.8.153 left open: given that SAME historical
 decision, and a caller-supplied, EXPLICIT reconciliation plan, does the
 decision's own embedded candidate still occur in THAT plan? A new
-`application/PublisherLeaderboardClaimSnapshotReconciliationDecisionCandidateRevalidationView.js`
+`application/claimSnapshotReconciliation/decision/CandidateRevalidationView.js`
 with one function,
 `describePublisherLeaderboardClaimSnapshotReconciliationDecisionCandidateRevalidation(decisionRecord, plan)`.
 
@@ -40757,7 +40757,7 @@ per this milestone's own request). No persistence, synchronization, or
 automatic/background computation of any kind.
 
 `docs/Roadmap.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationDecisionCandidateRevalidationView.test.js`
+`ReconciliationDecisionCandidateRevalidationView.test.js`
 registered in `tests.html`.
 
 ## 0.8.158 — Reconciliation Decision History Revalidation Projection
@@ -40770,7 +40770,7 @@ that same primitive, never a new comparison algorithm: given an entire
 decision HISTORY (0.8.146's own plain, ordered array of 0.8.145 decision
 records) and one explicitly supplied plan, which of that history's own
 recorded decisions still name a candidate present in that plan? A new
-`application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryRevalidationView.js`
+`application/claimSnapshotReconciliation/decision/HistoryRevalidationView.js`
 with one function,
 `describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryRevalidation(decisionHistory, plan)`
 — and, unlike 0.8.157, still no `reconstructXxx()` entry point, for the
@@ -40844,7 +40844,7 @@ request). No persistence, synchronization, or automatic/background
 computation of any kind.
 
 `docs/Roadmap.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryRevalidationView.test.js`
+`ReconciliationDecisionHistoryRevalidationView.test.js`
 registered in `tests.html`.
 
 ## 0.8.159 — Reconciliation Decision History Revalidation Difference Projection
@@ -40858,7 +40858,7 @@ milestone asks the question neither one asks alone: given two decision
 histories and one explicitly supplied reconciliation plan, which
 revalidation facts are exclusive to each history, and which are shared?
 A new
-`application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryRevalidationDifferenceView.js`
+`application/claimSnapshotReconciliation/decision/HistoryRevalidationDifferenceView.js`
 with one function,
 `describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryRevalidationDifference(sourceHistory, targetHistory, plan)`
 — and, like 0.8.157/0.8.158, no `reconstructXxx()` entry point, for the
@@ -40969,7 +40969,7 @@ history. No persistence, synchronization, or automatic/background
 computation of any kind.
 
 `docs/Roadmap.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryRevalidationDifferenceView.test.js`
+`ReconciliationDecisionHistoryRevalidationDifferenceView.test.js`
 registered in `tests.html`.
 
 ## 0.8.160 — Explicit Reconciliation Plan Identity Projection
@@ -40984,7 +40984,7 @@ comparable identity of its own: a caller could observe
 false` against P2, but had no standardized way to say WHICH exact plan
 artifact produced which observation. This milestone closes exactly that
 gap, and nothing else. A new
-`application/PublisherLeaderboardClaimSnapshotReconciliationPlanIdentity.js`
+`application/claimSnapshotReconciliation/PlanIdentity.js`
 with one function,
 `describePublisherLeaderboardClaimSnapshotReconciliationPlanIdentity(plan)`
 — no `reconstructXxx()` entry point, for the identical reason 0.8.157/
@@ -41065,7 +41065,7 @@ severity/confidence about the plan. No automatic, periodic, or
 background computation of any kind.
 
 `docs/Roadmap.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationPlanIdentity.test.js`
+`ReconciliationPlanIdentity.test.js`
 registered in `tests.html`.
 
 ## 0.8.167 — Revalidation Observation History Archive Integration
@@ -41117,7 +41117,7 @@ verifies a signature, calls 0.8.157-0.8.161, or compares against current
 state — the archive is storage, not a second observation engine.
 
 **The reconstruction seam.** A new file, `application/
-PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryView.js`,
+application/claimSnapshotReconciliation/revalidationObservation/HistoryView.js`,
 exports the single function `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory(archive)`
 — reading `archive.revalidationObservationRecords` and handing it back
 unchanged, an invalid/missing archive degrading to an empty history, never
@@ -41149,7 +41149,7 @@ collections and stays untouched: a historical observation is a record
 about a revalidation event, never achievement evidence.
 
 **The use case.** A new `application/
-RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationIntoArchiveUseCase.js`
+application/claimSnapshotReconciliation/revalidationObservation/RecordRevalidationObservationIntoArchiveUseCase.js`
 mirrors 0.8.150's own recording use case exactly: `execute(archive,
 observation, origin)` trusts a caller-supplied, already-computed 0.8.162
 observation record exactly as far as `appendRevalidationObservationRecord()`
@@ -41217,7 +41217,7 @@ decisions, closed one milestone later by 0.8.151's own decision-history
 exchange. This is that same missing step, one subject over.
 
 **New module.** `application/
-PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryExchange.js`,
+application/claimSnapshotReconciliation/revalidationObservation/HistoryExchange.js`,
 mirroring 0.8.151 exactly: `exportPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory(history)`,
 `importPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory(payload)`,
 `applyPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryExchange(history, payload)`.
@@ -41300,7 +41300,7 @@ Decision side                    Observation side
 ```
 
 `docs/Roadmap.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryExchange.test.js`
+`ReconciliationDecisionRevalidationObservationHistoryExchange.test.js`
 registered in `tests.html`.
 
 ## 0.8.169 — Revalidation Observation History Synchronization
@@ -41315,7 +41315,7 @@ difference determines what is missing, exchange transports it,
 synchronization composes the two without creating a third algorithm.
 
 **New module.** `application/
-PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistorySynchronization.js`,
+application/claimSnapshotReconciliation/revalidationObservation/HistorySynchronization.js`,
 four functions:
 `describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistorySynchronization(sourceHistory,
 targetHistory)` — a byte-identical passthrough to 0.8.166's own difference;
@@ -41381,7 +41381,7 @@ Decision side                    Observation side
 ```
 
 `docs/Roadmap.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistorySynchronization.test.js`
+`ReconciliationDecisionRevalidationObservationHistorySynchronization.test.js`
 registered in `tests.html`.
 
 ## 0.8.170 — Revalidation Observation Agreement Projection
@@ -41397,7 +41397,7 @@ identical composition: reuse 0.8.166's own difference, never a second
 comparison engine.
 
 **New module.** `application/
-PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationAgreementView.js`,
+application/claimSnapshotReconciliation/revalidationObservation/AgreementView.js`,
 exactly two functions — no export/import/apply wrappers, since agreement is
 a read-only projection, never an exchange operation:
 `describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationAgreement(sourceHistory,
@@ -41462,7 +41462,7 @@ Decision side                         Observation side
 ```
 
 `docs/Roadmap.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationAgreementView.test.js`
+`ReconciliationDecisionRevalidationObservationAgreementView.test.js`
 registered in `tests.html`.
 
 ## 0.8.171 — Revalidation Observation Candidate Correspondence Projection
@@ -41478,7 +41478,7 @@ DOES EACH HISTORICAL OBSERVATION REFER TO? This milestone is that
 projection, the observation-history analogue of 0.8.153, one subject over.
 
 **New module.** `application/
-PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationCandidateCorrespondenceView.js`,
+application/claimSnapshotReconciliation/revalidationObservation/CandidateCorrespondenceView.js`,
 `describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationCandidateCorrespondence(history)
 -> { observationCount, candidateCount, correspondences: [{
 observationIndex, candidate, decision, planIdentity, candidatePresent,
@@ -41536,7 +41536,7 @@ Decision side                              Observation side
 ```
 
 `docs/Roadmap.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationCandidateCorrespondenceView.test.js`
+`ReconciliationDecisionRevalidationObservationCandidateCorrespondenceView.test.js`
 registered in `tests.html`.
 
 ## 0.8.172 — Reconciliation Candidate Observation Evolution Projection
@@ -41547,7 +41547,7 @@ stopped there, naming "observation evolution by candidate, or narrating
 observations grouped by the candidate they share over time" in its own
 "Deliberately excluded" list as later work. This milestone is that later
 work: a new `application/
-PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionRevalidationObservationEvolutionView.js`
+application/claimSnapshotReconciliation/candidate/DecisionRevalidationObservationEvolutionView.js`
 with two functions,
 `describePublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionRevalidationObservationEvolution()`
 and
@@ -41648,7 +41648,7 @@ Decision side                              Observation side
 ```
 
 `docs/Roadmap.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionRevalidationObservationEvolutionView.test.js`
+`ReconciliationCandidateDecisionRevalidationObservationEvolutionView.test.js`
 registered in `tests.html`.
 
 ## 0.8.173 — Reconciliation Candidate Observation Evolution Difference Projection
@@ -41659,9 +41659,9 @@ identity. 0.8.172 answered "how did the recorded observations concerning
 each candidate evolve over time?" by grouping a single history's own
 observations by CANDIDATE identity. This milestone answers the question
 neither one does — the observation-history analogue of
-`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionEvolutionDifferenceView.js`
+`application/claimSnapshotReconciliation/candidate/DecisionEvolutionDifferenceView.js`
 (0.8.155), one subject over: a new `application/
-PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionRevalidationObservationEvolutionDifferenceView.js`
+application/claimSnapshotReconciliation/candidate/DecisionRevalidationObservationEvolutionDifferenceView.js`
 with two functions,
 `describePublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionRevalidationObservationEvolutionDifference()`
 and
@@ -41749,7 +41749,7 @@ Decision side                                    Observation side
 ```
 
 `docs/Roadmap.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionRevalidationObservationEvolutionDifferenceView.test.js`
+`ReconciliationCandidateDecisionRevalidationObservationEvolutionDifferenceView.test.js`
 registered in `tests.html`.
 
 ## 0.8.174 — Reconciliation Candidate Observation Evolution Agreement Projection
@@ -41766,7 +41766,7 @@ agreement projection, one subject over, and the agreement-side complement of
 breakdown of shared/source-only/target-only observation counts that
 0.8.173's own header named as this milestone's, separately sized, later
 question. A new `application/
-PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionRevalidationObservationEvolutionAgreementView.js`
+application/claimSnapshotReconciliation/candidate/DecisionRevalidationObservationEvolutionAgreementView.js`
 with two functions,
 `describePublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionRevalidationObservationEvolutionAgreement()`
 and
@@ -41877,7 +41877,7 @@ Decision side                              Observation side
 ```
 
 `docs/Roadmap.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionRevalidationObservationEvolutionAgreementView.test.js`
+`ReconciliationCandidateDecisionRevalidationObservationEvolutionAgreementView.test.js`
 registered in `tests.html`.
 
 ## 0.8.175 — Reconciliation Candidate Evidence Summary Projection
@@ -41889,7 +41889,7 @@ branches at once: what historical evidence — decisions AND observations — is
 available for one candidate? This is deliberately narrower than deciding
 whether a candidate is good, bad, current, correct, or winning; it only
 assembles already-established facts into a candidate-centric shape. A new
-`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceSummaryView.js`
+`application/claimSnapshotReconciliation/candidate/EvidenceSummaryView.js`
 with two functions,
 `describePublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceSummary(decisionHistory, observationHistory)`
 and
@@ -41982,7 +41982,7 @@ Decision side                    Observation side
 ```
 
 `docs/Roadmap.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceSummaryView.test.js`
+`ReconciliationCandidateEvidenceSummaryView.test.js`
 registered in `tests.html`.
 
 ## 0.8.176 — Reconciliation Candidate Evidence Agreement Projection
@@ -41996,7 +41996,7 @@ Nothing yet states the question a reader eventually needs from BOTH
 already-answered agreement views at once: given two replicas, what
 candidate evidence — of either kind — is shared, and what evidence exists
 exclusively on each side? A new
-`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceAgreementView.js`
+`application/claimSnapshotReconciliation/candidate/EvidenceAgreementView.js`
 with two functions,
 `describePublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceAgreement(sourceDecisionHistory, targetDecisionHistory, sourceObservationHistory, targetObservationHistory)`
 and
@@ -42091,7 +42091,7 @@ Decision side                         Observation side
 ```
 
 `docs/Roadmap.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceAgreementView.test.js`
+`ReconciliationCandidateEvidenceAgreementView.test.js`
 registered in `tests.html`.
 
 ## 0.8.177 — Reconciliation Candidate Leaderboard Read Model
@@ -42099,7 +42099,7 @@ registered in `tests.html`.
 0.8.176 answers, for two replicas at once, what candidate evidence — of
 either kind — is shared, and what evidence exists exclusively on each side.
 Nothing yet hands that answer to the page a reader will eventually look at.
-A new `application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardReadModel.js`
+A new `application/claimSnapshotReconciliation/leaderboard/LeaderboardReadModel.js`
 with two functions,
 `describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardReadModel(evidenceAgreement)`
 and
@@ -42177,7 +42177,7 @@ sections/columns/cards a page needs, and 0.8.179 builds the page.
 ```
 
 `docs/Roadmap.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardReadModel.test.js`
+`ReconciliationCandidateLeaderboardReadModel.test.js`
 registered in `tests.html`.
 
 ## 0.8.178 — Reconciliation Candidate Leaderboard Page View
@@ -42185,7 +42185,7 @@ registered in `tests.html`.
 0.8.177 handed the domain boundary a stable read model — one row per
 candidate, carrying only `decisionEvidence`/`observationEvidence` counts.
 Nothing yet shapes that into what an actual page renders. A new
-`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardView.js`
+`application/claimSnapshotReconciliation/leaderboard/LeaderboardView.js`
 with one function,
 `describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardView(readModel)`.
 
@@ -42273,7 +42273,7 @@ automatic, periodic, or background computation.
 ```
 
 `docs/Roadmap.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardView.test.js`
+`ReconciliationCandidateLeaderboardView.test.js`
 registered in `tests.html`.
 
 ## 0.8.179 — Archive-Backed Reconciliation Candidate Leaderboard Page
@@ -42282,7 +42282,7 @@ registered in `tests.html`.
 page renders, but deliberately kept no seam of its own onto an archive —
 its own header said wiring a real, archive-backed page together was
 explicitly 0.8.179's job. A new `application/
-PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage.js`
+application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js`
 with two entry points:
 
 ```
@@ -42402,7 +42402,7 @@ refresh behavior, sorting, or a formal ranking/scoring model be
 introduced — each real, separately sized future work.
 
 `docs/Roadmap.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage.test.js`
+`ReconciliationCandidateLeaderboardPage.test.js`
 registered in `tests.html`.
 
 ## 0.8.180 — Reconciliation Candidate Leaderboard UI Integration
@@ -42660,7 +42660,7 @@ decision/observation records, already grouped by candidate and already
 split Shared / Source-only / Target-only — 0.8.176's own header called
 this out explicitly: "per-candidate evidence lists are a grouping of
 0.8.156's/0.8.174's own global arrays, never a new comparison." A new
-`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetailView.js`
+`application/claimSnapshotReconciliation/candidate/EvidenceDetailView.js`
 reads those lists directly and performs a pure rename/reshape pass —
 `decisionAgreement.sharedDecisions` becomes `decisionDetail.shared`, and
 so on — never re-grouping, re-deriving, or re-sorting anything.
@@ -42735,7 +42735,7 @@ C1
   target-only observation O3 (Plan P3)
 ```
 
-`tests/PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetailView.test.js`
+`tests/ReconciliationCandidateEvidenceDetailView.test.js`
 proves: the table counts are unchanged; opening C1 reveals exactly those
 records; shared/source-only/target-only classification is preserved;
 decision and observation evidence remain separate; `planFingerprint`
@@ -42775,7 +42775,7 @@ surface.
 
 `docs/Roadmap.md` updated; `docs/user/09-PublicationsAndEvidence.md`
 updated to describe the Inspect Evidence panel;
-`PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetailView.test.js`
+`ReconciliationCandidateEvidenceDetailView.test.js`
 and `ReconciliationCandidateEvidenceDetailUI.test.js` registered in
 `tests.html`.
 
@@ -42810,7 +42810,7 @@ targetArchive = empty (peer supplied,   targetArchive = empty (peer supplied,
 
 **The invariant this milestone exists to hold: comparisonState never
 reinterprets the evidence itself.** A new, standalone
-`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardComparisonState.js`
+`application/claimSnapshotReconciliation/leaderboard/ComparisonState.js`
 computes exactly one of three plain strings —
 `NO_PEER`/`PEER_EMPTY`/`PEER_PRESENT` — from two inputs: `hasPeerArchive`
 (a boolean) and `targetArchive` (read only for its own already-public
@@ -42929,7 +42929,7 @@ Leaderboard UI
 
 **A read-only presentation projection over an already-produced page —
 never a new domain algorithm.** A new, standalone
-`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceFilter.js`
+`application/claimSnapshotReconciliation/leaderboard/EvidenceFilter.js`
 exports one pure function:
 
 ```text
@@ -43072,7 +43072,7 @@ nothing more.
 
 **A pure projection over 0.8.182's own already-computed result — never a
 new domain algorithm, never a third comparison.** A new, standalone
-`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateFilteredEvidenceDetailView.js`
+`application/claimSnapshotReconciliation/candidate/FilteredEvidenceDetailView.js`
 exports one pure function:
 
 ```text
@@ -43201,7 +43201,7 @@ renders this file's own output unchanged.
 `docs/Roadmap.md` updated; `docs/user/09-PublicationsAndEvidence.md`
 updated to describe how the Evidence Filter now also narrows a surviving
 row's own Inspect Evidence panel;
-`PublisherLeaderboardClaimSnapshotReconciliationCandidateFilteredEvidenceDetailView.test.js`
+`ReconciliationCandidateFilteredEvidenceDetailView.test.js`
 registered in `tests.html`.
 
 ## 0.8.186 — Reconciliation Candidate Leaderboard Evidence Export Projection
@@ -43226,7 +43226,7 @@ at?" This milestone closes that gap, and nothing more.
 
 **A pure projection over three already-computed facts — never a new
 domain algorithm, never a fourth comparison.** A new, standalone
-`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport.js`
+`application/claimSnapshotReconciliation/leaderboard/EvidenceExport.js`
 exports one pure function:
 
 ```text
@@ -43318,7 +43318,7 @@ a caller does with it is entirely outside this file's own reach.
 
 `docs/Roadmap.md` updated; `docs/user/09-PublicationsAndEvidence.md`
 updated to describe the exportable evidence document;
-`PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport.test.js`
+`ReconciliationCandidateLeaderboardEvidenceExport.test.js`
 registered in `tests.html`.
 
 ## 0.8.187 — Reconciliation Candidate Leaderboard Evidence Export UI Integration
@@ -43431,7 +43431,7 @@ archive, and neither is more authoritative than the other.
 ```
 
 **A new, standalone application projection —**
-`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparison.js`
+`application/claimSnapshotReconciliation/evidenceExportComparison/EvidenceExportComparison.js`
 exports one pure function:
 
 ```text
@@ -43559,7 +43559,7 @@ Importing, validating, or parsing raw JSON text — that stays entirely
 choice.
 
 `docs/Roadmap.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparison.test.js`
+`ReconciliationCandidateLeaderboardEvidenceExportComparison.test.js`
 registered in `tests.html`.
 
 ## 0.8.190 — Reconciliation Candidate Leaderboard Evidence Export Comparison Read Model
@@ -43570,7 +43570,7 @@ to each document — in full structural detail, complete with the record
 arrays themselves. Nothing yet turns that detailed answer into the compact
 shape a summary UI would actually put on screen — the identical gap 0.8.176
 left for 0.8.177 to close, one layer up. A new
-`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonReadModel.js`
+`application/claimSnapshotReconciliation/evidenceExportComparison/EvidenceExportComparisonReadModel.js`
 with one function,
 `describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonReadModel(comparison)`.
 
@@ -43656,7 +43656,7 @@ UI-layer work.
 ```
 
 `docs/Roadmap.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonReadModel.test.js`
+`ReconciliationCandidateLeaderboardEvidenceExportComparisonReadModel.test.js`
 registered in `tests.html`.
 
 ## 0.8.191 — Reconciliation Candidate Leaderboard Evidence Export Comparison View
@@ -43666,7 +43666,7 @@ five-fact read model over 0.8.189's own detailed export comparison. Nothing
 yet shapes that read model into what an actual comparison panel would put
 on screen — the identical gap 0.8.177 left for 0.8.178 to close, one layer
 up, in the sibling (single-export) leaderboard family. A new
-`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonView.js`
+`application/claimSnapshotReconciliation/evidenceExportComparison/EvidenceExportComparisonView.js`
 with one function,
 `describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonView(readModel)`.
 
@@ -43773,7 +43773,7 @@ work.
 ```
 
 `docs/Roadmap.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonView.test.js`
+`ReconciliationCandidateLeaderboardEvidenceExportComparisonView.test.js`
 registered in `tests.html`.
 
 ## 0.8.192 — Reconciliation Candidate Leaderboard Evidence Export Comparison UI
@@ -43958,7 +43958,7 @@ answer for anywhere in the portable-export family: "which exact evidence
 records account for those numbers?" This is the application-layer answer,
 mirroring the identical relationship 0.8.176 already has to 0.8.182 one
 layer up in the sibling (live-archive) leaderboard family. A new
-`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetailView.js`
+`application/claimSnapshotReconciliation/evidenceExportComparison/DetailView.js`
 with one function,
 `describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetail(comparison)`.
 
@@ -44066,7 +44066,7 @@ Two exported documents ──► 0.8.189 describeXxx() (comparison)
 ```
 
 `docs/Roadmap.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetailView.test.js`
+`ReconciliationCandidateLeaderboardEvidenceExportComparisonDetailView.test.js`
 registered in `tests.html`.
 
 ---
@@ -44191,7 +44191,7 @@ explicit answer, anywhere in this codebase, to "why are these two records
 separate records?" without informally re-deriving it themselves. This
 milestone is a narrow, application-layer-only answer to exactly that
 question — and nothing more. A new
-`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentityView.js`
+`application/claimSnapshotReconciliation/evidenceExportComparison/RecordIdentityView.js`
 with one function,
 `describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentity(detail)`.
 
@@ -44284,7 +44284,7 @@ work, deliberately deferred. Persistence, or automatic/periodic/background
 computation of any kind.
 
 `docs/Roadmap.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentityView.test.js`
+`ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentityView.test.js`
 registered in `tests.html`.
 
 ---
@@ -44401,7 +44401,7 @@ explicitly, so a reader comparing two records side by side no longer has to
 informally re-derive which fields exist — but still has to manually walk
 every field to find the one that differs. This milestone turns that manual
 walk into a projection. A new
-`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifferenceView.js`
+`application/claimSnapshotReconciliation/evidenceExportComparison/RecordDifferenceView.js`
 with one function,
 `describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifference(pairs)`.
 
@@ -44503,7 +44503,7 @@ archive, or 0.8.188's own `importXxx()`. Persistence, or automatic/
 periodic/background computation of any kind.
 
 `docs/Roadmap.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifferenceView.test.js`
+`ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifferenceView.test.js`
 registered in `tests.html`.
 
 ---
@@ -44524,7 +44524,7 @@ that choice belongs to an explicit request, not an automatic continuation.
 but it takes the pairing itself as a given, caller-supplied argument, and
 has never had a file of its own that states what an explicit pair even IS.
 This milestone is that seam. A new
-`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairsView.js`
+`application/claimSnapshotReconciliation/evidenceExportComparison/RecordPairsView.js`
 with one function,
 `describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairs(pairs)`.
 
@@ -44643,7 +44643,7 @@ already holds. Persistence, or automatic/periodic/background computation
 of any kind.
 
 `docs/Roadmap.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairsView.test.js`
+`ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairsView.test.js`
 registered in `tests.html`.
 
 ---
@@ -44666,7 +44666,7 @@ request, not an automatic continuation.
 "which named fields differ?" — but its own result carries the full
 `source`/`target` identity objects on every entry, which is exactly the
 detail a compact UI summary does not want to re-render. A new
-`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifferenceReadModel.js`
+`application/claimSnapshotReconciliation/evidenceExportComparison/RecordDifferenceReadModel.js`
 with one function,
 `describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifferenceReadModel(differences)`.
 
@@ -44769,7 +44769,7 @@ separate, later, UI-layer work. Persistence, or automatic/periodic/
 background computation of any kind.
 
 `docs/Roadmap.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifferenceReadModel.test.js`
+`ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifferenceReadModel.test.js`
 registered in `tests.html`.
 
 ---
@@ -44853,10 +44853,10 @@ an "Inspect differences" panel/page (if ever built) is separate, later,
 UI-layer work. Persistence, or automatic/periodic/background computation of
 any kind.
 
-`application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonPairedRecordDifferenceView.js`
+`application/claimSnapshotReconciliation/evidenceExportComparison/PairedRecordDifferenceView.js`
 added;
 `docs/Roadmap.md` updated;
-`PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonPairedRecordDifferenceView.test.js`
+`ReconciliationCandidateLeaderboardEvidenceExportComparisonPairedRecordDifferenceView.test.js`
 registered in `tests.html`.
 
 ---
@@ -98273,7 +98273,7 @@ the connection timer and the "Be Discoverable" state app-wide instead of per pag
 **Shared SHA-256.** `core/Sha256.js` (`sha256()`, `sha256Hex()`) replaces five identical hand-written copies in
 `application/PublicationObservationArchiveFingerprint.js`, `application/AchievementEvidenceFingerprint.js`,
 `application/PublisherLeaderboardSnapshotFingerprint.js`,
-`application/PublisherLeaderboardClaimSnapshotReconciliationPlanIdentity.js` and
+`application/claimSnapshotReconciliation/PlanIdentity.js` and
 `anchoring/BitcoinAnchorSignedPsbtFinalizer.js`. It stays synchronous (`crypto.subtle.digest()` is Promise-only) and
 dependency-free. Fingerprints are unchanged; the plan-identity boundary test now allows exactly this one import.
 

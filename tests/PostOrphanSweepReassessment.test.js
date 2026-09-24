@@ -5,7 +5,7 @@ import { PublicationObservationArchive } from '../application/PublicationObserva
 import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles } from './support/SourceFileGroups.js';
 import {
     reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage
-} from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage.js';
+} from '../application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js';
 
 // 0.9.328 — Post-Orphan-Sweep Product Evolution Reassessment.
 //
@@ -393,7 +393,7 @@ async function run() {
         const leaderboardViewSource = await rawSource('ui/views/ReconciliationCandidateLeaderboardView.js');
         assert(leaderboardViewSource.includes('ReconciliationCandidateLeaderboardEvidenceKind.DECISIONS'),
             'E2a. The shipped Leaderboard page still exposes a DECISIONS evidence-kind filter option.');
-        const pageSource = await rawSource('application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage.js');
+        const pageSource = await rawSource('application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js');
         assert(pageSource.includes('reconciliationDecisionRecords'),
             'E2b. That filter\'s own data ultimately traces, through this file\'s own documented composition chain, to the archive\'s own reconciliationDecisionRecords collection.');
         const RECONCILIATION_FAMILY_WRITERS = [

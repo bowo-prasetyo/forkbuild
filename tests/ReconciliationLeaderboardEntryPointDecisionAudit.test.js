@@ -85,13 +85,13 @@ async function run() {
         );
 
         const backendFiles = [
-            'application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetailView.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardComparisonState.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceFilter.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationCandidateFilteredEvidenceDetailView.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceImport.js',
+            'application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js',
+            'application/claimSnapshotReconciliation/candidate/EvidenceDetailView.js',
+            'application/claimSnapshotReconciliation/leaderboard/ComparisonState.js',
+            'application/claimSnapshotReconciliation/leaderboard/EvidenceFilter.js',
+            'application/claimSnapshotReconciliation/candidate/FilteredEvidenceDetailView.js',
+            'application/claimSnapshotReconciliation/leaderboard/EvidenceExport.js',
+            'application/claimSnapshotReconciliation/leaderboard/EvidenceImport.js',
             'ui/components/ReconciliationCandidateLeaderboardTable.js'
         ];
         for (const file of backendFiles) {

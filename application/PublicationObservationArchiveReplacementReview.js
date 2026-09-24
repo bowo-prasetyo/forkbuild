@@ -3,7 +3,7 @@ import { describePublicationObservationArchive } from './PublicationObservationA
 import { describePublicationObservationArchiveProvenance } from './PublicationObservationArchiveProvenanceView.js';
 import { describePublicationObservationArchiveDifference } from './PublicationObservationArchiveDifference.js';
 import { reconstructPublisherLeaderboardClaimHistoryDifference } from './PublisherLeaderboardClaimHistoryDifference.js';
-import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference } from './PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference.js';
+import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference } from './claimSnapshotReconciliation/decision/HistoryDifference.js';
 
 // 0.8.88 — Explicit Publication Archive Replacement Review.
 //
@@ -141,7 +141,7 @@ import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHisto
 // reports `reconciliationDecisionRecords` (0.8.150) as a twelfth POSITIONAL
 // collection; this SEPARATE field is the multiset-aware decision-history
 // difference application/
-// PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference.js's
+// application/claimSnapshotReconciliation/decision/HistoryDifference.js's
 // own `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference()`
 // (0.8.149, newly archive-aware) already computes — neither field is more
 // authoritative than the other, and neither computes any interpretation of

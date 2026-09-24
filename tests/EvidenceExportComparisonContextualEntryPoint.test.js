@@ -99,11 +99,11 @@ async function run() {
         }
 
         const backendFiles = [
-            'application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceImport.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparison.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonReadModel.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonView.js',
+            'application/claimSnapshotReconciliation/leaderboard/EvidenceExport.js',
+            'application/claimSnapshotReconciliation/leaderboard/EvidenceImport.js',
+            'application/claimSnapshotReconciliation/evidenceExportComparison/EvidenceExportComparison.js',
+            'application/claimSnapshotReconciliation/evidenceExportComparison/EvidenceExportComparisonReadModel.js',
+            'application/claimSnapshotReconciliation/evidenceExportComparison/EvidenceExportComparisonView.js',
             'ui/components/ReconciliationCandidateLeaderboardTable.js',
             'ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js'
         ];
@@ -262,7 +262,7 @@ async function run() {
         // import/validate function from the exact same shared file — the
         // identical fact 0.9.402's own Section C verified as the basis for
         // this predecessor relationship in the first place.
-        const sharedImportPath = "from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceImport.js';";
+        const sharedImportPath = "from '../../application/claimSnapshotReconciliation/leaderboard/EvidenceImport.js';";
         assert(
             leaderboardViewSource.includes(sharedImportPath) && comparisonViewSource.includes(sharedImportPath),
             n('F4. both pages still import the evidence-export document\'s own validate function from the byte-identical shared file path — the document format itself was not touched')

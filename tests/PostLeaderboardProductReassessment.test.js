@@ -397,7 +397,7 @@ async function run() {
         // one this milestone reassesses. Confirmed fresh that exposing THIS
         // leaderboard creates no new obligation toward that family.
         const applicationFiles = listFiles(['application']);
-        const claimSnapshotFamily = applicationFiles.filter((f) => path.basename(f).startsWith('PublisherLeaderboardClaimSnapshot'));
+        const claimSnapshotFamily = applicationFiles.filter((f) => path.basename(f).startsWith('PublisherLeaderboardClaimSnapshot') || f.startsWith('application/claimSnapshotReconciliation/'));
         assert(claimSnapshotFamily.length > 10, n(`F1. a large PublisherLeaderboardClaimSnapshot* reconciliation-analytics family genuinely exists in application/ (found ${claimSnapshotFamily.length} files) — a real, substantial parked surface, not a hypothetical one`));
 
         assert(!performanceViewSource.includes('PublisherLeaderboardClaimSnapshot'), n('F2. PublisherPerformanceLeaderboardView.js — the new, reachable surface — imports or references none of that family by name'));

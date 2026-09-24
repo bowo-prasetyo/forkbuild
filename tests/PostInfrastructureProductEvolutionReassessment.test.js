@@ -247,7 +247,7 @@ async function run() {
             { capability: 'Provider preference', evidence: ['core/RoleProviderPreference.js', 'ui/views/ContentProviderSettingsView.js'], classification: 'COMPLETE' },
             { capability: 'Endpoint resilience settings', evidence: ['core/ArweaveGatewayConfiguration.js', 'core/NostrRelayConfiguration.js'], classification: 'COMPLETE', note: 'this arc, 0.9.364-0.9.373 — see Section A' },
             { capability: 'Repository federation (encounter-driven)', evidence: ['application/ResolvePublicationUseCase.js', 'application/SearchPublicationsUseCase.js'], classification: 'COMPLETE', note: 'proactive discovery remains DEFERRED — see Section D' },
-            { capability: 'Achievement/Reconciliation Leaderboard', evidence: ['application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage.js', 'ui/views/ReconciliationCandidateLeaderboardView.js'], classification: 'INTERNAL', note: 'implemented and correct when reached, but no router-link or programmatic navigation anywhere in the app leads to it — see Section C' }
+            { capability: 'Achievement/Reconciliation Leaderboard', evidence: ['application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js', 'ui/views/ReconciliationCandidateLeaderboardView.js'], classification: 'INTERNAL', note: 'implemented and correct when reached, but no router-link or programmatic navigation anywhere in the app leads to it — see Section C' }
         ];
         for (const row of capabilityInventory) {
             for (const file of row.evidence) {
