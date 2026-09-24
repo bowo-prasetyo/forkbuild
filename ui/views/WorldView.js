@@ -66,6 +66,9 @@ import { nearbySectionTemplate } from './worldView/templates/nearbySection.js';
 import { avatarSectionTemplate } from './worldView/templates/avatarSection.js';
 import { inspectionPanelsTemplate } from './worldView/templates/inspectionPanels.js';
 import { dialogsTemplate } from './worldView/templates/dialogs.js';
+import { headerSectionTemplate } from './worldView/templates/headerSection.js';
+import { worldListsSectionTemplate } from './worldView/templates/worldListsSection.js';
+import { navigationHudSectionTemplate } from './worldView/templates/navigationHudSection.js';
 
 // World View observes and navigates; brick editing lives in the Editor (see
 // docs/Principles.md, "World View Observes and Navigates; Editor Mutates and
@@ -1149,88 +1152,7 @@ export default {
         <div class="world-view">
             <div class="world-view-overlay">
               <div class="world-view-overlay-scroll">
-                <h2>{{ title }}</h2>
-                <p
-                    v-if="activeDocumentInfo"
-                    :class="['world-view-status', { 'world-view-status--published': activeDocumentInfo.status === 'published' }]"
-                >
-                    <span v-if="activeDocumentInfo.status === 'published'">🔒 Published</span>
-                    <span v-else-if="activeDocumentInfo.parentDocumentId">
-                        ✎ Editing fork<template v-if="parentTitle(activeDocumentInfo.parentDocumentId)"> — forked from {{ parentTitle(activeDocumentInfo.parentDocumentId) }}</template>
-                    </span>
-                    <span v-else>✎ {{ activeDocumentInfo.statusLabel }}</span>
-                </p>
-                <!--
-                    Camera focus and the active document are tracked separately (docs/
-                    Principles.md, "Camera Focus, Active Document, and Selection Are Three
-                    Different Things").
-                -->
-                <p class="world-view-context">
-                    Camera: {{ focusedDocumentTitle || 'World' }} · Editing: {{ activeDocumentInfo ? title : 'None' }}
-                </p>
-                <div v-if="activeDocumentInfo && activeDocumentInfo.editable" class="world-view-actions">
-                    <button
-                        class="action-btn"
-                        :disabled="!activeDocumentInfo.dirty"
-                        @click="saveActiveDocument"
-                    >Save</button>
-                    <button class="action-btn action-btn--primary" @click="publishActiveDocument">Publish</button>
-                    <button class="action-btn" @click="openMetadataEditor(activeDocumentInfo)">Edit Metadata</button>
-                    <button
-                        class="action-btn"
-                        :disabled="!canUndo"
-                        :title="undoLabel || 'Nothing to undo'"
-                        @click="undoAction"
-                    >Undo</button>
-                    <button
-                        class="action-btn"
-                        :disabled="!canRedo"
-                        :title="redoLabel || 'Nothing to redo'"
-                        @click="redoAction"
-                    >Redo</button>
-                    <button
-                        class="action-btn"
-                        title="Inspect, preview, and restore this document's command history"
-                        @click="openHistoryPanel"
-                    >History</button>
-                </div>
-                <div v-if="activePlacementInfo" class="world-view-actions">
-                    <button
-                        class="action-btn"
-                        :disabled="!activePlacementInfo.movable"
-                        @click="openPlacementEditor(activePlacementInfo)"
-                    >Move Placement</button>
-                </div>
-                <p v-if="author">by {{ author }}</p>
-                <!--
-                    Mounted beside Save/Publish rather than inside World Encounters, so
-                    distributing your own Snapshot never depends on primary mode, a peer or
-                    Encounters. The commands are this view's thin wrappers, shared with
-                    WorldEncounterCanvas where they overlap.
-                -->
-                <OwnPublicationPanel
-                    v-if="cameraPosition"
-                    :publication="ownPublication"
-                    :unpublishCommand="unpublishOwnPublication"
-                    :placePublicationCommand="placeOwnPublication"
-                    :snapshotDistributionCommand="distributeWorldEncounterSnapshot"
-                    :snapshotDistributionStorageTypes="snapshotDistributionStorageTypes"
-                    :defaultContentDistributionProvider="defaultContentDistributionProvider"
-                    :publicationDistributionCommand="distributeWorldEncounterPublication"
-                    :defaultDiscoveryDistributionProvider="defaultAnnouncementDiscoveryProvider"
-                    :discoverSnapshotCommand="discoverOwnSnapshot"
-                    :exportSnapshotCommand="exportOwnSnapshot"
-                    :discoverSnapshotCandidatesCommand="discoverSnapshotCandidatesCommand"
-                    :worldDiscoverySourceRegistry="worldDiscoverySourceRegistry"
-                    :resolveSelectedSnapshotCommand="resolveSelectedSnapshotCommand"
-                    :materializeSelectedSnapshotCommand="materializeSelectedSnapshotCommand"
-                    :placementInfo="activePlacementInfo"
-                    :getPublicationCommentariesCommand="getPublicationCommentariesCommand"
-                    :addPublicationCommentaryCommand="addPublicationCommentaryCommand"
-                    :viewerIdentityId="myIdentityId"
-                    :getPublicationPlacementsCommand="getPublicationPlacementsCommand"
-                    :discoverSnapshotCandidatesWithOutcomeCommand="discoverSnapshotCandidatesWithOutcomeCommand"
-                />
+                ${headerSectionTemplate}
             <!--
                 Home and Locations are plain utilities; Explore / Map / Places are the three
                 mutually exclusive primary modes.
@@ -1304,96 +1226,12 @@ export default {
 
                 ${inspectionPanelsTemplate}
 
-                <div v-if="failedWorlds.length > 0" class="world-view-section world-view-section--error">
-                    <h4>Unavailable ({{ failedWorlds.length }})</h4>
-                    <ul class="world-list world-list--failed">
-                        <li v-for="w in failedWorlds" :key="w.documentId" class="world-item world-item--failed">
-                            <span class="world-item-title">{{ w.title }}</span>
-                            <span class="world-item-author">{{ w.author }}</span>
-                        </li>
-                    </ul>
-                </div>
-
-                <div v-if="loadedWorlds.length > 0" class="world-view-section">
-                    <h4>Worlds in View ({{ loadedWorlds.length }})</h4>
-                    <ul class="world-list world-list--loaded">
-                        <li
-                            v-for="w in loadedWorlds"
-                            :key="w.documentId"
-                            :class="['world-item', { 'world-item--current': w.documentId === $route.params.documentId }]"
-                        >
-                            <span class="world-item-title">{{ w.title }}</span>
-                            <span class="world-item-author">{{ w.author }}</span>
-                        </li>
-                    </ul>
-                </div>
-
-                <div v-if="nearbyWorlds.length > 0" class="world-view-section">
-                    <h4>Nearby Worlds</h4>
-                    <ul class="world-list world-list--nearby">
-                        <li
-                            v-for="w in nearbyWorlds"
-                            :key="w.documentId"
-                            class="world-item world-item--clickable"
-                            @click="focusWorld(w.documentId)"
-                        >
-                            <span class="world-item-title">{{ w.title }}</span>
-                            <span class="world-item-author">{{ w.author }}</span>
-                        </li>
-                    </ul>
-                </div>
+                ${worldListsSectionTemplate}
               </div>
             </div>
             <div ref="viewport" class="world-viewport"></div>
             ${dialogsTemplate}
-            <!--
-                Coordinates and compass float over the viewport, transparent so the World
-                stays dominant.
-            -->
-            <div v-if="cameraPosition" class="world-view-nav-hud">
-                <p class="world-view-nav-hud-coords">
-                    {{ cameraPosition.x.toFixed(1) }}, {{ cameraPosition.y.toFixed(1) }}, {{ cameraPosition.z.toFixed(1) }}
-                </p>
-                <div class="world-view-nav-hud-compass">
-                    <CompassIndicator :heading="compassHeading" :markers="compassMarkers" />
-                </div>
-                <!--
-                    The human-named place, shown above the derived terrain description and never
-                    merged with it (docs/Principles.md, "Users Name Places; The World Derives
-                    Geography From Names").
-                -->
-                <div v-if="spatialContext && spatialContext.placeName" class="world-view-nav-context world-view-nav-context--place">
-                    {{ spatialContext.placeName }}
-                </div>
-                <div v-if="spatialContext && spatialContext.description" class="world-view-nav-context">
-                    {{ spatialContext.description }}
-                </div>
-                <!-- Readable legend for the compass markers: the dial has no room for labels. -->
-                <div v-if="spatialContext && spatialContext.nearbyStructures && spatialContext.nearbyStructures.length > 0" class="world-view-nav-markers">
-                    <div v-for="structure in spatialContext.nearbyStructures.slice(0, 3)" :key="structure.id" class="world-view-nav-marker">
-                        <span class="marker-direction">{{ structure.direction }}</span>
-                        <span class="marker-label">{{ structure.title }} ({{ structure.distance }}m)</span>
-                    </div>
-                </div>
-                <div v-if="spatialContext && spatialContext.nearbyCollaborators && spatialContext.nearbyCollaborators.length > 0" class="world-view-nav-markers">
-                    <div v-for="collab in spatialContext.nearbyCollaborators.slice(0, 3)" :key="collab.identityId" class="world-view-nav-marker collaborator">
-                        <span class="marker-direction">{{ collab.direction }}</span>
-                        <span class="marker-label">{{ collab.displayName }} ({{ collab.distance }}m)</span>
-                    </div>
-                </div>
-                <div v-if="spatialContext && spatialContext.nearbyLandmarks && spatialContext.nearbyLandmarks.length > 0" class="world-view-nav-markers">
-                    <div v-for="landmark in spatialContext.nearbyLandmarks.slice(0, 3)" :key="landmark.id" class="world-view-nav-marker landmark">
-                        <span class="marker-direction">{{ landmark.direction }}</span>
-                        <span class="marker-label">★ {{ landmark.title }} ({{ landmark.distance }}m)</span>
-                    </div>
-                </div>
-                <div v-if="nearbyGeographicPlaces && nearbyGeographicPlaces.length > 0" class="world-view-nav-markers">
-                    <div v-for="place in nearbyGeographicPlaces.slice(0, 3)" :key="place.fingerprintKey" class="world-view-nav-marker place">
-                        <span class="marker-direction">{{ place.direction }}</span>
-                        <span class="marker-label">⬢ {{ place.displayName }} ({{ place.distance }}m)</span>
-                    </div>
-                </div>
-            </div>
+            ${navigationHudSectionTemplate}
         </div>
     `
 };

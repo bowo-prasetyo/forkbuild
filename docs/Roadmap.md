@@ -98412,3 +98412,10 @@ indentation. Tests read OwnPublicationPanel with its modules through `tests/supp
 103 files); checks on template order read `ownPublicationPanelSource()` or `worldEncounterCanvasSource()`, which
 expand the template in place. Other adjustments follow the earlier splits: inventories name the module holding the
 code, method regexes expect four-space indentation, and import paths quoted from source gained a `../`.
+
+**WorldView template split further.** `ui/views/WorldView.js` (1,399 → 1,237 lines) moves three more template
+sections into `ui/views/worldView/templates/`: the header and actions, the World lists, and the navigation HUD. The
+expanded template (`worldViewSourceWithTemplate()`) is identical before and after. `setup()` is left as it is: what
+remains is refs, injections, composable wiring, `refreshSpatialUI()` and the returned names, and the one cohesive
+block left (the automatic Snapshot cascade, its retention reconciliation and the place-naming monitor) shares two
+`let` flags with `refreshSpatialUI()` and unmount, so extracting it would change code rather than move it.
