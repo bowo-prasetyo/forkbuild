@@ -986,10 +986,12 @@ export class WorldNavigationSession {
                 if (this._avatarProfileSyncService && now - this._lastProfilePublishAt >= PROFILE_REPUBLISH_INTERVAL_MS) {
                     this._publishLocalAvatarProfile(this._avatarProfileUseCase.getProfile(), now);
                 }
-                // Presence heartbeat while idle (see PRESENCE_HEARTBEAT_INTERVAL_MS). Any
-                // real movement already published and refreshed `_lastPresenceUpdateAt`, so
-                // this never double-publishes. It goes through
-                // AvatarPresenceSession.update() so `sequence` advances.
+                // periodic presence HEARTBEAT: republishes the
+                // CURRENT, UNCHANGED presence once the local avatar has
+                // been idle for PRESENCE_HEARTBEAT_INTERVAL_MS. Real movement already
+                // published and refreshed `_lastPresenceUpdateAt`, so this never
+                // double-publishes. It goes through AvatarPresenceSession.update() so
+                // `sequence` advances.
                 if (this._avatarPresenceSession && now - this._lastPresenceUpdateAt >= PRESENCE_HEARTBEAT_INTERVAL_MS) {
                     const current = this._avatarPresenceSession.current;
                     this._avatarPresenceSession.update({
@@ -1809,8 +1811,8 @@ export class WorldNavigationSession {
     // it with `null`. Anything else is rejected (returns false).
     //
     // Turning one on re-frames immediately, so choosing "Bird's-Eye" while
-    // standing still moves the camera. Turning it off doesn't snap anywhere; the
-    // orbit camera resumes from where the perspective left it. Independent of
+    // standing still moves the camera. Turning it off does NOT snap the camera
+    // anywhere; the orbit camera resumes from where the perspective left it. Independent of
     // `_followAvatarEnabled`, but a set perspective always wins.
     setCameraPerspective(perspective) {
         if (perspective !== null && !isValidCameraPerspective(perspective)) {
@@ -2044,7 +2046,7 @@ export class WorldNavigationSession {
         return this._activeDocumentId;
     }
 
-    // Where the camera is navigated to; see getActiveDocumentId() for where an
+    // Where the camera is currently navigated to; see getActiveDocumentId() for where an
     // edit would land.
     getFocusedDocumentId() {
         return this._focusedDocumentId;
@@ -3282,7 +3284,8 @@ export class WorldNavigationSession {
     // landmark create/update/remove methods), also safe for a UI to reflect
     // (never decide) whether to offer an edit. Passes `documentId` to
     // WorldAuthorizationService so a non-owner holding a signed edit grant is
-    // recognized, the same answer the network side gives.
+    // recognized: the same answer, consulted from BOTH the LOCAL mutation chokepoint
+    // and the network one.
     canEditDocument(documentId) {
         if (!this._worldAuthorizationService) {
             return true;
@@ -3773,7 +3776,7 @@ export class WorldNavigationSession {
 
     // A document can have several placements (see docs/Principles.md, "A
     // Publication Is What; A Placement Is Where"). This picks the most recently
-    // updated one, like WorldLayoutProvider.getPosition.
+    // updated one, like WorldLayoutProvider.getPosition; browsing/choosing among several is future scope.
     _resolvePlacementRecord(documentId) {
         if (!this._placementRegistry) return null;
         const publication = this._resolvePublicationForPlacement(documentId);
