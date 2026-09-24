@@ -4,6 +4,7 @@ import { executeDiscoverPlaceNamingClaimsCommand } from '../application/Discover
 import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
 import { composePlaceNamingDiscoveryRuntime } from '../application/PlaceNamingDiscoveryRuntimeComposition.js';
 import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.257 — World View Place Naming Presentation.
 // See docs/Roadmap.md, "0.9.257 — World View Place Naming Presentation."
@@ -560,7 +561,7 @@ async function runTests() {
     // Proxy — this section is the static, source-level counterpart).
     // ---------------------------------------------------------------
     {
-        const worldViewCode = await codeOnlySource('ui/views/WorldView.js');
+        const worldViewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         const monitorBlock = extractBetween(
             worldViewCode,
             'const placeNamingDiscoveryMonitor = placeNamingDiscoveryQueryService',
@@ -666,7 +667,7 @@ async function runTests() {
         assert(mainCode.includes("app.provide('placeNamingDiscoveryQueryService', placeNamingDiscoveryQueryService);"),
             '34. ui/main.js provides placeNamingDiscoveryQueryService app-wide');
 
-        const worldViewCode = await codeOnlySource('ui/views/WorldView.js');
+        const worldViewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(worldViewCode.includes("const placeNamingDiscoveryQueryService = inject('placeNamingDiscoveryQueryService', null);"),
             '35. WorldView.js injects the app-wide placeNamingDiscoveryQueryService');
         assert(worldViewCode.includes('new PlaceNamingDiscoveryMonitor({'), '36. WorldView.js constructs a real PlaceNamingDiscoveryMonitor');

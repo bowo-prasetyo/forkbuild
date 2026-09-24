@@ -9,6 +9,7 @@ import { describeWorldEncounterMaterialVerificationStatusLabel } from '../applic
 import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
 import { shouldRefreshSnapshotDiscovery, DEFAULT_DISCOVERY_REFRESH_RADIUS } from '../application/ShouldRefreshSnapshotDiscovery.js';
 import { materializedSnapshotWorldOrigin } from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.528 — Snapshot Encounter & Placement Product Experience
 // Reassessment.
@@ -270,7 +271,7 @@ async function run() {
     {
         const panelInfoSource = await source('ui/components/PlacementInfoPanel.js');
         const editorSource = await source('ui/components/PlacementEditorDialog.js');
-        const worldViewSource = await source('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => source(file)))).join('\n');
 
         // The Publication/Placement split is a NAMED architectural rule,
         // not an implicit convention this milestone would be the first to

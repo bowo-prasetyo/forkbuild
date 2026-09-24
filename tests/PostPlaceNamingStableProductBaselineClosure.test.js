@@ -18,6 +18,7 @@ import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.319 — Post-Place-Naming Stable Product Baseline Closure.
 //
@@ -335,7 +336,7 @@ async function runTests() {
         // C4. Explicit Nostr publication capability remains internal:
         // reconfirmed structurally in the same live scenario, not a
         // separate claim taken on faith.
-        const worldView = await rawSource('ui/views/WorldView.js');
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const publishFnMatch = worldView.match(/function publishNamingClaim\(name\) \{[\s\S]*?\n {8}\}/);
         assert(publishFnMatch && !publishFnMatch[0].includes('Nostr') && !publishFnMatch[0].includes('Publisher'),
             'C4. The shipped "Publish" UI action still performs local persistence only — the publisher just exercised in C2a has no path from that action.');

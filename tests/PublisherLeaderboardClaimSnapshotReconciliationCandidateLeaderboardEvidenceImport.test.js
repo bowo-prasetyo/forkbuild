@@ -217,8 +217,8 @@ async function run() {
         const codeOnly = moduleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         const codeOnlyLower = codeOnly.toLowerCase();
 
-        const importLines = moduleSource.split('\n').filter((line) => line.trim().startsWith('import '));
-        assert(importLines.length === 3, '28. this file imports exactly three modules');
+        const importLines = moduleSource.split('\n').filter((line) => line.trim().startsWith('import ') && !line.includes("from '../utils/"));
+        assert(importLines.length === 3, '28. besides utils/ helpers, this file imports exactly three modules');
         assert(codeOnly.includes("from './PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport.js'"), '29. one import is 0.8.186\'s own evidence-export module (its protocol-version constant)');
         assert(codeOnly.includes("from './PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceFilter.js'"), '30. another import is 0.8.184\'s own evidence filter module (its enums)');
         assert(codeOnly.includes("from './PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardComparisonState.js'"), '31. another import is 0.8.183\'s own comparison-state module');

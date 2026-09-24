@@ -1,6 +1,7 @@
 import { isValidAvatarVehicleMount } from './AvatarVehicleMount.js';
 import { AvatarVehicleDeployIntent, isValidAvatarVehicleDeployIntent } from './AvatarVehicleDeployIntent.js';
 import { AvatarInventory, InventoryEntryKind, withEntryRemoved } from './AvatarInventory.js';
+import { isNonEmptyString } from '../utils/typeGuards.js';
 
 // 0.9.670 — Avatar Vehicle Deploy Transition.
 //
@@ -58,9 +59,6 @@ import { AvatarInventory, InventoryEntryKind, withEntryRemoved } from './AvatarI
 // criterion of its own — selection itself is entirely
 // application/AvatarVehicleInteractionController.js's own job (its
 // cycle-selection keys), never a rule this pure transition invents.
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.length > 0;
-}
 
 export function deriveAvatarVehicleDeployTransition({
     currentMount = null,

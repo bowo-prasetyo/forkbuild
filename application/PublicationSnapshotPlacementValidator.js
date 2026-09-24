@@ -1,4 +1,5 @@
 import { PUBLICATION_SNAPSHOT_PLACEMENT_KIND, CURRENT_SCHEMA_VERSION } from '../core/PublicationSnapshotPlacement.js';
+import { isNonBlankString } from '../utils/typeGuards.js';
 
 // 0.8.18 — Decentralized Snapshot Placement Foundation.
 //
@@ -16,16 +17,12 @@ export class PublicationSnapshotPlacementError extends Error {
     }
 }
 
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.trim().length > 0;
-}
-
 function validateSignature(signature, prefix) {
     if (!signature || typeof signature !== 'object') {
         throw new PublicationSnapshotPlacementError(`${prefix}.signature is missing or not an object`);
     }
     for (const field of ['algorithm', 'signer', 'signature', 'signedHash', 'domain']) {
-        if (!isNonEmptyString(signature[field])) {
+        if (!isNonBlankString(signature[field])) {
             throw new PublicationSnapshotPlacementError(`${prefix}.signature.${field} is missing or not a string`);
         }
     }
@@ -36,7 +33,7 @@ function validatePlacerIdentity(identity, prefix) {
         throw new PublicationSnapshotPlacementError(`${prefix}.placerIdentity is missing or not an object`);
     }
     for (const field of ['id', 'algorithm', 'publicKey']) {
-        if (!isNonEmptyString(identity[field])) {
+        if (!isNonBlankString(identity[field])) {
             throw new PublicationSnapshotPlacementError(`${prefix}.placerIdentity.${field} is missing or not a string`);
         }
     }
@@ -59,7 +56,7 @@ export function validatePublicationSnapshotPlacement(record) {
         throw new PublicationSnapshotPlacementError(`PublicationSnapshotPlacement: unsupported schema version ${record.schemaVersion}`);
     }
     for (const field of ['id', 'publicationId', 'contentHash', 'storage', 'locator', 'placedAt']) {
-        if (!isNonEmptyString(record[field])) {
+        if (!isNonBlankString(record[field])) {
             throw new PublicationSnapshotPlacementError(`PublicationSnapshotPlacement: ${field} is missing or not a string`);
         }
     }

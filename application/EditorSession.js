@@ -51,36 +51,19 @@ import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.
 import { CameraState } from '../renderer/CameraState.js';
 import { SelectionBoundsService } from './SelectionBoundsService.js';
 
-// Owns the live runtime graph — the render session, World, CommandHistory,
-// ToolManager, InputDispatcher — as one unit, so nothing else has to know
-// how to tear it down and rebuild it correctly. EditorView only ever
-// calls start()/loadDocument()/newDocument()/dispose() and forwards raw
-// DOM events to onPointerDown()/onPointerMove()/onPointerUp()/onKeyDown()
-// — it never touches a World, Renderer, or ToolManager directly, before
-// or after a document is replaced.
+// Owns the live runtime graph (render session, World, CommandHistory,
+// ToolManager, InputDispatcher) as one unit, so nothing else has to know how
+// to tear it down and rebuild it. EditorView only calls
+// start()/loadDocument()/newDocument()/dispose() and forwards raw DOM events;
+// it never touches a World, Renderer or ToolManager.
 //
-// 0.1.46 — interactive transform gizmo wiring. 0.1.47 — transform
-// precision (TransformSettings + modifier plumbing + gesture feedback).
-// 0.1.48 — alignSelection/distributeSelection. 0.1.49 —
-// applyNumericTransform. All routed to the same gesture service.
-//
-// 0.1.50 — the Editor half of the consolidated editing surface:
-// selectAll()/clearSelection()/deleteSelection() join the session API
-// so the EditorActionRegistry can drive selection operations from the
-// command palette, the sidebar, and keyboard shortcuts without any
-// Editor-only code paths.
-//
-// 0.6.0 — the SAME diagonal offset application/WorldNavigationSession.js
-// #focusLocation() already uses (its own LOCATION_FOCUS_OFFSET) — one
-// camera-framing convention across World View and the Editor, not a
-// second. See frameCameraOn()'s own header.
+// Same camera offset as WorldNavigationSession#focusLocation(), so both views
+// frame locations the same way.
+
 const ENTRY_CAMERA_OFFSET = { x: 12, y: 12, z: 12 };
 
-// docs/user/02-TheEditor.md's own Selecting-bricks table: Shift+Click
-// ADDS the one clicked brick; Shift+Drag DRAWS A BOX. Below this many
-// client pixels of movement a Shift+mousedown-then-up is a click, not a
-// drag — same distinction ui/views/WorldView.js's own DRAG_THRESHOLD_PX
-// already draws for orbit-vs-pick, applied here to marquee-vs-click.
+// Shift+Click adds one brick; Shift+Drag draws a box. Movement under this many
+// pixels counts as a click.
 const MARQUEE_DRAG_THRESHOLD_PX = 6;
 
 export class EditorSession {
@@ -96,96 +79,26 @@ export class EditorSession {
         copySelectionUseCase = null,
         pasteClipboardUseCase = null,
         forkStructureUseCase = new ForkStructureUseCase(),
-        // 0.4.0 — Structure Composition & Blueprint Library.
         copyStructureIntoDocumentUseCase = new CopyStructureIntoDocumentUseCase(),
-        // 0.4.2 — Structure Extraction & Blueprint Creation.
         createStructureFromSelectionUseCase = new CreateStructureFromSelectionUseCase(),
-        // 0.4.3 — Personal Blueprint Library. Optional, same posture as
-        // every other optional collaborator here — an EditorSession
-        // built without one (older call sites, test harnesses that never
-        // save a Structure anywhere) simply can't persist one;
-        // createStructureFromSelection() (0.4.2, unchanged) keeps
-        // working either way, since saving was always a separate step.
+        // The optional collaborators below simply disable their own methods when
+        // missing; nothing else depends on them.
         personalStructureLibraryStore = null,
-        // 0.4.6 — Blueprint Sharing & Exchange. Same optional posture as
-        // every other Structure use case above: an EditorSession built
-        // without these (older call sites, test harnesses that never
-        // export/import a blueprint) simply can't offer those two
-        // methods — nothing else here depends on them existing.
         exportBlueprintUseCase = new ExportBlueprintUseCase(),
         importBlueprintUseCase = new ImportBlueprintUseCase(),
-        // 0.9.641 — Editor Document Export. Same optional-in-shape-only
-        // posture as exportBlueprintUseCase above, except this one has
-        // no external dependency to omit — every EditorSession, old or
-        // new, gets a working exportDocument() for free.
         exportDocumentUseCase = new ExportDocumentUseCase(),
-        // 0.9.642 — Editor Document Import. The identical
-        // no-external-dependency-to-omit posture as
-        // exportDocumentUseCase immediately above — every EditorSession
-        // gets a working importDocument() for free.
         importDocumentUseCase = new ImportDocumentUseCase(),
-        // 0.6.6 — Decentralized Blueprint Exchange. Optional, same
-        // graceful-degradation posture as every other optional
-        // collaborator here — an EditorSession built without one (older
-        // call sites, test harnesses that never exchange an attribution)
-        // simply can't offer exportBlueprintAttribution()/
-        // importBlueprintAttribution(); exportBlueprint()/importBlueprint()
-        // (0.4.6, unchanged) keep working either way.
         blueprintAttributionExchange = null,
-        // 0.6.8 — Blueprint Lineage & Revision Discovery. The identical
-        // optional posture as blueprintAttributionExchange above — an
-        // EditorSession built without one simply can't offer
-        // exportBlueprintLineageClaim()/importBlueprintLineageClaim().
         blueprintLineageExchange = null,
-        // 0.6.3 — Blueprint Authoring & Versioning UX. Same optional
-        // posture as exportBlueprintUseCase/importBlueprintUseCase above.
         forkStructureToLibraryUseCase = new ForkStructureToLibraryUseCase(),
-        // 0.4.9 — Alignment, Snapping & Repetition. Optional, same
-        // graceful-degradation posture as every other optional
-        // collaborator here — an EditorSession built without one (older
-        // call sites, test harnesses that never repeat a selection)
-        // simply can't offer repeatSelection(); duplicateSelection()
-        // (0.4.7, unchanged) keeps working either way, since repetition
-        // is a distinct entry point built on the same primitives.
         repeatSelectionUseCase = null,
-        // 0.2.90 — Structure Placement & World Instances. Both optional
-        // so an EditorSession built without them (older call sites,
-        // test harnesses that never enter PLACE_STRUCTURE mode) keeps
-        // working — StructurePlacementTool already degrades gracefully
-        // when either is missing (its own header explains why).
         structureResolver = null,
         structurePreviewUseCase = null,
-        // 0.4.1 — Interactive Structure Composition UX. Optional for the
-        // exact same reason: an EditorSession built without it (older
-        // call sites, tests/BlueprintComposition.test.js's own harness)
-        // simply never offers beginStructureComposition() —
-        // copyStructureIntoDocument() (0.4.0, unchanged) keeps working
-        // either way.
         compositionPreviewUseCase = null,
-        // 0.9.224 — Runtime Composition / Editor Integration. Optional,
-        // same graceful-degradation posture as every other optional
-        // collaborator here — an EditorSession built without one (older
-        // call sites, every existing test) simply never broadcasts a
-        // local edit or applies a remote one; nothing else changes. When
-        // supplied, THIS class is the composition root that connects
-        // application/DocumentCommandPropagationUseCase.js's own trust
-        // boundary to the running Editor: outgoing (attachCommandHistory,
-        // wired fresh in _rebuild() below, since a new CommandHistory
-        // replaces the old one on every load/fork/new/document-switch)
-        // and incoming (attachToPropagation, wired once below, in this
-        // constructor — see its own comment for why). Never reopens
-        // DocumentCommandPropagationUseCase or
-        // RemoteDocumentOperationApplicationUseCase to add anything;
-        // both stay exactly as 0.9.222/0.9.223 left them.
+        // When supplied, connects document command propagation to the Editor:
+        // outgoing is wired per CommandHistory in _rebuild(), incoming once in the
+        // constructor.
         documentCommandPropagation = null,
-        // 0.9.230 — Causal Gap Recovery Request Boundary. Optional, same
-        // graceful-degradation posture as documentCommandPropagation
-        // above — an EditorSession built without one (older call sites,
-        // every existing test) simply never requests or answers a
-        // recovery exchange; nothing else changes. Already fully
-        // constructed by the caller (see ui/views/EditorView.js), exactly
-        // like documentCommandPropagation — this class never builds one
-        // itself.
         documentOperationRecovery = null
     }) {
         this._registry = registry;
@@ -215,30 +128,15 @@ export class EditorSession {
         this._compositionPreviewUseCase = compositionPreviewUseCase;
         this._documentCommandPropagation = documentCommandPropagation;
         this._remoteDocumentOperationApplication = new RemoteDocumentOperationApplicationUseCase();
-        // 0.9.229 — Causal Gap Observation at the Propagation Boundary.
-        // One detector for the whole session's lifetime, never rebuilt in
-        // _rebuild() below — its own graph is already document-scoped
-        // (see core/DocumentOperationCausality.js's own header), so it
-        // tracks causal knowledge across every document this session ever
-        // opens without needing to know which one is "current."
-        // 0.9.237 — the SAME detector instance is also handed to
-        // _documentOperationDeferral below, so readiness (Q4) is always
-        // evaluated against this session's real, cumulative causal
-        // knowledge, never a private, detached copy of it.
+        // One detector for the session's lifetime: its graph is already keyed by
+        // document. The deferral boundary shares it, so readiness uses the real
+        // causal knowledge.
         this._causalGapDetector = new DocumentOperationCausalGapDetector();
         this._documentOperationCausalGapObservation = new DocumentOperationCausalGapObservationUseCase({
             causalGapDetector: this._causalGapDetector
         });
-        // 0.9.237 — Causal Application Deferral Boundary. Session-lifetime,
-        // exactly like _documentOperationCausalGapObservation above.
-        // Replaces _remoteDocumentOperationApplication as the direct
-        // subscriber to documentCommandPropagation's own
-        // onOperationReceived() feed (wired below) — READY operations
-        // still flow straight through to _remoteDocumentOperationApplication
-        // #apply(), unchanged; NOT_READY operations are retained here
-        // instead of applied immediately. See
-        // DocumentOperationDeferralUseCase's own header for the full
-        // reasoning.
+        // Sits between propagation and application: READY operations apply
+        // immediately, NOT_READY ones are retained.
         this._documentOperationDeferral = new DocumentOperationDeferralUseCase({
             applicationUseCase: this._remoteDocumentOperationApplication,
             causalGapDetector: this._causalGapDetector
@@ -263,21 +161,9 @@ export class EditorSession {
             this._transformSettings
         );
         this._gizmoUseCase = new TransformGizmoUseCase(this._gestureService);
-        // 0.6.2 — Editor UX Consolidation: backs getSelectionSummary()
-        // below, the live position readout for a BRICK selection in
-        // ui/components/SelectionInspector.js. SelectionBoundsService
-        // itself is unchanged (0.1.48) — this is its first EditorSession-
-        // owned instance; every prior caller (TransformSelectionUseCase,
-        // CopySelectionUseCase, ...) already constructs its own.
         this._boundsService = new SelectionBoundsService(registry);
-        // 0.2.92 — World Instance Transform UX. A structure-placement
-        // selection gets its OWN gesture service (never widens
-        // SpatialEditingService — see that class's own 0.2.91 header),
-        // and a small router so the ONE TransformGizmoController this
-        // session constructs (application/RenderWorldUseCase.js) can
-        // drive either kind of selection through the SAME shared visual
-        // gizmo. See application/StructurePlacementGestureService.js and
-        // application/GizmoGestureRouter.js for the full reasoning.
+        // Placement selections get their own gesture service, and a router lets the
+        // one gizmo drive either kind of selection.
         this._placementGestureService = new StructurePlacementGestureService({
             getWorld: () => (this._documentManager.document ? this._documentManager.document.world : null),
             getCommandHistory: () => this._commandHistory,
@@ -290,51 +176,18 @@ export class EditorSession {
         this._gizmoSubscriptions = [];
         this._clipboardState = null;
         this._selectedGroupId = null;
-        // Shift+Drag marquee (see onPointerDown()/onPointerMove()/
-        // onPointerUp() below) — null whenever no Shift-held drag is in
-        // flight, matching isGestureActive()'s own "null/false means
-        // idle" posture for the gizmo.
         this._marqueeState = null;
 
         this._pasteCount = 0;
 
-        // 0.9.224 — the ONE place a received remote operation ever
-        // becomes an actual apply() call. Wired here, in the
-        // constructor, rather than in _rebuild() below: unlike outgoing
-        // broadcast (tied to a SPECIFIC CommandHistory instance, torn
-        // down and rebuilt every document switch), the INCOMING seam is
-        // a single, session-lifetime subscription to
-        // documentCommandPropagation's own onOperationReceived() feed —
-        // see application/RemoteDocumentOperationApplicationUseCase.js's
-        // own attachToPropagation() header. `resolveTarget()` is
-        // re-invoked by that method fresh for EVERY observed operation,
-        // never cached — reading this._documentManager.document/
-        // this._commandHistory LIVE means it always answers "what is
-        // this Editor looking at right now," through every subsequent
-        // load/fork/new/document-switch, without this constructor
-        // needing to re-wire anything when that happens. A remote
-        // operation for a document this session isn't currently looking
-        // at is NOT_APPLIED and forgotten, never queued — see that
-        // method's own header on why.
-        // 0.9.229 — registered BEFORE the application subscription just
-        // below, so a received operation's causal gap is always observed
-        // ahead of `RemoteDocumentOperationApplicationUseCase#apply()` —
-        // matching docs/Roadmap.md, 0.9.229's own receive sequence. This
-        // ordering is a documented invariant, not a correctness
-        // requirement: `attachToPropagation()`'s own failure isolation
-        // (see that method's header) means the application subscription
-        // below runs identically whichever order these two are wired in.
+        // Incoming operations are wired once, for the session's lifetime. The target
+        // is resolved live for each operation, so it always means "what this Editor is
+        // looking at now"; an operation for another document is not applied and not
+        // queued. Causal-gap observation is registered first (a documented order, not
+        // a correctness requirement).
         this._unattachCausalGapObservation = this._documentCommandPropagation
             ? this._documentOperationCausalGapObservation.attachToPropagation(this._documentCommandPropagation)
             : null;
-        // 0.9.237 — the deferral boundary now sits where
-        // _remoteDocumentOperationApplication#attachToPropagation() used
-        // to be wired directly: every received operation is still
-        // resolved against "what is this Editor looking at right now,"
-        // live, exactly as before, but READY/NOT_READY (0.9.234) decides
-        // whether it reaches _remoteDocumentOperationApplication#apply()
-        // immediately or is retained instead. See
-        // DocumentOperationDeferralUseCase's own header.
         this._unattachRemoteApplication = this._documentCommandPropagation
             ? this._documentOperationDeferral.attachToPropagation(
                 this._documentCommandPropagation,
@@ -343,25 +196,8 @@ export class EditorSession {
                     : null)
             )
             : null;
-        // 0.9.230 — Causal Gap Recovery Request Boundary. Two independent,
-        // session-lifetime wirings, symmetric to each other:
-        //
-        //   1. gap observed (GAP)  -> documentOperationRecovery sends a
-        //      REQUEST for the missing operationIds.
-        //   2. a recovered operation arrives (a verified RESPONSE)
-        //      -> documentOperationCausalGapObservation records it into
-        //      the SAME causal graph a normally-received operation would,
-        //      via attachToPropagation() reused completely unmodified —
-        //      documentOperationRecovery's own onOperationReceived() is
-        //      shaped identically to DocumentCommandPropagationUseCase's.
-        //
-        // Deliberately NEVER wired to
-        // this._remoteDocumentOperationApplication — see
-        // DocumentOperationRecoveryUseCase.js's own header, "Do not
-        // automatically apply." A recovered operation becomes KNOWN to
-        // this session's causal graph; whether/how it is ever applied is
-        // the open question 0.9.229's own "Recommendation" left for a
-        // later milestone.
+        // A detected gap sends a recovery request; a recovered operation is recorded
+        // in the causal graph. Recovered operations are never applied automatically.
         this._unattachGapToRecoveryRequest = this._documentOperationRecovery
             ? this._documentOperationRecovery.attachToGapObservation(this._documentOperationCausalGapObservation)
             : null;
@@ -370,11 +206,7 @@ export class EditorSession {
             : null;
     }
 
-    // 0.9.237 — Causal Application Deferral Boundary. Lets a caller (a
-    // future UI affordance, a test) see which operationIds this session
-    // currently has retained for `documentId` — NOT_READY when received,
-    // never applied yet — without reaching into a private field. Never
-    // mutates; see DocumentOperationDeferralUseCase's own header.
+    // Read-only: which operations are retained for `documentId`.
     getDeferredOperationIds(documentId) {
         return this._documentOperationDeferral.getDeferredOperationIds(documentId);
     }
@@ -383,18 +215,13 @@ export class EditorSession {
         return this._commandHistory;
     }
 
-    // 0.2.92 — checks BOTH gesture services: a placement drag now sets
-    // this._placementGestureService's own gizmo state active, exactly
-    // parallel to how a brick drag sets this._gestureService's. Neither
-    // service can be active while the other is (the gizmo controller
-    // only ever drives one drag at a time), so this is simply "is either
-    // one mid-gesture right now."
+    // Only one gesture service can be active at a time.
     isGestureActive() {
         return this._gestureService.transformGizmoState.active
             || this._placementGestureService.transformGizmoState.active;
     }
 
-    // -------------------------------- 0.1.50 consolidated editing surface
+    // ------------------------------------------ consolidated editing surface
 
     selectAll() {
         const document = this._documentManager.document;
@@ -419,19 +246,9 @@ export class EditorSession {
         return true;
     }
 
-    // 0.6.0 — Context-Preserving Fork-to-Edit. Frames the camera around
-    // `position` the moment a document opens, so a fork reached through
-    // "Edit a Copy" lands looking at what the viewer was actually
-    // focused on in World View, instead of _rebuild()'s own arbitrary
-    // default view (renderer/CameraState.js's own DEFAULT_POSITION/
-    // DEFAULT_TARGET). 0.5.9 deliberately left this unbuilt — "adding
-    // one is a real feature sized for its own milestone" — this is that
-    // milestone. Mirrors application/WorldViewSession.js#viewDocument()'s
-    // own "layout position + fixed offset, target = the position
-    // itself" shape exactly, one rung down (a focused OBJECT inside an
-    // already-open document, not a whole document's own layout slot).
-    // No-op (returns false) before start()/openDocument() has built a
-    // render session yet, or without a position to frame — never throws.
+    // Frames the camera on `position` (layout position plus a fixed offset,
+    // looking at it), so "Edit a Copy" opens on what the viewer was looking at.
+    // Returns false before a render session exists or without a position.
     frameCameraOn(position) {
         if (!this._session || !position) {
             return false;
@@ -445,21 +262,10 @@ export class EditorSession {
         return true;
     }
 
-    // 0.6.0 — the one place an EditorEntryContext
-    // (core/EditorEntryContext.js) is ever consumed, called by
-    // openDocument() itself right after a fork opens. Frames the camera
-    // on whatever position the viewer was looking at in World View and,
-    // ONLY when the context says the whole opened document IS the
-    // focused object's own content (`selectAllBricks` — see that
-    // module's own header on why only a STRUCTURE ever sets it),
-    // selects everything currently in it — the Editor equivalent of
-    // "Village Hall is already selected." A null/undefined
-    // entryContext (every OTHER caller of openDocument() — Load,
-    // forkStructure(), a fresh New) leaves the camera and selection
-    // exactly where _rebuild() already put them: untouched. Public
-    // (not `_`-prefixed) because it's a real, independently useful
-    // capability — exactly like frameCameraOn()/selectAll() above it,
-    // not an internal rebuild step.
+    // Applies an EditorEntryContext after a fork opens: frames the camera and,
+    // only when the opened document is the focused object's own content (a
+    // Structure), selects everything. A null context leaves camera and selection
+    // as they are.
     applyEntryContext(entryContext) {
         if (!entryContext) {
             return false;
@@ -499,16 +305,9 @@ export class EditorSession {
         return true;
     }
 
-    // Mirrors SelectionTool's delete path exactly: one DeleteBrickCommand
-    // per brick, wrapped in a CompositeCommand, one undo step, selection
-    // cleared afterwards. Session state + existing commands only — the
-    // action layer that calls this never touches CommandHistory itself.
-    //
-    // 0.2.91 — a structure-placement selection branches to
-    // removeStructurePlacement() instead: "the UI should finally expose
-    // the existing [0.2.90] removal operation" via the SAME
-    // selection.delete action (Delete/Backspace, the sidebar, the
-    // palette) bricks already use, rather than a second delete pathway.
+    // One DeleteBrickCommand per brick in one CompositeCommand (a single undo
+    // step). A structure-placement selection removes the placement instead, via
+    // the same action.
     deleteSelection() {
         const selection = this._editorContext.selection;
         const document = this._documentManager.document;
@@ -537,14 +336,8 @@ export class EditorSession {
         return true;
     }
 
-    // Choose Your Brick Color — mirrors deleteSelection()'s own shape:
-    // one SetBrickColorCommand per selected brick, wrapped in a
-    // CompositeCommand when more than one is selected, so recoloring a
-    // multi-brick selection is still a single undo step. A
-    // structure-placement selection has no single color of its own (it's
-    // composed of many bricks, each with its own definition/instance
-    // color) so this is a brick-selection-only operation, same carve-out
-    // structure.createFromSelection already makes.
+    // One undo step for any number of bricks. Brick selections only: a placement
+    // has no single color.
     recolorSelection(color) {
         const selection = this._editorContext.selection;
         const document = this._documentManager.document;
@@ -569,7 +362,7 @@ export class EditorSession {
         return true;
     }
 
-    // ------------------------ alignment / distribution / numeric (0.1.48/49)
+    // ------------------------ alignment / distribution / numeric
 
     alignSelection(mode) {
         if (this._editorContext.tool.activeTool === ToolId.PLACE) {
@@ -592,26 +385,12 @@ export class EditorSession {
         return this._gestureService.applyNumericTransform(this._editorContext.selection, intent, options);
     }
 
-    // They close the method-surface gap so the action registry and
-    // EditorActionContext.capture() work identically on both surfaces.
-
     // ---------------------------------------------------------------
-    // Transform operations (delegate to the gesture service, exactly
-    // as WorldNavigationSession does)
+    // Transform operations (delegate to the gesture service, as
+    // WorldNavigationSession does)
     //
-    // 0.2.91 — a structure-placement selection branches BEFORE reaching
-    // SpatialEditingService: that service (and TransformSelectionCommand
-    // underneath it) is shaped entirely around brick/group selection
-    // items — SelectionBoundsService, per-brick gesture math — and
-    // deliberately stays that way rather than being widened to also
-    // understand a StructurePlacement. Instead, a placement selection
-    // gets its OWN small commands (MoveStructurePlacementCommand /
-    // RotateStructurePlacementCommand), the exact same "mirrors X one
-    // rung up, as its own small focused thing" precedent 0.2.90 already
-    // set for PlaceStructureCommand vs. PlaceBrickCommand. The SELECTION
-    // model, the ACTION registry (nudge/rotate/delete), and CommandHistory
-    // are the abstractions this reuses; the gesture kernel is not one of
-    // them.
+    // Placement selections branch off before SpatialEditingService, which stays
+    // brick/group-shaped; placements have their own move/rotate commands.
     // ---------------------------------------------------------------
     moveSelection(delta, gestureOptions = {}) {
         if (this._editorContext.tool.activeTool === ToolId.PLACE) {
@@ -635,20 +414,9 @@ export class EditorSession {
         return this._gestureService.rotateSelection(selection, deltaRotation, gestureOptions);
     }
 
-    // 0.2.91 — "Duplicate" for a structure-placement selection: a new
-    // StructurePlacement referencing the SAME documentId, never a new
-    // Document (see application/commands/DuplicateStructurePlacementCommand.js's
-    // own header). Returns the new placement's id (truthy) or null.
-    //
-    // 0.4.7 — "Duplicate a composed selection" extends the SAME action to
-    // a loose brick selection (1..N bricks), previously copy/paste-only
-    // (two gestures, two history entries — see this method's own header
-    // before 0.4.7). Ctrl/Cmd+D on N selected bricks now produces exactly
-    // ONE PasteBricksCommand with fresh brick/group identities, by
-    // reusing CopySelectionUseCase/PasteClipboardUseCase directly rather
-    // than inventing a second "duplicate bricks" command — see
-    // _duplicateBrickSelection()'s own header for why this deliberately
-    // never touches this._clipboardState.
+    // For a placement: a new placement of the same document (never a new
+    // Document); returns its id or null. For bricks: one PasteBricksCommand with
+    // fresh ids.
     duplicateSelection() {
         const selection = this._editorContext.selection;
         const document = this._documentManager.document;
@@ -669,18 +437,9 @@ export class EditorSession {
         return this._duplicateBrickSelection(selection, document);
     }
 
-    // 0.4.7 — duplicates a loose brick selection as ONE history entry.
-    // Deliberately reuses CopySelectionUseCase (bounds-relative geometry,
-    // group-aware) and PasteClipboardUseCase (fresh ids, re-anchored at
-    // an offset) rather than a new command class — a duplicate IS a
-    // copy immediately pasted, geometrically, so there is no separate
-    // math to invent. Builds a THROWAWAY clipboard state local to this
-    // call: this._clipboardState/this._pasteCount (an explicit Ctrl+C
-    // the user made earlier, and its own cascade count) are never read
-    // or written here, so Ctrl+D never clobbers a real copy sitting in
-    // the clipboard. The duplicate becomes the active selection —
-    // "Duplicate -> rotate -> place" needs the COPY selected, not the
-    // original — mirroring WorldNavigationSession's own duplicate.
+    // A duplicate is a copy pasted at an offset, so this reuses the copy/paste use
+    // cases with a throwaway clipboard: the user's real clipboard is never touched.
+    // The copy becomes the selection.
     _duplicateBrickSelection(selection, document) {
         if (!this._copySelectionUseCase || !this._pasteClipboardUseCase) {
             return null;
@@ -706,15 +465,9 @@ export class EditorSession {
         return command.executedBrickIds[0] || null;
     }
 
-    // 0.4.9 — "Repeat x N": RepeatSelectionUseCase's own header. options:
-    // { count, offset: {x,y,z} }. Produces exactly ONE history entry (a
-    // CompositeCommand of N PasteBricksCommand children) whose collision
-    // check covers the whole batch atomically — a null result means
-    // nothing happened and the World is guaranteed untouched, so the
-    // caller never has to special-case "blocked" vs. "nothing to
-    // repeat." On success, every brick from every copy becomes the new
-    // active selection, mirroring duplicateSelection()'s own "the result
-    // becomes what's selected next" convention.
+    // options: { count, offset: {x,y,z} }. One history entry with an atomic
+    // collision check: null means nothing changed. The new bricks become the
+    // selection.
     repeatSelection(options = {}) {
         const selection = this._editorContext.selection;
         const document = this._documentManager.document;
@@ -736,25 +489,10 @@ export class EditorSession {
         return true;
     }
 
-    // 0.6.2 — Editor UX Consolidation. getSelectedPlacementInfo() (just
-    // below) has answered "what does a UI panel need to show a selected
-    // StructurePlacement" since 0.2.91; nothing ever answered the
-    // equivalent question for an ordinary BRICK selection — the sidebar
-    // only ever showed a bare count (ui/components/EditingSidebar.js's
-    // pre-0.6.2 "N brick(s) selected" line). This is that answer, for
-    // ui/components/SelectionInspector.js: count plus a LIVE world-space
-    // bounds reading (reusing SelectionBoundsService unchanged — see
-    // this._boundsService's own 0.6.2 header above), so the inspector
-    // can show where the selection actually is without inventing a
-    // second bounds computation.
-    //
-    // Returns null for anything this isn't for: no document, an empty
-    // selection, or a StructurePlacement selection (that one keeps its
-    // own, richer getSelectedPlacementInfo() below — deliberately not
-    // folded into one shape, since a placement's "position" is a
-    // command target and a brick selection's bounds are read-only
-    // geometry; conflating them would let a UI accidentally wire a
-    // Structure's numeric inspector to bricks-shaped data).
+    // Count and live bounds of a brick selection, for SelectionInspector. Null for
+    // no document, an empty selection, or a placement selection (which has
+    // getSelectedPlacementInfo(); the two shapes are kept apart so a UI cannot
+    // wire placement editing to brick bounds).
     getSelectionSummary() {
         const selection = this._editorContext.selection;
         const document = this._documentManager.document;
@@ -771,13 +509,8 @@ export class EditorSession {
         };
     }
 
-    // 0.2.91 — everything a UI panel needs to show "Selected House
-    // Instance": the placement's own id/documentId/position/rotation
-    // plus the referenced Document's title, resolved via the SAME
-    // Recent Documents listing Toolbar's own Place/Load buttons already
-    // read (application/LoadDocumentUseCase.js#listSavedDocuments()) —
-    // no second title-lookup mechanism. Returns null when nothing (or a
-    // non-placement) is selected, or the document/history aren't ready.
+    // Null when nothing (or a non-placement) is selected, or the document or
+    // history is not ready.
     getSelectedPlacementInfo() {
         const selection = this._editorContext.selection;
         const document = this._documentManager.document;
@@ -802,33 +535,15 @@ export class EditorSession {
             title,
             position: placement.position,
             rotation: placement.rotation,
-            // 0.2.92 — the numeric inspector's read-only elevation
-            // display (docs/Principles.md, "A Placement's Elevation Is
-            // Never A Gizmo Or Numeric Target"). Computed fresh, the same
-            // pure function renderer/WorldRenderer.js's own
-            // _renderStructurePlacement() calls at render time — never a
-            // stored fact, never editable here.
+            // Read-only (docs/Principles.md, "A Placement's Elevation Is Never A Gizmo Or
+            // Numeric Target"), computed like the renderer does.
             groundY: terrainHeightAt(DEFAULT_WORLD_SEED, placement.position.x, placement.position.z)
         };
     }
 
-    // 0.2.92 — World Instance Transform UX. The numeric inspector's
-    // counterpart to dragging the gizmo: absolute X/Z/rotation TARGETS
-    // for the selected placement, translated into the exact same
-    // delta-shaped calls moveSelection()/rotateSelection() already make
-    // — no third mutation path, per the design conversation ("Don't
-    // create a second mutation path merely for mouse interaction" — the
-    // same rule applies to a numeric one). `x`/`z`/`rotation` are each
-    // optional; omitting one leaves that axis unchanged. Y is
-    // deliberately not a parameter — see getSelectedPlacementInfo()'s own
-    // `groundY` note just above.
-    //
-    // Returns { moved, blocked, rotated }: `moved`/`rotated` report
-    // whether that half of the request actually changed anything (a
-    // no-op target commits nothing, same as everywhere else in this
-    // engine); `blocked` distinguishes "X/Z were requested but the
-    // target position collides with something" from "nothing was
-    // requested" so the UI can say which.
+    // Numeric targets for the selected placement, turned into the same delta calls
+    // as dragging; omitted axes are unchanged and Y is never a target. Returns
+    // { moved, blocked, rotated }; `blocked` means X/Z were requested but collide.
     applyPlacementTransform({ x = null, z = null, rotation = null } = {}) {
         const selection = this._editorContext.selection;
         const document = this._documentManager.document;
@@ -864,10 +579,8 @@ export class EditorSession {
         return { moved, blocked, rotated };
     }
 
-    // 0.2.91 — "Edit Source Document": reuses the EXISTING loadDocument()
-    // path (Toolbar's own Load button), never a new mutation surface —
-    // "editing a placed structure's bricks should still happen by
-    // opening/editing its Document, not by modifying the instance."
+    // Edits happen by opening the placement's Document, never by modifying the
+    // instance.
     editStructurePlacementSource(documentId) {
         if (!documentId) {
             return false;
@@ -915,14 +628,8 @@ export class EditorSession {
         return true;
     }
 
-    // Shared by _moveStructurePlacement() and application/tools/SelectionTool.js's
-    // own drag-to-move — "reuse the existing placement-validation
-    // machinery," StructurePlacementValidator, with excludePlacementId
-    // set to the placement's own id so it never collides with itself
-    // (its own header explains why that parameter exists at all).
-    // Gracefully permissive (true) when there's no resolver or the
-    // Document can't be resolved — the same posture StructurePlacementTool
-    // already takes toward a preview it can't validate.
+    // Excludes the placement's own id so it never collides with itself. Permissive
+    // (true) without a resolver or a resolvable document.
     _structurePlacementFits(world, placement, candidatePosition) {
         if (!this._structureResolver) {
             return true;
@@ -945,7 +652,7 @@ export class EditorSession {
     copySelection() {
         if (!this._copySelectionUseCase || !this._documentManager.document) return null;
         const result = this._copySelectionUseCase.execute(this._editorContext.selection, this._documentManager.document);
-        this._clipboardState = result; // Add this line to update internal state
+        this._clipboardState = result;
         this._pasteCount = 0; // Reset cascade counter
         return result;
     }
@@ -1148,15 +855,8 @@ export class EditorSession {
         return this._commandHistory ? this._commandHistory.getRedoLabel() : null;
     }
 
-    // application/EditorActionRegistry.js's own history.undo/history.redo
-    // actions call session.undo()/session.redo() directly (via
-    // surfaceCall, which only ever checks the session itself — unlike
-    // EditorActionContext.capture()'s historyCall(), it never falls back
-    // to session.commandHistory). canUndo()/canRedo() above were always
-    // enough to make the shortcut/palette entry show as ENABLED; without
-    // these, pressing it then found no session.undo/redo to call and
-    // fell through to "Undo is not available on this surface" instead of
-    // ever reaching CommandHistory.
+    // The action registry calls session.undo()/redo() directly, so these must
+    // exist even though canUndo()/canRedo() already do.
     undo() {
         if (!this._commandHistory) {
             return false;
@@ -1199,10 +899,6 @@ export class EditorSession {
         });
     }
 
-    // `entryContext` (core/EditorEntryContext.js) is optional and
-    // 0.6.0-only — every pre-existing caller (Load, a fresh New,
-    // forkStructure() below) passes nothing, and behaves exactly as
-    // before. See applyEntryContext()'s own header for what it does.
     openDocument(document, entryContext = null) {
         this._rebuild((eventBus) => {
             const worldJson = document.world.toJSON();
@@ -1214,15 +910,9 @@ export class EditorSession {
         this.applyEntryContext(entryContext);
     }
 
-    // 0.2.81 — Forkable Structure Library. Forks `structure` (a
-    // core/Structure.js instance, typically from the StructureRegistry)
-    // into a brand-new, independent Document via ForkStructureUseCase,
-    // then opens it through the SAME openDocument() path a published-
-    // world fork or a Load already uses — there is no separate
-    // "structure editing mode." The library Structure itself is never
-    // touched; see application/ForkStructureUseCase.js's own header.
-    // Returns false (and does nothing) if `structure` is falsy, so
-    // callers can wire this straight to a UI action without a guard.
+    // Forks a library Structure into a new Document and opens it through the same
+    // path as a Load; the library Structure is never touched. Returns false for a
+    // falsy structure.
     forkStructure(structure) {
         if (!structure) {
             return false;
@@ -1232,23 +922,10 @@ export class EditorSession {
         return true;
     }
 
-    // 0.4.0 — Structure Composition & Blueprint Library. Copies
-    // `structure`'s bricks into the CURRENTLY OPEN Document's own
-    // (single, per CreateEmptyWorldUseCase's "one building per world" V0.1
-    // simplification) building, as ONE PasteBricksCommand via
-    // CopyStructureIntoDocumentUseCase — see that use case's own header
-    // for why composing reuses PasteBricksCommand instead of a parallel
-    // command class. Mirrors paste() immediately above it: same
-    // "document + commandHistory must exist, document must have a
-    // building" guard, same execute-through-CommandHistory path, so
-    // undo/redo, replay, and CommandRegistry serialization all work for
-    // free. Unlike paste()'s clipboard, positioning is NOT a fixed
-    // per-call cascade — CopyStructureIntoDocumentUseCase places the
-    // copy past whatever the document already contains, so composing
-    // House + Well + Barn into one blueprint never overlaps without the
-    // caller picking coordinates. Returns false (and does nothing) if
-    // `structure` is falsy or there's nothing to copy into, so callers
-    // can wire this straight to a UI action without a guard.
+    // Copies the Structure's bricks into the open document as one
+    // PasteBricksCommand (undo, replay and serialization for free), placed past
+    // what the document already contains so compositions never overlap. Returns
+    // false if there is nothing to copy or copy into.
     copyStructureIntoDocument(structure) {
         if (!structure || !this._copyStructureIntoDocumentUseCase || !this._documentManager.document || !this._commandHistory) {
             return false;
@@ -1272,22 +949,8 @@ export class EditorSession {
         return true;
     }
 
-    // 0.4.1 — Interactive Structure Composition UX. Enters
-    // COMPOSE_STRUCTURE mode for `structure` instead of copying it
-    // immediately — mirrors placeDocument()'s own shape one rung over
-    // (set the thing being placed on EditorContext, then switch tools;
-    // StructureCompositionTool reads it back at activate()). The actual
-    // copy still only ever happens through
-    // CopyStructureIntoDocumentUseCase#execute() when the tool commits
-    // — this method never touches the Document itself, exactly like
-    // placeDocument() never creates a StructurePlacement itself. Same
-    // "document must exist and have a building" guard as
-    // copyStructureIntoDocument() (below), checked up front so a click
-    // on an empty document's Copy button fails immediately rather than
-    // entering a composition mode with nothing to commit into. Returns
-    // false (and does nothing) if `structure` is falsy or there's
-    // nothing to compose into, so callers can wire this straight to a
-    // UI action without a guard.
+    // Enters COMPOSE_STRUCTURE mode; the copy only happens when the tool commits.
+    // Checks up front that there is a document to compose into.
     beginStructureComposition(structure) {
         if (!structure || !this._documentManager.document) {
             return false;
@@ -1300,32 +963,9 @@ export class EditorSession {
         return true;
     }
 
-    // 0.4.2 — Structure Extraction & Blueprint Creation. The reverse of
-    // copyStructureIntoDocument() above:
-    //
-    //   Copy:     Structure --copy--> current Document's own bricks
-    //   Extract:  current selection's bricks --extract--> new Structure
-    //
-    // Reads the CURRENT selection out of the open Document via
-    // CreateStructureFromSelectionUseCase and returns a brand-new
-    // core/Structure.js instance — observation only, exactly like
-    // copySelection() above: neither the Document nor CommandHistory is
-    // ever touched, so this has no undo entry and nothing to replay.
-    // `metadata` is `{ name, category, tags, description }`; `name` is
-    // required (see that use case's own header). Returns null when
-    // there's no document or nothing left to extract; throws when the
-    // selection is anything other than an ordinary brick selection (a
-    // StructurePlacement selection, most notably) or `name` is missing —
-    // callers surface that message directly rather than silently doing
-    // nothing (see application/EditorActionRegistry.js's own
-    // 'structure.createFromSelection').
-    //
-    // The returned Structure is not saved anywhere — 0.4.3 (Personal
-    // Blueprint Library) is what gives a caller somewhere to put it;
-    // this method's whole job ends at "here is a valid, independent
-    // Structure," the same restraint ForkStructureUseCase and
-    // CopyStructureIntoDocumentUseCase both already apply to their own
-    // single responsibility.
+    // Extracts the selected bricks into a new, unsaved Structure. Observation only:
+    // no document change and no undo entry. Returns null with nothing to extract;
+    // throws for a non-brick selection or a missing name.
     createStructureFromSelection(metadata = {}) {
         const document = this._documentManager.document;
         if (!this._createStructureFromSelectionUseCase || !document) {
@@ -1337,16 +977,7 @@ export class EditorSession {
         });
     }
 
-    // 0.4.3 — Personal Blueprint Library. The "somewhere to put it"
-    // createStructureFromSelection() above deliberately left open —
-    // called SEPARATELY, always after extraction has already returned a
-    // valid Structure, never folded into one step (see
-    // application/LocalStructureLibraryStore.js's own header on why
-    // extraction and persistence stay two different responsibilities).
-    // Delegates straight to the injected store's addStructure(); returns
-    // false (and does nothing) if `structure` is falsy or no store is
-    // wired, so callers can chain this straight after
-    // createStructureFromSelection() without a guard.
+    // Saving is a separate step from extraction.
     saveStructureToPersonalLibrary(structure) {
         if (!structure || !this._personalStructureLibraryStore) {
             return false;
@@ -1355,39 +986,8 @@ export class EditorSession {
         return true;
     }
 
-    // 0.4.6 — Blueprint Sharing & Exchange. Pure — returns the portable
-    // package (application/BlueprintPackage.js's plain, JSON-safe shape)
-    // for `structure`; never touches storage, a file, or the clipboard.
-    // What the caller does with the result (build a download link, in
-    // ui/views/EditorView.js's own case) is deliberately none of this
-    // method's business, the same restraint copySelection() already
-    // applies to its own clipboard payload. Throws the same descriptive
-    // error application/ExportBlueprintUseCase.js#execute() throws when
-    // `structure` isn't a valid Structure — callers surface that message
-    // directly rather than silently doing nothing.
-    //
-    // 0.6.6 — Decentralized Blueprint Exchange. `attributions` is an
-    // OPTIONAL, additive second argument — a straight passthrough to
-    // ExportBlueprintUseCase's own new parameter. The caller (ui/views/
-    // EditorView.js#exportStructure()) is the one that knows which
-    // attributions, if any, this replica has on file for `structure` —
-    // this method still never reaches for a BlueprintAttributionUseCase
-    // itself, exactly the "Inspect ≠ compute" restraint every other
-    // EditorSession method already keeps toward data it is merely handed.
-    //
-    // 0.6.8 — Blueprint Lineage & Revision Discovery. `lineageClaims` is
-    // the identical OPTIONAL, additive third argument, one concept over.
-    // 0.9.641 — Editor Document Export. Deliberately reads
-    // this._documentManager.document directly rather than accepting a
-    // Document argument — unlike exportBlueprint() (which exports
-    // whatever Structure a caller hands it, not necessarily the open
-    // document), Export always means "the document currently open in
-    // THIS session," the same document Save would persist. Returns the
-    // exact JSON ExportDocumentUseCase/DocumentSerializer.serialize()
-    // produces — no envelope, no wrapping, nothing UI-specific mixed in
-    // — so the caller (ui/views/EditorView.js#exportDocument()) is free
-    // to stringify and offer it as a file without this method knowing
-    // anything about browsers, downloads, or file names.
+    // Always exports the document open in this session, as the serializer's exact
+    // JSON.
     exportDocument() {
         if (!this._exportDocumentUseCase) {
             return null;
@@ -1395,26 +995,9 @@ export class EditorSession {
         return this._exportDocumentUseCase.execute(this._documentManager.document);
     }
 
-    // 0.9.642 — Editor Document Import. `json` is whatever an imported
-    // file's own text parsed into — untrusted, exactly like a Blueprint
-    // package handed to importBlueprint() below. ImportDocumentUseCase
-    // throws (deserialize's own migrate -> validate -> construct
-    // pipeline, per its own header) before this method ever reaches
-    // openDocument() — a malformed import therefore never touches the
-    // currently open document, its dirty state, or storage; callers
-    // (ui/views/EditorView.js#importDocument()) surface that error
-    // directly, the same restraint importBlueprint() already takes
-    // toward BlueprintPackageError.
-    //
-    // On success, reuses openDocument() — the EXACT SAME path
-    // forkStructure() above already uses to bring a freshly-constructed
-    // Document into this session (fresh eventBus rehydration,
-    // documentManager.newDocument(), a clean DocumentState) — rather
-    // than inventing a second "open a Document" entry point. Import
-    // never calls loadDocument()/storage directly: the imported
-    // document only ever reaches disk if the user's own, later,
-    // ordinary Save does that, exactly like a fork or a brand-new
-    // document today.
+    // `json` is untrusted. A malformed import throws before openDocument(), so the
+    // open document and storage are untouched. On success it opens like a fork;
+    // nothing is saved until the user saves.
     importDocument(json) {
         if (!this._importDocumentUseCase) {
             return null;
@@ -1431,21 +1014,9 @@ export class EditorSession {
         return this._exportBlueprintUseCase.execute(structure, { attributions, lineageClaims });
     }
 
-    // 0.4.6 — Blueprint Sharing & Exchange. The reverse of
-    // exportBlueprint() above, folding validate -> construct -> save into
-    // one call — unlike createStructureFromSelection()/
-    // saveStructureToPersonalLibrary() (0.4.2/0.4.3), which stay two
-    // separate steps so a caller can edit metadata in between, importing
-    // a blueprint offers no such editing step: the package already
-    // carries its own name/category/tags/description, and 0.4.6's own
-    // design conversation is explicit that "imported, personal, and
-    // built-in Structures should become indistinguishable at placement
-    // time" the moment the import completes. Throws
-    // BlueprintPackageError (application/BlueprintImportValidator.js) on
-    // malformed/untrusted input — callers surface that message directly,
-    // exactly the way application/IdentityUseCase.js#importIdentity()'s
-    // own callers already surface IdentityPackageError. Returns null (and
-    // does nothing) if no use case or personal library store is wired.
+    // Validates, constructs and saves in one call: an imported blueprint carries
+    // its own metadata. Throws BlueprintPackageError on bad input; returns null
+    // if nothing is wired.
     importBlueprint(pkg) {
         if (!this._importBlueprintUseCase || !this._personalStructureLibraryStore) {
             return null;
@@ -1455,13 +1026,6 @@ export class EditorSession {
         return structure;
     }
 
-    // 0.6.6 — Decentralized Blueprint Exchange. The portable form of an
-    // attribution this replica already has — pure passthrough to
-    // BlueprintAttributionExchange#exportAttribution() (see that class's
-    // own header: the publication IS `attribution.toJSON()`, nothing
-    // more to build). Returns null (rather than throwing) when no
-    // exchange is wired, the same graceful-degradation posture
-    // exportBlueprint() already keeps toward its own optional use case.
     exportBlueprintAttribution(attribution) {
         if (!this._blueprintAttributionExchange) {
             return null;
@@ -1469,25 +1033,9 @@ export class EditorSession {
         return this._blueprintAttributionExchange.exportAttribution(attribution);
     }
 
-    // 0.6.6 — Decentralized Blueprint Exchange. Imports a single
-    // attribution publication `pkg` into this replica's own attribution
-    // store, via BlueprintAttributionExchange#importAttribution() —
-    // validate, construct, verify, cross-check, dedupe, store, in that
-    // order (see that class's own header).
-    //
-    // `structure`, if supplied, is a LOCAL Structure this replica already
-    // has (typically the one importBlueprint() just returned, imported
-    // moments earlier from the SAME package's own `attributions` field —
-    // see ui/views/EditorView.js#importBlueprint()) — its fingerprint is
-    // derived HERE, fresh, and handed to the exchange as
-    // `expectedFingerprint`, never trusted from the package itself. This
-    // is the one place this milestone's "never trust the fingerprint a
-    // package merely claims" rule actually gets enforced from the UI
-    // side; omitting `structure` entirely (a bare attribution import,
-    // unconnected to any local Structure) is equally valid — see
-    // BlueprintAttributionExchange#importAttribution()'s own header on
-    // why that case skips the cross-check rather than refusing outright.
-    // Returns null when no exchange is wired.
+    // When `structure` is given, its fingerprint is computed here and checked
+    // against the package, never trusted from it. Without one, the cross-check is
+    // skipped.
     importBlueprintAttribution(pkg, structure = null) {
         if (!this._blueprintAttributionExchange) {
             return null;
@@ -1496,10 +1044,6 @@ export class EditorSession {
         return this._blueprintAttributionExchange.importAttribution(pkg, { expectedFingerprint });
     }
 
-    // 0.6.8 — Blueprint Lineage & Revision Discovery. The exact
-    // exportBlueprintAttribution() shape, one concept over — pure
-    // passthrough to BlueprintLineageExchange#exportClaim(). Returns null
-    // when no exchange is wired.
     exportBlueprintLineageClaim(claim) {
         if (!this._blueprintLineageExchange) {
             return null;
@@ -1507,16 +1051,7 @@ export class EditorSession {
         return this._blueprintLineageExchange.exportClaim(claim);
     }
 
-    // 0.6.8 — Blueprint Lineage & Revision Discovery. The exact
-    // importBlueprintAttribution() shape, one concept over, but with TWO
-    // optional local Structures instead of one — a claim carries two
-    // fingerprints, and a caller may have either, both, or neither of the
-    // two local designs on hand. Each supplied Structure's fingerprint is
-    // derived HERE, fresh, and handed to the exchange as
-    // expectedSourceFingerprint/expectedDerivedFingerprint — never
-    // trusted from the package itself, the same rule
-    // importBlueprintAttribution() already enforces for a single
-    // fingerprint. Returns null when no exchange is wired.
+    // Same rule with two optional local Structures (source and derived).
     importBlueprintLineageClaim(pkg, { sourceStructure = null, derivedStructure = null } = {}) {
         if (!this._blueprintLineageExchange) {
             return null;
@@ -1526,18 +1061,8 @@ export class EditorSession {
         return this._blueprintLineageExchange.importClaim(pkg, { expectedSourceFingerprint, expectedDerivedFingerprint });
     }
 
-    // 0.6.3 — Blueprint Authoring & Versioning UX. The Structure-fork
-    // counterpart to forkStructure() above — see
-    // application/ForkStructureToLibraryUseCase.js's own header on the
-    // distinction: forkStructure() turns a Structure into a new
-    // Document to BUILD in; this turns a Structure into a new personal
-    // Structure to OWN, with no Document involved at all. Chains
-    // ForkStructureToLibraryUseCase -> personalStructureLibraryStore
-    // .addStructure(), the same "use case returns a value, this method
-    // persists it" shape importBlueprint() just used immediately above.
-    // Returns null (and does nothing) if `structure` is falsy or no
-    // library store is wired, so callers can wire this straight to a UI
-    // action without a guard.
+    // Forks a Structure into a new personal Structure (no Document). Returns null
+    // if nothing is wired.
     forkStructureToPersonalLibrary(structure) {
         if (!structure || !this._forkStructureToLibraryUseCase || !this._personalStructureLibraryStore) {
             return null;
@@ -1547,21 +1072,8 @@ export class EditorSession {
         return forked;
     }
 
-    // 0.2.90 — Structure Placement & World Instances. Enters
-    // PLACE_STRUCTURE mode targeting `documentId` — the "put this
-    // already-created structure here" entry point, wired from Toolbar's
-    // existing Recent Documents list (a Place button beside Load).
-    // Deliberately does NOT load/open `documentId` as the current
-    // document — placing is a spatial operation on the CURRENTLY OPEN
-    // document, exactly the separation ForkStructureUseCase's own
-    // header draws between forking (a content operation) and placing (a
-    // spatial one). Refuses to target the currently open document
-    // itself — see core/StructurePlacement.js's own header on why a
-    // Document referencing itself isn't rejected at the domain level,
-    // but there's no legitimate reason for THIS entry point to offer it.
-    // Returns false (and does nothing) if documentId is falsy or matches
-    // the open document, so callers can wire this straight to a UI
-    // action without a guard.
+    // Places `documentId` into the currently open document; it does not open it.
+    // Refuses the open document itself.
     placeDocument(documentId, title = null) {
         if (!documentId) {
             return false;
@@ -1575,10 +1087,6 @@ export class EditorSession {
         return true;
     }
 
-    // Mirrors deleteSelection()'s shape for a single StructurePlacement
-    // — one RemoveStructurePlacementCommand, one undo step. Never
-    // touches the referenced Document (RemoveStructurePlacementCommand's
-    // own header explains why).
     removeStructurePlacement(placementId) {
         const document = this._documentManager.document;
         if (!placementId || !document || !this._commandHistory) {
@@ -1596,16 +1104,9 @@ export class EditorSession {
             && this._session.gizmoPointerDown(event.clientX, event.clientY, this._editorContext.selection)) {
             return null;
         }
-        // Shift+Drag marquee (application/tools/SelectionTool.js's own
-        // header: "the tool never sees it") — a Shift-held left button
-        // starts tracking a drag rectangle here instead of reaching
-        // SelectionTool at all. Checked AFTER the gizmo above, so
-        // Shift-clicking a gizmo handle still reaches it for precision
-        // mode (docs/user/ControlsReference.md: "Shift while gizmo-
-        // dragging or nudging -> Precision mode") rather than being
-        // hijacked into a marquee. Whether this ends up a marquee or an
-        // ordinary Shift-click is only decided on release, once we know
-        // whether the pointer actually moved — see onPointerUp() below.
+        // A Shift-held left button starts a marquee instead of reaching SelectionTool.
+        // Checked after the gizmo so Shift on a gizmo handle still means precision.
+        // Click or marquee is decided on release.
         if (event.button === 0 && event.shiftKey) {
             this._marqueeState = {
                 additive: !!(event.ctrlKey || event.metaKey),
@@ -1615,13 +1116,8 @@ export class EditorSession {
                 y1: event.clientY,
                 moved: false
             };
-            // renderer/CameraController.js's own 0.1.46 header: "an
-            // active editing gesture temporarily owns the pointer" — the
-            // gizmo already suspends OrbitControls for the length of its
-            // drag; the marquee needs the exact same exclusivity, or
-            // orbit keeps consuming the SAME pointer movement and pans
-            // the whole scene under the rectangle instead of just
-            // stretching it.
+            // The marquee must own the pointer like the gizmo does, or orbit pans the
+            // scene under the rectangle.
             if (this._session) {
                 this._session.setControlsEnabled(false);
             }
@@ -1671,11 +1167,7 @@ export class EditorSession {
             if (moved) {
                 this.marqueeSelect({ x0, y0, x1, y1 }, { additive });
             } else if (this._inputDispatcher) {
-                // Never moved past the threshold — an ordinary
-                // Shift(+Ctrl/Cmd)-click, replayed now through the exact
-                // same pick path a non-Shift click already takes
-                // (SelectionTool.onPointerDown decides additive/toggle
-                // from the event's own modifiers).
+                // Never passed the threshold: replay as an ordinary Shift-click.
                 this._inputDispatcher.dispatchPointerDown(event);
                 this._inputDispatcher.dispatchPointerUp(event);
             }
@@ -1700,9 +1192,8 @@ export class EditorSession {
     }
 
     // ------------------------------------------------------- marquee UI
-    // Read by ui/views/EditorView.js to draw the `.marquee-rect` overlay
-    // (css/main.css) and to route Escape to cancelMarquee() ahead of
-    // selection.clear (Escape priority: gesture > marquee > selection).
+    // Read by EditorView to draw the overlay and to route Escape (gesture >
+    // marquee > selection).
 
     isMarqueeActive() {
         return !!this._marqueeState;
@@ -1742,9 +1233,8 @@ export class EditorSession {
         }
     }
 
-    // Add these to EditorSession.js and WorldNavigationSession.js
-    // They bridge the gap between the UI/Tests (which pass a groupId)
-    // and the Action Registry (which relies on the internal selected state).
+    // Bridge between callers that pass a groupId and the action registry, which
+    // works on the current selection.
 
     addToGroupWithSelection(groupId) {
         this._selectedGroupId = groupId;
@@ -1792,52 +1282,29 @@ export class EditorSession {
             eventBus,
             this._registry,
             this._editorContext.eventBus,
-            // 0.2.92 — the router, not the brick service directly, so the
-            // interactive gizmo also works for a structure-placement
-            // selection. See application/GizmoGestureRouter.js.
             { gestureService: this._gizmoGestureRouter, structureResolver: this._structureResolver }
         );
         const world = populateWorldFn(eventBus);
         this._commandHistory = new CommandHistory({ world });
         this._editorCommandHistories.set(world.id, this._commandHistory);
         this._untrackDirtyState = this._documentManager.trackCommandHistory(this._commandHistory);
-        // 0.9.224 — outgoing half of the SAME seam attachToPropagation()
-        // wires in the constructor above: every command THIS fresh
-        // CommandHistory executes now broadcasts through
-        // documentCommandPropagation#attachCommandHistory() (0.9.222,
-        // unchanged), exactly like WorldNavigationSession's own
-        // _registerCommandHistory() already does one level up. Torn
-        // down in _teardown() below before the next rebuild replaces
-        // this._commandHistory.
+        // Outgoing broadcast for this CommandHistory; torn down before the next
+        // rebuild.
         this._unattachCommandHistoryPropagation = this._documentCommandPropagation
             ? this._documentCommandPropagation.attachCommandHistory({
                 documentId: world.id,
                 commandHistory: this._commandHistory
             })
             : null;
-        // 0.9.230 — the outgoing half of documentOperationRecovery's own
-        // seam, rewired per-document exactly like
-        // documentCommandPropagation's own attachCommandHistory() just
-        // above: records this replica's own locally-authored operations
-        // so a later recovery REQUEST for one of them can be answered.
+        // Records locally authored operations so recovery requests can be answered.
         this._unattachRecoveryCommandHistory = this._documentOperationRecovery
             ? this._documentOperationRecovery.attachCommandHistory({
                 documentId: world.id,
                 commandHistory: this._commandHistory
             })
             : null;
-        // 0.9.237 — rewired per-document exactly like the two attachments
-        // just above: lets the deferral boundary answer Q4
-        // (`executionHistory.isExecuted()`, 0.9.234) against THIS
-        // document's real execution history, and lets a local edit, a
-        // normal remote apply, or an explicit
-        // `RecoveredOperationReplayUseCase#replay()` call — anything
-        // reaching `CommandHistory#execute()` for this document — release
-        // any retained operation it just made READY. Unconditional
-        // (unlike the two attachments above, never gated behind an
-        // optional collaborator): _documentOperationDeferral always
-        // exists, and attaching it costs nothing when nothing is ever
-        // deferred.
+        // Lets anything executing on this document release deferred operations it
+        // just made ready. Always attached: it costs nothing when nothing is deferred.
         this._unattachDeferralCommandHistory = this._documentOperationDeferral.attachCommandHistory({
             documentId: world.id,
             commandHistory: this._commandHistory
@@ -1849,10 +1316,8 @@ export class EditorSession {
             selectionUseCase: this._selectionUseCase,
             previewUseCase: this._previewUseCase,
             commandHistory: this._commandHistory,
-            // 0.2.90 — read by StructurePlacementTool only.
             structureResolver: this._structureResolver,
             structurePreviewUseCase: this._structurePreviewUseCase,
-            // 0.4.1 — read by StructureCompositionTool only.
             compositionPreviewUseCase: this._compositionPreviewUseCase,
             copyStructureIntoDocumentUseCase: this._copyStructureIntoDocumentUseCase
         };
@@ -1862,8 +1327,6 @@ export class EditorSession {
             this._toolManager,
             (screenX, screenY) => this._session.pick(screenX, screenY),
             (screenX, screenY) => this._session.pickGround(screenX, screenY),
-            // 0.2.91 — degrades to null when the render session predates
-            // pickPlacement (an older test double), never throws.
             (screenX, screenY) => (this._session.pickPlacement ? this._session.pickPlacement(screenX, screenY) : null)
         );
         const refreshGizmo = () => this._refreshGizmo();
@@ -1930,14 +1393,8 @@ export class EditorSession {
         this._session.showGizmo(presentation.pivot, presentation.bounds);
     }
 
-    // 0.2.92 — the presentation-resolution counterpart to
-    // GizmoGestureRouter: a structure-placement selection is anchored
-    // via StructurePlacementGestureService#getSelectionBounds() (the
-    // whole placed structure's resolved bounds), never through
-    // TransformGizmoUseCase — which stays exactly the brick/group-shaped
-    // use case it always was (see its own header). Same { pivot, bounds }
-    // shape either way, so _refreshGizmo() above never needs to know
-    // which kind of selection it just resolved.
+    // Placement selections anchor the gizmo on the placed structure's bounds;
+    // same { pivot, bounds } shape either way.
     _resolveGizmoPresentation(selection) {
         if (!selection || selection.isEmpty) {
             return null;

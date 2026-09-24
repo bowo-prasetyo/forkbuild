@@ -98267,3 +98267,58 @@ the connection timer and the "Be Discoverable" state app-wide instead of per pag
   collapsed into one open form at a time.
 - Peers: `PeerSessionManager#listCandidates()`/`forgetCandidate()`; the `lifecycleState` summary field.
 - Publications page: a third of the file's comments (version history) removed; five unused `isValid*State` exports.
+
+## Code-size cleanup (unnumbered, 2026-09-24)
+
+**Shared SHA-256.** `core/Sha256.js` (`sha256()`, `sha256Hex()`) replaces five identical hand-written copies in
+`application/PublicationObservationArchiveFingerprint.js`, `application/AchievementEvidenceFingerprint.js`,
+`application/PublisherLeaderboardSnapshotFingerprint.js`,
+`application/PublisherLeaderboardClaimSnapshotReconciliationPlanIdentity.js` and
+`anchoring/BitcoinAnchorSignedPsbtFinalizer.js`. It stays synchronous (`crypto.subtle.digest()` is Promise-only) and
+dependency-free. Fingerprints are unchanged; the plan-identity boundary test now allows exactly this one import.
+
+**Shared helpers.** Local copies of four small helpers now come from `utils/`: `isNonEmptyString()` and
+`isPlainObject()` (`utils/typeGuards.js`), `parseJSONOrNull()` (`utils/parseJsonOrNull.js`) and `withTimeout()`
+(`utils/withTimeout.js`, which takes the timeout message as a third argument so each caller keeps its own). This
+removed 61 definitions across 55 files. The eight validators whose copy trimmed whitespace now call
+`isNonBlankString()`, so both behaviors are kept. Five source-pinning tests that counted imports or `setTimeout()`
+calls now allow the `utils/` helpers.
+
+**Milestone history out of comments.** Per docs/CodingConventions.md (comments explain why; history lives here),
+the comments in the sixteen most comment-heavy files were rewritten to describe the current design without
+milestone tags, "AMENDED BY" notes or superseded reasoning. Line counts: `ui/components/WorldEncounterCanvas.js`
+6424 → 2464, `application/WorldNavigationSession.js` 8053 → 5573, `ui/views/WorldView.js` 5906 → 3477,
+`ui/main.js` 3596 → 1278, `ui/components/OwnPublicationPanel.js` 3513 → 1130, `ui/views/EditorView.js` 2649 →
+1781, `application/PublicationObservationArchive.js` 2205 → 1159, `application/EditorSession.js` 1963 → 1420,
+`application/VoiceUseCase.js` 1489 → 854, `application/AvatarMovementController.js` 1424 → 406,
+`application/ChatUseCase.js` 1179 → 630, `application/AvatarVehicleInteractionController.js` 1011 → 432,
+`core/AvatarVehicleMovementCapability.js` 854 → 200, `application/CreateWorldViewUseCase.js` 826 → 390,
+`application/PublicationDistributionLifecycleStore.js` 681 → 145 and
+`application/AvatarVehicleMovementController.js` 628 → 219. No code changed. Phrases that source-pinning tests quote
+were kept. Tests that used a version-tagged comment as an anchor now anchor on code or on the current comment text
+(the `document lifecycle` divider, `4.1. `, the Nearby Place Names `CollapsibleSection`, the Arweave snapshot store
+construction, and the WorldEncounterCanvas observer-local header). Three assertions that only checked that a comment
+still said something the code no longer does were dropped or reduced to existence checks
+(ArweaveAnnouncementDiscoveryCapabilityBoundaryAudit B2, ArweaveAnnouncementDiscoveryIntegrationBoundaryAudit I6/I7).
+
+**Large views split into composables.** `ui/views/DecentralizedPublicationsView.js` (7,547 → 4,389 lines) and
+`ui/views/WorldView.js` (3,478 → 2,275 lines) keep their templates, but most of each `setup()` now lives in
+per-feature composables under `ui/views/decentralizedPublications/` (fifteen composables plus the shared
+`presentation.js` badge/label constants) and `ui/views/worldView/` (eleven composables). Each composable takes its
+collaborators as explicit arguments and returns its state and actions; `setup()` destructures them, so the names
+the template reads are unchanged. The split was mechanical and verified three ways: every free identifier in the
+moved code still resolves, every name the template reads is still returned from `setup()`, and a server-side render
+of each view (logged out, stubbed injections) produces byte-identical HTML before and after. Source-reading tests
+now read each view together with its modules through `tests/support/ViewSourceFiles.js`; a handful of function-body
+regexes were adjusted for the composables' indentation, and three single-file checks now accept the view's own
+modules.
+
+**WorldNavigationSession split by concern.** `application/WorldNavigationSession.js` (5,573 → 1,805 lines) keeps
+its constructor, lifecycle (`start()`, `dispose()`), frame-loop setup, navigation, selection and streaming. Its
+other 210 methods now live in ten modules under `application/worldNavigation/`: local avatar, avatar presence,
+place queries, world experience, collaboration, placements, fork-on-write, World content, place naming and document
+history. `installMethods()` puts them on the prototype as ordinary non-enumerable methods, so the class's public
+shape, `this` and `instanceof` are unchanged; defining a name twice throws. Verified by snapshotting every prototype
+member (name, flags and source text) before and after: all 264 are identical. Source-reading tests read the class
+with its modules through `tests/support/SourceFileGroups.js` (renamed from `ViewSourceFiles.js`); three checks that
+it imports exactly one CommandHistory class now count distinct modules rather than import statements.

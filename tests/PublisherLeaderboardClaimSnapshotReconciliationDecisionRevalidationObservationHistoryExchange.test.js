@@ -497,8 +497,8 @@ async function run() {
             assert(!codeOnly.includes(term), `77. this file's own code never carries "${term}"`);
         }
 
-        const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
-        assert(importLines.length === 1, '78. this file imports exactly one module');
+        const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import ') && !line.includes("from '../utils/"));
+        assert(importLines.length === 1, '78. besides utils/ helpers, this file imports exactly one module');
         assert(importLines[0].includes('PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory.js') && !importLines[0].includes('Difference') && !importLines[0].includes('View') && !importLines[0].includes('Deduplication') && !importLines[0].includes('Timeline'), '79. the one import is 0.8.163\'s own append boundary, never the observation/deduplication/timeline/difference/archive-reconstruction modules');
 
         // Sanity — the two exported functions genuinely require no verifier

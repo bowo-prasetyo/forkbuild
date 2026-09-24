@@ -42,6 +42,7 @@ import { ArweaveTransactionDataProofVerifier } from '../anchoring/ArweaveTransac
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.513 — Proof/Anchoring Cross-Substrate End-to-End Closure Audit.
 //
@@ -745,11 +746,11 @@ async function run() {
     // ===============================================================
     {
         const mainSrc = codeOnly(await source('ui/main.js'));
-        const viewSrc = codeOnly(await source('ui/views/DecentralizedPublicationsView.js'));
+        const viewSrc = codeOnly((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n'));
 
         // I1-I2: Bitcoin — the activated 0.9.512 seam.
         assert(mainSrc.includes("app.provide('bitcoinAnchorPublicationCoordinator', bitcoinAnchorPublicationCoordinator);"), n('I1[bitcoin]. ui/main.js provides the real coordinator to the app'));
-        const broadcastFnMatch = viewSrc.match(/async function broadcastBitcoinAnchorTransaction\(\) \{[\s\S]*?\n {8}\}\n/);
+        const broadcastFnMatch = viewSrc.match(/async function broadcastBitcoinAnchorTransaction\(\) \{[\s\S]*?\n {4}\}\n/);
         assert(broadcastFnMatch && broadcastFnMatch[0].includes('publishBroadcastedAnchor(') && broadcastFnMatch[0].includes('BitcoinAnchorBroadcastState.BROADCASTED'),
             n('I2[bitcoin]. publishBroadcastedAnchor() is reachable from the real, explicit "Broadcast Transaction" action, guarded by the real BROADCASTED state'));
 
@@ -761,16 +762,16 @@ async function run() {
         // availableAnchorTypes() list this replica's own registry
         // populates.
         assert(/externalAnchorPublisherRegistry\.register\(arweaveAnchorPublisher\)/.test(mainSrc), n('I5[arweave]. arweaveAnchorPublisher is registered into the registry availableAnchorTypes() reads'));
-        assert(/v-for="anchorType in availableAnchorTypes"/.test(await source('ui/views/DecentralizedPublicationsView.js')), n('I6[arweave]. a real card is rendered for every available anchorType, Arweave included'));
-        assert(/@click="createAnchor\(entry, anchorType\)"/.test(await source('ui/views/DecentralizedPublicationsView.js')) && viewSrc.includes('async function createAnchor(entry, anchorType)'),
+        assert(/v-for="anchorType in availableAnchorTypes"/.test((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n')), n('I6[arweave]. a real card is rendered for every available anchorType, Arweave included'));
+        assert(/@click="createAnchor\(entry, anchorType\)"/.test((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n')) && viewSrc.includes('async function createAnchor(entry, anchorType)'),
             n('I7[arweave]. that card\'s own button click reaches a real createAnchor(entry, anchorType) action'));
 
         // I8-I9: all three — evidence inspection and verification are
         // BOTH reachable for any anchor, regardless of anchorType (never
         // gated per-substrate), and are two clearly separate actions.
-        assert(/@click="toggleInspect\(entry, anchorView\)"/.test(await source('ui/views/DecentralizedPublicationsView.js')) && viewSrc.includes('function toggleInspect(entry, anchorView)'),
+        assert(/@click="toggleInspect\(entry, anchorView\)"/.test((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n')) && viewSrc.includes('function toggleInspect(entry, anchorView)'),
             n('I8. "Inspect Evidence" reaches a real, anchorType-agnostic toggleInspect() for any anchor'));
-        assert(/@click="verifyAnchor\(entry, anchorView\)"/.test(await source('ui/views/DecentralizedPublicationsView.js')) && viewSrc.includes('async function verifyAnchor(entry, anchorView)'),
+        assert(/@click="verifyAnchor\(entry, anchorView\)"/.test((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n')) && viewSrc.includes('async function verifyAnchor(entry, anchorView)'),
             n('I9. "Verify Evidence" reaches a real, anchorType-agnostic verifyAnchor() for any anchor — a distinct action from inspection, never triggered as a side effect of it'));
 
         console.log('✓ Section I: UI journey — all three substrates are reachable from real, located view code (not merely present as classes): Bitcoin\'s real broadcast action, Base\'s dedicated creation action, and Arweave\'s generic-registry card all mint anchors a person can then inspect and, separately, verify through the identical two anchorType-agnostic actions');

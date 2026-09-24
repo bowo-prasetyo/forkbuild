@@ -14,6 +14,7 @@ import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacement
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
 import { describeSnapshotDiscoveryEnvelope, SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.662 — Remote IPFS Distribution Integration Boundary Audit.
 //
@@ -213,7 +214,7 @@ async function run() {
 
         // B2 — the production UI journey: publishToRemoteIpfs() in
         // ui/views/DecentralizedPublicationsView.js, traced by source.
-        const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         const fnMatch = viewSource.match(/async function publishToRemoteIpfs\(entry\) \{[\s\S]*?\n        \}/);
         assert(fnMatch, n('B4. ui/views/DecentralizedPublicationsView.js#publishToRemoteIpfs() exists as a real, isolable function — the ONE production call site for application/IpfsRemotePublicationCoordinator.js#publish() (confirmed earlier, application/DecentralizedDistributionGuidanceProductGapAudit\'s own Section B).'));
         const fnBody = fnMatch[0];

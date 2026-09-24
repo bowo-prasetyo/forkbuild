@@ -282,7 +282,7 @@ async function runTests() {
         // (navigate) this section originally found missing. select
         // (prefer) and copy/share (export) remain deliberately unbuilt —
         // this milestone's own brief drew the line at navigation alone.
-        const nearbyBlock = worldView.match(/<!-- 0\.9\.257 — World View Place Naming Presentation\.[\s\S]*?<\/CollapsibleSection>/)[0];
+        const nearbyBlock = worldView.match(/<CollapsibleSection\s+title="Nearby Place Names"[\s\S]*?<\/CollapsibleSection>/)[0];
         assert(nearbyBlock.includes('world-view-place-naming-row'), 'C2a. the discovered-claim row block was located.');
 
         const automaticRow = [
@@ -401,7 +401,7 @@ async function runTests() {
         // the manual naming surface, and still never adopts/verifies/
         // prefers a name, so E2a's own boundary continues to hold exactly
         // as written.
-        const nearbyBlock = worldView.match(/<!-- 0\.9\.257 — World View Place Naming Presentation\.[\s\S]*?<\/CollapsibleSection>/)[0];
+        const nearbyBlock = worldView.match(/<CollapsibleSection\s+title="Nearby Place Names"[\s\S]*?<\/CollapsibleSection>/)[0];
         assert(!nearbyBlock.includes('openNamingPanel') && !nearbyBlock.includes('openNames'),
             'E2a. The Nearby Place Names block still never calls openNamingPanel()/openNames* — Navigate (0.9.260) reuses session.focusLocation(), never the manual naming surface.');
         const rowMapping = worldView.match(/const nearbyPlaceNamingClaimRows = computed\(\(\) => \([\s\S]*?\)\);/)[0];

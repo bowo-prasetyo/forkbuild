@@ -1,4 +1,6 @@
 import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryEntry } from './PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory.js';
+import { parseJSONOrNull } from '../utils/parseJsonOrNull.js';
+import { isPlainObject } from '../utils/typeGuards.js';
 
 // 0.8.168 — Portable Revalidation Observation History Exchange.
 //
@@ -171,8 +173,8 @@ import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidati
 // reads a clock, touches storage, or performs any I/O. Calling any of them
 // twice with byte-identical arguments returns a byte-identical result.
 //
-// ARCHITECTURAL BOUNDARY — EXACTLY ONE IMPORT, 0.8.163's OWN APPEND
-// BOUNDARY, NOTHING ELSE. This file imports nothing from `application/
+// ARCHITECTURAL BOUNDARY — BESIDES utils/ HELPERS, EXACTLY ONE IMPORT,
+// 0.8.163's OWN APPEND BOUNDARY. This file imports nothing from `application/
 // PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation.js`
 // (0.8.162), `application/
 // PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplicationView.js`
@@ -421,18 +423,6 @@ function canonicalObservationKey(record) {
         candidateMatchesPlan: record.candidateMatchesPlan,
         observedAt: record.observedAt
     });
-}
-
-function parseJSONOrNull(text) {
-    try {
-        return JSON.parse(text);
-    } catch (error) {
-        return null;
-    }
-}
-
-function isPlainObject(value) {
-    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 function hasOnlyKeys(value, allowedKeys) {

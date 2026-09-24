@@ -1,3 +1,5 @@
+import { isNonEmptyString } from '../utils/typeGuards.js';
+
 // 0.9.77 — Avatar-Vehicle Mount Relationship.
 //
 // Three independent facts existed before this milestone, none of them a
@@ -94,10 +96,6 @@
 // persistence, and networking. This file answers only "what relationship,
 // if any, currently holds between an avatar and a vehicle by id," nothing
 // about how that relationship comes to be, changes, or ends.
-
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.length > 0;
-}
 
 export class AvatarVehicleMount {
     constructor(vehicleId) {

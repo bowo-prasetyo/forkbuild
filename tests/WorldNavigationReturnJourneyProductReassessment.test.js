@@ -16,6 +16,7 @@ import { describeObserverLocalPublicationEncounter } from '../core/ObserverLocal
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 
 import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.584 — World Navigation & Return Journey Product Reassessment.
 //
@@ -212,7 +213,7 @@ async function main() {
     // Section A — Navigation surface inventory & canonical convergence.
     // ===============================================================
     {
-        const worldViewSource = codeOnly(await readSource('ui/views/WorldView.js'));
+        const worldViewSource = codeOnly((await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n'));
 
         // A1. focusWorld() is defined exactly once, and its body is
         // exactly the three-call shape every navigation entry point
@@ -300,7 +301,7 @@ async function main() {
         // adversarial check is exactly: is that argument ever, anywhere,
         // `publication.id` or `publication.contentHash` instead?
         const worldEncounterCanvasSource = codeOnly(await readSource('ui/components/WorldEncounterCanvas.js'));
-        const worldViewSource = codeOnly(await readSource('ui/views/WorldView.js'));
+        const worldViewSource = codeOnly((await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n'));
         assert(!/focusWorld\(publication\.id\)/.test(worldViewSource) && !/focusWorld\(publication\.contentHash\)/.test(worldViewSource),
             'B3. No focusWorld() call site passes publication.id or publication.contentHash where documentId belongs.');
         assert(/focusWorld\(publication\.documentId\)/.test(worldViewSource),
@@ -370,7 +371,7 @@ async function main() {
         // milestone does not re-derive that file, only confirms (by exact
         // source text) that it is genuinely optional and never mutates
         // this section's own default contract.
-        const navigationSessionSource = codeOnly(await readSource('application/WorldNavigationSession.js'));
+        const navigationSessionSource = codeOnly((await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n'));
         assert(/focusDocument\(documentId, \{ setActive = true \} = \{\}\) \{/.test(navigationSessionSource),
             'C4. focusDocument()\'s own signature carries no framing-restoration parameter of any kind — restoreWorldExperience() is a separate, explicitly-invoked call, never implicit inside focusDocument() itself.');
         assert(/restoreWorldExperience\(/.test(navigationSessionSource) && /_localWorldExperienceStore/.test(navigationSessionSource),
@@ -397,7 +398,7 @@ async function main() {
         assert(avatarSession.current.sequence === 1 && avatarSession.current.position.x === 12,
             'D1b. A single movement update advances sequence past 0 and updates position — from this point on, _spawnAvatarNear()\'s own guard (sequence !== 0) would skip re-spawning on every subsequent focusDocument() call, confirming avatar position survives a World-to-World hop by construction, never by a per-hop preservation branch.');
 
-        const navigationSessionSource = codeOnly(await readSource('application/WorldNavigationSession.js'));
+        const navigationSessionSource = codeOnly((await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n'));
         // Bug fix (this session) — _spawnAvatarNear() gained a `documentId`
         // parameter alongside `position`, so it can measure the target
         // world's own real bounds (via the new _safeSpawnPosition()) and
@@ -505,7 +506,7 @@ async function main() {
         // left. This section adds only the ONE fact that milestone did not
         // itself state: presence enter/leave is NOT called from inside
         // focusWorld() at all.
-        const worldViewSource = codeOnly(await readSource('ui/views/WorldView.js'));
+        const worldViewSource = codeOnly((await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n'));
 
         // F1. focusWorld()'s own body (already exact-matched in Section
         // A1b) contains none of the four presence methods.
@@ -531,7 +532,7 @@ async function main() {
     // Section G — Async "races," reframed.
     // ===============================================================
     {
-        const navigationSessionSource = codeOnly(await readSource('application/WorldNavigationSession.js'));
+        const navigationSessionSource = codeOnly((await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n'));
 
         // G1. The navigation-critical path is proven, by source, to
         // contain NO Promise machinery at all — focusDocument()/
@@ -595,7 +596,7 @@ async function main() {
         // failure (with an attempt count and a timestamp) rather than
         // propagating it — and the SAME retry schedule from Section G3
         // governs when it is retried.
-        const navigationSessionSource = codeOnly(await readSource('application/WorldNavigationSession.js'));
+        const navigationSessionSource = codeOnly((await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n'));
         assert(/catch \(err\) \{/.test(navigationSessionSource) && /_failedLoads\.set\(id, \{\s*attempts:/.test(navigationSessionSource) && /lastAttemptAt: now/.test(navigationSessionSource),
             'H2. A failed _loadWorld() is caught and recorded (attempts, lastAttemptAt) rather than thrown further up — confirmed by exact source shape.');
 
@@ -615,7 +616,7 @@ async function main() {
         // (never rendered as visible text) — confirmed live by the exact
         // production construction already read during this milestone's
         // own research.
-        const worldViewSource = codeOnly(await readSource('ui/views/WorldView.js'));
+        const worldViewSource = codeOnly((await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n'));
         assert(/<h4>Unavailable \(\{\{ failedWorlds\.length \}\}\)<\/h4>/.test(worldViewSource),
             'H4. WorldView renders a plain "Unavailable (N)" section for failed loads — an honest, bounded surface, never a silently-stuck screen.');
         assert(/<span class="world-item-title">\{\{ w\.title \}\}<\/span>/.test(worldViewSource) && /title: doc\?\.metadata\?\.title \|\| pub\?\.title \|\| 'Untitled'/.test(worldViewSource) && /failedWorlds\.value = state\.failed\.map\(\(id\) => worldRow\(id\)\)/.test(worldViewSource),
@@ -660,7 +661,7 @@ async function main() {
         // and this milestone's own inventory re-confirmed): Open/Fork
         // target /editor, Explore/View targets /world/<documentId> — never
         // the same route for a different action.
-        const worldViewSource = codeOnly(await readSource('ui/views/WorldView.js'));
+        const worldViewSource = codeOnly((await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n'));
         assert(/router\.push\(\{ path: '\/editor', query: \{ load: publication\.documentId \} \}\)/.test(worldViewSource),
             'I2. openEncounteredPublicationCommand() targets /editor?load=<documentId> — distinct from focusWorld()\'s own /world/<documentId>.');
         assert(/router\.push\(\{ path: '\/editor', query: \{ fork: publication\.documentId, publication: publication\.id \} \}\)/.test(worldViewSource),
@@ -695,7 +696,7 @@ async function main() {
         // _presentWorldDocumentIds, _presentSpatialWorldDocumentIds) is
         // assigned with `this.` inside the constructor, never at module
         // scope.
-        const navigationSessionSource = await readSource('application/WorldNavigationSession.js');
+        const navigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(!/^\s*static /m.test(navigationSessionSource),
             'J2. No `static` member exists anywhere in WorldNavigationSession.js.');
         assert(!/^const \w+ = new (Map|Set)\(\);?\s*$/m.test(navigationSessionSource),
@@ -708,11 +709,11 @@ async function main() {
     // Section K — URL/deep-link continuity.
     // ===============================================================
     {
-        const navigationSessionSource = codeOnly(await readSource('application/WorldNavigationSession.js'));
+        const navigationSessionSource = codeOnly((await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n'));
         assert(/navigateToDocument\(documentId\) \{\s*return this\.focusDocument\(documentId\);\s*\}/.test(navigationSessionSource),
             'K1. navigateToDocument() — the call a direct URL load makes — is a synchronous alias for focusDocument() — the identical underlying call every in-app focusWorld() also makes.');
 
-        const worldViewSource = codeOnly(await readSource('ui/views/WorldView.js'));
+        const worldViewSource = codeOnly((await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n'));
         assert(/const initialDocumentId = route\.params\.documentId/.test(worldViewSource) || /route\.params\.documentId/.test(worldViewSource),
             'K2. WorldView reads its initial documentId from route.params.documentId exactly once, at mount.');
         assert(/session\.navigateToDocument\(initialDocumentId\)/.test(worldViewSource),
@@ -725,7 +726,7 @@ async function main() {
     // Section L — User-visible vocabulary audit.
     // ===============================================================
     {
-        const worldViewSource = codeOnly(await readSource('ui/views/WorldView.js'));
+        const worldViewSource = codeOnly((await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n'));
 
         // L1. The two real World-navigation list surfaces this milestone
         // inventoried (Unavailable, and — by the identical construction —

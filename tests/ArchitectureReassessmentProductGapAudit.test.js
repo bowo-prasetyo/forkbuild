@@ -20,6 +20,7 @@ import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js
 import { UnpublishDocumentUseCase } from '../application/UnpublishDocumentUseCase.js';
 import { DocumentManager } from '../application/DocumentManager.js';
 import { VehicleType } from '../core/VehicleType.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.196 — Architecture Reassessment / Product Gap Audit.
 //
@@ -226,7 +227,7 @@ async function runTests() {
         // counterpart — gated on the SAME ownership signal, no new
         // lifecycle state invented — which is what this assertion now
         // confirms instead of its absence.
-        const navigationSessionSource = await rawSource('application/WorldNavigationSession.js');
+        const navigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(/movable:\s*ownedByCurrentUser/.test(navigationSessionSource), 'C3a. getPlacementInfo() still returns a `movable` field gated on ownership');
         assert(/removable:\s*ownedByCurrentUser/.test(navigationSessionSource), 'C3b. getPlacementInfo() now returns a `removable` field, gated on the exact same ownership signal as `movable` — 0.9.197 closed the World-placement half of this audit\'s Section C gap');
 
@@ -275,7 +276,7 @@ async function runTests() {
         // Section G of tests/PublicationUnpublishUIAction.test.js for
         // why no ownership rule was invented either). What DID need to
         // exist, and now does, is the mutation itself.
-        const navigationSessionSourceForUnpublish = await rawSource('application/WorldNavigationSession.js');
+        const navigationSessionSourceForUnpublish = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(/unpublishDocument\(documentId/.test(navigationSessionSourceForUnpublish), 'C7a. WorldNavigationSession now exposes unpublishDocument(documentId, expectedPublicationId) — the reachable call site 0.9.198 added, mirroring removePlacement()\'s own compare-and-swap shape one authority up');
         const ownPublicationPanelSourceForUnpublish = await rawSource('ui/components/OwnPublicationPanel.js');
         assert(/unpublishCommand/.test(ownPublicationPanelSourceForUnpublish) && /unpublishOwnPublication/.test(ownPublicationPanelSourceForUnpublish), 'C7b. OwnPublicationPanel.js now wires an unpublishCommand prop to an "Unpublish" action, per 0.9.198');

@@ -12,6 +12,7 @@ import { CommandHistory } from '../application/CommandHistory.js';
 import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
 import { PlaceBrickCommand } from '../application/commands/PlaceBrickCommand.js';
 import { CreateWorldLandmarkCommand } from '../application/commands/CreateWorldLandmarkCommand.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.209 — Post-History Product Reassessment.
 //
@@ -91,7 +92,7 @@ async function runTests() {
     // right next to that stack in the same class: undo()/redo().
     // ---------------------------------------------------------------
     {
-        const worldView = await rawSource('ui/views/WorldView.js');
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const componentTags = new Set((worldView.match(/<[A-Z][A-Za-z]+/g) || []).map((tag) => tag.slice(1)));
         const expectedFamilies = [
             'AvatarInfoPanel', 'NearbyAvatarsPanel', 'CompassIndicator',
@@ -131,7 +132,7 @@ async function runTests() {
         // cadence every other action-bar affordance already uses. See
         // tests/WorldViewUndoRedoIntegration.test.js for the full
         // integration proof and docs/Roadmap.md's own 0.9.210 entry.
-        const navigationSessionSource = await rawSource('application/WorldNavigationSession.js');
+        const navigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(/undo\(\)\s*\{[\s\S]{0,80}_historyPreview[\s\S]{0,40}active[\s\S]{0,20}return false/.test(navigationSessionSource), 'A6a. WorldNavigationSession.undo() still refuses to run while a history preview is active');
         assert(/redo\(\)\s*\{[\s\S]{0,80}_historyPreview[\s\S]{0,40}active[\s\S]{0,20}return false/.test(navigationSessionSource), 'A6b. WorldNavigationSession.redo() still refuses to run while a history preview is active');
         assert(/session\.undo\(\)/.test(worldView) && /session\.redo\(\)/.test(worldView), 'A6c. (post-0.9.210) WorldView.js now calls session.undo()/session.redo()');
@@ -228,11 +229,11 @@ async function runTests() {
 
         // C2 — the 0.9.206 finding stays closed (history timeline/
         // replay/restore), including 0.9.208's three lifecycle fixes.
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         for (const identifier of ['getTimeline', 'restoreHistoryAt', 'beginHistoryPreview', 'previewHistoryAt', 'cancelHistoryPreview']) {
             assert(countReferences(worldViewSource, identifier) > 0, `C2a. WorldView.js still references ${identifier}`);
         }
-        const navigationSessionSource = await rawSource('application/WorldNavigationSession.js');
+        const navigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(/documentId === docId/.test(navigationSessionSource) || /_historyPreview\.documentId/.test(navigationSessionSource), 'C2b. restoreHistoryAt()\'s 0.9.208 cross-document scoping fix is still present');
         const disposeStart = navigationSessionSource.indexOf('    dispose() {');
         assert(disposeStart >= 0, 'C2c. WorldNavigationSession still declares dispose()');
@@ -274,7 +275,7 @@ async function runTests() {
         // deliberately excluded from this list and filed under Section A
         // instead — it is a missing UI caller for a capability that was
         // never uncomposed, not a missing composition.
-        const worldViewSourceForC = await rawSource('ui/views/WorldView.js');
+        const worldViewSourceForC = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         for (const method of ['createLandmarkHere', 'createRegionHere', 'movePlacement', 'removePlacement', 'unpublishDocument', 'searchWorld']) {
             assert(countReferences(worldViewSourceForC, method) > 0, `C4. WorldView.js still calls session.${method}(...) — the document/placement/publication-lifecycle surface has no new orphaned method`);
         }
@@ -401,9 +402,9 @@ async function runTests() {
         // A's finding) without either implementing a second, competing
         // CommandHistory-like mechanism. Exactly one CommandHistory
         // class is imported and used.
-        const navigationSessionSource = await rawSource('application/WorldNavigationSession.js');
+        const navigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const commandHistoryImports = [...navigationSessionSource.matchAll(/import\s*\{[^}]*\bCommandHistory\b[^}]*\}\s*from\s*['"]([^'"]+)['"]/g)];
-        assert(commandHistoryImports.length === 1, 'F4a. WorldNavigationSession.js still imports exactly one CommandHistory-shaped class');
+        assert(new Set(commandHistoryImports.map((m) => m[1].split('/').pop())).size === 1, 'F4a. WorldNavigationSession.js and its method modules import exactly one CommandHistory-shaped class');
         assert(!/class\s+\w*History\w*(?!Timeline)/.test(navigationSessionSource.replace(/HistoryTimelinePanel/g, '')), 'F4b. WorldNavigationSession.js still defines no competing history mechanism of its own');
 
         console.log('✓ Section F: Cross-cutting lifecycle integrity — CONFIRMED. Autosave/recovery, history/replay/restore, placement, publication/distribution, and Snapshot materialization remain five separate authorities with no cross-references in either direction, checked directly against source rather than by name. WorldNavigationSession hosts undo/redo and history/replay/restore side by side without inventing a second history mechanism.');

@@ -19,6 +19,7 @@ import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAn
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.472 — Expose Review-Preserving Base Anchor Action.
 //
@@ -223,7 +224,7 @@ async function run() {
 
     const mainSrc = await source('ui/main.js');
     const mainCodeOnly = codeOnly(mainSrc);
-    const viewSrc = await source('ui/views/DecentralizedPublicationsView.js');
+    const viewSrc = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
     const viewCodeOnly = codeOnly(viewSrc);
 
     // ===============================================================
@@ -294,7 +295,7 @@ async function run() {
     // or a review, and never calls publish() with a bare contentHash.
     // ===============================================================
     {
-        const fnMatch = viewCodeOnly.match(/async function createBaseAnchor\(entry\) \{([\s\S]*?)\n        \}\n\n        function baseAnchorCreationView/);
+        const fnMatch = viewCodeOnly.match(/async function createBaseAnchor\(entry\) \{([\s\S]*?)\n {4,8}\}\n\n {4,8}function baseAnchorCreationView/);
         assert(!!fnMatch, n('C1. createBaseAnchor()\'s own body is isolatable for direct inspection'));
         const body = fnMatch[1];
 
@@ -420,7 +421,7 @@ async function run() {
     // Section H — Wallet lifetime in the new UI action.
     // ===============================================================
     {
-        const fnMatch = viewCodeOnly.match(/async function createBaseAnchor\(entry\) \{([\s\S]*?)\n        \}\n\n        function baseAnchorCreationView/);
+        const fnMatch = viewCodeOnly.match(/async function createBaseAnchor\(entry\) \{([\s\S]*?)\n {4,8}\}\n\n {4,8}function baseAnchorCreationView/);
         const body = fnMatch[1];
         assert(!/entry\.baseAnchorWallet|this\._wallet/.test(body),
             n('H1. createBaseAnchor() stores no wallet reference of its own anywhere — the wallet is read fresh, per call, from the same injected baseInjectedProviderWalletTransactionSigner every granular step already uses'));

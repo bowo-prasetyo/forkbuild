@@ -1,4 +1,5 @@
 import { PUBLICATION_ANCHOR_KIND, CURRENT_SCHEMA_VERSION } from '../core/PublicationAnchor.js';
+import { isNonBlankString } from '../utils/typeGuards.js';
 
 // 0.8.0 — Decentralized Publication Anchoring & External Evidence.
 //
@@ -22,16 +23,12 @@ export class PublicationAnchorError extends Error {
     }
 }
 
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.trim().length > 0;
-}
-
 function validateSignature(signature, prefix) {
     if (!signature || typeof signature !== 'object') {
         throw new PublicationAnchorError(`${prefix}.signature is missing or not an object`);
     }
     for (const field of ['algorithm', 'signer', 'signature', 'signedHash', 'domain']) {
-        if (!isNonEmptyString(signature[field])) {
+        if (!isNonBlankString(signature[field])) {
             throw new PublicationAnchorError(`${prefix}.signature.${field} is missing or not a string`);
         }
     }
@@ -42,7 +39,7 @@ function validateAnchorIdentity(identity, prefix) {
         throw new PublicationAnchorError(`${prefix}.anchorIdentity is missing or not an object`);
     }
     for (const field of ['id', 'algorithm', 'publicKey']) {
-        if (!isNonEmptyString(identity[field])) {
+        if (!isNonBlankString(identity[field])) {
             throw new PublicationAnchorError(`${prefix}.anchorIdentity.${field} is missing or not a string`);
         }
     }
@@ -64,7 +61,7 @@ export function validatePublicationAnchor(record) {
         throw new PublicationAnchorError(`PublicationAnchor: unsupported schema version ${record.schemaVersion}`);
     }
     for (const field of ['id', 'publicationId', 'contentHash', 'anchorType', 'locator', 'anchoredAt']) {
-        if (!isNonEmptyString(record[field])) {
+        if (!isNonBlankString(record[field])) {
             throw new PublicationAnchorError(`PublicationAnchor: ${field} is missing or not a string`);
         }
     }

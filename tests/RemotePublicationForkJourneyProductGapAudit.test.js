@@ -29,6 +29,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PublicationExchange } from '../application/PublicationExchange.js';
 import { PublicationPeerExchange } from '../application/PublicationPeerExchange.js';
 import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.352 — Remote Publication Fork Journey Product Gap Audit.
 //
@@ -409,8 +410,8 @@ async function run() {
         assert(/@explore="viewWorld"/.test(catalogSource) && /@fork="forkPublication"/.test(catalogSource),
             '1. PublicationCard emits `explore`/`fork` as two independent, ungated events — a user may Explore without ever Forking, or Fork directly without ever Exploring first.');
 
-        const worldViewSource = await readSource('ui/views/WorldView.js');
-        assert(worldViewSource.includes("path: '/editor',\n                query: { fork: documentId, ...(publication ? { publication } : {}), ...entryQuery }"),
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
+        assert(/path: '\/editor',\n\s+query: \{ fork: documentId, \.\.\.\(publication \? \{ publication \} : \{\}\), \.\.\.entryQuery \}/.test(worldViewSource),
             '2. World View\'s own "Edit a Copy" (editFocusedCopyFromFocusPanel) reuses the SAME /editor?fork= navigation PublicationCatalog.js\'s forkPublication() uses — never a second fork mechanism.');
 
         const editorViewSource = await readSource('ui/views/EditorView.js');

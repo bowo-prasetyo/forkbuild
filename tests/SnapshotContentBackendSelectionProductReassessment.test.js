@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.509 — Snapshot Content Backend Selection Product Reassessment.
 //
@@ -110,7 +111,7 @@ async function run() {
         check(mainSource.includes('snapshotPlacementStoreRegistry.register(arweaveSnapshotPlacementContentStore)'),
             'B. ...and a real Arweave store — both eligible backends are genuinely registered on a stock production build, not merely eligible-in-principle');
 
-        const viewSource = await rawSource('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => rawSource(file)))).join('\n');
         check(/const snapshotDistributionAvailableStorageTypesCommand = inject\('snapshotDistributionAvailableStorageTypes', null\)/.test(viewSource),
             'B. the picker\'s own option source is injected from the app-wide composition, never re-derived locally');
         check(/<select v-model="entry\.snapshotDistributionStorage" class="form-select"/.test(viewSource),
@@ -137,7 +138,7 @@ async function run() {
     // basis for that proof still holds in the real UI state shape.
     // ===============================================================
     {
-        const viewSource = await rawSource('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => rawSource(file)))).join('\n');
 
         // AMENDED BY 0.9.667 — Role Provider Preference As Dropdown
         // Default. Both fields' own literal fallback values ('nostr', and
@@ -194,7 +195,7 @@ async function run() {
     // Announcement/Discovery's own (separate) settings surface.
     // ===============================================================
     {
-        const viewSource = await rawSource('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => rawSource(file)))).join('\n');
 
         check(/function snapshotDistributionConfigurationRoute\(entry\) \{\s*\n\s*return entry\.snapshotDistributionStorage === 'ar'\s*\n\s*\? '\/settings\/arweave-gateway'\s*\n\s*: '\/settings\/content-provider';/.test(viewSource),
             "E. Content's own configuration route follows THIS entry's own selection: Arweave -> /settings/arweave-gateway, IPFS -> /settings/content-provider");
@@ -252,7 +253,7 @@ async function run() {
         check(!/SnapshotDistributionContentBackendSelection|resolveSnapshotDistributionContentStore/.test(placementOrchestratorSource),
             "G. ...nor does Placement's own creation orchestrator import anything from Distribution's selection module, in the other direction");
 
-        const viewSource = await rawSource('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => rawSource(file)))).join('\n');
         check(/v-for="storage in availableStorageTypes"/.test(viewSource),
             "G. Placement's own picker (\"Create <X> Placement\") still reads its OWN, separately-scoped availableStorageTypes — not Distribution's snapshotDistributionStorageTypes");
 
@@ -272,7 +273,7 @@ async function run() {
         check(/const snapshotDistributionCommand = \(bytes, storage = 'ar', publicationId, claimedPosition, discoveryProvider\)/.test(mainSource),
             "H. AMENDED BY 0.9.669 — an omitted `storage` argument still defaults to 'ar' — every caller that has not been updated keeps its exact pre-0.9.506 Arweave-only behavior");
 
-        const viewSource = await rawSource('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => rawSource(file)))).join('\n');
         // AMENDED BY 0.9.667 — the SAME 'ar' fallback, now the third
         // argument to resolveSavedProviderDefault() rather than an
         // inline `||` chain, only reached when neither an explicit choice
@@ -321,7 +322,7 @@ async function run() {
     // asserted.
     // ===============================================================
     {
-        const viewSource = await rawSource('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => rawSource(file)))).join('\n');
 
         check(/const STORAGE_TYPE_LABELS = \{\s*\n\s*local: 'Local',\s*\n\s*ipfs: 'IPFS',\s*\n\s*ar: 'Arweave'\s*\n\s*\};/.test(viewSource),
             "I. CLOSED — a real, closed name map exists: 'local' -> 'Local', 'ipfs' -> 'IPFS', 'ar' -> 'Arweave'");

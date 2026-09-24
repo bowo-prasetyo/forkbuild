@@ -6,6 +6,7 @@ import {
     withEntryAdded
 } from './AvatarInventory.js';
 import { isValidAnimalSpecies } from './AnimalPresence.js';
+import { isNonEmptyString } from '../utils/typeGuards.js';
 
 // 0.9.700 — Avatar Animal Catch Transition.
 //
@@ -43,9 +44,6 @@ import { isValidAnimalSpecies } from './AnimalPresence.js';
 // target `resolveAvatarAnimalCatchTarget()` just resolved — that
 // question belongs upstream, to whatever call site already did the
 // resolving.
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.length > 0;
-}
 
 export function deriveAvatarAnimalCatchTransition({
     currentInventory,

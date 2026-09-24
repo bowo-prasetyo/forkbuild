@@ -25,6 +25,7 @@ import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLib
 import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.550 — World Navigation & Orientation Product Reassessment.
 //
@@ -320,7 +321,7 @@ async function main() {
         // Confirmed against the real, unmodified production source
         // itself — not merely reconstructed from this file's own
         // understanding of it.
-        const sessionSrc = await readSource('application/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(sessionSrc.includes('does NOT snap the camera anywhere'),
             '7. LIVE: application/WorldNavigationSession.js\'s own real setCameraPerspective() header states, verbatim, that turning a Perspective off does not snap the camera — B3\'s own live behavior matches the documented intent exactly.');
         assert(/if \(this\._cameraPerspective && this\._spatialCameraController\)/.test(sessionSrc),
@@ -442,7 +443,7 @@ async function main() {
         assert(visibleByCameraHeading === false,
             '2. LIVE, THE BOUNDARY: the IDENTICAL target, from the IDENTICAL position, is judged OUTSIDE the view cone once the heading fed in is the camera\'s (180deg) rather than the avatar\'s own walking direction (0deg) — the same geometry, two different real outcomes, purely from which heading source is supplied.');
 
-        const sessionSrc = await readSource('application/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         const applyRosterMatch = sessionSrc.match(/_applySpatialPresenceRoster\([^)]*\)\s*\{[\s\S]*?\n\s{4}\}/);
         assert(applyRosterMatch, '3. setup: _applySpatialPresenceRoster() found in real source.');
         const applyRosterBody = applyRosterMatch[0];
@@ -520,7 +521,7 @@ async function main() {
         // Confirm this test's own tickMountedVehicle() helper is not an
         // invented stand-in: the real production source performs the
         // identical sequence.
-        const sessionSrc = await readSource('application/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(sessionSrc.includes('this._avatarVehicleMovementController.tick({') && sessionSrc.includes('position: moved.vehicleInstance.position,')
             && sessionSrc.includes('rotation: { y: moved.rotationY }'),
             '8. LIVE: application/WorldNavigationSession.js\'s own real frame loop performs exactly this sequence — this test\'s tickMountedVehicle() helper reproduces real production wiring, not an invented one.');
@@ -576,7 +577,7 @@ async function main() {
         // getCameraPosition()/getCompassHeading() — never
         // getAvatarPosition() or the avatar's own rotation.y — even
         // though a real avatar with its own distinct position exists.
-        const sessionSrc = await readSource('application/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         for (const methodName of ['enterWorldSpatialPresence', 'syncWorldSpatialPresence']) {
             const methodMatch = sessionSrc.match(new RegExp(`${methodName}\\([^)]*\\)\\s*\\{[\\s\\S]*?\\n\\s{4}\\}`));
             assert(methodMatch, `3. setup: ${methodName}() found in real source.`);

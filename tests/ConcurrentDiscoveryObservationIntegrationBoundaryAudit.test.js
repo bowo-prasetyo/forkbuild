@@ -13,6 +13,7 @@ import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.434 — Concurrent Discovery Observation Integration Boundary Audit.
 //
@@ -333,7 +334,7 @@ async function run() {
         // wires exactly this shape, so this section's own fidelity to
         // "production" is not merely asserted but checked against the
         // live file.
-        const viewSource = codeOnly(await source('ui/views/WorldView.js'));
+        const viewSource = codeOnly((await Promise.all(worldViewFiles().map((file) => source(file)))).join('\n'));
         // AMENDED BY 0.9.670 — Publication Material Storage Selection. The
         // function signature grew two more parameters (materialStorage,
         // remotePinningConfiguration) — updated to match; still confirms

@@ -9,6 +9,7 @@ import { Position } from '../core/Position.js';
 import { Publication } from '../publisher/Publication.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.566 — Distribute Existing Claimed Position Through Snapshot
 // Distribution.
@@ -192,7 +193,7 @@ async function run() {
     // Section A — Existing claim acquisition.
     // =======================================================================
     {
-        const sessionSource = await readSource('application/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         const methodMatch = sessionSource.match(/getPlacementInfoForPublication\(publicationId\)\s*\{[\s\S]*?\n    \}/);
         assert(methodMatch, '1. WorldNavigationSession#getPlacementInfoForPublication(publicationId) exists as an isolable method.');
         assert(/return\s*\{\s*\n\s*placementId:\s*record\.placementId,\s*\n\s*publicationId:\s*record\.publicationId,\s*\n\s*position:\s*\{\s*x:\s*record\.position\.x,\s*y:\s*record\.position\.y,\s*z:\s*record\.position\.z\s*\}\s*\n\s*\};/.test(methodMatch[0]),
@@ -410,13 +411,13 @@ async function run() {
         assert(/discoveryPublisher\.publish\(\{\s*contentHash:\s*contentReference\.hash,\s*locator:\s*contentReference\.uri,\s*storage:\s*contentReference\.storage,\s*publicationId,\s*claimedPosition\s*\}\)/.test(runFnMatch[0]),
             '2. it forwards publicationId/claimedPosition into discoveryPublisher.publish() alongside the pre-existing three fields, unmodified.');
 
-        const worldViewSource = await readSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         // AMENDED BY 0.9.669 — Per-Click Snapshot Announcement/Discovery
         // Substrate Override. `discoveryProvider` joined `publication`/
         // `storage`/`remotePinningConfiguration` as a new, optional fourth
         // parameter — still exactly one `distributeWorldEncounterSnapshot`,
         // never a second function.
-        const distributeFnMatch = worldViewSource.match(/function distributeWorldEncounterSnapshot\(publication, storage, remotePinningConfiguration, discoveryProvider\)\s*\{[\s\S]*?\n        \}/);
+        const distributeFnMatch = worldViewSource.match(/function distributeWorldEncounterSnapshot\(publication, storage, remotePinningConfiguration, discoveryProvider\)\s*\{[\s\S]*?\n    \}/);
         assert(distributeFnMatch, '3. AMENDED BY 0.9.669 — WorldView.js#distributeWorldEncounterSnapshot(publication, storage, remotePinningConfiguration, discoveryProvider) exists as an isolable function.');
         const body = distributeFnMatch[0];
         assert(/session\.getPlacementInfoForPublication\(publication\.id\)/.test(body),

@@ -293,7 +293,7 @@ async function runTests() {
         assert(worldViewCode.includes('adoptNearbyPlaceNamingClaim,'),
             '7. ui/views/WorldView.js exposes adoptNearbyPlaceNamingClaim from setup(), so the template can actually call it.');
 
-        const nearbyBlock = worldViewCode.match(/<!-- 0\.9\.257 — World View Place Naming Presentation\.[\s\S]*?<\/CollapsibleSection>/)[0];
+        const nearbyBlock = worldViewCode.match(/<CollapsibleSection\s+title="Nearby Place Names"[\s\S]*?<\/CollapsibleSection>/)[0];
         assert(/@click="adoptNearbyPlaceNamingClaim\(claim\)"/.test(nearbyBlock),
             '8. the "Nearby Place Names" row template wires a real click handler to adoptNearbyPlaceNamingClaim().');
         assert(/>\s*Adopt\s*</i.test(nearbyBlock),

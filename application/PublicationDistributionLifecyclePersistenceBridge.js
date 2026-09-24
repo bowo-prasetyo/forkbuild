@@ -1,3 +1,5 @@
+import { isNonEmptyString } from '../utils/typeGuards.js';
+
 // 0.9.55 — Publication Distribution Lifecycle Persistence Bridge.
 //
 // 0.9.53 added an observation seam to the memory store; 0.9.54 added a
@@ -210,10 +212,6 @@
 //   notification, with no equality comparison."
 // - **`FAILED`, `PENDING`, `CONFIRMED`, `RECOVERING`, or any other
 //   operational vocabulary.** See "No rollback," above.
-
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.length > 0;
-}
 
 export class PublicationDistributionLifecyclePersistenceBridge {
     constructor(store, persistence) {

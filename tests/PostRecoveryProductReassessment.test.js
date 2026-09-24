@@ -15,6 +15,7 @@ import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import { ReplayDocumentUseCase } from '../application/ReplayDocumentUseCase.js';
 import { RestoreHistoryStateUseCase } from '../application/RestoreHistoryStateUseCase.js';
 import { RecoveryObserver } from '../application/RecoveryObserver.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.206 — Post-Recovery Product Reassessment.
 //
@@ -80,7 +81,7 @@ async function runTests() {
     // added, remain wired.
     // ---------------------------------------------------------------
     {
-        const worldView = await rawSource('ui/views/WorldView.js');
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const componentTags = new Set((worldView.match(/<[A-Z][A-Za-z]+/g) || []).map((tag) => tag.slice(1)));
         const expectedFamilies = [
             'AvatarInfoPanel', 'NearbyAvatarsPanel', 'CompassIndicator',
@@ -110,7 +111,7 @@ async function runTests() {
         // regression to re-litigate — the finding, filed under Section C
         // below, is that 0.5.9's own stated REASON for keeping it never
         // got a caller in WorldView.js).
-        const navigationSessionSource = await rawSource('application/WorldNavigationSession.js');
+        const navigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         for (const method of ['undo(', 'redo(', 'beginHistoryPreview(', 'previewHistoryAt(', 'cancelHistoryPreview(', 'restoreHistoryAt(', 'getTimeline(']) {
             assert(navigationSessionSource.includes(method), `A5. WorldNavigationSession.js still declares ${method} — 0.5.9's own two kept exceptions and their history/timeline machinery are all still present`);
         }
@@ -217,7 +218,7 @@ async function runTests() {
         assert(/new RestoreHistoryStateUseCase\(/.test(createWorldViewSource), 'C3b. CreateWorldViewUseCase.js still composes RestoreHistoryStateUseCase');
         assert(/replayDocumentUseCase,\s*\n?\s*restoreHistoryStateUseCase,/.test(createWorldViewSource) || (/replayDocumentUseCase/.test(createWorldViewSource) && /restoreHistoryStateUseCase/.test(createWorldViewSource)), 'C3c. both are handed onward into the session it constructs');
 
-        const navigationSessionSource = await rawSource('application/WorldNavigationSession.js');
+        const navigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         for (const method of ['getTimeline(documentId)', 'restoreHistoryAt(cursor, documentId)', 'beginHistoryPreview()', 'previewHistoryAt(cursor)', 'cancelHistoryPreview()', 'getHistoryPreview()']) {
             assert(navigationSessionSource.includes(method), `C3d. WorldNavigationSession.js still declares ${method}`);
         }
@@ -241,7 +242,7 @@ async function runTests() {
                 assert(countReferences(source, identifier) === 0, `C4. ${file} still never references ${identifier}`);
             }
         }
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         for (const identifier of ['getTimeline', 'restoreHistoryAt', 'beginHistoryPreview', 'previewHistoryAt', 'cancelHistoryPreview']) {
             assert(countReferences(worldViewSource, identifier) > 0, `C4a. (post-0.9.207) WorldView.js now references ${identifier}`);
         }

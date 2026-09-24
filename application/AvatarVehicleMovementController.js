@@ -6,154 +6,28 @@ import { resolveVehicleHeadingFromMovement } from '../core/VehicleMovementHeadin
 import { resolveVehicleMovementDirectionFromSteering } from '../core/VehicleSteeringSimulation.js';
 import { AvatarDroneVerticalStateKind, deriveAvatarDroneVerticalState, stepDroneAltitude } from '../core/AvatarDroneVerticalState.js';
 
-// 0.9.116 — Mounted Vehicle Movement.
+// Moves the mounted vehicle, not the avatar:
 //
-//   Movement Intent -> Mounted Vehicle -> vehicle movement simulation
-//   -> VehicleInstance.withPosition() -> VehicleRenderer / avatar follows
+//   movement intent -> simulateAvatarMovement() -> candidate position
+//   -> building/brick then tree collision -> VehicleRuntimeInstances.setPosition()
+//   -> WorldNavigationSession makes the avatar follow
 //
-// 0.9.119 — Vehicle–World Collision Constraint. 0.9.116 through 0.9.118
-// gave a mounted, movable vehicle its own runtime position and made
-// every consumer of it agree on that position — but `tick()` below fed
-// `simulateAvatarMovement()`'s own pure kinematics result STRAIGHT into
-// `VehicleRuntimeInstances#setPosition()`, with nothing standing between
-// them. A bicycle could ride straight through a tree, a brick, or an
-// entire building, because no world-collision constraint was ever
-// consulted for vehicle movement at all — 0.9.88's own
-// `collisionRadius` (core/AvatarVehicleMovementCapability.js) had a
-// physically-correct footprint sitting ready and unused, since the ONLY
-// pipeline that ever consumed it was the on-foot
-// AvatarMovementController, never this class.
+// There is no second movement system: the kinematics are
+// core/AvatarMovementSimulation.js's, called verbatim, and collision reuses the
+// same AvatarMovementConstraint/AvatarTreeConstraint instances as the on-foot
+// avatar, at the vehicle's own collision radius. This class never reads or
+// writes an AvatarPresence; ownership flows vehicle -> avatar only.
 //
-//   Movement Intent -> Mounted Vehicle -> vehicle movement simulation
-//   -> candidate position -> world collision constraint (building/brick,
-//   then tree) -> allowed position -> VehicleInstance.withPosition()
-//   -> VehicleRenderer / avatar follows
+// Only vehicle types that can be placed and rendered move (MOVABLE_VEHICLE_TYPES),
+// not every type the capability layer supports, so a future vehicle without a
+// visual never starts moving by accident.
 //
-// THE FIX REUSES THE EXISTING COLLISION INFRASTRUCTURE, NEVER A SECOND
-// ONE. `tick()` below now optionally applies the SAME
-// application/AvatarMovementConstraint.js (buildings/bricks) and
-// application/AvatarTreeConstraint.js (trees) instances the on-foot
-// avatar already uses — see application/WorldNavigationSession.js's own
-// 0.9.119 wiring, which shares one pair of instances between both
-// controllers, and this file's own constructor/tick() comments below for
-// exactly how. No `VehicleCollision*` class, no rectangular/oriented
-// footprint, no vehicle-specific spatial index — see
-// core/AvatarCollision.js's own 0.9.119 header for the one change that
-// made building/brick collision reusable here at all: its existing
-// `resolveHorizontalMovement()` now accepts an optional `radius`,
-// mirroring the identical `avatarRadius` seam
-// core/AvatarTreeCollisionQuery.js already established for trees in
-// 0.9.88.
+// A drone additionally steps its own altitude (core/AvatarDroneVerticalState.js)
+// on top of the same horizontal pipeline.
 //
-// 0.9.85 through 0.9.95 built a complete movement CAPABILITY/simulation
-// layer (speed, collision radius, permitted directions, acceleration,
-// braking, steering) and wired it into
-// application/AvatarMovementController.js — but every one of those
-// milestones fed a mounted vehicle's own numbers into the AVATAR's own
-// position. Riding a bicycle has, until now, meant "the avatar moves
-// faster," never "the bicycle moves." This file is the seam that
-// changes that: given a mounted vehicle's id, its resolved movement
-// capability (core/AvatarVehicleMovementCapability.js, entirely
-// unchanged), and the current movement intent
-// (application/AvatarMovementController.js#movementState(), reused
-// verbatim), it advances the VEHICLE's own runtime position by one
-// simulation tick and commits the result to
-// application/VehicleRuntimeInstances.js via
-// `VehicleInstance#withPosition()` — the exact mechanism 0.9.114 built
-// for exactly this.
-//
-// NO SECOND MOVEMENT SYSTEM. The actual kinematics — turning, then
-// stepping along the new facing; a rate-limited approach to a target
-// speed; braking as an independently-tunable rate; a rate-limited
-// approach to a target heading — are core/AvatarMovementSimulation.js's
-// own `simulateAvatarMovement()`, called here VERBATIM, the identical
-// pure function application/AvatarMovementController.js already calls
-// for on-foot movement. This file duplicates none of that math; it only
-// supplies a DIFFERENT subject (a VehicleInstance's own position,
-// instead of an AvatarPresence's own position) and a DIFFERENT
-// destination for the result (VehicleRuntimeInstances#setPosition(),
-// instead of AvatarPresenceSession#update()). See docs/Roadmap.md,
-// 0.9.116, "Reuse the existing movement capabilities" — "the new
-// milestone should connect the existing capability/simulation layer to
-// the new runtime position," never reinvent it.
-//
-// THE VEHICLE MOVES; THE AVATAR FOLLOWS — NEVER THE REVERSE. This
-// class's own `tick()` never reads or writes an AvatarPresence at all;
-// it has no idea one exists. application/WorldNavigationSession.js is
-// the one place that both calls this class's own `tick()` AND, with
-// its result, updates the avatar's own position/rotation to match — see
-// that file's own 0.9.116 header for exactly where. Ownership flows
-// vehicle -> avatar, never avatar -> vehicle, matching this milestone's
-// own brief precisely: "do not simply keep moving the avatar and then
-// copy its position into the bicycle."
-//
-// ONLY A VEHICLE TYPE THIS CODEBASE CAN ACTUALLY SHOW MOVES — NEVER
-// EVERY GROUND_VEHICLE THE GENERIC CAPABILITY LAYER "SUPPORTS".
-// core/AvatarVehicleMovementCapability.js's own `supported` field
-// answers "does a movement pipeline concept exist for this KIND"
-// (WALK/GROUND_VEHICLE both `true`; only AERIAL_VEHICLE/DRONE is
-// `false`) — MOTORCYCLE and CAR both resolve `supported: true` under
-// that vocabulary, purely because they share BICYCLE's own
-// GROUND_VEHICLE kind. `canMove()` below gates on a narrower fact
-// instead — the currently implemented visual + placement vocabulary —
-// never on the capability layer's own, broader `supported` flag.
-//
-// 0.9.668 UPDATE — MOTORCYCLE JOINS BICYCLE HERE. Through 0.9.667,
-// renderer/VehicleRenderer.js had no visual for MOTORCYCLE and
-// core/VehiclePlacement.js never placed one, so `MOVABLE_VEHICLE_TYPES`
-// held BICYCLE alone — moving an unplaceable, invisible vehicle would
-// have been unreachable dead code. 0.9.668 closed both of those gaps at
-// once (VehiclePlacement.js's own "Motorcycle Placement" header;
-// VehicleRenderer.js's own buildMotorcycle()), so a motorcycle is now a
-// real, visible, mountable vehicle exactly like a bicycle — and this is
-// the one line that lets it actually move once mounted, rather than
-// sitting mounted-but-frozen the way any of CAR/DRONE still would if
-// mounted today. CAR and DRONE remain excluded: neither has a placement
-// path nor a visual yet, so adding either here would be exactly the
-// "hypothetical future vehicle silently starts moving" mistake this
-// gate exists to prevent — see docs/Roadmap.md, 0.9.116, "What should
-// happen to the avatar?"/Section H, and 0.9.668's own entry for the
-// motorcycle-specific reasoning.
-//
-// 0.9.669 UPDATE — CAR JOINS BICYCLE AND MOTORCYCLE HERE. Through
-// 0.9.668, renderer/VehicleRenderer.js had no visual for CAR and
-// core/VehiclePlacement.js never placed one, so CAR stayed excluded for
-// the identical reason MOTORCYCLE was excluded through 0.9.667. 0.9.669
-// closed both remaining gaps at once (VehiclePlacement.js's own "Car
-// Activation" header; VehicleRenderer.js's own buildCar()), so a car is
-// now a real, visible, mountable, and — via this one line — movable
-// vehicle exactly like a bicycle or a motorcycle, and (per
-// core/AvatarVehicleMovementCapability.js's own 0.9.87 header) the
-// fastest of the three ground vehicles.
-//
-// AERIAL MOVEMENT PIPELINE UPDATE — DRONE JOINS THE OTHER THREE HERE.
-// core/VehiclePlacement.js now places DRONE, renderer/VehicleRenderer.js
-// now has a buildDrone() visual, and — the gap that kept DRONE excluded
-// even after both of those — core/AvatarDroneVerticalState.js now gives
-// it a real vertical-state pipeline (GROUNDED/RISING/HOVERING/DESCENDING,
-// stepped every tick below). `tick()`'s own DRONE-specific block, below,
-// layers that altitude on top of this exact same horizontal
-// simulation/constraint pipeline every other movable vehicle already
-// goes through — a drone is a real, visible, mountable, movable vehicle
-// now too, and (per core/AvatarVehicleMovementCapability.js's own
-// "AERIAL_VEHICLE Is Now A Real, Supported Capability" header) the
-// fastest of all four.
-//
-// 0.9.127 — Vehicle Steering Integration Audit. 0.9.125/0.9.126 built a
-// closed steering-intent vocabulary (core/VehicleSteeringIntent.js) and a
-// pure directional transformation over it (core/VehicleSteeringSimulation.js)
-// and deliberately stopped short of ever calling either from here — see
-// that second file's own closing "Recommendation." This is the milestone
-// that wires them in: `tick()` below now accepts an OPTIONAL
-// `steeringIntent`, defaulting to `null` so every existing caller (this
-// file's own real caller, application/WorldNavigationSession.js, until
-// some future input layer starts supplying one — see docs/Roadmap.md,
-// 0.9.127's own "Recommendation" — and every test predating this
-// milestone) is completely unaffected. See `tick()`'s own signature
-// comment, below, for exactly what changes when a real one IS supplied,
-// and this file's own closing 0.9.127 comment for why heading resolution
-// itself needed no change at all to already be correct once steering
-// entered the real pipeline.
+// An optional steeringIntent redirects the already-resolved step along the
+// steered direction without recomputing its length.
+
 const MOVABLE_VEHICLE_TYPES = new Set([VehicleType.BICYCLE, VehicleType.MOTORCYCLE, VehicleType.CAR, VehicleType.DRONE]);
 
 export function isMovableVehicleType(type) {
@@ -161,161 +35,51 @@ export function isMovableVehicleType(type) {
 }
 
 export class AvatarVehicleMovementController {
-    // `vehicleRuntimeInstances` is the ONE VehicleRuntimeInstances store
-    // this controller reads a vehicle's current position from and
-    // commits its next one to — see that file's own header for why the
-    // deterministic placement query itself is never consulted here at
-    // all. This class never constructs its own store, exactly like
-    // application/AvatarMovementController.js never constructs its own
-    // AvatarPresenceSession.
-    //
-    // 0.9.119 — Vehicle–World Collision Constraint. `movementConstraint`/
-    // `treeConstraint` (both optional, same "enforce/offer only when
-    // wired" posture every constraint in application/AvatarMovementController.js
-    // already follows) are the exact SAME constraint INSTANCES a real
-    // caller already builds for the on-foot avatar
-    // (application/AvatarMovementConstraint.js for bricks/buildings,
-    // application/AvatarTreeConstraint.js for trees) — see
-    // application/WorldNavigationSession.js's own 0.9.119 wiring, which
-    // shares one pair of instances between both controllers. This class
-    // never constructs either constraint itself, and never duplicates
-    // the collision geometry/query they already wrap — see this file's
-    // own tick(), below, for where they are applied.
+    // All three collaborators are shared with the caller; this class never builds
+    // its own store or constraints.
     constructor(vehicleRuntimeInstances, movementConstraint = null, treeConstraint = null) {
         this._vehicleRuntimeInstances = vehicleRuntimeInstances;
         this._movementConstraint = movementConstraint;
         this._treeConstraint = treeConstraint;
-        // 0.9.119 — transient, debug-only outcome of the MOST RECENT
-        // tick()'s own constraint pipeline, the direct structural twin
-        // of application/AvatarMovementController.js's own `_collided`/
-        // `_collidedWithTree` fields. Never part of VehicleInstance,
-        // never read by any other logic in this class.
         this._collided = false;
         this._collidedWithTree = false;
-        // The vehicle id this controller most recently simulated a tick
-        // for, or `null` — used only to detect "this is a genuinely NEW
-        // ride" (a fresh mount, possibly of a different bicycle) so the
-        // transient bookkeeping below can be reset. Never read for any
-        // other purpose, and never itself the source of truth for
-        // "which vehicle is mounted" — that stays
-        // application/AvatarVehicleInteractionController.js's own
-        // `mount()`.
+        // Used only to detect a new ride so transient state can be reset; never the
+        // source of truth for what is mounted.
         this._activeVehicleId = null;
-        // The direct structural twins of
-        // application/AvatarMovementController.js's own
-        // `_verticalVelocity`/`_grounded`/`_currentMovementSpeed` —
-        // this controller's own small bit of physics bookkeeping between
-        // ticks, deliberately kept OUTSIDE VehicleInstance for the exact
-        // reason that file's own header already gives for the avatar's
-        // identical fields: a future replica receiving a VehicleInstance
-        // has no reason to know or care about the rider's mid-ride
-        // transient speed. Reset only on a genuinely new ride — see
-        // `tick()` below.
+        // Per-ride physics bookkeeping, kept out of VehicleInstance: peers have no use
+        // for the rider's transient speed.
         this._verticalVelocity = 0;
         this._grounded = true;
         this._currentMovementSpeed = 0;
-        // Aerial Movement Pipeline — the direct structural twin of
-        // `_verticalVelocity`/`_grounded` above, but for a mounted
-        // DRONE's own altitude (core/AvatarDroneVerticalState.js) rather
-        // than the shared on-foot/ground-vehicle jump physics those two
-        // fields track. Always `0` for every other vehicle type — see
-        // `tick()`'s own DRONE-specific block, below, for the only place
-        // this is ever read or written.
+        // A mounted drone's altitude; always 0 for other vehicles.
         this._droneAltitude = 0;
-        // The MOST RECENT tick()'s own resolved
-        // AvatarDroneVerticalStateKind for a mounted DRONE, or `null` for
-        // every other vehicle type (never computed for them at all — see
-        // `tick()`'s own DRONE-specific block). Transient and
-        // internal-only, the direct structural twin of `_collided`/
-        // `_collidedWithTree` above — consulted by `tick()` itself to
-        // decide whether tree collision should be bypassed this tick
-        // (a genuinely HOVERING drone — see that method's own block,
-        // below), never persisted, never part of VehicleInstance.
-        // application/AvatarVehicleInteractionController.js's own
-        // dismount-while-airborne gate deliberately does NOT read this
-        // field — it derives "airborne" independently, from the
-        // vehicle's own already-committed position vs. raw terrain
-        // height, so it needs no reference to this class at all.
+        // The last tick's drone vertical state (null for other vehicles), used only to
+        // let a hovering drone skip tree collision. The dismount-while-airborne check
+        // derives "airborne" independently and does not read this.
         this._droneVerticalStateKind = null;
     }
 
-    // See this file's own header, "Only a vehicle type this codebase
-    // can actually show moves."
     canMove(vehicleType) {
         return isMovableVehicleType(vehicleType);
     }
 
-    // Runs one simulation tick for the vehicle `vehicleId` — which MUST
-    // already be tracked by this controller's own VehicleRuntimeInstances
-    // (added there by that store's own sync(), ordinarily well before
-    // any avatar could ever mount it) — and returns
-    // `{ vehicleInstance, rotationY }`: the vehicle's own new,
-    // ALREADY-COMMITTED-TO-THE-STORE VehicleInstance, and its new
-    // heading (degrees, the SAME representation
-    // core/AvatarMovementSimulation.js's own `rotationY` already uses).
-    // Returns `null` — no simulation, no store write — when `vehicleId`
-    // is not currently tracked: the identical honest "no destination is
-    // known from here" the mount/dismount controller itself already
-    // settles for (see
-    // application/AvatarVehicleInteractionController.js's own
-    // `_findMountedVehicle()`), never a crash or a silently-fabricated
-    // vehicle.
-    //
-    // `capability` is a real, resolved AvatarVehicleMovementCapability
-    // (ordinarily core/AvatarVehicleMovementCapability.js's own
-    // `resolveAvatarVehicleMovementCapability(vehicleType)`, called by
-    // the caller — this class never resolves one itself, matching
-    // application/AvatarMovementController.js's own "never imports
-    // VehicleType to look up a capability" restraint, one layer
-    // removed). `movementIntent` is a plain
-    // `{direction, turnAxis, running, brakingRequested}` snapshot —
-    // ordinarily application/AvatarMovementController.js's own
-    // `movementState()` output, reused VERBATIM: this controller never
-    // re-derives forward/turn/running/braking intent from a raw key
-    // itself, and never reads `movementIntent.jumpRequested` even if a
-    // caller's own snapshot happens to carry one — a mounted vehicle
-    // cannot jump (see docs/Roadmap.md, 0.9.116's own exclusion list),
-    // so this method always simulates with `jumpRequested: false`,
-    // regardless of whether Space is currently held.
-    // 0.9.127 — Vehicle Steering Integration Audit. `steeringIntent`
-    // (optional, default `null`) is the ONE new parameter this milestone
-    // adds — a real `core/VehicleSteeringIntent.js` instance, ordinarily
-    // `application/WorldNavigationSession.js`'s own `_vehicleSteeringIntent`
-    // field, reused VERBATIM. `null` (every existing caller, including
-    // every test predating this milestone, and the real session's own
-    // frame loop until a future milestone decides how physical input
-    // produces one — see docs/Roadmap.md, 0.9.127's own "Recommendation")
-    // takes a completely untouched path: this tick's own attempted
-    // direction is left exactly where it has always come from —
-    // `result.rotationY`, the avatar's own held-turn-key facing — and
-    // every line below this comment behaves byte-for-byte as it did
-    // before this milestone. See this method's own body, below, for
-    // exactly where a REAL `VehicleSteeringIntent` diverges from that
-    // path, and this file's own closing 0.9.127 comment for the full
-    // architectural picture.
+    // Returns `{ vehicleInstance, rotationY }` after committing the new position,
+    // or null when `vehicleId` is not tracked. `movementIntent` is
+    // AvatarMovementController#movementState(), reused verbatim; a mounted vehicle
+    // never jumps, so jumpRequested is always false. With no steeringIntent the
+    // step follows result.rotationY, the avatar's own facing.
     tick({ seed, vehicleId, capability, movementIntent, currentRotationY, deltaSeconds, steeringIntent = null }) {
         const vehicleInstance = this._vehicleRuntimeInstances.get(vehicleId);
         if (!vehicleInstance) {
             return null;
         }
-        // Defense in depth, not merely a caller-side convention: even a
-        // caller that forgot to check `canMove()` first can never move a
-        // vehicle type outside MOVABLE_VEHICLE_TYPES through this method
-        // — see this file's own header, "Only a vehicle type this
-        // codebase can actually show moves."
+        // Defense in depth: never moves a non-movable type, even if the caller skipped
+        // canMove().
         if (!isMovableVehicleType(vehicleInstance.type)) {
             return null;
         }
 
         if (vehicleId !== this._activeVehicleId) {
-            // A genuinely new ride (a fresh mount, or a different
-            // vehicle than the one this controller was last ticking) —
-            // this controller's own transient bookkeeping starts
-            // completely fresh, the identical "capability change resets
-            // transient speed" discipline
-            // application/AvatarMovementController.js's own
-            // `setMovementCapability()` already applies to
-            // `_currentMovementSpeed` on an actual capability change.
             this._activeVehicleId = vehicleId;
             this._verticalVelocity = 0;
             this._grounded = true;
@@ -324,19 +88,8 @@ export class AvatarVehicleMovementController {
         }
 
         const currentPosition = vehicleInstance.position;
-        // A ground vehicle's own Y follows raw terrain height, exactly
-        // as core/VehiclePlacement.js already computed it at spawn
-        // (`presenceForCell()`'s own `terrainHeightAt(seed, x, z)`) —
-        // never application/AvatarStepConstraint.js's own building-aware
-        // support height, which answers a question ("what is the AVATAR
-        // currently standing on, bricks included") this vehicle was
-        // never subject to in the first place; see docs/Roadmap.md,
-        // 0.9.116's own exclusion list, "vehicle collision redesign."
-        // Sampled at the vehicle's CURRENT position, before this tick's
-        // own step — the identical "read support height before
-        // simulating" ordering
-        // application/AvatarMovementController.js#tick() already uses
-        // for the avatar (0.3.2's own precedent).
+        // Ground vehicles follow raw terrain height, as at spawn, never the avatar's
+        // brick-aware support height. Sampled before stepping.
         const groundHeight = terrainHeightAt(seed, currentPosition.x, currentPosition.z);
 
         const movementState = new AvatarMovementState({
@@ -366,35 +119,10 @@ export class AvatarVehicleMovementController {
         this._grounded = result.grounded;
         this._currentMovementSpeed = result.currentMovementSpeed;
 
-        // 0.9.127 — Vehicle Steering Integration Audit. `result.position`
-        // above is `currentPosition` stepped along `result.rotationY` —
-        // the avatar's own held-turn-key facing, entirely unrelated to
-        // `core/VehicleSteeringSimulation.js`. A REAL `steeringIntent`
-        // (see this method's own signature comment, above) redirects
-        // that SAME step onto the vehicle's own steering-attempted
-        // direction instead, WITHOUT re-deriving how far it travels: the
-        // scalar distance this tick's movement simulation already
-        // resolved (speed, acceleration, braking — every bit of it,
-        // completely untouched) is recovered from the vector
-        // `simulateAvatarMovement()` already returned by projecting it
-        // back onto its own `sin(rotationY), cos(rotationY)` unit
-        // direction — the exact inverse of how that file's own `dx`/`dz`
-        // were built in the first place — then re-applied along
-        // `resolveVehicleMovementDirectionFromSteering()`'s own output.
-        // This is a pure geometric re-projection, never a second speed/
-        // acceleration/braking computation: the "no second movement
-        // system" discipline this file's own header already establishes
-        // for `simulateAvatarMovement()` itself extends to this
-        // redirection too. `result.rotationY` itself — and everything
-        // this method returns it for (the avatar's own visual facing
-        // while riding, see application/WorldNavigationSession.js's own
-        // `rotation: { y: moved.rotationY }`) — is left completely
-        // unread by this block beyond that one projection, and is
-        // returned to the caller absolutely unchanged: steering the
-        // VEHICLE's own attempted travel direction never becomes a
-        // second way to set the avatar's own rendered rotation. See
-        // this file's own closing 0.9.127 comment for the full chain
-        // this one redirection completes.
+        // With a steeringIntent, re-project the step: recover the distance the
+        // simulation already resolved from its own direction, then apply it along the
+        // steered direction. result.rotationY, the avatar's facing, is returned
+        // unchanged.
         let candidatePosition = result.position;
         if (steeringIntent) {
             const attemptedDirection = resolveVehicleMovementDirectionFromSteering({
@@ -412,22 +140,8 @@ export class AvatarVehicleMovementController {
             };
         }
 
-        // Aerial Movement Pipeline — DRONE ONLY. Every other vehicle
-        // type leaves `candidatePosition.y` exactly as
-        // `simulateAvatarMovement()` already resolved it (raw terrain
-        // height — see this class's own 0.9.116 header, immediately
-        // below). A mounted drone additionally steps its own altitude
-        // (core/AvatarDroneVerticalState.js#stepDroneAltitude()) toward
-        // DRONE_HOVER_ALTITUDE whenever this tick's own movement intent
-        // requests forward/backward travel — "hovers when moving, sits
-        // on the ground when idle," the product brief this milestone
-        // implements — and layers it ON TOP OF the terrain-height Y the
-        // horizontal simulation already produced, rather than replacing
-        // that horizontal simulation with a second one. `this._droneAltitude`
-        // is this controller's own transient per-ride bookkeeping, the
-        // direct structural twin of `_verticalVelocity`/`_grounded`
-        // above, reset on every genuinely new ride (see above) and by
-        // `reset()` (below).
+        // Drone only: the altitude rises toward hover while moving and settles when
+        // idle, layered on top of the terrain-height Y.
         this._droneVerticalStateKind = null;
         if (vehicleInstance.type === VehicleType.DRONE) {
             const ascending = movementIntent.direction !== 0;
@@ -436,34 +150,9 @@ export class AvatarVehicleMovementController {
             candidatePosition = { ...candidatePosition, y: groundHeight + this._droneAltitude };
         }
 
-        // 0.9.119 — Vehicle–World Collision Constraint. The pure
-        // kinematics result above — 0.9.127's own steering redirection
-        // and the DRONE-only altitude block above, when active — is only
-        // ever a PROPOSED position — exactly the same "simulation
-        // proposes, a constraint disposes" split
-        // application/AvatarMovementController.js's own tick() already
-        // applies for the on-foot avatar (see that class's own
-        // 0.2.42/0.9.63 headers). Building/brick collision is applied
-        // FIRST, tree collision LAST — the identical ordering that
-        // pipeline already establishes — and BOTH are handed
-        // `capability.collisionRadius`, never a hardcoded avatar-sized
-        // radius, so a bicycle is tested against world geometry at its
-        // own, larger footprint (see core/AvatarVehicleMovementCapability.js's
-        // own 0.9.88 header). Y is untouched by either constraint — both
-        // are purely horizontal (X/Z) — so `candidatePosition.y` (already
-        // the vehicle's own raw-terrain-height Y for every non-DRONE
-        // vehicle — see this class's own 0.9.116 header — or terrain
-        // height PLUS the drone's own current altitude, per the block
-        // above) survives the pipeline unchanged. For a DRONE this also
-        // means building/brick collision becomes genuinely height-aware
-        // for free: core/AvatarCollision.js#resolveHorizontalMovement()
-        // already tests a moving body as a vertical column from its own
-        // `position.y` upward (AVATAR_COLLISION_HEIGHT) against each
-        // obstacle's real brick AABB — feeding it the drone's true
-        // in-flight Y, rather than always the ground, is the only change
-        // needed for a tall building to correctly block a low-flying
-        // drone while a building shorter than its current altitude does
-        // not — no new collision code anywhere.
+        // Collision is horizontal only, so Y survives. For a drone this makes building
+        // collision height-aware for free: a building shorter than its altitude no
+        // longer blocks it.
         let finalPosition = candidatePosition;
         this._collided = false;
         if (this._movementConstraint) {
@@ -474,15 +163,8 @@ export class AvatarVehicleMovementController {
             this._collided = constrained.collided;
         }
         this._collidedWithTree = false;
-        // A drone genuinely HOVERING (at or above DRONE_HOVER_ALTITUDE —
-        // see core/AvatarDroneVerticalState.js) bypasses tree collision
-        // entirely — "hovering above trees," this feature's own product
-        // brief — since core/TreeCollisionGeometry.js's own trees are a
-        // horizontal-only collision circle with no height data to test a
-        // real altitude against (see that file's own header). Below
-        // hover altitude (GROUNDED/RISING/DESCENDING) a drone is treated
-        // exactly like any other vehicle here — still low enough that
-        // bypassing trees would be visibly wrong during takeoff/landing.
+        // A hovering drone skips tree collision (trees have no height data). Below
+        // hover altitude it collides like any other vehicle.
         const droneHovering = this._droneVerticalStateKind === AvatarDroneVerticalStateKind.HOVERING;
         if (this._treeConstraint && !droneHovering) {
             const treeResult = this._treeConstraint.apply(currentPosition, finalPosition, {
@@ -492,30 +174,12 @@ export class AvatarVehicleMovementController {
             this._collidedWithTree = treeResult.collided;
         }
 
-        // The ONE line this whole class exists to reach: the vehicle's
-        // own runtime position actually changes, through the exact
-        // mechanism 0.9.114 built for it —
-        // VehicleRuntimeInstances#setPosition(), itself a thin wrapper
-        // over VehicleInstance#withPosition(). Never a direct field
-        // assignment, never a second position-replacement path. Commits
-        // `finalPosition` — the ALREADY-CONSTRAINED position — so the
-        // avatar (which follows this store's own committed position,
-        // never a pre-constraint one — see
-        // application/WorldNavigationSession.js's own 0.9.116 "the
-        // vehicle moves, the avatar follows" wiring) can never end up
-        // standing inside an obstacle the vehicle itself was just
-        // stopped short of.
+        // Commits the constrained position, so the avatar that follows can never end
+        // up inside an obstacle the vehicle stopped short of.
         let nextVehicleInstance = this._vehicleRuntimeInstances.setPosition(vehicleId, finalPosition);
 
-        // 0.9.123 — Vehicle Orientation. Only a GENUINE horizontal
-        // position change (never a raw request/intent, and never the
-        // pre-collision simulated one) ever produces a new heading — see
-        // this file's own 0.9.123 header. `currentPosition` is this
-        // tick's OWN starting position (captured above, before
-        // simulation ran), so a fully-blocked tick (finalPosition ===
-        // currentPosition in X/Z) is indistinguishable here from a tick
-        // with no movement intent at all — both correctly leave heading
-        // untouched.
+        // Heading changes only on real horizontal movement after collision, so a fully
+        // blocked tick keeps the old heading.
         if (finalPosition.x !== currentPosition.x || finalPosition.z !== currentPosition.z) {
             const nextHeading = resolveVehicleHeadingFromMovement({
                 dx: finalPosition.x - currentPosition.x,
@@ -528,35 +192,16 @@ export class AvatarVehicleMovementController {
         return { vehicleInstance: nextVehicleInstance, rotationY: result.rotationY };
     }
 
-    // 0.9.119 — whether the MOST RECENT tick()'s desired movement was
-    // altered by building/brick collision geometry. Same transient,
-    // debug/UI-only posture as application/AvatarMovementController.js's
-    // own isCollided() — recomputed fresh every tick, never persisted,
-    // never part of VehicleInstance.
     isCollided() {
         return this._collided;
     }
 
-    // 0.9.119 — the direct structural twin of isCollided() above, for
-    // tree collision — mirroring application/AvatarMovementController.js's
-    // own isCollidedWithTree().
     isCollidedWithTree() {
         return this._collidedWithTree;
     }
 
-    // Clears this controller's own transient per-ride bookkeeping —
-    // called whenever the avatar is NOT currently having its movement
-    // intent resolved into vehicle movement (unmounted, or mounted on a
-    // vehicle `canMove()` reports false for), so that a LATER ride —
-    // even of the exact same bicycle, even a re-mount within the same
-    // session — always starts from rest, never carrying over a stale
-    // mid-ride speed or vertical velocity from a previous, unrelated
-    // ride. The direct structural twin of
-    // application/AvatarMovementController.js's own capability-change
-    // reset, invoked here by the CALLER (application/WorldNavigationSession.js)
-    // rather than inferred internally, because only the caller knows
-    // whether this frame's movement intent was actually routed here at
-    // all.
+    // Called by the caller whenever intent is not routed here (unmounted, or an
+    // immovable vehicle), so every later ride starts from rest.
     reset() {
         this._activeVehicleId = null;
         this._verticalVelocity = 0;
@@ -569,60 +214,6 @@ export class AvatarVehicleMovementController {
     }
 }
 
-// 0.9.123 — Vehicle Orientation. `tick()` now also commits a new
-// VehicleInstance.heading — see core/VehicleInstance.js's own 0.9.123
-// header — WHENEVER the vehicle's own final, ALREADY-CONSTRAINED
-// position genuinely differs (in X/Z) from where it started this tick.
-// The heading itself comes from core/VehicleMovementHeading.js's own
-// pure `resolveVehicleHeadingFromMovement()`, fed the REALIZED
-// displacement (finalPosition minus currentPosition, after collision) —
-// never from `result.rotationY`, which tracks requested STEERING, not
-// realized movement (see that file's own header for exactly why those
-// two can differ). A tick that produced no real horizontal movement —
-// no movement intent, or a movement fully absorbed by
-// `_movementConstraint`/`_treeConstraint` — never calls
-// `setHeading()` at all, so a stationary or fully-blocked vehicle's own
-// heading is simply left exactly as this store already holds it; see
-// this class's own `tick()` below for where that check happens.
-//
-// 0.9.127 — Vehicle Steering Integration Audit. `tick()` above now also
-// accepts an optional `steeringIntent`
-// (core/VehicleSteeringIntent.js) — see that parameter's own signature
-// comment for the full picture. Still no steering ANGLE, RATE, turning
-// radius, or angular velocity of any kind: a real `steeringIntent`
-// changes only which direction this tick's ALREADY-RESOLVED step
-// magnitude is applied along, computed in one call to
-// core/VehicleSteeringSimulation.js's own pure
-// `resolveVehicleMovementDirectionFromSteering()` — never smoothed,
-// rate-limited, or tracked as persistent state between ticks, the exact
-// same "applied in full, in one call" discipline that file's own header
-// already establishes for itself. Heading STILL only ever comes from
-// core/VehicleMovementHeading.js's own `resolveVehicleHeadingFromMovement()`,
-// fed this tick's REALIZED (post-collision) displacement — a steered
-// tick that collision fully absorbs leaves heading exactly where a
-// steered tick was already required to, before this milestone.
-//
-// Deliberately not yet, matching this milestone's own brief: a vehicle
-// physics engine, vehicle-vs-vehicle collision (0.9.119 added only
-// vehicle-vs-WORLD collision — trees, bricks, buildings — never
-// vehicle-vs-vehicle), steering angle, turning radius, or
-// vehicle angular velocity of any kind (heading SNAPS to the realized
-// movement direction each tick — see core/VehicleMovementHeading.js's own
-// header — it is never smoothed/rate-limited the way `rotationY` itself
-// still is), wheel or rider animation, road/path following, gears,
-// reverse, or turning-radius physics beyond
-// core/AvatarMovementSteeringSimulation.js's own existing math (which
-// still governs `result.rotationY`, the avatar's own facing while
-// mounted — entirely unchanged by this milestone, see
-// application/WorldNavigationSession.js's own 0.9.116 header), an
-// oriented/rectangular collision footprint (the vehicle's own
-// `collisionRadius` stays circular — see core/VehicleInstance.js's own
-// 0.9.123 header, "keep the bicycle a circular collision body"),
-// collision response beyond the existing "stop at the combined radius"
-// resolution (no sliding response redesign, no bounce, no
-// damage/sound/animation), multiplayer synchronization, persistence, or
-// a redesign of mounting/dismounting/spawning of any kind. This file
-// answers only "given a movement intent and a mounted, movable vehicle,
-// what is its next, WORLD-COLLISION-CONSTRAINED runtime position AND
-// facing" — never any of those. See docs/Roadmap.md, 0.9.116, 0.9.119,
-// and 0.9.123.
+// Heading comes from the realized, post-collision displacement
+// (core/VehicleMovementHeading.js) and snaps each tick; it is never smoothed
+// the way rotationY is.

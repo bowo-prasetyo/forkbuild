@@ -33,219 +33,43 @@ import { deriveAvatarVehicleDeployTransition } from '../core/AvatarVehicleDeploy
 import { VehicleInstance } from '../core/VehicleInstance.js';
 import { createId } from '../core/createId.js';
 
-// 0.9.83 — Avatar-Vehicle Mount/Dismount Runtime Integration.
-// Extended by 0.9.117 — Vehicle-Aware Dismount.
-// Extended by 0.9.118 — Vehicle Runtime Authority Audit (mount-target
-// resolution — see `_nearbyVehicles()`'s own 0.9.118 header below).
+// Runs the core mount/dismount (and store/deploy) chain at runtime. It holds no
+// policy of its own: every decision is made by the pure core/ functions it
+// calls. It only supplies where the avatar is, which vehicles are nearby, and
+// when to ask.
 //
-// 0.9.73 through 0.9.82 built a complete mount/dismount semantic chain —
-// proximity, identity, intent, target resolution, a mount descriptor, a
-// mount transition, dismount intent, dismount destination resolution,
-// destination clearance, and a dismount transition — entirely inside
-// core/, entirely uncalled by anything else in this codebase (see
-// docs/Roadmap.md, 0.9.82's own closing paragraph: "the next step is
-// deliberately NOT another small core abstraction — it is integrating
-// this now-complete chain into the actual World View/navigation
-// runtime"). This file is that integration, and ONLY that integration:
+// Keys are polled from held state once per frame, like AvatarMovementController,
+// so browser auto-repeat never counts as new presses. One key ('e') means mount
+// when unmounted and dismount when mounted; `_interactKeyConsumed` limits each
+// physical press to one transition, otherwise the tick after a dismount would
+// immediately remount the vehicle still within reach.
 //
-//   raw "is the interaction key held" fact
-//           |
-//           v
-//   AvatarVehicleInteractionIntent / AvatarVehicleDismountIntent
-//           |
-//           v
-//   AvatarVehicleInteractionTarget  (mount path only)
-//           |
-//           v
-//   AvatarVehicleMountTransition  /  AvatarVehicleDismountPosition
-//                                    -> AvatarVehicleDismountClearance
-//                                    -> AvatarVehicleDismountTransition
-//           |
-//           v
-//   this controller's own `mount` state, and (dismount only) a new
-//   AvatarPresence position
+// `mount` lives here: growing AvatarPresence with a `mountedVehicleId` was explicitly
+// rejected (see core/AvatarVehicleMount.js), and AvatarMovementController only
+// owns movement keys and kinematics.
 //
-// THIS FILE CONTAINS NO MOUNT/DISMOUNT POLICY OF ITS OWN. Every actual
-// decision — is a target in range, is a destination clear, does an
-// intent + current state actually transition — is made entirely inside
-// the nine already-complete, already-independently-tested pure
-// functions this class calls. This class supplies exactly the three
-// things none of those functions is allowed to supply for itself: WHERE
-// the avatar currently is (AvatarPresenceSession), WHICH vehicles
-// currently exist nearby (a seed-driven query — see "Vehicle lookup"
-// below), and WHEN to ask (once per animation frame, from whatever raw
-// key state it was told about).
-//
-// A ONE-SHOT ACTION, DERIVED FROM A HELD-KEY POLL — THE SAME SHAPE
-// application/AvatarMovementController.js ALREADY USES FOR W/A/S/D/
-// SHIFT/SPACE. `keyDown('e')`/`keyUp('e')` only ever record "is the
-// interaction key CURRENTLY held," mirroring that class's own `_keys`
-// object; `tick()` re-evaluates the mount/dismount rule fresh every
-// frame from whatever is currently held, mirroring that class's own
-// `_currentMovementState()`. This is deliberately NOT "call an
-// `interact()` method once on a keydown edge": a real browser fires
-// repeated keydown events for one held key (auto-repeat), and this
-// controller must never treat each of those as a fresh discrete
-// request.
-//
-// WHY HELD STATE ALONE IS NOT ENOUGH, AND WHAT `_interactKeyConsumed`
-// FIXES. core/AvatarVehicleInteractionIntent.js's and
-// core/AvatarVehicleDismountIntent.js's own headers are each correct in
-// isolation — asserting MOUNT every tick while already mounted is a
-// no-op (0.9.78's own idempotence), and the identical argument holds
-// for DISMOUNT once unmounted. But this controller routes ONE shared
-// key to TWO different intents depending on current `mount` state
-// (below), and `mount` can change to `null` in the MIDDLE of a single
-// held press — the exact tick a dismount succeeds. Held-state-only
-// polling would then route the VERY NEXT tick, key still physically
-// down, into `_tickMount()` instead — and since a just-dismounted
-// avatar stands well within the same vehicle's own interaction radius
-// (`BICYCLE_DISMOUNT_OFFSET_X` is 1, `VEHICLE_INTERACTION_RADIUS` is
-// 1.5), it would immediately remount the vehicle it just dismounted, a
-// real mount<->dismount ping-pong within one continuous key press.
-// `_interactKeyConsumed` closes exactly that gap: once a press has
-// caused ONE transition (either direction), `requested` is held false
-// for the REST of that same press, regardless of how many further
-// ticks the key stays down — releasing the key is what re-arms it. A
-// player must genuinely release and re-press the key to toggle a
-// second time, and within one physical press, at most one transition
-// ever fires.
-//
-// MOUNT AND DISMOUNT SHARE ONE KEY, NEVER BOTH LIVE AT ONCE. Which
-// intent is even asked for is decided by this controller's own current
-// `mount` state — not mounted asks MOUNT, mounted asks DISMOUNT. This
-// is a runtime input-routing decision, not a new core vocabulary: it
-// never merges core/AvatarVehicleInteractionIntent.js and
-// core/AvatarVehicleDismountIntent.js into one enum, and neither core
-// function ever learns the other exists.
-//
-// WHERE DOES `mount` LIVE? This is the one open architectural question
-// the milestone brief asked this integration to answer, and the answer
-// this milestone gives is: RIGHT HERE, on this controller, not folded
-// into AvatarPresenceSession (which owns WHERE the avatar is, signed
-// and broadcast — see core/AvatarVehicleMount.js's own header for why
-// growing AvatarPresence with a `mountedVehicleId` was explicitly
-// rejected) and not folded into AvatarMovementController (which owns
-// raw movement key state and the kinematics tick, and this milestone
-// deliberately never touches — see "No movement coupling" below). A
-// mount relationship is neither of those; it is its own small piece of
-// session-local runtime state, exactly as small as
-// core/AvatarVehicleMount.js's own descriptor already is. `mount()`
-// exists so a caller (a future UI indicator, a future movement-
-// capability seam) can read it without this controller growing a
-// second, differently-shaped way to ask "is the avatar mounted."
-//
-// VEHICLE LOOKUP: A REQUERY, NEVER A REGISTRY — STILL TRUE FOR MOUNTING,
-// NO LONGER THE WHOLE STORY FOR DISMOUNTING AS OF 0.9.117. The mount
-// path (0.9.76's own `vehicles` argument) needs real VehiclePresence
-// instances for vehicles not yet known to exist at all, and nothing in
-// this codebase yet holds a "currently known vehicles" collection FOR
-// THAT PURPOSE (unlike buildings/placements, which DO stream through a
-// document-backed registry — see application/AvatarMovementConstraint.js's
-// own "currently loaded" concern). Rather than inventing one,
-// `_nearbyVehicles()` below extends the exact pattern
-// application/AvatarTreeConstraint.js already established for trees:
-// vehicles, like trees, are a PURE function of (seed, x, z) —
-// core/VehiclePlacement.js's own header, "recomputed, never stored" — so
-// a small, seed-scoped, stateless region requery around the avatar's own
-// current position is already the correct "currently available" answer
-// for MOUNTING, with no registry, no caching, and no synchronization
-// concern of any kind; for mounting, its result becomes 0.9.76's own
-// `vehicles` candidate list, unchanged by 0.9.117. Dismounting is
-// different: once mounted, WHICH vehicle is already known by identity
-// (`mount.vehicleId`) — nothing needs discovering — so 0.9.117 routes
-// that lookup through `_currentMountedVehicle()` (below), which prefers
-// application/VehicleRuntimeInstances.js's own identity-keyed store (a
-// real registry, of exactly the "currently known vehicles" kind this
-// paragraph once said didn't exist — see that file's own header) over
-// this same requery, and falls back to it only when no such store is
-// wired. See "A known boundary," below, for the one case even that
-// fallback can still miss, and this file's own "Vehicle identity is the
-// primary reference, once mounted" for 0.9.117's own full story.
-//
-// A KNOWN BOUNDARY, DELIBERATELY LEFT OPEN — NO MOVEMENT COUPLING.
-// core/AvatarVehicleMountTransition.js's own header is explicit that
-// mounting causes "no movement changes," and this milestone's own brief
-// is equally explicit that vehicle movement, and any coupling between
-// mount state and AvatarMovementController, is OUT OF SCOPE. That
-// means this controller never disables, slows, or otherwise touches
-// ordinary W/A/S/D movement while mounted — an avatar can still walk
-// away from a vehicle it is nominally "mounted" on. If it walks far
-// enough that NEITHER the runtime store (when one is wired — see this
-// file's own 0.9.117 header, "Vehicle identity is the primary
-// reference, once mounted") NOR the deterministic fallback still has
-// the mounted vehicle, `_currentMountedVehicle()` returns `null`,
-// `resolveAvatarVehicleDismountPosition()` is never even called, and
-// the dismount transition's own honest `dismountPosition: null` case
-// (0.9.80's own "no destination known") leaves the avatar mounted with
-// its position unchanged — never a crash, never a silently wrong
-// teleport, just "no destination is known from here." Deciding what a
-// mounted avatar's movement should even mean is exactly the seam
-// docs/Roadmap.md's own 0.9.82 closing paragraph deferred to whatever
-// comes after this milestone; this controller does not guess at it.
-//
-// VEHICLE IDENTITY IS THE PRIMARY REFERENCE, ONCE MOUNTED — 0.9.117's
-// OWN CENTRAL CORRECTION. Every dismount-path lookup above 0.9.117 ever
-// had was spatial: `_findMountedVehicle()` re-derives "which vehicle is
-// this" by re-querying deterministic placement around the AVATAR's own
-// current position and filtering for a matching id — correct only by
-// accident, because through 0.9.115 a vehicle's position never changed,
-// so "near the avatar" and "the vehicle I'm mounted on" always agreed.
-// 0.9.116 broke that accident: a mounted, ridden bicycle now has a
-// runtime position that can differ from its deterministic spawn point,
-// and the deterministic query only ever finds a vehicle by its FIXED
-// spawn point falling inside a small, avatar-centered box — so a moved
-// vehicle's dismount destination kept resolving from where it STARTED,
-// and once ridden far enough, stopped resolving one at all (see "A
-// known boundary," above). `_currentMountedVehicle()` (below) is this
-// milestone's fix: once mounted, `this._mount.vehicleId` — session-
-// local, set the instant mounting succeeds, and never itself
-// distance-gated — is looked up by IDENTITY against
-// `this._vehicleRuntimeInstances`, this session's own authoritative
-// store of a vehicle's CURRENT position (application/VehicleRuntimeInstances.js),
-// before ever falling back to a spatial requery. `mountedVehicleType()`
-// and `_tickDismount()` both go through this one lookup now — see each
-// method's own 0.9.117 update — closing the exact gap
-// docs/Roadmap.md's own 0.9.116 entry named as "0.9.117's own job."
+// Once mounted, the vehicle is found by identity in VehicleRuntimeInstances (its
+// current position), never by re-querying spawn positions around the avatar. A
+// ridden vehicle's position differs from its spawn point. Mount targeting also
+// merges tracked vehicles at their current positions. Without a runtime store,
+// lookups fall back to the deterministic spawn query.
+
 export class AvatarVehicleInteractionController {
     constructor(avatarPresenceSession, { seed = DEFAULT_WORLD_SEED, vehicleRuntimeInstances = null, avatarInventoryStore = null } = {}) {
         this._avatarPresenceSession = avatarPresenceSession;
         this._seed = seed;
-        // 0.9.700 — Shared Avatar Inventory Store. `null` by default: a
-        // caller that builds this controller alone (an older test, a
-        // minimal setup with no animal-catching side) gets its own
-        // private store, exactly as 0.9.670 always gave it — see
-        // application/AvatarInventoryStore.js's own header for why a real
-        // World View session instead constructs ONE store and hands the
-        // SAME instance to this controller and
-        // application/AvatarAnimalInteractionController.js alike.
+        // Shared with AvatarAnimalInteractionController in a real session; a private
+        // store otherwise.
         this._inventoryStore = avatarInventoryStore || new AvatarInventoryStore();
-        // 0.9.117 — Vehicle-Aware Dismount. The one new collaborator this
-        // milestone adds — see this file's own 0.9.117 header, "Vehicle
-        // identity is the primary reference, once mounted." `null` by
-        // default: a caller that builds this controller without one (an
-        // older test, a minimal setup) gets exactly the pre-0.9.117
-        // deterministic-fallback behavior `_findMountedVehicle()` already
-        // provided, never a throw — see `_currentMountedVehicle()` below.
+        // Optional; without it lookups fall back to the deterministic spawn query.
         this._vehicleRuntimeInstances = vehicleRuntimeInstances;
         this._interactKeyHeld = false;
-        // 0.9.83 — set the moment a held press causes ONE mount/dismount
-        // transition, cleared only on keyUp. See this file's own header,
-        // "Why held state alone is not enough."
+        // Set once a press causes a transition; cleared on key release.
         this._interactKeyConsumed = false;
         this._mount = null;
-        // 0.9.670 — Avatar Inventory (store/deploy). A second, independent
-        // key ('q') sharing the exact "held-key poll + one-shot consume"
-        // shape 'e' already established above for mount/dismount — see
-        // this file's own 0.9.670 header, below `tick()`.
         this._storeKeyHeld = false;
         this._storeKeyConsumed = false;
-        // 0.9.671 — Avatar Inventory Cycle Selection. Which carried entry
-        // deploy() acts on — `null` means "no explicit selection," which
-        // core/AvatarInventory.js#resolve() already treats as "the most
-        // recent one," the original 0.9.670 default. Two more keys
-        // ('[' / ']'), the same held-key/one-shot-consumed shape 'e' and
-        // 'q' already use above.
+        // null means the most recent entry.
         this._selectedEntryId = null;
         this._cyclePreviousKeyHeld = false;
         this._cyclePreviousKeyConsumed = false;
@@ -253,61 +77,16 @@ export class AvatarVehicleInteractionController {
         this._cycleNextKeyConsumed = false;
     }
 
-    // The avatar's current AvatarVehicleMount, or `null` when not
-    // mounted — a read-only debug/UI surface, the same posture
-    // application/AvatarMovementController.js's own isCollided()/
-    // verticalState() already establish for their own transient state.
     mount() {
         return this._mount;
     }
 
-    // 0.9.670 — Avatar Inventory (store/deploy). The avatar's current,
-    // SHARED AvatarInventory — a read-only debug/UI surface, the
-    // identical posture mount() above already establishes for its own
-    // state. 0.9.700 UPDATE — reads through `this._inventoryStore` now,
-    // so this returns the exact same inventory
-    // application/AvatarAnimalInteractionController.js sees and mutates,
-    // never a private copy.
     inventory() {
         return this._inventoryStore.get();
     }
 
-    // 0.9.85 — the VehicleType of the vehicle this controller is
-    // currently mounted on, or VehicleType.NONE when not mounted —
-    // never `null`, mirroring core/AvatarVehicleMovementCapability.js's
-    // own header: "VehicleType.NONE is passed for 'not currently
-    // mounted,' reusing the exact value core/VehicleType.js's own
-    // header already reserved for this," never a second not-mounted
-    // spelling alongside `mount`'s own `null`. Reuses the exact
-    // `_currentMountedVehicle()` lookup `_tickDismount()` already
-    // performs below — see this file's own header, "Vehicle identity is
-    // the primary reference, once mounted" — rather than a second copy
-    // of the same lookup. Read by application/WorldNavigationSession.js,
-    // once per animation frame, to resolve the local avatar's current
-    // movement capability (core/AvatarVehicleMovementCapability.js) —
-    // the one new consumer 0.9.85 adds for this controller's own
-    // `mount` state, and still not application/AvatarMovementController.js
-    // itself, which never learns a VehicleType exists at all (see that
-    // file's own 0.9.85 header).
-    //
-    // 0.9.117 UPDATE — NO LONGER SUBJECT TO THE "KNOWN BOUNDARY"
-    // `_findMountedVehicle()` ITSELF STILL DOCUMENTS BELOW ("A known
-    // boundary"), as long as a `vehicleRuntimeInstances` store was
-    // wired in (the case for every real World View session — see
-    // application/WorldNavigationSession.js's own constructor). Through
-    // 0.9.116 this method degraded to VehicleType.NONE the moment the
-    // avatar walked far enough that the mounted vehicle no longer fell
-    // inside `_nearbyVehicles()`'s own query rectangle — even though
-    // `mount()` itself was still non-null — because it re-derived the
-    // vehicle SPATIALLY, from the avatar's own current position, rather
-    // than by the identity it was already holding. `_currentMountedVehicle()`
-    // below closes that gap by resolving the mounted vehicle's identity
-    // (`this._mount.vehicleId`) directly against the runtime store
-    // first; the spatial requery survives only as a fallback for a
-    // caller with no runtime store wired at all (see that method's own
-    // header). A caller with no runtime store keeps the exact pre-0.9.117
-    // "no destination is known from here" honesty, never a crash or a
-    // guessed type.
+    // VehicleType.NONE when not mounted, never null. Read each frame by
+    // WorldNavigationSession to resolve the movement capability.
     mountedVehicleType() {
         if (!this._avatarPresenceSession || this._mount === null) {
             return VehicleType.NONE;
@@ -317,51 +96,14 @@ export class AvatarVehicleInteractionController {
         return vehicle ? vehicle.type : VehicleType.NONE;
     }
 
-    // 0.9.98 — Vehicle Mount/Dismount World View Integration. The one new
-    // read-only observation seam this milestone adds — the controller-
-    // level counterpart to application/AvatarMovementController.js's own
-    // `movementState()` (0.9.97). A caller (ordinarily
-    // application/WorldNavigationSession.js, ordinarily World View
-    // itself, on its own independent poll cadence) needs to know, at any
-    // moment, whether to present a "[E] Mount" or "[E] Dismount"
-    // affordance and which vehicle type it refers to — WITHOUT
-    // recomputing proximity or target resolution itself:
+    // Read-only preview of what 'e' would do now, for the UI prompt:
     //
-    //   mounted
-    //       -> { mounted: true, vehicleType: <mounted vehicle's type>,
-    //            targetVehicleId: null }
-    //   not mounted, a vehicle is in interaction range
-    //       -> { mounted: false, vehicleType: <that vehicle's type>,
-    //            targetVehicleId: <its id> }
-    //   not mounted, nothing in range
-    //       -> { mounted: false, vehicleType: VehicleType.NONE,
-    //            targetVehicleId: null }
+    //   mounted                  { mounted: true,  vehicleType, targetVehicleId: null }
+    //   a vehicle in range       { mounted: false, vehicleType, targetVehicleId }
+    //   nothing in range         { mounted: false, vehicleType: NONE, targetVehicleId: null }
     //
-    // REUSES resolveAvatarVehicleInteractionTarget() — never a second
-    // nearest-candidate search. `_tickMount()` only ever calls that
-    // function with a REAL, key-driven `interactionIntent` (NONE most
-    // ticks, MOUNT only the instant the key is actually held), because
-    // ITS job is deciding whether to actually mount. This method's job is
-    // different — "what WOULD be targeted right now" — so it always asks
-    // with `interactionIntent` forced to MOUNT, purely to read 0.9.76's
-    // own ranked-candidate answer as a PREVIEW. This is not a second
-    // target-resolution policy: it is the exact same pure function,
-    // called for observation rather than for a decision — the same
-    // posture `mountedVehicleType()` above already takes, reusing
-    // `_findMountedVehicle()`'s own query for a read rather than a
-    // transition.
-    //
-    // NEVER CALLED FROM tick(). A UI observation seam must never itself
-    // influence the actual mount/dismount decision, and never does here —
-    // this method is called only from OUTSIDE the tick loop, exactly like
-    // `mount()`/`mountedVehicleType()` above already are.
-    //
-    // A plain, frozen object — not a new class — the identical posture
-    // `AvatarMovementController#movementState()` already established for
-    // the same reason: every field is already a primitive or a plain
-    // string, so `Object.freeze()` alone keeps a caller from ever
-    // mutating this controller's own bookkeeping through the returned
-    // value.
+    // Asks the same target resolution with intent forced to MOUNT, purely as a
+    // preview. Never called from tick().
     vehicleInteractionState() {
         if (!this._avatarPresenceSession) {
             return Object.freeze({ mounted: false, vehicleType: VehicleType.NONE, targetVehicleId: null });
@@ -390,51 +132,10 @@ export class AvatarVehicleInteractionController {
         });
     }
 
-    // 0.9.670 — Avatar Inventory (store/deploy). The store/deploy
-    // affordance counterpart of vehicleInteractionState() above — a
-    // caller (ordinarily World View's own prompt) needs to know whether
-    // to show a "[Q] Store" or "[Q] Deploy <Type>" hint, without
-    // recomputing mount or inventory state itself:
-    //
-    //   mounted
-    //       -> { canStore: true, canDeploy: false,
-    //            vehicleType: <mounted vehicle's type>,
-    //            carriedCount: <however many are also carried>,
-    //            selectedIndex: null }
-    //   not mounted, carrying at least one entry
-    //       -> { canStore: false, canDeploy: true,
-    //            vehicleType: <the entry that would deploy next>,
-    //            carriedCount: <total carried>,
-    //            selectedIndex: <1-based position of that entry> }
-    //   not mounted, carrying nothing
-    //       -> { canStore: false, canDeploy: false,
-    //            vehicleType: VehicleType.NONE, carriedCount: 0,
-    //            selectedIndex: null }
-    //
-    // 0.9.671 UPDATE — carriedCount/selectedIndex are the two new fields
-    // Cycle Selection adds, for a UI (ui/components/VehicleInteractionPrompt.js)
-    // that wants to show "Deploy Bicycle (2/3)" rather than just a bare
-    // type name once more than one vehicle can be carried at once.
-    // `vehicleType` itself still reflects whatever entry would actually
-    // deploy right now — the exact SAME resolution `_tickDeploy()` below
-    // feeds into `deriveAvatarVehicleDeployTransition()` — never a
-    // second, independently-computed "what's selected" answer.
-    //
-    // 0.9.700 UPDATE — reads through the SHARED `this._inventoryStore`
-    // now, and every carried-entry read below is scoped to
-    // `InventoryEntryKind.VEHICLE` — see core/AvatarInventory.js's own
-    // header, "A shared inventory, not two parallel ones." Without that
-    // scoping, a carried ANIMAL entry (application/AnimalRuntimeInstances.js's
-    // own kind) would silently count toward `carriedCount` and could
-    // even become the "selected" entry this method reports as
-    // `vehicleType` — a real bug this scoping exists specifically to
-    // prevent.
-    //
-    // PRESENTATION ONLY — reuses mountedVehicleType() and the shared
-    // inventory's own resolve()/entriesOf(), never a second computation
-    // of either. Never called from tick(), the same "a UI observation
-    // seam must never influence the actual decision" discipline
-    // vehicleInteractionState() above already establishes.
+    // Read-only preview for the store/deploy prompt: canStore/canDeploy, the type
+    // that would be stored or deployed, carriedCount and the 1-based selectedIndex.
+    // Counts VEHICLE entries only: the inventory also holds animals, which must not
+    // count or become the selection. Never called from tick().
     storeInteractionState() {
         if (!this._avatarPresenceSession) {
             return Object.freeze({ canStore: false, canDeploy: false, vehicleType: VehicleType.NONE, carriedCount: 0, selectedIndex: null });
@@ -463,10 +164,7 @@ export class AvatarVehicleInteractionController {
         });
     }
 
-    // Returns true when `key` is the one this controller understands,
-    // so a caller knows whether to preventDefault/swallow the event —
-    // the same contract application/AvatarMovementController.js#keyDown/
-    // keyUp already establish for W/A/S/D/Shift/Space.
+    // Returns whether `key` is handled, so the caller knows to swallow the event.
     keyDown(key) {
         return this._setKey(key, true);
     }
@@ -475,39 +173,19 @@ export class AvatarVehicleInteractionController {
         return this._setKey(key, false);
     }
 
-    // Releases the held interaction key without changing `mount` —
-    // called wherever application/AvatarMovementController.js#releaseAll()
-    // already is (Avatar Control Mode turning off, a window blur), for
-    // the identical reason: a key event the browser never delivered
-    // must never leave this controller reading a permanently-held key.
-    // `mount` itself survives, exactly like AvatarMovementController's
-    // own `_continuousMovementIntent` survives releaseAll() — losing
-    // keyboard focus must never silently dismount the avatar.
+    // Releases held keys but keeps `mount`: losing focus must never dismount.
     releaseAll() {
         this._interactKeyHeld = false;
         this._interactKeyConsumed = false;
-        // 0.9.670 — losing keyboard focus must not leave 'q' permanently
-        // held either, the identical reasoning as 'e' immediately above.
-        // `_mount` and the shared inventory both survive, exactly like
-        // `mount` itself already survives releaseAll().
         this._storeKeyHeld = false;
         this._storeKeyConsumed = false;
-        // 0.9.671 — the same reasoning, for the two cycle-selection keys.
-        // `_selectedEntryId` and the shared inventory both survive,
-        // exactly like `mount` already does above.
         this._cyclePreviousKeyHeld = false;
         this._cyclePreviousKeyConsumed = false;
         this._cycleNextKeyHeld = false;
         this._cycleNextKeyConsumed = false;
     }
 
-    // Re-evaluates the mount/dismount rule from whatever is currently
-    // held. Called once per animation frame, alongside
-    // AvatarMovementController#tick() — see this file's own header for
-    // why polling held state here, rather than reacting to a single
-    // keydown edge, is what makes holding the key harmless, and why
-    // `_interactKeyConsumed` — not `_interactKeyHeld` alone — is what
-    // is actually passed down as this tick's request.
+    // Called once per frame alongside AvatarMovementController#tick().
     tick() {
         if (!this._avatarPresenceSession) {
             return;
@@ -518,21 +196,12 @@ export class AvatarVehicleInteractionController {
         } else {
             this._tickDismount(requested);
         }
-        // 0.9.670 — Avatar Inventory (store/deploy). Independent of the
-        // 'e' block above: a player presses one key or the other, never
-        // both at once for the same physical press, but nothing here
-        // relies on that — the two blocks simply never touch the same
-        // key's own held/consumed flags. See this file's own 0.9.670
-        // header, below.
         const storeRequested = this._storeKeyHeld && !this._storeKeyConsumed;
         if (this._mount === null) {
             this._tickDeploy(storeRequested);
         } else {
             this._tickStore(storeRequested);
         }
-        // 0.9.671 — Avatar Inventory Cycle Selection. Independent of
-        // both blocks above, the same "different keys never interfere"
-        // reasoning already given for 'q' vs 'e'.
         if (this._cyclePreviousKeyHeld && !this._cyclePreviousKeyConsumed) {
             this._cycleSelection(-1);
             this._cyclePreviousKeyConsumed = true;
@@ -543,9 +212,6 @@ export class AvatarVehicleInteractionController {
         }
     }
 
-    // Composes exactly the three 0.9.75/0.9.76/0.9.78 primitives the
-    // milestone brief's own "Mount" diagram names, in that order — no
-    // rule of its own beyond "which vehicles are currently nearby."
     _tickMount(requested) {
         const avatarPosition = this._avatarPresenceSession.current.position;
         const interactionIntent = deriveAvatarVehicleInteractionIntent({
@@ -568,47 +234,15 @@ export class AvatarVehicleInteractionController {
         this._mount = nextMount;
     }
 
-    // Composes exactly the four 0.9.79/0.9.80/0.9.81/0.9.82 primitives
-    // the milestone brief's own "Dismount" diagram names, in that
-    // order. The one piece none of those four files is allowed to
-    // supply for itself — the mounted vehicle's own CURRENT position —
-    // comes from `_currentMountedVehicle()` below.
-    //
-    // 0.9.117 — Vehicle-Aware Dismount. THE central invariant this
-    // milestone exists to establish: once mounted, the vehicle's CURRENT
-    // runtime position — never its deterministic spawn position — is the
-    // spatial authority for dismounting. Through 0.9.116 this line read
-    // `this._findMountedVehicle(currentPosition)`, a freshly re-queried
-    // `VehiclePresence` whose own `position` is, by that type's own
-    // contract, always the vehicle's FIXED spawn point (see
-    // core/VehiclePresence.js's own header) — so a bicycle ridden away
-    // from where it spawned (application/AvatarVehicleMovementController.js,
-    // 0.9.116) either resolved a dismount destination near a point the
-    // vehicle no longer occupied, or, once ridden more than
-    // `VEHICLE_INTERACTION_RADIUS` from its spawn point, stopped
-    // resolving one at all (see this file's own header, "A known
-    // boundary") — an avatar that could never dismount again. See this
-    // file's own header, "Vehicle identity is the primary reference,
-    // once mounted."
+    // Once mounted, the vehicle's current runtime position is the authority for
+    // the dismount destination, never its spawn position.
     _tickDismount(requested) {
         const currentPosition = this._avatarPresenceSession.current.position;
         const vehicle = this._currentMountedVehicle(currentPosition);
 
-        // Aerial Movement Pipeline — a DRONE currently off the ground
-        // (application/AvatarVehicleMovementController.js's own tick()
-        // commits its real in-flight Y, terrain height plus altitude,
-        // via VehicleRuntimeInstances#setPosition() — see that class's
-        // own header) cannot be dismounted mid-flight: forcing
-        // `requested` to false here, rather than teaching
-        // core/AvatarVehicleDismountTransition.js any vehicle awareness,
-        // keeps that file's own explicit "no vehicle awareness of any
-        // kind" restriction intact (see its own header) — this is a
-        // policy decision this application-layer controller is allowed
-        // to make, not a new core-level rule. Derived purely from the
-        // vehicle's own already-committed position vs. raw terrain
-        // height, never from application/AvatarVehicleMovementController.js's
-        // own private per-ride bookkeeping — this controller has no
-        // reference to that class at all, and does not need one.
+        // A drone in the air cannot be dismounted. Decided here from the vehicle's
+        // committed Y vs. terrain height, so the core dismount transition stays
+        // vehicle-agnostic.
         const airborne = vehicle !== null
             && vehicle.type === VehicleType.DRONE
             && vehicle.position.y > terrainHeightAt(this._seed, vehicle.position.x, vehicle.position.z) + 0.5;
@@ -651,16 +285,8 @@ export class AvatarVehicleInteractionController {
         }
     }
 
-    // 0.9.670 — Avatar Inventory (store/deploy). Composes
-    // core/AvatarVehicleStoreIntent.js + core/AvatarVehicleStoreTransition.js
-    // exactly the way `_tickMount()` composes its own three primitives —
-    // no store policy of its own beyond resolving WHICH vehicle is
-    // currently mounted (`_currentMountedVehicle()`, already shared with
-    // `_tickDismount()` above) and, once the pure transition says the
-    // store actually happened, removing that vehicle from the world via
-    // `VehicleRuntimeInstances#discard()` — the one real-world EFFECT
-    // core/AvatarVehicleStoreTransition.js is deliberately not allowed to
-    // perform itself (it only ever returns a next mount/inventory pair).
+    // Removes the stored vehicle from the world via VehicleRuntimeInstances#discard(),
+    // the effect the pure transition does not perform.
     _tickStore(requested) {
         const avatarPosition = this._avatarPresenceSession.current.position;
         const vehicle = this._currentMountedVehicle(avatarPosition);
@@ -682,33 +308,11 @@ export class AvatarVehicleInteractionController {
         this._inventoryStore.set(transition.inventory);
     }
 
-    // 0.9.670 — Avatar Inventory (store/deploy). Composes
-    // core/AvatarVehicleDeployIntent.js + core/AvatarVehicleDeployTransition.js,
-    // then performs the one EFFECT that pure transition deliberately
-    // leaves to its caller (see that file's own header, "Returns an
-    // entry, never a mount"): minting a fresh id
-    // (core/createId.js — a deployed vehicle has no deterministic
-    // placement slot to derive an id FROM, exactly like a hand-placed
-    // World/Building/Brick already needs one of these rather than a
-    // formula), constructing a real VehicleInstance at the avatar's own
-    // current position, registering it into the runtime store, and only
-    // THEN mounting it via `createAvatarVehicleMount()` — the identical
-    // primitive `deriveAvatarVehicleMount()` itself already builds on.
-    //
-    // GUARDED ENTIRELY ON `_vehicleRuntimeInstances` BEING WIRED. A
-    // deployed vehicle has nowhere else to exist — unlike the mount/
-    // dismount path's own graceful spatial-requery fallback
-    // (`_findMountedVehicle()`), there is no deterministic query that
-    // could ever "find" a vehicle that was never placed. A caller with
-    // no runtime store (an older test, a minimal setup) gets a harmless
-    // no-op: the key press is never consumed, and inventory stays
-    // exactly as it was — never a thrown error, never a silently lost
-    // entry.
-    // 0.9.671 UPDATE — reads `this._selectedEntryId` into the pure
-    // transition's own `selectedEntryId` parameter, and clears it once a
-    // deploy actually happens (the deployed entry no longer exists to be
-    // selected, so the next default is back to "most recent" — the same
-    // `AvatarInventory#resolve()` fallback used everywhere else).
+    // Performs what the pure transition leaves to its caller: mints an id (a
+    // deployed vehicle has no placement slot to derive one from), creates the
+    // VehicleInstance at the avatar, registers it, then mounts it. Requires a
+    // runtime store; without one the press is a no-op. Clears the selection after
+    // deploying.
     _tickDeploy(requested) {
         if (!this._vehicleRuntimeInstances) {
             return;
@@ -737,21 +341,8 @@ export class AvatarVehicleInteractionController {
         this._mount = createAvatarVehicleMount(instance.id);
     }
 
-    // 0.9.671 — Avatar Inventory Cycle Selection. Moves
-    // `this._selectedEntryId` one step through the shared inventory's
-    // own VEHICLE-only order (see storeInteractionState()'s own 0.9.700
-    // header for why the scoping matters) — `direction: 1` for one step
-    // newer (the '[' key's mirror, ']'), `direction: -1` for one step
-    // older ('[') — reusing core/AvatarInventory.js's own `next()`/
-    // `previous()`, never a second index-arithmetic implementation here.
-    // A harmless no-op on an empty (VEHICLE) inventory (both return
-    // `null`, and `null` is already this controller's own "no
-    // selection" spelling); cycling with exactly one vehicle carried
-    // always lands back on that same entry, which is correct, not a
-    // bug — there is nothing else to select.
-    // NEVER TOUCHES `_mount` OR THE INVENTORY ITSELF — cycling only ever
-    // changes WHICH entry a future deploy would act on, never performs
-    // one; that stays `_tickDeploy()`'s own job.
+    // Steps the selection through VEHICLE entries only; changes which entry a
+    // future deploy uses, never deploys.
     _cycleSelection(direction) {
         const inventory = this._inventoryStore.get();
         const entry = direction === 1
@@ -760,55 +351,17 @@ export class AvatarVehicleInteractionController {
         this._selectedEntryId = entry ? entry.id : null;
     }
 
-    // The one vehicle this controller is currently mounted on, re-found
-    // fresh from `_nearbyVehicles()` — never cached, since a fresh
-    // VehiclePresence for the SAME conceptual vehicle is reconstructed
-    // as a new object on every query (core/VehicleIdentity.js's own
-    // header). Returns `null` when the mounted vehicle no longer falls
-    // inside the query — see this file's own header, "A known
-    // boundary." As of 0.9.117 this is no longer the primary way a
-    // mounted vehicle is found — see `_currentMountedVehicle()` below —
-    // and survives only as its deterministic, spatial FALLBACK.
+    // Deterministic fallback: the vehicle as found near its spawn point. Returns
+    // null once the avatar is out of range of that spawn point.
     _findMountedVehicle(avatarPosition) {
         const vehicles = this._nearbyVehicles(avatarPosition);
         return vehicles.find((vehicle) => vehicle.id === this._mount.vehicleId) || null;
     }
 
-    // 0.9.117 — Vehicle-Aware Dismount. THE one lookup `mountedVehicleType()`
-    // and `_tickDismount()` now both go through for "which vehicle,
-    // currently, is the avatar mounted on" — see this file's own header,
-    // "Vehicle identity is the primary reference, once mounted."
-    // `this._mount.vehicleId` (session-local, set the instant a mount
-    // succeeds, never distance-gated — 0.9.77's own AvatarVehicleMount)
-    // is looked up directly against `this._vehicleRuntimeInstances` —
-    // this session's own runtime authority on a vehicle's CURRENT
-    // position (application/VehicleRuntimeInstances.js) — rather than
-    // rediscovered by re-querying deterministic placement around the
-    // AVATAR's own current position. That is the actual fix: identity
-    // first, space never. Returns `null` immediately when nothing is
-    // mounted (`this._mount === null`) — the same "not mounted" case
-    // every caller already checks before calling this.
-    //
-    // FALLS BACK TO `_findMountedVehicle()` ONLY WHEN NO RUNTIME STORE
-    // IS WIRED, OR THE STORE HAS NOT YET DISCOVERED THIS VEHICLE. A
-    // caller that never wires a `vehicleRuntimeInstances` (an older
-    // test, a minimal setup — see this class's own constructor) gets
-    // exactly the pre-0.9.117 deterministic, spawn-anchored behavior,
-    // never a throw. A real World View session always wires one (see
-    // application/WorldNavigationSession.js's own constructor), but its
-    // own vehicle-rendering frame subscription can tick AFTER this
-    // controller's own mount/dismount subscription within the very same
-    // frame (subscription registration order) — so the very first frame
-    // a vehicle is ever mounted, the runtime store may not have
-    // discovered it yet. That fallback is harmless: a vehicle the
-    // runtime store has never tracked has, by construction, never yet
-    // been moved by application/AvatarVehicleMovementController.js
-    // either, so the deterministic query's own spawn-equal answer is
-    // still the CORRECT current position in that one narrow window.
-    // core/AvatarVehicleDismountPosition.js's own 0.9.117 update accepts
-    // either a real `VehicleInstance` (the runtime-store branch) or a
-    // real `VehiclePresence` (the fallback branch) — both already expose
-    // the same `type`/`position` fields this lookup's own callers need.
+    // Identity first: looks up the mounted vehicle in the runtime store. Falls back
+    // to the spawn query only without a store, or in the first frame before the
+    // store has discovered the vehicle (which cannot have moved yet, so its spawn
+    // position is still correct).
     _currentMountedVehicle(avatarPosition) {
         if (this._mount === null) {
             return null;
@@ -822,67 +375,12 @@ export class AvatarVehicleInteractionController {
         return this._findMountedVehicle(avatarPosition);
     }
 
-    // A half-open square of side `2 * VEHICLE_INTERACTION_RADIUS`
-    // centered on the avatar, handed straight to
-    // core/VehiclePlacement.js#vehiclePresenceInRegion() — a strict
-    // superset of the circle core/AvatarVehicleProximity.js#withinRadiusXZ()
-    // itself tests against, so this query never excludes a vehicle
-    // either 0.9.76's target resolution or this controller's own
-    // dismount lookup could otherwise consider in range. See this
-    // file's own header, "Vehicle lookup: a requery, never a registry."
-    //
-    // 0.9.118 UPDATE — MERGED WITH TRACKED, CURRENT-POSITION CANDIDATES.
-    // THE AUDIT'S OWN CENTRAL FINDING. Through 0.9.117 this method
-    // returned the deterministic query's own result, unmodified — correct
-    // for MOUNTING a vehicle that has never moved (the overwhelming
-    // majority of cases, since most vehicles are never ridden), but wrong
-    // for the exact scenario 0.9.116/0.9.117 already made possible: a
-    // bicycle ridden away from its spawn point and left there is a real
-    // vehicle sitting at its CURRENT position, yet the deterministic
-    // query only ever finds a vehicle by its FIXED spawn point falling
-    // inside this box — so an avatar walking up to that vehicle's ACTUAL,
-    // current location could never mount it again; only walking back to
-    // its long-vacated spawn point would ever surface it, and that spot
-    // no longer has anything there. This is the identical "reads spawn,
-    // not current position" bug 0.9.117 already fixed for dismounting,
-    // found here for mount TARGETING by this milestone's own audit.
-    //
-    // The fix merges `this._vehicleRuntimeInstances.nearby()` — every
-    // ALREADY-TRACKED vehicle within interaction range of the avatar,
-    // measured against its own CURRENT position (application/
-    // VehicleRuntimeInstances.js's own 0.9.118 addition) — ahead of the
-    // deterministic candidates, deduplicated by id so a tracked vehicle's
-    // CURRENT-position entry always wins over the deterministic query's
-    // stale, spawn-anchored one for the same id. A vehicle this store has
-    // never discovered (the common case) is entirely unaffected — it
-    // still only ever comes from the deterministic query, exactly as
-    // before. Absent entirely when no `vehicleRuntimeInstances` was wired
-    // in (an older test, a minimal setup — see this class's own
-    // constructor), the identical graceful-degradation posture
-    // `_currentMountedVehicle()` already established for the dismount
-    // path.
-    //
-    // NEVER CALLS `sync()`. See application/VehicleRuntimeInstances.js's
-    // own `nearby()` header for exactly why: `sync()`'s own eviction step
-    // is keyed to ITS OWN radius/center, and this controller's own
-    // interaction radius (1.5) is far smaller than
-    // application/WorldNavigationSession.js's own render radius (50) —
-    // calling `sync()` from here, too, would evict a vehicle the render
-    // loop still wants tracked the moment the avatar is merely near it
-    // but not within mounting range. `nearby()` only ever reads; it never
-    // discovers or evicts anything.
-    // 0.9.700 UPDATE — deterministic candidates are now filtered through
-    // `this._vehicleRuntimeInstances.isExcluded()` before anything else.
-    // See that method's own header for the exact bug this closes:
-    // without it, a just-STORED vehicle (0.9.670) — discard()'d, so
-    // invisible to rendering and to `get()` — was still returned by this
-    // raw deterministic query on the very next tick, since
-    // `vehiclePresenceInRegion()` has no memory of the discard ever
-    // happening. Standing in place and pressing 'e' again would then
-    // re-mount that SAME vehicle id, and a subsequent 'q' press would
-    // try to store it a second time — `withEntryAdded()`'s own
-    // duplicate-id guard would throw, since the first store's own entry
-    // was still sitting in inventory the whole time.
+    // Deterministic candidates within a square around the avatar (a superset of the
+    // interaction circle), minus vehicles the store has excluded (stored ones, which
+    // the placement query cannot know about), merged after already-tracked vehicles
+    // at their current positions (tracked entries win by id). Never calls sync():
+    // its eviction radius is the render radius, so calling it here would evict
+    // vehicles the renderer still needs.
     _nearbyVehicles(avatarPosition) {
         const rawDeterministic = vehiclePresenceInRegion(
             this._seed,
@@ -900,10 +398,7 @@ export class AvatarVehicleInteractionController {
         return [...tracked, ...deterministic.filter((vehicle) => !trackedIds.has(vehicle.id))];
     }
 
-    // On release, also re-arms `_interactKeyConsumed` — a fresh press
-    // must always be able to act, exactly once, even after a press
-    // that already caused a transition. See this file's own header,
-    // "Why held state alone is not enough."
+    // Releasing re-arms `_interactKeyConsumed`.
     _setKey(key, isDown) {
         switch (String(key || '').toLowerCase()) {
             case 'e':
@@ -912,22 +407,13 @@ export class AvatarVehicleInteractionController {
                     this._interactKeyConsumed = false;
                 }
                 return true;
-            // 0.9.670 — Avatar Inventory (store/deploy). Its own key,
-            // deliberately never 'e' — mounting/dismounting and storing/
-            // deploying are two independent actions a player can reach
-            // for on the same tick (e.g. mounted, about to dismount AND
-            // store in the same motion is still two separate presses).
             case 'q':
                 this._storeKeyHeld = isDown;
                 if (!isDown) {
                     this._storeKeyConsumed = false;
                 }
                 return true;
-            // 0.9.671 — Avatar Inventory Cycle Selection. '[' steps to
-            // an older carried entry, ']' to a newer one — deliberately
-            // not the arrow keys (already vehicle steering while
-            // mounted) or the scroll wheel (already camera zoom — see
-            // docs/user/ControlsReference.md's own Camera table).
+            // '[' older, ']' newer: arrow keys steer and the wheel zooms the camera.
             case '[':
                 this._cyclePreviousKeyHeld = isDown;
                 if (!isDown) {
@@ -944,68 +430,3 @@ export class AvatarVehicleInteractionController {
         }
     }
 }
-
-// Deliberately not yet: vehicle movement, speed, or any DIRECT coupling
-// with application/AvatarMovementController.js (see this file's own
-// header, "A known boundary — no movement coupling") — this file still
-// never imports or references that class; 0.9.85's own `mountedVehicleType()`
-// above is a pure read of this controller's already-existing vehicle
-// lookup, and application/WorldNavigationSession.js is the one place
-// that composes it into an actual movement-capability change, never
-// this file. 0.9.98's own `vehicleInteractionState()` above is likewise
-// a pure read — no vehicle-type label, no keyboard-hint string, no
-// rendering of any kind lives here; that formatting is
-// ui/components/VehicleInteractionPrompt.js's job, never this
-// controller's. Also not yet: vehicle switching while
-// already mounted (0.9.78's own no-op rule already prevents it, and
-// this controller invents no override); a persistent vehicle registry
-// of any kind (see "Vehicle lookup: a requery, never a registry");
-// animation, camera changes, or rendering of any kind; a second
-// interaction key for a future non-bicycle vehicle type; remounting
-// policy beyond what 0.9.78's own idempotence already gives for free;
-// networking or persistence of `mount` (it is exactly as ephemeral,
-// local, and unsigned as AvatarPresence's own position — see
-// core/AvatarPresence.js's own header); collision or physics beyond
-// the existing tree-clearance check 0.9.81 already supplies. See
-// docs/Roadmap.md, 0.9.83, for the full pre-0.9.85 list, and 0.9.85 for
-// `mountedVehicleType()` itself.
-//
-// 0.9.117 deliberately does not add: any vehicle-specific collision
-// geometry (the existing tree-only `isAvatarVehicleDismountPositionClear()`
-// stays the entire clearance authority, completely unmodified); vehicle
-// orientation, steering, or rotation; alternative dismount directions or
-// automatic repositioning of a blocked destination; vehicle despawning;
-// persistence of a vehicle's runtime position across a session (a moved
-// vehicle still resets to its deterministic spawn point on the next
-// fresh session — `_vehicleRuntimeInstances` remains exactly as
-// session-local as application/VehicleRuntimeInstances.js's own header
-// already establishes); multiplayer synchronization of a vehicle's
-// runtime position; MOTORCYCLE/CAR/DRONE movement (still gated entirely
-// by `isMovableVehicleType()`, upstream in
-// application/AvatarVehicleMovementController.js, untouched here); a
-// redesign of mounting or of the mount TARGET resolution path
-// (`_tickMount()`/`_nearbyVehicles()` are completely unchanged — only
-// the DISMOUNT-side vehicle lookup changes, since only a MOUNTED
-// vehicle's identity is already known); or a fix for the observation
-// seam's own separate concerns beyond `mountedVehicleType()` itself. A
-// fuller sweep of every OTHER runtime-vehicle consumer for the same
-// "identity vs. spatial rediscovery" question is deliberately left to a
-// future audit milestone — see docs/Roadmap.md, 0.9.117's own closing
-// recommendation.
-//
-// 0.9.118 IS THAT AUDIT MILESTONE, AND `_nearbyVehicles()` IS THE ONE
-// PLACE IT FOUND SOMETHING TO FIX. The paragraph immediately above is
-// still accurate AS OF 0.9.117 — `_tickMount()`/`_nearbyVehicles()` were
-// genuinely unchanged by that milestone. 0.9.118's own audit swept mount
-// TARGET resolution specifically and found the same "reads spawn, not
-// current position" gap 0.9.117 already closed for dismounting: see
-// `_nearbyVehicles()`'s own 0.9.118 header above for the fix. Still no
-// redesign of mounting itself — `_tickMount()`'s own composition of
-// intent + target resolution + mount transition is completely unchanged;
-// only the CANDIDATE LIST `_nearbyVehicles()` hands it now also includes
-// already-tracked vehicles at their current position. 0.9.118 deliberately
-// adds nothing else: no vehicle-specific collision geometry, no
-// orientation/steering, no persistence of runtime position across a
-// session, no multiplayer synchronization, no MOTORCYCLE/CAR/DRONE
-// movement, no new vehicle capability of any kind — see docs/Roadmap.md,
-// 0.9.118, for the complete audit and its one fix.

@@ -10,6 +10,7 @@ import { DecentralizedSnapshotResolutionOutcome } from '../application/Decentral
 import { executeDiscoverSnapshotCommand } from '../application/DiscoverSnapshotCommand.js';
 import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
 import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.664 — Node-less Distribution Product Reassessment.
 //
@@ -239,7 +240,7 @@ async function run() {
     // announced" apart from "published, announcement failed"?
     // =======================================================================
     {
-        const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         const templateStart = viewSource.indexOf('template: `');
         assert(templateStart !== -1, n('B1. ui/views/DecentralizedPublicationsView.js still has an inline `template:` literal to inspect.'));
         const templateBody = viewSource.slice(templateStart);
@@ -286,7 +287,7 @@ async function run() {
     // Section C — First-run discoverability / provider transparency.
     // =======================================================================
     {
-        const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         const templateStart = viewSource.indexOf('template: `');
         const templateBody = viewSource.slice(templateStart);
 

@@ -2,6 +2,7 @@ import { PublicationObservationArchive } from './PublicationObservationArchive.j
 import { describePublicationObservationArchive } from './PublicationObservationArchiveView.js';
 import { describePublicationObservationArchiveProvenance } from './PublicationObservationArchiveProvenanceView.js';
 import { describePublicationObservationArchiveFingerprint } from './PublicationObservationArchiveFingerprintView.js';
+import { parseJSONOrNull } from '../utils/parseJsonOrNull.js';
 
 // 0.8.86 — Non-Replacing External Publication Archive Inspection.
 //
@@ -268,12 +269,4 @@ function collectBaseTransactionHashes(archive) {
     collect(Object.keys(archive.baseTransactionInclusionObservationsByTransactionHash));
     collect(archive.baseAnchorPublicationRecords.map((record) => record.txid));
     return txids;
-}
-
-function parseJSONOrNull(text) {
-    try {
-        return JSON.parse(text);
-    } catch {
-        return null;
-    }
 }

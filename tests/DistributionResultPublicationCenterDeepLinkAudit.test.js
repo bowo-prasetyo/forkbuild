@@ -214,7 +214,7 @@ function buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDi
     const blockSource = extractRange(
         editorViewSource,
         "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
-        '// ------------------------- 0.2.21 document lifecycle ------------',
+        '// ------------------------- document lifecycle ------------',
         '0.9.377/0.9.450 post-publish distribution block'
     );
 
@@ -716,7 +716,7 @@ async function run() {
         const postPublishDistributionBlock = extractRange(
             editorViewSource,
             "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
-            '// ------------------------- 0.2.21 document lifecycle ------------',
+            '// ------------------------- document lifecycle ------------',
             '0.9.377/0.9.450 post-publish distribution block'
         );
         assert(!postPublishDistributionBlock.includes('publicationCatalog') && !postPublishDistributionBlock.includes('.add('),

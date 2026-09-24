@@ -1,4 +1,5 @@
 import { parsePlaceNamingDiscoveryEnvelope } from '../core/PlaceNamingDiscoveryEnvelope.js';
+import { isPlainObject } from '../utils/typeGuards.js';
 
 // 0.9.253 — Place Naming Discovery Boundary.
 //
@@ -96,10 +97,6 @@ import { parsePlaceNamingDiscoveryEnvelope } from '../core/PlaceNamingDiscoveryE
 // - **Caching a previous `search()` result, or retrying a failed
 //   source.** Every call is independent; a source that failed on one call
 //   is retried, unmodified, on the very next call.
-
-function isPlainObject(value) {
-    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
 
 function isSearchableSource(source) {
     return Boolean(source) && typeof source === 'object' && typeof source.search === 'function';

@@ -1,5 +1,6 @@
 import { DecentralizedDiscoveryQueryService } from './DecentralizedWorldDiscoveryQuery.js';
 import { parseDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
+import { withTimeout } from '../utils/withTimeout.js';
 
 const DEFAULT_RELAY_URL = 'wss://relay.damus.io';
 const DEFAULT_TAG_NAME = 't';
@@ -227,7 +228,7 @@ export class NostrDiscoveryQueryService extends DecentralizedDiscoveryQueryServi
 
         let events;
         try {
-            events = await withTimeout(this._queryImpl(this._relayUrl, filter), this._timeoutMs);
+            events = await withTimeout(this._queryImpl(this._relayUrl, filter), this._timeoutMs, 'NostrDiscoveryQueryService: queryImpl timed out');
         } catch {
             return [];
         }
@@ -277,17 +278,4 @@ function parseEnvelopeCandidates(events) {
 function extractUriScheme(uri) {
     const match = URI_SCHEME_PATTERN.exec(uri);
     return match ? match[1] : null;
-}
-
-// Races `promise` against `timeoutMs`; rejects if the timer fires first.
-// The timer is always cleared, whichever settles first — no dangling
-// handle survives a call.
-function withTimeout(promise, timeoutMs) {
-    return new Promise((resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error('NostrDiscoveryQueryService: queryImpl timed out')), timeoutMs);
-        Promise.resolve(promise).then(
-            (value) => { clearTimeout(timer); resolve(value); },
-            (error) => { clearTimeout(timer); reject(error); }
-        );
-    });
 }

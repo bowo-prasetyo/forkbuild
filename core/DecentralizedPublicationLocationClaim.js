@@ -1,4 +1,5 @@
 import { WorldEncounterKind } from './WorldEncounter.js';
+import { isNonEmptyString } from '../utils/typeGuards.js';
 
 // 0.9.29 — Decentralized Association Evidence Ingress.
 //
@@ -122,10 +123,6 @@ import { WorldEncounterKind } from './WorldEncounter.js';
 //   real, hash-verified `core/ContentReference.js` from a claim.**
 //   Unscheduled, later work — this file never imports
 //   `core/ContentReference.js` and never fetches anything.
-
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.length > 0;
-}
 
 // Pure. Describes ONE location claim a signed Publication-shaped object's
 // own fields already make — "this signed identity claims object `id`'s

@@ -9,6 +9,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
 import { ExternalAnchorPublisherRegistry } from '../application/ExternalAnchorPublisherRegistry.js';
 import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.422 — Decentralized Substrate Role Choice UI Reachability Audit.
 //
@@ -198,7 +199,7 @@ async function run() {
         assert(/path: '\/publications', name: 'publications', component: DecentralizedPublicationsView/.test(routerSource), n('B1. CONTENT\'s and PROOF_AND_ANCHORING\'s own natural entry point — /publications -> DecentralizedPublicationsView — is a real, registered route, not merely an existing component'));
         assert(/path: '\/settings\/content-provider', name: 'content-provider-settings', component: ContentProviderSettingsView/.test(routerSource), n('B2. CONTENT\'s own preference-setting entry point — /settings/content-provider — is likewise a real, registered route'));
 
-        const viewSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         // CONTENT chain: route -> injected coordinator -> per-storage click -> registry lookup.
         assert(/const placementCreationCoordinator = inject\('snapshotPlacementCreationCoordinator'/.test(viewSource) || /inject\('snapshotPlacementCreationCoordinator'/.test(viewSource), n('B3. CONTENT: the view injects a real snapshotPlacementCreationCoordinator, never constructs one of its own'));
         assert(/async function createPlacement\(entry, storage\)/.test(viewSource), n('B4. CONTENT: a real createPlacement(entry, storage) function exists, taking exactly one storage identifier per call'));
@@ -286,7 +287,7 @@ async function run() {
     // Section D — choice is already contextual.
     // ===============================================================
     {
-        const viewSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         // Both real choice mechanisms render INSIDE a per-publication
         // entry card, never on a standalone, generic "pick your
         // substrates" page reachable independent of any one publication.
@@ -305,7 +306,7 @@ async function run() {
     // Section E — choice vs. fan-out, confirmed absent in the UI too.
     // ===============================================================
     {
-        const viewSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(/async function createPlacement\(entry, storage\)/.test(viewSource) && !/createPlacement\(entry, storages\)/.test(viewSource), n('E1. createPlacement takes a single `storage` string, never a `storages` array'));
         assert(/async function createAnchor\(entry, anchorType\)/.test(viewSource) && !/createAnchor\(entry, anchorTypes\)/.test(viewSource), n('E2. createAnchor takes a single `anchorType` string, never an `anchorTypes` array'));
 

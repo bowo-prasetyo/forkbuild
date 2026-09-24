@@ -12,6 +12,7 @@ import {
     validatePublicationSnapshotPlacement,
     PublicationSnapshotPlacementError
 } from './PublicationSnapshotPlacementValidator.js';
+import { isNonBlankString } from '../utils/typeGuards.js';
 
 // 0.4.6 — Blueprint Sharing & Exchange.
 //
@@ -40,10 +41,6 @@ export class BlueprintPackageError extends Error {
     }
 }
 
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.trim().length > 0;
-}
-
 function isFiniteNumber(value) {
     return typeof value === 'number' && Number.isFinite(value);
 }
@@ -69,14 +66,14 @@ function validateBrick(brick, index, seenIds, registry) {
     if (!brick || typeof brick !== 'object') {
         throw new BlueprintPackageError(`BlueprintImport: bricks[${index}] is missing or not an object`);
     }
-    if (!isNonEmptyString(brick.id)) {
+    if (!isNonBlankString(brick.id)) {
         throw new BlueprintPackageError(`BlueprintImport: bricks[${index}].id is missing or not a string`);
     }
     if (seenIds.has(brick.id)) {
         throw new BlueprintPackageError(`BlueprintImport: duplicate brick id "${brick.id}"`);
     }
     seenIds.add(brick.id);
-    if (!isNonEmptyString(brick.definitionId)) {
+    if (!isNonBlankString(brick.definitionId)) {
         throw new BlueprintPackageError(`BlueprintImport: bricks[${index}].definitionId is missing or not a string`);
     }
     if (registry && !registry.has(brick.definitionId)) {
@@ -108,10 +105,10 @@ export function validateBlueprintPackage(pkg, { registry = null } = {}) {
     if (!structure || typeof structure !== 'object') {
         throw new BlueprintPackageError('BlueprintImport: structure is missing or not an object');
     }
-    if (!isNonEmptyString(structure.id)) {
+    if (!isNonBlankString(structure.id)) {
         throw new BlueprintPackageError('BlueprintImport: structure.id is missing or not a string');
     }
-    if (!isNonEmptyString(structure.name)) {
+    if (!isNonBlankString(structure.name)) {
         throw new BlueprintPackageError('BlueprintImport: structure.name is missing or not a string');
     }
     if (structure.category !== undefined && typeof structure.category !== 'string') {

@@ -59,25 +59,18 @@ import { BLUEPRINT_ATTRIBUTION_KIND } from '../../core/BlueprintAttribution.js';
 import { BLUEPRINT_LINEAGE_CLAIM_KIND } from '../../core/BlueprintLineageClaim.js';
 import { compareBlueprintSimilarity, isPossibleLineageCandidate } from '../../core/BlueprintSimilarity.js';
 
-// 0.1.50: the Editor's keyboard surface is consolidated. Editing
-// shortcuts (undo/redo, delete, rotate, nudges, select all, copy/paste,
-// command palette) come from the EditorActionRegistry — one source of
-// truth shared with the palette, the sidebar, and the controls docs.
-// Escape follows the explicit priority chain: text input > shortcuts
-// overlay > palette > gizmo gesture > selection. Tool switching (1/2),
-// Ctrl+S, and (0.6.2) '?' for the Keyboard Shortcuts overlay stay
-// view-local: they are not editing actions.
+// Editing shortcuts come from EditorActionRegistry, shared with the palette,
+// the sidebar and the controls docs. Escape priority: text input > shortcuts
+// overlay > palette > gizmo gesture > marquee > selection. Tool switching
+// (1/2), Ctrl+S and '?' stay view-local: they are not editing actions.
+
 const TOOL_SHORTCUTS = { 1: ToolId.SELECT, 2: ToolId.PLACE };
 
-// Lowercase, dash-separated filename fragment; `fallback` when nothing
-// usable remains.
 function slugify(text, fallback) {
     return (text || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || fallback;
 }
 
-// Triggers an immediate browser download of `data` as pretty-printed
-// JSON (`data:application/json` + <a download>) — the one shape every
-// Editor export uses, with no intermediate modal.
+// Downloads `data` as pretty-printed JSON, with no intermediate modal.
 function downloadJson(filename, data) {
     const link = document.createElement('a');
     link.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(data, null, 2));
@@ -109,44 +102,15 @@ export default {
                 @recover="recoverDocument"
                 @discard="discardRecovery"
             />
-            <!-- 0.9.377 — EditorView Post-Publish Distribution Action.
-                 Reachable the instant a publish succeeds — never
-                 automatic, never a second way to trigger distribution.
-                 Rendered only while publishedPublication holds the just-
-                 published Publication; dismissing or publishing again
-                 replaces/clears it. Deliberately EditorView-owned rather
-                 than folded into ActionFeedback, which stays exactly as
-                 non-interactive/passive as 0.9.375 left it. Mirrors World
-                 View's own "Distribute Publication" action (0.9.347)
-                 button-and-result shape, one caller over — see this
-                 setup()'s own 0.9.377 comment, below, for the full
-                 lineage.
-
-                 AMENDED — moved to sit directly below RecoveryBanner,
-                 above .editor-body, instead of after it. .editor-body
-                 hosts the 3D viewport, which can fill the entire
-                 remaining height; content placed after it in this flex
-                 column rendered below that canvas — effectively below
-                 the fold, with nothing on screen hinting it was there.
-                 RecoveryBanner already establishes the correct pattern
-                 for a banner that must always be seen the instant it
-                 appears: a full-width bar at the TOP of the view, ahead
-                 of the viewport, never behind or below it. -->
+            <!--
+                Post-publish distribution action, shown only for the just-published
+                Publication. Sits at the top so it is not hidden below the viewport.
+            -->
             <div v-if="publishedPublication || distributionError || (distributionResult && distributionResult.length) || snapshotDistributionError || snapshotDistributionResult" class="editor-post-publish-overlay">
                 <div v-if="publishedPublication" class="editor-post-publish-action">
                     <span class="editor-post-publish-message">Publication published successfully.</span>
 
-                    <!-- 0.9.672 — Editor View Distribution Dialog. Every
-                         Snapshot/Publication storage/substrate picker,
-                         button, and result display that used to render
-                         inline here now lives in EditorDistributionDialog.js
-                         (see that file's own header) — a single "Distribute"
-                         trigger replaces them all on this primary screen.
-                         Rendered whenever EITHER protocol is usable at all;
-                         the dialog itself renders only the section(s) that
-                         apply, exactly like each protocol's own dedicated
-                         button already only rendered when that protocol's
-                         own command was supplied. -->
+                    <!-- Opens EditorDistributionDialog, which holds every storage/substrate choice. -->
                     <button
                         v-if="canDistributeSnapshot || canDistributePublication"
                         type="button"
@@ -209,12 +173,6 @@ export default {
                         Placing "{{ activeCompositionTitle }}" — hover the ground, R to rotate, click to place, Esc to cancel.
                     </p>
                     <DocumentInfoPanel :info="documentInfo" @edit-metadata="showMetadataEditor = true" />
-                    <!-- 0.6.2 — the old "Selected X — drag to move, R to
-                         rotate" placement-hint paragraph that used to sit
-                         here was a second copy of the exact same line
-                         StructureInstancePanel's own hint already shows
-                         below — removed as a duplicate, not a
-                         regression; see this milestone's Roadmap entry. -->
                     <StructureInstancePanel
                         v-if="selectedPlacementInfo"
                         :info="selectedPlacementInfo"
@@ -329,41 +287,27 @@ export default {
 
         const registry = new CreateBrickRegistryUseCase().execute();
         const structureRegistry = new CreateStructureRegistryUseCase().execute();
-        // 0.4.3 — Personal Blueprint Library.
         const { personalStructureLibraryStore } = new CreatePersonalStructureLibraryUseCase().execute();
-        // 0.6.4 — Blueprint Discovery, Search & Library Organization.
         const { libraryUsageHistoryStore } = new CreateLibraryUsageHistoryUseCase().execute();
         const editorContext = new CreateEditorContextUseCase().execute();
         const selectionUseCase = new SelectionUseCase(editorContext);
         const paletteUseCase = new PaletteUseCase(registry, editorContext);
         const previewUseCase = new PreviewUseCase(editorContext);
-        // 0.2.90 — Structure Placement & World Instances.
         const structurePreviewUseCase = new StructurePreviewUseCase(editorContext);
-        // 0.4.1 — Interactive Structure Composition UX.
         const compositionPreviewUseCase = new CompositionPreviewUseCase(editorContext);
         const { libraryPreviewService } = new CreateLibraryPreviewUseCase().execute(registry);
         const toolRegistry = new CreateToolRegistryUseCase().execute();
         const documentManager = new CreateDocumentManagerUseCase().execute();
         const {
             saveDocumentUseCase, loadDocumentUseCase, forkDocumentUseCase, structureDocumentResolver,
-            // 0.9.204 — Editor Autosave & Recovery UI Integration.
-            // CreatePersistenceUseCase has composed these since 0.2.6;
-            // this view simply never reached for them before. See
-            // docs/Roadmap.md, 0.9.203/0.9.204.
             autosaveDocumentUseCase, recoverDocumentUseCase, discardRecoveryUseCase, checkRecoveryUseCase
         } = new CreatePersistenceUseCase().execute();
 
-        // 0.9.204 — the existing AutosaveScheduler, watching THIS view's
-        // own documentManager. start()/stop() are called from
-        // onMounted()/onBeforeUnmount() below, exactly like
-        // editorSession.start()/dispose() already are, so an unmounted
-        // Editor cannot go on producing autosaves — see
-        // application/AutosaveScheduler.js's own stop(), unchanged.
+        // Watches this view's documentManager; started and stopped with the view so an
+        // unmounted Editor never autosaves.
         const autosaveScheduler = new AutosaveScheduler(autosaveDocumentUseCase, documentManager);
-        // The recovery counterpart: probes CheckRecoveryUseCase once per
-        // open document (never on every edit — see
-        // application/RecoveryObserver.js's own header) and drives
-        // recoveryStatus, which RecoveryBanner renders.
+        // Probes recovery once per open document (never per edit) and drives
+        // RecoveryBanner.
         const recoveryStatus = ref(null);
         const recoveryObserver = new RecoveryObserver(checkRecoveryUseCase, documentManager, {
             onChange: (status) => { recoveryStatus.value = status; }
@@ -372,46 +316,19 @@ export default {
         const identityUseCase = inject('identityUseCase');
         const identityProvider = identityUseCase.provider;
         const { publishDocumentUseCase } = new CreatePublisherUseCase().execute(identityProvider);
-        // 0.9.339 — closes the exact fork/load lookup gap
-        // tests/FederatedRepositoryPublicationUserJourneyAudit.test.js's
-        // own Section D located: this findPublicationUseCase now merges
-        // in the SAME shared decentralized provider Repository search
-        // does, through the SAME composition root — see application/
-        // CreateDiscoveryUseCase.js's own 0.9.339 comment.
+        // Fork/load lookups also search Repository-admitted decentralized publications.
         const decentralizedDiscoveryProviderForLookup = inject('decentralizedPublicationDiscoveryProvider', null);
         const { findPublicationUseCase } = new CreateDiscoveryUseCase().execute({
             decentralizedDiscoveryProvider: decentralizedDiscoveryProviderForLookup
         });
-        // 0.6.5 — Blueprint Identity & Attribution.
-        // 0.6.6 — Decentralized Blueprint Exchange.
         const { blueprintAttributionUseCase, blueprintAttributionExchange } = new CreateBlueprintAttributionUseCase().execute(identityProvider);
-        // 0.6.8 — Blueprint Lineage & Revision Discovery.
         const { blueprintLineageUseCase, blueprintLineageExchange } = new CreateBlueprintLineageUseCase().execute(identityProvider);
-        // 0.7.5 — Decentralized Publication UX & Resolution. The SAME
-        // app-wide publicationResolver/publicationCatalog/
-        // publicationPeerExchange ui/main.js already wires (0.7.0/0.7.2/
-        // 0.7.3) — never a second, disconnected instance constructed
-        // here, for the identical reason this view already reuses one
-        // app-wide identityUseCase rather than its own. See
-        // publishInspectedAttributionToNetwork() below.
         const publicationResolver = inject('publicationResolver');
         const publicationCatalog = inject('publicationCatalog');
         const publicationPeerExchange = inject('publicationPeerExchange');
 
-        // 0.9.224 — Runtime Composition / Editor Integration. The SAME
-        // app-wide peerMessageBus/peerSessionManager.registry/
-        // deviceAuthorizationUseCase/peerBlockUseCase ui/views/WorldView.js
-        // already reuses for application/WorldCommandPropagationUseCase.js
-        // — never a second, disconnected peer stack constructed here.
-        // Gated on the identical "is there actually a peer stack to ride"
-        // condition CreateWorldViewUseCase.js's own worldCommandPropagation
-        // uses: a caller without one (headless use, most existing tests)
-        // gets `documentCommandPropagation: null`, and EditorSession
-        // degrades to exactly its own pre-0.9.224 behavior — purely local
-        // editing, nothing ever broadcast or applied. commandRegistry is
-        // constructed fresh here (this view never needed one before) via
-        // the SAME CreateCommandRegistryUseCase every other command-
-        // serializing surface in this codebase already uses.
+        // Uses the app-wide peer stack. Without one, propagation is null and the
+        // Editor stays purely local.
         const peerMessageBus = inject('peerMessageBus', null);
         const peerSessionManager = inject('peerSessionManager', null);
         const deviceAuthorizationUseCase = inject('deviceAuthorizationUseCase', null);
@@ -427,11 +344,7 @@ export default {
                 deviceAuthorization: deviceAuthorizationUseCase,
                 identityProvider,
                 commandRegistry,
-                // The Editor has exactly ONE document open at a time
-                // (documentManager.document) — unlike World View's own
-                // resolveWorldDocument, which resolves any of SEVERAL
-                // concurrently open Documents by id, this only ever
-                // needs to ask "is that the one I currently have open."
+                // The Editor has one open document, so this only asks "is it the open one".
                 resolveDocument: (documentId) => (
                     documentManager.document && documentManager.document.world.id === documentId
                         ? documentManager.document
@@ -440,16 +353,8 @@ export default {
                 isBlocked
             })
             : null;
-        // 0.9.230 — Causal Gap Recovery Request Boundary. The SAME
-        // peerMessageBus/peerSessionManager.registry/identityProvider
-        // documentCommandPropagation just above already rides — never a
-        // second, disconnected peer stack — gated on the identical
-        // condition, plus documentCommandPropagation itself existing
-        // (verifyEnvelope()/resolveEditAccessFor() are its own reused
-        // trust chain, see DocumentOperationRecoveryUseCase.js's own
-        // header). A caller without one degrades to exactly its own
-        // pre-0.9.230 behavior — a causal gap is still observed, but
-        // never requested.
+        // Needs document propagation, whose trust chain it reuses. Without it, causal
+        // gaps are still observed but never requested.
         const documentOperationRecovery = (documentCommandPropagation && identityProvider && peerMessageBus && peerSessionManager)
             ? new DocumentOperationRecoveryUseCase({
                 peerMessageBus,
@@ -472,61 +377,34 @@ export default {
 		    previewUseCase,
 		    loadDocumentUseCase,
 		    identityProvider,
-		    copySelectionUseCase,  // Pass use case
-		    pasteClipboardUseCase,  // Pass use case
-		    // 0.4.9 — Alignment, Snapping & Repetition.
+		    copySelectionUseCase,
+		    pasteClipboardUseCase,
 		    repeatSelectionUseCase,
-		    // 0.2.90 — Structure Placement & World Instances.
 		    structureResolver: structureDocumentResolver,
 		    structurePreviewUseCase,
-		    // 0.4.1 — Interactive Structure Composition UX.
 		    compositionPreviewUseCase,
-		    // 0.4.3 — Personal Blueprint Library.
 		    personalStructureLibraryStore,
-		    // 0.6.6 — Decentralized Blueprint Exchange.
 		    blueprintAttributionExchange,
-		    // 0.6.8 — Blueprint Lineage & Revision Discovery.
 		    blueprintLineageExchange,
-		    // 0.9.224 — Runtime Composition / Editor Integration.
 		    documentCommandPropagation,
-		    // 0.9.230 — Causal Gap Recovery Request Boundary.
 		    documentOperationRecovery
 		});
 
-		// 0.2.81 — Forkable Structure Library, grouped per 0.2.84
-		// (Building Library & Palette UX) via
-		// core/StructureRegistry.js#groupByCategory(). The registry's
-		// contents never change at runtime (same reasoning as
-		// paletteUseCase's own brick definitions), so this is read
-		// once, not subscribed to.
+		// Built-in structures never change at runtime, so this is read once.
 		const structureGroups = ref(structureRegistry.groupByCategory());
 
-		// 0.4.3 — Personal Blueprint Library. Unlike structureGroups
-		// above, this DOES change at runtime — saving a newly extracted
-		// Structure, renaming one, or removing one — so it's refreshed
-		// explicitly after each of those, rather than read once.
+		// Changes at runtime, so it is refreshed after save, rename or remove.
 		const personalStructureGroups = ref(personalStructureLibraryStore.groupByCategory());
-		// 0.6.4 — Blueprint Discovery, Search & Library Organization.
-		// Consulted only by core/sortStructures.js's 'recent' sort key —
-		// see application/LocalStructureLibraryStore.js#getSavedAtById()'s
-		// own header. Refreshed alongside personalStructureGroups
-		// whenever the personal library changes (below).
+		// Used only by the 'recent' sort; refreshed with the personal library.
 		const personalSavedAtById = ref(personalStructureLibraryStore.getSavedAtById());
 		function refreshPersonalStructureGroups() {
 		    personalStructureGroups.value = personalStructureLibraryStore.groupByCategory();
 		    personalSavedAtById.value = personalStructureLibraryStore.getSavedAtById();
 		}
 
-		// 0.6.4 — Blueprint Discovery, Search & Library Organization.
-		// Resolves application/LibraryUsageHistoryStore.js's own bare ids
-		// against whichever library still recognizes each one — a
-		// structure that was removed, or a personal one that was renamed
-		// (renaming preserves its id, so this still finds it) since it
-		// was last used, either resolves to the current entry or, if
-		// truly gone, is silently dropped, per that store's own header.
-		// This is the ONE place that decides "built-in or personal" for
-		// a recent id — ui/components/BuildLibraryPanel.js never reaches
-		// into either library itself.
+		// Resolves recent ids against whichever library still has them (renames keep
+		// their id); ids that are gone are dropped. The one place that decides
+		// built-in vs. personal for a recent id.
 		function resolveRecentStructures() {
 		    const ids = libraryUsageHistoryStore.listRecent(5);
 		    const resolved = [];
@@ -555,17 +433,15 @@ export default {
 		    }
 		    personalStructureLibraryStore.updateStructureMetadata(structure.id, { name: name.trim() });
 		    refreshPersonalStructureGroups();
-		    refreshRecentStructures(); // 0.6.4 — Recent shows the renamed name too, not a stale one
+		    refreshRecentStructures();
 		    feedback.show(`Renamed to "${name.trim()}"`);
 		}
 
 		function removePersonalStructure(structure) {
-		    // Deleting from the library never touches a Document that
-		    // already copied or forked this Structure's bricks — see
-		    // application/LocalStructureLibraryStore.js's own header.
+		    // Removing from the library never touches documents that already used it.
 		    personalStructureLibraryStore.removeStructure(structure.id);
 		    refreshPersonalStructureGroups();
-		    refreshRecentStructures(); // 0.6.4 — a removed Structure disappears from Recent too
+		    refreshRecentStructures();
 		    feedback.show(`Removed "${structure.name}" from My Structures`);
 		}
 
@@ -576,15 +452,8 @@ export default {
 		    }
 		}
 
-		// 0.6.3 — Blueprint Authoring & Versioning UX. The Structure-fork
-		// counterpart to forkStructure() immediately above — see
-		// application/ForkStructureToLibraryUseCase.js's own header on
-		// the distinction: forkStructure() opens a new DOCUMENT; this
-		// adds a new personal STRUCTURE, with no Document involved.
-		// Reachable only from a built-in card's "⋮" menu (see
-		// ui/components/BuildLibraryPanel.js) — forking a personal
-		// Structure into the SAME personal library isn't a workflow this
-		// milestone's design conversation asked for.
+		// Forks a built-in Structure into a new personal Structure (forkStructure()
+		// opens a new Document instead).
 		function forkStructureToLibrary(structure) {
 		    const forked = editorSession.forkStructureToPersonalLibrary(structure);
 		    if (forked) {
@@ -593,39 +462,13 @@ export default {
 		    }
 		}
 
-		// 0.4.6 — Blueprint Sharing & Exchange. Builds the portable
-		// package via editorSession.exportBlueprint() (pure — see that
-		// method's own header) and triggers an immediate browser
-		// download, the same `data:application/json` + <a download>
-		// shape ui/views/IdentityManagementView.js's own portable-
-		// identity export already established — deliberately no
-		// intermediate modal, since (unlike an identity export) there is
-		// no passphrase to collect first.
-		//
-		// 0.6.3 — renamed from exportPersonalStructure(): a built-in
-		// card's "⋮" menu now offers Export Blueprint too (see
-		// ExportBlueprintUseCase's own header — it was always generic
-		// over any Structure; only the UI previously withheld the
-		// button). The wire event name from BuildLibraryPanel stays
-		// 'export-personal-structure' unchanged — only this handler's
-		// own name follows what it actually does now.
-		// 0.6.6 — Decentralized Blueprint Exchange. Bundles every
-		// attribution THIS replica currently has on file for `structure`'s
-		// own design (blueprintAttributionUseCase.summarize() — the exact
-		// same read StructureInfoPanel's own Author fact already shows)
-		// straight into the same package — see application/
-		// BlueprintPackage.js's own header on why this is a convenience
-		// bundling of two still-independent things, never a merger. A
-		// design nobody has attributed yet still exports exactly the
-		// Structure-only package 0.4.6 always produced.
+		// Exports the blueprint as a download, bundling the attributions and lineage
+		// claims this replica has for it. The BuildLibraryPanel event is still named
+		// 'export-personal-structure'.
 		function exportStructure(structure) {
 		    let pkg;
 		    try {
 		        const { attributions } = blueprintAttributionUseCase.summarize(structure);
-		        // 0.6.8 — Blueprint Lineage & Revision Discovery. The exact
-		        // same bundling convenience as `attributions` above, for
-		        // every lineage claim this replica has on file touching
-		        // `structure`'s own fingerprint.
 		        const lineageClaims = blueprintLineageUseCase.claimsForBlueprint(structure);
 		        pkg = editorSession.exportBlueprint(structure, attributions, lineageClaims);
 		    } catch (e) {
@@ -639,19 +482,7 @@ export default {
 		    feedback.show(`Exported "${structure.name}" as a blueprint`);
 		}
 
-		// 0.9.641 — Editor Document Export. The exact
-		// exportStructure()/exportBlueprintAttribution() shape, one
-		// concept over: editorSession.exportDocument() (a thin wrapper
-		// over the existing DocumentSerializer.serialize() seam —
-		// application/ExportDocumentUseCase.js, tests/
-		// EditorDocumentPortabilityBoundaryAudit.test.js Section C) never
-		// touches storage, the manifest, or the document's own dirty
-		// state — this handler's only job, same as its blueprint
-		// siblings, is turning that already-serialized JSON into a
-		// browser download. Filename follows the SAME
-		// `forkbuild-<kind>-<slug>.json` convention exportStructure()
-		// and IdentityManagementView.js's own identity export already
-		// established, rather than inventing a new extension.
+		// Filename follows the `forkbuild-<kind>-<slug>.json` convention.
 		function exportDocument() {
 			let json;
 			try {
@@ -668,25 +499,9 @@ export default {
 			feedback.show(`Exported "${title || 'document'}"`);
 		}
 
-		// 0.9.642 — Editor Document Import. `rawText` is whatever
-		// Toolbar's own hidden file input read off disk — untrusted,
-		// unparsed input, the same "JSON.parse and the use case call are
-		// each wrapped separately" two-stage error handling
-		// importBlueprint() (below) and IdentityManagementView.js's own
-		// confirmImport() already established: a bad file (not JSON at
-		// all) gets one message, a well-formed-but-invalid Document gets
-		// whatever editorSession.importDocument()/ImportDocumentUseCase/
-		// DocumentSerializer.deserialize() actually says. Either failure
-		// leaves the currently open document, its dirty state, and
-		// storage completely untouched — the JSON.parse throw and the
-		// deserialize() throw both happen before editorSession ever
-		// calls openDocument() (see EditorSession#importDocument()'s own
-		// header). On success, the imported document — a fresh local
-		// identity, per the 0.9.640 audit's own Section D — becomes the
-		// open document through the exact same session/navigation
-		// lifecycle a Fork or a New already uses; nothing here decides
-		// what happens next beyond that, exactly like forkStructure()
-		// above it never does either.
+		// `rawText` is untrusted. JSON parse errors and invalid documents are reported
+		// separately; either leaves the open document and storage untouched. On
+		// success the imported document opens like a fork.
 		function importDocument(rawText) {
 			let json;
 			try {
@@ -706,14 +521,8 @@ export default {
 			}
 		}
 
-		// 0.6.6 — Decentralized Blueprint Exchange. Exports a SINGLE
-		// attribution on its own — independent of any blueprint, exactly
-		// the "two independent portable things" this milestone's own
-		// design conversation asked for. Reachable only from
-		// StructureInfoPanel's own "Export Attribution" link, which is
-		// only ever shown when `attribution.mine` exists (see that
-		// component's own header) — there is always something to export
-		// by the time this runs.
+		// Exports one attribution on its own; only reachable when `attribution.mine`
+		// exists.
 		function exportBlueprintAttribution(attribution) {
 		    let pkg;
 		    try {
@@ -729,25 +538,9 @@ export default {
 		    feedback.show('Exported your attribution');
 		}
 
-		// 0.4.6 — Blueprint Sharing & Exchange. `rawText` is whatever
-		// BuildLibraryPanel's hidden file input read off disk — untrusted
-		// input, so JSON.parse and editorSession.importBlueprint() (which
-		// runs application/BlueprintImportValidator.js before
-		// constructing anything — see that use case's own header) are
-		// each wrapped separately, mirroring
-		// IdentityManagementView.js#confirmImport()'s own two-stage
-		// "is this even JSON" / "is this a valid package" error handling.
-		// 0.6.6 — Decentralized Blueprint Exchange. `rawText` may now name
-		// either of the two independent portable things this milestone
-		// introduced: an ordinary Blueprint Package (`BLUEPRINT_KIND`,
-		// unchanged since 0.4.6, now optionally carrying `attributions`
-		// too) or a BARE attribution publication
-		// (`BLUEPRINT_ATTRIBUTION_KIND`) received on its own, unconnected
-		// to any blueprint import happening right now — see this
-		// milestone's own design conversation on why attribution travels
-		// separately from the design it's about. Both share the same
-		// file-picker entry point (BuildLibraryPanel's existing "Import
-		// Blueprint"); which one `pkg.kind` names decides which path runs.
+		// `rawText` is untrusted, parsed and validated in two separate steps. It may be
+		// a blueprint package or a bare attribution or lineage claim; `pkg.kind`
+		// decides which path runs.
 		function importBlueprint(rawText) {
 		    let pkg;
 		    try {
@@ -760,10 +553,6 @@ export default {
 		        importBareBlueprintAttribution(pkg);
 		        return;
 		    }
-		    // 0.6.8 — Blueprint Lineage & Revision Discovery. A bare lineage
-		    // claim shares the same "arrived on its own, unconnected to any
-		    // blueprint import happening right now" path as a bare
-		    // attribution above.
 		    if (pkg && pkg.kind === BLUEPRINT_LINEAGE_CLAIM_KIND) {
 		        importBareBlueprintLineageClaim(pkg);
 		        return;
@@ -781,19 +570,9 @@ export default {
 		    }
 		}
 
-		// 0.6.6 — Decentralized Blueprint Exchange. Imports every
-		// attribution publication `pkg.attributions` (already validated,
-		// structurally, by the time importBlueprint() above succeeded —
-		// see application/BlueprintImportValidator.js's own header) —
-		// cross-checked against `structure`'s own LOCALLY-derived
-		// fingerprint, never the fingerprint the package merely claims
-		// (application/BlueprintAttributionExchange.js's own header names
-		// this the critical rule). One bad or mismatched attribution never
-		// undoes the successful blueprint import above it — each entry is
-		// its own independent try, exactly like WorldView.js's own naming-
-		// claim import tolerates one malformed claim without touching any
-		// other. Returns a short, human-readable suffix for the caller's
-		// own feedback message, or '' when there was nothing to import.
+		// Each bundled attribution is cross-checked against the locally derived
+		// fingerprint, never the one the package claims. A bad attribution never undoes
+		// the successful blueprint import. Returns a feedback suffix or ''.
 		function importBundledBlueprintAttributions(pkg, structure) {
 		    if (!Array.isArray(pkg.attributions) || pkg.attributions.length === 0 || !blueprintAttributionExchange) {
 		        return '';
@@ -806,23 +585,14 @@ export default {
 		                imported += 1;
 		            }
 		        } catch (e) {
-		            // A single malformed/mismatched attribution is reported
-		            // nowhere but the console — it never blocks the
-		            // blueprint import that already succeeded, and never
-		            // surfaces as though the WHOLE import had failed.
 		            console.warn('Skipped an attribution bundled with this blueprint:', e.message);
 		        }
 		    }
 		    return imported > 0 ? ` with ${imported} attributed ${imported === 1 ? 'author' : 'authors'}` : '';
 		}
 
-		// 0.6.6 — Decentralized Blueprint Exchange. A bare attribution
-		// arriving with no accompanying blueprint in the SAME file has no
-		// local Structure to cross-check its fingerprint against — see
-		// application/BlueprintAttributionExchange.js#importAttribution()'s
-		// own header on why that is still a completely legitimate import,
-		// just an unconfirmed one. Never touches the personal library —
-		// an attribution is never a Structure.
+		// A bare attribution has no local Structure to cross-check against; it is still
+		// a legitimate, unconfirmed import. It never touches the personal library.
 		function importBareBlueprintAttribution(pkg) {
 		    if (!blueprintAttributionExchange) {
 		        feedback.show('Blueprint attribution exchange is not available');
@@ -840,9 +610,6 @@ export default {
 		    }
 		}
 
-		// 0.6.8 — Blueprint Lineage & Revision Discovery. The exact
-		// exportBlueprintAttribution() shape, one concept over — exports a
-		// single signed lineage claim on its own.
 		function exportBlueprintLineageClaim(claim) {
 		    let pkg;
 		    try {
@@ -859,11 +626,8 @@ export default {
 		    feedback.show('Exported your lineage claim');
 		}
 
-		// 0.6.8 — Blueprint Lineage & Revision Discovery. The exact
-		// importBundledBlueprintAttributions() shape, one concept over. A
-		// bundled claim's own `structure` may be either its source or its
-		// derived design — whichever fingerprint matches decides which
-		// cross-check editorSession.importBlueprintLineageClaim() runs.
+		// A bundled claim's structure may be its source or derived design; the matching
+		// fingerprint decides which cross-check runs.
 		function importBundledBlueprintLineageClaims(pkg, structure) {
 		    if (!Array.isArray(pkg.lineageClaims) || pkg.lineageClaims.length === 0 || !blueprintLineageExchange) {
 		        return '';
@@ -880,19 +644,12 @@ export default {
 		                imported += 1;
 		            }
 		        } catch (e) {
-		            // Mirrors importBundledBlueprintAttributions()'s own
-		            // restraint: one bad/mismatched lineage claim never
-		            // blocks the blueprint import that already succeeded.
 		            console.warn('Skipped a lineage claim bundled with this blueprint:', e.message);
 		        }
 		    }
 		    return imported > 0 ? ` with ${imported} lineage ${imported === 1 ? 'claim' : 'claims'}` : '';
 		}
 
-		// 0.6.8 — Blueprint Lineage & Revision Discovery. The exact
-		// importBareBlueprintAttribution() shape, one concept over — a
-		// lineage claim arriving with no accompanying blueprint has neither
-		// local Structure to cross-check against, so both are omitted.
 		function importBareBlueprintLineageClaim(pkg) {
 		    if (!blueprintLineageExchange) {
 		        feedback.show('Blueprint lineage exchange is not available');
@@ -910,81 +667,31 @@ export default {
 		    }
 		}
 
-		// 0.4.1 — Interactive Structure Composition UX. "Copy Into
-		// Document" enters an interactive ghost-preview mode
-		// (StructureCompositionTool) instead of copying immediately —
-		// the actual insertion still only ever happens through the SAME
-		// EditorSession#copyStructureIntoDocument()
-		// -> CopyStructureIntoDocumentUseCase path 0.4.0 established,
-		// just triggered by the tool's own click-to-commit rather than
-		// this handler. See docs/Roadmap.md, 0.4.1.
-		//
-		// 0.4.5 — Unified Build Placement. This function is the SAME
-		// entry point BuildLibraryPanel's structure card now calls on a
-		// plain click (emits 'place-structure'), exactly the way
-		// selectBrick()/setTool(ToolId.PLACE) is what a brick's click
-		// calls — the name stays copyStructureIntoDocument() (the
-		// mutation semantics EditorSession#beginStructureComposition()
-		// still describes never changed), only the UI-facing verb the
-		// user sees does. See docs/Principles.md, "Buildable Things
-		// Share One Placement Experience."
+		// Enters the interactive preview mode; the copy happens when the tool commits.
+		// Also the entry point for a structure card's plain click (docs/Principles.md,
+		// "Buildable Things Share One Placement Experience").
 		function copyStructureIntoDocument(structure) {
 		    const started = editorSession.beginStructureComposition(structure);
 		    if (started) {
 		        feedback.show(`Placing "${structure.name}" — click to place, R to rotate, Esc to cancel`);
-		        // 0.6.4 — Blueprint Discovery, Search & Library Organization.
-		        // Recorded at Place-intent (starting composition), not at
-		        // the later ground click that actually commits it — the
-		        // same moment selectBrick() already treats as "this is the
-		        // one the user picked." A cancelled placement (Esc) still
-		        // counts; see application/LibraryUsageHistoryStore.js's own
-		        // header on why a stale/optimistic entry is harmless.
+		        // Recorded on place intent, even if later cancelled; a stale entry is harmless.
 		        libraryUsageHistoryStore.recordUse(structure.id);
 		        refreshRecentStructures();
 		    }
 		}
 
-		// 0.6.3 — Blueprint Authoring & Versioning UX. Which built-in or
-		// personal Structure ui/components/StructureInfoPanel.js is
-		// currently showing — null when closed. `inspectedStructureSource`
-		// ('built-in' | 'personal') is derived here, once, at open time —
-		// the panel itself never reaches into either library to answer a
-		// question its host already knows the answer to (see that
-		// component's own header).
+		// The source ('built-in' | 'personal') is derived here, so the panel never
+		// reaches into the libraries.
 		const inspectedStructure = ref(null);
 		const inspectedStructureSource = ref('built-in');
-		// 0.6.5 — Blueprint Identity & Attribution. Refreshed every time
-		// the panel opens (and again right after claimAuthorship() below)
-		// — never cached against the structure's own id, since the whole
-		// point of a fingerprint is that it stays valid across a fresh
-		// Structure instance with a fresh id.
-		//
-		// 0.6.7 — Blueprint Attribution Resolution & Community Identity.
-		// Now `blueprintAttributionUseCase.communityView(structure)`'s own
-		// `{ fingerprint, authors, authorCount, claims, mine, receivedAt }`
-		// rather than summarize()'s flat `{ fingerprint, attributions, mine }`
-		// — StructureInfoPanel needs the distinct-author ranking to render
-		// "Community Attribution," not just a raw count. summarize() itself
-		// is untouched and still used by exportStructure() above, which only
-		// ever needed the raw, unranked attribution list.
+		// Recomputed each time the panel opens: fingerprints stay valid across new
+		// Structure instances with new ids.
 		const inspectedStructureAttribution = ref(null);
-		// 0.6.8 — Blueprint Lineage & Revision Discovery. The signed-claim
-		// counterpart to inspectedStructureAttribution above —
-		// blueprintLineageUseCase.lineageView(structure)'s own
-		// `{ fingerprint, derivedFrom, derivedDesigns, mine, hasCycleWarning }`.
 		const inspectedStructureLineage = ref(null);
-		// A SEPARATE, unsigned, evidence-only read — never persisted, never
-		// itself a claim (see core/BlueprintSimilarity.js's own header).
-		// `{ structure, evidence }[]`, most-similar first, recomputed every
-		// time the panel opens.
+		// Unsigned evidence only, never persisted and never a claim. Most similar first.
 		const inspectedStructureSimilarityCandidates = ref([]);
-		// Every candidate design this replica currently knows about,
-		// scanned for a "possible predecessor" — the built-in library plus
-		// My Structures, exactly the two sources ui/components/
-		// BuildLibraryPanel.js already shows side by side. Excludes the
-		// inspected structure itself and any candidate a lineage claim
-		// already names as a source, so a confirmed relationship is never
-		// re-suggested as though it were still just a guess.
+		// Built-in plus personal designs, excluding the inspected one and any already
+		// named as a source by a lineage claim.
 		function computeSimilarityCandidates(structure, lineage) {
 		    const alreadyClaimed = new Set((lineage && lineage.derivedFrom || []).map((claim) => claim.sourceFingerprint));
 		    const known = [...structureRegistry.getAll(), ...personalStructureLibraryStore.listStructures()];
@@ -1009,10 +716,8 @@ export default {
 		    inspectedStructureLineage.value = blueprintLineageUseCase.lineageView(structure);
 		    inspectedStructureSimilarityCandidates.value = computeSimilarityCandidates(structure, inspectedStructureLineage.value);
 		}
-		// The panel's own Place/Export buttons delegate straight to the
-		// SAME copyStructureIntoDocument()/exportStructure() every card's
-		// primary click and "⋮" menu already use — Inspect never becomes
-		// a second way to do either, only a second way to REACH them.
+		// Inspect only offers another way to reach Place/Export, never another way to
+		// do them.
 		function placeInspectedStructure() {
 		    const structure = inspectedStructure.value;
 		    inspectedStructure.value = null;
@@ -1023,13 +728,7 @@ export default {
 		    inspectedStructure.value = null;
 		    exportStructure(structure);
 		}
-		// 0.6.5 — Blueprint Identity & Attribution. Publishes a signed
-		// BlueprintAttribution for whatever the Info panel is currently
-		// showing, then re-summarizes so the panel immediately reflects
-		// "You" as author without needing to be closed and reopened —
-		// the same "the surface stays visually up to date the instant
-		// this fires" posture onCreateBlueprint() takes for a saved
-		// Structure.
+		// Refreshes the attribution afterwards so the panel shows "You" immediately.
 		function claimAuthorship() {
 		    const structure = inspectedStructure.value;
 		    if (!structure) {
@@ -1044,13 +743,6 @@ export default {
 		    }
 		}
 
-		// 0.6.6 — Decentralized Blueprint Exchange. StructureInfoPanel's
-		// own "Export Attribution" link, reachable only once THIS identity
-		// has already claimed authorship of the inspected structure (see
-		// that component's own header) — exports just the ONE attribution
-		// belonging to the currently signed-in identity, independent of
-		// the blueprint itself, straight to exportBlueprintAttribution()
-		// above.
 		function exportInspectedAttribution() {
 		    const attribution = inspectedStructureAttribution.value && inspectedStructureAttribution.value.mine;
 		    if (!attribution) {
@@ -1059,25 +751,9 @@ export default {
 		    exportBlueprintAttribution(attribution);
 		}
 
-		// 0.7.5 — Decentralized Publication UX & Resolution.
-		// StructureInfoPanel's own "Publish to Network" link, reachable
-		// under the identical `attribution.mine` guard
-		// exportInspectedAttribution() above already uses. Wraps the SAME
-		// signed BlueprintAttribution export already produces in a signed
-		// application/DecentralizedPublication.js envelope instead of a
-		// hand-off file — application/PublicationResolver.js#publish()
-		// (0.7.0) stores its canonical bytes and signs the locator,
-		// application/LocalPublicationCatalog.js#add() (0.7.2) catalogs it
-		// on THIS replica the same way importing one would, and
-		// application/PublicationPeerExchange.js#announce() (0.7.3) tells
-		// every currently authenticated peer about it — three already-built
-		// classes, called in the one order that was always missing a UI
-		// caller. Zero connected peers is never an error: the publication
-		// is still cataloged, ready to show up in
-		// ui/views/DecentralizedPublicationsView.js and ready to announce
-		// automatically-never — see that class's own header on why
-		// announcing again is always a deliberate, repeated act, never
-		// retried on its own.
+		// Wraps the signed attribution in a signed DecentralizedPublication, catalogs
+		// it and announces it to connected peers. No peers is not an error: it stays
+		// cataloged. Announcing again is always a deliberate act.
 		async function publishInspectedAttributionToNetwork() {
 		    const attribution = inspectedStructureAttribution.value && inspectedStructureAttribution.value.mine;
 		    if (!attribution) {
@@ -1099,19 +775,9 @@ export default {
 		    }
 		}
 
-		// 0.6.8 — Blueprint Lineage & Revision Discovery. Publishes a signed
-		// BlueprintLineageClaim asserting that the inspected structure was
-		// derived from `sourceStructure` — one of
-		// inspectedStructureSimilarityCandidates.value's own entries,
-		// chosen by a person, never automatically. The similarity evidence
-		// that got the candidate shown in the first place is never itself
-		// consulted here: publish() only ever asks "can this identity sign,
-		// and do the two fingerprints actually differ" — see core/
-		// BlueprintSimilarity.js's own header on why a percentage is
-		// evidence for a human, never a threshold this codebase acts on by
-		// itself. Re-derives the panel's own lineage view and similarity
-		// candidates afterward, the same "stays visually up to date"
-		// posture claimAuthorship() already established.
+		// Publishes a lineage claim for a candidate a person chose. The similarity
+		// score is never consulted here: it is evidence for a person, never a
+		// threshold.
 		function claimLineage(sourceStructure) {
 		    const structure = inspectedStructure.value;
 		    if (!structure) {
@@ -1127,19 +793,8 @@ export default {
 		    }
 		}
 
-		// 0.6.3 — Blueprint Authoring & Versioning UX. Replaces the 0.4.2
-		// window.prompt() chain with ui/components/CreateBlueprintDialog.js
-		// — see application/EditorActionRegistry.js's own 0.6.3 comment
-		// on why opening it is as far as that action's execute() itself
-		// goes; the rest of the 0.4.2/0.4.3 chain
-		// (createStructureFromSelection -> saveStructureToPersonalLibrary)
-		// runs here instead, once the user actually submits the form.
 		const showCreateBlueprintDialog = ref(false);
-		// A throwaway Structure (placeholder metadata, real bricks) built
-		// once at open time purely so the dialog has something to show a
-		// preview of before any name is typed — see that component's own
-		// header on why re-extracting with the REAL metadata on Create is
-		// correct rather than reusing this one.
+		// Placeholder metadata so the dialog can preview before a name is typed.
 		const createBlueprintPreview = ref(null);
 		function closeCreateBlueprintDialog() {
 		    showCreateBlueprintDialog.value = false;
@@ -1161,32 +816,14 @@ export default {
 
         const activeTool = ref(editorContext.tool.activeTool);
         const selectionCount = ref(0);
-        // 0.2.90 — Structure Placement & World Instances: mirrors
-        // activeTool's own ref+subscription shape one rung up, so the
-        // placement hint can name what's being placed.
         const activeStructureTitle = ref(editorContext.activeStructure.title);
-        // 0.4.1 — Interactive Structure Composition UX: mirrors
-        // activeStructureTitle's own ref+subscription shape, so the
-        // placement hint can name what's being composed.
         const activeCompositionTitle = ref(
             editorContext.activeComposition.structure ? editorContext.activeComposition.structure.name : null
         );
-        // 0.2.91 — World Instance Editing & Placement Management: mirrors
-        // selectionCount's own ref+subscription shape, so the sidebar's
-        // registry-gated actions (selection.duplicate) and the
-        // "Selected House Instance" panel can react to a placement
-        // selection the same way everything else here reacts to
-        // SELECTION_CHANGED.
         const selectionIsStructurePlacement = ref(false);
         const selectedPlacementInfo = ref(null);
-        // 0.6.2 — Editor UX Consolidation: the brick-selection
-        // counterpart to selectedPlacementInfo above, backing
-        // SelectionInspector — see
-        // application/EditorSession.js#getSelectionSummary()'s own
-        // header. Mirrors selectedPlacementInfo's exact refresh shape:
-        // set on SELECTION_CHANGED, and re-read after any pointer-up/
-        // key-down that could have moved the SAME still-selected bricks
-        // (see refreshSelectionSummary() below).
+        // Refreshed on selection change and after any pointer-up/key-down that may
+        // have moved the same selection.
         const selectionSummary = ref(null);
         const shortcutsOpen = ref(false);
         let unsubTool = null;
@@ -1210,39 +847,23 @@ export default {
             editorSession.applyNumericTransform(intent, options);
         }
 
-        // ------------------ 0.2.91 structure instance manipulation ------
+        // ------------------ structure instance manipulation ------
 
-        // 0.2.92 — World Instance Transform UX. selectedPlacementInfo only
-        // ever refreshes automatically on SELECTION_CHANGED (see the
-        // subscription below) — moving/rotating the SAME still-selected
-        // placement (a keyboard nudge, a gizmo drag, Rotate, Apply) never
-        // fires that event. Now that the panel shows LIVE X/Z/Rotation
-        // numbers (0.2.91's panel only showed static title text, so this
-        // staleness was invisible before), every one of those paths calls
-        // this afterward so the inspector never shows a stale number.
+        // Moving or rotating the same selected placement fires no SELECTION_CHANGED,
+        // so every such path calls this to keep the inspector's numbers live.
         function refreshSelectedPlacementInfo() {
             if (editorContext.selection.isStructurePlacementSelection) {
                 selectedPlacementInfo.value = editorSession.getSelectedPlacementInfo();
             }
         }
 
-        // 0.6.2 — refreshSelectionSummary()'s own reason for existing is
-        // identical to refreshSelectedPlacementInfo() just above: a
-        // nudge/rotate/apply on the SAME still-selected bricks changes
-        // their bounds without ever firing SELECTION_CHANGED, so
-        // SelectionInspector's live position readout would otherwise go
-        // stale the instant it started showing one.
+        // Same reason, for brick selections.
         function refreshSelectionSummary() {
             if (!editorContext.selection.isEmpty && !editorContext.selection.isStructurePlacementSelection) {
                 selectionSummary.value = editorSession.getSelectionSummary();
             }
         }
 
-        // 0.6.2 — Editor UX Consolidation. RepeatPanel/EditingSidebar's
-        // own host callback — parallels alignSelection()/
-        // distributeSelection() immediately below: parse/UI concerns
-        // stay in the panel, this is nothing but the routing hop into
-        // EditorSession#repeatSelection() plus feedback.
         function repeatSelection(options) {
             const repeated = editorSession.repeatSelection(options);
             feedback.show(repeated
@@ -1251,17 +872,9 @@ export default {
             refreshSelectionSummary();
         }
 
-        // EditingSidebar's own host callback for picking WHICH group the
-        // Advanced actions (Rename/Duplicate/Delete/+Sel/-Sel) act on —
-        // those all read EditorSession's _selectedGroupId, and nothing
-        // in the sidebar's group list ever set it, so every Advanced
-        // button stayed permanently disabled (a disabled <button> fires
-        // no click at all) no matter which group you meant. Unlike
-        // repeatSelection() above, selectGroup() is deliberately session
-        // state only — no command, no documentManager.onStateChanged()
-        // — so this bumps documentVersion itself to force
-        // getActionContext()'s callers (EditingSidebar/CommandPalette)
-        // to notice hasSelectedGroup/selectedGroupId actually changed.
+        // Group actions read EditorSession's selected group, which only this sets.
+        // selectGroup() runs no command, so documentVersion is bumped to make the
+        // sidebar notice.
         function selectGroup(groupId) {
             editorSession.selectGroup(groupId);
             documentVersion.value++;
@@ -1272,10 +885,6 @@ export default {
             refreshSelectedPlacementInfo();
         }
 
-        // The numeric inspector's Apply — see
-        // application/EditorSession.js#applyPlacementTransform() for why
-        // this is exactly Move/RotateStructurePlacementCommand under the
-        // hood, never a third mutation path.
         function applySelectedPlacementTransform(payload) {
             const result = editorSession.applyPlacementTransform(payload);
             refreshSelectedPlacementInfo();
@@ -1289,9 +898,6 @@ export default {
         function duplicateSelectedPlacement() {
             const newId = editorSession.duplicateSelection();
             if (newId) {
-                // 0.6.2 — "what happens next," the same posture
-                // application/EditorActionRegistry.js#selection.duplicate
-                // now uses for a brick selection's own Duplicate.
                 feedback.show('Copy created — R to rotate, drag to move');
             }
         }
@@ -1302,23 +908,15 @@ export default {
             }
         }
 
-        // Choose Your Brick Color — SelectionInspector's color swatch
-        // calls this directly (the same "the panel calls the session
-        // directly" shape RepeatPanel/transform.repeat already
-        // established, see EditorActionRegistry.js's own header) rather
-        // than going through the action registry, since picking a color
-        // is a live widget interaction, not a no-argument command.
+        // Called directly by the color swatch: picking a color is a live widget, not a
+        // no-argument command.
         function recolorSelection(color) {
             if (editorSession.recolorSelection(color)) {
                 feedback.show('Recolored selection');
             }
         }
 
-        // "Edit Source Document" — deliberately never mutates the
-        // instance; it opens the referenced Document through the exact
-        // same loadDocument() path Toolbar's Load button already uses.
-        // See docs/Roadmap.md, 0.2.91: "do not offer 'Edit Bricks' as an
-        // instance mutation... instead, Instance -> Edit Source Document."
+        // Opens the referenced Document; never mutates the instance.
         function editSelectedPlacementSource() {
             const info = selectedPlacementInfo.value;
             if (!info) {
@@ -1328,7 +926,7 @@ export default {
             feedback.show(`Editing "${info.title}"`);
         }
 
-        // ------------------------- 0.1.50 action surface ----------------
+        // ------------------------- action surface ----------------
 
         const feedbackMessage = ref('');
         const feedbackVisible = ref(false);
@@ -1346,132 +944,47 @@ export default {
             }
         };
 
-        // ------------------- 0.9.377 post-publish distribution ----------
-        // EditorView Post-Publish Distribution Action. Toolbar's own
-        // publish() (unmodified in what it decides — see its own 0.9.377
-        // comment) now forwards the EXACT just-published Publication
-        // through its new `published` emit; onDocumentPublished() below
-        // is the only place that ever writes publishedPublication.
-        // Nothing here ever re-derives "the latest Publication" through a
-        // catalog or session lookup — see
-        // tests/EditorViewDistributionCommandChannelAudit.test.js's own
-        // Section B for why that would be a strictly less direct identity
-        // path than the one already in hand.
-        //
-        // ActionFeedback.js stays exactly as passive as 0.9.375 left it —
-        // this view owns the transient action itself, entirely separate
-        // from `feedback`/`feedbackMessage`/`feedbackVisible` above.
-        // AMENDED BY 0.9.450 — Nostr Multi-Relay Publication Distribution
-        // Wiring. This view offers no Announcement/Discovery substrate
-        // choice of its own (unlike WorldView.js/DecentralizedPublicationsView.js
-        // — no `discoveryProvider` argument, no substrate `<select>`
-        // anywhere in this file), so its ENTIRE publication distribution
-        // path has always been the Nostr default. That makes the injected
-        // command here the app-wide `multiRelayNostrPublicationDistributionCommand`
-        // outright, never a conditional choice between it and the
-        // single-relay `publicationDistributionCommand` — this view has no
-        // Arweave case to keep the single-relay command around for, so it
-        // is no longer injected here at all.
+        // ------------------- post-publish distribution ----------
+        // Toolbar forwards the exact just-published Publication; nothing here looks up
+        // "the latest Publication". ActionFeedback stays passive: this view owns the
+        // action.
         const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);
 
-        // AMENDED BY 0.9.502 — Editor Announcement/Discovery Provider
-        // Selection. `ui/views/WorldView.js`'s own distributeWorldEncounterPublication()
-        // (0.9.430) already threads an explicit Nostr/Arweave substrate
-        // choice through this exact command pair — WorldView.js's own
-        // "Distribute Publication" action has offered that choice since
-        // 0.9.430. This view's own "Distribute now" action never did:
-        // every click reached `multiRelayNostrPublicationDistributionCommand`
-        // unconditionally, with no way to reach Arweave at all — see
-        // `tests/AnnouncementDiscoveryProviderExpansionReadinessAudit.test.js`'s
-        // own pre-0.9.502 Section A3 finding. `publicationDistributionCommand`
-        // is the SAME app-wide, single-relay command WorldView.js already
-        // injects for its own `discoveryProvider === 'arweave'` branch —
-        // never a new collaborator, never a second Arweave client, never a
-        // second composition root.
+        // Nostr goes to the multi-relay command, Arweave to the single-relay one, as in
+        // WorldView.
         const publicationDistributionCommand = inject('publicationDistributionCommand', null);
 
-        // Snapshot Distribution — distributes the Publication's own
-        // MATERIAL bytes directly (Arweave/IPFS/Remote Pinning), entirely
-        // separate from announcing the Publication itself above. The SAME
-        // three app-wide collaborators `ui/views/WorldView.js`'s own
-        // distributeWorldEncounterSnapshot() already injects, one caller
-        // over: `snapshotDistributionCommand` for the registry-backed
-        // 'ar'/'ipfs' paths, `publicationContentStore` to read the actual
-        // bytes from `publication.contentReference`, and
-        // `ipfsRemotePublicationCoordinator`/`resolveSnapshotDiscoveryPublisher`
-        // for the separate Remote Pinning path (see that function's own
-        // header for why Remote Pinning never goes through
-        // `snapshotDistributionCommand` at all). Never a second
-        // composition, never a new command.
+        // Snapshot distribution sends the Publication's material bytes, separately
+        // from announcing the Publication. Remote Pinning never goes through
+        // snapshotDistributionCommand.
         const snapshotDistributionCommand = inject('snapshotDistributionCommand', null);
         const publicationContentStore = inject('publicationContentStore', null);
         const ipfsRemotePublicationCoordinator = inject('ipfsRemotePublicationCoordinator', null);
         const resolveSnapshotDiscoveryPublisher = inject('resolveSnapshotDiscoveryPublisher', null);
 
-        // The Wanderer's own freely editable choice of Announcement/
-        // Discovery substrate for the NEXT distribution — shared by
-        // "Distribute Publication" and "Distribute Snapshot" alike —
-        // page-local UI state only, mirroring `WorldEncounterCanvas.js`'s
-        // own `selectedDiscoveryProvider` (0.9.430) exactly, one caller
-        // over: never persisted, never synchronized, never reset on a
-        // fresh publish.
-        //
-        // 0.9.667 — Role Provider Preference As Dropdown Default. Opens on
-        // this replica's own saved Announcement/Discovery preference
-        // (ui/main.js's own `defaultAnnouncementDiscoveryProvider`, resolved
-        // once at boot from the SAME roleProviderPreferenceStore
-        // AnnouncementDiscoveryProviderSettingsView.js saves into) when one
-        // is on file; falls back to `'nostr'` — matching
-        // `PublicationDistributionRuntimeComposition.js`'s own default —
-        // exactly as every pre-0.9.667 mount already did, for anyone who has
-        // never saved a preference.
+        // Substrate choice shared by both actions: page-local, never persisted.
+        // Opens on the saved preference, else 'nostr'.
         const defaultAnnouncementDiscoveryProvider = inject('defaultAnnouncementDiscoveryProvider', 'nostr');
         const selectedDiscoveryProvider = ref(defaultAnnouncementDiscoveryProvider);
 
-        // One shared Storage choice for BOTH "Distribute Publication" (as
-        // its Material storage) and "Distribute Snapshot" (as its Snapshot
-        // storage), plus the combined action — page-local UI state only,
-        // never persisted, never reset on a fresh publish. The two actions
-        // used to carry separate, always-identically-seeded pickers; see
-        // EditorDistributionDialog.js's own header, "ONE SHARED SETTINGS
-        // BLOCK FOR BOTH PROTOCOLS." `selectedDiscoveryProvider` above is
-        // likewise shared by both actions.
-        //
-        // When Snapshot distribution is available, the eligible storages
-        // are the ones this device's Snapshot placement registry currently
-        // lists (`snapshotDistributionStorageTypes`, the SAME injected
-        // list ui/views/WorldView.js already reads) plus 'remote-pinning';
-        // otherwise all three Material storages. Opens on this replica's
-        // own saved Content preference (ui/main.js's own
-        // defaultContentDistributionProvider) when it names an eligible
-        // storage, falling back to the first eligible registry storage,
-        // then 'ar'. 'remote-pinning' still opens the Endpoint/Credential
-        // fields empty.
+        // One Storage choice shared by both actions: page-local, never persisted. When
+        // Snapshot distribution is available the options are the registered storages
+        // plus 'remote-pinning', otherwise the Material storages. Opens on the saved
+        // Content preference when eligible, then the first registered storage, then
+        // 'ar'.
         const defaultContentDistributionProvider = inject('defaultContentDistributionProvider', null);
         const snapshotDistributionAvailableStorageTypesCommand = inject('snapshotDistributionAvailableStorageTypes', null);
         const snapshotDistributionStorageTypes = snapshotDistributionAvailableStorageTypesCommand
             ? snapshotDistributionAvailableStorageTypesCommand()
             : ['ar', 'ipfs'];
-        // Shared by both actions — mirrors OwnPublicationPanel.js's own
-        // single remotePinningDraft exactly, one caller over. Never
-        // persisted anywhere; discarded on reload.
+        // Never persisted; discarded on reload.
         const remotePinningDraft = ref({ endpoint: '', credential: '', requestField: '', responseField: '' });
 
-        // Whether ANY distribution capability exists at all — read only to
-        // decide whether to render the action/select in the first place.
-        // Never itself a provider choice; see distributeEditorPublication()
-        // below for the one place that choice is actually made. A plain
-        // boolean, not a computed: both injected commands are fixed,
-        // app-wide values that never change after this view mounts.
+        // A plain boolean: the injected commands never change after mount.
         const canDistributePublication = Boolean(multiRelayNostrPublicationDistributionCommand || publicationDistributionCommand);
 
-        // Same restraint, one action over: whether Snapshot distribution
-        // has anywhere to go at all — either the registry-backed command
-        // (Arweave/local IPFS) or the Remote Pinning path (which needs
-        // both the coordinator AND a way to resolve a discovery
-        // publisher). `publicationContentStore` is required either way —
-        // it is how this view turns "which Publication" into "which
-        // bytes" — see distributeEditorSnapshot() below.
+        // publicationContentStore is required either way: it turns "which Publication"
+        // into "which bytes".
         const canDistributeSnapshot = Boolean(
             publicationContentStore
             && (snapshotDistributionCommand || (ipfsRemotePublicationCoordinator && resolveSnapshotDiscoveryPublisher))
@@ -1486,25 +999,9 @@ export default {
                 : ((canDistributeSnapshot && snapshotDistributionStorageTypes[0]) || 'ar')
         );
 
-        // The smallest callable contract 0.9.376's own Section A/D
-        // identified — identical in shape to WorldView.js's own
-        // distributeWorldEncounterPublication(publication, discoveryProvider)
-        // (0.9.104/0.9.347/0.9.430, unchanged): a two-argument
-        // (publication, discoveryProvider) -> Promise wrapper adding
-        // exactly one field (serializedMaterial) to whichever injected
-        // command's own request shape `discoveryProvider` selects. Nothing
-        // about "Editor" appears anywhere in its own body. AMENDED BY
-        // 0.9.450: the Nostr branch resolves to an ARRAY of
-        // `PublicationDistributionResult` (one per configured Nostr relay)
-        // rather than a single result — see `distributionResult`'s own
-        // 0.9.450 amendment, below, for how this view's own display
-        // adapted. AMENDED BY 0.9.502: `discoveryProvider === 'arweave'`
-        // now calls the single-relay `publicationDistributionCommand`
-        // instead — byte-for-byte the same branch WorldView.js's own
-        // distributeWorldEncounterPublication() already holds; every other
-        // value (`'nostr'`, or omitted — no pre-0.9.502 caller of this
-        // function exists) still calls the multi-relay Nostr command,
-        // unchanged.
+        // (publication, discoveryProvider) -> Promise. Adds serializedMaterial to the
+        // request. 'arweave' uses the single-relay command; anything else the
+        // multi-relay Nostr command, which resolves one result per relay.
         function distributeEditorPublication(publication, discoveryProvider, materialStorage, remotePinningConfiguration) {
             const remotePinningProviderOptions = materialStorage === 'remote-pinning' && remotePinningConfiguration
                 ? {
@@ -1538,18 +1035,8 @@ export default {
             });
         }
 
-        // Distributes the Publication's own raw SNAPSHOT bytes — never the
-        // serialized Publication object distributeEditorPublication()
-        // sends above. Byte-for-byte the same shape and behavior as
-        // WorldView.js's own distributeWorldEncounterSnapshot(), one
-        // caller over, with exactly one deliberate omission: that function
-        // also forwards a `claimedPosition` read from
-        // `session.getPlacementInfoForPublication()` — this view injects
-        // no WorldNavigationSession at all (it has no spatial/placement
-        // concerns of its own), so `claimedPosition`/`publicationId` are
-        // always left `undefined` here, the exact same degraded-but-
-        // tolerated path that function already holds for a Publication
-        // with no authoritative WorldPlacement.
+        // Sends the Publication's raw snapshot bytes. Like WorldView's version, but
+        // with no placement here, claimedPosition and publicationId stay undefined.
         function distributeEditorSnapshot(publication, storage, remotePinningConfiguration, discoveryProvider) {
             if (!publicationContentStore || !publication.contentReference) {
                 return Promise.reject(new Error('Snapshot distribution is not available.'));
@@ -1575,13 +1062,8 @@ export default {
                         return discoveryPublisher.publish({ contentHash: outcome.contentHash, locator: outcome.locator, storage: 'ipfs' })
                             .then((announcement) => ({ contentReference, announcement }))
                             .catch((error) => {
-                                // Same restraint as WorldView.js's own
-                                // identical catch: the content is already
-                                // durably pinned regardless of whether the
-                                // Nostr/Arweave announcement itself
-                                // succeeded, so a real announcement
-                                // failure never fails the whole attempt —
-                                // it surfaces as announcementError instead.
+                                // The content is already pinned, so an announcement failure surfaces as
+                                // announcementError rather than failing the whole attempt.
                                 console.error('Snapshot Nostr announcement failed:', error);
                                 return {
                                     contentReference,
@@ -1597,70 +1079,36 @@ export default {
             return snapshotDistributionCommand(snapshotBytes, storage, undefined, undefined, discoveryProvider);
         }
 
-        // The exact just-published Publication — replaced wholesale by
-        // each successful publish, never merged with a prior one. A later
-        // publish superseding an earlier one's still-visible action is
-        // deliberate: "Publish A -> action A, Publish B -> action B,
-        // click B" must distribute B — there is no "last Publication"
-        // lookup anywhere in this file.
+        // Replaced by each successful publish: "Publish A, Publish B, click" must
+        // distribute B.
         const publishedPublication = ref(null);
-        // Mirrors OwnPublicationPanel.js's own
-        // publicationDistributionExecuting/publicationDistributionError/
-        // publicationDistributionResult/publicationDistributionRequestId
-        // ephemeral family exactly, one caller over — never a new
-        // vocabulary, never shared with any other family in this view. No
-        // persistence, no "needs distribution" state, no notification
-        // record, no retry queue, no distribution history, no unread
-        // state — the action stays ephemeral.
+        // Ephemeral only: no persistence, retry queue or history.
         const distributionExecuting = ref(false);
         const distributionError = ref(null);
         const distributionResult = ref(null);
 
-        // The identical ephemeral family, one action over, for Snapshot
-        // distribution — entirely independent state, never shared with
-        // distributionExecuting/distributionError/distributionResult
-        // above (mirrors OwnPublicationPanel.js's own two separate
-        // families exactly).
+        // Separate state for Snapshot distribution.
         const snapshotDistributionExecuting = ref(false);
         const snapshotDistributionError = ref(null);
         const snapshotDistributionResult = ref(null);
-        // One request-id counter per family; see runDistribution().
         const distributionRequestIds = { publication: 0, snapshot: 0 };
 
-        // 0.9.672 — Editor View Distribution Dialog. Purely a "is the
-        // popup currently open" flag, mirroring OwnPublicationPanel.js's
-        // own pre-existing diagnosticToolsOpen exactly — see
-        // EditorDistributionDialog.js's own header. Never read by, and
-        // never written from, either distribution action itself; reset
-        // alongside the rest of this ephemeral family below so a stale
-        // dialog never carries over to a different published Publication.
+        // Reset with the rest of this state so a stale dialog never carries over.
         const distributionDialogOpen = ref(false);
 
-        // Toolbar's own `@published` handler — the ONLY place
-        // publishedPublication is ever written to a non-null value.
-        // Publishing itself never calls distributeEditorPublication() or
-        // publicationDistributionCommand() on its own: simply publishing
-        // causes zero distribution calls: distribution only ever happens
-        // on a LATER, separate, explicit user click, mirroring
-        // WorldView.js's own publishActiveDocument()/
-        // distributeWorldEncounterPublication() separation.
+        // The only writer of publishedPublication. Publishing never distributes on its
+        // own; distribution needs a later explicit click.
         function onDocumentPublished(publication) {
             publishedPublication.value = publication;
             resetDistributionState();
         }
 
-        // The action's own dismiss — if the user ignores or dismisses it,
-        // nothing else happens. Never touches the Publication itself,
-        // never marks anything "needs distribution": it only clears this
-        // view's own ephemeral display state.
         function dismissPublishAction() {
             publishedPublication.value = null;
             resetDistributionState();
         }
 
-        // Clears both distribution families and the dialog, and bumps both
-        // request ids so any still-in-flight attempt can no longer write
-        // its (now stale) outcome.
+        // Also bumps both request ids so in-flight attempts cannot write stale results.
         function resetDistributionState() {
             distributionExecuting.value = false;
             distributionError.value = null;
@@ -1673,12 +1121,8 @@ export default {
             distributionDialogOpen.value = false;
         }
 
-        // The Arweave branch of distributeEditorPublication() resolves a
-        // bare PublicationDistributionResult; the Nostr branch resolves an
-        // array (one per relay). The template guards and indexes
-        // distributionResult as an array, so a bare result is wrapped
-        // before it is stored. Only what this view stores for display is
-        // normalized; neither command's own return shape changes.
+        // The Arweave branch returns one result, the Nostr branch an array; store both
+        // as arrays for display.
         function normalizeDistributionResultForDisplay(result) {
             if (Array.isArray(result)) {
                 return result;
@@ -1686,14 +1130,9 @@ export default {
             return result ? [result] : null;
         }
 
-        // The executing/error/result state machine both distribution
-        // actions share. Only the latest attempt of a `family` may write
-        // its outcome, so a superseded attempt (a newer click, a new
-        // publish, a dismiss) never overwrites fresher state. Full,
-        // unsanitized error detail goes to the browser console only;
-        // the UI shows sanitizeDistributionErrorMessage()'s safe text (the
-        // common case: no compatible wallet extension installed — see
-        // that module's own header) or `fallbackMessage`.
+        // Shared executing/error/result state machine. Only the latest attempt of a
+        // `family` may write its outcome. Full errors go to the console; the UI shows
+        // sanitized text or `fallbackMessage`.
         function runDistribution(family, state, attempt, { logLabel, fallbackMessage, toDisplay = (result) => result }) {
             state.executing.value = true;
             state.error.value = null;
@@ -1724,10 +1163,7 @@ export default {
             return selectedDistributionStorage.value === 'remote-pinning' ? remotePinningDraft.value : undefined;
         }
 
-        // The only caller of distributeEditorPublication() in this view,
-        // forwarding the current substrate/storage choice. A no-op whenever
-        // there is no publishedPublication, no usable distribution command
-        // (either injected command counts), or a call is already in flight.
+        // No-op without a published Publication, a usable command, or while busy.
         function distributePublishedDocument() {
             const publication = publishedPublication.value;
             if (!publication || !canDistributePublication || distributionExecuting.value) {
@@ -1750,11 +1186,6 @@ export default {
             );
         }
 
-        // Mirrors distributePublishedDocument() immediately above, one
-        // action over: the only caller of distributeEditorSnapshot() in
-        // this view. A no-op whenever there is no publishedPublication, no
-        // usable snapshot distribution capability at all, or a call is
-        // already in flight.
         function distributePublishedSnapshot() {
             const publication = publishedPublication.value;
             if (!publication || !canDistributeSnapshot || snapshotDistributionExecuting.value) {
@@ -1776,51 +1207,17 @@ export default {
             );
         }
 
-        // UX-level convenience only: fires the two already-independent
-        // actions above from one click — mirrors
-        // ui/components/OwnPublicationPanel.js's own
-        // distributeOwnPublicationAndSnapshot() (and
-        // ui/components/WorldEncounterCanvas.js's own
-        // distributeSelectedPublicationAndSnapshot()) exactly, one host
-        // view over. Each keeps its own protocol, its own executing/error/
-        // result state, and its own outcome display — this never
-        // introduces a combined result or an aggregate status, and a
-        // failure in one never stops or hides the other. Run
-        // SEQUENTIALLY, never concurrently — both legs can end up signing
-        // through the SAME injected browser extension, and firing two
-        // signing requests at once is a real-world extension failure mode
-        // (no popup ever shown, no response ever received), not a race
-        // either leg's own code could detect. Snapshot runs first, then
-        // Publication, matching this view's own template order (the
-        // Snapshot section renders above the Publication section) — the
-        // identical ordering OwnPublicationPanel.js's own combined action
-        // already holds, one caller over.
+        // Runs both actions from one click, each keeping its own state and result.
+        // Sequential, never concurrent: both may sign through the same extension, and
+        // two simultaneous signing requests can silently hang it. Snapshot first,
+        // matching the template order.
         function distributePublishedDocumentAndSnapshot() {
             return Promise.resolve(distributePublishedSnapshot())
                 .then(() => distributePublishedDocument());
         }
 
-        // 0.9.381 — EditorView Distribution Result -> Repository
-        // Navigation. Closes the one gap 0.9.380's own audit found — and
-        // corrected: NOT a "View in Publication Center" link
-        // (LocalPublicationCatalog is structurally disjoint from this
-        // Publication type, live-proven in that audit's own Section B/D),
-        // but a jump to the SAME already-existing /world/:documentId
-        // route ui/components/PublicationCatalog.js's own "Explore"
-        // action, and this view's own backToWorld()/backFromForkFailure()
-        // below, already navigate to.
-        //
-        // Built from ONLY publishedPublication.value.documentId — already
-        // held in this view, never looked up through a catalog or
-        // session, never reconstructed from title/author/contentHash/
-        // distribution-result position (see that audit's own Section
-        // A/D/G). A missing documentId — there is none in practice, every
-        // Publication carries one, but the guard costs nothing — degrades
-        // to no navigation action at all, never a thrown error and never
-        // a new error state, exactly as that audit's own Section F called
-        // for. No lifecycle mutation, no distribution call, no I/O of any
-        // kind: a single router.push(), the same shape Section G already
-        // proved pure.
+        // Navigates to /world/:documentId using the documentId already held; never a
+        // catalog lookup. Without one it does nothing.
         function viewDistributedPublicationInRepository() {
             const publication = publishedPublication.value;
             if (!publication || !publication.documentId) {
@@ -1829,58 +1226,27 @@ export default {
             router.push({ path: `/world/${publication.documentId}` });
         }
 
-        // ------------------------- 0.2.21 document lifecycle ------------
-        // Document Info panel + Document Properties editor. The Editor's
-        // document is always mutable/editable (there is no fork-on-edit
-        // gate here — that is a World View concern, 0.2.20) so `editable`
-        // stays true; status only ever distinguishes Draft/Saved.
+        // ------------------------- document lifecycle ------------
+        // The Editor's document is always editable (fork-on-edit is a World View
+        // concern), so status only ever distinguishes Draft/Saved.
 
         const updateDocumentMetadataUseCase = new UpdateDocumentMetadataUseCase();
         const documentInfo = ref(null);
         const showMetadataEditor = ref(false);
-        // Bumped by refreshDocumentInfo() below on every
-        // documentManager.onStateChanged() — i.e. every CommandHistory
-        // execute/undo/redo, group create/rename/duplicate/delete
-        // included. getActionContext() reads it purely so Vue tracks it
-        // as a dependency: EditingSidebar's `context` computed otherwise
-        // only depends on selectionCount/paletteOpen/activeTool/
-        // selectionIsStructurePlacement, none of which change when a
-        // group is created — so its groups list (and canUndo/canRedo)
-        // would stay cached at their pre-mutation values, showing "No
-        // groups yet" forever even after a real group was created.
+        // Bumped on every document state change and read by getActionContext() so Vue
+        // tracks it: otherwise the sidebar's groups and undo/redo would stay cached
+        // when a group is created.
         const documentVersion = ref(0);
         let unsubDocumentState = null;
 
-        // 0.6.1 — World ↔ Editor Continuity & Return Navigation. The
-        // EditorEntryContext (core/EditorEntryContext.js) a fork arrived
-        // with, kept alive for the life of THIS open document only —
-        // unlike every 0.6.0 consumption of it (frameCameraOn()/
-        // selectAll(), applied once and discarded), Toolbar's own "←
-        // Back to World"/"Save & Return to World" buttons need it to
-        // stay readable for as long as the fork they describe is what's
-        // actually open. `arrivalDocumentId` is that fork's own
-        // world.id, captured once right after openDocument() — see
-        // refreshDocumentInfo() below, which clears both the moment the
-        // OPEN document stops being the one this context describes (a
-        // later Load/New/place-a-different-document), so the header
-        // never claims "Editing a copy of X" about a document that
-        // isn't X's fork anymore. Never persisted, never read by
-        // anything outside this view — exactly the ephemeral,
-        // navigation-only posture core/EditorEntryContext.js's own
-        // header already establishes.
+        // The EditorEntryContext a fork arrived with, kept for as long as that fork is
+        // the open document (for "Back to World"). Cleared as soon as another document
+        // opens; never persisted.
         const entryContext = ref(null);
         let arrivalDocumentId = null;
 
-        // 0.9.353 — Fork Failure Reason Presentation. Set by the
-        // route.query.fork handler's own catch block below, on a failed
-        // fork ONLY (never on success — see that block's own header).
-        // `{ reason, returnWorldId, focusLocationId }` — reason is a
-        // ForkFailureReason value or null (an unnamed cause);
-        // returnWorldId/focusLocationId are exactly the fields
-        // backToWorld() below already reads off entryContext, computed
-        // the identical way for the failure path in backFromForkFailure().
-        // Cleared the instant the dialog it drives resolves; never
-        // persisted, never read anywhere outside this view.
+        // Set only when a fork fails: `{ reason, returnWorldId, focusLocationId }`.
+        // Cleared when the dialog closes.
         const forkFailure = ref(null);
 
         function refreshDocumentInfo() {
@@ -1913,19 +1279,8 @@ export default {
             };
         }
 
-        // 0.9.204 — Editor Autosave & Recovery UI Integration.
-        // RecoveryBanner's own 'recover' handler. Goes through the SAME
-        // existing use-case boundary the milestone's own architectural
-        // invariant requires (EditorView -> use case -> recovery
-        // subsystem -> storage, never EditorView -> storage): loads the
-        // checkpoint via RecoverDocumentUseCase, opens it through the
-        // SAME openDocument() path a fork or a published-world fork
-        // already uses (preserves the document's own world.id — see
-        // core/World.js#toJSON()/fromJSON()), then marks the manager
-        // dirty, mirroring exactly what tests/PersistenceRecovery.test.js's
-        // own flagship does by hand (load recovered doc, markDirty(),
-        // ready for an explicit Save) — recovered content is NOT the
-        // same as the last saved state, so it must not read as clean.
+        // Opens the recovered checkpoint through openDocument() (keeping its world.id)
+        // and marks it dirty: recovered content is not the saved state.
         function recoverDocument() {
             if (!recoveryStatus.value) {
                 return;
@@ -1938,24 +1293,13 @@ export default {
                 recoveryObserver.clear();
                 feedback.show('Recovered unsaved changes from a previous session');
             } catch (e) {
-                // Recovery failure (corrupt/tampered checkpoint) never
-                // takes down the Editor or the still-open document — see
-                // application/RecoverDocumentUseCase.js's own integrity
-                // check, unchanged by this milestone.
+                // A corrupt checkpoint never takes down the Editor or the open document.
                 feedback.show(`Recovery failed: ${e.message}`);
             }
         }
 
-        // RecoveryBanner's own 'discard' handler — the user saying
-        // "throw away the autosaved work." Straight through
-        // DiscardRecoveryUseCase; the currently open document (saved or
-        // not) is never touched.
-        //
-        // 0.9.205 — wrapped in the SAME try/catch shape recoverDocument()
-        // above already uses: a discard failure (e.g. the checkpoint's
-        // own storage entry is unreadable) must not leave the banner
-        // showing a stale offer with no explanation, and must not go
-        // uncaught out of a UI click handler.
+        // Discards the checkpoint without touching the open document. Wrapped like
+        // recoverDocument() so a failure never leaves a stale banner.
         function discardRecovery() {
             if (!recoveryStatus.value) {
                 return;
@@ -1970,15 +1314,8 @@ export default {
             }
         }
 
-        // Toolbar's own "← Back to World"/"Save & Return to World" —
-        // see core/EditorEntryContext.js's own 0.6.1 header for why
-        // `returnWorldId` is never `route.query.fork`/`sourceDocumentId`,
-        // and `focusLocationId` doubles as exactly the id
-        // ui/views/WorldView.js#getFocusContextForLocation() needs to
-        // reopen the same WorldFocusPanel on arrival. A no-op without a
-        // known return address (a fork reached some OTHER way than
-        // "Edit a Copy" — e.g. a bare Publication Catalog fork — simply
-        // has nowhere this button can send the viewer back to).
+        // Returns via the entry context's return address. No-op for forks reached
+        // another way.
         function backToWorld() {
             const context = entryContext.value;
             if (!context || !context.returnWorldId) {
@@ -1990,17 +1327,7 @@ export default {
             });
         }
 
-        // 0.9.353 — Fork Failure Reason Presentation. ForkFailureDialog's
-        // own (and only) way out. Navigates by the SAME `/world/<id>`
-        // shape backToWorld() above already uses — never a second
-        // navigation concept for "return to the Publication" — to
-        // whichever World the failed fork's own route.query.fork handler
-        // (below) recorded as `forkFailure.value.returnWorldId`: the
-        // World View "Edit a Copy" entered from, when that's how this
-        // fork was reached, else the Publication's own documentId — the
-        // SAME id ui/components/PublicationCatalog.js's own Explore
-        // action already navigates to for this Publication (see that
-        // handler's own header on why one id covers both entry points).
+        // The failure dialog's way out, via the same `/world/<id>` route.
         function backFromForkFailure() {
             const failure = forkFailure.value;
             forkFailure.value = null;
@@ -2024,29 +1351,13 @@ export default {
             togglePalette() {
                 paletteOpen.value = !paletteOpen.value;
             },
-            // group.rename's own input-collection hook:
-            // EditorActionRegistry's execute() can't collect a new name
-            // itself, and renameSelectedGroup(name) has no default —
-            // called with none it would rename the group to undefined.
-            // A native prompt pre-filled with the current name; null
-            // means Cancel.
+            // The registry cannot collect a name itself; null means Cancel.
             promptRenameGroup(currentName = '') {
                 return prompt('New group name:', currentName || '');
             },
             focusNumeric: null,
-            // 0.6.3 — Blueprint Authoring & Versioning UX. Supersedes the
-            // 0.4.2 window.prompt() chain (Name/Category/Description as
-            // three separate native prompts) with
-            // ui/components/CreateBlueprintDialog.js. Builds a throwaway
-            // preview Structure (placeholder metadata, the CURRENT
-            // selection's real bricks) so the dialog has something to
-            // show before any name is typed; see that component's own
-            // header on why Create re-extracts with the real metadata
-            // rather than reusing this one. See
-            // application/EditorActionRegistry.js's own 0.6.3 comment on
-            // why opening the dialog is as far as this hook goes — the
-            // rest of the 0.4.2/0.4.3 chain runs from the dialog's own
-            // 'create' handler (this file's own onCreateBlueprint()).
+            // Opens CreateBlueprintDialog with a preview Structure built from the current
+            // selection; the dialog's 'create' handler does the rest.
             openCreateBlueprintDialog() {
                 let preview = null;
                 try {
@@ -2067,12 +1378,7 @@ export default {
             createStandardActions({ session: editorSession, feedback, ui: actionUi })
         );
         const getActionContext = () => {
-            // Read (never used) purely so any Vue computed built on top
-            // of getActionContext() — EditingSidebar's own `context`
-            // chief among them — picks up documentVersion as a tracked
-            // dependency too, not just selectionCount/paletteOpen/
-            // activeTool/selectionIsStructurePlacement below. See
-            // documentVersion's own declaration for why that matters.
+            // Read only so computeds built on this track documentVersion too.
             void documentVersion.value;
             return EditorActionContext.capture({
                 session: editorSession,
@@ -2091,13 +1397,8 @@ export default {
         let onPointerUp = null;
         let onKeyDown = null;
 
-        // Shift+Drag marquee overlay (css/main.css .marquee-rect) — null
-        // whenever editorSession.isMarqueeActive() is false. Positioned
-        // in CSS pixels relative to the viewport container (the nearest
-        // `position: relative` ancestor the template already gives
-        // .marquee-rect's own `position: absolute`), recomputed from
-        // editorSession.getMarqueeRect()'s CLIENT-space corners on every
-        // pointer event the gesture touches.
+        // In CSS pixels relative to the viewport container, recomputed from the
+        // session's client-space corners.
         const marqueeRect = ref(null);
         function updateMarqueeRect() {
             const rect = editorSession.getMarqueeRect();
@@ -2114,15 +1415,8 @@ export default {
             };
         }
 
-        // Transform gesture feedback overlay (0.9.214). Purely a
-        // projection of the return value EditorSession.onPointerMove()/
-        // onPointerUp() already forward (feedback included) once the
-        // interactive gizmo consumes a pointer event — see
-        // application/SpatialEditingService.js#getGestureFeedback() and
-        // ui/components/TransformFeedback.js, both built for exactly this
-        // blob and unchanged by this milestone. Never mutated except by
-        // that forwarded value: no local transform math, no independent
-        // polling of gesture state.
+        // Only ever set from what EditorSession's pointer handlers return: no local
+        // transform math.
         const transformFeedback = ref(null);
         function clearTransformFeedback() {
             transformFeedback.value = null;
@@ -2140,15 +1434,8 @@ export default {
             unsubSelection = editorContext.eventBus.subscribe(
                 EditorEvent.SELECTION_CHANGED,
                 ({ selection }) => {
-                    // _rebuild() (loadDocument/openDocument/newDocument)
-                    // clears the selection before anything else — so this
-                    // fires on every document switch, the one existing
-                    // signal broad enough to guarantee a gesture overlay
-                    // left over from a previous document can never bleed
-                    // into a new one. An ordinary selection change mid-
-                    // session can't happen while a gizmo drag is in
-                    // flight either, so this never fights the live
-                    // pointermove/pointerup updates above.
+                    // Every document switch clears the selection first, so this guarantees no
+                    // overlay carries over to a new document.
                     clearTransformFeedback();
                     selectionCount.value = selection.items.length;
                     selectionIsStructurePlacement.value = !!selection.isStructurePlacementSelection;
@@ -2176,29 +1463,15 @@ export default {
             refreshDocumentInfo();
             unsubDocumentState = documentManager.onStateChanged(refreshDocumentInfo);
 
-            // 0.9.204 — Editor Autosave & Recovery UI Integration.
-            // Started AFTER editorSession.start() (above) has already
-            // populated the real document, so the very first recovery
-            // probe checks that document's own id rather than
-            // DocumentManager's throwaway construction-time default.
+            // Started after editorSession.start() so the first probe checks the real
+            // document.
             autosaveScheduler.start();
             recoveryObserver.start();
 
             if (route.query.fork) {
                 const sourceDocumentId = route.query.fork;
-                // 0.6.0 — Context-Preserving Fork-to-Edit. Decodes
-                // whatever EditorEntryContext World View's "Edit a
-                // Copy" attached to this same navigation (see
-                // core/EditorEntryContext.js's own header on the
-                // query-param channel). A pure function of route.query
-                // — hoisted above the try (0.9.353) because both
-                // outcomes need it: openDocument() on success (below),
-                // and — new in 0.9.353 — returnWorldId/focusLocationId
-                // on failure, so a failed fork can send the viewer back
-                // to precisely the World they came from rather than an
-                // unconditional trip to a blank document (see
-                // tests/RemotePublicationForkJourneyProductGapAudit.test.js
-                // Section F).
+                // Decoded before the try because both outcomes need it: openDocument() on
+                // success and the return address on failure.
                 const decodedEntryContext = editorEntryContextFromQuery(route.query, sourceDocumentId);
                 try {
                     let sourcePublication = null;
@@ -2206,52 +1479,17 @@ export default {
                         sourcePublication = findPublicationUseCase.execute(route.query.publication);
                     }
                     const forkedDocument = forkDocumentUseCase.execute(route.query.fork, identityProvider, sourcePublication);
-                    // Hands decodedEntryContext to openDocument(), which
-                    // frames the camera and, for a STRUCTURE, selects the
-                    // fork's own bricks — the one place this context is
-                    // ever consumed; it is discarded the instant this
-                    // block finishes, never stored anywhere.
-                    // `entryContext.value` below is what stays live for
-                    // Toolbar's own header/"← Back to World" for as long
-                    // as this fork is the open document (see that ref's
-                    // own header, just above refreshDocumentInfo()).
                     editorSession.openDocument(forkedDocument, decodedEntryContext);
-                    // 0.6.1 — set AFTER openDocument() succeeds, so a
-                    // fork that throws (caught below) never leaves a
-                    // stale entryContext describing a document that was
-                    // never actually opened.
+                    // Set only after openDocument() succeeds.
                     entryContext.value = decodedEntryContext;
                     arrivalDocumentId = decodedEntryContext ? forkedDocument.world.id : null;
-                    // 0.2.21: the document id silently changing (0.1.24's
-                    // fork mechanism) is exactly what the milestone design
-                    // asked not to leave unexplained. 0.6.0 — when the
-                    // fork carries a title (it was reached through "Edit
-                    // a Copy," not every fork is), name what was actually
-                    // being looked at rather than the generic message —
-                    // this is the transient "Editing a copy of ___"
-                    // arrival indicator, ephemeral UI only (see
-                    // `feedback.show()`'s own 2.5s auto-hide below), never
-                    // persisted anywhere.
+                    // Transient arrival message, naming what was being looked at when known.
                     feedback.show(decodedEntryContext && decodedEntryContext.title
                         ? `Editing a copy of "${decodedEntryContext.title}"`
                         : `Created your editable fork of "${forkedDocument.metadata.title}"`);
                 } catch (err) {
-                    // 0.9.353 — Fork Failure Reason Presentation.
-                    // Replaces the bare `Fork failed: ${err.message}`
-                    // toast (transient, and never told apart a license
-                    // denial from a retrieval failure — see
-                    // application/ForkFailureReason.js's own header) with
-                    // a persistent dialog naming why (err.reason, when
-                    // ForkDocumentUseCase supplied one) and a route back
-                    // to the Publication/World the viewer actually came
-                    // from: decodedEntryContext's own returnWorldId when
-                    // this fork was reached through "Edit a Copy," else
-                    // sourceDocumentId itself — the SAME id
-                    // ui/components/PublicationCatalog.js's own Explore
-                    // action already navigates to for this Publication
-                    // (see backFromForkFailure()'s own header). Never
-                    // entered a blank editor as a dead end — the dialog
-                    // covers it until the viewer picks that one way out.
+                    // A failed fork shows a dialog with the reason and a way back to where the
+                    // viewer came from, instead of a transient toast.
                     forkFailure.value = {
                         reason: err.reason || null,
                         returnWorldId: (decodedEntryContext && decodedEntryContext.returnWorldId) || sourceDocumentId,
@@ -2263,23 +1501,8 @@ export default {
                 try {
                     editorSession.loadDocument(route.query.load);
                 } catch (err) {
-                    // 0.9.574 — Repository Publication Lifecycle & Currency
-                    // Product Reassessment, Section G. Used to interpolate
-                    // `err.message` verbatim — for LoadDocumentUseCase's own
-                    // failure that read `Load failed: LoadDocumentUseCase:
-                    // no document found with id "..."`, leaking the use
-                    // case's own internal class name and a raw storage
-                    // identifier straight into a Wanderer-facing toast.
-                    // Named, not fixed, by tests/
-                    // PublicationDiscoveryToWorkContinuityProductReassessment.test.js
-                    // Section I (0.9.559) as a genuine paper-cut out of
-                    // that milestone's own scope; this is that named
-                    // future milestone. Branches on err.reason (a
-                    // LoadFailureReason value) the same way
-                    // ForkFailureDialog.js already reads err.reason rather
-                    // than pattern-matching ForkDocumentUseCase's message —
-                    // an unnamed cause still shows a plain, safe fallback,
-                    // never the raw message.
+                    // Never shows the raw error message (it leaked class names and storage ids);
+                    // branches on err.reason, with a safe fallback.
                     feedback.show(err.reason === LoadFailureReason.MATERIAL_UNAVAILABLE
                         ? "This Publication's material is currently unavailable."
                         : 'This document could not be opened.');
@@ -2294,31 +1517,18 @@ export default {
             viewport.value.addEventListener('pointerdown', onPointerDown);
             onPointerMove = (event) => {
                 const result = editorSession.onPointerMove(event);
-                // Only a CONSUMED result (the gizmo mid-drag) ever
-                // carries feedback; an ordinary hover/tool move returns
-                // null here and must leave whatever is already showing
-                // alone, not blank it out between drag frames.
+                // Only a consumed result carries feedback; a plain hover must not blank it.
                 if (result) {
                     transformFeedback.value = result.feedback || null;
                 }
                 updateMarqueeRect();
             };
             viewport.value.addEventListener('pointermove', onPointerMove);
-            // 0.2.92 — refreshSelectedPlacementInfo() runs after EVERY
-            // pointer-up/key-down, not just the ones that obviously moved
-            // something: a gizmo drag commits inside
-            // editorSession.onPointerUp() itself (SelectionTool's own
-            // click-drag does too), and a keyboard nudge/rotate/delete
-            // commits inside editorSession.onKeyDown() — neither surfaces
-            // back through a return value or SELECTION_CHANGED. The
-            // refresh is cheap and a no-op unless a placement is
-            // currently selected (see its own definition above).
+            // Runs after every pointer-up/key-down: commits there surface through neither
+            // a return value nor SELECTION_CHANGED. Cheap and a no-op without a placement
+            // selected.
             onPointerUp = (event) => {
                 const result = editorSession.onPointerUp(event);
-                // Gizmo release always reports feedback: null once the
-                // gesture is over (committed or a no-op release) — the
-                // overlay's own idle state, set here rather than
-                // guessed at independently.
                 if (result) {
                     transformFeedback.value = result.feedback || null;
                 }
@@ -2329,18 +1539,14 @@ export default {
             window.addEventListener('pointerup', onPointerUp);
 
             const handleKeyDown = (event) => {
-                // 1. Text inputs own their keys; Escape blurs them.
                 if (InputRouter.isTextInputTarget(event.target)) {
                     if (event.key === 'Escape') {
                         event.target.blur();
                     }
                     return;
                 }
-                // 1.5. An open Keyboard Shortcuts overlay owns the
-                // keyboard next — same "the topmost open surface wins"
-                // priority the palette already had, just one layer
-                // earlier so `?`/Escape close it before anything below
-                // (tool shortcuts, the registry) ever sees the key.
+                // 1.5. An open Keyboard Shortcuts overlay owns the keyboard next, so `?`/Escape
+                // close it first.
                 if (shortcutsOpen.value) {
                     if (event.key === 'Escape' || event.key === '?') {
                         event.preventDefault();
@@ -2348,7 +1554,6 @@ export default {
                     }
                     return;
                 }
-                // 2. An open palette owns the keyboard.
                 if (paletteOpen.value) {
                     if (event.key === 'Escape') {
                         event.preventDefault();
@@ -2359,33 +1564,22 @@ export default {
                     }
                     return;
                 }
-                // 3. An active gizmo gesture owns the keyboard (Escape
-                //    cancels it inside the session).
                 if (editorSession.isGestureActive()) {
                     editorSession.onKeyDown(event);
-                    // Escape cancels the gesture inside the session
-                    // without ever reaching onPointerUp() above — the
-                    // overlay's own idle state has to be set here
-                    // instead, or a cancelled gesture would leave its
-                    // last preview frame on screen forever.
+                    // A cancelled gesture never reaches onPointerUp(), so clear the overlay here.
                     if (!editorSession.isGestureActive()) {
                         clearTransformFeedback();
                     }
                     return;
                 }
-                // 3.5. An in-flight Shift+Drag marquee owns Escape next
-                // (gesture > marquee > selection). Cancels the drag with no
-                // selection change, rather than falling through to step
-                // 5's registry Escape (selection.clear), which would also
-                // wipe out whatever was already selected before the drag
-                // started.
+                // 3.5. An in-flight marquee owns Escape next: cancel it without clearing the
+                // existing selection.
                 if (editorSession.isMarqueeActive() && event.key === 'Escape') {
                     event.preventDefault();
                     editorSession.cancelMarquee();
                     updateMarqueeRect();
                     return;
                 }
-                // 4. View-local, non-action shortcuts.
                 const shortcutTool = TOOL_SHORTCUTS[event.key];
                 if (shortcutTool && !event.ctrlKey && !event.metaKey) {
                     editorContext.setActiveTool(shortcutTool);
@@ -2401,51 +1595,26 @@ export default {
                     }
                     return;
                 }
-                // 4.1 — Editor UX Consolidation: '?' opens the Keyboard
-                // Shortcuts overlay. Placed after tool-switching/Save
-                // (neither uses '?') and before placement's own Rotate/
-                // Escape carve-outs below, so '?' never reaches those —
-                // it isn't a shortcut either mode defines.
+                // 4.1. '?' opens the Keyboard Shortcuts overlay.
                 if (event.key === '?' && !event.ctrlKey && !event.metaKey) {
                     event.preventDefault();
                     shortcutsOpen.value = true;
                     return;
                 }
-                // 4.5. Placement mode keeps its own Rotate (0.2.87) —
-                // 'R'/'Shift+R' already name Rotate Clockwise/Counter-
-                // Clockwise in the registry (transform.rotateClockwise/
-                // CounterClockwise), but those are disabled while
-                // placing (editingAllowed() checks ctx.placementMode) —
-                // and step 5's matchShortcut() resolves a key to its
-                // bound action by KEY ALONE, oblivious to enabled(), so
-                // letting this fall through unchanged would silently
-                // swallow the keystroke on a disabled action rather than
-                // ever reaching PlacementTool. Routed to the tool
-                // directly instead, exactly like WorldView's identical
-                // carve-out for the same reason.
+                // 4.5. Placement mode handles Rotate itself: matchShortcut() matches by key
+                // alone, even for disabled actions, so R would otherwise be swallowed.
                 if ((activeTool.value === ToolId.PLACE || activeTool.value === ToolId.PLACE_STRUCTURE
                         || activeTool.value === ToolId.COMPOSE_STRUCTURE)
                     && event.key.toLowerCase() === 'r') {
                     editorSession.onKeyDown(event);
                     return;
                 }
-                // 4.6. COMPOSE_STRUCTURE's own Escape-to-cancel
-                // (StructureCompositionTool#onKeyDown()) needs the exact
-                // same carve-out as 4.5's Rotate, for the exact same
-                // reason: step 5's matchShortcut() resolves Escape to
-                // 'selection.clear' by KEY ALONE and returns immediately
-                // once ANY action matches the key — regardless of
-                // whether actionRegistry.execute() actually did
-                // anything (it's disabled here: no selection is active
-                // while composing) — so Escape would never reach the
-                // tool without this carve-out. Neither PLACE nor
-                // PLACE_STRUCTURE need this: neither tool implements an
-                // Escape handler of its own.
+                // 4.6. Same for COMPOSE_STRUCTURE's Escape, which would otherwise match the
+                // disabled 'selection.clear'.
                 if (activeTool.value === ToolId.COMPOSE_STRUCTURE && event.key === 'Escape') {
                     editorSession.onKeyDown(event);
                     return;
                 }
-                // 5. Registry-driven editing shortcuts.
                 const action = InputRouter.matchShortcut(event, actionRegistry);
                 if (action) {
                     if (actionRegistry.execute(action.id, getActionContext())) {
@@ -2453,7 +1622,6 @@ export default {
                     }
                     return;
                 }
-                // 6. Everything else falls through to tools.
                 editorSession.onKeyDown(event);
             };
             onKeyDown = (event) => {
@@ -2480,41 +1648,14 @@ export default {
             if (unsubDocumentState) {
                 unsubDocumentState();
             }
-            // 0.9.580 — Editor Trailing-Autosave Loss Window closure.
-            // Flushes whatever checkpoint is still pending — the exact
-            // bounded gap 0.9.579 Section C proved: stop() below cancels
-            // rather than flushes, so a timer in flight at this exact
-            // moment (the most recent edit(s), still inside the
-            // debounce delay) would otherwise be discarded unfired and
-            // unwarned. See application/AutosaveScheduler.js's own
-            // flush() header for why it is always a safe no-op once an
-            // autosave has already fired, or when nothing is pending.
-            //
-            // Caught, not left to propagate like Toolbar.js's own
-            // save(): everything below this line in this SAME hook
-            // (recoveryObserver.stop(), every unsubscribe/
-            // removeEventListener, editorSession.dispose(), the two
-            // peer dispose() calls) still needs to run regardless — an
-            // uncaught throw here would skip all of them, leaking
-            // exactly what those calls exist to prevent. Logged, not
-            // swallowed: a failed flush leaves DocumentManager state
-            // (and therefore the still-dirty document) completely
-            // untouched — see AutosaveDocumentUseCase's own atomic
-            // failure behavior — so nothing here ever claims a save
-            // that did not happen, and navigation itself is never
-            // gated on this succeeding (see Section C1's own finding
-            // that no navigation-blocking guard exists anywhere in
-            // this view).
+            // Flush a pending autosave: stop() cancels rather than flushes, so the most
+            // recent edits would be lost. Caught so the rest of this cleanup always runs.
+            // A failed flush leaves the document dirty, and never blocks navigation.
             try {
                 autosaveScheduler.flush();
             } catch (e) {
                 console.error('Editor exit: failed to flush the pending autosave checkpoint', e);
             }
-            // 0.9.204 — the negative test this milestone's own brief
-            // names as the important one: an unmounted Editor must not
-            // go on producing autosaves or recovery probes. Both stop()
-            // calls unsubscribe from documentManager.onStateChanged();
-            // see application/AutosaveScheduler.js/RecoveryObserver.js.
             autosaveScheduler.stop();
             recoveryObserver.stop();
             if (feedbackTimer) {
@@ -2525,19 +1666,10 @@ export default {
             viewport.value.removeEventListener('pointermove', onPointerMove);
             viewport.value.removeEventListener('pointerdown', onPointerDown);
             editorSession.dispose();
-            // 0.9.224 — this view's own documentCommandPropagation is
-            // constructed fresh per mount (never the app-wide shared
-            // peerMessageBus/registry themselves) — disposed here so an
-            // unmounted Editor's peer/bus subscriptions don't leak into
-            // the next mount, mirroring editorSession.dispose() just above.
+            // Created per mount, so dispose it to avoid leaking bus subscriptions.
             if (documentCommandPropagation) {
                 documentCommandPropagation.dispose();
             }
-            // 0.9.230 — this view's own documentOperationRecovery is
-            // constructed fresh per mount, exactly like
-            // documentCommandPropagation just above — disposed here so
-            // an unmounted Editor's peer/bus subscriptions don't leak
-            // into the next mount.
             if (documentOperationRecovery) {
                 documentOperationRecovery.dispose();
             }

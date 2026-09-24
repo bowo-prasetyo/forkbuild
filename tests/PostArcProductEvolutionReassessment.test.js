@@ -6,6 +6,7 @@ import { PlacementRecord } from '../core/PlacementRecord.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { DiscoverPlacementsUseCase } from '../application/DiscoverPlacementsUseCase.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.307 — Post-Arc Product Evolution Reassessment.
 //
@@ -443,7 +444,7 @@ async function runTests() {
         // admitting this is a deliberate simplification and naming the
         // missing capability by name: "browsing/choosing among several
         // is future scope."
-        const sessionSource = await rawSource('application/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(sessionSource.includes('browsing/choosing among several is future scope'),
             'G3. application/WorldNavigationSession.js still carries this exact admission next to _resolvePlacementRecord().');
         assert(/records\.reduce\(\(latest, r\) => \(!latest \|\| r\.updatedAt > latest\.updatedAt\) \? r : latest, null\)/.test(sessionSource),

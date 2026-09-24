@@ -721,8 +721,12 @@ async function run() {
 
         check(providerCallWindow !== null, 'I4. ui/main.js still calls createPublicationDistributionRuntimeProvider() — the real composition-root seam');
         check(!/discoveryProvider|arweaveAnnouncementPublisherOptions/.test(providerCallWindow), 'I5. ...and that real call site supplies neither discoveryProvider nor arweaveAnnouncementPublisherOptions');
-        check(configCallWindow !== null && !/discoveryProvider|arweaveAnnouncementPublisherOptions/.test(configCallWindow), 'I6. neither does the real resolvePublicationDistributionRuntimeConfiguration() call site');
-        check(commandCallWindow !== null && !/discoveryProvider|arweaveAnnouncementPublisherOptions/.test(commandCallWindow), 'I7. neither does the real composePublicationDistributionCommand() call site — the one object ui/views/WorldView.js\'s own distributeWorldEncounterPublication() and ui/components/OwnPublicationPanel.js\'s own distributeOwnPublication() both ultimately call');
+        // I6 (that call site never resolved arweaveAnnouncementPublisherOptions)
+        // stopped being true at 0.9.430/0.9.492.
+        check(configCallWindow !== null, 'I6. ui/main.js still calls resolvePublicationDistributionRuntimeConfiguration()');
+        // I7 (that call site never passed arweaveAnnouncementPublisherOptions)
+        // stopped being true at 0.9.430.
+        check(commandCallWindow !== null, 'I7. ui/main.js still calls composePublicationDistributionCommand()');
 
         // Contrast: Proof/Anchor's own equivalent IS UI-reachable today,
         // through a real registry a real coordinator exposes to a real

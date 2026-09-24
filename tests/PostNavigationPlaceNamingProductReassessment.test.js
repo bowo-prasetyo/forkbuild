@@ -12,6 +12,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { namingView as deriveNamingView } from '../core/PlaceNamingView.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.262 — Post-Navigation Place Naming Product Reassessment.
 //
@@ -158,7 +159,7 @@ async function runTests() {
         assert(await sourceExists('tests/PlaceNamingNearbyNavigationLifecycleAudit.test.js'),
             'A1b. tests/PlaceNamingNearbyNavigationLifecycleAudit.test.js (0.9.261) still exists as the authoritative navigation-lifecycle record this section reuses rather than reproduces.');
 
-        const worldView = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
+        const worldView = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         assert(worldView.includes(".some((region) => region.id === row.regionId && region.worldId === row.worldId)"),
             'A2. ui/views/WorldView.js#navigateToNearbyPlaceNamingClaim() still cross-checks the claim\'s own worldId against session.getRegions() before navigating, verbatim, unchanged since 0.9.260.');
         assert(worldView.includes('session.focusLocation(row.regionId);') && worldView.includes("navigateToNearbyPlaceNamingClaim(claim)"),
@@ -187,8 +188,8 @@ async function runTests() {
     // ---------------------------------------------------------------
     const matrix = new Map();
     {
-        const worldView = await rawSource('ui/views/WorldView.js');
-        const nearbyBlock = worldView.match(/<!-- 0\.9\.257 — World View Place Naming Presentation\.[\s\S]*?<\/CollapsibleSection>/)[0];
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
+        const nearbyBlock = worldView.match(/<CollapsibleSection\s+title="Nearby Place Names"[\s\S]*?<\/CollapsibleSection>/)[0];
 
         matrix.set('Display', 'COMPLETE');
         assert(/navigateToNearbyPlaceNamingClaim/.test(nearbyBlock), 'B1. Navigate button present on the Nearby row (basis for classifying Navigate COMPLETE).');
@@ -271,7 +272,7 @@ async function runTests() {
         assert(panel.includes('triggerImportClaim') && panel.includes("$emit('import-claim'"),
             'D1. ui/components/PlaceNamingPanel.js still exposes a real, wired Import Claim action — the manual surface can adopt a claim today, unchanged since 0.5.3.');
 
-        const worldView = await rawSource('ui/views/WorldView.js');
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(worldView.includes('function importNamingClaim(rawText)') && worldView.includes('session.importPlaceNamingClaim(parsed)'),
             'D2. ui/views/WorldView.js still wires that Import Claim action through to the real session.importPlaceNamingClaim() — the manual adoption path is real, complete, and unmodified.');
 
@@ -282,7 +283,7 @@ async function runTests() {
         // publication package, no Adopt button. 0.9.263 closed exactly
         // that gap, reusing the existing, unmodified importPlaceNamingClaim()
         // boundary (Section C's own three-step discipline, untouched).
-        const nearbyBlock = worldView.match(/<!-- 0\.9\.257 — World View Place Naming Presentation\.[\s\S]*?<\/CollapsibleSection>/)[0];
+        const nearbyBlock = worldView.match(/<CollapsibleSection\s+title="Nearby Place Names"[\s\S]*?<\/CollapsibleSection>/)[0];
         assert(/adoptNearbyPlaceNamingClaim/.test(nearbyBlock) && />\s*Adopt\s*</i.test(nearbyBlock),
             'D3. UPDATED BY 0.9.263 — the Nearby Place Names block now carries a real Adopt button, wired to adoptNearbyPlaceNamingClaim(), which reshapes the row into a publication package and calls the existing session.importPlaceNamingClaim() — closing the gap this section originally found.');
 
@@ -356,7 +357,7 @@ async function runTests() {
         // its own header states this, and it takes no regionId/worldId
         // parameter of its own at all, relying entirely on the pkg's own
         // signed claim.
-        const sessionSource = await rawSource('application/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(sessionSource.includes('Deliberately NOT scoped to `regionId` or to whatever\n\t// World is currently active'),
             'E3. WorldNavigationSession#importPlaceNamingClaim()\'s own header still states it is deliberately not scoped to the currently active World — the pkg\'s own claim.worldId is the only identity that matters.');
 

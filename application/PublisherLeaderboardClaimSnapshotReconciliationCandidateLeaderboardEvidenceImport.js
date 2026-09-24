@@ -8,6 +8,8 @@ import {
 import {
     ReconciliationCandidateLeaderboardComparisonState
 } from './PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardComparisonState.js';
+import { parseJSONOrNull } from '../utils/parseJsonOrNull.js';
+import { isPlainObject } from '../utils/typeGuards.js';
 
 // 0.8.188 — Reconciliation Candidate Leaderboard Evidence Export Import.
 //
@@ -121,7 +123,8 @@ import {
 // mutated. Calling either function twice with byte-identical arguments
 // returns byte-identical output.
 //
-// ARCHITECTURAL BOUNDARY — THIS FILE IMPORTS EXACTLY THREE MODULES: 0.8.186
+// ARCHITECTURAL BOUNDARY — BESIDES utils/ HELPERS, THIS FILE IMPORTS EXACTLY
+// THREE MODULES: 0.8.186
 // (its own frozen protocol-version constant, reused rather than
 // hardcoded), 0.8.184 (its frozen `evidenceKind`/`replicaRelation` enums,
 // reused rather than redeclared), and 0.8.183 (its frozen `comparisonState`
@@ -182,21 +185,9 @@ const VALID_REPLICA_RELATIONS = [
     ReconciliationCandidateLeaderboardReplicaRelation.TARGET_ONLY
 ];
 
-function isPlainObject(value) {
-    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
 function hasExactKeys(value, keys) {
     const actual = Object.keys(value);
     return actual.length === keys.length && keys.every((key) => actual.includes(key));
-}
-
-function parseJSONOrNull(text) {
-    try {
-        return JSON.parse(text);
-    } catch {
-        return null;
-    }
 }
 
 function validateFilter(filter) {

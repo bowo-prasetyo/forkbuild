@@ -469,7 +469,9 @@ async function runTests() {
             'ui/components/PublicationCommentarySection.js',
             'ui/components/OwnPublicationPanel.js',
             'ui/components/WorldEncounterCanvas.js',
-            'ui/views/WorldView.js'
+            'ui/views/WorldView.js',
+            // WorldView's own publication actions module, where those wrappers live.
+            'ui/views/worldView/useOwnPublicationActions.js'
         ]);
         assert(wired.length === expectedWired.size, `1. exactly ${expectedWired.size} UI files under ui/components/ or ui/views/ reference the Commentary command vocabulary — found ${wired.length}: ${wired.join(', ')}`);
         for (const file of wired) {

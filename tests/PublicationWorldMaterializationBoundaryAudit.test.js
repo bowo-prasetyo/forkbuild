@@ -28,6 +28,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.603 — Publication World Materialization Boundary Audit.
 //
@@ -436,7 +437,7 @@ async function run() {
         const worldLayoutSrc = await readSource('world-layout/LocalWorldLayoutProvider.js');
         assert(!/forkPolicy|isKnownPublication|license|authoriz/i.test(worldLayoutSrc),
             'G1. RECONFIRMED (0.9.602 Section E1): world-layout/LocalWorldLayoutProvider.js still contains no fork-policy/licensing/authorization logic — widening its own discoveryProvider argument remains, by construction, incapable of touching fork-policy.');
-        const sessionSrc = await readSource('application/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         const findPublicationsBody = sessionSrc.match(/_findPublications\(documentId\) \{[\s\S]*?\n {4}\}/);
         assert(findPublicationsBody !== null && /this\._discoveryProvider/.test(findPublicationsBody[0]) && !/this\._publicationActionDiscoveryProvider/.test(findPublicationsBody[0]),
             'G2. RECONFIRMED (0.9.602 Section E2): fork-policy\'s own choke point, _findPublications(), still reads only the narrow discoveryProvider — a completely separate constructor argument from worldLayoutProvider\'s own. Nothing in this audit\'s own Sections A-F touches, or needs to touch, that separation.');

@@ -1,5 +1,6 @@
 import { parseSnapshotDiscoveryEnvelope } from '../core/SnapshotDiscoveryEnvelope.js';
 import { SnapshotCandidateDiscoveryOutcome } from './SnapshotCandidateDiscoveryOutcome.js';
+import { withTimeout } from '../utils/withTimeout.js';
 
 const DEFAULT_RELAY_URL = 'wss://relay.damus.io';
 const DEFAULT_TAG_NAME = 't';
@@ -195,7 +196,7 @@ export class NostrSnapshotDiscoveryQueryService {
 
         let events;
         try {
-            events = await withTimeout(this._queryImpl(this._relayUrl, filter), this._timeoutMs);
+            events = await withTimeout(this._queryImpl(this._relayUrl, filter), this._timeoutMs, 'NostrSnapshotDiscoveryQueryService: queryImpl timed out');
         } catch {
             return [];
         }
@@ -231,8 +232,8 @@ export class NostrSnapshotDiscoveryQueryService {
     // does not need the distinction keeps calling `search()`.
     //
     // Runs the identical filter/query/timeout/parse sequence `search()`
-    // itself runs, against the SAME `buildDiscoveryFilter()`/
-    // `withTimeout()`/`parseEnvelopeCandidates()` helpers, below — never a
+    // itself runs, against the SAME `buildDiscoveryFilter()`,
+    // `withTimeout()` and `parseEnvelopeCandidates()` helpers — never a
     // second query implementation. Classifies the result rather than
     // discarding the classification:
     //   - `queryImpl` rejects, or `withTimeout()`'s own timer fires first,
@@ -249,7 +250,7 @@ export class NostrSnapshotDiscoveryQueryService {
 
         let events;
         try {
-            events = await withTimeout(this._queryImpl(this._relayUrl, filter), this._timeoutMs);
+            events = await withTimeout(this._queryImpl(this._relayUrl, filter), this._timeoutMs, 'NostrSnapshotDiscoveryQueryService: queryImpl timed out');
         } catch {
             return { outcome: SnapshotCandidateDiscoveryOutcome.UNAVAILABLE, candidates: [] };
         }
@@ -303,16 +304,4 @@ function parseEnvelopeCandidates(events) {
         candidates.push(candidate);
     }
     return candidates;
-}
-
-// Races `promise` against `timeoutMs`; rejects if the timer fires first.
-// The timer is always cleared, whichever settles first.
-function withTimeout(promise, timeoutMs) {
-    return new Promise((resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error('NostrSnapshotDiscoveryQueryService: queryImpl timed out')), timeoutMs);
-        Promise.resolve(promise).then(
-            (value) => { clearTimeout(timer); resolve(value); },
-            (error) => { clearTimeout(timer); reject(error); }
-        );
-    });
 }

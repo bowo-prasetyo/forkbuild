@@ -1,4 +1,5 @@
 import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
+import { withTimeout } from '../utils/withTimeout.js';
 
 const DEFAULT_RELAY_URL = 'wss://relay.damus.io';
 const DEFAULT_TAG_NAME = 't';
@@ -314,7 +315,7 @@ export class NostrPublicationDiscoveryPublisher {
             content: JSON.stringify(described)
         });
 
-        const result = await withTimeout(this._publishImpl(this._relayUrl, eventTemplate), this._timeoutMs);
+        const result = await withTimeout(this._publishImpl(this._relayUrl, eventTemplate), this._timeoutMs, 'NostrPublicationDiscoveryPublisher: publishImpl timed out');
 
         if (!result || result.published !== true) {
             return null;
@@ -330,19 +331,3 @@ export class NostrPublicationDiscoveryPublisher {
 NostrPublicationDiscoveryPublisher.DEFAULT_RELAY_URL = DEFAULT_RELAY_URL;
 NostrPublicationDiscoveryPublisher.DEFAULT_TAG_NAME = DEFAULT_TAG_NAME;
 NostrPublicationDiscoveryPublisher.DEFAULT_KIND = DEFAULT_KIND;
-
-// Races `promise` against `timeoutMs`; rejects if the timer fires first —
-// a timeout is a genuine failure here, never collapsed to `null`, unlike
-// `application/NostrDiscoveryQueryService.js`'s own identically-named
-// helper, which collapses every `queryImpl` failure (a timeout included)
-// to `[]` because that file's own contract never propagates a rejection at
-// all. The timer is always cleared, whichever settles first.
-function withTimeout(promise, timeoutMs) {
-    return new Promise((resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error('NostrPublicationDiscoveryPublisher: publishImpl timed out')), timeoutMs);
-        Promise.resolve(promise).then(
-            (value) => { clearTimeout(timer); resolve(value); },
-            (error) => { clearTimeout(timer); reject(error); }
-        );
-    });
-}

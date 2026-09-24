@@ -1,4 +1,6 @@
 import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry } from './PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js';
+import { parseJSONOrNull } from '../utils/parseJsonOrNull.js';
+import { isPlainObject } from '../utils/typeGuards.js';
 
 // 0.8.151 — Portable Reconciliation Decision History Exchange.
 //
@@ -148,8 +150,8 @@ import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEnt
 // reads a clock, touches storage, or performs any I/O. Calling any of them
 // twice with byte-identical arguments returns a byte-identical result.
 //
-// ARCHITECTURAL BOUNDARY — EXACTLY ONE IMPORT, 0.8.146's OWN APPEND
-// BOUNDARY, NOTHING ELSE. This file imports nothing from
+// ARCHITECTURAL BOUNDARY — BESIDES utils/ HELPERS, EXACTLY ONE IMPORT,
+// 0.8.146's OWN APPEND BOUNDARY. This file imports nothing from
 // `application/PublisherLeaderboardClaimSnapshotReconciliationDecision.js`,
 // `application/PublisherLeaderboardClaimSnapshotReconciliation.js`,
 // `application/PublisherLeaderboardClaimSnapshotReconciliationPlanView.js`,
@@ -364,18 +366,6 @@ export function applyPublisherLeaderboardClaimSnapshotReconciliationDecisionHist
 // `candidate` + `decision` + `decidedAt`), never a narrower key.
 function canonicalDecisionKey(record) {
     return JSON.stringify({ candidate: record.candidate, decision: record.decision, decidedAt: record.decidedAt });
-}
-
-function parseJSONOrNull(text) {
-    try {
-        return JSON.parse(text);
-    } catch (error) {
-        return null;
-    }
-}
-
-function isPlainObject(value) {
-    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 function hasOnlyKeys(value, allowedKeys) {

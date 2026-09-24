@@ -1,8 +1,5 @@
 import { RenderWorldViewUseCase } from './RenderWorldViewUseCase.js';
 import { Position } from '../core/Position.js';
-import { createId } from '../core/createId.js';
-import { AnimalPresence } from '../core/AnimalPresence.js';
-import { SpatialBounds } from '../core/SpatialBounds.js';
 import { SpatialSelectionState } from './spatial-state/SpatialSelectionState.js';
 import { SpatialHoverState } from './spatial-state/SpatialHoverState.js';
 import { SpatialCameraController } from './SpatialCameraController.js';
@@ -10,301 +7,64 @@ import { SpatialInspectionService } from './SpatialInspectionService.js';
 import { SpatialInspectionState } from './spatial-state/SpatialInspectionState.js';
 import { SpatialEditingContext } from './spatial-state/SpatialEditingContext.js';
 import { CommandHistory } from './CommandHistory.js';
-import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { EventBus } from '../core/events/EventBus.js';
-import { License } from '../core/License.js';
-import { CreateWorldLandmarkCommand } from './commands/CreateWorldLandmarkCommand.js';
-import { UpdateWorldLandmarkCommand } from './commands/UpdateWorldLandmarkCommand.js';
-import { RemoveWorldLandmarkCommand } from './commands/RemoveWorldLandmarkCommand.js';
-import { CreateWorldRegionCommand } from './commands/CreateWorldRegionCommand.js';
-import { UpdateWorldRegionCommand } from './commands/UpdateWorldRegionCommand.js';
-import { RemoveWorldRegionCommand } from './commands/RemoveWorldRegionCommand.js';
-import { CreateWorldAnimalDecorationCommand } from './commands/CreateWorldAnimalDecorationCommand.js';
-import { RemoveWorldAnimalDecorationCommand } from './commands/RemoveWorldAnimalDecorationCommand.js';
-import { RegionKind } from '../core/RegionKind.js';
-import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
-import { Document } from '../core/Document.js';
-import { computeLifecycleStatus, describeLifecycleStatus } from './DocumentLifecycleStatus.js';
-import { detectSpatialOverlap } from '../core/SpatialOverlap.js';
-import { SpatialAllocationPolicy, evaluateSpatialAllocation } from '../core/SpatialAllocationPolicy.js';
-import { distanceBetween, isWithinRadius } from '../core/SpatialQuery.js';
-import { summarizeDiscoveryDiagnostics } from '../core/DiscoveryDiagnosticsSummary.js';
-import { AvatarMovementController } from './AvatarMovementController.js';
-import { AvatarMovementConstraint } from './AvatarMovementConstraint.js';
-import { AvatarTerrainConstraint } from './AvatarTerrainConstraint.js';
-import { AvatarStepConstraint } from './AvatarStepConstraint.js';
-import { AvatarTreeConstraint } from './AvatarTreeConstraint.js';
-import { AvatarWaterConstraint } from './AvatarWaterConstraint.js';
-import { AvatarWildlifeConstraint } from './AvatarWildlifeConstraint.js';
-import { AvatarVehicleInteractionController } from './AvatarVehicleInteractionController.js';
+import { SpatialAllocationPolicy } from '../core/SpatialAllocationPolicy.js';
+import { distanceBetween } from '../core/SpatialQuery.js';
 import { VehicleRuntimeInstances } from './VehicleRuntimeInstances.js';
-import { AvatarAnimalInteractionController } from './AvatarAnimalInteractionController.js';
 import { AnimalRuntimeInstances, ANIMAL_RENDER_RADIUS } from './AnimalRuntimeInstances.js';
-import { ANIMAL_INTERACTION_RADIUS } from '../core/AvatarAnimalCatchTarget.js';
 import { AvatarInventoryStore } from './AvatarInventoryStore.js';
 import { AvatarInventoryTransferPeerExchange } from './AvatarInventoryTransferPeerExchange.js';
-import { AvatarVehicleMovementController } from './AvatarVehicleMovementController.js';
-import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
-import { isValidVehicleSteeringIntent, createVehicleSteeringIntent, VehicleSteeringIntent } from '../core/VehicleSteeringIntent.js';
-import { deriveVehicleSteeringInputEvent } from '../core/VehicleSteeringInputAdapter.js';
-import { deriveAvatarContinuousMovementInputEvent } from '../core/AvatarContinuousMovementInputAdapter.js';
-import { deriveAvatarContinuousMovementIntent } from '../core/AvatarContinuousMovementIntent.js';
-import { deriveAvatarContinuousMovementMode } from '../core/AvatarContinuousMovementMode.js';
-import { deriveAvatarVehicleBrakingInputFact } from '../core/AvatarVehicleBrakingInputAdapter.js';
-import { AvatarVehicleBrakingIntent, deriveAvatarVehicleBrakingIntent } from '../core/AvatarVehicleBrakingIntent.js';
-import { DEFAULT_MAX_STEP_HEIGHT } from '../core/BrickWalkability.js';
-import { PresenceSyncService } from './PresenceSyncService.js';
-import { LocalPresenceStore } from './LocalPresenceStore.js';
-import { PresenceTrustBoundary } from './PresenceTrustBoundary.js';
-import { RemoteAvatarRegistry } from './RemoteAvatarRegistry.js';
-import { toAvatarPresenceAdvertisement } from '../core/AvatarPresenceAdvertisement.js';
 import { DEFAULT_AVATAR_TEMPLATE_ID } from '../core/AvatarProfile.js';
-import { signAvatarPresenceAdvertisement } from './PresenceSigning.js';
-import { summarizePresenceDiagnostics } from '../core/PresenceDiagnosticsSummary.js';
 import { AvatarInteractionState } from './spatial-state/AvatarInteractionState.js';
-import { AvatarProfileSyncService } from './AvatarProfileSyncService.js';
-import { LocalAvatarProfileStore } from './LocalAvatarProfileStore.js';
-import { AvatarProfileTrustBoundary } from './AvatarProfileTrustBoundary.js';
-import { RemoteAvatarAppearanceRegistry } from './RemoteAvatarAppearanceRegistry.js';
-import { toAvatarProfileAdvertisement } from '../core/AvatarProfileAdvertisement.js';
-import { signAvatarProfileAdvertisement } from './AvatarProfileSigning.js';
-import { computeNearbyAvatars } from '../core/AvatarProximity.js';
-import { AvatarInteractionKind, isValidInteractionKind } from '../core/AvatarInteractionKind.js';
-import { canPerformInteraction } from '../core/AvatarInteractionCooldown.js';
-import { computeFacingYawDegrees } from '../core/AvatarFacing.js';
-import { AvatarInteractionSyncService } from './AvatarInteractionSyncService.js';
-import { AvatarInteractionTrustBoundary } from './AvatarInteractionTrustBoundary.js';
-import { toAvatarInteractionAdvertisement } from '../core/AvatarInteractionAdvertisement.js';
-import { signAvatarInteractionAdvertisement } from './AvatarInteractionSigning.js';
 import { WorldLocationDirectory, ORIGIN_LOCATION_ID } from './WorldLocationDirectory.js';
 import { CameraFocusAnimator } from './CameraFocusAnimator.js';
 import { computeCompassHeading } from '../core/CompassHeading.js';
-import { CameraPerspective, isValidCameraPerspective, computeCameraFraming } from '../core/CameraPerspective.js';
-import { WorldAccessLevel } from '../core/WorldAccessLevel.js';
-import { WorldPresenceActivity } from '../core/WorldPresenceActivity.js';
-import { WorldSpatialSelection } from '../core/WorldSpatialSelection.js';
-import { deriveWorldSpatialActivity } from '../core/WorldSpatialActivity.js';
-import { AvatarVerticalState } from '../core/AvatarVerticalState.js';
-import { deriveWorldSpatialAnchor } from '../core/WorldSpatialAnchor.js';
-import { derivePlaceContexts, findNearestLandmark, describeLocation } from '../core/WorldCurationContext.js';
-import { deriveWorldWelcomeContext } from '../core/WorldWelcomeContext.js';
-import { regionsContaining, describePlace } from '../core/WorldRegionGeography.js';
-import { preferredClaimedName } from '../core/PlaceNamingView.js';
-import { groupRegionsByPlaceIdentity } from '../core/PlaceIdentity.js';
-import { geographicPlaceForRegion } from '../core/GeographicPlaceResolution.js';
-import { buildGeographicPlaceDirectory, geographicPlaceByKey } from '../core/GeographicPlaceDirectory.js';
-import {
-    geographicPlaceLocationId,
-    isGeographicPlaceLocationId,
-    geographicPlaceFingerprintKeyFromLocationId,
-    deriveNearbyGeographicPlaces,
-    searchGeographicPlaces as searchGeographicPlaceRows,
-    DEFAULT_NEARBY_GEOGRAPHIC_PLACE_RADIUS
-} from '../core/GeographicPlaceNavigation.js';
-import { deriveWorldFocusContext, WorldFocusKind } from '../core/WorldFocusContext.js';
+import { LOCATION_FOCUS_OFFSET } from './worldNavigation/constants.js';
+import { installMethods } from './worldNavigation/installMethods.js';
+import { localAvatarMethods } from './worldNavigation/localAvatarMethods.js';
+import { avatarPresenceMethods } from './worldNavigation/avatarPresenceMethods.js';
+import { placeQueryMethods } from './worldNavigation/placeQueryMethods.js';
+import { worldExperienceMethods } from './worldNavigation/worldExperienceMethods.js';
+import { collaborationMethods } from './worldNavigation/collaborationMethods.js';
+import { placementMethods } from './worldNavigation/placementMethods.js';
+import { forkOnWriteMethods } from './worldNavigation/forkOnWriteMethods.js';
+import { worldContentMethods } from './worldNavigation/worldContentMethods.js';
+import { placeNamingMethods } from './worldNavigation/placeNamingMethods.js';
+import { documentHistoryMethods } from './worldNavigation/documentHistoryMethods.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
 const RETRY_DELAYS = [2000, 5000, 10000];
-// 0.2.41 — how often the local avatar's PROFILE re-advertises even
-// when nothing changed. Deliberately much less frequent than presence
-// (published on every accepted movement) — see
-// core/AvatarProfileAdvertisement.js's own header: appearance is
-// low-frequency, persistent state. This exists ONLY to let a replica
-// that joins (or missed the one message) mid-session eventually catch
-// up on a fire-and-forget transport with no request/response — the
-// same "eventual" half of "eventually consistent presentation state."
-const PROFILE_REPUBLISH_INTERVAL_MS = 15000;
-// 0.3.1 — how often the local avatar's PRESENCE re-advertises even
-// when it hasn't moved. Unlike PROFILE_REPUBLISH_INTERVAL_MS above,
-// this has to stay comfortably UNDER a receiver's own
-// application/LocalPresenceStore.js staleAfterMs/absentAfterMs
-// freshness window (2500ms/6000ms by default) — those are judged
-// purely from wall-clock time since the last ACCEPTED advertisement
-// (core/PresenceFreshness.js), and 0.2.37 deliberately never
-// published one at all while idle ("an idle local avatar never
-// reaches this line, so it publishes nothing"). That was fine when
-// STALE/ABSENT only fed a diagnostic label, but it means a replica
-// that is standing perfectly still — not gone, just not moving — is
-// pruned out of every OTHER replica's Nearby Avatars / World View
-// rendering a few seconds later, which reads as "they vanished."
-// Republishing the CURRENT, UNCHANGED presence on this cadence keeps
-// `sequence` advancing (see AvatarPresence.next()'s own header — a
-// resend of the same sequence is rejected as stale/duplicate by
-// core/PresenceIngestion.js, so this only works because
-// AvatarPresenceSession.update() always bumps it) purely so every
-// receiver's `receivedAt` keeps refreshing — nothing about the
-// avatar's actual position, rotation, or animation changes.
-const PRESENCE_HEARTBEAT_INTERVAL_MS = 2000;
 
-// 0.2.29 — defaults for the two location-browser entry points.
-// DEFAULT_EXPLORE_RADIUS matches the design doc's own example ("radius
-// 25 of (100, 50, 250)") — a reasonable starting neighborhood to look
-// around the camera without the caller having to pick a number first.
-// NEARBY_RADIUS is deliberately much smaller: "What's Here?" reads as
-// an exact-location query, but the camera's world position is
-// continuous and essentially never lands exactly on a recorded
-// PlacementRecord's position — not even immediately after Focus, whose
-// orbit-style framing (SpatialCameraController) parks the camera a
-// fixed offset away from the target, never on top of it. A small
-// tolerance radius is what makes "What's here?" answerable at all from
-// camera position; see exploreHere/whatsHere below.
-const DEFAULT_EXPLORE_RADIUS = 25;
-const NEARBY_RADIUS = 5;
-// 0.9.701 — World View Persistence. Throttles how often
-// _setupVehicleRuntimePersistence()/_setupAnimalRuntimePersistence()
-// (below) actually write a snapshot to storage — the SAME "now minus
-// last-saved-at, in wall-clock ms" throttle PRESENCE_HEARTBEAT_INTERVAL_MS
-// already establishes for a per-frame concern, applied here for the
-// identical reason: a ridden vehicle calls setPosition() every single
-// frame, and writing that to storage every frame would be pure waste —
-// a snapshot at most once per second is indistinguishable to a reload a
-// few seconds later, while staying cheap enough to run unconditionally
-// whenever a persistence store is actually wired.
+// Throttle for runtime vehicle/animal persistence. A ridden vehicle moves
+// every frame; one snapshot per second is indistinguishable after a reload.
 const RUNTIME_PLACEMENT_PERSISTENCE_INTERVAL_MS = 1000;
-// 0.9.96 — the ONE physical key that produces a vehicle braking
-// request — see `_processVehicleBrakingInput()`'s own header, below,
-// for why Control is the key this milestone picks: every other "hold
-// it down" key already means something (W/A/S/D the movement axes
-// themselves, Shift running, Space jumping — still live for a mounted
-// ground vehicle, see core/AvatarMovementSimulation.js's own
-// unconditional jump handling — Alt the continuous-movement activation
-// chord, 'E' mount/dismount), and Control is the one remaining
-// modifier-row key, reachable by the same hand already resting on
-// WASD, with no existing meaning anywhere in this file or its sibling
-// controllers.
-const VEHICLE_BRAKE_KEY = 'control';
-// 0.9.702 — the ONE physical key that bakes the nearest released
-// animal into durable World content, or (0.9.703) undoes that same
-// bake-in for the nearest existing decoration — see
-// `_processWorldAnimalDecorationInput()`'s own header, below, for why
-// 'G' is the key this milestone picks: W/A/S/D, Shift, Space, Alt, 'E',
-// 'F', Control, and the arrow keys are all already claimed (see
-// VEHICLE_BRAKE_KEY's own comment, immediately above, and
-// application/AvatarAnimalInteractionController.js's own header for
-// 'F'), and 'G' — the next letter along the same QWERTY home-row reach
-// — carries no meaning anywhere in World View.
-const WORLD_ANIMAL_DECORATION_KEY = 'g';
-// 0.9.128 — the two physical keys that produce a real steering request —
-// see `_processVehicleSteeringInput()`'s own header, below, for why arrow
-// keys are the pair this milestone picks: W/A/S/D, Shift, Space, Alt, 'E',
-// and Control (VEHICLE_BRAKE_KEY, immediately above) are all already
-// claimed, exactly as that constant's own comment already explains for
-// itself. The arrow keys carry no meaning anywhere in World View — the
-// Transform panel's own arrow-key bindings (docs/user/ControlsReference.md,
-// "Transform — keyboard") are explicitly Editor-only, over a selection, and
-// never reachable from World View at all.
-const VEHICLE_STEER_LEFT_KEY = 'arrowleft';
-const VEHICLE_STEER_RIGHT_KEY = 'arrowright';
-// 0.2.43 — the default radius getNearbyAvatars() searches within when
-// no radius is given. Deliberately its OWN constant, not a reuse of
-// NEARBY_RADIUS above: that one answers "is a document essentially at
-// this exact camera position" (0.2.29's tight tolerance for "What's
-// Here?"); this one answers "who is close enough to plausibly
-// interact with," a genuinely different, avatar-scaled question — a
-// person walking at WALK_SPEED (core/AvatarMovementSimulation.js)
-// covers this whole radius in well under ten seconds.
-const DEFAULT_NEARBY_AVATAR_RADIUS = 15;
-// 0.2.44 — how long a local GREET/WAVE/POINT gesture keeps playing
-// before automatically returning to NONE — see
-// _updateLocalAvatarInteractionPresentation() below. Deliberately
-// short: a gesture is a momentary social beat, never a persistent
-// state the user has to remember to turn off (there is no "stop
-// waving" button, matching the design doc's own framing of these as
-// transient events rather than a mode).
-const GESTURE_DURATION_MS = 1800;
-// 0.2.35 follow-up: a fresh AvatarPresence otherwise always spawns at
-// literal world origin regardless of which document a session opens
-// on — and a document's own placement (0.2.24's deterministic grid
-// strategy) is essentially never near the origin, so the avatar would
-// render far outside whatever the camera is actually looking at. A
-// small, fixed diagonal offset from the first-focused document's own
-// position — not exactly on top of it, to avoid spawning inside the
-// document's own geometry — gives a sensible "you arrive where you're
-// looking" default without pretending to know anything about that
-// document's actual size/shape.
-//
-// Bug fix — kept ONLY as the fallback for when a document's content
-// isn't loaded yet to measure (see _safeSpawnPosition() below): a
-// fixed (3, 0, 3) assumes the document's own local origin sits outside
-// whatever was built there, which breaks the instant a structure is
-// authored AROUND its own origin instead of out from a corner of it —
-// reported live as an avatar spawning inside its own pyramid once that
-// pyramid was recentered on local (0,0,0) to fix an unrelated
-// streaming bug. _safeSpawnPosition() now measures real content
-// whenever it can and only falls back to this constant when it can't.
-const AVATAR_SPAWN_OFFSET = { x: 3, y: 0, z: 3 };
-// The gap left BEYOND a document's own farthest measured corner (see
-// _safeSpawnPosition() below) — small on purpose, matching
-// AVATAR_SPAWN_OFFSET's own original magnitude: enough that the avatar
-// doesn't spawn flush against a wall, not so much that it lands far
-// out in unrelated space for a small build.
-const AVATAR_SPAWN_CLEARANCE = 3;
 
-// 0.2.94 — World View Location & Navigation. HOME_CAMERA_FRAMING is
-// deliberately NOT a fresh invention: it is exactly
-// renderer/CameraState.js's own DEFAULT_POSITION/DEFAULT_TARGET
-// ((10,10,10) looking at the origin) — the framing every World View
-// session already starts from before any focusDocument()/navigateToDocument()
-// call ever runs. Reusing it (rather than picking a new "home" framing)
-// is what makes goHome() actually mean "the world's conventional
-// starting area" per the design conversation, instead of a third,
-// independently-chosen camera pose nothing else in the codebase agrees
-// with. LOCATION_FOCUS_OFFSET is the STRUCTURE-kind counterpart —
-// reused from focusSelection()'s own placement-focus offset (see
-// focusSelection() below), so focusing a location and focusing the
-// current inspection selection land on the exact same framing for the
-// exact same target. CAMERA_FOCUS_DURATION_MS is short on purpose: long
-// enough to read as a deliberate glide rather than a jump-cut, short
-// enough that repeated navigation (hopping through a Locations list)
-// never feels sluggish.
+// HOME_CAMERA_FRAMING is renderer/CameraState.js's own default framing, so
+// goHome() returns to the same pose every session starts from.
+// LOCATION_FOCUS_OFFSET matches focusSelection()'s placement-focus offset, so
+// both land on the same framing for the same target. The focus glide is short
+// so hopping through a Locations list never feels sluggish.
 const HOME_CAMERA_FRAMING = { position: { x: 10, y: 10, z: 10 }, target: { x: 0, y: 0, z: 0 } };
-const LOCATION_FOCUS_OFFSET = { x: 12, y: 12, z: 12 };
 const CAMERA_FOCUS_DURATION_MS = 900;
 
-// 0.1.46: gizmo wiring. 0.1.47: precision + modifier plumbing + gesture
-// feedback; keyboard transforms route through the gesture transaction.
-// 0.1.48: alignSelection/distributeSelection. 0.1.49:
-// applyNumericTransform. One gateway, one command type, byte-identical
-// behavior to the Editor for the same selection.
-//
-// 0.1.50: the World View half of the consolidated editing surface —
-// selectAll()/getSelectionCount() join the session API so the shared
-// EditorActionRegistry can drive World View operations exactly as it
-// drives the Editor. Group and clipboard surface (0.1.42/0.1.43)
-// belongs wherever this session is extended in the deployed tree; the
-// action layer degrades gracefully when those methods are absent.
-//
-// 0.5.9 — World View Read-Only Exploration & Fork-to-Edit. Every
-// paragraph above this one describes editing capability that no longer
-// lives on this class: placement, gizmo/transform, groups, and
-// clipboard are gone (EditorSession already had full parity for all of
-// it — see docs/Principles.md, "World View Observes and Navigates;
-// Editor Mutates and Builds"). selectAll()/getSelectionCount()/
-// pick()/hover()/marqueeSelect()/clearSelection() stay — they drive
-// FOCUS and inspection, not mutation. World Region/Landmark naming
-// (createRegionHere() etc., further below) also stays, deliberately —
-// see that section's own header on why naming a place is annotation,
-// not construction. The one deliberate door out of this boundary is
-// "Edit a Copy": forkFocusedDocument-shaped navigation
-// (ui/views/WorldView.js#editFocusedCopyFromFocusPanel(), reusing the
-// exact same `/editor?fork=` entry point ui/components/
-// PublicationCatalog.js#forkPublication() already used) that hands the
-// containing Document off to the Editor rather than editing it here.
+// World View observes and navigates; the Editor mutates and builds (see
+// docs/Principles.md, "World View Observes and Navigates; Editor Mutates and
+// Builds"). selectAll()/getSelectionCount()/pick()/hover()/marqueeSelect()/
+// clearSelection() remain because they drive focus and inspection, not
+// mutation. Region/Landmark naming also stays: naming a place is annotation,
+// not construction. The one door out is "Edit a Copy"
+// (ui/views/WorldView.js#editFocusedCopyFromFocusPanel()), which reuses the
+// `/editor?fork=` entry point PublicationCatalog.js#forkPublication() already
+// uses to hand the Document to the Editor.
 export class WorldNavigationSession {
 	constructor({
 	    registry,
 	    loadPublicationDocumentUseCase,
-	    // 0.9.605 — Wire Publication Discovery into World Rendering. The
-	    // SAME read-through material bridge (LoadPublishedWorldSessionUseCase
-	    // + contentStore) tests/PublicationWorldMaterializationBoundaryAudit.test.js
-	    // (0.9.603) already proved sufficient — consulted ONLY by
-	    // _loadWorld()'s own fallback (see its own comment), when a
-	    // documentId that worldLayoutProvider now surfaces (below) has no
-	    // LOCAL copy in storage[documentId] at all. Optional: a caller
-	    // that doesn't wire one (every pre-0.9.605 caller/test) simply
-	    // never gets this fallback — _loadWorld() then fails exactly as
-	    // it always has for a document this replica has no local copy of.
+	    // Read-through material bridge, consulted only by _loadWorld()'s fallback
+	    // when a documentId surfaced by worldLayoutProvider has no local copy.
+	    // Without it, _loadWorld() fails for documents this replica doesn't hold.
 	    loadPublishedWorldSessionUseCase = null,
 	    worldLayoutProvider,
 	    saveDocumentUseCase = null,
@@ -313,101 +73,34 @@ export class WorldNavigationSession {
 	    restoreHistoryStateUseCase = null,
 	    identityProvider = null,
 	    documentCloneService = null,
-    	discoveryProvider = null, // <-- Fixed: Added missing parameter
-	    // 0.9.597 — Publication Action Provider Continuity Fix. A SEPARATE,
-	    // OPTIONAL discovery capability, consulted ONLY by
-	    // getPublicationForDocument()/findPublicationById() (see both,
-	    // below) — never by _isKnownPublication()/_checkForkPolicy()/
-	    // _loadWorld()'s publish-marking, and never by worldLayoutProvider's
-	    // own position enrichment (constructed upstream, in
-	    // application/CreateWorldViewUseCase.js, from the plain
-	    // `discoveryProvider` above, unchanged). 0.9.596's own Section D
-	    // live-proved that widening `discoveryProvider` ITSELF (the shared
-	    // choke point _findPublications() reads for every one of those other
-	    // callers) to also see decentralized/Repository-admitted
-	    // Publications would silently extend fork-policy license
-	    // enforcement to a plain, never-locally-published document merely
-	    // because an unrelated encounter admitted a Publication sharing its
-	    // documentId. This constructor parameter exists so that widening
-	    // never has to happen: a caller (CreateWorldViewUseCase.js) that
-	    // wants OwnPublicationPanel's own `publication` prop
-	    // (getPublicationForDocument()) to see a Repository-admitted
-	    // Publication passes a SEPARATE, already-merged provider here,
-	    // leaving `discoveryProvider` itself exactly as narrow as it always
-	    // was. A caller that doesn't supply one (every pre-0.9.597 caller,
-	    // and every existing test) falls back to `discoveryProvider` itself
-	    // — see this constructor's own assignment, below — so
-	    // getPublicationForDocument()/findPublicationById() degrade to
-	    // their exact pre-0.9.597 behavior, byte for byte.
+    	discoveryProvider = null,
+	    // Optional discovery provider consulted only by getPublicationForDocument()/
+	    // findPublicationById(). It is kept separate from `discoveryProvider`:
+	    // widening that shared provider to include Repository-admitted Publications
+	    // would extend fork-policy license enforcement to never-published local
+	    // documents that merely share a documentId. Falls back to
+	    // `discoveryProvider` when not supplied.
 	    publicationActionDiscoveryProvider = null,
-	    // 0.9.600 — Publication First-Placement Action Wiring Fix. The
-	    // SAME PlacePublicationUseCase instance
-	    // application/CreateWorldViewUseCase.js already builds for
-	    // PublishDocumentUseCase's own automatic initial placement —
-	    // never a second one, and never reconstructed here. As of this
-	    // milestone that upstream instance is itself constructed with
-	    // `publicationActionDiscoveryProvider` (above) rather than the
-	    // narrow `discoveryProvider` (see that file's own 0.9.600
-	    // comment) — the ONE change tests/
-	    // FirstPublicationPlacementCapabilityBoundaryAudit.test.js
-	    // (0.9.599, Section C-Wiring) proved live is sufficient for it
-	    // to resolve a Repository-admitted-only Publication. This
-	    // constructor parameter exists purely so this session can
-	    // delegate an EXPLICIT, user-triggered placePublication() call
-	    // (below) to it — optional, same "enforce/offer only when
-	    // actually wired" posture as moveWorldPlacementUseCase/
-	    // removeWorldPlacementUseCase below: a session built without one
-	    // (every pre-0.9.600 caller, and every existing test) simply
-	    // can't place a Publication explicitly.
+	    // The same PlacePublicationUseCase CreateWorldViewUseCase builds for
+	    // automatic initial placement, used here for explicit placePublication()
+	    // calls. Without it, a session can't place a Publication explicitly.
 	    placePublicationUseCase = null,
 	    placementRegistry = null,
 	    moveWorldPlacementUseCase = null,
-	    // 0.9.197 — World Placement Removal UI Action. The mirror
-	    // optional collaborator to moveWorldPlacementUseCase, same
-	    // "enforce/offer only when actually wired" posture — a session
-	    // built without one (every pre-0.9.197 caller, and every
-	    // existing test) simply can't remove a placement; see
-	    // removePlacement() below.
+	    // Optional; without it a session can't remove a placement. See
+	    // removePlacement().
 	    removeWorldPlacementUseCase = null,
-	    // 0.9.198 — Publication Unpublish/Retract UI Action. The mirror
-	    // capability one layer UP from moveWorldPlacementUseCase/
-	    // removeWorldPlacementUseCase above — those two take a
-	    // PLACEMENT out of shared space; this takes the PUBLICATION
-	    // itself out of the publication-facing catalog
-	    // (discoveryProvider), a completely different authority over a
-	    // completely different thing (see docs/Principles.md, "A
-	    // Publication Is What; A Placement Is Where"). Same
-	    // "enforce/offer only when actually wired" posture: a session
-	    // built without one (every pre-0.9.198 caller, and every
-	    // existing test) simply can't unpublish anything — see
-	    // unpublishDocument() below. UnpublishDocumentUseCase itself is
-	    // never imported here — this file only ever holds whatever
-	    // instance its caller (application/CreateWorldViewUseCase.js)
-	    // hands it.
+	    // Removes the Publication itself from the catalog, a different authority
+	    // from removing a Placement (see docs/Principles.md, "A Publication Is What;
+	    // A Placement Is Where"). Without it a session can't unpublish; see
+	    // unpublishDocument().
 	    unpublishDocumentUseCase = null,
-	    // 0.9.248 — Publication Commentary UI Integration. The
-	    // application-layer read/write pair 0.9.244-0.9.247 already
-	    // built, threaded through so `getPublicationCommentaries()`/
-	    // `addPublicationCommentary()` below have something to delegate
-	    // to. Same "enforce/offer only when the collaborator is actually
-	    // wired" posture as `unpublishDocumentUseCase` above: a session
-	    // built without either (every pre-0.9.248 caller, and every
-	    // existing test) simply reports empty commentary and refuses to
-	    // create any. Neither use case's own construction (identity
-	    // resolution, authorization, storage) is reproduced here — this
-	    // file only ever holds whatever instances its caller
-	    // (application/CreateWorldViewUseCase.js) hands it.
+	    // Read/write pair for publication commentary. Without them the session
+	    // reports empty commentary and refuses to create any.
 	    getPublicationCommentariesUseCase = null,
 	    addPublicationCommentaryUseCase = null,
-	    // 0.9.284 — Notification History UI Boundary. The SAME
-	    // "enforce/offer only when the collaborator is actually wired"
-	    // posture as getPublicationCommentariesUseCase immediately above:
-	    // a session built without one (every pre-0.9.284 caller, and
-	    // every existing test) simply reports no notification history —
-	    // see getRecipientNotificationEvents() below.
-	    // GetRecipientNotificationEventsUseCase itself (0.9.283) is never
-	    // imported here — this file only ever holds whatever instance its
-	    // caller (application/CreateWorldViewUseCase.js) hands it.
+	    // Without it the session reports no notification history; see
+	    // getRecipientNotificationEvents().
 	    getRecipientNotificationEventsUseCase = null,
 	    spatialAllocationPolicy = SpatialAllocationPolicy.WARN,
 	    searchWorldUseCase = null,
@@ -422,148 +115,58 @@ export class WorldNavigationSession {
 	    avatarProfileVisibilityUseCase = null,
 	    hasFriend = null,
 	    isBlocked = null,
-	    // 0.2.93 — World View Instance Inspection. Both optional, the
-	    // same "enforce/offer only when the collaborator is actually
-	    // wired" posture every other optional collaborator in this
-	    // constructor already follows: a session built without
-	    // structureResolver simply never RENDERS a StructurePlacement at
-	    // all (renderer/WorldRenderer.js's own 0.2.90 header — this was
-	    // already true before this milestone; see
-	    // application/CreateWorldViewUseCase.js for the real wiring), and
-	    // one built without loadDocumentUseCase falls back to showing a
-	    // placement's raw documentId instead of its title (see
-	    // getSavedDocumentTitle() below) — never throws either way.
+	    // Without structureResolver, StructurePlacements aren't rendered; without
+	    // loadDocumentUseCase, a placement shows its raw documentId instead of a
+	    // title (see getSavedDocumentTitle()). Neither case throws.
 	    structureResolver = null,
 	    loadDocumentUseCase = null,
-	    // 0.2.95 — World Editing Authorization Foundation. Optional,
-	    // the same "enforce/offer only when the collaborator is
-	    // actually wired" posture every other optional collaborator in
-	    // this constructor already follows: a session built without one
-	    // (every pre-0.2.95 caller, and every existing test) treats
-	    // every loaded document as editable, exactly the pre-0.2.95
-	    // behavior — see canEditDocument()/canReadDocument() below. Real
-	    // wiring wraps application/WorldAuthorizationService.js — see
-	    // application/CreateWorldViewUseCase.js.
+	    // Without it every loaded document is treated as editable; see
+	    // canEditDocument()/canReadDocument(). Real wiring wraps
+	    // application/WorldAuthorizationService.js.
 	    worldAuthorizationService = null,
-	    // 0.2.97 — Shared World Ordering & Conflict Resolution. Closes
-	    // the composition gap 0.2.96 explicitly left open (see
-	    // application/WorldCommandPropagationUseCase.js's own header):
-	    // "broadcastCommand()/onOperationApplied() are not yet threaded
-	    // into WorldNavigationSession." Optional, the same
-	    // "enforce/offer only when the collaborator is actually wired"
-	    // posture worldAuthorizationService above already follows — a
-	    // session built without one (every pre-0.2.97 caller, and every
-	    // existing test) behaves exactly as before: purely local
-	    // editing, nothing ever broadcast. When wired, every
-	    // application/CommandHistory.js this session creates or
-	    // replaces is registered with it — see _registerCommandHistory()
-	    // below — so a FORWARD local mutation (execute(), never
-	    // undo()/redo() — see application/WorldCommandPropagationUseCase.js#
-	    // attachCommandHistory()'s own header) is broadcast to every
-	    // authenticated peer with zero additional wiring at any of this
-	    // file's many mutation call sites.
+	    // When wired, every CommandHistory this session creates is registered with
+	    // it (see _registerCommandHistory()), so every forward local mutation is
+	    // broadcast to authenticated peers without touching each mutation call site.
+	    // Undo/redo are never broadcast. Without it, editing is purely local.
 	    worldCommandPropagation = null,
-	    // 0.2.98 — Shared World Membership & Collaborative Presence.
-	    // Both OPTIONAL, the same "enforce/offer only when the
-	    // collaborator is actually wired" posture worldAuthorizationService/
-	    // worldCommandPropagation above already follow. `worldMembershipUseCase`
-	    // (application/WorldMembershipUseCase.js) is what
-	    // grantWorldEdit()/revokeWorldEdit()/listWorldMembers() below
-	    // delegate to — a session built without one (every pre-0.2.98
-	    // caller) simply has no membership model: canEditDocument() falls
-	    // back to ownership alone, exactly the pre-0.2.98 behavior.
-	    // `worldPresenceUseCase` (application/WorldPresenceUseCase.js) is
-	    // what enterWorldPresence()/leaveWorldPresence()/
-	    // getWorldPresenceRoster() below delegate to — a session built
-	    // without one simply never advertises or observes presence at
-	    // all.
+	    // worldMembershipUseCase backs grantWorldEdit()/revokeWorldEdit()/
+	    // listWorldMembers(); without it canEditDocument() falls back to ownership.
+	    // worldPresenceUseCase backs enterWorldPresence()/leaveWorldPresence()/
+	    // getWorldPresenceRoster(); without it presence is never advertised.
 	    worldMembershipUseCase = null,
 	    worldPresenceUseCase = null,
-	    // 0.3.0 — Collaborative Spatial Presence. OPTIONAL, the exact
-	    // same "enforce/offer only when the collaborator is actually
-	    // wired" posture worldPresenceUseCase above already follows — a
-	    // session built without one (every pre-0.3.0 caller, and every
-	    // existing test) simply never advertises or observes spatial
-	    // presence at all; see enterWorldSpatialPresence()/
-	    // syncWorldSpatialPresence()/leaveWorldSpatialPresence() below.
+	    // Without it spatial presence is never advertised or observed; see
+	    // enterWorldSpatialPresence()/syncWorldSpatialPresence()/
+	    // leaveWorldSpatialPresence().
 	    worldSpatialPresenceUseCase = null,
-	    // 0.3.10 — World Persistence & Return Experience. OPTIONAL, the
-	    // same "enforce/offer only when the collaborator is actually
-	    // wired" posture every other optional collaborator in this
-	    // constructor follows — a session built without one (every
-	    // pre-0.3.10 caller, and every existing test) simply never
-	    // remembers or restores a camera framing for any World. See
-	    // application/LocalWorldExperienceStore.js and the "Local World
-	    // Experience & Return" section below.
+	    // Without it no camera framing is remembered or restored. See
+	    // application/LocalWorldExperienceStore.js and "Local World Experience &
+	    // Return" below.
 	    localWorldExperienceStore = null,
-	    // 0.5.2 — Place Naming & Naming Claims. Both OPTIONAL, the same
-	    // "enforce/offer only when the collaborator is actually wired"
-	    // posture every other optional collaborator in this constructor
-	    // already follows: a session built without one (every pre-0.5.2
-	    // caller, and every existing test) simply can't publish/retract/
-	    // read naming claims or local name preferences — see the "Place
-	    // Naming & Naming Claims" section below, and
-	    // application/CreateWorldPlaceNamingUseCase.js for the real
-	    // wiring. Deliberately separate collaborators, never folded into
-	    // one — a claim is signed, shared content; a preference is
-	    // unsigned, local-only state, exactly the boundary core/
-	    // PlaceNamingClaim.js and application/LocalNamePreferenceStore.js
-	    // each document in their own header.
+	    // Without these a session can't publish/retract/read naming claims or local
+	    // name preferences. Kept separate: a claim is signed, shared content; a
+	    // preference is unsigned, local-only state.
 	    placeNamingClaimUseCase = null,
 	    localNamePreferenceStore = null,
-	    // 0.5.3 — Decentralized Place Name Exchange. The SAME optional-
-	    // collaborator posture as the two above: a session built without
-	    // one (every pre-0.5.3 caller, and every existing test) simply
-	    // can't export/import a naming claim — see the "Decentralized
-	    // Place Name Exchange" section below, and
-	    // application/PlaceNamingClaimExchange.js's own header on why
-	    // this is a genuinely separate concern from publishing/retracting
-	    // one's own claim.
+	    // Without it a session can't export/import a naming claim. See
+	    // application/PlaceNamingClaimExchange.js.
 	    placeNamingClaimExchange = null,
-	    // 0.9.701 — World View Persistence. Three OPTIONAL collaborators,
-	    // the same "enforce/offer only when actually wired" posture every
-	    // other optional collaborator in this constructor already
-	    // follows: a session built without them (every pre-0.9.701
-	    // caller, and every existing test) behaves exactly as before —
-	    // avatar inventory, placed/ridden vehicles, and placed/released
-	    // animals all stay purely session-local, reset on the very next
-	    // construction, exactly as application/AvatarInventoryStore.js,
-	    // application/VehicleRuntimeInstances.js, and
-	    // application/AnimalRuntimeInstances.js each already document for
-	    // themselves. Wired, this constructor rehydrates
-	    // `_avatarInventoryStore`/`_vehicleRuntimeInstances`/
-	    // `_animalRuntimeInstances` from whatever was last saved (below),
-	    // and _setupVehicleRuntimePersistence()/
-	    // _setupAnimalRuntimePersistence() (see both, below) keep saving
-	    // as the World changes. See storage/AvatarInventoryPersistenceStore.js,
-	    // storage/VehicleRuntimeInstancePersistenceStore.js, and
-	    // storage/AnimalRuntimeInstancePersistenceStore.js for what each
-	    // actually persists, and application/CreateWorldViewUseCase.js for
-	    // the real wiring.
+	    // Optional persistence for avatar inventory, vehicles and animals. Without
+	    // them those stay session-local. When wired, the constructor rehydrates from
+	    // the last save and _setupVehicleRuntimePersistence()/
+	    // _setupAnimalRuntimePersistence() keep saving as the World changes.
 	    avatarInventoryPersistenceStore = null,
 	    vehicleRuntimeInstancePersistenceStore = null,
 	    animalRuntimeInstancePersistenceStore = null,
-	    // 0.9.702 — Avatar Inventory Transfer. The SAME app-wide
-	    // peer/PeerMessageBus.js and application/ConnectedPeerRegistry.js
-	    // pair every other real-peer-transport collaborator in
-	    // application/CreateWorldViewUseCase.js already shares (see e.g.
-	    // presenceBroadcastProvider there) — never a second transport.
-	    // Both OPTIONAL, the identical "enforce/offer only when actually
-	    // wired" posture the three 0.9.701 persistence stores just above
-	    // already follow: a session built without them (every pre-0.9.702
-	    // caller, and every existing test) simply has no
-	    // avatarInventoryTransferPeerExchange() to return — sending a
-	    // carried entry to another avatar is unavailable, never silently
-	    // broken. Consumed immediately below, right after
-	    // `_avatarInventoryStore` is built — see that field's own 0.9.700
-	    // comment for why this is the ONE place a collaborator bound to it
-	    // can be constructed.
+	    // The app-wide peer bus and registry every other peer collaborator shares,
+	    // never a second transport. Without them there is no
+	    // avatarInventoryTransferPeerExchange(): sending a carried entry is
+	    // unavailable rather than silently broken.
 	    peerMessageBus = null,
 	    connectedPeerRegistry = null
 	}) {
 	    this._registry = registry;
 	    this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
-	    // 0.9.605: see this constructor's own parameter comment, above.
 	    this._loadPublishedWorldSessionUseCase = loadPublishedWorldSessionUseCase;
 	    this._worldLayoutProvider = worldLayoutProvider;
 	    this._saveDocumentUseCase = saveDocumentUseCase;
@@ -572,307 +175,142 @@ export class WorldNavigationSession {
 	    this._restoreHistoryStateUseCase = restoreHistoryStateUseCase;
 	    this._identityProvider = identityProvider;
 	    this._documentCloneService = documentCloneService;
-	    // 0.2.23: WHERE a published world sits in shared space — a
-	    // separate concern from the document/publication itself (see
-	    // docs/Principles.md, "A Publication Is What; A Placement Is
-	    // Where"). Both optional: a session built without them (most
-	    // existing tests) simply can't resolve/move a placement,
-	    // exactly the same "enforce/offer only when the collaborator is
-	    // actually wired" pattern discoveryProvider already follows.
+	    // Where a published world sits in shared space, a separate concern from the
+	    // publication (see docs/Principles.md, "A Publication Is What; A Placement Is
+	    // Where"). Without these a session can't resolve or move a placement.
 	    this._placementRegistry = placementRegistry;
-	    // 0.9.600: see placePublication() below.
 	    this._placePublicationUseCase = placePublicationUseCase;
 	    this._moveWorldPlacementUseCase = moveWorldPlacementUseCase;
-	    // 0.9.197: see removePlacement() below.
 	    this._removeWorldPlacementUseCase = removeWorldPlacementUseCase;
-	    // 0.9.198: see unpublishDocument() below.
 	    this._unpublishDocumentUseCase = unpublishDocumentUseCase;
-	    // 0.9.248: see getPublicationCommentaries()/addPublicationCommentary() below.
 	    this._getPublicationCommentariesUseCase = getPublicationCommentariesUseCase;
 	    this._addPublicationCommentaryUseCase = addPublicationCommentaryUseCase;
-	    // 0.9.284: see getRecipientNotificationEvents() below.
 	    this._getRecipientNotificationEventsUseCase = getRecipientNotificationEventsUseCase;
-	    // 0.2.25: the policy applied to EXPLICIT, interactive placement
-	    // (checkPlacementOverlap/movePlacement) — see
-	    // core/SpatialAllocationPolicy.js. Automatic initial placement
-	    // (PlacePublicationUseCase, via GridPlacementStrategy) is
-	    // deliberately NOT routed through this — it always behaves as
-	    // ALLOW, matching 0.2.23's "placement never blocks a publish."
+	    // Policy for explicit, interactive placement (checkPlacementOverlap/
+	    // movePlacement); see core/SpatialAllocationPolicy.js. Automatic initial
+	    // placement always behaves as ALLOW: placement never blocks a publish.
 	    this._spatialAllocationPolicy = spatialAllocationPolicy;
-	    // 0.2.26: optional, same "enforce/offer only when the
-	    // collaborator is actually wired" rule everything else in this
-	    // constructor follows — a session built without it (most
-	    // existing tests) simply can't search.
+	    // Without it a session can't search.
 	    this._searchWorldUseCase = searchWorldUseCase;
-	    // 0.2.30: OPTIONAL trust-capable discovery provider, consulted
-	    // ONLY to obtain diagnostics for exploreLocation/exploreHere/
-	    // whatsHere — never to resolve which documents/positions those
-	    // methods return (that still goes through searchWorldByLocation,
-	    // exactly as 0.2.28/0.2.29 established). Deliberately decoupled
-	    // from document resolution: the live World View's placement data
-	    // comes from LocalPlacementRegistry/LocalWorldLayoutProvider, and
-	    // as of this milestone no live deployment has ever built a
-	    // populated SpatialIndexRoot/Manifest for
-	    // DecentralizedSpatialDiscoveryProvider to query — wiring it as
-	    // the SOURCE of documents would silently return zero results
-	    // everywhere. Wiring it as an diagnostics-only ADDITION means a
-	    // replica that DOES have a real decentralized index populated
-	    // can honestly report on it, while every other replica honestly
-	    // reports "no trust layer available" instead of fabricating
-	    // either a false "all clear" or a false "nothing found." See
-	    // docs/Principles.md, "Diagnostics Are Received From The
-	    // Discovery Layer, Never Invented By The UI (0.2.30)."
+	    // Optional trust-capable provider, consulted only for diagnostics in
+	    // exploreLocation/exploreHere/whatsHere, never to resolve documents (live
+	    // placement data comes from the placement registry). A replica with a real
+	    // decentralized index can report on it; others report "no trust layer
+	    // available". See docs/Principles.md, "Diagnostics Are Received From The
+	    // Discovery Layer, Never Invented By The UI".
 	    this._spatialDiscoveryProvider = spatialDiscoveryProvider;
-	    // 0.2.35 — OPTIONAL, same "enforce/offer only when the
-	    // collaborator is actually wired" rule as every other
-	    // optional dependency in this constructor. Both null when
-	    // nobody is logged in (see CreateWorldViewUseCase) — a session
-	    // built without them simply renders no local avatar, exactly
-	    // the graceful-absence posture spatialDiscoveryProvider already
-	    // established.
+	    // Both null when nobody is logged in; the session then renders no local
+	    // avatar.
 	    this._avatarProfileUseCase = avatarProfileUseCase;
 	    this._avatarPresenceSession = avatarPresenceSession;
 	    this._avatarProfileSubscription = null;
 	    this._avatarPresenceSubscription = null;
 	    this._localAvatarVisible = true;
-	    // 0.2.36 — Local Avatar Movement & Animation. See the "Local
-	    // Avatar Movement" section below for the full picture;
-	    // `_avatarMovementController` is only ever constructed once an
-	    // avatar actually exists (same optional-collaborator posture as
-	    // everything else avatar-related in this constructor).
+	    // Only constructed once an avatar exists; see "Local Avatar Movement" below.
 	    this._avatarMovementController = null;
-	    // 0.9.83 — Avatar-Vehicle Mount/Dismount Runtime Integration. The
-	    // direct structural twin of `_avatarMovementController` above:
-	    // built once an avatar actually exists (see _setupLocalAvatar()
-	    // below), ticked on the same animation frame, and fed keyboard
-	    // facts through the same avatarKeyDown/avatarKeyUp seam — see
-	    // application/AvatarVehicleInteractionController.js's own header
-	    // for why this is a separate controller rather than folded into
-	    // AvatarMovementController itself.
-	    //
-	    // 0.9.85 — Vehicle Movement Capability Integration. This session is
-	    // the one place 0.9.84's own closing paragraph named as the future
-	    // integration point: once per animation frame, AFTER this
-	    // controller's own mount/dismount tick has resolved and BEFORE
-	    // `_avatarMovementController.tick()` runs, this session reads
-	    // `_avatarVehicleInteractionController.mountedVehicleType()`,
-	    // resolves it through
-	    // core/AvatarVehicleMovementCapability.js#resolveAvatarVehicleMovementCapability(),
-	    // and hands the result to
-	    // `_avatarMovementController.setMovementCapability()` — see the
-	    // frame loop below for the exact ordering, and why it matters.
-	    // Neither controller gains a new dependency on the other: this
-	    // session is the only place that reads from one and writes to the
-	    // other, exactly like every other composition in this class.
+	    // Mount/dismount controller, built with the avatar and ticked on the same
+	    // frame. Each frame, after its tick and before the movement controller's,
+	    // this session resolves the mounted vehicle's movement capability and hands
+	    // it to `_avatarMovementController.setMovementCapability()`. Neither
+	    // controller depends on the other; this session composes them.
 	    this._avatarVehicleInteractionController = null;
-	    // 0.9.700 — Animal Catching. Built alongside
-	    // `_avatarVehicleInteractionController` above, in _setupLocalAvatar()
-	    // — a catch/release affordance is meaningless without an avatar to
-	    // do the catching.
+	    // Built with the avatar in _setupLocalAvatar(); catching needs an avatar.
 	    this._avatarAnimalInteractionController = null;
-	    // 0.9.116 — Mounted Vehicle Movement. The direct structural twin
-	    // of `_avatarMovementController` above, one layer removed: built
-	    // alongside it in _setupLocalAvatar() (a mounted vehicle's
-	    // movement is meaningless without an avatar to mount it), ticked
-	    // on the same animation frame, and reads its vehicle's current
-	    // runtime position from — and commits its next one to —
-	    // `_vehicleRuntimeInstances` below rather than an
-	    // AvatarPresenceSession. See
-	    // application/AvatarVehicleMovementController.js's own header,
-	    // and the frame loop below for the exact "vehicle moves, avatar
-	    // follows" ordering.
+	    // Mounted vehicle movement. Reads and commits the vehicle's position through
+	    // `_vehicleRuntimeInstances` rather than an AvatarPresenceSession. See the
+	    // frame loop below for the "vehicle moves, avatar follows" ordering.
 	    this._avatarVehicleMovementController = null;
-	    // 0.9.127 — Vehicle Steering Integration Audit. The session-held,
-	    // programmatic COUNTERPART to the mount identity above — a real
-	    // core/VehicleSteeringIntent.js instance, or `null` (the default,
-	    // meaning "no steering request active," never
-	    // `VehicleSteeringDirection.NONE` — see `setVehicleSteeringIntent()`,
-	    // below, for exactly why that distinction matters). Read by the
-	    // frame loop below and handed to
-	    // `_avatarVehicleMovementController.tick()`'s own new
-	    // `steeringIntent` parameter VERBATIM, every frame. Set ONLY through
-	    // `setVehicleSteeringIntent()` — this milestone wires
-	    // `VehicleSteeringIntent` into the REAL mounted-vehicle pipeline
-	    // without deciding how a physical key produces one; no
-	    // `avatarKeyDown`/`avatarKeyUp` binding reads or writes this field —
-	    // see docs/Roadmap.md, 0.9.127's own "Recommendation," for why that
-	    // stays a later milestone's job.
+	    // The current steering request: a VehicleSteeringIntent, or null for "no
+	    // request" (distinct from `VehicleSteeringDirection.NONE`; see
+	    // `setVehicleSteeringIntent()`). Passed verbatim to the vehicle movement
+	    // controller's tick every frame.
 	    this._vehicleSteeringIntent = null;
 	    this._avatarFrameSubscription = null;
 	    this._avatarControlModeActive = false;
-	    // 0.9.66 — Continuous Movement Controller Integration. This
-	    // session's own small bit of caller-owned bookkeeping for
-	    // core/AvatarContinuousMovementInputAdapter.js — see
-	    // avatarKeyDown/avatarKeyUp below, and that file's own header
-	    // for why the physical Alt KEY's hold state is tracked
-	    // here rather than read from an event's own toggle state.
-	    // `_avatarMovementController` itself remains the one place the
-	    // resulting NONE/FORWARD/BACKWARD intent value lives (see
-	    // application/AvatarMovementController.js#continuousMovementIntent) —
-	    // this field is ONLY ever `altDown`, never a second copy of
-	    // that intent.
+	    // Physical Alt key hold state for core/AvatarContinuousMovementInputAdapter.js.
+	    // The resulting intent lives only in `_avatarMovementController`; this is
+	    // never a second copy of it.
 	    this._altDown = false;
-	    // 0.9.69 — Continuous Movement Direction + Mode Integration. The
-	    // direct structural twin of `_altDown` above, tracking the
-	    // physical Shift key's hold state the identical way, for the
-	    // identical reason (see core/AvatarContinuousMovementInputAdapter.js's
-	    // own 0.9.68 header): a caller-owned physical-hold boolean, never a
-	    // browser modifier-toggle read. `_avatarMovementController` remains
-	    // the one place the resulting NONE/WALK/RUN mode value lives (see
-	    // application/AvatarMovementController.js#continuousMovementMode) —
-	    // this field is ONLY ever `shiftDown`, never a second copy of that
-	    // mode.
+	    // Physical Shift key hold state, tracked like `_altDown`. The resulting
+	    // NONE/WALK/RUN mode lives only in `_avatarMovementController`.
 	    this._shiftDown = false;
-	    // 0.9.128 — Vehicle Steering Input Binding. The direct structural
-	    // twins of `_altDown`/`_shiftDown` above, one layer over for
-	    // core/VehicleSteeringInputAdapter.js's own `leftHeld`/`rightHeld` —
-	    // this session's own caller-owned bookkeeping for telling a genuine
-	    // new press of the LEFT/RIGHT steering key from an uninteresting
-	    // repeat of one already held (see that adapter's own header for why
-	    // steering, a discrete PULSE, needs this and braking's own stateless
-	    // adapter does not). `_vehicleSteeringIntent` itself remains the one
-	    // place the resulting LEFT/RIGHT/NONE request lives — these two
-	    // fields are ONLY ever the raw physical hold bits, never a second
-	    // copy of that request.
+	    // Raw physical hold bits for the steering keys, so a new press can be told
+	    // from a key-repeat (steering is a discrete pulse; see
+	    // core/VehicleSteeringInputAdapter.js). The request itself lives only in
+	    // `_vehicleSteeringIntent`.
 	    this._vehicleSteerLeftHeld = false;
 	    this._vehicleSteerRightHeld = false;
-	    // 0.9.702 — World Animal Decorations. The direct structural twin
-	    // of `_vehicleSteerLeftHeld` above, one layer over for
-	    // `_processWorldAnimalDecorationInput()`'s own rising-edge check —
-	    // decorateNearestReleasedAnimalHere() is a discrete, one-shot
-	    // action, never something a HELD 'G' should keep re-triggering on
-	    // every repeat keydown a browser's own key-repeat fires.
+	    // Rising-edge tracking for 'G': decorating is one-shot, so a held key's
+	    // repeat keydowns must not re-trigger it.
 	    this._decorateKeyHeld = false;
 	    this._followAvatarEnabled = false;
 	    this._lastAvatarFollowPosition = null;
-	    // 0.3.2 — Camera Perspective. `null` means "off" — the free/orbit
-	    // camera this session has always had, completely unchanged. Purely
-	    // LOCAL UI/navigation state, exactly like `_followAvatarEnabled`
-	    // above: never persisted, never signed, never broadcast to any
-	    // collaborator — see docs/Principles.md, "Camera Perspective Is
-	    // Local Perception, Never Shared Reality (0.3.2)." See
-	    // setCameraPerspective() below.
+	    // `null` means off (the free/orbit camera). Local UI state only: never
+	    // persisted, signed or broadcast (see docs/Principles.md, "Camera
+	    // Perspective Is Local Perception, Never Shared Reality"). See
+	    // setCameraPerspective().
 	    this._cameraPerspective = null;
-	    // 0.2.37 — Decentralized Avatar Presence Synchronization.
-	    // `presenceBroadcastProvider` and `avatarTemplateRegistry` are
-	    // both OPTIONAL, same posture as everything else avatar-related
-	    // above: a session built without a broadcast provider simply
-	    // never publishes or receives presence at all; one built
-	    // without a template registry can still receive presence but
-	    // has no way to resolve what an unknown remote avatar should
-	    // even look like, so it never creates a visual for one. See the
-	    // "Remote Avatar Presence" section below for the full wiring.
+	    // Without a broadcast provider, presence is never published or received;
+	    // without a template registry, remote presence is received but no visual is
+	    // created, since there's no way to resolve its look. See "Remote Avatar
+	    // Presence" below.
 	    this._presenceBroadcastProvider = presenceBroadcastProvider;
 	    this._avatarTemplateRegistry = avatarTemplateRegistry;
-	    // 0.2.40 — OPTIONAL, same posture as every other avatar-related
-	    // collaborator here: a session built without one simply always
-	    // advertises (see the publish gate in _setupLocalAvatar() below),
-	    // exactly 0.2.37/0.2.38's own behavior, unchanged.
+	    // Without it the session always advertises (see the publish gate in
+	    // _setupLocalAvatar()).
 	    this._presenceVisibilityUseCase = presenceVisibilityUseCase;
-	    // 0.2.58 — OPTIONAL, profile's OWN independent publish gate. See
-	    // _publishLocalAvatarProfile() below: when this is wired, profile
-	    // publishing consults ONLY this policy, never presenceVisibilityUseCase's
-	    // — see docs/Principles.md, "Profile Gets Its Own Publication
-	    // Gate, Superseding The Shared One." A session built WITHOUT one
-	    // (every pre-0.2.58 caller, and any test that only wires
-	    // presenceVisibilityUseCase) falls back to the exact 0.2.41
-	    // shared-gate behavior unchanged — see _publishLocalAvatarProfile's
-	    // own comment.
+	    // Profile's own publish gate: when wired, profile publishing consults only
+	    // this policy (see docs/Principles.md, "Profile Gets Its Own Publication
+	    // Gate, Superseding The Shared One"). Without it, profile falls back to the
+	    // shared presence gate; see _publishLocalAvatarProfile().
 	    this._avatarProfileVisibilityUseCase = avatarProfileVisibilityUseCase;
-	    // 0.2.58 — OPTIONAL zero-arg predicate: "do I currently have AT
-	    // LEAST ONE real, mutual FriendshipState.FRIEND," re-consulted
-	    // fresh on every publish attempt, never cached — the COARSE
-	    // counterpart to the per-peer `isFriend` predicate
-	    // presence/PeerAvatarPresenceBroadcastProvider.js#advertise()
-	    // itself consults. Feeds PresenceVisibilityPolicy#shouldAdvertise()/
-	    // AvatarProfileVisibilityPolicy#shouldAdvertise()'s own
-	    // `{ hasFriend }` context via _hasFriendContext() below. Absent
-	    // (null) is the exact pre-0.2.58 behavior: FRIENDS with an empty
-	    // authorizedPeerIdentities still behaves like HIDDEN at this
-	    // coarse gate, unchanged — see core/PresenceVisibilityPolicy.js's
-	    // own shouldAdvertise() header.
+	    // Zero-arg predicate "do I have at least one mutual friend", re-checked on
+	    // every publish and never cached. Feeds the visibility policies'
+	    // `{ hasFriend }` context via _hasFriendContext(). Without it, FRIENDS with
+	    // no authorized peers behaves like HIDDEN at this coarse gate.
 	    this._hasFriend = hasFriend;
-	    // 0.2.60 — OPTIONAL zero-arg-per-call predicate
-	    // `(identityId) => boolean`, the RECEIVER-side counterpart to
-	    // isFriend/hasFriend above: consulted in _setupRemoteAvatars()
-	    // below to build each avatar-social protocol's trust boundary
-	    // with blocking wired in, so a locally-blocked identity's
-	    // presence/profile/interaction claims are rejected at ingestion
-	    // regardless of how cryptographically valid they are — see
-	    // application/PresenceTrustBoundary.js's own `isBlocked` header.
-	    // The SENDER-side gate is a completely separate wiring, one
-	    // layer further out — see application/CreateWorldViewUseCase.js,
-	    // which passes the same predicate straight to each
-	    // presence/PeerAvatarPresenceBroadcastProvider.js's own
-	    // `isBlocked` instead. Absent (null) is the exact pre-0.2.60
-	    // behavior: every trust boundary defaults to `isBlocked: () =>
-	    // false`, nothing silently changes.
+	    // Receiver-side block predicate `(identityId) => boolean`, wired into each
+	    // avatar-social trust boundary in _setupRemoteAvatars() so a blocked
+	    // identity's claims are rejected at ingestion however valid they are. The
+	    // sender-side gate is wired separately in CreateWorldViewUseCase. Without it,
+	    // every trust boundary defaults to `isBlocked: () => false`.
 	    this._isBlocked = isBlocked;
 	    this._presenceSyncService = null;
 	    this._remoteAvatarRegistry = null;
 	    this._presencePublishSubscription = null;
 	    this._remoteAvatarFrameSubscription = null;
 	    this._remoteAvatarsVisible = true;
-	    // 0.2.41 — Remote Avatar Appearance Synchronization. OPTIONAL,
-	    // same posture as presenceBroadcastProvider — a session built
-	    // without one simply never publishes or receives PROFILE data
-	    // (every remote avatar still renders, using the placeholder
-	    // appearance exactly like 0.2.37 always did). See the "Remote
-	    // Avatar Appearance" section below for the full wiring.
+	    // Without it no profile data is published or received; remote avatars
+	    // render with the placeholder appearance. See "Remote Avatar Appearance"
+	    // below.
 	    this._avatarProfileBroadcastProvider = avatarProfileBroadcastProvider;
 	    this._avatarProfileSyncService = null;
 	    this._remoteAvatarAppearanceRegistry = null;
-	    // Reused by BOTH the profile-changed subscription (resets this
-	    // on every explicit edit) and the periodic republish check in
-	    // the avatar movement frame subscription — see
-	    // _setupLocalAvatar() below. 0 means "never yet published,"
-	    // which deliberately makes the very FIRST frame tick publish
-	    // immediately — no separate bootstrap call needed.
+	    // Reset on every explicit profile edit and read by the periodic republish
+	    // check. 0 means "never published", so the first frame publishes
+	    // immediately.
 	    this._lastProfilePublishAt = 0;
-	    // 0.3.1 — reused by BOTH the onPresenceChanged subscription
-	    // (refreshed on every accepted movement update) and the
-	    // periodic heartbeat check in the avatar movement frame
-	    // subscription — see PRESENCE_HEARTBEAT_INTERVAL_MS's own
-	    // comment and _setupLocalAvatar() below. Same "0 means never
-	    // yet published" bootstrap posture as `_lastProfilePublishAt`
-	    // above.
+	    // Refreshed on every accepted presence update and read by the heartbeat
+	    // check (see PRESENCE_HEARTBEAT_INTERVAL_MS). 0 means "never published".
 	    this._lastPresenceUpdateAt = 0;
-	    // 0.2.39 — World Entity Interaction & Selection. See the
-	    // "Avatar Interaction" section below for the full picture.
-	    // `_avatarInteraction` is deliberately its OWN state slice,
-	    // never folded into `_spatialSelection` — see
-	    // docs/Principles.md, "Avatars Are Never Document Selection."
-	    // `_followedRemoteAvatarId` is the camera-follows-a-REMOTE-
-	    // avatar counterpart to `_followAvatarEnabled` above (which
-	    // only ever follows the LOCAL avatar) — the two are mutually
-	    // exclusive (see setFollowAvatar/followAvatarId), because
-	    // there is only one camera.
+	    // `_avatarInteraction` is its own state slice, never part of
+	    // `_spatialSelection` (see docs/Principles.md, "Avatars Are Never Document
+	    // Selection"). `_followedRemoteAvatarId` follows a remote avatar;
+	    // `_followAvatarEnabled` follows the local one. The two are mutually
+	    // exclusive because there is one camera.
 	    this._avatarInteraction = AvatarInteractionState.empty();
 	    this._followedRemoteAvatarId = null;
 	    this._lastFollowedRemotePosition = null;
-	    // 0.2.44 — Local Avatar Interaction & Social Presence. Gates
-	    // GREET/WAVE/POINT through ONE shared cooldown regardless of
-	    // which gesture was last performed — see
-	    // core/AvatarInteractionCooldown.js. 0 means "never yet
-	    // performed," which — like `_lastProfilePublishAt` above —
-	    // deliberately makes the very FIRST gesture always allowed.
+	    // One shared cooldown for GREET/WAVE/POINT (see
+	    // core/AvatarInteractionCooldown.js). 0 means the first gesture is always
+	    // allowed.
 	    this._lastInteractionPerformedAt = 0;
-	    // 0.2.45 — Ephemeral Avatar Interaction Synchronization.
-	    // OPTIONAL, same posture as every other broadcast-provider
-	    // collaborator in this constructor: a session built without one
-	    // simply never publishes or receives interaction EVENTS at all
-	    // (a gesture still fully happens locally either way — see
-	    // performAvatarInteraction below). `_localInteractionSequence`
-	    // is this avatar's OWN, separate monotonic counter for
-	    // interaction events specifically — never AvatarPresence's own
-	    // `sequence` — see core/AvatarInteractionAdvertisement.js's own
-	    // header for why. `_remoteAvatarGestureExpiry` is
-	    // avatarId -> the timestamp a REMOTE avatar's currently-playing
-	    // received gesture should be cleared, the receiving-side
-	    // counterpart to `_avatarInteraction.interactionStartedAt` on
-	    // this replica's own local gesture — see
-	    // _applyRemoteAvatarInteraction/_expireRemoteAvatarGestures
-	    // below.
+	    // Without a provider, interaction events are never published or received; a
+	    // gesture still happens locally. `_localInteractionSequence` is a separate
+	    // counter from AvatarPresence's `sequence` (see
+	    // core/AvatarInteractionAdvertisement.js). `_remoteAvatarGestureExpiry` maps
+	    // avatarId to when a received remote gesture should clear; see
+	    // _applyRemoteAvatarInteraction/_expireRemoteAvatarGestures.
 	    this._avatarInteractionBroadcastProvider = avatarInteractionBroadcastProvider;
 	    this._avatarInteractionSyncService = null;
 	    this._localInteractionSequence = 0;
@@ -885,25 +323,16 @@ export class WorldNavigationSession {
 	    // that detail available again, on demand, without re-querying).
 	    this._lastDiscoveryDiagnosticsRaw = null;
 
-	    // 0.2.93 — see the constructor's own comment above.
 	    this._structureResolver = structureResolver;
 	    this._loadDocumentUseCase = loadDocumentUseCase;
 
-	    // 0.2.95 — see the constructor's own comment above.
 	    this._worldAuthorizationService = worldAuthorizationService;
 
-	    // 0.2.97 — see the constructor's own comment above.
-	    // `_commandHistoryUnsubscribes` mirrors `_commandHistories`
-	    // key-for-key: whenever a CommandHistory for a worldId is
-	    // replaced or removed (fork, clone, historical restoration,
-	    // unload — see _registerCommandHistory()/_unregisterCommandHistory()
-	    // below), the OLD subscription is torn down first, so a stale
-	    // CommandHistory instance never keeps broadcasting after this
-	    // session has moved on from it.
+	    // `_commandHistoryUnsubscribes` mirrors `_commandHistories` key for key, so a
+	    // replaced or removed CommandHistory stops broadcasting.
 	    this._worldCommandPropagation = worldCommandPropagation;
 	    this._commandHistoryUnsubscribes = new Map();
 
-	    // 0.2.98 — see the constructor's own comment above.
 	    this._worldMembershipUseCase = worldMembershipUseCase;
 	    this._worldPresenceUseCase = worldPresenceUseCase;
 	    // Worlds this session has explicitly entered presence for — so
@@ -912,35 +341,23 @@ export class WorldNavigationSession {
 	    // OTHER replica's own WorldPresenceUseCase already performs.
 	    this._presentWorldDocumentIds = new Set();
 
-	    // 0.3.0 — see the constructor's own comment above.
 	    this._worldSpatialPresenceUseCase = worldSpatialPresenceUseCase;
-	    // Worlds this session has explicitly entered SPATIAL presence
-	    // for — mirrors `_presentWorldDocumentIds` above, one rung
-	    // further: dispose() broadcasts an honest LEAVE for each. A
-	    // SEPARATE set from `_presentWorldDocumentIds` on purpose — a
-	    // caller may enter coarse presence without ever syncing spatial
-	    // presence (or vice versa); the two protocols never assume one
+	    // Worlds with spatial presence entered, so dispose() can broadcast a LEAVE
+	    // for each. Separate from `_presentWorldDocumentIds`: neither protocol
 	    // implies the other.
 	    this._presentSpatialWorldDocumentIds = new Set();
-	    // documentId -> unsubscribe function for this session's own
-	    // internal onSpatialPresenceChanged() listener — see
-	    // enterWorldSpatialPresence()/leaveWorldSpatialPresence() below.
-	    // This is what drives `this._session.setRemoteSpatialPresence()`
-	    // automatically, the identical "application layer drives its own
-	    // render facade" shape application/RemoteAvatarRegistry.js
-	    // already established for avatars — WorldView.js never touches
-	    // the renderer directly for this any more than it does for
-	    // remote avatars.
+	    // documentId -> unsubscribe for this session's onSpatialPresenceChanged()
+	    // listener, which drives `this._session.setRemoteSpatialPresence()`. The
+	    // application layer drives the render facade; WorldView.js never touches the
+	    // renderer for this.
 	    this._spatialPresenceRenderSubscriptions = new Map();
 	    // documentId -> Set(deviceId) currently rendered, so a device
 	    // that drops out of a later roster snapshot can be explicitly
 	    // removed from the scene rather than left as a stale marker.
 	    this._spatialPresenceRenderedDevices = new Map();
 
-	    // 0.3.10 — see the constructor's own comment above.
 	    this._localWorldExperienceStore = localWorldExperienceStore;
 
-	    // 0.5.2 — see the constructor's own comment above.
 	    this._placeNamingClaimUseCase = placeNamingClaimUseCase;
 	    this._localNamePreferenceStore = localNamePreferenceStore;
 	    this._placeNamingClaimExchange = placeNamingClaimExchange;
@@ -950,137 +367,71 @@ export class WorldNavigationSession {
         this._spatialCameraController = null;
         this._loadedDocuments = new Map();
         this._commandHistories = new Map();
-        // 0.5.9 — World View Read-Only Exploration & Fork-to-Edit.
-        // SpatialEditingService/SpatialPlacementService/TransformGizmoUseCase
-        // (brick/structure/group content mutation — placement, gizmo
-        // drags, selection transforms, clipboard, groups) no longer
-        // exist on this session at all: EditorSession already owns that
-        // whole kernel with full parity (see docs/Principles.md, "World
-        // View Observes and Navigates; Editor Mutates and Builds
-        // (0.5.9)"). SpatialInspectionService stays — read-only.
-        // `_commandHistories` also stays: World Region/Landmark naming
-        // (createRegionHere() etc., below) still routes fork-on-write
-        // and undo/redo through it exactly as before — that capability
-        // was deliberately NOT part of this milestone's removal (naming
-        // a place is navigation/annotation, not construction).
+        // Brick/structure/group mutation lives in EditorSession (see
+        // docs/Principles.md, "World View Observes and Navigates; Editor Mutates and
+        // Builds"). SpatialInspectionService stays, read-only. `_commandHistories`
+        // stays because Region/Landmark naming still routes fork-on-write and
+        // undo/redo through it.
         this._inspectionService = new SpatialInspectionService(this);
         this._failedLoads = new Map();
         this._spatialSelection = SpatialSelectionState.empty();
         this._spatialHover = SpatialHoverState.empty();
         this._spatialInspection = SpatialInspectionState.empty();
-        // 0.2.27: two independent concepts that used to be one field —
-        // see docs/Principles.md, "Camera Focus, Active Document, and
-        // Selection Are Three Different Things."
+        // Two independent concepts (see docs/Principles.md, "Camera Focus, Active
+        // Document, and Selection Are Three Different Things"):
         //   _focusedDocumentId — where the CAMERA is navigated to.
         //   _activeDocumentId  — which document receives document-level
         //                        actions and mutation fallbacks.
-        // They usually change together (focusDocument() sets both, by
-        // default) but are never assumed to be equal — every mutation
-        // path in this file reads _activeDocumentId, never
-        // _focusedDocumentId, so "where the camera happens to be
-        // pointed" can never silently decide what gets edited.
+        // Every mutation path reads _activeDocumentId, so where the camera happens
+        // to point never decides what gets edited.
         this._focusedDocumentId = null;
         this._activeDocumentId = null;
-        // 0.9.606 — Home, Even After Streaming Out. _focusedDocumentId
-        // is deliberately volatile: _unloadWorld() clears it the moment
-        // its document streams out of camera range, because nothing
-        // else in this file needs "focus" to mean anything once the
-        // document it names is gone. goHome() needs the opposite
-        // property — wandering far enough that the user's own world
-        // unloads (on foot, or riding a vehicle — see
-        // _setupVehicleRendering() above) is exactly the scenario Home
-        // exists for, so its target can't be a value that same
-        // wandering just erased. _homeDocumentId is that stable
-        // pointer: bootstrapped once by _loadWorld() (identical
-        // condition to _focusedDocumentId's own bootstrap, see below)
-        // and never cleared by _unloadWorld() or anything else short of
-        // dispose()'s full reset.
+        // Stable home pointer. _focusedDocumentId is cleared when its document
+        // streams out of range, but wandering far away is exactly when Home is
+        // needed. Set once by _loadWorld() and cleared only by dispose().
         this._homeDocumentId = null;
         this._eventBus = null;
 	    this._discoveryProvider = discoveryProvider;
-	    // 0.9.597 — see this constructor's own parameter comment, above.
-	    // Falls back to `discoveryProvider` itself when no separate one is
-	    // supplied, so a caller that never wires this (every pre-0.9.597
-	    // caller/test) gets IDENTICAL behavior to before this milestone.
+	    // Falls back to `discoveryProvider` when no separate provider is supplied.
 	    this._publicationActionDiscoveryProvider = publicationActionDiscoveryProvider || discoveryProvider;
 
-        // 0.2.20: documentIds currently loaded straight from a
-        // publication — immutable as far as this session is concerned,
-        // exactly like PublishedWorldSession's canEdit:false, except
-        // enforced here by intercepting mutation entry points rather
-        // than by omitting them. A documentId leaves this set the
-        // moment it is superseded by a fork (_forkForEdit) or created
-        // fresh by forkDocument()/cloneDocument(). See
-        // docs/Principles.md, "A published snapshot is never mutated
-        // in place (0.2.20)".
+        // documentIds loaded straight from a publication: immutable here, enforced by
+        // intercepting mutation entry points. An id leaves the set once superseded by
+        // a fork or created fresh by forkDocument()/cloneDocument(). See
+        // docs/Principles.md, "A published snapshot is never mutated in place".
         this._publishedDocumentIds = new Set();
 
-        // 0.2.20 follow-up: a lazily-created fork is, by definition, a
-        // document the discovery/layout providers have never heard of
-        // (it has not been published). Two things break if that's not
-        // accounted for:
-        //   1. updateSpatialView()'s streaming unload only protects
-        //      "dirty" documents; once a fork is saved (dirty clears)
-        //      it silently vanishes from the view on the next camera
-        //      move, because it can never appear in
-        //      findVisibleDocuments()'s results again.
-        //   2. worldLayoutProvider.getPosition(forkId) has nothing to
-        //      look up and falls back to (0,0,0)/a wrong grid slot —
-        //      fine for the bricks themselves (addWorld was called
-        //      with the correct inherited position once, at fork
-        //      time), but every *subsequent* position lookup (the
-        //      transform gizmo's pivot, chiefly) recomputes from
-        //      scratch and drifts away from where the bricks actually
-        //      are, so the gizmo can no longer be grabbed.
-        // _localOnlyDocumentIds pins a fork against streaming unload
-        // unconditionally; _localPositions remembers the position it
-        // inherited from its source so lookups stay correct even after
-        // the document stops being "dirty".
+        // A lazily-created fork is unknown to the discovery/layout providers, which
+        // breaks two things:
+        //   1. Streaming unload only protects dirty documents, so a saved fork
+        //      would vanish on the next camera move.
+        //   2. worldLayoutProvider.getPosition(forkId) has nothing to look up, so
+        //      later position lookups (the gizmo pivot) drift from the bricks.
+        // _localOnlyDocumentIds pins forks against unload; _localPositions keeps the
+        // position inherited from the source.
         this._localOnlyDocumentIds = new Set();
         this._localPositions = new Map();
 
-        // 0.2.21: set by _forkForEdit right before it returns, cleared
-        // by the next consumeForkNotice() call. A drain, not an event
-        // subscription — the UI already polls session state once per
-        // interaction (refreshSpatialUI), so a flag it can check right
-        // after a guarded call is simpler than wiring a new EventBus
-        // topic for something that fires at most once per interaction.
+        // Set by _forkForEdit, cleared by consumeForkNotice(). A drain rather than
+        // an event: the UI already polls session state after each interaction.
         this._pendingForkNotice = null;
 
-        // 0.2.94 — World View Location & Navigation. `_worldLocationDirectory`
-        // is stateless and cheap to construct once, reused for every
-        // getWorldLocations()/focusLocation() call — see
-        // WorldLocationDirectory's own header for why it never needs
-        // rebuilding. `_activeCameraFocus` is null whenever no
-        // goHome()/focusLocation() animation is currently in flight;
-        // otherwise `{ animator, startedAt }`, advanced once per render
-        // frame by `_tickCameraFocus` (wired in start(), see below).
+        // `_worldLocationDirectory` is stateless and reused for every call.
+        // `_activeCameraFocus` is null unless a goHome()/focusLocation() animation
+        // is in flight, else `{ animator, startedAt }`, advanced each frame by
+        // `_tickCameraFocus`.
         this._worldLocationDirectory = new WorldLocationDirectory(this);
         this._activeCameraFocus = null;
         this._cameraFocusFrameSubscription = null;
-        // 0.9.115 — Vehicle Rendering. See _setupVehicleRendering() below.
+        // See _setupVehicleRendering() below.
         this._vehicleRenderFrameSubscription = null;
-        // 0.9.116 — Mounted Vehicle Movement. The runtime
-        // vehicle-instance ownership boundary — see
-        // application/VehicleRuntimeInstances.js's own header. Built
-        // here, unconditionally, exactly like `_worldLocationDirectory`
-        // above: a vehicle's own current position is a fact about the
-        // World, independent of whether a local avatar exists (see
-        // docs/Principles.md, "Watching Presence Never Requires Having
-        // One" — the same reasoning `_setupVehicleRendering()` already
-        // applies for a spectator with no avatar at all). Read by
-        // _setupVehicleRendering() below and by
-        // _avatarVehicleMovementController above once an avatar exists
-        // to mount something.
+        // Runtime vehicle positions (see application/VehicleRuntimeInstances.js).
+        // Built unconditionally: a vehicle's position is a fact about the World,
+        // independent of whether a local avatar exists (see docs/Principles.md,
+        // "Watching Presence Never Requires Having One").
         this._vehicleRuntimeInstances = new VehicleRuntimeInstances();
-        // 0.9.701 — World View Persistence. Optional — see this
-        // constructor's own parameter comment, above. Kept as its own
-        // field (rather than consulted only here) so
-        // _setupVehicleRuntimePersistence() (below) can keep saving to
-        // it as the World changes. Seeding uses ONLY
-        // VehicleRuntimeInstances's own public add()/discard() — the
-        // exact same seam a deployed/stored vehicle already goes
-        // through — never a direct write to its private fields.
+        // Kept as a field so _setupVehicleRuntimePersistence() can keep saving.
+        // Seeding uses only VehicleRuntimeInstances' public add()/discard().
         this._vehicleRuntimeInstancePersistenceStore = vehicleRuntimeInstancePersistenceStore;
         if (this._vehicleRuntimeInstancePersistenceStore) {
             const { instances, excludedIds } = this._vehicleRuntimeInstancePersistenceStore.load();
@@ -1091,15 +442,10 @@ export class WorldNavigationSession {
                 this._vehicleRuntimeInstances.discard(id);
             }
         }
-        // 0.9.700 — Animal Catching. The animal-side twin of
-        // `_vehicleRuntimeInstances` above — see
-        // application/AnimalRuntimeInstances.js's own header. Also
-        // built unconditionally, for the identical reason.
+        // Animal counterpart of `_vehicleRuntimeInstances`; see
+        // application/AnimalRuntimeInstances.js.
         this._animalRuntimeInstances = new AnimalRuntimeInstances();
-        // 0.9.701 — World View Persistence. The direct structural twin
-        // of `_vehicleRuntimeInstancePersistenceStore` above, for
-        // `_animalRuntimeInstances` — see that field's own 0.9.701
-        // comment.
+        // Animal counterpart of `_vehicleRuntimeInstancePersistenceStore`.
         this._animalRuntimeInstancePersistenceStore = animalRuntimeInstancePersistenceStore;
         if (this._animalRuntimeInstancePersistenceStore) {
             const { instances, excludedIds } = this._animalRuntimeInstancePersistenceStore.load();
@@ -1110,67 +456,30 @@ export class WorldNavigationSession {
                 this._animalRuntimeInstances.excludeId(id);
             }
         }
-        // 0.9.700 — the ONE AvatarInventory owner both
-        // `_avatarVehicleInteractionController` and
-        // `_avatarAnimalInteractionController` (built below, once a
-        // local avatar exists) are handed — see
-        // application/AvatarInventoryStore.js's own header for why
-        // ownership moved out of either controller. Built here,
-        // unconditionally, so it exists even for the brief window before
-        // either controller does.
-        //
-        // 0.9.701 — World View Persistence. `avatarInventoryPersistenceStore`
-        // (optional — see this constructor's own parameter comment,
-        // above) is handed straight to AvatarInventoryStore's own
-        // constructor, which does its own rehydrate-on-construct/
-        // save-on-set — this file has no inventory persistence logic of
-        // its own to add.
+        // The one AvatarInventory owner both interaction controllers are handed
+        // (see application/AvatarInventoryStore.js). Built unconditionally, before
+        // either controller exists. The optional persistence store is passed
+        // straight through; AvatarInventoryStore rehydrates and saves itself.
         this._avatarInventoryStore = new AvatarInventoryStore(avatarInventoryPersistenceStore);
-        // 0.9.702 — Avatar Inventory Transfer. Bound to the SAME
-        // `_avatarInventoryStore` immediately above — never a second,
-        // competing owner of the local avatar's carried entries (see
-        // application/AvatarInventoryStore.js's own header). Only built
-        // when a real peer stack is actually wired (see this
-        // constructor's own parameter comment on `peerMessageBus`/
-        // `connectedPeerRegistry`); a session built without one gets
-        // `null`, exactly like `_worldMembershipUseCase` and every other
-        // optional peer-stack collaborator this constructor already
-        // accepts.
+        // Bound to the same `_avatarInventoryStore`, never a second owner. Only
+        // built when a real peer stack is wired; otherwise null.
         this._avatarInventoryTransferPeerExchange = (peerMessageBus && connectedPeerRegistry)
             ? new AvatarInventoryTransferPeerExchange(this._avatarInventoryStore, peerMessageBus, connectedPeerRegistry)
             : null;
-        // 0.9.700 — Animal Catching. See _setupWildlifeExclusionSync()
-        // below, the identical "own subscription, own field" shape
-        // `_vehicleRenderFrameSubscription` above already establishes.
+        // See _setupWildlifeExclusionSync() below.
         this._wildlifeExclusionSyncFrameSubscription = null;
-        // 0.9.701 — World View Persistence. Own subscription, own field,
-        // the identical shape every other optional per-frame concern in
-        // this file already uses — see _setupVehicleRuntimePersistence()/
-        // _setupAnimalRuntimePersistence(), below.
+        // See _setupVehicleRuntimePersistence()/_setupAnimalRuntimePersistence().
         this._vehicleRuntimePersistenceFrameSubscription = null;
         this._animalRuntimePersistenceFrameSubscription = null;
-        // 0.9.701 — World View Persistence. `0` so the very first frame
-        // after construction is always eligible to save — harmless even
-        // though it usually just re-writes what load() (above) already
-        // read back, the identical "no special-cased first tick" restraint
-        // PRESENCE_HEARTBEAT_INTERVAL_MS's own throttle already takes.
+        // `0` so the first frame after construction may save.
         this._lastVehicleRuntimeSaveAt = 0;
         this._lastAnimalRuntimeSaveAt = 0;
     }
 
-    // 0.2.97 — the ONE place a CommandHistory ever enters
-    // `_commandHistories`. Every call site that used to write
-    // `this._commandHistories.set(worldId, history)` directly now
-    // calls this instead, so wiring a `worldCommandPropagation`
-    // collaborator into the constructor makes EVERY existing mutation
-    // pathway (placement, gesture commit, paste, fork, clone,
-    // historical restoration, document-metadata touch) broadcast
-    // automatically — none of those call sites themselves changed.
-    // Replacing an existing history for the same worldId (fork/clone/
-    // restoreHistoryAt all do this — a fresh CommandHistory instance
-    // taking over the same live World) tears down the OLD subscription
-    // first, exactly like every other "replace, don't leak" pattern in
-    // this file.
+    // The one place a CommandHistory enters `_commandHistories`, so a wired
+    // `worldCommandPropagation` makes every mutation pathway broadcast without
+    // changing any call site. Replacing a history for the same worldId (fork,
+    // clone, restoreHistoryAt) tears down the old subscription first.
     _registerCommandHistory(worldId, history) {
         this._unregisterCommandHistory(worldId);
         this._commandHistories.set(worldId, history);
@@ -1184,11 +493,8 @@ export class WorldNavigationSession {
         return history;
     }
 
-    // The mirror of _registerCommandHistory() above — every existing
-    // `this._commandHistories.delete(worldId)` call site now calls
-    // this instead, so a CommandHistory this session no longer owns
-    // (unloaded, superseded by a fork) stops broadcasting immediately
-    // rather than leaking a subscription to a detached World.
+    // Mirror of _registerCommandHistory(): a history this session no longer owns
+    // stops broadcasting immediately.
     _unregisterCommandHistory(worldId) {
         const unsubscribe = this._commandHistoryUnsubscribes.get(worldId);
         if (unsubscribe) {
@@ -1206,18 +512,9 @@ export class WorldNavigationSession {
             container,
             this._registry,
             this._eventBus,
-            // 0.2.93 — structureResolver threaded through so World View
-            // actually RENDERS a StructurePlacement's content (and can
-            // therefore pick/inspect it) — see this class's own
-            // constructor comment and renderer/WorldRenderer.js's 0.2.90
-            // header. Still gracefully absent (null) for any caller that
-            // doesn't wire one, exactly as before this milestone.
-            //
-            // 0.5.9 — gestureService is now permanently null: World View
-            // no longer owns a gesture/gizmo kernel at all (see this
-            // class's own header), so renderer/TransformGizmoController.js
-            // never has one to drive a drag with — its own null guards
-            // already make that a silent no-op rather than a throw.
+            // structureResolver lets World View render (and so pick/inspect)
+            // StructurePlacements. gestureService is always null: World View owns no
+            // gizmo kernel, and the gizmo controller's null guards make that a no-op.
             { gestureService: null, structureResolver: this._structureResolver }
         );
         this._spatialCameraController = new SpatialCameraController(this._session);
@@ -1235,46 +532,18 @@ export class WorldNavigationSession {
         this._setupAnimalRuntimePersistence();
     }
 
-    // 0.9.115 — Vehicle Rendering. Deliberately independent of
-    // _setupLocalAvatar() above — a vehicle is a fact about the WORLD,
-    // never about whether the viewer happens to have an avatar (see
-    // docs/Principles.md, "Watching Presence Never Requires Having One,"
-    // the identical reasoning `showOtherAvatars` already applies one
-    // layer up in ui/views/WorldView.js). Rides the SAME per-render-frame
-    // loop application/WorldSpatialContextService.js's own "what is
-    // around me right now" already keys off of — `getAvatarPosition() ||
-    // getCameraPosition()`, so a logged-out viewer just spectating still
-    // sees the vehicles nearby their own camera.
+    // Independent of _setupLocalAvatar(): vehicles are a fact about the World,
+    // so a logged-out spectator still sees vehicles near the camera (see
+    // docs/Principles.md, "Watching Presence Never Requires Having One").
     //
-    // A RECONCILE EVERY FRAME, NEVER A BARE REQUERY — as of 0.9.116.
-    // Through 0.9.115 this called application/NearbyVehicleInstances.js's
-    // own `nearbyVehicleInstances()` directly, which was safe only
-    // because every vehicle it could ever produce was stationary (see
-    // that file's own header). Now that a mounted vehicle's own position
-    // can genuinely change (application/AvatarVehicleMovementController.js),
-    // calling that pure, deterministic bridge directly here again would
-    // silently overwrite a moving vehicle's own runtime position with its
-    // fixed spawn point every single frame — see
-    // application/VehicleRuntimeInstances.js's own header, "One subtle
-    // issue to resolve." `_vehicleRuntimeInstances.sync()` is the fix:
-    // it still calls that exact same deterministic bridge to discover
-    // which vehicles exist at all, but never lets it overwrite a vehicle
-    // this store already knows the CURRENT position of.
-    // `application/AvatarVehicleInteractionController.js#_nearbyVehicles()`'s
-    // own header — "Vehicle lookup: a requery, never a registry" — still
-    // describes THAT controller's own, smaller-radius, deliberately
-    // vehicle-agnostic lookup accurately; it is unmodified by this
-    // milestone and continues to requery the deterministic placement
-    // directly, exactly as before. This file's own query is a handful of
-    // cheap deterministic hash evaluations over a few lattice cells,
-    // negligible next to the mesh/geometry work this same frame loop
-    // already tolerates elsewhere.
+    // A reconcile every frame, never a bare requery: calling
+    // nearbyVehicleInstances() directly would overwrite a moving vehicle's
+    // runtime position with its fixed spawn point. `_vehicleRuntimeInstances.sync()`
+    // uses the same deterministic bridge to discover vehicles but never
+    // overwrites a known current position. The query is a few cheap hash
+    // evaluations per frame.
     //
-    // Absent entirely when the render facade supports neither
-    // onAnimationFrame nor syncVehicles (a minimal test double, or an
-    // older facade that hasn't been extended) — the same graceful-
-    // absence posture every other optional frame-driven feature in this
-    // file already follows.
+    // Absent when the render facade lacks onAnimationFrame or syncVehicles.
     _setupVehicleRendering() {
         if (typeof this._session.onAnimationFrame !== 'function' || typeof this._session.syncVehicles !== 'function') {
             return;
@@ -1288,22 +557,10 @@ export class WorldNavigationSession {
         });
     }
 
-    // 0.9.700 — Animal Catching. Drains
-    // `_animalRuntimeInstances.drainRecentlyCaught()` once per render
-    // frame and forwards each `{ id, position }` pair to the render
-    // facade's own `markAnimalCaught()` — a thin bridge from "the
-    // avatar-animal controller just caught something" (an EVENT, fired
-    // wherever tick() happens to run) to "the renderer should stop
-    // drawing it" (this file's own frame loop), the same
-    // event-queue-drained-by-the-render-frame shape every other
-    // rendering seam in this file already uses rather than calling into
-    // the renderer directly from inside a controller's own tick(). Most
-    // frames drain nothing at all — the queue is normally empty — so
-    // this is a cheap no-op the overwhelming majority of the time.
-    // Absent entirely when the render facade doesn't support
-    // markAnimalCaught (a minimal test double), the identical
-    // graceful-absence posture `_setupVehicleRendering()` already takes
-    // for its own missing syncVehicles().
+    // Drains `_animalRuntimeInstances.drainRecentlyCaught()` once per frame
+    // into the facade's `markAnimalCaught()`, so controllers never call the
+    // renderer from inside their own tick(). Usually a no-op. Absent when the
+    // facade lacks markAnimalCaught.
     _setupWildlifeExclusionSync() {
         if (typeof this._session.onAnimationFrame !== 'function' || typeof this._session.markAnimalCaught !== 'function') {
             return;
@@ -1315,24 +572,12 @@ export class WorldNavigationSession {
         });
     }
 
-    // 0.9.701 — Released Animal Rendering. The direct structural twin of
-    // `_setupVehicleRendering()` above, for released animals instead of
-    // vehicles — same `onAnimationFrame` subscription shape, same
-    // avatar-then-camera position fallback, same graceful absence when
-    // the render facade doesn't support `syncAnimals`.
+    // Animal counterpart of `_setupVehicleRendering()`.
     //
-    // `this._animalRuntimeInstances.sync(...)` IS STILL CALLED HERE, NOT
-    // SKIPPED — this frame loop needs the store's own discovery/eviction
-    // bookkeeping to keep running regardless of rendering (catch-target
-    // resolution depends on it — see
-    // application/AvatarAnimalInteractionController.js#_nearbyAnimals()),
-    // exactly the same dual-purpose `sync()` call
-    // `_setupVehicleRendering()` already makes for mounting. Only the
-    // RESULT actually handed to `syncAnimals()` is narrowed, via
-    // `releasedNearby()` — see that method's own header for why handing
-    // it `sync()`'s own full return value instead would double-render
-    // every deterministic, tile-baked animal this store also happens to
-    // have discovered.
+    // `sync()` always runs, since catch-target resolution depends on its
+    // discovery/eviction bookkeeping. Only what goes to `syncAnimals()` is
+    // narrowed, via `releasedNearby()`; handing it `sync()`'s full result would
+    // double-render every tile-baked animal.
     _setupAnimalRendering() {
         if (typeof this._session.onAnimationFrame !== 'function' || typeof this._session.syncAnimals !== 'function') {
             return;
@@ -1347,16 +592,10 @@ export class WorldNavigationSession {
         });
     }
   
-    // 0.9.701 — World View Persistence. Absent entirely when no
-    // vehicleRuntimeInstancePersistenceStore was wired (every pre-0.9.701
-    // caller and test), OR when the render facade supports no
-    // onAnimationFrame — the same graceful-absence posture
-    // _setupVehicleRendering() above already takes, deliberately
-    // independent of it: this runs whether or not the facade also
-    // supports syncVehicles, since saving does not depend on rendering.
-    // Throttled to RUNTIME_PLACEMENT_PERSISTENCE_INTERVAL_MS — see that
-    // constant's own header for why a ridden vehicle's own every-frame
-    // setPosition() must never translate into an every-frame write.
+    // Absent when no persistence store is wired or the facade lacks
+    // onAnimationFrame. Independent of rendering. Throttled to
+    // RUNTIME_PLACEMENT_PERSISTENCE_INTERVAL_MS so a ridden vehicle's per-frame
+    // moves never become per-frame writes.
     _setupVehicleRuntimePersistence() {
         if (!this._vehicleRuntimeInstancePersistenceStore || typeof this._session.onAnimationFrame !== 'function') {
             return;
@@ -1374,9 +613,7 @@ export class WorldNavigationSession {
         });
     }
 
-    // 0.9.701 — World View Persistence. The direct structural twin of
-    // _setupVehicleRuntimePersistence() above, for
-    // `_animalRuntimeInstances` — see that method's own header.
+    // Animal counterpart of _setupVehicleRuntimePersistence().
     _setupAnimalRuntimePersistence() {
         if (!this._animalRuntimeInstancePersistenceStore || typeof this._session.onAnimationFrame !== 'function') {
             return;
@@ -1394,15 +631,9 @@ export class WorldNavigationSession {
         });
     }
 
-    // 0.2.94 — advances any in-flight goHome()/focusLocation() animation
-    // once per render frame, the same frame loop every other time-based
-    // concern in this file already rides (avatar movement, presence
-    // republish). Absent entirely when the render facade doesn't
-    // support onAnimationFrame (a minimal test double) — a session
-    // without frame ticking simply applies every camera focus
-    // instantly, see _beginCameraFocus() below, the same
-    // graceful-absence posture every other optional frame-driven
-    // feature in this file already follows.
+    // Advances any in-flight goHome()/focusLocation() animation once per frame.
+    // Without onAnimationFrame, camera focus applies instantly (see
+    // _beginCameraFocus()).
     _setupCameraFocusAnimation() {
         if (typeof this._session.onAnimationFrame !== 'function') {
             return;
@@ -1412,13 +643,8 @@ export class WorldNavigationSession {
         });
     }
 
-    // Applies `framing` to the camera right now, then either starts an
-    // animated glide toward it (when this session can actually tick
-    // frames) or — the graceful-absence case, e.g. a test session built
-    // without start()/onAnimationFrame support — applies it instantly,
-    // exactly like every pre-0.2.94 focus call already did. Either way
-    // the FINAL framing is the same deterministic value for the same
-    // target; only whether the camera visibly glides there differs.
+    // Glides toward `framing` when this session can tick frames, otherwise
+    // applies it instantly. The final framing is the same either way.
     _beginCameraFocus(framing) {
         if (!this._spatialCameraController) {
             return;
@@ -1460,2015 +686,19 @@ export class WorldNavigationSession {
     }
 
     // -----------------------------------------------------------------
-    // Local Avatar (0.2.35)
-    // -----------------------------------------------------------------
-    //
-    // Deliberately narrow: renders ONLY the current user's own avatar,
-    // combining two independent, already-existing inputs it never
-    // modifies — AvatarProfileUseCase.getEffectiveAvatar() (WHAT it
-    // looks like) and AvatarPresenceSession.current (WHERE it is) —
-    // see docs/Principles.md, "An Avatar's Location Comes From
-    // Presence, Never From The Avatar Itself." Neither subscription
-    // here ever writes back to the profile, the presence, a Document,
-    // a WorldPlacement, or any discovery/publication provider — this
-    // session's avatar wiring only ever calls the render facade.
-    _setupLocalAvatar() {
-        if (!this._avatarProfileUseCase || !this._avatarPresenceSession) {
-            return;
-        }
-        const { template, appearance } = this._avatarProfileUseCase.getEffectiveAvatar();
-        this._session.setLocalAvatar(template, appearance, this._avatarPresenceSession.current, {
-            ridingVehicle: this._isRidingMovableVehicle()
-        });
-        this._session.setLocalAvatarVisible(this._localAvatarVisible);
-
-        this._avatarProfileSubscription = this._avatarProfileUseCase.onProfileChanged((profile) => {
-            const effective = this._avatarProfileUseCase.getEffectiveAvatar();
-            this._session.updateLocalAvatarAppearance(effective.template, effective.appearance);
-            // 0.2.41 — ADVERTISE: an explicit edit publishes
-            // immediately, never waiting for the periodic republish
-            // tick below.
-            this._publishLocalAvatarProfile(profile, Date.now());
-        });
-        this._avatarPresenceSubscription = this._avatarPresenceSession.onPresenceChanged((presence) => {
-            // Bug fix — Bicycle Ground Elevation Double-Lift. While
-            // genuinely riding a movable ground vehicle, `presence.position`
-            // is not the ordinary flat on-foot fact — the frame loop below
-            // (`vehicleMovementActive`'s own branch) has already copied it
-            // verbatim from the vehicle's own domain position, which itself
-            // already carries REAL terrainHeightAt() elevation (see
-            // application/AvatarVehicleMovementController.js's own
-            // 0.9.116/0.9.119 header). Telling the render facade so lets it
-            // skip its own ground-elevation lift for this update instead of
-            // adding the real elevation a second time — see
-            // application/RenderWorldViewUseCase.js's own
-            // resolveAvatarRenderPosition()/withGroundElevation() headers
-            // for the full "why" and the matching fix on the vehicle mesh's
-            // own side (syncVehicles()).
-            this._session.updateLocalAvatarPresence(presence, { ridingVehicle: this._isRidingMovableVehicle() });
-            this._followAvatarIfEnabled(presence);
-            // 0.2.37 — ADVERTISE: publish only when
-            // AvatarPresenceSession actually accepted a new update
-            // (the same event this subscription is already reacting
-            // to) — an idle local avatar never reaches this line at
-            // all, so it publishes nothing: no movement, no sequence
-            // advancement, no network traffic.
-            //
-            // 0.2.38 — signed whenever this session's identityProvider
-            // is actually able to (see application/PresenceSigning.js);
-            // falls back to an unsigned advertisement otherwise, which
-            // is exactly what always happened before this milestone.
-            // In real deployment `_identityProvider` and
-            // `_avatarPresenceSession` are always wired together (see
-            // CreateWorldViewUseCase — both come from being logged in),
-            // so the local avatar's own presence is signed whenever it
-            // exists at all.
-            //
-            // 0.2.40 — VISIBILITY: consulted here, BEFORE anything
-            // reaches the transport, never as a receiver-side filter
-            // and never by publishing an obscured/encrypted
-            // advertisement anyway — see docs/Principles.md,
-            // "Visibility Happens Before Broadcasting, Never After."
-            // A session without a presenceVisibilityUseCase wired
-            // always advertises, exactly 0.2.37/0.2.38's own behavior.
-            const canAdvertise = this._presenceVisibilityUseCase
-                ? this._presenceVisibilityUseCase.getPolicy().shouldAdvertise(this._hasFriendContext())
-                : true;
-            if (this._presenceSyncService && canAdvertise) {
-                const advertisement = toAvatarPresenceAdvertisement(presence);
-                this._presenceSyncService.publish(signAvatarPresenceAdvertisement(advertisement, this._identityProvider));
-            }
-            // 0.3.1 — refreshed on EVERY accepted presence update,
-            // movement-driven or heartbeat-driven alike (this
-            // subscription fires for both — see the heartbeat tick
-            // below), so PRESENCE_HEARTBEAT_INTERVAL_MS only ever
-            // measures genuine idle time since the last one, exactly
-            // like `_lastProfilePublishAt`'s own bookkeeping.
-            this._lastPresenceUpdateAt = Date.now();
-        });
-
-        // 0.2.36 — Local Avatar Movement. The controller owns raw key
-        // state and the pure kinematics tick; this session only ever
-        // decides WHEN it ticks (every render frame, via the same
-        // frame loop AvatarVisual's gait clock already uses) and WHAT
-        // key events reach it at all (only while Avatar Control Mode
-        // is on — see avatarKeyDown/avatarKeyUp below). Absent entirely
-        // when `_session` doesn't support onAnimationFrame (a minimal
-        // test facade, e.g. Section C's spy) — movement simply never
-        // ticks, exactly the same graceful-absence posture every other
-        // optional collaborator in this file already follows.
-        // 0.9.119 — Vehicle–World Collision Constraint. `movementConstraint`/
-        // `treeConstraint` are built ONCE, here, and stored so the exact
-        // SAME two instances can also be handed to
-        // AvatarVehicleMovementController below — see that class's own
-        // 0.9.119 header for why: building/brick and tree collision are
-        // ONE shared collision system, parameterized by whichever body's
-        // own radius is currently moving through it, never a second,
-        // vehicle-specific copy of either constraint. `terrainConstraint`/
-        // `stepConstraint` stay avatar-only — a mounted vehicle's own Y
-        // still follows raw terrain height, unrelated to either (see
-        // application/AvatarVehicleMovementController.js's own 0.9.116
-        // header).
-        const movementConstraint = this._buildAvatarMovementConstraint();
-        const treeConstraint = this._buildAvatarTreeConstraint();
-        this._avatarMovementController = new AvatarMovementController(
-            this._avatarPresenceSession,
-            movementConstraint,
-            this._buildAvatarTerrainConstraint(),
-            this._buildAvatarStepConstraint(),
-            treeConstraint,
-            // 0.9.634 — avatar-only, the same posture terrainConstraint/
-            // stepConstraint already have (see this constructor call's own
-            // surrounding comment): a mounted vehicle's own movement stays
-            // completely untouched by water depth, unrelated scope for
-            // this milestone (see application/AvatarWaterConstraint.js's
-            // own header).
-            this._buildAvatarWaterConstraint(),
-            // Avatar-only, same posture as terrainConstraint/stepConstraint/
-            // waterConstraint above — see
-            // application/AvatarWildlifeConstraint.js's own header.
-            this._buildAvatarWildlifeConstraint()
-        );
-        // 0.9.83 — built alongside the movement controller, from the
-        // same avatarPresenceSession. See
-        // application/AvatarVehicleInteractionController.js's own
-        // header for why `mount` lives here rather than on either the
-        // movement controller or AvatarPresenceSession itself.
-        //
-        // 0.9.117 — Vehicle-Aware Dismount. This session's own
-        // `_vehicleRuntimeInstances` (constructed unconditionally in the
-        // constructor, well before any avatar exists — see that field's
-        // own header) is now also handed to the interaction controller,
-        // so its dismount-path vehicle lookup resolves the mounted
-        // vehicle's CURRENT runtime position by identity, rather than
-        // re-deriving it from a spawn-anchored deterministic requery —
-        // see that controller's own 0.9.117 header, "Vehicle identity is
-        // the primary reference, once mounted." The SAME store
-        // application/AvatarVehicleMovementController.js already writes
-        // a ridden vehicle's new position to below, and
-        // _setupVehicleRendering() already reads from — one store, three
-        // readers/writers, never a second parallel copy of "where is
-        // this vehicle right now."
-        this._avatarVehicleInteractionController = new AvatarVehicleInteractionController(
-            this._avatarPresenceSession,
-            {
-                vehicleRuntimeInstances: this._vehicleRuntimeInstances,
-                // 0.9.700 — the SAME AvatarInventoryStore
-                // `_avatarAnimalInteractionController` (below) is handed —
-                // see that field's own header for why ownership moved
-                // out of either controller.
-                avatarInventoryStore: this._avatarInventoryStore
-            }
-        );
-        // 0.9.700 — Animal Catching. Built alongside the vehicle
-        // controller above, sharing this session's own
-        // `_animalRuntimeInstances` and `_avatarInventoryStore` — the
-        // identical "one store, several readers/writers" shape this
-        // constructor already establishes for vehicles.
-        this._avatarAnimalInteractionController = new AvatarAnimalInteractionController(
-            this._avatarPresenceSession,
-            {
-                animalRuntimeInstances: this._animalRuntimeInstances,
-                avatarInventoryStore: this._avatarInventoryStore
-            }
-        );
-        // 0.9.116 — Mounted Vehicle Movement. Built alongside the mount/
-        // dismount controller above, sharing this session's own
-        // `_vehicleRuntimeInstances` (constructed unconditionally in the
-        // constructor — see that field's own header) as the ONE store
-        // both vehicle rendering and vehicle movement read from and
-        // write to.
-        //
-        // 0.9.119 — sharing the exact SAME `movementConstraint`/
-        // `treeConstraint` instances the avatar's own
-        // AvatarMovementController was just built with, above — one
-        // world-collision system, two subjects (the on-foot avatar, a
-        // ridden vehicle), never two parallel copies of the same
-        // building/brick/tree geometry.
-        this._avatarVehicleMovementController = new AvatarVehicleMovementController(
-            this._vehicleRuntimeInstances,
-            movementConstraint,
-            treeConstraint
-        );
-        this._lastAvatarFollowPosition = this._avatarPresenceSession.current.position;
-        if (typeof this._session.onAnimationFrame === 'function') {
-            this._avatarFrameSubscription = this._session.onAnimationFrame((deltaSeconds) => {
-                // 0.9.83 — mount/dismount are re-evaluated first, from
-                // whatever interaction-key state is currently held,
-                // exactly like AvatarMovementController's own W/A/S/D
-                // re-evaluation below. See that controller's own
-                // header for why this is safe to call every frame even
-                // while the key is held.
-                //
-                // 0.9.85 — deliberately ticked BEFORE movement below
-                // (reordered from 0.9.83's own original "right after
-                // movement" placement): a mount/dismount transition
-                // resolved right here must be reflected in the movement
-                // capability AvatarMovementController consumes on this
-                // SAME frame, never one frame late — see this session's
-                // own 0.9.85 constructor comment above for why a
-                // one-frame mismatch ("mount = bicycle, movement
-                // capability = WALK") would otherwise be observable.
-                this._avatarVehicleInteractionController.tick();
-                // 0.9.700 — Animal Catching. Ticked alongside the
-                // mount/dismount controller above, on the identical
-                // "held-key poll, once per frame" shape — see
-                // application/AvatarAnimalInteractionController.js#tick()'s
-                // own header. No movement-capability composition
-                // follows this one (unlike the vehicle controller,
-                // catching an animal never changes how the avatar
-                // moves), so it needs no special ordering relative to
-                // AvatarMovementController below.
-                this._avatarAnimalInteractionController.tick();
-                // 0.9.85 — resolved AFTER mount/dismount above and
-                // BEFORE movement below: the local avatar's current
-                // AvatarVehicleMount, looked up down to a VehicleType by
-                // AvatarVehicleInteractionController#mountedVehicleType()
-                // itself (never re-queried here — see that method's own
-                // header, "Vehicle lookup: a requery, never a
-                // registry"), resolved through
-                // core/AvatarVehicleMovementCapability.js's own pure
-                // resolveAvatarVehicleMovementCapability(), and handed
-                // straight to AvatarMovementController#setMovementCapability().
-                // AvatarMovementController itself never learns a
-                // VehicleType or an AvatarVehicleMount exists — see that
-                // class's own 0.9.85 header for why.
-                this._avatarMovementController.setMovementCapability(
-                    resolveAvatarVehicleMovementCapability(
-                        this._avatarVehicleInteractionController.mountedVehicleType()
-                    )
-                );
-                // 0.9.116 — Mounted Vehicle Movement. Whether THIS
-                // frame's movement intent is routed to the vehicle
-                // (below) or to the ordinary on-foot pipeline
-                // (AvatarMovementController#tick(), completely
-                // unchanged) is decided here, independently of
-                // `setMovementCapability()` above. Vehicle movement
-                // resolves its own vehicle identity from `mount()`
-                // (session-local, never distance-gated) and its own
-                // vehicle TYPE from `_vehicleRuntimeInstances` (this
-                // session's own runtime authority — see that store's own
-                // header) directly, rather than through
-                // `mountedVehicleType()`'s own lookup above — belt and
-                // suspenders, not a workaround for a bound that still
-                // exists: as of 0.9.117,
-                // `AvatarVehicleInteractionController#mountedVehicleType()`
-                // itself also resolves the mounted vehicle by identity
-                // against this SAME `_vehicleRuntimeInstances` store
-                // first (see that controller's own 0.9.117 header,
-                // "Vehicle identity is the primary reference, once
-                // mounted"), so it no longer degrades to VehicleType.NONE
-                // merely because the avatar and vehicle have ridden far
-                // from the vehicle's FIXED spawn point.
-                const mount = this._avatarVehicleInteractionController.mount();
-                const mountedVehicleInstance = mount ? this._vehicleRuntimeInstances.get(mount.vehicleId) : null;
-                const vehicleMovementActive = mountedVehicleInstance !== null
-                    && this._avatarVehicleMovementController.canMove(mountedVehicleInstance.type);
-
-                if (vehicleMovementActive) {
-                    // The VEHICLE moves; the avatar FOLLOWS — never the
-                    // reverse. See docs/Roadmap.md, 0.9.116, "Mounted
-                    // vs. unmounted." `AvatarMovementController#tick()`
-                    // is deliberately never called this frame — this
-                    // session, not that controller, decides where the
-                    // avatar's own position comes from while genuinely
-                    // riding a movable vehicle.
-                    const current = this._avatarPresenceSession.current;
-                    const moved = this._avatarVehicleMovementController.tick({
-                        seed: this.getWorldSeed(),
-                        vehicleId: mount.vehicleId,
-                        capability: resolveAvatarVehicleMovementCapability(mountedVehicleInstance.type),
-                        movementIntent: this._avatarMovementController.movementState(),
-                        currentRotationY: current.rotation.y || 0,
-                        deltaSeconds,
-                        // 0.9.127 — this session's own current steering
-                        // request, VERBATIM — see
-                        // `_vehicleSteeringIntent`'s own constructor
-                        // comment and `setVehicleSteeringIntent()`,
-                        // above. `null` (the default, until some future
-                        // milestone's input layer starts calling that
-                        // setter) reaches `tick()`'s own `steeringIntent`
-                        // parameter, which itself defaults to `null` —
-                        // this line changes nothing about a real session's
-                        // own observable behavior yet.
-                        steeringIntent: this._vehicleSteeringIntent
-                    });
-                    // 0.9.128 — Vehicle Steering Input Binding. A real
-                    // LEFT/RIGHT steering request is a single, discrete
-                    // turn, never a continuous rate (see
-                    // core/VehicleSteeringSimulation.js's own header) — it
-                    // was already handed to tick() above, in full, exactly
-                    // once. Decaying it to an explicit NONE here (never back
-                    // to `null`) is what keeps a held steer key from
-                    // compounding a further turn on every subsequent frame:
-                    // the very next tick continues along the vehicle's own
-                    // now-current heading through the SAME steering-redirect
-                    // path (see application/AvatarVehicleMovementController.js's
-                    // own tick(), "NONE -> previousHeading, unchanged") —
-                    // never a fresh LEFT/RIGHT re-issued every frame a steer
-                    // key merely happens to still be physically held. See
-                    // docs/Roadmap.md, 0.9.127's own "A steering request is
-                    // a single, discrete turn, not a continuous rate," and
-                    // 0.9.128.
-                    if (this._vehicleSteeringIntent && !this._vehicleSteeringIntent.isNone) {
-                        this.setVehicleSteeringIntent(VehicleSteeringIntent.none());
-                    }
-                    if (moved) {
-                        const positionChanged = moved.vehicleInstance.position.x !== current.position.x
-                            || moved.vehicleInstance.position.y !== current.position.y
-                            || moved.vehicleInstance.position.z !== current.position.z;
-                        const rotationChanged = Math.abs(moved.rotationY - (current.rotation.y || 0)) > 1e-6;
-                        // "No movement, no sequence advancement, no
-                        // network traffic" (docs/Principles.md) applies
-                        // to a stationary mounted vehicle exactly as it
-                        // already does to an idle on-foot avatar.
-                        if (positionChanged || rotationChanged) {
-                            this._avatarPresenceSession.update({
-                                position: moved.vehicleInstance.position,
-                                rotation: { y: moved.rotationY }
-                            });
-                        }
-                    }
-                } else {
-                    // Not currently moving a vehicle (unmounted, or
-                    // mounted on something this codebase cannot yet
-                    // move) — this controller's own transient per-ride
-                    // bookkeeping is cleared so a LATER ride never
-                    // inherits it (see
-                    // AvatarVehicleMovementController#reset()'s own
-                    // header), and the ordinary on-foot pipeline runs
-                    // completely UNCHANGED from before this milestone.
-                    this._avatarVehicleMovementController.reset();
-                    this._avatarMovementController.tick(deltaSeconds);
-                }
-                const now = Date.now();
-                // 0.2.44 — expires a finished gesture and refreshes the
-                // local avatar's facing override, both purely local,
-                // purely presentation — see
-                // _updateLocalAvatarInteractionPresentation()'s own
-                // header.
-                this._updateLocalAvatarInteractionPresentation(now);
-                // 0.2.41 — periodic profile republish, rides the SAME
-                // frame loop as movement — see
-                // PROFILE_REPUBLISH_INTERVAL_MS's own comment for why
-                // this exists at all (a fire-and-forget transport has
-                // no "catch me up" mechanism; this is the ONLY thing
-                // that lets a replica joining mid-session eventually
-                // see current appearance without an explicit edit ever
-                // happening).
-                if (this._avatarProfileSyncService && now - this._lastProfilePublishAt >= PROFILE_REPUBLISH_INTERVAL_MS) {
-                    this._publishLocalAvatarProfile(this._avatarProfileUseCase.getProfile(), now);
-                }
-                // 0.3.1 — periodic presence HEARTBEAT: republishes the
-                // CURRENT, UNCHANGED presence once the local avatar has
-                // been idle for PRESENCE_HEARTBEAT_INTERVAL_MS — see
-                // that constant's own comment for why an idle-but-still-
-                // present avatar otherwise ages into STALE/ABSENT on
-                // every OTHER replica's receiving end. Movement's own
-                // tick() above already published (and refreshed
-                // `_lastPresenceUpdateAt`, via the onPresenceChanged
-                // subscription both paths share) if anything actually
-                // changed this frame, so this only ever fires while
-                // genuinely idle — never a second publish for the same
-                // movement. Routed through AvatarPresenceSession.update()
-                // rather than a bespoke resend, so it advances `sequence`
-                // exactly like a real movement would (a raw resend of
-                // the same sequence is rejected as stale/duplicate — see
-                // core/PresenceIngestion.js) and reaches every other
-                // subscriber of onPresenceChanged identically.
-                if (this._avatarPresenceSession && now - this._lastPresenceUpdateAt >= PRESENCE_HEARTBEAT_INTERVAL_MS) {
-                    const current = this._avatarPresenceSession.current;
-                    this._avatarPresenceSession.update({
-                        position: current.position,
-                        rotation: current.rotation,
-                        animation: current.animation
-                    });
-                }
-            });
-        }
-    }
-
-    // 0.2.42 — builds the LOCAL avatar's movement constraint from
-    // state this session already owns: `_loadedDocuments` (the exact
-    // streaming set updateSpatialView() maintains — see
-    // docs/Principles.md, "The Local Avatar Is Constrained By
-    // Collision Geometry Currently Available To This Replica"),
-    // `_getWorldPosition` (already the one source of truth for a
-    // document's world offset, fork-local-override included), and
-    // `_registry` (the BrickRegistry every other spatial use case here
-    // already shares). No new constructor dependency on
-    // WorldNavigationSession itself — collision is entirely DERIVED
-    // from state that already exists for other reasons, never a
-    // separately-wired collaborator. Always built, unconditionally:
-    // an empty `_loadedDocuments` (nothing streamed in yet) simply
-    // means the constraint finds no obstacles and never alters
-    // movement — the exact same graceful-absence behavior as if no
-    // constraint were wired at all.
-    _buildAvatarMovementConstraint() {
-        return new AvatarMovementConstraint({
-            loadedDocuments: this._loadedDocuments,
-            getWorldPosition: (documentId) => this._getWorldPosition(documentId),
-            brickRegistry: this._registry,
-            // 0.3.2 — the SAME DEFAULT_MAX_STEP_HEIGHT
-            // _buildAvatarStepConstraint() below builds its own
-            // constraint with: a single shared constant, so a brick
-            // this class excludes from horizontal collision as
-            // "climbable" and the brick AvatarStepConstraint actually
-            // climbs are always talking about the exact same height
-            // threshold, never two constants that could quietly drift
-            // apart.
-            maxStepHeight: DEFAULT_MAX_STEP_HEIGHT,
-            // Bug fix — Placed StructurePlacement instances previously
-            // contributed zero collision at all: this is the same
-            // resolver renderer/WorldRenderer.js already uses to RENDER
-            // them, reused here so a placed structure's bricks are as
-            // solid as an ordinary building's.
-            structureResolver: this._structureResolver
-        });
-    }
-
-    // 0.2.77 — builds the LOCAL avatar's terrain-slope constraint.
-    // Unlike _buildAvatarMovementConstraint() above, this needs no
-    // state from this session at all: terrain is a pure function of
-    // (seed, x, z), always computable for any coordinate regardless of
-    // which documents happen to be streamed in nearby, so there is no
-    // "currently available to this replica" concept to wire up here —
-    // see application/AvatarTerrainConstraint.js's own header.
-    // AvatarTerrainConstraint's own constructor defaults (the same
-    // shared DEFAULT_WORLD_SEED every other terrain query point in
-    // this codebase reads, and a fixed default walkable-slope limit)
-    // are exactly what a real session wants, so nothing is passed
-    // here — always built, unconditionally, the same posture
-    // _buildAvatarMovementConstraint() already established.
-    _buildAvatarTerrainConstraint() {
-        return new AvatarTerrainConstraint();
-    }
-
-    // 0.3.2 — builds the LOCAL avatar's Step-Up Movement constraint,
-    // from exactly the same already-owned state
-    // _buildAvatarMovementConstraint() above reads (`_loadedDocuments`,
-    // `_getWorldPosition`, `_registry`) — collision and step-up are
-    // both entirely DERIVED from the same streamed-in geometry, never
-    // a second, separately-tracked obstacle set. Always built,
-    // unconditionally, same posture as both constraints above: an
-    // empty `_loadedDocuments` simply means no brick ever offers a
-    // step, and terrain alone (a pure function of seed/x/z) decides
-    // support height — the exact same graceful-absence behavior as if
-    // this constraint were never wired at all.
-    _buildAvatarStepConstraint() {
-        return new AvatarStepConstraint({
-            loadedDocuments: this._loadedDocuments,
-            getWorldPosition: (documentId) => this._getWorldPosition(documentId),
-            brickRegistry: this._registry,
-            // Bug fix — see _buildAvatarMovementConstraint()'s own
-            // comment just above: a StructurePlacement's walkable top
-            // must be as real as an ordinary building's.
-            structureResolver: this._structureResolver
-        });
-    }
-
-    // 0.9.63 — builds the LOCAL avatar's tree-collision constraint.
-    // Like _buildAvatarTerrainConstraint() above, this needs no state
-    // from this session at all: tree placement is a pure function of
-    // (seed, x, z), always computable for any coordinate regardless of
-    // which documents happen to be streamed in nearby — see
-    // application/AvatarTreeConstraint.js's own header.
-    // AvatarTreeConstraint's own constructor default (the same shared
-    // DEFAULT_WORLD_SEED every other seed-driven query point in this
-    // codebase reads) is exactly what a real session wants, so nothing
-    // is passed here — always built, unconditionally, the same posture
-    // _buildAvatarTerrainConstraint() already established.
-    _buildAvatarTreeConstraint() {
-        return new AvatarTreeConstraint();
-    }
-
-    // 0.9.634 — builds the LOCAL avatar's shallow-water depth constraint.
-    // Like _buildAvatarTerrainConstraint()/_buildAvatarTreeConstraint()
-    // above, this needs no state from this session at all: water depth
-    // is a pure function of (seed, x, z), always computable for any
-    // coordinate regardless of which documents happen to be streamed in
-    // nearby — see application/AvatarWaterConstraint.js's own header.
-    // AvatarWaterConstraint's own constructor defaults (the same shared
-    // DEFAULT_WORLD_SEED every other seed-driven query point in this
-    // codebase reads, and core/AvatarWaterWalkability.js's own default
-    // walking-depth limit) are exactly what a real session wants, so
-    // nothing is passed here — always built, unconditionally, the same
-    // posture _buildAvatarTerrainConstraint() already established.
-    _buildAvatarWaterConstraint() {
-        return new AvatarWaterConstraint();
-    }
-
-    // Builds the LOCAL avatar's wildlife-collision constraint. Like
-    // _buildAvatarTreeConstraint() above, this needs no state from this
-    // session at all: animal placement is a pure function of (seed, x, z),
-    // always computable for any coordinate regardless of which documents
-    // happen to be streamed in nearby — see
-    // application/AvatarWildlifeConstraint.js's own header.
-    // AvatarWildlifeConstraint's own constructor default (the same shared
-    // DEFAULT_WORLD_SEED every other seed-driven query point in this
-    // codebase reads) is exactly what a real session wants, so nothing is
-    // passed here — always built, unconditionally, the same posture
-    // _buildAvatarTreeConstraint() already established.
-    _buildAvatarWildlifeConstraint() {
-        return new AvatarWildlifeConstraint();
-    }
-
-    // -----------------------------------------------------------------
-    // Remote Avatar Presence (0.2.37)
-    // -----------------------------------------------------------------
-    //
-    // Deliberately independent of hasLocalAvatar(): a logged-out
-    // viewer can still SEE other participants' avatars even though
-    // they have none of their own to publish — see
-    // docs/Principles.md, "Watching Presence Never Requires Having
-    // One." Wires the ADVERTISE/PULL round trip the design doc calls
-    // for: PresenceSyncService owns the transport + ingestion
-    // boundary (application/LocalPresenceStore.js's sequence-based
-    // acceptance), RemoteAvatarRegistry owns reconciling which avatars
-    // exist and their visual interpolation — this method only ever
-    // decides WHEN pull()/sync()/tick() run (once per render frame,
-    // the same frame loop every other time-based avatar concern in
-    // this file already uses) and never touches the render facade
-    // directly itself.
-    _setupRemoteAvatars() {
-        if (!this._presenceBroadcastProvider) {
-            return;
-        }
-        const localAvatarId = this._avatarPresenceSession ? this._avatarPresenceSession.current.avatarId : null;
-        // 0.2.60 — every trust boundary below is built with the SAME
-        // `isBlocked` predicate (defaulting to `() => false` when this
-        // session wasn't given one), each its OWN instance, never
-        // shared — the same "presence-authority, profile-authority, and
-        // interaction-authority stay independently established" posture
-        // application/AvatarProfileTrustBoundary.js's own header already
-        // documents, extended here to blocking.
-        const isBlocked = this._isBlocked || (() => false);
-        this._presenceSyncService = new PresenceSyncService(this._presenceBroadcastProvider, {
-            localAvatarId,
-            store: new LocalPresenceStore({ trustBoundary: new PresenceTrustBoundary({ isBlocked }) })
-        });
-
-        // A remote avatar's APPEARANCE is not synchronized at all in
-        // 0.2.37 (see the design doc's own scope list) — every remote
-        // avatar renders with the same fixed, resolved-once
-        // placeholder template+appearance. Resolved here (application
-        // layer), never inside the renderer — see docs/Principles.md,
-        // "A Template Is A Closed Vocabulary, Not An Asset Loader."
-        // Absent entirely when no registry was wired: remote presence
-        // is still tracked and synced, it just never produces a
-        // visual, the same graceful-absence posture every optional
-        // collaborator in this file already follows.
-        let defaultTemplate = null;
-        let defaultAppearance = null;
-        if (this._avatarTemplateRegistry) {
-            defaultTemplate = this._avatarTemplateRegistry.get(DEFAULT_AVATAR_TEMPLATE_ID);
-            defaultAppearance = defaultTemplate ? defaultTemplate.defaultAppearance : null;
-        }
-
-        // 0.2.41 — OPTIONAL: a session without a profile broadcast
-        // provider still renders every remote avatar exactly as 0.2.37
-        // always did (the same fixed placeholder), it just never
-        // upgrades to anyone's real appearance. See docs/Principles.md,
-        // "Appearance And Position Are Different Lifecycles, Never One
-        // Message."
-        if (this._avatarProfileBroadcastProvider) {
-            this._avatarProfileSyncService = new AvatarProfileSyncService(this._avatarProfileBroadcastProvider, {
-                localAvatarId,
-                store: new LocalAvatarProfileStore({ trustBoundary: new AvatarProfileTrustBoundary({ isBlocked }) })
-            });
-            this._remoteAvatarAppearanceRegistry = new RemoteAvatarAppearanceRegistry(
-                this._session, this._avatarProfileSyncService, this._avatarTemplateRegistry,
-                { defaultTemplate, defaultAppearance }
-            );
-        }
-
-        // 0.2.45 — OPTIONAL: a session without an interaction broadcast
-        // provider still renders every remote avatar exactly as before,
-        // it just never plays a received GREET/WAVE/POINT for anyone.
-        // See docs/Principles.md, "Presence Describes An Avatar's
-        // Current State; Interaction Describes An Event That Happened."
-        if (this._avatarInteractionBroadcastProvider) {
-            this._avatarInteractionSyncService = new AvatarInteractionSyncService(this._avatarInteractionBroadcastProvider, {
-                localAvatarId,
-                trustBoundary: new AvatarInteractionTrustBoundary({ isBlocked })
-            });
-        }
-
-        this._remoteAvatarRegistry = new RemoteAvatarRegistry(this._session, {
-            defaultTemplate, defaultAppearance,
-            appearanceResolver: this._remoteAvatarAppearanceRegistry
-        });
-        if (typeof this._session.setRemoteAvatarsVisible === 'function') {
-            this._session.setRemoteAvatarsVisible(this._remoteAvatarsVisible);
-        }
-
-        if (typeof this._session.onAnimationFrame === 'function') {
-            this._remoteAvatarFrameSubscription = this._session.onAnimationFrame(() => {
-                const now = Date.now();
-                // 0.2.41 — profile inbox is drained FIRST, before
-                // presence sync creates any brand-new avatar visual.
-                // Presence and profile are two independent, racing
-                // transports (see core/AvatarProfileAdvertisement.js's
-                // own header) — a profile that already arrived this
-                // frame must be sitting in LocalAvatarProfileStore
-                // BEFORE RemoteAvatarRegistry.sync() below ever
-                // consults the appearanceResolver for a stranger it's
-                // seeing for the first time, or that first visual
-                // wastefully renders the placeholder even though the
-                // real appearance was already known. pull() itself is
-                // cheap (an empty inbox almost every frame — profile
-                // updates are rare).
-                if (this._avatarProfileSyncService) {
-                    this._avatarProfileSyncService.pull();
-                }
-                const knownPresences = this._presenceSyncService.pull(now);
-                this._remoteAvatarRegistry.sync(knownPresences, now);
-                this._remoteAvatarRegistry.tick(now);
-                // 0.2.39 — both read the SAME knownPresences/registry
-                // this frame already computed; neither adds a query.
-                this._pruneAvatarInteractionIfGone(knownPresences);
-                this._followRemoteAvatarIfEnabled(now);
-                // 0.2.41 — now that sync() above has settled which
-                // avatarIds exist, apply any profileRevision that
-                // changed for an avatar that ALREADY had a visual
-                // (sync() above already handled a brand-new one).
-                if (this._avatarProfileSyncService) {
-                    this._remoteAvatarAppearanceRegistry.sync(this._remoteAvatarRegistry.knownAvatarIds());
-                }
-                // 0.2.45 — drains any newly-accepted interaction EVENTS
-                // and plays each one on its sender's own remote avatar
-                // visual, then expires whichever received gestures have
-                // finished playing. See _applyRemoteAvatarInteraction/
-                // _expireRemoteAvatarGestures below for why this is
-                // never a "known list" the way presence/profile pull()
-                // returns — an interaction event is rendered once and
-                // then genuinely forgotten.
-                if (this._avatarInteractionSyncService) {
-                    for (const event of this._avatarInteractionSyncService.pull()) {
-                        this._applyRemoteAvatarInteraction(event, now);
-                    }
-                }
-                this._expireRemoteAvatarGestures(now);
-            });
-        }
-    }
-
-    // 0.2.45 — plays ONE accepted interaction event on the SENDER's own
-    // remote avatar visual — "Remote interaction event -> RemoteAvatarVisual,"
-    // per the design doc's own pipeline. Deliberately keyed by
-    // `event.avatarId` (who PERFORMED the gesture), never
-    // `event.targetAvatarId`: the gesture is presentation on the
-    // sender's own body, exactly like the LOCAL half 0.2.44 already
-    // established (a wave is rendered on Bob, not teleported onto
-    // Alice) — see core/AvatarInteractionAdvertisement.js's own header
-    // for why `targetAvatarId` is a claim, never an instruction. A
-    // no-op if the sender isn't currently a known (presence-driven)
-    // remote avatar, or the render facade doesn't support gestures —
-    // the same graceful-absence posture every other optional avatar
-    // surface in this file already follows.
-    _applyRemoteAvatarInteraction(event, now) {
-        if (!this._remoteAvatarRegistry || !this._remoteAvatarRegistry.has(event.avatarId)) {
-            return;
-        }
-        if (!this._session || typeof this._session.setRemoteAvatarGesture !== 'function') {
-            return;
-        }
-        this._session.setRemoteAvatarGesture(event.avatarId, event.kind);
-        this._remoteAvatarGestureExpiry.set(event.avatarId, now + GESTURE_DURATION_MS);
-    }
-
-    // 0.2.45 — the receiving-side counterpart to
-    // _updateLocalAvatarInteractionPresentation()'s own local-gesture
-    // expiry: once a received gesture's short lifetime elapses, clears
-    // it back to no-gesture, with no explicit "stop" message from the
-    // sender ever required or expected — see docs/Principles.md,
-    // "Presence Describes An Avatar's Current State; Interaction Describes
-    // An Event That Happened (0.2.45)." Reuses the SAME
-    // GESTURE_DURATION_MS a local gesture plays for, so a sender's own
-    // avatar and everyone watching it see the gesture for the same
-    // visual duration.
-    _expireRemoteAvatarGestures(now) {
-        if (this._remoteAvatarGestureExpiry.size === 0) {
-            return;
-        }
-        if (!this._session || typeof this._session.setRemoteAvatarGesture !== 'function') {
-            return;
-        }
-        for (const [avatarId, expiresAt] of this._remoteAvatarGestureExpiry) {
-            if (now >= expiresAt) {
-                this._remoteAvatarGestureExpiry.delete(avatarId);
-                this._session.setRemoteAvatarGesture(avatarId, null);
-            }
-        }
-    }
-
-    // How many OTHER avatars this replica currently believes are
-    // present/stale (never counts the local avatar) — a debug/UI
-    // surface, not something anything internal reads.
-    getKnownRemoteAvatarCount() {
-        return this._remoteAvatarRegistry ? this._remoteAvatarRegistry.size : 0;
-    }
-
-    // 0.2.38 — the unobtrusive World View diagnostic surface the
-    // design doc asked for: trusted/stale/conflicting/unavailable
-    // counts over exactly the same known-presences list
-    // getKnownRemoteAvatarCount() already summarizes as one number.
-    // Reads from PresenceSyncService.listKnownPresences() (never
-    // pull()) so calling this from the UI has no side effects and
-    // never drains the inbox out from under the real per-frame
-    // pull()/sync()/tick() loop above.
-    getRemoteAvatarDiagnostics() {
-        if (!this._presenceSyncService) {
-            return summarizePresenceDiagnostics([]);
-        }
-        return summarizePresenceDiagnostics(this._presenceSyncService.listKnownPresences(Date.now()));
-    }
-
-    // 0.2.43 — "who is near me?" as a derived, local, geometric fact —
-    // see docs/Principles.md, "Proximity Is Derived, Never Announced."
-    // Reads from PresenceSyncService.listKnownPresences() (never
-    // pull()), the EXACT SAME trusted remote-presence list that
-    // already drives rendering (RemoteAvatarRegistry.sync()) and the
-    // diagnostics summary above — proximity is a new VIEW over
-    // already-trusted state, never a second, independently-verified
-    // copy of it. Requires a local avatar (there is no "near ME"
-    // without a me); returns [] gracefully otherwise, the same
-    // graceful-absence posture every other optional avatar surface in
-    // this file already follows.
-    getNearbyAvatars(radius = DEFAULT_NEARBY_AVATAR_RADIUS) {
-        if (!this._avatarPresenceSession || !this._presenceSyncService) {
-            return [];
-        }
-        const localPosition = this._avatarPresenceSession.current.position;
-        const knownPresences = this._presenceSyncService.listKnownPresences(Date.now());
-        return computeNearbyAvatars({ localPosition, knownPresences, radius });
-    }
-
-    // 0.2.43 — the one, shared place a friendly name is resolved for
-    // ANY avatarId, local or remote — used by getNearbyAvatars()
-    // consumers (the "Nearby Avatars" panel doesn't want to show raw
-    // avatarIds) and by _inspectRemoteAvatar() below, replacing what
-    // used to be a hard "never distributed" fallback to ownerIdentity.
-    // That was true when 0.2.39 wrote it; it stopped being true the
-    // moment 0.2.41 started distributing AvatarProfile.displayName
-    // over its own channel — this is that catch-up. Degrades in the
-    // same order either way: real displayName, then ownerIdentity,
-    // then the avatarId itself, then (local avatar only) "You" — never
-    // throws, never returns an empty string.
-    getAvatarDisplayName(avatarId) {
-        if (this.isLocalAvatarId(avatarId)) {
-            const profile = this._avatarProfileUseCase ? this._avatarProfileUseCase.getProfile() : null;
-            return (profile && (profile.displayName || profile.ownerIdentity)) || 'You';
-        }
-        const knownProfile = this._avatarProfileSyncService ? this._avatarProfileSyncService.getKnownProfile(avatarId) : null;
-        if (knownProfile && knownProfile.displayName) {
-            return knownProfile.displayName;
-        }
-        const known = this._presenceSyncService ? this._presenceSyncService.listKnownPresences(Date.now()) : [];
-        const entry = known.find((k) => k.advertisement.avatarId === avatarId);
-        return (entry && entry.advertisement.ownerIdentity) || avatarId;
-    }
-
-    // 0.2.43 — targets `avatarId` as the avatar interaction target
-    // WITHOUT a screen-space pick: the "Nearby Avatars" panel's own
-    // row click needs exactly the outcome pick()'s avatar branch
-    // already produces (see docs/Principles.md, "Avatars Are Never
-    // Document Selection" — clears any brick/ground selection the same
-    // way), just triggered from a UI list entry instead of a raycast.
-    // Validates `avatarId` is actually KNOWN first (the local avatar,
-    // or a remote one whose presence hasn't expired) — unlike pick(),
-    // which can trust a raycast hit because it only ever hits a
-    // currently-rendered avatar, a UI-supplied id could be stale.
-    // Returns the new AvatarInteractionState on success, null
-    // (no-op) otherwise — the same "not currently known" contract
-    // followAvatarId() already established.
-    targetAvatar(avatarId) {
-        const known = this.isLocalAvatarId(avatarId)
-            || Boolean(this._remoteAvatarRegistry && this._remoteAvatarRegistry.has(avatarId));
-        if (!known) {
-            return null;
-        }
-        this._setAvatarInteraction(AvatarInteractionState.avatar(avatarId));
-        this._setSpatialSelection(SpatialSelectionState.empty());
-        if (this._session) {
-            this._session.clearSelection();
-            this._session.clearHover();
-        }
-        this._refreshGizmo();
-        return this._avatarInteraction;
-    }
-
-    // 0.2.44 — GREET/WAVE/POINT: a LOCAL, presentation-only gesture
-    // the user chooses to perform at the CURRENT avatar interaction
-    // target. See docs/Principles.md, "Observation Does Not Imply
-    // Authority, And Interaction Does Not Imply Control": this never
-    // touches AvatarPresence and never reaches the transport (see the
-    // design doc's own scope — no wire format change in 0.2.44). It
-    // only ever changes THIS replica's own local AvatarInteractionState,
-    // which _updateLocalAvatarInteractionPresentation() below then
-    // renders as a temporary pose overlay on Bob's OWN avatar — never
-    // Alice's; Alice's replica never even hears about it.
-    //
-    // Requires a REMOTE target: gesturing with nothing targeted, or at
-    // yourself, is a no-op, the same "not currently a valid target"
-    // posture followAvatarId() already has. Rate-limited by
-    // core/AvatarInteractionCooldown.js so holding a button (or a
-    // scripted spam) can never restart the gesture faster than the
-    // shared cooldown allows. Returns true when the gesture was
-    // actually accepted, false otherwise (no target, invalid kind, or
-    // still on cooldown) — the same boolean-outcome contract
-    // followAvatarId() already established.
-    performAvatarInteraction(kind) {
-        if (this._avatarInteraction.isEmpty || this.isLocalAvatarId(this._avatarInteraction.avatarId)) {
-            return false;
-        }
-        if (!isValidInteractionKind(kind) || kind === AvatarInteractionKind.NONE) {
-            return false;
-        }
-        const now = Date.now();
-        if (!canPerformInteraction(this._lastInteractionPerformedAt, now)) {
-            return false;
-        }
-        const targetAvatarId = this._avatarInteraction.avatarId;
-        this._lastInteractionPerformedAt = now;
-        this._setAvatarInteraction(this._avatarInteraction.withInteraction(kind, now));
-        // 0.2.45 — ADVERTISE: see _publishAvatarInteraction's own header.
-        // Never changes this method's return contract — a gesture that
-        // fails to publish (no sync service wired, no local avatar
-        // identity, or visibility policy says HIDDEN) still fully
-        // happened LOCALLY, exactly 0.2.44's own behavior.
-        this._publishAvatarInteraction(kind, targetAvatarId, now);
-        return true;
-    }
-
-    // 0.2.45 — the ONE place a performed gesture is signed and handed
-    // to its own transport, mirroring _publishLocalAvatarProfile's role
-    // one layer over. Reuses the EXACT same visibility gate presence/
-    // profile publishing already share — see docs/Principles.md,
-    // "Presence And Profile Share One Publication Gate," extended here
-    // to interactions too: HIDDEN/empty-FRIENDS means a gesture never
-    // reaches the transport either, one single policy. A single
-    // fire-and-forget publish, deliberately never a periodic republish
-    // the way profile gets one — see
-    // application/AvatarInteractionSyncService.js's own header for why
-    // a missed gesture is not something a later-joining replica should
-    // ever catch up on.
-    _publishAvatarInteraction(kind, targetAvatarId, now) {
-        if (!this._avatarInteractionSyncService || !this._avatarPresenceSession) {
-            return;
-        }
-        const canAdvertise = this._presenceVisibilityUseCase
-            ? this._presenceVisibilityUseCase.getPolicy().shouldAdvertise(this._hasFriendContext())
-            : true;
-        if (!canAdvertise) {
-            return;
-        }
-        this._localInteractionSequence += 1;
-        const presence = this._avatarPresenceSession.current;
-        const advertisement = toAvatarInteractionAdvertisement({
-            avatarId: presence.avatarId,
-            ownerIdentity: presence.ownerIdentity,
-            kind,
-            targetAvatarId,
-            sequence: this._localInteractionSequence,
-            timestamp: now
-        });
-        this._avatarInteractionSyncService.publish(signAvatarInteractionAdvertisement(advertisement, this._identityProvider));
-    }
-
-    // A pure client rendering preference, exactly like
-    // isLocalAvatarVisible/setLocalAvatarVisible — never touches
-    // presence sync, the known-remote-avatar set, or anything
-    // persisted; only which already-built visuals are actually in the
-    // scene.
-    isRemoteAvatarsVisible() {
-        return this._remoteAvatarsVisible;
-    }
-
-    setRemoteAvatarsVisible(visible) {
-        this._remoteAvatarsVisible = Boolean(visible);
-        if (this._session && typeof this._session.setRemoteAvatarsVisible === 'function') {
-            this._session.setRemoteAvatarsVisible(this._remoteAvatarsVisible);
-        }
-    }
-
-    // 0.2.41 — the ONE place a local profile advertisement is signed
-    // and handed to the transport, called from two sites: an explicit
-    // profile edit (immediate) and the periodic republish tick in
-    // _setupLocalAvatar() above (eventual, for a replica that joins
-    // mid-session).
-    //
-    // 0.2.58 — SUPERSEDES 0.2.41's "Presence And Profile Share One
-    // Publication Gate": profile now gates on its OWN
-    // avatarProfileVisibilityUseCase when one is wired, completely
-    // independent of presenceVisibilityUseCase — see docs/Principles.md,
-    // "Profile Gets Its Own Publication Gate, Superseding The Shared
-    // One." `Presence: HIDDEN, Profile: PUBLIC` and `Presence: PUBLIC,
-    // Profile: HIDDEN` are now both real, independently-representable
-    // configurations, exactly as core/AvatarProfileVisibilityPolicy.js's
-    // own header always intended once a real profile-visibility
-    // configuration surface existed. A session that does NOT wire
-    // avatarProfileVisibilityUseCase (any pre-0.2.58 caller) falls back
-    // to the EXACT 0.2.41 shared-gate behavior, unchanged — this is a
-    // purely ADDITIVE change, never a breaking one.
-    _publishLocalAvatarProfile(profile, now) {
-        this._lastProfilePublishAt = now;
-        if (!this._avatarProfileSyncService) {
-            return;
-        }
-        const canAdvertise = this._avatarProfileVisibilityUseCase
-            ? this._avatarProfileVisibilityUseCase.getPolicy().shouldAdvertise(this._hasFriendContext())
-            : (this._presenceVisibilityUseCase ? this._presenceVisibilityUseCase.getPolicy().shouldAdvertise(this._hasFriendContext()) : true);
-        if (!canAdvertise) {
-            return;
-        }
-        const advertisement = toAvatarProfileAdvertisement(profile);
-        this._avatarProfileSyncService.publish(signAvatarProfileAdvertisement(advertisement, this._identityProvider));
-    }
-
-    // 0.2.58 — the one place `_hasFriend` (see the constructor's own
-    // comment) is actually consulted and turned into the `{ hasFriend }`
-    // context both PresenceVisibilityPolicy#shouldAdvertise() and
-    // AvatarProfileVisibilityPolicy#shouldAdvertise() accept. Called
-    // fresh every time, never cached, exactly like every other
-    // visibility decision in this file.
-    _hasFriendContext() {
-        return { hasFriend: this._hasFriend ? Boolean(this._hasFriend()) : false };
-    }
-
-    // Shifts the camera by exactly the avatar's own movement delta —
-    // see docs/Principles.md, "Following The Avatar Never Redefines
-    // What The Camera Is Looking At (0.2.36)." Deliberately calls
-    // ONLY moveCamera() (position AND target shifted together,
-    // preserving whatever orbit offset the user last set) — never
-    // focusDocument()/setActiveDocument(), so following the avatar can
-    // never change `_focusedDocumentId`/`_activeDocumentId` or fork
-    // anything. Runs regardless of whether follow is enabled (so the
-    // tracked position never goes stale) but only ever MOVES the
-    // camera when it is.
-    _followAvatarIfEnabled(presence) {
-        const previous = this._lastAvatarFollowPosition;
-        this._lastAvatarFollowPosition = presence.position;
-        // 0.3.2 — a selected Camera Perspective takes over camera
-        // placement on every presence update, superseding the plain
-        // delta-preserving follow below: a perspective's whole point is
-        // a FIXED offset relative to the avatar (eye height, behind-
-        // and-above, straight overhead), never "whatever offset the
-        // user happened to leave the orbit camera at." See
-        // core/CameraPerspective.js and docs/Principles.md, "Camera
-        // Perspective Determines An Offset; It Never Replaces The
-        // Camera Machinery (0.3.2)." Runs regardless of
-        // `_followAvatarEnabled` — selecting a perspective IS a
-        // stronger, always-on form of following your own avatar.
-        if (this._cameraPerspective && this._spatialCameraController) {
-            this._applyCameraPerspectiveFraming(presence.position, presence.rotation ? presence.rotation.y : null);
-            return;
-        }
-        if (!this._followAvatarEnabled || !this._spatialCameraController || !previous) {
-            return;
-        }
-        const delta = {
-            x: presence.position.x - previous.x,
-            y: presence.position.y - previous.y,
-            z: presence.position.z - previous.z
-        };
-        if (delta.x === 0 && delta.y === 0 && delta.z === 0) {
-            return;
-        }
-        this._spatialCameraController.moveCamera(delta);
-    }
-
-    // Applies `perspective`'s deterministic offset around `position`/
-    // `headingDegrees` directly (never through _beginCameraFocus()'s
-    // glide-once animator — that machinery is for a discrete, one-shot
-    // user action like clicking a Locations-panel entry; a perspective
-    // re-frames every single presence update, so applying it instantly
-    // each tick already IS continuous, smooth tracking, exactly like
-    // moveCamera() above already is for plain Follow Avatar).
-    _applyCameraPerspectiveFraming(position, headingDegrees) {
-        const framing = computeCameraFraming(this._cameraPerspective, position, headingDegrees);
-        if (framing) {
-            this._spatialCameraController.applyFraming(framing);
-        }
-    }
-
-    // Whether Avatar Control Mode currently captures W/A/S/D/Shift/
-    // Space — see avatarKeyDown/avatarKeyUp. An explicit toggle, never
-    // implied by focus/hover, so typing in a search box can never
-    // accidentally walk the avatar away — see the design doc's own
-    // concern and docs/Principles.md.
-    isAvatarControlModeActive() {
-        return this._avatarControlModeActive;
-    }
-
-    // 0.9.83 — the local avatar's current AvatarVehicleMount (or `null`
-    // when not mounted), read straight off
-    // application/AvatarVehicleInteractionController.js#mount() — a
-    // debug/UI surface, the session-level counterpart to
-    // isAvatarControlModeActive() above and isCollidedWithTree()/
-    // verticalState() on the movement controller. Returns `null` when
-    // no avatar exists at all, the same graceful-absence posture every
-    // other avatar-related getter in this file already follows.
-    avatarVehicleMount() {
-        return this._avatarVehicleInteractionController
-            ? this._avatarVehicleInteractionController.mount()
-            : null;
-    }
-
-    // Bug fix — Bicycle Ground Elevation Double-Lift. Whether the local
-    // avatar's OWN presence.position right now is the vehicle-follow
-    // fact — copied verbatim from a movable, mounted vehicle's own
-    // raw-terrain-elevation Y (see application/
-    // AvatarVehicleMovementController.js's own 0.9.116/0.9.119 header) —
-    // rather than the ordinary flat on-foot baseline. Deliberately
-    // mirrors the frame loop's own `vehicleMovementActive` gate, below
-    // (mounted AND the mounted type is one this codebase can actually
-    // move — merely being mounted on an AERIAL_VEHICLE/DRONE never
-    // touches the avatar's position, so it must never skip the lift
-    // either), so `_setupLocalAvatar()`'s render calls ask the identical
-    // question the movement tick already answered for this same frame,
-    // never a second, independently-derived copy of it. `null` at any
-    // step (no interaction controller, no mount, no runtime store, no
-    // movement controller — every one of them graceful-absence, matching
-    // every other vehicle getter in this file) reads as "not riding."
-    _isRidingMovableVehicle() {
-        if (!this._avatarVehicleInteractionController || !this._vehicleRuntimeInstances || !this._avatarVehicleMovementController) {
-            return false;
-        }
-        const mount = this._avatarVehicleInteractionController.mount();
-        if (!mount) {
-            return false;
-        }
-        const mountedVehicleInstance = this._vehicleRuntimeInstances.get(mount.vehicleId);
-        return mountedVehicleInstance !== null
-            && this._avatarVehicleMovementController.canMove(mountedVehicleInstance.type);
-    }
-
-    // 0.9.98 — Vehicle Mount/Dismount World View Integration. The local
-    // avatar's current mount/dismount AFFORDANCE — a plain pass-through
-    // to application/AvatarVehicleInteractionController.js#vehicleInteractionState(),
-    // never a second computation. See that method's own header for the
-    // exact `{ mounted, vehicleType, targetVehicleId }` shape and why it
-    // is safe to poll from World View on its own independent cadence.
-    // Returns `null` when no local avatar exists at all, the same
-    // graceful-absence posture avatarVehicleMount() above already
-    // follows.
-    avatarVehicleInteractionState() {
-        return this._avatarVehicleInteractionController
-            ? this._avatarVehicleInteractionController.vehicleInteractionState()
-            : null;
-    }
-
-    // 0.9.670 — Avatar Inventory (store/deploy). The local avatar's
-    // current store/deploy AFFORDANCE — a plain pass-through to
-    // application/AvatarVehicleInteractionController.js#storeInteractionState(),
-    // never a second computation, the identical posture
-    // avatarVehicleInteractionState() above already takes for its own
-    // controller method. Returns `null` when no local avatar exists at
-    // all, the same graceful-absence posture as its sibling.
-    avatarStoreInteractionState() {
-        return this._avatarVehicleInteractionController
-            ? this._avatarVehicleInteractionController.storeInteractionState()
-            : null;
-    }
-
-    // 0.9.700 — Animal Catching. The local avatar's current catch/
-    // release AFFORDANCE — a plain pass-through to
-    // application/AvatarAnimalInteractionController.js#catchInteractionState(),
-    // the identical posture avatarStoreInteractionState() immediately
-    // above already takes for its own sibling controller. Returns
-    // `null` when no local avatar exists at all.
-    avatarAnimalInteractionState() {
-        return this._avatarAnimalInteractionController
-            ? this._avatarAnimalInteractionController.catchInteractionState()
-            : null;
-    }
-
-    // 0.9.702 — World Animal Decorations. The "[G] Decorate <Species>" /
-    // (0.9.703) "[G] Undecorate <Species>" AFFORDANCE — a caller
-    // (ordinarily a future World View prompt, mirroring
-    // ui/components/AnimalInteractionPrompt.js's own catch/release
-    // affordance) needs to know what a 'G' press would do right now,
-    // WITHOUT recomputing proximity itself or duplicating
-    // toggleNearestAnimalDecorationHere()'s own priority rule.
-    // Deliberately its OWN method, never folded into
-    // avatarAnimalInteractionState() above: that one is a plain
-    // pass-through to AvatarAnimalInteractionController's own catch/
-    // release concern, which knows nothing about Documents, Worlds, or
-    // authorization — "what would a decorate/undecorate key do right
-    // here" is this class's own concern, the identical layering
-    // canEditDocument()/getDocumentPosition() already keep separate
-    // from the controller. Returns `null` when no local avatar exists,
-    // the same graceful-absence posture every sibling
-    // *InteractionState() method here already takes.
-    animalDecorationInteractionState() {
-        const avatarPos = this.getAvatarPosition();
-        if (!avatarPos) {
-            return null;
-        }
-        const releaseTarget = this._animalRuntimeInstances.nearestReleased(avatarPos, ANIMAL_INTERACTION_RADIUS);
-        if (releaseTarget) {
-            return Object.freeze({
-                canDecorate: true,
-                canUndecorate: false,
-                species: releaseTarget.species,
-                targetAnimalId: releaseTarget.id,
-                targetDecorationId: null
-            });
-        }
-        const decorationTarget = this._nearestAnimalDecorationNear(avatarPos, ANIMAL_INTERACTION_RADIUS);
-        return Object.freeze({
-            canDecorate: false,
-            canUndecorate: decorationTarget !== null,
-            species: decorationTarget ? decorationTarget.decoration.species : null,
-            targetAnimalId: null,
-            targetDecorationId: decorationTarget ? decorationTarget.decoration.id : null
-        });
-    }
-
-    // 0.9.702 — Avatar Inventory Transfer. A plain accessor for the
-    // collaborator this constructor may have built (see this class's own
-    // constructor comment on `peerMessageBus`/`connectedPeerRegistry`) —
-    // never a second construction. Returns `null` when this session has
-    // no real peer stack wired, the identical graceful-absence posture
-    // every other optional peer-based collaborator here already takes. A
-    // caller (ordinarily a future inventory panel) reads the local
-    // avatar's OWN carried entries from `avatarInventoryStore()` (below)
-    // and calls sendOffer()/acceptOffer()/declineOffer() on what this
-    // method returns directly — WorldNavigationSession has no policy of
-    // its own about when to send or accept an entry.
-    avatarInventoryTransferPeerExchange() {
-        return this._avatarInventoryTransferPeerExchange;
-    }
-
-    // 0.9.702 — Avatar Inventory Transfer. The local avatar's own
-    // application/AvatarInventoryStore.js — the SAME instance
-    // avatarStoreInteractionState()/avatarAnimalInteractionState() (both
-    // above) already read indirectly through their own controllers, now
-    // also exposed directly so a caller can list every carried entry (a
-    // "what am I carrying" UI — see core/AvatarInventory.js's own header,
-    // "a future 'show everything I'm carrying' screen") rather than only
-    // the single most-recent-per-kind affordance those two methods
-    // already surface.
-    avatarInventoryStore() {
-        return this._avatarInventoryStore;
-    }
-
-    // 0.9.127 — Vehicle Steering Integration Audit. The ONE way
-    // `_vehicleSteeringIntent` (see that field's own constructor comment)
-    // is ever set — a plain, programmatic setter, deliberately never a
-    // key binding. `intent` must be `null` (releases any active steering
-    // request — the frame loop's own `steeringIntent: null` default path
-    // through `AvatarVehicleMovementController#tick()` then applies, byte-
-    // for-byte identical to every frame before this milestone) or a real
-    // `core/VehicleSteeringIntent.js` instance; anything else is silently
-    // treated as `null` rather than thrown, the same permissive-setter
-    // posture this file already applies to camera/selection state that a
-    // caller might hand a stale or malformed value to. This method never
-    // reads `avatarVehicleMount()`, `movementCapability()`, or any other
-    // vehicle fact — exactly like `application/AvatarMovementController.js#setVehicleBrakingIntent()`,
-    // it only ever records the CALLER's own request; whether a mounted,
-    // movable vehicle exists to apply it to is resolved fresh, every
-    // frame, by the frame loop below, never by this setter.
-    setVehicleSteeringIntent(intent) {
-        this._vehicleSteeringIntent = isValidVehicleSteeringIntent(intent) ? intent : null;
-    }
-
-    // 0.9.127 — the current, session-held steering request (or `null`),
-    // the direct structural twin of avatarVehicleMount() above — a
-    // debug/UI read-back of exactly what setVehicleSteeringIntent() last
-    // recorded, never a second source of truth.
-    vehicleSteeringIntent() {
-        return this._vehicleSteeringIntent;
-    }
-
-    // Turning the mode OFF immediately releases every held key —
-    // exiting must return keyboard control to the rest of World View
-    // at once, never leave a key "stuck" because its keyup never
-    // arrived (e.g. focus moved to a dialog mid-press).
-    //
-    // 0.9.66 — also resets `_altDown`: the exact same "never leave
-    // physical input state stuck" reasoning `releaseAll()` already
-    // applies to `_keys` applies here too, one layer up, to the Caps
-    // Lock hold-state this session tracks for continuous-movement
-    // chording — see avatarKeyDown/avatarKeyUp below.
-    // `_continuousMovementIntent` itself (owned by `_avatarMovementController`)
-    // is deliberately left untouched — see that class's own 0.9.66
-    // header for why turning off Avatar Control Mode must never
-    // silently cancel a deliberately activated continuous walk.
-    //
-    // 0.9.69 — also resets `_shiftDown`, the direct structural twin of
-    // `_altDown` above, for the identical reason. `_continuousMovementMode`
-    // itself (owned by `_avatarMovementController`) is likewise
-    // deliberately left untouched — see that class's own 0.9.69 header
-    // for why turning off Avatar Control Mode must never silently
-    // cancel a deliberately activated persistent RUN/WALK any more than
-    // it already leaves persistent FORWARD/BACKWARD untouched.
-    setAvatarControlMode(active) {
-        this._avatarControlModeActive = Boolean(active);
-        this._altDown = false;
-        this._shiftDown = false;
-        // 0.9.128 — the direct structural twins of `_altDown`/`_shiftDown`
-        // above, reset for the identical reason: a steer key physically
-        // held down when Avatar Control Mode is switched off (so its own
-        // keydown never reached `_processVehicleSteeringInput()`) must not
-        // read as "already held" the next time the mode is switched back
-        // on while that same key is still physically down — otherwise the
-        // repeated keydown a browser's own key-repeat fires would be
-        // silently treated as a REPEAT rather than the genuine new press it
-        // represents from this mode-cycle's own perspective, and the
-        // steering request it should have produced would simply never
-        // fire.
-        this._vehicleSteerLeftHeld = false;
-        this._vehicleSteerRightHeld = false;
-        // 0.9.702 — same "never leave physical input state stuck"
-        // reasoning as the steer-key resets above, for 'G'.
-        this._decorateKeyHeld = false;
-        if (!this._avatarControlModeActive && this._avatarMovementController) {
-            this._avatarMovementController.releaseAll();
-        }
-        // 0.9.83 — the direct structural twin of the movement release
-        // above: turning Avatar Control Mode off must never leave the
-        // interaction key ('E') reading as permanently held. `mount`
-        // itself is untouched — see
-        // application/AvatarVehicleInteractionController.js#releaseAll's
-        // own header for why.
-        if (!this._avatarControlModeActive && this._avatarVehicleInteractionController) {
-            this._avatarVehicleInteractionController.releaseAll();
-        }
-        // 0.9.700 — the same reasoning, for the catch/release key ('F').
-        if (!this._avatarControlModeActive && this._avatarAnimalInteractionController) {
-            this._avatarAnimalInteractionController.releaseAll();
-        }
-        // 0.9.96 — the direct structural twin of the two releases above,
-        // for the brake key. UNLIKE `_continuousMovementIntent`/
-        // `_continuousMovementMode` (deliberately left untouched here —
-        // see this method's own 0.9.66/0.9.69 comments), a braking
-        // request is a HELD-KEY fact, not a persistent toggle: it has no
-        // mechanism of its own to ever decay back to NONE once this
-        // session forgets whether Control is physically down, so turning
-        // Avatar Control Mode off must force it back to NONE explicitly,
-        // exactly like `_keys.jumpHeld` inside `releaseAll()` itself —
-        // otherwise a Control key stuck down by a lost keyup (the same
-        // failure this whole method exists to guard against) would leave
-        // the avatar braking forever, even after the mode is switched
-        // back on.
-        if (!this._avatarControlModeActive && this._avatarMovementController) {
-            this._avatarMovementController.setVehicleBrakingIntent(AvatarVehicleBrakingIntent.NONE);
-        }
-    }
-
-    // 0.3.2 — Avatar Control Mode is persistent LOCAL INTERACTION STATE,
-    // never a transient gesture: once the user explicitly turns it on
-    // it stays on until they explicitly turn it off again — see
-    // docs/Principles.md, "User-Controlled Avatar Mode Is Persistent
-    // Local Interaction State (0.3.2)." This method exists precisely so
-    // a caller with a legitimate reason to release held keys (a window
-    // blur swallowing a keyup — see ui/views/WorldView.js's own
-    // onWindowBlur) never has to reach for setAvatarControlMode(false)
-    // to do it: that would silently uncheck the mode itself, which is a
-    // hidden state transition the user never asked for. Releasing keys
-    // and disabling the mode are two different things — this is the
-    // one that only ever does the first.
-    releaseAvatarMovementKeys() {
-        this._altDown = false;
-        this._shiftDown = false;
-        // 0.9.128 — same "release keys without touching the mode" seam,
-        // extended to the steer keys — see setAvatarControlMode()'s own
-        // 0.9.128 comment for why the hold bits need an explicit reset
-        // here too.
-        this._vehicleSteerLeftHeld = false;
-        this._vehicleSteerRightHeld = false;
-        // 0.9.702 — same "release keys without touching the mode" seam,
-        // extended to the decorate key.
-        this._decorateKeyHeld = false;
-        if (this._avatarMovementController) {
-            this._avatarMovementController.releaseAll();
-        }
-        // 0.9.83 — same "release keys without touching the mode" seam,
-        // extended to the interaction key.
-        if (this._avatarVehicleInteractionController) {
-            this._avatarVehicleInteractionController.releaseAll();
-        }
-        // 0.9.700 — same "release keys without touching the mode" seam,
-        // extended to the catch/release key.
-        if (this._avatarAnimalInteractionController) {
-            this._avatarAnimalInteractionController.releaseAll();
-        }
-        // 0.9.96 — same "release keys without touching the mode" seam,
-        // extended to the brake key — see setAvatarControlMode()'s own
-        // 0.9.96 comment for why braking needs an explicit forced reset
-        // here that `_continuousMovementIntent`/`_continuousMovementMode`
-        // deliberately do not.
-        if (this._avatarMovementController) {
-            this._avatarMovementController.setVehicleBrakingIntent(AvatarVehicleBrakingIntent.NONE);
-        }
-    }
-
-    // Returns true if `key` was one the movement controller
-    // understands (so the UI knows whether to preventDefault/swallow
-    // the event) — false when control mode is off, no avatar exists,
-    // or the key is unrelated to movement, in every case leaving the
-    // key free for whatever else would normally handle it.
-    //
-    // 0.9.66 — Continuous Movement Controller Integration. Before
-    // forwarding to the controller's own ordinary keyDown(), this raw
-    // key is ALSO run through `_processContinuousMovementInput()` —
-    // the seam that translates a real Alt + W/S chord into
-    // `_avatarMovementController.setContinuousMovementIntent()` calls,
-    // via core/AvatarContinuousMovementInputAdapter.js (0.9.65) and
-    // core/AvatarContinuousMovementIntent.js's own transition function
-    // (0.9.64). Gated behind the exact same early return as ordinary
-    // movement — continuous movement can no more be armed while Avatar
-    // Control Mode is off than an ordinary W can move the avatar while
-    // it's off.
-    avatarKeyDown(key) {
-        if (!this._avatarControlModeActive || !this._avatarMovementController) {
-            return false;
-        }
-        this._processContinuousMovementInput(key, 'keydown');
-        const movementConsumed = this._avatarMovementController.keyDown(key);
-        // 0.9.83 — tried independently of movement's own result: 'E' is
-        // not a movement key, so AvatarMovementController#keyDown never
-        // recognizes it, and this class never asks it to. Either
-        // controller recognizing the key is enough to consume the
-        // event — see application/AvatarVehicleInteractionController.js#keyDown.
-        const vehicleInteractionConsumed = this._avatarVehicleInteractionController
-            ? this._avatarVehicleInteractionController.keyDown(key)
-            : false;
-        // 0.9.700 — same "tried independently" posture as the vehicle
-        // interaction key above: 'F' is not a movement or vehicle key,
-        // so neither controller above ever recognizes it — see
-        // application/AvatarAnimalInteractionController.js#keyDown.
-        const animalInteractionConsumed = this._avatarAnimalInteractionController
-            ? this._avatarAnimalInteractionController.keyDown(key)
-            : false;
-        // 0.9.96 — same "tried independently" posture as the interaction
-        // key above: Control is not a movement key either, so neither
-        // controller above ever recognizes it — see
-        // `_processVehicleBrakingInput()`'s own header, below.
-        const vehicleBrakingConsumed = this._processVehicleBrakingInput(key, 'keydown');
-        // 0.9.128 — same "tried independently" posture as the interaction
-        // and braking keys above: the arrow keys are not movement keys
-        // either, so neither controller above ever recognizes them — see
-        // `_processVehicleSteeringInput()`'s own header, below.
-        const vehicleSteeringConsumed = this._processVehicleSteeringInput(key, 'keydown');
-        // 0.9.702 — same "tried independently" posture as every key
-        // above: 'G' is not a movement, vehicle, braking, or steering
-        // key, so nothing above ever recognizes it — see
-        // `_processWorldAnimalDecorationInput()`'s own header, above.
-        const worldAnimalDecorationConsumed = this._processWorldAnimalDecorationInput(key, 'keydown');
-        return movementConsumed || vehicleInteractionConsumed || animalInteractionConsumed || vehicleBrakingConsumed || vehicleSteeringConsumed || worldAnimalDecorationConsumed;
-    }
-
-    avatarKeyUp(key) {
-        if (!this._avatarMovementController) {
-            return false;
-        }
-        // 0.9.66 — same translation as avatarKeyDown above, but NOT
-        // gated on `_avatarControlModeActive` — matching this method's
-        // own pre-existing "always forwarded" posture for ordinary
-        // keys, so an Alt release that arrives after control mode
-        // was already switched off still cleanly updates `_altDown`
-        // rather than leaving it stale (see `deriveAvatarContinuousMovementInputEvent`'s
-        // own header: key-up never produces a `transition`, so this
-        // can only ever update the Alt hold bit, never the
-        // continuous-movement intent itself).
-        this._processContinuousMovementInput(key, 'keyup');
-        // Always forwarded, even if control mode was switched off
-        // between this key's down and up — so a key held before the
-        // mode was toggled off still cleanly releases instead of
-        // leaving stale state inside the controller (releaseAll()
-        // already covers the same case on the toggle itself; this
-        // covers the ordinary "released after mode already off" case).
-        const movementConsumed = this._avatarMovementController.keyUp(key);
-        // 0.9.83 — same "always forwarded" posture as movement's own
-        // keyUp above, for the identical reason.
-        const vehicleInteractionConsumed = this._avatarVehicleInteractionController
-            ? this._avatarVehicleInteractionController.keyUp(key)
-            : false;
-        // 0.9.700 — same "always forwarded" posture as movement's/
-        // vehicle interaction's own keyUp above, for the identical
-        // reason.
-        const animalInteractionConsumed = this._avatarAnimalInteractionController
-            ? this._avatarAnimalInteractionController.keyUp(key)
-            : false;
-        // 0.9.96 — same "always forwarded" posture as movement's/
-        // interaction's own keyUp above, for the identical reason: a
-        // Control release that arrives after control mode was already
-        // switched off must still clear the braking request rather than
-        // leaving it stale.
-        const vehicleBrakingConsumed = this._processVehicleBrakingInput(key, 'keyup');
-        // 0.9.128 — same "always forwarded" posture as movement's/
-        // interaction's/braking's own keyUp above, for the identical
-        // reason: an arrow-key release that arrives after control mode was
-        // already switched off must still clear the steering hold bit
-        // rather than leaving it stale.
-        const vehicleSteeringConsumed = this._processVehicleSteeringInput(key, 'keyup');
-        // 0.9.702 — same "always forwarded" posture as every keyUp
-        // above: clears `_decorateKeyHeld` even if control mode was
-        // switched off between this key's down and up, for the
-        // identical reason `_processVehicleBrakingInput()`'s own keyup
-        // handling already gives.
-        const worldAnimalDecorationConsumed = this._processWorldAnimalDecorationInput(key, 'keyup');
-        return movementConsumed || vehicleInteractionConsumed || animalInteractionConsumed || vehicleBrakingConsumed || vehicleSteeringConsumed || worldAnimalDecorationConsumed;
-    }
-
-    // 0.9.66 — Continuous Movement Controller Integration. The ONE
-    // seam that turns a raw keyboard fact into a call to
-    // `_avatarMovementController.setContinuousMovementIntent()`. This
-    // session owns `_altDown` (the only piece of mutable state
-    // core/AvatarContinuousMovementInputAdapter.js needs a caller to
-    // carry between calls — see that file's own header) and reads
-    // `_avatarMovementController.continuousMovementIntent()` as the
-    // `currentIntent` core/AvatarContinuousMovementIntent.js's own
-    // transition function needs, rather than keeping a second copy of
-    // it here — the controller stays the one place that value lives.
-    //
-    // Deliberately the same "thin adapter, no new mathematics" posture
-    // application/AvatarTreeConstraint.js already follows for its own
-    // collaborators: every actual decision (is this a chord? does it
-    // activate, switch, or cancel?) is made entirely inside the two
-    // already-complete, already-tested pure functions this method
-    // calls — nothing here re-implements or second-guesses either one.
-    //
-    // 0.9.69 — this method now ALSO owns `_shiftDown` (the direct
-    // structural twin of `_altDown`, same call, same
-    // core/AvatarContinuousMovementInputAdapter.js seam) and, on every
-    // transition, independently derives the persistent MODE alongside
-    // the persistent DIRECTION already derived above — via
-    // `deriveAvatarContinuousMovementMode()` (0.9.67), fed
-    // `transition.activationRequested`/`transition.runRequested`
-    // exactly as that function's own header declares it expects, then
-    // published through `setContinuousMovementMode()`. Direction and
-    // mode are derived from the SAME `transition` object, produced by
-    // the SAME adapter call, so a single key event updates both
-    // dimensions together and can never leave one stale relative to the
-    // other — the same "one input event, two independent transition
-    // functions" seam core/AvatarContinuousMovementInputAdapter.js's
-    // own 0.9.68 header already establishes. Unlike direction, mode
-    // needs no `currentMode` fed back in — see
-    // core/AvatarContinuousMovementMode.js's own header for why its
-    // outcome is already fully determined by `activationRequested`/
-    // `runRequested` alone.
-    _processContinuousMovementInput(key, type) {
-        const { altDown, shiftDown, transition } = deriveAvatarContinuousMovementInputEvent({
-            altDown: this._altDown,
-            shiftDown: this._shiftDown,
-            key,
-            type
-        });
-        this._altDown = altDown;
-        this._shiftDown = shiftDown;
-        if (transition && this._avatarMovementController) {
-            this._avatarMovementController.setContinuousMovementIntent(
-                deriveAvatarContinuousMovementIntent({
-                    currentIntent: this._avatarMovementController.continuousMovementIntent(),
-                    direction: transition.direction,
-                    activationRequested: transition.activationRequested
-                })
-            );
-            this._avatarMovementController.setContinuousMovementMode(
-                deriveAvatarContinuousMovementMode({
-                    activationRequested: transition.activationRequested,
-                    runRequested: transition.runRequested
-                })
-            );
-        }
-    }
-
-    // 0.9.96 — Vehicle Braking Input Binding. The ONE seam that decides
-    // WHICH physical key finally calls
-    // `_avatarMovementController.setVehicleBrakingIntent()` in real
-    // play — the direct counterpart to 0.9.65/0.9.66's own keyboard
-    // wiring for continuous movement above, and the missing half 0.9.95
-    // deliberately left for a later milestone (see
-    // core/AvatarVehicleBrakingInputAdapter.js's own header: "deciding
-    // WHICH physical control feeds that adapter is left to a
-    // still-later milestone" — this is that milestone).
-    //
-    // See VEHICLE_BRAKE_KEY's own comment, above, for why Control is
-    // the key this milestone picks.
-    //
-    // A THIN TRANSLATION, NOT A NEW DECISION LAYER. This method's own
-    // job is exactly what core/AvatarVehicleBrakingInputAdapter.js's own
-    // header names as still missing: turning Control's own down/up
-    // transition into the CONTROL-shaped `type: 'brakedown'/'brakeup'`
-    // that adapter already expects. Every actual decision after that —
-    // is this a brake request, what BRAKE means, whether it ever reaches
-    // simulation — is made entirely inside
-    // deriveAvatarVehicleBrakingInputFact(),
-    // deriveAvatarVehicleBrakingIntent(), and
-    // AvatarMovementController#_resolvedBrakingRequested()/
-    // core/AvatarMovementSimulation.js, exactly as
-    // core/AvatarVehicleBrakingIntent.js's own header insists: this
-    // method has no idea what braking eventually does to speed, only
-    // that a request either is or is not being made right now. Nothing
-    // here changes braking's own vocabulary or simulation semantics —
-    // this is purely the wire between an existing key and an existing,
-    // already-complete intent chain.
-    //
-    // STATELESS ACROSS CALLS, UNLIKE `_processContinuousMovementInput()`'s
-    // OWN `_altDown`/`_shiftDown`. core/AvatarVehicleBrakingInputAdapter.js's
-    // own header is explicit that a brake control's down/up transition is
-    // already the complete fact it needs, in the same call that reports
-    // it — there is no chord to resolve, so this method carries no
-    // caller-owned hold bit of its own, mirroring that adapter's own
-    // stateless design. Holding Control therefore reports BRAKE on every
-    // repeated keydown a browser's own key-repeat fires — never a toggle
-    // — and releasing it reports NONE on the very next call, the exact
-    // level-driven shape core/AvatarVehicleBrakingIntent.js's own header
-    // requires.
-    //
-    // NEVER VEHICLE-AWARE, NEVER MOVEMENT-AWARE. This method reads only
-    // `key`/`type` and calls `setVehicleBrakingIntent()` — it never
-    // reads `movementCapability()`, never checks `avatarVehicleMount()`,
-    // and never asks whether the avatar is even moving. Braking while
-    // unmounted, while idle, or while walking on foot is not this
-    // method's problem to prevent — exactly the same "not this file's
-    // problem" boundary core/AvatarVehicleBrakingIntent.js's own header
-    // already draws for itself.
-    //
-    // A KEY THAT DOES NOT MATCH LEAVES BRAKING ENTIRELY ALONE. Unlike
-    // Alt/Shift (which `_processContinuousMovementInput()` must still
-    // silently absorb to keep its own hold bits current), an unrelated
-    // key here has no cross-call state to update — this method simply
-    // returns `false` (not consumed) and calls nothing.
-    //
-    // Deliberately excluded, matching this milestone's own brief: any
-    // change to core/AvatarVehicleBrakingIntent.js or
-    // core/AvatarVehicleBrakingInputAdapter.js (both remain exactly as
-    // 0.9.95 left them), a second brake control (mouse button, gamepad
-    // trigger), brake-overrides-throttle behavior, a handbrake, and any
-    // vehicle-specific branching — this method's own body never mentions
-    // a vehicle type. See docs/Roadmap.md, 0.9.96.
-    _processVehicleBrakingInput(key, type) {
-        if (String(key || '').toLowerCase() !== VEHICLE_BRAKE_KEY) {
-            return false;
-        }
-        if (this._avatarMovementController) {
-            const { brakeRequested } = deriveAvatarVehicleBrakingInputFact({
-                type: type === 'keyup' ? 'brakeup' : 'brakedown'
-            });
-            this._avatarMovementController.setVehicleBrakingIntent(
-                deriveAvatarVehicleBrakingIntent({ brakeRequested })
-            );
-        }
-        return true;
-    }
-
-    // 0.9.702 — World Animal Decorations Input Binding. The ONE seam
-    // that decides which physical key finally calls
-    // toggleNearestAnimalDecorationHere() in real play — the direct
-    // counterpart to 0.9.96's own `_processVehicleBrakingInput()` above,
-    // for WORLD_ANIMAL_DECORATION_KEY ('G') instead of Control.
-    //
-    // 0.9.703 — dispatches to toggleNearestAnimalDecorationHere(), NOT
-    // decorateNearestReleasedAnimalHere() directly, once "undo a
-    // bake-in" existed as a real, separate action — the identical
-    // single-key, context-disambiguated shape
-    // application/AvatarAnimalInteractionController.js's own 'F'
-    // (catch vs. release) already establishes, see that dispatcher's
-    // own header for the exact priority rule.
-    //
-    // RISING EDGE ONLY, NEVER EVERY REPEAT — unlike braking (a
-    // continuous HELD fact, correctly re-derived on every keydown a
-    // browser's own key-repeat fires), decorating/undecorating is a
-    // discrete, one-shot action: `_decorateKeyHeld` exists purely so a
-    // held 'G' fires toggleNearestAnimalDecorationHere() exactly once,
-    // on the genuine new press, the identical "tell a real new press
-    // from an uninteresting repeat" concern `_vehicleSteerLeftHeld`/
-    // `_vehicleSteerRightHeld` already solve for steering (see those
-    // fields' own constructor comment).
-    //
-    // NEVER LETS AN ERROR ESCAPE. Both decorateNearestReleasedAnimalHere()
-    // and undecorateNearestAnimalDecorationHere() throw for a handful of
-    // real setup problems (no live avatar, no editable document, not
-    // authorized, not signed in) — the same contract createLandmarkHere()
-    // already keeps, because a UI caller is expected to guard() around
-    // it (see ui/views/WorldView.js's own onSaveLandmarkForm). This
-    // method IS that guard for the raw keyboard path: catching and
-    // discarding is correct here specifically because "nothing usable
-    // happened" is exactly what a stray 'G' press with, say, no
-    // signed-in identity yet should look like from the keyboard — the
-    // key is still reported consumed either way, so nothing else in
-    // this file mistakes 'G' for an unrelated command.
-    _processWorldAnimalDecorationInput(key, type) {
-        if (String(key || '').toLowerCase() !== WORLD_ANIMAL_DECORATION_KEY) {
-            return false;
-        }
-        if (type === 'keyup') {
-            this._decorateKeyHeld = false;
-            return true;
-        }
-        if (!this._decorateKeyHeld) {
-            this._decorateKeyHeld = true;
-            try {
-                this.toggleNearestAnimalDecorationHere();
-            } catch {
-                // See this method's own header, "Never lets an error escape."
-            }
-        }
-        return true;
-    }
-
-    // 0.9.128 — Vehicle Steering Input Binding. The ONE seam that decides
-    // WHICH physical keys finally call
-    // `setVehicleSteeringIntent()` in real play — the direct counterpart to
-    // 0.9.96's own `_processVehicleBrakingInput()` above, and the missing
-    // half 0.9.127 deliberately left for a later milestone (see that
-    // milestone's own "Recommendation": "decide how A/D, arrow keys, or a
-    // controller input produce a VehicleSteeringIntent").
-    //
-    // See `VEHICLE_STEER_LEFT_KEY`/`VEHICLE_STEER_RIGHT_KEY`'s own comment,
-    // above, for why the arrow keys are the pair this milestone picks —
-    // deliberately NOT 'a'/'d', which already drive the avatar's own
-    // held-turn-key facing (`_keys.left`/`_keys.right` -> `turnAxis` ->
-    // `result.rotationY`, core/AvatarMovementSimulation.js) both on foot and
-    // while riding — a continuous, smooth, `rotationY`-driven turn that
-    // 0.9.127's own audit proved deliberately independent of, and
-    // unaffected by, vehicle steering (see that milestone's own Section D).
-    // Reusing 'a'/'d' for this milestone's own discrete LEFT/RIGHT pulse
-    // would entangle two already-independent, already-tested turning
-    // models in the same physical key; a fresh pair keeps them exactly as
-    // separate as 0.9.127 already established.
-    //
-    // A THIN TRANSLATION, NOT A NEW DECISION LAYER. This method's own job is
-    // exactly what core/VehicleSteeringInputAdapter.js's own header names as
-    // still missing: turning an arrow key's own down/up transition into the
-    // CONTROL-shaped `type: 'steerleftdown'/'steerleftup'/'steerrightdown'/
-    // 'steerrightup'` that adapter already expects, and threading its own
-    // `leftHeld`/`rightHeld` hold bits through this session's own
-    // `_vehicleSteerLeftHeld`/`_vehicleSteerRightHeld` fields. Every actual
-    // decision after that — is this genuinely a NEW press, what a LEFT/RIGHT
-    // steering request means, whether it ever reaches simulation — is made
-    // entirely inside `deriveVehicleSteeringInputEvent()`,
-    // `createVehicleSteeringIntent()` (core/VehicleSteeringIntent.js), and
-    // `core/VehicleSteeringSimulation.js`/`AvatarVehicleMovementController#tick()`
-    // (both completely untouched by this milestone): this method has no
-    // idea what steering eventually does to the vehicle's own attempted
-    // direction, only that a NEW turn either is or is not being requested
-    // right now.
-    //
-    // NEVER VEHICLE-AWARE, NEVER MOVEMENT-AWARE, NEVER HEADING-AWARE. This
-    // method reads only `key`/`type`, this session's own two hold bits, and
-    // calls `setVehicleSteeringIntent()` — it never reads
-    // `movementCapability()`, never checks `avatarVehicleMount()`, never
-    // computes or reads a heading, and never invokes
-    // `core/VehicleSteeringSimulation.js` itself. Steering while unmounted,
-    // while idle, or while walking on foot is not this method's problem to
-    // prevent — exactly the same "not this file's problem" boundary
-    // `_processVehicleBrakingInput()`'s own header already draws for
-    // itself; the frame loop below is the one place that decides whether a
-    // pending request ever actually reaches a moving vehicle.
-    //
-    // A KEY THAT DOES NOT MATCH LEAVES STEERING ENTIRELY ALONE, returning
-    // `false` (not consumed) and updating no hold bit — the identical
-    // "unrelated key, no cross-call state to touch" posture
-    // `_processVehicleBrakingInput()`'s own header already establishes.
-    //
-    // Deliberately excluded, matching this milestone's own brief: any
-    // change to core/VehicleSteeringIntent.js, core/VehicleSteeringSimulation.js,
-    // or application/AvatarVehicleMovementController.js (all three remain
-    // exactly as 0.9.127 left them), a gamepad or on-screen steering
-    // control, continuous/held-key steering, steering angle, rate, turn
-    // radius, or angular velocity of any kind, and any vehicle-specific
-    // branching — this method's own body never mentions a vehicle type. See
-    // docs/Roadmap.md, 0.9.128.
-    _processVehicleSteeringInput(key, type) {
-        const normalizedKey = String(key || '').toLowerCase();
-        let controlType;
-        if (normalizedKey === VEHICLE_STEER_LEFT_KEY) {
-            controlType = type === 'keyup' ? 'steerleftup' : 'steerleftdown';
-        } else if (normalizedKey === VEHICLE_STEER_RIGHT_KEY) {
-            controlType = type === 'keyup' ? 'steerrightup' : 'steerrightdown';
-        } else {
-            return false;
-        }
-
-        const { leftHeld, rightHeld, direction } = deriveVehicleSteeringInputEvent({
-            leftHeld: this._vehicleSteerLeftHeld,
-            rightHeld: this._vehicleSteerRightHeld,
-            type: controlType
-        });
-        this._vehicleSteerLeftHeld = leftHeld;
-        this._vehicleSteerRightHeld = rightHeld;
-        if (direction) {
-            this.setVehicleSteeringIntent(createVehicleSteeringIntent(direction));
-        }
-        return true;
-    }
-
-    // Whether the camera currently follows the local avatar's
-    // movement — see _followAvatarIfEnabled above. A pure client
-    // camera preference, exactly like "Show My Avatar": never touches
-    // AvatarProfile, AvatarPresence, _focusedDocumentId, or
-    // _activeDocumentId.
-    isFollowingAvatar() {
-        return this._followAvatarEnabled;
-    }
-
-    setFollowAvatar(enabled) {
-        this._followAvatarEnabled = Boolean(enabled);
-        if (this._followAvatarEnabled && this._avatarPresenceSession) {
-            // Re-anchor to the CURRENT position rather than whatever
-            // was last recorded while follow was off — otherwise the
-            // first movement after re-enabling follow would yank the
-            // camera through every step the avatar took while
-            // unobserved.
-            this._lastAvatarFollowPosition = this._avatarPresenceSession.current.position;
-            // 0.2.39 — there is only one camera; following your OWN
-            // avatar and following a REMOTE one are mutually
-            // exclusive. See followAvatarId() below.
-            this._stopFollowingRemoteAvatarInternal();
-        }
-    }
-
-    // 0.3.2 — the CURRENT Camera Perspective, or `null` while the
-    // camera is free/orbit (every pre-0.3.2 World View behavior,
-    // completely unchanged). Purely local UI/navigation state — see
-    // this._cameraPerspective's own constructor comment.
-    getCameraPerspective() {
-        return this._cameraPerspective;
-    }
-
-    // Sets the active Camera Perspective (one of core/CameraPerspective.js's
-    // CameraPerspective values), or clears it back to the free/orbit
-    // camera with `null`. Rejects anything else (returns false,
-    // changes nothing) rather than silently accepting an unrecognized
-    // value — the same "degrade gracefully, never corrupt state" rule
-    // every other setter in this file already follows.
-    //
-    // Turning a perspective ON immediately re-frames toward the local
-    // avatar's CURRENT position/facing, right now — never waits for
-    // the next movement tick, so choosing "Bird's-Eye" while standing
-    // still still actually moves the camera. Turning a perspective OFF
-    // (`null`) deliberately does NOT snap the camera anywhere: the
-    // free/orbit camera simply resumes from wherever the perspective
-    // last left it, the same "removing an unintended reset is the fix,
-    // never inventing a second one" discipline this milestone's own
-    // avatar-control-mode fix applies. Never touches `_followAvatarEnabled`
-    // — the two are independent, but only one can ever actually be
-    // steering the camera at once (see _followAvatarIfEnabled: a set
-    // perspective always wins).
-    setCameraPerspective(perspective) {
-        if (perspective !== null && !isValidCameraPerspective(perspective)) {
-            return false;
-        }
-        this._cameraPerspective = perspective;
-        if (perspective && this._avatarPresenceSession) {
-            const presence = this._avatarPresenceSession.current;
-            this._applyCameraPerspectiveFraming(presence.position, presence.rotation ? presence.rotation.y : null);
-        }
-        return true;
-    }
-
-    // 0.2.39 — the camera-follows-a-REMOTE-avatar counterpart to
-    // setFollowAvatar/isFollowingAvatar above. Deliberately a
-    // SEPARATE surface, not a generalized "follow any avatarId"
-    // replacement for the existing boolean API — see
-    // docs/Principles.md, "Following The Avatar Never Redefines What
-    // The Camera Is Looking At": both follow relationships share that
-    // same principle (moveCamera() only, never focusDocument()/
-    // setActiveDocument()), but 0.2.36's local-avatar-follow keeps its
-    // own tested boolean contract completely unchanged.
-    getFollowedRemoteAvatarId() {
-        return this._followedRemoteAvatarId;
-    }
-
-    // Starts following avatarId's camera position. A no-op (returns
-    // false) if avatarId isn't currently a known remote avatar — most
-    // commonly because it's the LOCAL avatar (use setFollowAvatar for
-    // that) or because its presence already expired. Turns OFF
-    // local-avatar-follow, for the same one-camera reason
-    // setFollowAvatar turns this off.
-    followAvatarId(avatarId) {
-        if (!this._remoteAvatarRegistry || !this._remoteAvatarRegistry.has(avatarId)) {
-            return false;
-        }
-        this._followedRemoteAvatarId = avatarId;
-        this._lastFollowedRemotePosition = this._remoteAvatarRegistry.currentPosition(avatarId, Date.now());
-        this._followAvatarEnabled = false;
-        return true;
-    }
-
-    stopFollowingRemoteAvatar() {
-        this._stopFollowingRemoteAvatarInternal();
-    }
-
-    _stopFollowingRemoteAvatarInternal() {
-        this._followedRemoteAvatarId = null;
-        this._lastFollowedRemotePosition = null;
-    }
-
-    // Same delta-only camera shift _followAvatarIfEnabled uses for the
-    // local avatar, driven from the SAME interpolated position
-    // RemoteAvatarRegistry.tick() already pushes to the renderer every
-    // frame — following sees exactly what's on screen, never a
-    // separately-computed value. Gracefully stops following (rather
-    // than throwing or camera-jumping) the moment the target avatar is
-    // no longer known — e.g. its presence expired.
-    _followRemoteAvatarIfEnabled(now) {
-        if (!this._followedRemoteAvatarId || !this._spatialCameraController || !this._remoteAvatarRegistry) {
-            return;
-        }
-        if (!this._remoteAvatarRegistry.has(this._followedRemoteAvatarId)) {
-            this._stopFollowingRemoteAvatarInternal();
-            return;
-        }
-        const position = this._remoteAvatarRegistry.currentPosition(this._followedRemoteAvatarId, now);
-        const previous = this._lastFollowedRemotePosition;
-        this._lastFollowedRemotePosition = position;
-        if (!previous || !position) {
-            return;
-        }
-        const delta = {
-            x: position.x - previous.x,
-            y: position.y - previous.y,
-            z: position.z - previous.z
-        };
-        if (delta.x === 0 && delta.y === 0 && delta.z === 0) {
-            return;
-        }
-        this._spatialCameraController.moveCamera(delta);
-    }
-
-    // 0.2.39 — the moment a targeted avatar's presence actually
-    // expires (ABSENT-pruned from LocalPresenceStore — see
-    // application/RemoteAvatarRegistry.js's own sync()), the
-    // interaction target and any active follow relationship both
-    // gracefully clear, rather than pointing at an avatar that no
-    // longer exists. `knownPresences` is exactly what this frame's
-    // pull()/sync() already computed — no extra query.
-    _pruneAvatarInteractionIfGone(knownPresences) {
-        if (this._avatarInteraction.isEmpty || this.isLocalAvatarId(this._avatarInteraction.avatarId)) {
-            return;
-        }
-        const stillKnown = knownPresences.some((k) => k.advertisement.avatarId === this._avatarInteraction.avatarId);
-        if (!stillKnown) {
-            this._setAvatarInteraction(AvatarInteractionState.empty());
-        }
-    }
-
-    // 0.2.44 — runs every render frame, right after movement ticks:
-    // expires a finished gesture back to NONE, then pushes the
-    // current gesture kind AND facing override to the render facade.
-    // Both purely local, purely presentation — see this file's own
-    // avatar-interaction comments above, core/AvatarGesturePoseOffsets.js,
-    // and core/AvatarFacing.js. Reads `_avatarInteraction`/
-    // `_remoteAvatarRegistry`, both already current from this or the
-    // previous frame — no new query added.
-    _updateLocalAvatarInteractionPresentation(now) {
-        if (!this._session || typeof this._session.setLocalAvatarGesture !== 'function') {
-            return;
-        }
-        if (this._avatarInteraction.isGesturing
-            && now - this._avatarInteraction.interactionStartedAt >= GESTURE_DURATION_MS) {
-            this._setAvatarInteraction(this._avatarInteraction.withInteraction(AvatarInteractionKind.NONE, null));
-        }
-        this._session.setLocalAvatarGesture(this._avatarInteraction.isGesturing ? this._avatarInteraction.interaction : null);
-        this._applyAvatarFacing(now);
-    }
-
-    // 0.2.44 — see docs/Principles.md, "A Gesture Is Presentation,
-    // Never Presence": computes (or clears) a temporary
-    // yaw override that makes the local avatar face its current
-    // interaction target, but ONLY while the player isn't actively
-    // steering — an actively-moving player's own input always wins,
-    // so this never fights AvatarMovementController's own rotation.
-    _applyAvatarFacing(now) {
-        if (!this._session || typeof this._session.setLocalAvatarFacing !== 'function' || !this._avatarPresenceSession) {
-            return;
-        }
-        const targetPosition = this._facingTargetPosition(now);
-        const isMoving = Boolean(this._avatarMovementController && this._avatarMovementController.hasMovementInput());
-        if (!targetPosition || isMoving) {
-            this._session.setLocalAvatarFacing(null);
-            return;
-        }
-        const localPosition = this._avatarPresenceSession.current.position;
-        this._session.setLocalAvatarFacing(computeFacingYawDegrees(localPosition, targetPosition));
-    }
-
-    // The CURRENT interaction target's position, or null when there is
-    // no target, the target is the local avatar itself (facing
-    // yourself is meaningless), or the target's presence isn't known
-    // to `_remoteAvatarRegistry` (e.g. it expired this same frame,
-    // before `_pruneAvatarInteractionIfGone` got to it) — gracefully
-    // "no facing override" in every case, never a thrown error.
-    _facingTargetPosition(now) {
-        if (this._avatarInteraction.isEmpty || this.isLocalAvatarId(this._avatarInteraction.avatarId)) {
-            return null;
-        }
-        return this._remoteAvatarRegistry
-            ? this._remoteAvatarRegistry.currentPosition(this._avatarInteraction.avatarId, now)
-            : null;
-    }
-
-    // Whether a local avatar was actually wired for this session (i.e.
-    // someone was logged in when it started) — lets the UI decide
-    // whether "Show My Avatar" is even a meaningful control to offer.
-    hasLocalAvatar() {
-        return Boolean(this._avatarProfileUseCase && this._avatarPresenceSession);
-    }
-
-    isLocalAvatarVisible() {
-        return this._localAvatarVisible;
-    }
-
-    // Repositions a still-untouched (sequence 0, i.e. never explicitly
-    // moved) local avatar to spawn near wherever the camera is about
-    // to focus, instead of leaving it at literal world origin — see
-    // AVATAR_SPAWN_OFFSET above and docs/Principles.md. Deliberately
-    // gated on sequence === 0: this only ever fires once per session,
-    // on whichever focusDocument() call happens first (in practice
-    // the initial navigateToDocument() on World View mount). Once the
-    // avatar has moved even once — by this spawn repositioning itself,
-    // or later by real movement (0.2.36) — every subsequent
-    // focusDocument() call (searching, Explore Here, Nearby Worlds)
-    // leaves it exactly where it is; navigating the CAMERA elsewhere
-    // must never silently teleport a participant.
-    _spawnAvatarNear(documentId, position) {
-        if (!this._avatarPresenceSession || this._avatarPresenceSession.current.sequence !== 0) {
-            return;
-        }
-        this._avatarPresenceSession.update({ position: this._safeSpawnPosition(documentId, position) });
-    }
-
-    // Bug fix — a spawn/homecoming point must clear the document's own
-    // REAL content, not just assume its local origin sits outside
-    // whatever was built there. AVATAR_SPAWN_OFFSET's small, fixed
-    // (3, 0, 3) worked fine for typical content authored out from its
-    // own local origin (a house whose corner is near (0,0,0)), but a
-    // structure recentered AROUND its own local origin (exactly what
-    // this session's own earlier bug fix did for an oversized, far-
-    // from-origin pyramid — see PlacePublicationUseCase's own bounds
-    // fix) puts (3, 0, 3) well inside it: reported live as "Home
-    // dropped me inside my own pyramid."
-    //
-    // When the document's content is already loaded, this measures its
-    // REAL local bounds (core/SpatialBounds.js#fromWorld(), the exact
-    // same AABB PlacePublicationUseCase already computes for streaming)
-    // and spawns just past its farthest corner plus a small clearance —
-    // guaranteed outside the footprint regardless of size or where its
-    // own local origin happens to sit inside it. Falls back to the
-    // original small fixed offset only when the document isn't loaded
-    // yet to measure (the exact pre-existing behavior for that case) —
-    // graceful degradation, never a throw, matching every other
-    // optional-data posture in this class.
-    _safeSpawnPosition(documentId, position) {
-        const document = documentId ? this._loadedDocuments.get(documentId) : null;
-        if (!document) {
-            return {
-                x: position.x + AVATAR_SPAWN_OFFSET.x,
-                y: position.y + AVATAR_SPAWN_OFFSET.y,
-                z: position.z + AVATAR_SPAWN_OFFSET.z
-            };
-        }
-        const bounds = SpatialBounds.fromWorld(document.world, this._registry);
-        return {
-            x: position.x + bounds.max.x + AVATAR_SPAWN_CLEARANCE,
-            y: position.y + AVATAR_SPAWN_OFFSET.y,
-            z: position.z + bounds.max.z + AVATAR_SPAWN_CLEARANCE
-        };
-    }
-
-    // A pure client rendering preference — see docs/Principles.md.
-    // Never touches AvatarProfile or AvatarPresence; toggling it
-    // twice in a row is a no-op exactly like every other purely
-    // visual toggle in this codebase.
-    setLocalAvatarVisible(visible) {
-        this._localAvatarVisible = visible;
-        if (this._session && typeof this._session.setLocalAvatarVisible === 'function') {
-            this._session.setLocalAvatarVisible(visible);
-        }
-    }
-
-    // -----------------------------------------------------------------
-    // Placement Mode & Gizmo interaction — REMOVED (0.5.9). World View
-    // no longer offers brick placement, brick/group selection-transform,
-    // or gizmo dragging at all; EditorSession already owns the full,
-    // identical kernel (SpatialPlacementService/SpatialEditingService/
-    // TransformGizmoUseCase) with zero loss of capability — see
-    // docs/Principles.md, "World View Observes and Navigates; Editor
-    // Mutates and Builds (0.5.9)". setActiveDefinitionId/
-    // getActiveDefinitionId/isPlacementMode/rotatePlacementPreview/
-    // isGestureActive/getSpatialPlacement/commitPlacement/
-    // cancelPlacement/gizmoPointerDown/gizmoPointerMove/gizmoPointerUp/
-    // gizmoKeyDown used to live here.
+    // Placement mode and gizmo interaction live in EditorSession (see
+    // docs/Principles.md, "World View Observes and Navigates; Editor Mutates and
+    // Builds").
     // -----------------------------------------------------------------
 
     // -----------------------------------------------------------------
     // Navigation
     // -----------------------------------------------------------------
 
-    // 0.2.27: moves the camera AND, by default, makes `documentId` the
-    // active (editing) document too — the common case (search/Nearby
-    // Worlds/Documents-Here "Focus") really does mean both at once,
-    // and every pre-0.2.27 caller of focusDocument already expected
-    // that combined behavior. Pass `{ setActive: false }` for a pure
-    // camera move that must not change what mutations target — see
-    // docs/Principles.md, "Navigation Never Implies Editing."
+    // Moves the camera and, by default, makes `documentId` the active document
+    // too, which is what search/Nearby Worlds/"Focus" mean. Pass
+    // `{ setActive: false }` for a camera-only move (see docs/Principles.md,
+    // "Navigation Never Implies Editing").
     focusDocument(documentId, { setActive = true } = {}) {
         this._focusedDocumentId = documentId;
         if (setActive) {
@@ -3480,16 +710,11 @@ export class WorldNavigationSession {
         return this.updateSpatialView();
     }
 
-    // 0.2.27: makes `documentId` the active document WITHOUT touching
-    // the camera — the missing half of "Editing: Bob" while "Camera:
-    // Alice" stays put (e.g. two publications sharing a coordinate;
-    // switching which one is the editing target never needs to move
-    // anything). A selection that belongs to a DIFFERENT document is
-    // cleared — carrying it forward would mean the next transform
-    // silently forks a document that isn't the one this call just
-    // said should be active (see docs/Principles.md, "Only The Active
-    // Document Is An Editing Target"). A selection already inside
-    // `documentId` (or no selection at all) is left exactly as it was.
+    // Makes `documentId` active without moving the camera (e.g. two
+    // publications sharing a coordinate). A selection in a different document is
+    // cleared, or the next transform would fork a document that isn't the active
+    // one (see docs/Principles.md, "Only The Active Document Is An Editing
+    // Target").
     setActiveDocument(documentId) {
         if (this._spatialSelection && !this._spatialSelection.isEmpty
             && this._spatialSelection.documentId !== documentId) {
@@ -3499,9 +724,8 @@ export class WorldNavigationSession {
         return this._activeDocumentId;
     }
 
-    // Where the camera is currently navigated to — see getActiveDocumentId()
-    // for "which document would an edit land on," a genuinely different
-    // question as of 0.2.27.
+    // Where the camera is currently navigated to; see getActiveDocumentId() for where an
+    // edit would land.
     getFocusedDocumentId() {
         return this._focusedDocumentId;
     }
@@ -3527,778 +751,25 @@ export class WorldNavigationSession {
         return this.focusDocument(documentId);
     }
 
-    // 0.2.94 — every currently-navigable WorldLocation: the world's
-    // fixed Origin, plus one entry per StructurePlacement across every
-    // currently LOADED document. See WorldLocationDirectory's own
-    // header for exactly what "currently loaded" does and doesn't
-    // include. Purely a query — never mutates selection, focus, or the
-    // active document.
-    getWorldLocations() {
-        return this._worldLocationDirectory.list();
-    }
-
-    // Every OTHER collaborator currently spatially present across every
-    // World this session has entered (`_presentSpatialWorldDocumentIds`),
-    // flattened to one row per identity: `{ identityId, label, position,
-    // activity, activityTarget }`. The shared collaborator source both
-    // getPlaceContexts() (0.3.8) and getWelcomeContext() (0.3.9) derive
-    // from — the roster itself stays grouped by identity with one entry
-    // per DEVICE (see WorldSpatialPresenceUseCase#getSpatialRoster()'s
-    // own header), so this picks each identity's first device that
-    // currently reports a position and skips identities with none.
-    // `resolveDisplayName`, if given, is the same optional
-    // `(identityId) => string` callers already thread through
-    // enterWorldSpatialPresence() for spatial marker rendering — absent,
-    // falls back to the same short truncated identityId
-    // _applySpatialPresenceRoster() uses. Never throws; an empty array
-    // when no World has been spatially entered yet.
-    _getPresentCollaborators(resolveDisplayName) {
-        const collaborators = [];
-        const seen = new Set();
-        for (const documentId of this._presentSpatialWorldDocumentIds) {
-            const roster = this.getWorldSpatialPresenceRoster(documentId);
-            for (const group of roster) {
-                if (seen.has(group.identityId)) {
-                    continue;
-                }
-                const device = group.devices.find((candidate) => candidate.position);
-                if (!device) {
-                    continue;
-                }
-                seen.add(group.identityId);
-                collaborators.push({
-                    identityId: group.identityId,
-                    label: typeof resolveDisplayName === 'function' ? resolveDisplayName(group.identityId) : this._shortIdentityLabel(group.identityId),
-                    position: device.position,
-                    activity: device.activity,
-                    activityTarget: this._resolveSpatialContextualLabel(device.selection),
-                    // Carried through so a "Follow" affordance built on
-                    // top of this row (see core/WorldWelcomeContext.js's
-                    // nearby-collaborator shape) can call
-                    // focusCollaborator(deviceId) directly.
-                    deviceId: device.deviceId
-                });
-            }
-        }
-        return collaborators;
-    }
-
-    // 0.3.8 — Collaborative World Curation. Returns derived place
-    // contexts based on spatial proximity to landmarks. Each context
-    // includes the landmark, nearby structures, nearby landmarks, and
-    // nearby collaborators. Purely derived — never persisted, never
-    // authoritative. See core/WorldCurationContext.js for the grouping
-    // logic and radius constants. `resolveDisplayName` is optional — see
-    // _getPresentCollaborators() above.
-    getPlaceContexts(resolveDisplayName) {
-        const landmarks = [];
-        const structurePlacements = [];
-        const structureTitles = new Map();
-
-        for (const document of this.getLoadedDocuments()) {
-            const world = document.world;
-            for (const landmark of world.getWorldLandmarks()) {
-                landmarks.push(landmark);
-            }
-            for (const placement of world.getStructurePlacements()) {
-                structurePlacements.push(placement);
-                structureTitles.set(placement.documentId, this.getSavedDocumentTitle(placement.documentId));
-            }
-        }
-
-        const collaborators = this._getPresentCollaborators(resolveDisplayName);
-
-        return derivePlaceContexts({
-            landmarks,
-            structurePlacements,
-            structureTitles,
-            collaborators
-        });
-    }
-
-    // 0.3.8 — Returns a human-readable description of the current
-    // location based on nearby landmarks and structures. E.g.,
-    // "In Village" or "Near Old Bridge". Returns empty string if
-    // no meaningful context can be derived.
-    getCurrentLocationDescription() {
-        const cameraPos = this.getCameraPosition();
-        if (!cameraPos) {
-            return '';
-        }
-
-        const landmarks = [];
-        const structurePlacements = [];
-        const structureTitles = new Map();
-
-        for (const document of this.getLoadedDocuments()) {
-            const world = document.world;
-            for (const landmark of world.getWorldLandmarks()) {
-                landmarks.push(landmark);
-            }
-            for (const placement of world.getStructurePlacements()) {
-                structurePlacements.push(placement);
-                structureTitles.set(placement.documentId, this.getSavedDocumentTitle(placement.documentId));
-            }
-        }
-
-        return describeLocation({
-            position: cameraPos,
-            landmarks,
-            structurePlacements,
-            structureTitles
-        });
-    }
-
-    // 0.3.8 — Focus the camera on a place context (landmark position).
-    // Uses the same camera animation as focusLocation(). Returns false
-    // if the landmarkId is not found.
-    focusPlace(landmarkId) {
-        const landmarks = [];
-        for (const document of this.getLoadedDocuments()) {
-            const world = document.world;
-            for (const landmark of world.getWorldLandmarks()) {
-                if (landmark.id === landmarkId) {
-                    landmarks.push(landmark);
-                }
-            }
-        }
-
-        if (landmarks.length === 0) {
-            return false;
-        }
-
-        const landmark = landmarks[0];
-        const { x, y, z } = landmark.position;
-        this._beginCameraFocus({
-            position: { x: x + LOCATION_FOCUS_OFFSET.x, y: y + LOCATION_FOCUS_OFFSET.y, z: z + LOCATION_FOCUS_OFFSET.z },
-            target: { x, y, z }
-        });
-        return true;
-    }
-
-    // 0.3.9 — World Welcome & Guided Exploration. Derives a
-    // WorldWelcomeContext for the active document's World: the same
-    // landmark/structure collection getPlaceContexts() above gathers,
-    // the live spatial presence roster (_getPresentCollaborators()), and
-    // the avatar's own position (falling back to the camera's, for a
-    // viewer with no avatar movement controller wired). Purely derived —
-    // never persisted, never mutates the World, introduces no new
-    // storage. See core/WorldWelcomeContext.js for the derivation itself
-    // and docs/Principles.md, "Exploration Guides Attention, Never
-    // Ownership or Mutation (0.3.9)." `resolveDisplayName` is optional —
-    // see _getPresentCollaborators() above. Returns null when there is
-    // no active document to welcome the viewer into.
-    getWelcomeContext(resolveDisplayName) {
-        const activeDocumentId = this.getActiveDocumentId();
-        const activeDocument = activeDocumentId ? this.getDocument(activeDocumentId) : null;
-        if (!activeDocument) {
-            return null;
-        }
-
-        const landmarks = [];
-        const structurePlacements = [];
-        const structureTitles = new Map();
-        for (const document of this.getLoadedDocuments()) {
-            const world = document.world;
-            for (const landmark of world.getWorldLandmarks()) {
-                landmarks.push(landmark);
-            }
-            for (const placement of world.getStructurePlacements()) {
-                structurePlacements.push(placement);
-                structureTitles.set(placement.documentId, this.getSavedDocumentTitle(placement.documentId));
-            }
-        }
-
-        const collaborators = this._getPresentCollaborators(resolveDisplayName);
-        const position = this.getAvatarPosition() || this.getCameraPosition();
-        const placeContexts = derivePlaceContexts({ landmarks, structurePlacements, structureTitles, collaborators });
-        // 0.5.0 — regions across every loaded document, positions
-        // already offset into the SAME shared/absolute layout space the
-        // avatar/camera position above already is (see this method's
-        // sibling loop above for structures/landmarks, and
-        // getCurrentRegionPath() below for the identical offset logic).
-        const regions = this._collectRegions();
-        // 0.5.6 — Geographic Place Navigation & Arrival. Already
-        // distance-filtered/sorted, direction-labeled rows — see
-        // getNearbyGeographicPlaces()'s own header for why this is the
-        // one call site that resolution logic lives behind.
-        const nearbyGeographicPlaces = this.getNearbyGeographicPlaces();
-
-        return deriveWorldWelcomeContext({
-            world: activeDocument.world,
-            position,
-            landmarks,
-            structurePlacements,
-            structureTitles,
-            collaborators,
-            placeContexts,
-            regions,
-            nearbyGeographicPlaces
-        });
-    }
-
-    // 0.5.0 — World Regions & Decentralized Place Naming. Every
-    // WorldRegion across every currently loaded document, with each
-    // region's own X/Z offset into this session's shared/absolute
-    // layout space (getDocumentPosition), the exact inverse of what
-    // createRegionHere() below subtracts when creating one. A thin,
-    // read-only helper shared by getWelcomeContext(), getCurrentRegionPath(),
-    // and getRegions() — never a second source of truth for what regions
-    // currently exist.
-    _collectRegions() {
-        const regions = [];
-        for (const document of this.getLoadedDocuments()) {
-            const layoutPosition = this.getDocumentPosition(document.world.id);
-            for (const region of document.world.getWorldRegions()) {
-                regions.push({
-                    id: region.id,
-                    worldId: document.world.id,
-                    name: region.name,
-                    description: region.description,
-                    kind: region.kind,
-                    radius: region.radius,
-                    parentRegionId: region.parentRegionId,
-                    authorIdentityId: region.authorIdentityId,
-                    position: {
-                        x: region.x + layoutPosition.x,
-                        y: region.position.y + layoutPosition.y,
-                        z: region.z + layoutPosition.z
-                    }
-                });
-            }
-        }
-        return regions;
-    }
-
-    // Every currently known region, world-wide across loaded documents —
-    // the "Places" panel's own data source, the region counterpart to
-    // getWorldLocations().
-    getRegions() {
-        return this._collectRegions();
-    }
-
-    // 0.5.4 — Place Identity & Geographic Claim Resolution. Every
-    // WorldRegion across every currently loaded document, in EACH
-    // region's own NATIVE per-World coordinates — deliberately NOT
-    // offset into this session's shared multi-document layout space the
-    // way _collectRegions() above is. That offset exists purely so
-    // several loaded Worlds can be visualized side by side without
-    // overlapping on screen; using it here would make every cross-World
-    // geographic comparison meaningless (two regions that genuinely
-    // describe the same ground in two independent Worlds would appear
-    // however many thousands of units apart the layout happened to
-    // place their documents). core/PlaceFingerprint.js/PlaceIdentity.js
-    // only ever see what THIS method returns — never the shared-layout
-    // positions _collectRegions() produces.
-    _collectRawRegions() {
-        const regions = [];
-        for (const document of this.getLoadedDocuments()) {
-            for (const region of document.world.getWorldRegions()) {
-                regions.push({
-                    id: region.id,
-                    worldId: document.world.id,
-                    name: region.name,
-                    kind: region.kind,
-                    radius: region.radius,
-                    authorIdentityId: region.authorIdentityId,
-                    position: { x: region.x, y: region.position.y, z: region.z }
-                });
-            }
-        }
-        return regions;
-    }
-
-    // core/PlaceIdentity.js#groupRegionsByPlaceIdentity(), applied to
-    // every region across every currently loaded document. Pure
-    // geometry — candidacy only; see that module's own header on why a
-    // matching fingerprint is never treated as proof that two regions
-    // are the same place.
-    getGeographicPlaceGroups(options = {}) {
-        return groupRegionsByPlaceIdentity(this._collectRawRegions(), options);
-    }
-
-    // The combined community naming view for whatever geographic place
-    // `regionId` belongs to: every region this replica currently knows
-    // about that shares its core/PlaceFingerprint.js fingerprint (see
-    // core/PlaceIdentity.js), and every claim on file for ANY of them,
-    // ranked together by core/PlaceNamingView.js#rankClaimsByName()'s
-    // own distinct-author scoring — see core/GeographicPlaceResolution.js
-    // for the full derivation. Returns `{ regions, namingView }`:
-    // `regions` is always at least `[the region itself]` when it's
-    // known to this replica; `namingView` is [] when naming claims
-    // aren't wired, mirroring getPlaceNamingView()'s own graceful
-    // degradation — a caller may always call this safely without first
-    // checking whether either collaborator exists.
-    getGeographicNamingView(regionId, options = {}) {
-        const regions = this._collectRawRegions();
-        const claims = this._collectClaimsFor(regions);
-        const group = geographicPlaceForRegion(regionId, regions, claims, options);
-        if (!group) {
-            return { regions: [], namingView: [] };
-        }
-        return { regions: group.regions, namingView: group.namingView };
-    }
-
-    // 0.5.5 — Geographic Place Directory & Identity UX. Every geographic
-    // place candidate this replica currently knows about, world-wide
-    // across every loaded document — the "Places" directory's own data
-    // source, the geographic counterpart to
-    // application/WorldLocationDirectory.js#list(). Each entry is a
-    // core/GeographicPlaceView.js#GeographicPlaceView: a DERIVED reading
-    // over whatever regions/claims this replica already has, never a
-    // fourth stored object alongside WorldRegion/PlaceFingerprint/
-    // PlaceIdentity — see that module's own header on the exact
-    // pipeline this closes:
-    //
-    //   WorldRegion -> PlaceFingerprint -> PlaceIdentity ->
-    //   GeographicPlaceView -> UI
-    //
-    // Cheap and safe to call as often as a UI likes, the same "list() is
-    // never cached" posture WorldLocationDirectory itself already
-    // documents — this method re-derives the whole directory fresh on
-    // every call rather than keeping any state of its own.
-    getGeographicPlaceDirectory(options = {}) {
-        const regions = this._collectRawRegions();
-        const claims = this._collectClaimsFor(regions);
-        return buildGeographicPlaceDirectory(regions, claims, options);
-    }
-
-    // One geographic place by its own fingerprint key — exactly the id
-    // a getGeographicPlaceDirectory() row itself carries
-    // (GeographicPlaceView#fingerprintKey) — so a directory row can be
-    // opened directly without the caller needing to already hold a
-    // regionId. Returns null for an unknown key, never a throw, the
-    // same graceful-absence posture getGeographicNamingView() already
-    // keeps for an unknown regionId.
-    getGeographicPlace(fingerprintKey, options = {}) {
-        const regions = this._collectRawRegions();
-        const claims = this._collectClaimsFor(regions);
-        return geographicPlaceByKey(fingerprintKey, regions, claims, options);
-    }
-
-    // 0.5.6 — Geographic Place Navigation & Arrival. Every geographic
-    // place candidate within `radius` of the viewer's current position
-    // (avatar position, falling back to camera position — the exact
-    // same "where am I" fallback getWelcomeContext()/getCurrentRegionPath()
-    // already use), nearest first. [] with no position available (no
-    // avatar, no camera — e.g. before start()), the same graceful
-    // degradation every other position-dependent read in this file
-    // already has.
-    //
-    // Deliberately resolves each place's navigable position through
-    // `_worldLocationDirectory` — the SAME single source of truth
-    // focusLocation() itself reads via its own `place:<fingerprintKey>`
-    // resolution (application/WorldLocationDirectory.js#
-    // _geographicPlaceLocation()) — rather than recomputing a layout
-    // offset here a second time. "How far away is it" and "where does
-    // Go To Place actually take me" can never disagree, by
-    // construction: both answers come from the exact same lookup.
-    //
-    // No distance/visitor/lastVisited is ever stored — every row
-    // returned here is recomputed fresh on every call, exactly like
-    // getGeographicPlaceDirectory() itself already is.
-    getNearbyGeographicPlaces(radius = DEFAULT_NEARBY_GEOGRAPHIC_PLACE_RADIUS) {
-        const position = this.getAvatarPosition() || this.getCameraPosition();
-        if (!position) {
-            return [];
-        }
-        return deriveNearbyGeographicPlaces(this._collectGeographicPlaceEntries(), position, radius);
-    }
-
-    // 0.5.8 — World View Contextual Focus & Information Hierarchy. The
-    // entries loop getNearbyGeographicPlaces() built inline before this
-    // milestone, extracted so getFocusContext() below can ask its own
-    // "what's the nearest OTHER geographic place candidate to THIS
-    // target" question by reusing the exact same resolution — never a
-    // second copy of this loop, and never a second way "how far away is
-    // a geographic place" gets answered. See core/GeographicPlaceNavigation.js#
-    // deriveNearbyGeographicPlaces()'s own header on why no distance is
-    // ever stored: every entry's position is re-resolved fresh, on
-    // every call, straight through the same WorldLocationDirectory
-    // lookup focusLocation() itself uses.
-    _collectGeographicPlaceEntries() {
-        const entries = [];
-        for (const place of this.getGeographicPlaceDirectory()) {
-            const location = this._worldLocationDirectory.find(geographicPlaceLocationId(place.fingerprintKey));
-            if (!location) {
-                continue;
-            }
-            entries.push({
-                fingerprintKey: place.fingerprintKey,
-                displayName: place.displayName,
-                descriptionCount: place.descriptionCount,
-                worldCount: place.worldCount,
-                authorCount: place.authorCount,
-                position: { x: location.position.x, y: location.position.y, z: location.position.z }
-            });
-        }
-        return entries;
-    }
-
-    // 0.5.8 — every WorldLandmark across every loaded document, in this
-    // session's own shared/absolute layout space (getDocumentPosition)
-    // — the exact same offset _collectRegions()/getMapContent() already
-    // apply — PLUS each landmark's own description, which
-    // getMapContent()'s thinner {id, title, position} rows don't carry.
-    // A thin, read-only helper for getFocusContext() below; never a
-    // second source of truth for what landmarks currently exist.
-    _collectFocusLandmarks() {
-        const landmarks = [];
-        for (const document of this.getLoadedDocuments()) {
-            const layoutPosition = this.getDocumentPosition(document.world.id);
-            for (const landmark of document.world.getWorldLandmarks()) {
-                landmarks.push({
-                    id: landmark.id,
-                    documentId: document.world.id,
-                    title: landmark.title,
-                    description: landmark.description,
-                    position: {
-                        x: landmark.position.x + layoutPosition.x,
-                        y: landmark.position.y + layoutPosition.y,
-                        z: landmark.position.z + layoutPosition.z
-                    }
-                });
-            }
-        }
-        return landmarks;
-    }
-
-    // The structure counterpart to _collectFocusLandmarks() above —
-    // same shape/offset getMapContent() already produces for
-    // structures; kept as its own method purely so getFocusContext()
-    // below reads symmetrically with the landmark/region helpers beside
-    // it, not because the shape actually differs from getMapContent()'s
-    // own structures array.
-    _collectFocusStructures() {
-        const structures = [];
-        for (const document of this.getLoadedDocuments()) {
-            const layoutPosition = this.getDocumentPosition(document.world.id);
-            for (const placement of document.world.getStructurePlacements()) {
-                structures.push({
-                    id: placement.id,
-                    // The PLACED structure's own content document — see
-                    // core/WorldFocusContext.js's own header on why
-                    // "Edit a Copy" forks THIS, never the containing
-                    // World document that merely positions it. The exact
-                    // same id ui/views/WorldView.js#openStructureSource()
-                    // already loads.
-                    documentId: placement.documentId,
-                    title: this.getSavedDocumentTitle(placement.documentId),
-                    position: {
-                        x: placement.position.x + layoutPosition.x,
-                        y: placement.position.y + layoutPosition.y,
-                        z: placement.position.z + layoutPosition.z
-                    }
-                });
-            }
-        }
-        return structures;
-    }
-
-    // 0.5.8 — World View Contextual Focus & Information Hierarchy. The
-    // ONE place a core/WorldFocusContext.js#WorldFocusContext is ever
-    // built: gathers whatever raw World state deriveWorldFocusContext()
-    // needs (the target itself, the viewer's own current position for
-    // distance/direction, every region for containment, every
-    // geographic place candidate for "Near: ___") and hands it to that
-    // pure function — this method never derives anything itself. See
-    // getFocusContextForLocation()/getFocusContextForCollaborator()
-    // below for the two ways a caller actually reaches this; both are
-    // thin resolvers that end here.
-    _buildFocusContext(kind, entity) {
-        if (!entity) {
-            return null;
-        }
-        const viewerPosition = this.getAvatarPosition() || this.getCameraPosition();
-        return deriveWorldFocusContext({
-            kind,
-            entity,
-            viewerPosition,
-            regions: this._collectRegions(),
-            nearbyPlaceEntries: this._collectGeographicPlaceEntries()
-        });
-    }
-
-    // The Locations-panel/Map/Explore counterpart to focusLocation(): the
-    // SAME `locationId` space (a WorldRegion/WorldLandmark/StructurePlacement
-    // id, or a geographic place's own derived `place:<fingerprintKey>` id
-    // — see core/GeographicPlaceNavigation.js) resolved into a
-    // WorldFocusContext instead of a camera move. Deliberately does NOT
-    // go through `_worldLocationDirectory.find()` for a region/landmark/
-    // structure id — that returns only {id, title, kind, position},
-    // missing the description/region-kind a focus panel wants to show —
-    // so this resolves each kind against its own richer collection
-    // instead (_collectRegions()/_collectFocusLandmarks()/
-    // _collectFocusStructures()). Returns null for an unknown id, an
-    // ORIGIN id (not a focusable kind — see core/WorldFocusContext.js's
-    // own closed vocabulary), or when nothing is currently loaded —
-    // never throws.
-    getFocusContextForLocation(locationId) {
-        if (!locationId) {
-            return null;
-        }
-        if (isGeographicPlaceLocationId(locationId)) {
-            const fingerprintKey = geographicPlaceFingerprintKeyFromLocationId(locationId);
-            const entry = fingerprintKey
-                ? this._collectGeographicPlaceEntries().find((e) => e.fingerprintKey === fingerprintKey)
-                : null;
-            return this._buildFocusContext(WorldFocusKind.GEOGRAPHIC_PLACE, entry);
-        }
-        const region = this._collectRegions().find((r) => r.id === locationId);
-        if (region) {
-            return this._buildFocusContext(WorldFocusKind.REGION, region);
-        }
-        const landmark = this._collectFocusLandmarks().find((l) => l.id === locationId);
-        if (landmark) {
-            return this._buildFocusContext(WorldFocusKind.LANDMARK, landmark);
-        }
-        const structure = this._collectFocusStructures().find((s) => s.id === locationId);
-        if (structure) {
-            return this._buildFocusContext(WorldFocusKind.STRUCTURE, structure);
-        }
-        return null;
-    }
-
-    // The collaborator counterpart to getFocusContextForLocation() above
-    // — a WorldCollaboratorIndicator row/Explore's "Nearby People" row/a
-    // map collaborator marker all already address a collaborator by
-    // `deviceId`, exactly what focusCollaborator() itself takes.
-    // `resolveDisplayName` is the same optional `(identityId) => string`
-    // every other collaborator-listing method here already accepts —
-    // see _getPresentCollaborators()'s own header. Returns null for an
-    // unknown/no-longer-present deviceId, never throws.
-    getFocusContextForCollaborator(deviceId, resolveDisplayName) {
-        if (!deviceId) {
-            return null;
-        }
-        const collaborator = this._getPresentCollaborators(resolveDisplayName).find((c) => c.deviceId === deviceId);
-        if (!collaborator || !collaborator.position) {
-            return null;
-        }
-        return this._buildFocusContext(WorldFocusKind.COLLABORATOR, {
-            identityId: collaborator.identityId,
-            deviceId: collaborator.deviceId,
-            displayName: collaborator.label,
-            activity: collaborator.activity,
-            position: collaborator.position
-        });
-    }
-
-    // 0.5.6 — a lightweight, derived filter over getGeographicPlaceDirectory()'s
-    // own rows — see core/GeographicPlaceNavigation.js#searchGeographicPlaces()
-    // for what it matches against (displayName, every community name,
-    // every region's own name). Never a second index kept in sync with
-    // anything; every call re-derives the directory fresh, the same
-    // "cheap, never cached" posture getGeographicPlaceDirectory() itself
-    // already holds to.
-    searchGeographicPlaces(query, options = {}) {
-        return searchGeographicPlaceRows(this.getGeographicPlaceDirectory(options), query);
-    }
-
-    // Every claim this replica has on file for any of `regions` —
-    // gathered per (worldId, regionId), since
-    // application/LocalPlaceNamingClaimStore.js is scoped per World.
-    // Returns [] when naming claims were never wired, the same
-    // graceful-degradation posture getPlaceNamingClaims() itself keeps.
-    _collectClaimsFor(regions) {
-        if (!this._placeNamingClaimUseCase) {
-            return [];
-        }
-        const claims = [];
-        for (const region of regions) {
-            claims.push(...this._placeNamingClaimUseCase.claimsForRegion(region.worldId, region.id));
-        }
-        return claims;
-    }
-
-    // 0.5.0 — every named region actually containing the viewer's
-    // current position, innermost first. Purely derived — see
-    // core/WorldRegionGeography.js#regionsContaining().
-    getCurrentRegionPath() {
-        const position = this.getAvatarPosition() || this.getCameraPosition();
-        if (!position) {
-            return [];
-        }
-        const regions = this._collectRegions();
-        return regionsContaining(position, regions).map((region) => {
-            const dx = region.position.x - position.x;
-            const dz = region.position.z - position.z;
-            return {
-                id: region.id,
-                name: region.name,
-                kind: region.kind,
-                distance: Math.round(Math.sqrt(dx * dx + dz * dz) * 10) / 10
-            };
-        });
-    }
-
-    // 0.5.1 — World Maps & Geographic Navigation. Every region/landmark/
-    // structure/collaborator currently known to this session, WORLD-WIDE
-    // across every loaded document — the exact same scope
-    // application/WorldLocationDirectory.js#list() already uses for
-    // navigation (never streaming-radius-limited, per that class's own
-    // header), because a map is for understanding the whole World, not
-    // just what's currently rendered nearby. Each entry's position is
-    // already offset into this session's shared/absolute layout space
-    // (getDocumentPosition) — the SAME transform _collectRegions() above
-    // and WorldLocationDirectory's own _landmarkLocationsFor()/
-    // _structureLocationsFor() already apply — so a map spanning
-    // multiple loaded Worlds lines their content up exactly like the
-    // Locations panel already does. `resolveDisplayName` is the same
-    // optional `(identityId) => string` every other collaborator-listing
-    // method here already accepts — see _getPresentCollaborators()'s
-    // own header.
-    //
-    // Purely a read: never mutates the World, never decides what a map
-    // does with this. See core/WorldMapProjection.js for the pure
-    // projection math built on top, and ui/components/WorldMapPanel.js
-    // for the one renderer that consumes it today.
-    getMapContent(resolveDisplayName) {
-        const landmarks = [];
-        const structures = [];
-        for (const document of this.getLoadedDocuments()) {
-            const layoutPosition = this.getDocumentPosition(document.world.id);
-            for (const landmark of document.world.getWorldLandmarks()) {
-                landmarks.push({
-                    id: landmark.id,
-                    title: landmark.title,
-                    position: {
-                        x: landmark.position.x + layoutPosition.x,
-                        y: landmark.position.y + layoutPosition.y,
-                        z: landmark.position.z + layoutPosition.z
-                    }
-                });
-            }
-            for (const placement of document.world.getStructurePlacements()) {
-                structures.push({
-                    id: placement.id,
-                    title: this.getSavedDocumentTitle(placement.documentId),
-                    position: {
-                        x: placement.position.x + layoutPosition.x,
-                        y: placement.position.y + layoutPosition.y,
-                        z: placement.position.z + layoutPosition.z
-                    }
-                });
-            }
-        }
-
-        return {
-            regions: this._collectRegions(),
-            landmarks,
-            structures,
-            collaborators: this._getPresentCollaborators(resolveDisplayName),
-            viewerPosition: this.getAvatarPosition() || this.getCameraPosition()
-        };
-    }
-
-    // The human breadcrumb for the viewer's CURRENT position, e.g.
-    // "Willow Village · Green Valley". Falls back to the exact same
-    // describeLocation() reading (nearest landmark/structure) this
-    // session already offered before 0.5.0 when no region contains the
-    // position — never a fabricated placeholder name.
-    getCurrentPlaceName() {
-        const path = this.getCurrentRegionPath();
-        const placeName = describePlace(path);
-        return placeName || this.getCurrentLocationDescription();
-    }
-
     // -----------------------------------------------------------------
-    // Local World Experience & Return (0.3.10)
+    // Local World Experience & Return
     // -----------------------------------------------------------------
     //
-    // Purely local, per-user camera framing for a World this replica has
-    // visited before — never a Document field, a WorldPlacement field,
-    // or anything ever broadcast. See core/LocalWorldExperience.js and
-    // docs/Principles.md, "Personal Experience Is Not Shared World
-    // State (0.3.10)." Every method below is a graceful no-op with no
-    // localWorldExperienceStore wired — the same optional-collaborator
-    // posture every other optional feature in this constructor follows.
+    // Local, per-user camera framing for Worlds this replica has visited; never
+    // a Document or WorldPlacement field, never broadcast. See
+    // core/LocalWorldExperience.js and docs/Principles.md, "Personal Experience
+    // Is Not Shared World State". No-ops without localWorldExperienceStore.
     //
-    // Deliberately independent of enterWorldPresence()/leaveWorldPresence()
-    // (0.2.98): those broadcast a SHARED "I am here" fact to peers; these
-    // read/write nothing but this replica's own local storage. A caller
-    // wires both at the same "active document changed" event (see
-    // ui/views/WorldView.js's _syncWorldExperience()) without either
-    // implying the other — and, per the same principle, this state is
-    // NEVER consulted by canEditDocument()/worldAuthorizationService: a
-    // prior visit is a UX convenience, never an authorization claim.
+    // Independent of enterWorldPresence()/leaveWorldPresence(), which broadcast
+    // a shared "I am here". Callers wire both at the same active-document change
+    // (see WorldView.js _syncWorldExperience()). Never consulted for
+    // authorization: a prior visit is a convenience, not a claim.
 
-    hasVisitedWorld(documentId) {
-        if (!this._localWorldExperienceStore || !documentId) {
-            return false;
-        }
-        return this._localWorldExperienceStore.hasVisited(documentId);
-    }
-
-    getWorldExperience(documentId) {
-        if (!this._localWorldExperienceStore || !documentId) {
-            return null;
-        }
-        return this._localWorldExperienceStore.getExperience(documentId);
-    }
-
-    // Snapshots THIS replica's current camera framing (position, target,
-    // a derived heading reading) and active Camera Perspective for
-    // `documentId`, right now. A no-op with no localWorldExperienceStore
-    // wired, or before start() has ever run (no camera controller yet —
-    // nothing to snapshot).
-    saveWorldExperience(documentId) {
-        if (!this._localWorldExperienceStore || !documentId || !this._spatialCameraController) {
-            return;
-        }
-        const state = this._spatialCameraController.getSpatialCameraState();
-        const heading = computeCompassHeading(state.position, state.target);
-        this._localWorldExperienceStore.recordVisit(documentId, {
-            position: { x: state.position.x, y: state.position.y, z: state.position.z },
-            target: { x: state.target.x, y: state.target.y, z: state.target.z },
-            heading: heading ? heading.degrees : null,
-            perspective: this._cameraPerspective
-        });
-    }
-
-    // Restores whatever THIS replica's own last visit to `documentId`
-    // left behind, if anything. A stored Camera Perspective takes
-    // priority and is re-applied via setCameraPerspective() — a
-    // perspective is always an offset from the avatar's CURRENT
-    // position (core/CameraPerspective.js), never a raw coordinate, so
-    // it re-frames correctly even if the avatar moved (or the World
-    // changed) since the last visit. Otherwise, a stored free/orbit
-    // position+target is restored directly, exactly like every other
-    // camera-focus caller in this file (see _beginCameraFocus()) — never
-    // a second camera-movement mechanism. Returns the restored
-    // LocalWorldExperience, or null when there is nothing to restore
-    // (no store wired, or no prior visit on record) — the caller simply
-    // keeps whatever framing it already had, e.g. 0.3.9's Welcome
-    // framing for a first-time visitor.
-    restoreWorldExperience(documentId) {
-        if (!this._localWorldExperienceStore || !documentId) {
-            return null;
-        }
-        const experience = this._localWorldExperienceStore.getExperience(documentId);
-        if (!experience) {
-            return null;
-        }
-        if (experience.cameraPerspective) {
-            this.setCameraPerspective(experience.cameraPerspective);
-        } else if (experience.cameraPosition && experience.cameraTarget) {
-            this._beginCameraFocus({ position: experience.cameraPosition, target: experience.cameraTarget });
-        }
-        return experience;
-    }
-
-    // 0.2.94 — the Locations-panel counterpart to focusDocument()/
-    // focusSelection(): moves the camera toward a WorldLocation's own
-    // position with a deterministic offset (LOCATION_FOCUS_OFFSET for a
-    // STRUCTURE location, or the fixed HOME_CAMERA_FRAMING for ORIGIN —
-    // see those constants' own comments for why each is what it is),
-    // smoothly when this session can animate (see _beginCameraFocus()).
-    // Deliberately never touches `_activeDocumentId`/selection/
-    // inspection — see docs/Principles.md, "Navigation Never Implies
-    // Editing (0.2.27)," which this milestone's Locations panel keeps
-    // exactly as true as every prior navigation entry point. Returns
-    // false (a no-op) for an unknown locationId, e.g. a stale panel
-    // entry whose StructurePlacement was since deleted or unloaded —
-    // never throws.
+    // Moves the camera to a WorldLocation (LOCATION_FOCUS_OFFSET for a
+    // STRUCTURE, HOME_CAMERA_FRAMING for ORIGIN), animated when possible. Never
+    // touches the active document, selection or inspection (see
+    // docs/Principles.md, "Navigation Never Implies Editing"). Returns false for
+    // an unknown id, e.g. a stale panel entry.
     focusLocation(locationId) {
         const location = this._worldLocationDirectory.find(locationId);
         if (!location) {
@@ -4316,86 +787,36 @@ export class WorldNavigationSession {
         return true;
     }
 
-    // Bug fix / redefinition — "Home" used to mean `focusLocation(ORIGIN_LOCATION_ID)`:
-    // the camera alone, jumping to the shared World View's fixed
-    // (0,0,0) reference framing regardless of what the user was
-    // actually doing. Since a published world's own position is
-    // essentially randomized across a huge shared grid
-    // (core/DeterministicGridPlacement.js), (0,0,0) is almost never
-    // anywhere near the user's own content — the button read as "Home"
-    // but behaved as "teleport to an unrelated, usually-empty part of
-    // the shared map," a reported source of real confusion. True
-    // world origin remains reachable exactly as before, just no longer
-    // through this shortcut: WorldLocationDirectory's own `list()`
-    // always lists it first, under its permanent `ORIGIN_LOCATION_ID`
-    // entry, for anyone who wants it deliberately.
+    // "Home" returns the camera and the local avatar to the user's own world.
+    // World origin is reachable through the ORIGIN_LOCATION_ID entry, but a
+    // published world sits somewhere on a huge shared grid, so origin is almost
+    // never near the user's content.
     //
-    // "Home" now means what the word actually promises: back to the
-    // user's OWN currently-focused world (`_focusedDocumentId` — see
-    // focusDocument()'s own header for how that gets set), both the
-    // CAMERA and the LOCAL AVATAR. This is a deliberate, singular
-    // exception to the "navigation is camera-only, never silently
-    // relocates a participant" rule every other focus*() method here
-    // holds (see focusDocument()'s own `_spawnAvatarNear()`, gated to
-    // fire at most once per session, on `sequence === 0`, for exactly
-    // that reason): leaving the avatar behind while the camera jumps
-    // "home" would recreate the same render/reality mismatch this
-    // World View has already had fixed elsewhere this session — the
-    // camera would show the user's own world while WASD kept moving
-    // their avatar around wherever it actually was, off-screen. A
-    // button people will genuinely think of as "take me home" should
-    // take all of them home, not just their point of view.
+    // Moving the avatar is a deliberate exception to "navigation never
+    // relocates a participant": leaving it behind would show the user's world
+    // while WASD moves an avatar somewhere off-screen.
     //
-    // Reuses focusDocument() for the camera/active-document/streaming
-    // half (identical to what every other "jump to a specific world"
-    // entry point already does), then unconditionally repositions the
-    // avatar on top — overriding, harmlessly, whatever
-    // focusDocument()'s own once-only _spawnAvatarNear() already did
-    // when the avatar had never moved, and actually moving it every
-    // other time, which is the entire point of this override existing.
+    // Uses focusDocument() for the camera, active document and streaming, then
+    // repositions the avatar. Falls back to origin only when no document has
+    // ever been focused.
     //
-    // Falls back to the pre-existing origin behavior only when there
-    // is no world of the user's own to go home TO — no document has
-    // ever been focused yet — the same "graceful degrade to the one
-    // guaranteed destination" posture focusLocation() itself already
-    // has for an unresolvable id.
-    //
-    // Reads _homeDocumentId, NOT _focusedDocumentId, and — unlike an
-    // earlier version of this method — does not also require the
-    // document to be currently loaded. Wandering far enough (on foot,
-    // or riding a vehicle) that the user's own world streams out via
-    // updateSpatialView() is exactly the scenario Home exists to
-    // recover from, and _unloadWorld() clears _focusedDocumentId the
-    // moment that happens; _homeDocumentId is the stable pointer that
-    // survives it (see its own constructor comment). focusDocument()
-    // below reloads the document itself — its own trailing
-    // updateSpatialView() call runs synchronously, so by the time this
-    // method reaches _safeSpawnPosition() the document is back in
-    // _loadedDocuments and its real bounds are measured, not the
-    // fixed-offset fallback.
+    // Reads _homeDocumentId, not _focusedDocumentId, and doesn't require the
+    // document to be loaded: wandering far enough to unload it is exactly when
+    // Home is needed. focusDocument() reloads it synchronously, so
+    // _safeSpawnPosition() measures real bounds.
     goHome() {
         const documentId = this._homeDocumentId;
         if (!documentId) {
             return this.focusLocation(ORIGIN_LOCATION_ID);
         }
-        // focusDocument()'s own return is updateSpatialView()'s richer
-        // { loaded, visible, failed } shape, not a boolean — goHome()
-        // keeps focusLocation()'s own established true/false contract
-        // instead (every existing caller of goHome() already expects
-        // that shape; nothing needs updateSpatialView()'s own streaming
-        // detail from this particular call).
+        // focusDocument() returns updateSpatialView()'s { loaded, visible, failed };
+        // goHome() keeps its boolean contract.
         this.focusDocument(documentId);
         const layoutPos = this._getWorldPosition(documentId);
         if (this._avatarPresenceSession && layoutPos) {
-            // Bug fix — reuses the same real-bounds-aware spawn point
-            // _spawnAvatarNear() computes for a fresh avatar's own
-            // first spawn (see _safeSpawnPosition()'s own header): the
-            // fixed (3, 0, 3) offset this used to add put the avatar
-            // INSIDE a structure recentered around its own local origin
-            // — reported live as "Home dropped me inside my own
-            // pyramid." _safeSpawnPosition() degrades to that same
-            // fixed offset gracefully on its own if, for any reason,
-            // the document above failed to reload.
+            // Uses the bounds-aware spawn point so Home never lands inside a structure
+            // built around its own origin. _safeSpawnPosition() falls back to the fixed
+            // offset if the reload failed.
             this._avatarPresenceSession.update({
                 position: this._safeSpawnPosition(documentId, layoutPos)
             });
@@ -4403,14 +824,9 @@ export class WorldNavigationSession {
         return true;
     }
 
-    // 0.2.94 — a pure, derived orientation reading for a compass
-    // indicator: "which way is the camera currently looking," computed
-    // fresh from the camera's own position/target (core/CompassHeading.js)
-    // every time this is called — never cached, never a stored fact.
-    // Returns null before start() has ever been called (no camera
-    // controller yet) or when the camera's position and target
-    // currently coincide (no meaningful heading — see
-    // computeCompassHeading's own comment).
+    // Which way the camera is looking, derived fresh from position/target (see
+    // core/CompassHeading.js). Null before start() or when position and target
+    // coincide.
     getCompassHeading() {
         if (!this._spatialCameraController) {
             return null;
@@ -4443,12 +859,9 @@ export class WorldNavigationSession {
 		    if (visibleIds.includes(id)) return false;
 		    // Pin dirty documents against streaming unload
 		    if (this.isDocumentDirty(id)) return false;
-		    // 0.2.20: a lazily-forked document is never a publication,
-		    // so it can never re-enter `visibleIds` on its own — unlike
-		    // a dirty flag, this pin does not clear on save. Without it,
-		    // saving a fork (which clears dirty) would make the very
-		    // next camera move stream it out permanently: unloadable
-		    // and undiscoverable in the same breath.
+		    // A lazily-forked document is never a publication, so it can never re-enter
+		    // `visibleIds`; unlike the dirty flag, this pin survives a save. Without it a
+		    // saved fork would stream out on the next camera move for good.
 		    if (this._localOnlyDocumentIds.has(id)) return false;
 		    return true;
 		});
@@ -4494,18 +907,11 @@ export class WorldNavigationSession {
     // Interaction
     // -----------------------------------------------------------------
 	
-	// 0.2.39 — an avatar pick is checked ALONGSIDE the brick pick (both
-	// are cheap raycasts against entirely separate object sets — see
-	// renderer/AvatarPickingService.js), and whichever is actually
-	// NEARER the camera wins — never "bricks always win" regardless of
-	// depth (an avatar standing in front of a wall must be selectable
-	// as itself, not as the wall behind it). Exactly one of
-	// {avatar interaction target, brick/ground selection} is ever
-	// non-empty at a time — see docs/Principles.md, "Avatars Are Never
-	// Document Selection": every branch below explicitly clears the
-	// other. `toggle`/`additive` are meaningless for an avatar target
-	// (there is no multi-avatar-selection concept) and are simply
-	// ignored on that branch.
+	// Avatar, placement and brick picks are separate raycasts; the nearest hit
+	// wins, so an avatar in front of a wall is selectable. At most one of
+	// {avatar target, brick/ground selection} is set at a time (see
+	// docs/Principles.md, "Avatars Are Never Document Selection").
+	// `toggle`/`additive` don't apply to avatars.
 	pick(screenX, screenY, { toggle = false, additive = false } = {}) {
 	    if (!this._session) {
 	        return null;
@@ -4514,16 +920,9 @@ export class WorldNavigationSession {
 	    const avatarHit = typeof this._session.pickAvatar === 'function'
 	        ? this._session.pickAvatar(screenX, screenY)
 	        : null;
-	    // 0.2.93 — World View Instance Inspection: a THIRD, separate
-	    // raycast target set (renderer/PlacementMeshRegistry.js, via
-	    // PickingService#pickPlacement()) — a StructurePlacement's own
-	    // meshes are never registered with the brick mesh registry (see
-	    // renderer/WorldRenderer.js's own 0.2.90 header), so resolving a
-	    // hit on one needs its own test, folded into the same
-	    // nearest-wins comparison avatarHit already uses against
-	    // brickHit. Optional: a render facade that doesn't support it
-	    // (an older test double) simply never resolves a placement hit —
-	    // the same graceful-absence posture avatarHit already has.
+	    // StructurePlacement meshes live in their own registry, so a placement hit
+	    // needs its own raycast, folded into the same nearest-wins comparison. A
+	    // facade without pickPlacement() never resolves one.
 	    const placementHit = typeof this._session.pickPlacement === 'function'
 	        ? this._session.pickPlacement(screenX, screenY)
 	        : null;
@@ -4539,20 +938,10 @@ export class WorldNavigationSession {
 	        return this._avatarInteraction;
 	    }
 
-	    // 0.2.93 — a StructurePlacement instance: SELECT, never EDIT. See
-	    // docs/Principles.md, "Selection In World View Does Not Imply
-	    // Editing Authority" — this branch only ever sets selection +
-	    // inspection state and drives a whole-instance highlight; it
-	    // never reaches SpatialEditingService, and never shows the
-	    // transform gizmo (a `placement` selection's `items` array is
-	    // always empty — see SpatialSelectionState's own header — so
-	    // SelectionBoundsService#calculate() returns null for it, and
-	    // TransformGizmoUseCase#resolvePresentation(), called from
-	    // _refreshGizmo() below, hides the gizmo accordingly. No
-	    // special-casing needed in either of those files). `toggle`/
-	    // `additive` are meaningless here (there is no multi-placement-
-	    // selection concept) and are simply ignored, exactly like the
-	    // avatar branch above.
+	    // A StructurePlacement is selected, never edited (see docs/Principles.md,
+	    // "Selection In World View Does Not Imply Editing Authority"). A `placement`
+	    // selection has no items, so no gizmo shows. `toggle`/`additive` are
+	    // ignored.
 	    if (placementHit && (!brickHit || placementHit.distance < brickHit.distance)) {
 	        const hostDocumentId = this._resolvePlacementHostDocumentId(placementHit.placementId);
 	        if (hostDocumentId) {
@@ -4648,10 +1037,8 @@ export class WorldNavigationSession {
         return true;
     }
 
-    // 0.1.50 — select every brick in the document the current selection
-    // belongs to (or the ACTIVE document when nothing is selected —
-    // 0.2.27: never the camera-focused one, see docs/Principles.md).
-    // Multi-document select-all is deliberately undefined: a spatial
+    // Selects every brick in the selection's document, or the active document
+    // (never the camera-focused one) when nothing is selected. A spatial
     // selection references exactly one document.
     selectAll() {
         const documentId = (!this._spatialSelection.isEmpty && this._spatialSelection.documentId)
@@ -4721,10 +1108,8 @@ export class WorldNavigationSession {
         return true;
     }
 
-    // moveSelection/deleteSelection/rotateSelection/alignSelection/
-    // distributeSelection/snapSelectionToGrid/applyNumericTransform —
-    // REMOVED (0.5.9). See the "Placement Mode & Gizmo interaction"
-    // removal note above; EditorSession owns this whole kernel now.
+    // Selection transforms (move/delete/rotate/align/distribute/snap/numeric)
+    // live in EditorSession.
 
     undo() {
 	    if (this._historyPreview && this._historyPreview.active) return false;
@@ -4752,11 +1137,8 @@ export class WorldNavigationSession {
         return false;
     }
 
-    // 0.9.210 — World View Undo/Redo UI Integration. Read-only mirrors of
-    // undo()/redo()'s own gating (same _historyPreview.active check, same
-    // _getActiveCommandHistory() target) so WorldView.js can disable its
-    // Undo/Redo buttons without ever touching CommandHistory directly or
-    // maintaining a second undoStack/redoStack representation of its own.
+    // Read-only mirrors of undo()/redo()'s gating, so WorldView.js can disable
+    // its buttons without touching CommandHistory.
     canUndo() {
         if (this._historyPreview && this._historyPreview.active) return false;
         const history = this._getActiveCommandHistory();
@@ -4794,25 +1176,18 @@ export class WorldNavigationSession {
         return this._spatialInspection;
     }
 
-    // 0.2.39 — the raw AvatarInteractionState, same shape/role as
-    // getSpatialSelection() but for the entirely separate avatar
-    // target slice — see docs/Principles.md, "Avatars Are Never
-    // Document Selection."
+    // The raw AvatarInteractionState, a separate slice from the spatial
+    // selection (see docs/Principles.md, "Avatars Are Never Document
+    // Selection").
     getAvatarInteraction() {
         return this._avatarInteraction;
     }
 
-    // Read-only, generalizes 0.2.29's inspectDocument() to avatars:
-    // resolves the CURRENT avatar interaction target into plain
-    // presentation data for ui/components/AvatarInfoPanel.js, reading
-    // from whichever source actually HOLDS that data — the local
-    // avatar's own AvatarProfileUseCase/AvatarPresenceSession, or a
-    // remote avatar's known presence via PresenceSyncService — never
-    // mutating anything, never forking, never touching presence. See
-    // docs/Principles.md, "Looking At Something Is Never The Same As
-    // Acting On It." Returns null when there is no current target, or
-    // when the targeted avatar is no longer known (e.g. its presence
-    // expired between being clicked and being inspected).
+    // Read-only presentation data for the current avatar target, for
+    // ui/components/AvatarInfoPanel.js, from the local avatar's profile/presence
+    // or a remote avatar's known presence (see docs/Principles.md, "Looking At
+    // Something Is Never The Same As Acting On It"). Null with no target or
+    // when the target's presence expired.
     getAvatarInfo() {
         if (!this._avatarInteraction || this._avatarInteraction.isEmpty) {
             return null;
@@ -4841,14 +1216,10 @@ export class WorldNavigationSession {
         return { x: state.position.x, y: state.position.y, z: state.position.z };
     }
 
-    // 0.3.6 — World Discovery & Exploration. The local avatar's own
-    // live world position — WorldSpatialContextService's primary
-    // "where am I" signal (see application/WorldSpatialContextService.js
-    // and docs/Principles.md, "Exploration Is Derived From Place, Not
-    // Stored As Place"). Same graceful-absence posture as
-    // getCameraPosition() above: a session with no avatarPresenceSession
-    // wired (nobody logged in, or most existing tests) simply returns
-    // null, leaving the caller to fall back to getCameraPosition().
+    // The local avatar's live world position, WorldSpatialContextService's
+    // primary "where am I" signal (see docs/Principles.md, "Exploration Is
+    // Derived From Place, Not Stored As Place"). Null without an
+    // avatarPresenceSession; callers fall back to getCameraPosition().
     getAvatarPosition() {
         if (!this._avatarPresenceSession) {
             return null;
@@ -4857,12 +1228,8 @@ export class WorldNavigationSession {
         return { x, y, z };
     }
 
-    // 0.3.6 — the SAME seed terrainHeightAt()/ecologyZoneAt()/
-    // hydrologyFeatureAt() already use everywhere else in this file
-    // (DEFAULT_WORLD_SEED, imported above) — spatial context derivation
-    // must never invent a second, session-local notion of "which seed
-    // is this world using," it just needs a way to ask this session
-    // which one is live.
+    // The one live seed (DEFAULT_WORLD_SEED), so spatial context never invents
+    // its own.
     getWorldSeed() {
         return DEFAULT_WORLD_SEED;
     }
@@ -4880,9 +1247,7 @@ export class WorldNavigationSession {
             displayName: profile.displayName || profile.ownerIdentity || 'You',
             ownerIdentity: profile.ownerIdentity,
             templateLabel: template ? template.displayLabel : null,
-            // 0.2.37 never synchronizes real appearance for a REMOTE
-            // avatar — but THIS is the local avatar, whose template is
-            // always its own real, chosen one.
+            // The local avatar always has its own chosen template.
             templatePlaceholder: false,
             position: { x: presence.position.x, y: presence.position.y, z: presence.position.z },
             rotation: { ...presence.rotation },
@@ -4915,10 +1280,8 @@ export class WorldNavigationSession {
         return {
             avatarId,
             isLocal: false,
-            // 0.2.41 onward, a remote AvatarProfile's displayName IS
-            // distributed (see core/AvatarProfileAdvertisement.js) —
-            // getAvatarDisplayName() resolves it when known, falling
-            // back to ownerIdentity, then the avatarId itself.
+            // A remote displayName is distributed with the profile;
+            // getAvatarDisplayName() falls back to ownerIdentity, then avatarId.
             displayName: this.getAvatarDisplayName(avatarId),
             ownerIdentity: entry.advertisement.ownerIdentity,
             templateLabel: defaultTemplate ? defaultTemplate.displayLabel : null,
@@ -4982,1736 +1345,34 @@ export class WorldNavigationSession {
     }
 
     // -----------------------------------------------------------------
-    // World Editing Authorization (0.2.95)
-    // -----------------------------------------------------------------
+    // Fork-on-write
     //
-    // Three public queries, deliberately never a fourth "isOwner" or a
-    // role name — see core/WorldAccessLevel.js and application/
-    // WorldAuthorizationService.js's own headers. A session built
-    // without a worldAuthorizationService (every pre-0.2.95 caller)
-    // treats every loaded document as fully editable — the EXACT
-    // pre-0.2.95 behavior, unchanged — which is also why
-    // getWorldAccessLevel() falls back to EDIT rather than NONE for a
-    // documentId this session cannot resolve at all: an unresolvable
-    // id under the graceful-absence default must never look MORE
-    // restrictive than simply having no gate wired, or a caller that
-    // never asked for authorization at all would start seeing spurious
-    // denials the moment a documentId typo or a not-yet-streamed-in
-    // document is looked up. When a real worldAuthorizationService IS
-    // wired, an unresolvable documentId instead denies (see
-    // canEditDocument/canReadDocument below) — there is no Document to
-    // ask the service about, and "no Document" is never editable or
-    // readable by construction.
-    getWorldAccessLevel(documentId) {
-        if (!this._worldAuthorizationService) {
-            return WorldAccessLevel.EDIT;
-        }
-        const document = this.getDocument(documentId);
-        return this._worldAuthorizationService.resolveAccess(document, documentId);
-    }
-
-    // The gate every real mutation chokepoint on this session consults
-    // directly (createRegionHere/updateRegion/removeRegion/
-    // createLandmarkHere/updateLandmark/removeLandmark below — 0.5.9
-    // retired every OTHER mutation chokepoint this session used to have;
-    // see docs/Principles.md, "World View Observes and Navigates; Editor
-    // Mutates and Builds"), and safe to call directly from a UI surface
-    // that wants to reflect (never decide) whether an edit affordance
-    // should even be offered.
-    //
-    // 0.2.98 — now also threads `documentId` through to
-    // WorldAuthorizationService, so a NON-OWNER holding a signed World
-    // edit grant (application/WorldMembershipUseCase.js) is recognized
-    // here too, not merely by application/WorldCommandPropagationUseCase.js's
-    // own receiving side — the exact same authorization answer,
-    // consulted from both the LOCAL mutation chokepoint and the network
-    // one.
-    canEditDocument(documentId) {
-        if (!this._worldAuthorizationService) {
-            return true;
-        }
-        return this._worldAuthorizationService.canEdit(this.getDocument(documentId), documentId);
-    }
-
-    canReadDocument(documentId) {
-        if (!this._worldAuthorizationService) {
-            return true;
-        }
-        return this._worldAuthorizationService.canRead(this.getDocument(documentId), documentId);
-    }
-
-    // -----------------------------------------------------------------
-    // World Membership (0.2.98)
-    // -----------------------------------------------------------------
-    //
-    // "Am I this exact World's own cryptographic owner?" — the gate
-    // application/WorldMembershipUseCase.js itself already enforces
-    // before honoring grantWorldEdit()/revokeWorldEdit() below; exposed
-    // here too so a UI can decide whether to even OFFER a "manage
-    // collaborators" affordance, the identical "reflect, never decide"
-    // relationship canEditDocument() already has with
-    // SpatialEditingService's own enforcement.
-    isWorldOwner(documentId) {
-        if (!this._worldAuthorizationService) {
-            return false;
-        }
-        return this._worldAuthorizationService.isOwner(this.getDocument(documentId));
-    }
-
-    // Grants `subjectIdentityId` EDIT authority over `documentId` —
-    // throws exactly when application/WorldMembershipUseCase.js#grantEdit()
-    // itself would (not wired, not this World's owner, or a malformed
-    // subject). See that class's own header for the full security
-    // model.
-    grantWorldEdit(documentId, subjectIdentityId) {
-        if (!this._worldMembershipUseCase) {
-            throw new Error('WorldNavigationSession: no worldMembershipUseCase is wired — World membership grants are unavailable');
-        }
-        return this._worldMembershipUseCase.grantEdit(documentId, subjectIdentityId);
-    }
-
-    revokeWorldEdit(documentId, subjectIdentityId) {
-        if (!this._worldMembershipUseCase) {
-            throw new Error('WorldNavigationSession: no worldMembershipUseCase is wired — World membership grants are unavailable');
-        }
-        return this._worldMembershipUseCase.revokeEdit(documentId, subjectIdentityId);
-    }
-
-    // Every membership fact this replica currently holds for `documentId`
-    // — an empty array, never a throw, when no worldMembershipUseCase is
-    // wired (the same graceful-absence posture every other optional
-    // collaborator in this class already follows).
-    listWorldMembers(documentId) {
-        if (!this._worldMembershipUseCase) {
-            return [];
-        }
-        return this._worldMembershipUseCase.listMembers(documentId);
-    }
-
-    // 0.2.99 — World Collaboration UX. Thin delegation mirroring
-    // onWorldPresenceChanged() below exactly — a UI Members panel
-    // wants to reflect a GOSSIPED grant/revocation (one this replica
-    // didn't itself issue, e.g. Charlie observing Alice grant Bob) the
-    // moment it arrives, not only after its own next poll. Returns a
-    // no-op unsubscribe when no worldMembershipUseCase is wired, the
-    // same graceful-absence contract every subscription method here
-    // already follows.
-    onWorldMembershipChanged(documentId, callback) {
-        if (!this._worldMembershipUseCase) {
-            return () => {};
-        }
-        return this._worldMembershipUseCase.onMembershipChanged(documentId, callback);
-    }
-
-    // -----------------------------------------------------------------
-    // World Presence (0.2.98)
-    // -----------------------------------------------------------------
-    //
-    // Declares this replica present in `documentId`. `activity` defaults
-    // to a fresh canEditDocument() read — see core/WorldPresenceActivity.js's
-    // own header on why this is only ever a self-reported UI HINT,
-    // never itself an authorization claim. A no-op when no
-    // worldPresenceUseCase is wired (every pre-0.2.98 caller, and any
-    // headless/local-only use).
-    enterWorldPresence(documentId, activity = null) {
-        if (!this._worldPresenceUseCase) {
-            return;
-        }
-        const resolvedActivity = activity || (this.canEditDocument(documentId) ? WorldPresenceActivity.EDITING : WorldPresenceActivity.EXPLORING);
-        this._worldPresenceUseCase.enterWorld(documentId, resolvedActivity);
-        this._presentWorldDocumentIds.add(documentId);
-    }
-
-    // Re-derives this replica's own advertised activity from a FRESH
-    // canEditDocument() read — the call a session makes after a World
-    // edit grant it holds changes (granted or revoked), so its own
-    // presence stays honest without waiting for a peer to notice on
-    // their own. A no-op for a World this session never entered
-    // presence for.
-    refreshWorldPresenceActivity(documentId) {
-        if (!this._worldPresenceUseCase || !this._presentWorldDocumentIds.has(documentId)) {
-            return;
-        }
-        this._worldPresenceUseCase.setActivity(documentId, this.canEditDocument(documentId) ? WorldPresenceActivity.EDITING : WorldPresenceActivity.EXPLORING);
-    }
-
-    leaveWorldPresence(documentId) {
-        if (!this._worldPresenceUseCase) {
-            return;
-        }
-        this._worldPresenceUseCase.leaveWorld(documentId);
-        this._presentWorldDocumentIds.delete(documentId);
-    }
-
-    // The roster of every OTHER participant currently present in
-    // `documentId` — see application/WorldPresenceUseCase.js#getRoster()'s
-    // own header for the exact shape. An empty array, never a throw,
-    // when no worldPresenceUseCase is wired.
-    getWorldPresenceRoster(documentId) {
-        if (!this._worldPresenceUseCase) {
-            return [];
-        }
-        return this._worldPresenceUseCase.getRoster(documentId);
-    }
-
-    onWorldPresenceChanged(documentId, callback) {
-        if (!this._worldPresenceUseCase) {
-            return () => {};
-        }
-        return this._worldPresenceUseCase.onPresenceChanged(documentId, callback);
-    }
-
-    // -----------------------------------------------------------------
-    // World Spatial Presence (0.3.0)
-    // -----------------------------------------------------------------
-    //
-    // Declares this replica SPATIALLY present in `documentId` — see
-    // application/WorldSpatialPresenceUseCase.js's own header. A no-op
-    // when no worldSpatialPresenceUseCase is wired, the exact
-    // graceful-absence contract enterWorldPresence() above already
-    // follows. `resolveDisplayName`, if given, is an OPTIONAL
-    // `(identityId) => string` this session threads straight through to
-    // every remote marker it renders for THIS World — the same
-    // presentation-only resolution WorldView.js's own
-    // resolveIdentityDisplayName() already performs for the Members
-    // panel (ui/components/WorldMembersPanel.js), never duplicated or
-    // reinvented here. Absent, a short truncated identityId is shown
-    // instead — never a thrown error.
-    enterWorldSpatialPresence(documentId, { resolveDisplayName = null } = {}) {
-        if (!this._worldSpatialPresenceUseCase) {
-            return;
-        }
-        const cameraPosition = this.getCameraPosition();
-        const heading = this.getCompassHeading();
-        this._worldSpatialPresenceUseCase.enterWorld(documentId, {
-            position: cameraPosition ? { x: cameraPosition.x, z: cameraPosition.z } : null,
-            heading: heading ? heading.degrees : null
-        });
-        this._presentSpatialWorldDocumentIds.add(documentId);
-        this._startSpatialPresenceRendering(documentId, typeof resolveDisplayName === 'function' ? resolveDisplayName : null);
-    }
-
-    // The one call a UI drives on a fast interval (see ui/views/WorldView.js)
-    // while this World is the active one — reads this session's OWN
-    // already-existing camera/selection/gizmo/movement state and
-    // forwards it. This is the ONE place local interaction state becomes
-    // a network fact — see core/WorldSpatialActivity.js's own header:
-    // `activity` is always DERIVED here, never something a caller passes
-    // in directly. A no-op for a World this session hasn't entered
-    // spatial presence for.
-    syncWorldSpatialPresence(documentId) {
-        if (!this._worldSpatialPresenceUseCase || !this._presentSpatialWorldDocumentIds.has(documentId)) {
-            return;
-        }
-        const cameraPosition = this.getCameraPosition();
-        const heading = this.getCompassHeading();
-        const selection = this._resolveWorldSpatialSelection(documentId);
-        // 0.5.9 — World View no longer has a gizmo to drag at all, so
-        // this is always inactive now; kept as a real (if permanently
-        // empty) shape rather than editing deriveWorldSpatialActivity()'s
-        // own call below, which still expects gizmoActive/gizmoMode.
-        const gizmoState = { active: false, mode: null };
-        // 0.3.4 — the local avatar's own vertical motion
-        // (core/AvatarVerticalState.js), read fresh off the movement
-        // controller exactly like `isMoving` already is below, and fed
-        // into deriveWorldSpatialActivity()'s own new JUMPING/FALLING
-        // cases. Absent entirely (no controller wired at all) simply
-        // means neither ever fires — same graceful-absence posture as
-        // `isMoving` already follows.
-        const verticalState = this._avatarMovementController ? this._avatarMovementController.verticalState() : null;
-        const activity = deriveWorldSpatialActivity({
-            gizmoActive: gizmoState.active,
-            gizmoMode: gizmoState.mode,
-            hasSelection: !selection.isEmpty,
-            canEdit: this.canEditDocument(documentId),
-            isMoving: Boolean(this._avatarMovementController && this._avatarMovementController.hasMovementInput()),
-            rising: verticalState === AvatarVerticalState.RISING,
-            falling: verticalState === AvatarVerticalState.FALLING
-        });
-        this._worldSpatialPresenceUseCase.updateSpatial(documentId, {
-            position: cameraPosition ? { x: cameraPosition.x, z: cameraPosition.z } : undefined,
-            heading: heading ? heading.degrees : undefined,
-            selection,
-            activity
-        });
-    }
-
-    leaveWorldSpatialPresence(documentId) {
-        if (!this._worldSpatialPresenceUseCase) {
-            return;
-        }
-        this._worldSpatialPresenceUseCase.leaveWorld(documentId);
-        this._presentSpatialWorldDocumentIds.delete(documentId);
-        this._stopSpatialPresenceRendering(documentId);
-    }
-
-    // Every device-level entry currently spatially present in
-    // `documentId` — see WorldSpatialPresenceUseCase#getSpatialRoster()'s
-    // own header for the exact shape. An empty array, never a throw,
-    // when no worldSpatialPresenceUseCase is wired.
-    getWorldSpatialPresenceRoster(documentId) {
-        if (!this._worldSpatialPresenceUseCase) {
-            return [];
-        }
-        return this._worldSpatialPresenceUseCase.getSpatialRoster(documentId);
-    }
-
-    onWorldSpatialPresenceChanged(documentId, callback) {
-        if (!this._worldSpatialPresenceUseCase) {
-            return () => {};
-        }
-        return this._worldSpatialPresenceUseCase.onSpatialPresenceChanged(documentId, callback);
-    }
-
-    // Reads this session's own LOCAL editing selection
-    // (`_spatialSelection`, application/spatial-state/SpatialSelectionState.js)
-    // and translates it into the read-only observation shape
-    // core/WorldSpatialSelection.js defines — see that file's own
-    // header on why the two are never the same type. Only ever reflects
-    // a selection that belongs to THIS World (never a different loaded
-    // document this replica also happens to have open) and only its
-    // World-View-relevant kinds (brick, structure placement) — a ground
-    // click or ordinary multi-brick marquee simply reports no selection,
-    // exactly like a placement selection already suppresses the
-    // transform gizmo (see SpatialSelectionState's own header).
-    _resolveWorldSpatialSelection(documentId) {
-        const selection = this._spatialSelection;
-        if (!selection || selection.isEmpty || selection.documentId !== documentId) {
-            return WorldSpatialSelection.none();
-        }
-        if (selection.isStructurePlacementSelection) {
-            return WorldSpatialSelection.placement({ documentId, placementId: selection.placementId });
-        }
-        if (selection.isSingle && selection.type === 'brick') {
-            return WorldSpatialSelection.brick({ documentId, buildingId: selection.buildingId, brickId: selection.brickId });
-        }
-        return WorldSpatialSelection.none();
-    }
-
-    // 0.3.0 — the application-layer render driver, the identical shape
-    // application/RemoteAvatarRegistry.js already established for remote
-    // avatars: THIS class reacts to a presence-sync event and calls its
-    // own render facade (`this._session`) directly — WorldView.js never
-    // touches renderer/RemoteSpatialPresenceRenderer.js, or even knows
-    // it exists. A no-op (never throws) before this._session exists yet
-    // (start() hasn't been called) — the subscription is still recorded,
-    // so a start() that happens later doesn't need this called again.
-    _startSpatialPresenceRendering(documentId, resolveDisplayName) {
-        if (this._spatialPresenceRenderSubscriptions.has(documentId)) {
-            return;
-        }
-        this._spatialPresenceRenderedDevices.set(documentId, new Set());
-        const unsubscribe = this._worldSpatialPresenceUseCase.onSpatialPresenceChanged(documentId, (roster) => {
-            this._applySpatialPresenceRoster(documentId, roster, resolveDisplayName);
-        });
-        this._spatialPresenceRenderSubscriptions.set(documentId, unsubscribe);
-        this._applySpatialPresenceRoster(documentId, this._worldSpatialPresenceUseCase.getSpatialRoster(documentId), resolveDisplayName);
-    }
-
-    _stopSpatialPresenceRendering(documentId) {
-        const unsubscribe = this._spatialPresenceRenderSubscriptions.get(documentId);
-        if (unsubscribe) {
-            unsubscribe();
-            this._spatialPresenceRenderSubscriptions.delete(documentId);
-        }
-        const rendered = this._spatialPresenceRenderedDevices.get(documentId);
-        if (rendered && this._session && typeof this._session.removeRemoteSpatialPresence === 'function') {
-            for (const deviceId of rendered) {
-                this._session.removeRemoteSpatialPresence(deviceId);
-            }
-        }
-        this._spatialPresenceRenderedDevices.delete(documentId);
-    }
-
-    // Diffs the freshly-fetched roster against whatever this session
-    // last rendered for `documentId`, so a device that dropped out (its
-    // owner disconnected, or explicitly left) is removed from the scene
-    // rather than left behind as a stale marker.
-    //
-    // 0.3.1 — Collaborative Spatial Awareness. Each device's raw 0.3.0
-    // observation is turned into a `WorldSpatialAnchor` (core/WorldSpatialAnchor.js)
-    // BEFORE it ever reaches the renderer: this session's OWN camera
-    // position/heading (already read for syncWorldSpatialPresence() just
-    // above) becomes the anchor's viewer, and this device's own selection
-    // is resolved to a contextual label ("House") through
-    // _resolveSpatialContextualLabel() below. The renderer/UI never do
-    // this derivation themselves — see that file's own header, "a pure
-    // function of a WorldSpatialPresenceUseCase observation plus the
-    // VIEWER's own local camera state."
-    _applySpatialPresenceRoster(documentId, roster, resolveDisplayName) {
-        if (!this._session || typeof this._session.setRemoteSpatialPresence !== 'function') {
-            return;
-        }
-        const viewerPosition = this.getCameraPosition();
-        const viewerHeading = this.getCompassHeading();
-        const seen = new Set();
-        for (const group of roster) {
-            const label = resolveDisplayName ? resolveDisplayName(group.identityId) : this._shortIdentityLabel(group.identityId);
-            for (const device of group.devices) {
-                seen.add(device.deviceId);
-                const anchor = deriveWorldSpatialAnchor({
-                    deviceId: device.deviceId,
-                    identityId: group.identityId,
-                    label,
-                    position: device.position,
-                    heading: device.heading,
-                    selection: device.selection,
-                    activity: device.activity,
-                    contextualLabel: this._resolveSpatialContextualLabel(device.selection),
-                    viewerPosition: viewerPosition ? { x: viewerPosition.x, z: viewerPosition.z } : null,
-                    viewerHeadingDegrees: viewerHeading ? viewerHeading.degrees : null
-                });
-                this._session.setRemoteSpatialPresence(device.deviceId, anchor);
-            }
-        }
-        const previouslyRendered = this._spatialPresenceRenderedDevices.get(documentId) || new Set();
-        for (const deviceId of previouslyRendered) {
-            if (!seen.has(deviceId)) {
-                this._session.removeRemoteSpatialPresence(deviceId);
-            }
-        }
-        this._spatialPresenceRenderedDevices.set(documentId, seen);
-    }
-
-    _shortIdentityLabel(identityId) {
-        if (typeof identityId !== 'string' || identityId.length === 0) {
-            return '?';
-        }
-        return `${identityId.replace(/^did:key:/, '').slice(0, 6)}…`;
-    }
-
-    // 0.3.1 — Collaborative Spatial Awareness. "What is this remote
-    // selection actually pointing at, in words" — the ONE place a
-    // `WorldSpatialSelection` (0.3.0's read-only observation type) is
-    // ever turned into display text. Reuses getSavedDocumentTitle()'s
-    // own already-existing lookup rather than inventing a second one; a
-    // placement selection resolves through `document.world.getStructurePlacement()`
-    // to find WHICH document it references (exactly
-    // application/EditorSession.js#getSelectedPlacementInfo()'s own
-    // step, generalized to any loaded document rather than only the
-    // active one, since a remote participant's selection can live in any
-    // World this session has open). A brick selection has no comparable
-    // name to show — core/Building.js carries no title field at all
-    // (see that file's own header) — so it deliberately resolves to
-    // null, which describeSpatialActivity() already treats as "no
-    // contextual target," falling back to the exact plain phrase 0.3.0
-    // always showed ("Building", never "Building undefined"). Returns
-    // null, never throws, for an empty selection, an unresolvable
-    // placement (deleted, or in a document this replica hasn't loaded),
-    // or no loadDocumentUseCase wired at all.
-    _resolveSpatialContextualLabel(selection) {
-        if (!selection || selection.isEmpty || selection.kind !== 'placement') {
-            return null;
-        }
-        const hostDocument = this.getDocument(selection.documentId);
-        if (!hostDocument) {
-            return null;
-        }
-        const placement = hostDocument.world.getStructurePlacement(selection.placementId);
-        if (!placement) {
-            return null;
-        }
-        return this.getSavedDocumentTitle(placement.documentId);
-    }
-
-    // The public counterpart to _resolveSpatialContextualLabel() above —
-    // a UI (ui/views/WorldView.js) passes THIS straight to
-    // buildSpatialCollaboratorRows()'s own `resolveSelectionLabel` option
-    // rather than reaching into a private method, exactly the same
-    // "public wrapper around an internal derivation" shape
-    // resolveIdentityDisplayName()/getSavedDocumentTitle() already are.
-    resolveSpatialSelectionLabel(selection) {
-        return this._resolveSpatialContextualLabel(selection);
-    }
-
-    // 0.3.1 — Collaborative Spatial Awareness. The Follow-only navigation
-    // counterpart to focusLocation()/focusDocument(): moves the camera
-    // toward a collaborator's LAST KNOWN spatial position, once, through
-    // the exact same _beginCameraFocus()/LOCATION_FOCUS_OFFSET machinery
-    // 0.2.94's own Locations panel already established — no second
-    // camera-movement mechanism. Deliberately NOT a subscription: this
-    // reads whatever getWorldSpatialPresenceRoster() reports RIGHT NOW
-    // and never looks again — see docs/Principles.md, "Follow Is Local
-    // Camera Navigation, Never A Shared Camera (0.3.1)." A second call
-    // (e.g. a UI's own "Follow" button clicked again later) simply
-    // focuses wherever that collaborator now is; there is no persistent
-    // "currently following" mode, no live tether, and nothing is ever
-    // sent to the collaborator's own replica — their client has no way
-    // to know this was ever called. Searches every World this session is
-    // currently spatially present in (ordinarily just the one active
-    // World View is showing) rather than requiring a caller to also name
-    // a documentId. Returns false (a no-op) for a deviceId with no
-    // currently-known position — a stale roster row, or one that
-    // disconnected between the click and this call — never throws.
-    focusCollaborator(deviceId) {
-        for (const documentId of this._presentSpatialWorldDocumentIds) {
-            const roster = this.getWorldSpatialPresenceRoster(documentId);
-            for (const group of roster) {
-                const device = group.devices.find((candidate) => candidate.deviceId === deviceId);
-                if (device && device.position) {
-                    const groundY = terrainHeightAt(DEFAULT_WORLD_SEED, device.position.x, device.position.z);
-                    // 0.3.2 — a selected Camera Perspective decides
-                    // Follow's offset too, exactly as
-                    // docs/Principles.md, "Camera Perspective
-                    // Determines An Offset; It Never Replaces The
-                    // Camera Machinery (0.3.2)" describes: Bob in
-                    // third-person shows him ahead of the camera; the
-                    // same Follow in first-person approaches through
-                    // his own eyes instead. Still the exact same
-                    // _beginCameraFocus() glide-once call either way —
-                    // only the FRAMING handed to it differs. Falls
-                    // back to the original fixed LOCATION_FOCUS_OFFSET
-                    // box exactly as before whenever no perspective is
-                    // selected.
-                    const framing = this._cameraPerspective
-                        ? computeCameraFraming(
-                            this._cameraPerspective,
-                            { x: device.position.x, y: groundY, z: device.position.z },
-                            device.heading
-                        )
-                        : null;
-                    this._beginCameraFocus(framing || {
-                        position: {
-                            x: device.position.x + LOCATION_FOCUS_OFFSET.x,
-                            y: groundY + LOCATION_FOCUS_OFFSET.y,
-                            z: device.position.z + LOCATION_FOCUS_OFFSET.z
-                        },
-                        target: { x: device.position.x, y: groundY, z: device.position.z }
-                    });
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    // 0.2.93 — resolves a StructurePlacement's referenced documentId to
-    // a human title via the SAME saved-document listing
-    // application/EditorSession.js#getSelectedPlacementInfo() already
-    // reads (application/LoadDocumentUseCase.js#listSavedDocuments()) —
-    // no second title-lookup mechanism. Falls back to the raw
-    // documentId when there's no loadDocumentUseCase wired, or no
-    // matching saved entry (e.g. content authored on a different
-    // device/replica this replica has never saved locally) — the same
-    // graceful-absence shape getSelectedPlacementInfo() already
-    // established, never a thrown error.
-    getSavedDocumentTitle(documentId) {
-        if (this._loadDocumentUseCase && typeof this._loadDocumentUseCase.listSavedDocuments === 'function') {
-            const entry = this._loadDocumentUseCase.listSavedDocuments().find((doc) => doc.id === documentId);
-            if (entry) {
-                return entry.title;
-            }
-        }
-        return documentId;
-    }
-
-    // -----------------------------------------------------------------
-    // Fork-on-write (0.2.20)
-    //
-    // A published World View is immutable; a World View SESSION is
-    // editable. Opening a published snapshot never makes the snapshot
-    // itself editable — the first mutation crosses the publication
-    // boundary and creates a new Document derived from it (Copy-on-
-    // Write / Fork-on-Edit). Navigation, camera, selection, hover, and
-    // inspection never call any of this; only an actual document
-    // mutation does. See docs/Principles.md, 0.2.20.
+    // A published World View is immutable; a World View session is editable.
+    // The first mutation of a published snapshot creates a new Document derived
+    // from it. Navigation, camera, selection, hover and inspection never fork;
+    // only an actual document mutation does. See docs/Principles.md, "A
+    // published snapshot is never mutated in place".
     // -----------------------------------------------------------------
 
-    // True while `documentId` is still a straight, unforked view of a
-    // published snapshot — i.e. still immutable as far as this session
-    // is concerned.
-    isDocumentPublished(documentId) {
-        return this._publishedDocumentIds.has(documentId);
-    }
-
-    // Proactive counterpart to the guards below: tells the UI what
-    // WOULD happen on the first edit of `documentId`, before the user
-    // attempts one, so it can explain itself instead of only reacting
-    // after a blocked action throws. Returns null for anything that
-    // isn't a still-published snapshot (already editable — nothing to
-    // say). Otherwise:
-    //   { blocked: false, message } — editable; first edit forks silently
-    //   { blocked: true,  message } — fork policy (0.2.13) forbids it
-    getEditabilityNotice(documentId) {
-        if (!documentId || !this._publishedDocumentIds.has(documentId)) {
-            return null;
-        }
-        const { allowed, license } = this._checkForkPolicy(documentId);
-        if (!allowed) {
-            const licenseLabel = license ? license.id : 'UNSPECIFIED';
-            return {
-                blocked: true,
-                message: `Published under "${licenseLabel}" — the author has not allowed forking, so this world can be viewed but not edited.`
-            };
-        }
-        return {
-            blocked: false,
-            message: 'Published snapshot — your first edit creates your own editable fork; the original is never changed.'
-        };
-    }
-
-    // 0.2.21: the World View entry point for the Document Properties
-    // editor. Editing metadata is a mutation exactly like moving a
-    // brick — it must not land on a published snapshot — so it goes
-    // through the SAME fork-on-first-mutation gate
-    // (_ensureEditableDocumentId) every other guard in this file uses,
-    // rather than a bespoke "throw if published" check of its own.
-    // Returns the documentId the edit actually landed on (the fork's
-    // id, if one was just created) so the caller can re-focus/re-select
-    // it.
-    updateDocumentMetadata(documentId, { title, description, license } = {}) {
-        const id = this._ensureEditableDocumentId(documentId || this._activeDocumentId);
-        const doc = this.getDocument(id);
-        if (!doc) {
-            throw new Error(`WorldNavigationSession: no loaded document "${id}"`);
-        }
-        const metadata = doc.metadata;
-        if (title !== undefined) metadata.title = title;
-        if (description !== undefined) metadata.description = description;
-        if (license !== undefined) metadata.license = license;
-        metadata.touch();
-        let history = this._commandHistories.get(id);
-        if (!history) {
-            history = new CommandHistory({ world: doc.world });
-            this._registerCommandHistory(id, history);
-        }
-        history.markUnsaved();
-        return id;
-    }
-
-    // Normalized data for the Document Info panel — the same shape
-    // for a published snapshot, a fork, or an ordinary loaded
-    // document, so the UI component doesn't need to know which one
-    // it's looking at. `hasBeenSaved` is approximated as "not dirty":
-    // every fork starts dirty the instant it's created (_forkForEdit
-    // always calls history.markUnsaved()), so a clean history reliably
-    // means an explicit saveDocument() happened since.
-    getDocumentInfo(documentId) {
-        const id = documentId || this._activeDocumentId;
-        const doc = this.getDocument(id);
-        if (!doc) return null;
-        const isPublished = this.isDocumentPublished(id);
-        const dirty = this.isDocumentDirty(id);
-        const status = computeLifecycleStatus({ hasBeenSaved: !dirty, isPublished });
-        return {
-            documentId: id,
-            title: doc.metadata.title || 'Untitled',
-            description: doc.metadata.description || '',
-            author: doc.metadata.author,
-            // 0.2.99 — World Collaboration UX. The SAME cryptographic
-            // fact WorldAuthorizationService/WorldMembershipUseCase
-            // already key ownership off (core/DocumentMetadata.js's own
-            // 0.2.95 field), exposed here purely so a Members panel can
-            // label the owner's row without re-deriving ownership
-            // itself — null for a pre-0.2.95 document, exactly like
-            // `author` degrades gracefully everywhere else.
-            authorIdentityId: doc.metadata.authorIdentityId || null,
-            license: doc.metadata.license,
-            parentDocumentId: doc.metadata.parentDocumentId,
-            status,
-            statusLabel: describeLifecycleStatus(status, { dirty }),
-            dirty,
-            editable: !isPublished,
-            editabilityNotice: this.getEditabilityNotice(id)
-        };
-    }
-
-    // 0.2.23: the Publication a loaded document's placement(s) belong
-    // to — a document only HAS a placement once it (or a document
-    // sharing its documentId, for a document that hasn't been
-    // published itself) has been published; a fork you haven't
-    // published yet has none. Separate from _isKnownPublication/
-    // _findPublications (0.2.20), which answer "is this a published
-    // snapshot" for the fork-on-edit boundary — this answers "which
-    // Publication row does the spatial layer key placements under",
-    // used regardless of whether the document is currently the
-    // read-only source or an already-forked, still-editable copy that
-    // happens to share history with one.
-    _resolvePublicationForPlacement(documentId) {
-        const publications = this._findPublications(documentId);
-        if (publications.length === 0) return null;
-        return publications.reduce((latest, p) => (!latest || p.publishedAt > latest.publishedAt) ? p : latest, null);
-    }
-
-    // A document can have more than one placement (the same
-    // publication exhibited in several places — see docs/Principles.md,
-    // "A Publication Is What; A Placement Is Where"). Picking the most
-    // recently updated one is a deliberate simplification for this
-    // milestone, matching WorldLayoutProvider.getPosition's same
-    // choice; browsing/choosing among several is future scope, not
-    // something the current data model prevents.
-    _resolvePlacementRecord(documentId) {
-        if (!this._placementRegistry) return null;
-        const publication = this._resolvePublicationForPlacement(documentId);
-        if (!publication) return null;
-        const records = this._placementRegistry.findByPublicationId(publication.id);
-        if (records.length === 0) return null;
-        return records.reduce((latest, r) => (!latest || r.updatedAt > latest.updatedAt) ? r : latest, null);
-    }
-
-    // Per-record enrichment shared by getPlacementInfo() (one record,
-    // reduced from possibly several) and getPlacementsForPublication()
-    // (0.9.308, every record, unreduced) — position, revision, owner,
-    // and whether THIS identity is (as far as this session can tell,
-    // locally) the one who may move/remove it. Extracted so both
-    // callers compute the IDENTICAL facts for a given record rather
-    // than maintaining two independent copies of this logic.
-    _enrichPlacementRecord(record) {
-        const currentUser = this._identityProvider ? this._identityProvider.currentUser() : null;
-        const currentUsername = currentUser ? (currentUser.username || currentUser.id) : null;
-        // Best-effort, LOCAL ownership signal for the UI only — never
-        // the actual authorization boundary. A move this session
-        // allows still gets signed as the CURRENT user (0.2.16); if
-        // that doesn't match the placement's real owner (or a valid
-        // 0.2.17 delegation), the revision fails verification wherever
-        // it's actually checked, the same "the writer doesn't gate
-        // itself, the reader verifies" decentralized posture 0.2.19's
-        // trust layer already established. No owner recorded at all
-        // (a legacy/never-signed placement) is treated as movable,
-        // matching "enforce only when the information is actually
-        // available" (0.2.13/0.2.20's fork policy checks use the same
-        // rule).
-        const ownerName = record.owner || (record.ownerIdentity ? (record.ownerIdentity.username || record.ownerIdentity.id) : null);
-        const ownedByCurrentUser = !ownerName || (currentUsername !== null && ownerName === currentUsername);
-        // 0.2.25: passive overlap visibility — how many OTHER placements
-        // (local knowledge only, same "best-effort" posture as `movable`
-        // above) currently sit at this exact position. Shown regardless
-        // of how this placement got here (automatic or explicit) — see
-        // docs/Principles.md, "Overlap Is A Fact; Collision Is A Policy
-        // Decision." Never blocks or alters anything by itself.
-        const overlap = this._placementRegistry
-            ? detectSpatialOverlap(record.position, this._placementRegistry.list(), { excludePlacementId: record.placementId })
-            : null;
-        return {
-            placementId: record.placementId,
-            publicationId: record.publicationId,
-            position: { x: record.position.x, y: record.position.y, z: record.position.z },
-            rotation: record.rotation,
-            revision: record.revision,
-            owner: ownerName,
-            movable: ownedByCurrentUser,
-            // 0.9.197 — World Placement Removal UI Action. Gated on the
-            // exact same local, best-effort ownership signal as
-            // `movable` above — removing a placement is, like moving
-            // one, an act of authorization over WHERE a publication
-            // sits, never over the publication or document itself. No
-            // new lifecycle state: this reuses `ownedByCurrentUser`
-            // rather than inventing a separate removability rule.
-            removable: ownedByCurrentUser,
-            overlapCount: overlap ? overlap.count : 0
-        };
-    }
-
-    // Normalized data for a Placement Info panel — position, revision,
-    // owner, and whether THIS identity is (as far as this session can
-    // tell, locally) the one who may move it. Returns null when the
-    // document has no known placement yet (never published, or
-    // placementRegistry isn't wired) rather than a placement-shaped
-    // object full of nulls.
-    getPlacementInfo(documentId) {
-        const id = documentId || this._activeDocumentId;
-        const record = this._resolvePlacementRecord(id);
-        if (!record) return null;
-        return { documentId: id, ...this._enrichPlacementRecord(record) };
-    }
-
-    // 0.9.308 — Publication Multi-Placement Visibility. getPlacementInfo()
-    // above (and getPlacementInfoForPublication() below) each reduce a
-    // Publication's placements down to a single record — a deliberate
-    // simplification _resolvePlacementRecord()'s own comment already
-    // names ("browsing/choosing among several is future scope"). This
-    // answers the SAME "where is this Publication placed" question
-    // WITHOUT that reduction: every PlacementRecord
-    // DiscoverPlacementsUseCase/PlacementRegistry.findByPublicationId()
-    // returns is enriched (via _enrichPlacementRecord(), above — the
-    // IDENTICAL per-record facts getPlacementInfo() computes) and
-    // returned, preserving multiplicity — see docs/Principles.md, "A
-    // Publication Is What; A Placement Is Where," 0.2.23's own "an
-    // exhibition copy here, a personal copy of the same publication
-    // there." Never sorts, dedupes, or ranks: whatever order
-    // findByPublicationId() itself returns is the order returned here.
-    //
-    // No `documentId` field — unlike getPlacementInfo(), this method
-    // starts from a publicationId directly (mirroring
-    // getPlacementInfoForPublication()'s own same choice), and a
-    // Publication placed several times has no single document to
-    // attribute all of them to.
-    //
-    // Returns `[]` (never `null`) when there is no placementRegistry
-    // wired, no publicationId supplied, or the Publication genuinely
-    // has zero placements — a real, honest, empty result. An actual
-    // discovery FAILURE (the registry itself throwing) is deliberately
-    // left to propagate, uncaught, rather than being swallowed into an
-    // indistinguishable empty array — see ui/components/
-    // OwnPublicationPanel.js's own refreshPublicationPlacements() for
-    // how a caller keeps "zero placements" and "discovery failed"
-    // distinguishable.
-    getPlacementsForPublication(publicationId) {
-        if (!this._placementRegistry || typeof publicationId !== 'string' || publicationId.length === 0) return [];
-        const records = this._placementRegistry.findByPublicationId(publicationId);
-        return records.map((record) => this._enrichPlacementRecord(record));
-    }
-
-    // 0.9.187 — Automatic Snapshot Encounter Cascade. getPlacementInfo()
-    // above answers "where does THIS DOCUMENT'S publication live," starting
-    // from a documentId — the question a person looking at an open document
-    // already has an answer path for. Automatic, background Snapshot
-    // processing (application/AutomaticSnapshotEncounterCascade.js) has no
-    // open document at all; the only identity it ever has is a discovered
-    // candidate's own claimed `publicationId`. This method answers the
-    // IDENTICAL underlying question — "does an authoritative WorldPlacement
-    // already exist, and where" — starting from a publicationId directly,
-    // skipping the documentId->publication resolution step
-    // _resolvePublicationForPlacement() performs (the caller already knows
-    // the publicationId). Returns ONLY the minimal shape
-    // resolveSnapshotWorldPlacement() (application/SnapshotWorldPlacement.js,
-    // 0.9.159) itself requires — `{ placementId, publicationId, position }`
-    // — never the fuller owner/movable/overlap enrichment getPlacementInfo()
-    // computes for a person-facing panel, which this caller never renders.
-    // `null` when there is no placementRegistry wired, or no placement
-    // record exists for this publicationId — the same "null when the
-    // question doesn't apply" rule getPlacementInfo() already follows.
-    getPlacementInfoForPublication(publicationId) {
-        if (!this._placementRegistry || typeof publicationId !== 'string' || publicationId.length === 0) return null;
-        const records = this._placementRegistry.findByPublicationId(publicationId);
-        if (records.length === 0) return null;
-        const record = records.reduce((latest, r) => (!latest || r.updatedAt > latest.updatedAt) ? r : latest, null);
-        return {
-            placementId: record.placementId,
-            publicationId: record.publicationId,
-            position: { x: record.position.x, y: record.position.y, z: record.position.z }
-        };
-    }
-
-    // 0.9.187 — originally the SAME `_discoveryProvider.findById()` lookup
-    // _describeSpatialOccupant() performs privately, exposed publicly for
-    // application/AutomaticSnapshotEncounterCascade.js's own
-    // `findPublicationById` collaborator — the actual Publication instance
-    // `registerMaterializedSnapshotWorldSource()` requires alongside
-    // `getPlacementInfoForPublication()`'s own placementInfo, never just an
-    // id. `null` when there is no discovery capability wired, or the
-    // publication is not locally known — never throws.
-    //
-    // 0.9.597 — now reads `_publicationActionDiscoveryProvider` (see this
-    // class's own constructor comment) rather than `_discoveryProvider`
-    // directly, per 0.9.596's own D6 recommendation: an exact-id lookup
-    // carries none of `_findPublications()`'s documentId-collision risk,
-    // so widening it to also see Repository-admitted Publications is safe
-    // on its own terms. `_describeSpatialOccupant()`'s OWN, separate
-    // `_discoveryProvider.findById()` call is deliberately left untouched
-    // — spatial-occupant/collision reporting is out of this milestone's
-    // scope, and this method's own callers never route through it.
-    findPublicationById(publicationId) {
-        if (!this._publicationActionDiscoveryProvider || typeof publicationId !== 'string' || publicationId.length === 0) return null;
-        return this._publicationActionDiscoveryProvider.findById(publicationId) || null;
-    }
-
-    // Pre-flight query for an EXPLICIT placement request — "if I moved
-    // this placement to newPosition right now, what would I find
-    // there, and does my configured policy require confirming first?"
-    // Purely a query: it never mutates anything, and movePlacement()
-    // below does not call it — the caller (the UI) is expected to call
-    // this FIRST, get a decision, and only invoke movePlacement() once
-    // that decision is satisfied (allowed, and confirmed if required).
-    // See docs/Principles.md, "Overlap Is A Fact; Collision Is A Policy
-    // Decision" — MoveWorldPlacementUseCase remains the sole authority
-    // for actually creating a new placement revision; this method never
-    // touches it.
-    //
-    // Returns null when there is nothing to check against (no
-    // placementRegistry wired, or the document has no placement of its
-    // own to move) rather than a decision-shaped object full of
-    // defaults — the same "null when the question doesn't apply" rule
-    // getPlacementInfo already follows.
-    checkPlacementOverlap(documentId, newPosition) {
-        const id = documentId || this._activeDocumentId;
-        if (!this._placementRegistry) return null;
-        const record = this._resolvePlacementRecord(id);
-        if (!record) return null;
-        const overlap = detectSpatialOverlap(newPosition, this._placementRegistry.list(), { excludePlacementId: record.placementId });
-        const decision = evaluateSpatialAllocation(this._spatialAllocationPolicy, overlap);
-        return {
-            ...decision,
-            occupants: overlap.occupants.map((occupant) => this._describeSpatialOccupant(occupant))
-        };
-    }
-
-    // 0.2.26 — "what's actually here?", independent of any move in
-    // progress. Unlike checkPlacementOverlap (which excludes the
-    // placement being moved, because it's asking "would I collide with
-    // something ELSE"), this includes every placement at the position,
-    // the currently-inspected one included — it answers the World
-    // Navigation design's "Documents at this location" list, not a
-    // move's pre-flight check. Read-only: never touches
-    // MoveWorldPlacementUseCase, never mutates anything.
-    //
-    // Only PUBLISHED placements (backed by a PlacementRecord) can ever
-    // appear here — an editing fork has no placement of its own (it
-    // inherits its source's position locally and non-authoritatively,
-    // see _localPositions below), so it deliberately never shows up in
-    // a "documents at this position" query. Making forks independently
-    // placeable would mean giving something that BY DESIGN has no
-    // publication yet a position anyway — a bigger question this
-    // milestone does not attempt to answer.
-    //
-    // 0.9.201 — a PlacementRecord surviving its own Publication being
-    // unpublished (0.9.200's documented, intentional orphan) is a raw
-    // STORAGE fact, not a user-facing one. _describeSpatialOccupant()
-    // already reports that case with documentId: null (no discovery
-    // resolution) — this is this method's OWN presentation boundary,
-    // so it's the one place that fact is turned into an omission,
-    // exactly like 0.9.200's own recommendation, rather than exposing
-    // a degraded, opaque-id row through "Documents Here". Nothing
-    // upstream changes: the PlacementRecord, the spatial index, and
-    // checkPlacementOverlap's own (unfiltered) collision-detection
-    // occupants are all untouched — this is presentation-only, and it
-    // stays that way deliberately (see _describeSpatialOccupant below
-    // for why the filter lives here and not there).
-    getDocumentsAtPosition(position) {
-        if (!this._placementRegistry) return [];
-        const overlap = detectSpatialOverlap(position, this._placementRegistry.list());
-        return overlap.occupants
-            .map((occupant) => this._describeSpatialOccupant(occupant))
-            .filter((occupant) => occupant.documentId !== null);
-    }
-
-    // Resolves a placement record into the shape a UI actually wants
-    // to show a person: a title and a documentId to focus, not a raw
-    // publicationId. Best-effort — falls back to the publicationId
-    // itself when discovery can't resolve it (no discoveryProvider
-    // wired, or the publication isn't locally known), matching how
-    // every other best-effort local lookup in this file degrades.
-    // Shared by checkPlacementOverlap (0.2.25) and getDocumentsAtPosition
-    // (0.2.26) — both are "who else is at this position," just with
-    // different self-inclusion rules upstream.
-    //
-    // This method itself stays deliberately ignorant of WHY a
-    // publication fails to resolve (never unpublished, unpublished,
-    // no discoveryProvider wired at all — all look identical from
-    // here: `publication` is falsy). checkPlacementOverlap keeps this
-    // raw, unfiltered shape on purpose — it's a collision pre-flight
-    // check over physical occupancy, not a document listing, so an
-    // unresolvable occupant is still a real thing to not collide with.
-    // getDocumentsAtPosition (0.9.201) is the one caller that turns an
-    // unresolved occupant (documentId: null) into an omission, because
-    // IT is the one presenting occupants as user-facing "documents".
-    _describeSpatialOccupant(record) {
-        const publication = this._discoveryProvider ? this._discoveryProvider.findById(record.publicationId) : null;
-        return {
-            documentId: publication ? publication.documentId : null,
-            publicationId: record.publicationId,
-            title: publication ? publication.title : record.publicationId,
-            owner: record.owner || null
-        };
-    }
-
-    // 0.2.26 — search over the SAME discovery machinery everything
-    // else reads from (see application/SearchWorldUseCase.js), enriched
-    // with what the World View actually needs to show a result and
-    // act on it: a resolved position (Focus needs somewhere to send
-    // the camera) and whether that position came from a real,
-    // recorded PlacementRecord or the deterministic fallback grid
-    // (0.2.24) — a real, meaningful distinction (see docs/Principles.md,
-    // "Publication Found Is Not The Same As Placement Found"), not an
-    // error state. Read-only, like every other navigation method here:
-    // searching never loads, forks, or mutates anything by itself.
-    //
-    // 0.2.28: accepts either the original plain string (text-only,
-    // unchanged) or an options object `{ text, center, radius }` —
-    // `searchWorldByLocation` below is a thin convenience wrapper for
-    // the center/radius-only case. The spatial filter runs HERE, after
-    // enrichment, not inside SearchWorldUseCase: position resolution
-    // already lives in this method (see _describeSearchResult), and a
-    // pure discovery-layer use case has no reason to know about
-    // placements at all — see docs/Principles.md, "A Spatial Query Is
-    // Authoritative Over Placement, Not A Local-Cache Scan," for why
-    // this still returns a real answer over whatever this node can
-    // discover rather than merely "whatever happens to be nearby the
-    // camera." Results are sorted nearest-first when a spatial filter
-    // ran — the natural reading of a radius query — and left in
-    // whatever order discovery returned them for a text-only one
-    // (matching 0.2.26 — no ordering guarantee of its own).
-    searchWorld(queryOrOptions) {
-        if (!this._searchWorldUseCase) return [];
-        const options = typeof queryOrOptions === 'string' ? { text: queryOrOptions } : (queryOrOptions || {});
-        const candidates = this._searchWorldUseCase.execute(options);
-        let results = candidates.map((publication) => this._describeSearchResult(publication, options.center));
-        if (options.center && Number.isFinite(options.radius)) {
-            results = results
-                .filter((r) => r.position && isWithinRadius(r.position, options.center, options.radius))
-                .sort((a, b) => a.distance - b.distance);
-        }
-        return results;
-    }
-
-    // Convenience for a PURE spatial query — "what's within `radius`
-    // World Units of `center`," no text criterion at all. Equivalent
-    // to `searchWorld({ center, radius })`; exists because "find
-    // everything near this point" reads more clearly as its own named
-    // operation than as a text search with the text left out (see
-    // docs/Principles.md — spatial and text discovery are two kinds of
-    // the same underlying query, not one shoehorned into the other).
-    searchWorldByLocation({ center, radius }) {
-        return this.searchWorld({ center, radius });
-    }
-
-    // `center` is optional — only passed when a spatial query is in
-    // progress, so `distance` is computed (and included) ONLY when it
-    // actually means something; a plain text search never carries a
-    // `distance` field implying a query that was never made.
-    _describeSearchResult(publication, center = null) {
-        const explicit = this._placementRegistry
-            ? this._placementRegistry.findByPublicationId(publication.id)
-                .reduce((latest, r) => (!latest || r.revision > latest.revision) ? r : latest, null)
-            : null;
-        const resolved = this._worldLayoutProvider
-            ? this._worldLayoutProvider.getPosition(publication.documentId)
-            : null;
-        const position = explicit
-            ? { x: explicit.position.x, y: explicit.position.y, z: explicit.position.z }
-            : (resolved ? { x: resolved.x, y: resolved.y, z: resolved.z } : null);
-        return {
-            documentId: publication.documentId,
-            publicationId: publication.id,
-            title: publication.title,
-            author: publication.author,
-            hasPlacement: !!explicit,
-            position,
-            distance: (center && position) ? distanceBetween(position, center) : null
-        };
-    }
-
     // -----------------------------------------------------------------
-    // World Location Browser (0.2.29)
+    // World Location Browser
     //
-    // Lets a person explore a region of the world directly — by camera
-    // position — instead of requiring they already know a document's
-    // name or manually type coordinates into the Search panel. This is
-    // deliberately NOT a second discovery mechanism: every method here
-    // is a thin wrapper over searchWorldByLocation/searchWorld (0.2.28),
-    // so there remains exactly one path — text/spatial query ->
-    // discoveryProvider -> position enrichment -> distance/radius test
-    // — and the location browser just gives it a camera-driven entry
-    // point and a couple of read-only conveniences on top. Nothing in
-    // this section moves a placement, edits a document, forks anything,
-    // or publishes — it only ever looks (see docs/Principles.md,
-    // "Navigation Never Implies Editing," 0.2.27, which this section
-    // extends to exploration as well as to focus/select).
+    // Camera-driven exploration of a region, instead of knowing a name or typing
+    // coordinates. Not a second discovery mechanism: every method wraps
+    // searchWorldByLocation/searchWorld, so there is one path (query ->
+    // discoveryProvider -> position enrichment -> radius test). Nothing here
+    // moves, edits, forks or publishes (see docs/Principles.md, "Navigation
+    // Never Implies Editing").
     // -----------------------------------------------------------------
-
-    // Explicit center/radius exploration — the same enriched spatial
-    // result shape 0.2.28 established (position, hasPlacement,
-    // distance), just under a name that reads as "look around this
-    // location" rather than "search." `searchWorldByLocation` still
-    // resolves WHICH documents come back — that resolution path is
-    // completely unchanged from 0.2.29. What's new in 0.2.30 is the
-    // return shape: `{ documents, diagnostics }` rather than a bare
-    // array, so a caller can show what was found AND what the trust
-    // layer (if any is wired) has to say about how it was found,
-    // without the two ever being confused for one thing. See
-    // docs/Principles.md, "Discovery And Trust Are Related, But They
-    // Are Not The Same Operation (0.2.30)."
-    //
-    // This is a deliberately narrower change than it might look: only
-    // exploreLocation/exploreHere/whatsHere (all three brand new in
-    // 0.2.29, with exactly one caller — WorldLocationBrowser — fully
-    // owned by this codebase) gain the envelope. searchWorld/
-    // searchWorldByLocation (0.2.26/0.2.28, the more established API
-    // WorldSearchPanel depends on) keep returning a plain array,
-    // unchanged — see docs/ArchitectureHistory.md, 0.2.30, for why the two
-    // were kept independent rather than unifying both under one
-    // envelope shape in this pass.
-    exploreLocation({ center, radius }) {
-        const documents = this.searchWorldByLocation({ center, radius });
-        const diagnostics = this._runSpatialDiscoveryDiagnostics(center, radius);
-        return { documents, diagnostics };
-    }
-
-    // "Explore Here" — the query center is the CAMERA's current world
-    // position, not the active document's placement. Per 0.2.27, camera
-    // focus and active document are independent: the user may be
-    // looking at empty space between two documents, with no active
-    // document at all (or one that has nothing to do with where the
-    // camera happens to be pointed), and still want to explore right
-    // there. Returns an empty envelope if the session has no camera
-    // state yet (nothing loaded) rather than falling back to some other
-    // position — there is no "camera position" to explore from before
-    // a world session exists, and no discovery query was even attempted
-    // (diagnostics.available stays false, honestly — nothing ran).
-    exploreHere(radius = DEFAULT_EXPLORE_RADIUS) {
-        const center = this.getSpatialState().cameraPosition;
-        if (!center) return { documents: [], diagnostics: summarizeDiscoveryDiagnostics(null) };
-        return this.exploreLocation({ center, radius });
-    }
-
-    // "What's Here?" — a small-tolerance version of exploreHere, for
-    // "what, if anything, is essentially at the camera's current
-    // position" rather than "what's in the neighborhood." The design
-    // doc suggested reusing getDocumentsAtPosition()'s exact-match
-    // semantics directly; that method tests literal position equality
-    // (via detectSpatialOverlap), which works for "what else occupies
-    // this placement's exact spot" but never matches a continuous
-    // camera coordinate — so this adapts the same intent to a radius
-    // query with a deliberately small radius (NEARBY_RADIUS) instead of
-    // reusing getDocumentsAtPosition() verbatim. It still shares
-    // exploreHere/exploreLocation's single code path, so the adaptation
-    // costs nothing in duplicated logic.
-    whatsHere() {
-        return this.exploreHere(NEARBY_RADIUS);
-    }
-
-    // 0.2.30: runs the OPTIONAL trust-capable spatialDiscoveryProvider
-    // (if one is wired) over the same center/radius, purely to obtain
-    // diagnostics — its own result (a PlacementRecord[]) is discarded;
-    // exploreLocation's documents already came from
-    // searchWorldByLocation and are not replaced or filtered by
-    // anything this method finds. See the constructor's own comment
-    // for why the two are kept decoupled.
-    //
-    // DecentralizedSpatialDiscoveryProvider.discover() THROWS for a
-    // root/authority it cannot trust at all (untrusted signer,
-    // equivocation under the default policy) — the correct behavior
-    // for a caller that's about to treat the index as authoritative,
-    // but exploreLocation is a read-only exploration call, not a
-    // mutation gate, so that throw is caught here and turned into
-    // `diagnostics.fatal` instead of propagating out of a UI action
-    // that never expected to throw.
-    _runSpatialDiscoveryDiagnostics(center, radius) {
-        if (!this._spatialDiscoveryProvider || typeof this._spatialDiscoveryProvider.discover !== 'function') {
-            this._lastDiscoveryDiagnosticsRaw = null;
-            return summarizeDiscoveryDiagnostics(null);
-        }
-        let raw = null;
-        try {
-            this._spatialDiscoveryProvider.discover(center, radius);
-            raw = typeof this._spatialDiscoveryProvider.getLastDiagnostics === 'function'
-                ? this._spatialDiscoveryProvider.getLastDiagnostics()
-                : null;
-            this._lastDiscoveryDiagnosticsRaw = raw;
-            return summarizeDiscoveryDiagnostics(raw);
-        } catch (err) {
-            this._lastDiscoveryDiagnosticsRaw = null;
-            return summarizeDiscoveryDiagnostics(null, { fatal: err.message });
-        }
-    }
-
-    // Read-only bundle for the Location Browser's "Inspect" action:
-    // Document Info + Placement Info for `documentId`, exactly as
-    // getDocumentInfo/getPlacementInfo already compute them — inspect
-    // never forces a load. A location-browser result is, by definition,
-    // usually a document this session hasn't loaded (that's the point
-    // of finding it via search/explore rather than already having it
-    // open), and getDocumentInfo only has data for a document current
-    // loaded in this session (`getDocument(id)` must resolve) — loading
-    // it just to inspect it would be a real side effect (renderer work,
-    // network/storage reads) that a strictly read-only action should
-    // not trigger on its own. So documentInfo may legitimately be null
-    // here; the caller (WorldLocationBrowser) falls back to the
-    // search/explore result's own already-known fields (title, author,
-    // position, hasPlacement) when that happens. placementInfo is
-    // independent of whether the document is loaded — it comes from
-    // the placement registry — so it is often available even when
-    // documentInfo is not.
-    //
-    // 0.2.30: `trust` — the specific TrustObservation (if any) recorded
-    // for this document's placement during the MOST RECENT
-    // exploreLocation/exploreHere/whatsHere call, looked up from the
-    // raw diagnostics cached by _runSpatialDiscoveryDiagnostics above.
-    // null whenever there is nothing to report: no diagnostics-capable
-    // provider wired, this document's cell wasn't part of the last
-    // query, or the document has no known placement at all. This is
-    // deliberately NOT a fresh query — Inspect stays a read-only lookup
-    // against what the last exploration already observed, not a reason
-    // to run a whole new discovery pass.
-    inspectDocument(documentId) {
-        const placementInfo = this.getPlacementInfo(documentId);
-        return {
-            documentId,
-            documentInfo: this.getDocumentInfo(documentId),
-            placementInfo,
-            trust: this._lookupTrustObservation(placementInfo)
-        };
-    }
-
-    _lookupTrustObservation(placementInfo) {
-        if (!placementInfo || !this._lastDiscoveryDiagnosticsRaw) {
-            return null;
-        }
-        const match = this._lastDiscoveryDiagnosticsRaw.observations.find((o) =>
-            o.subjectType === 'placement-record' && o.subjectId === placementInfo.placementId);
-        if (!match) {
-            return null;
-        }
-        return {
-            status: match.status,
-            reason: match.reason,
-            freshness: match.freshness && typeof match.freshness.toJSON === 'function'
-                ? match.freshness.toJSON()
-                : match.freshness
-        };
-    }
-
-    // 0.9.600 — Publication First-Placement Action Wiring Fix.
-    // PUBLICATION-ID-KEYED, unlike movePlacement()/removePlacement()
-    // below, which are both documentId-keyed — deliberately: the whole
-    // point of this method is reaching a Publication that documentId-
-    // based resolution structurally does not (and, per 0.9.596's own
-    // fork-policy rationale, should not) — a Repository-admitted-only
-    // Publication this replica never locally published, and so has no
-    // documentId path to at all (see tests/
-    // FirstPublicationPlacementCapabilityBoundaryAudit.test.js, 0.9.599,
-    // Section G).
-    //
-    // Delegates directly to the already-injected placePublicationUseCase
-    // — this method resolves and decides nothing of its own beyond "is
-    // one wired." PlacePublicationUseCase.execute() (unmodified — see
-    // its own header) remains the sole authority for constructing the
-    // WorldPlacement/PlacementRecord: it already, unconditionally,
-    // supports creating a Publication's first placement AND every
-    // subsequent one (multi-placement, 0.2.23) with no first-vs-later
-    // distinction anywhere in its own logic (0.9.599 Section C1) — so
-    // this method carries no "already placed" guard either. The
-    // PlacementRecord's owner is always the identity that calls this
-    // method, never the Publication's own author (0.9.599 Section D) —
-    // "place this already-known Publication in my local World" cannot
-    // become "I now own or authored this Publication."
-    //
-    // Authorization: UNGATED, identically to PlacePublicationUseCase's
-    // own current, pre-existing behavior for its one other caller
-    // (PublishDocumentUseCase's automatic initial placement) — see
-    // 0.9.599 Section F. This method introduces no new fork-policy or
-    // ownership check of its own; deciding whether one belongs here is
-    // an explicit, separate product decision 0.9.599 raised and left
-    // open, not a technical gap this milestone silently closes.
-    //
-    // Throws (never returns null) when no placePublicationUseCase is
-    // wired, matching movePlacement()/removePlacement()'s own posture
-    // immediately below — a caller that didn't ask for this capability
-    // (every pre-0.9.600 caller, and every existing test) simply can't
-    // reach it.
-    placePublication(publicationId, position) {
-        if (!this._placePublicationUseCase) {
-            throw new Error('WorldNavigationSession: publication cannot be placed — no PlacePublicationUseCase wired');
-        }
-        if (typeof publicationId !== 'string' || publicationId.length === 0) {
-            throw new Error('WorldNavigationSession: placePublication requires a publicationId');
-        }
-        return this._placePublicationUseCase.execute(publicationId, position);
-    }
-
-    // Moves a placement to a new position — this is NOT a document
-    // mutation: it never touches the Document/Publication, never
-    // forks anything (see docs/Principles.md, "Moving A Placement Is
-    // Not Editing A Document"), and applies even to a still-published,
-    // un-forked snapshot's placement. Delegates the actual revision
-    // (signed, causally-stamped — 0.2.10/0.2.16/0.2.18) to
-    // MoveWorldPlacementUseCase; this method's job is purely resolving
-    // WHICH placement "the document currently showing as documentId"
-    // means.
-    movePlacement(documentId, newPosition) {
-        const id = documentId || this._activeDocumentId;
-        if (!this._moveWorldPlacementUseCase) {
-            throw new Error('WorldNavigationSession: placement cannot be moved — no MoveWorldPlacementUseCase wired');
-        }
-        const record = this._resolvePlacementRecord(id);
-        if (!record) {
-            throw new Error(`WorldNavigationSession: "${id}" has no known placement to move`);
-        }
-        return this._moveWorldPlacementUseCase.execute(record.placementId, newPosition);
-    }
-
-    // 0.9.197 — World Placement Removal UI Action. The mirror
-    // capability to movePlacement() above, and just as narrow: this
-    // takes the placement OUT of shared space. It is NOT unpublish —
-    // the Publication, the Document, and its material are all
-    // untouched (see RemoveWorldPlacementUseCase's own header); a
-    // Wanderer who removes a placement here can still find the same
-    // Publication through discovery/search and place it again. The
-    // rendering/selection machinery that shows PlacementInfoPanel
-    // collapses on its own on the next refresh — getPlacementInfo()
-    // (above) returns null once the placement registry no longer has a
-    // record for this document, exactly the same "null when the
-    // question doesn't apply" rule it already follows for a document
-    // that was never placed at all.
-    //
-    // `expectedPlacementId` — normally the `placementId` the caller's
-    // own PlacementInfoPanel read the "Remove" action from — is an
-    // OPTIONAL compare-and-swap guard: when given, and the freshly
-    // resolved placement for this document no longer matches it (this
-    // placement was moved, replaced, or already removed by someone
-    // else since the panel was rendered), this refuses to remove
-    // whatever placement now sits there instead of silently deleting a
-    // different one out from under the person who never saw it.
-    // Omitting it (like movePlacement() above, which has no such
-    // guard) removes whatever the freshest resolution finds.
-    removePlacement(documentId, expectedPlacementId = null) {
-        const id = documentId || this._activeDocumentId;
-        if (!this._removeWorldPlacementUseCase) {
-            throw new Error('WorldNavigationSession: placement cannot be removed — no RemoveWorldPlacementUseCase wired');
-        }
-        const record = this._resolvePlacementRecord(id);
-        if (!record) {
-            throw new Error(`WorldNavigationSession: "${id}" has no known placement to remove`);
-        }
-        if (expectedPlacementId && record.placementId !== expectedPlacementId) {
-            throw new Error('WorldNavigationSession: this placement has changed since it was selected — refusing to remove a different placement');
-        }
-        this._removeWorldPlacementUseCase.execute(record.placementId);
-    }
-
-    // 0.9.198 — Publication Unpublish/Retract UI Action. Retracts the
-    // Publication governing `documentId` — removing it (and its
-    // publisher-internal snapshot copy) from the publication-facing
-    // catalog `_findPublications`/`_resolvePublicationForPlacement`
-    // both read from. This is NOT a placement removal and NOT a
-    // document deletion: `UnpublishDocumentUseCase`'s own header is the
-    // single authority on what actually happens (as of this writing,
-    // the editable Document and its content-addressed material both
-    // survive untouched — see that file's own header and
-    // `publisher/LocalPublisherProvider.js#unpublish()`); this method
-    // never invents additional cleanup beyond what that use case itself
-    // performs, mirroring `removePlacement()`'s own restraint one
-    // authority up.
-    //
-    // A documented, deliberately-left-open side effect of THIS
-    // authority sitting one layer above `removePlacement()`'s own:
-    // because `getPlacementInfo()`/`movePlacement()`/`removePlacement()`
-    // all resolve a placement BY WAY OF the document's current
-    // Publication (`_resolvePublicationForPlacement`), unpublishing
-    // makes any EXISTING placement immediately unresolvable through
-    // this documentId-keyed path too — even though the raw
-    // PlacementRecord itself is never touched, and remains directly
-    // reachable by anyone who already holds its publicationId (see
-    // `getPlacementInfoForPublication()`, above, which bypasses
-    // discoveryProvider entirely). This is an observed CONSEQUENCE of
-    // how placement resolution already worked before this milestone,
-    // not a new cleanup this method performs — see
-    // tests/PublicationUnpublishUIAction.test.js, Section D, and
-    // docs/Roadmap.md's own 0.9.198 entry for why closing that gap
-    // (what a Wanderer should see for a now-orphaned placement) is left
-    // to 0.9.199 rather than answered here.
-    //
-    // `expectedPublicationId` mirrors `removePlacement()`'s own
-    // `expectedPlacementId` exactly: an OPTIONAL compare-and-swap guard
-    // against a stale caller (an `OwnPublicationPanel` that read a
-    // Publication which has, since then, itself already been
-    // unpublished and republished under a new id) silently retracting
-    // whatever NOW governs this document instead of refusing. Omitting
-    // it (like every other guard in this file) unpublishes whatever the
-    // freshest resolution finds.
-    //
-    // Returns `UnpublishDocumentUseCase.execute()`'s own boolean result
-    // unchanged — never re-interpreted into a new outcome vocabulary.
-    unpublishDocument(documentId, expectedPublicationId = null) {
-        const id = documentId || this._activeDocumentId;
-        if (!this._unpublishDocumentUseCase) {
-            throw new Error('WorldNavigationSession: publication cannot be unpublished — no UnpublishDocumentUseCase wired');
-        }
-        const publication = this._resolvePublicationForPlacement(id);
-        if (!publication) {
-            throw new Error(`WorldNavigationSession: "${id}" has no known publication to unpublish`);
-        }
-        if (expectedPublicationId && publication.id !== expectedPublicationId) {
-            throw new Error('WorldNavigationSession: this publication has changed since it was selected — refusing to unpublish a different publication');
-        }
-        return this._unpublishDocumentUseCase.execute(publication.id);
-    }
-
-    // 0.9.248 — Publication Commentary UI Integration. The read half of
-    // the application-layer boundary 0.9.247 named
-    // (GetPublicationCommentariesUseCase) — this method never touches
-    // PublicationCommentaryStore itself. A session built without one
-    // wired (every pre-0.9.248 caller) answers `[]`, never a throw —
-    // "no capability wired" degrades to "nothing to show," exactly the
-    // posture `getPlacementInfo()` already holds for a Publication with
-    // no placement. Ordering is whatever the use case itself returns —
-    // this method performs no sort of its own.
-    getPublicationCommentaries(publicationId) {
-        if (!this._getPublicationCommentariesUseCase || !publicationId) {
-            return [];
-        }
-        return this._getPublicationCommentariesUseCase.execute({ publicationId });
-    }
-
-    // 0.9.248 — the write half. Delegates entirely to
-    // AddPublicationCommentaryUseCase (0.9.244-0.9.246, unmodified) —
-    // this method resolves no identity, checks no authorization, and
-    // constructs no PublicationCommentary itself. Unlike the read side
-    // above, a session built without one wired throws rather than
-    // silently no-opping: creating commentary is an explicit user
-    // action with an outcome the caller must observe, the same reason
-    // `unpublishDocument()` throws instead of returning false when its
-    // own use case is missing. `authorIdentityId` is deliberately not a
-    // parameter here — see AddPublicationCommentaryUseCase's own 0.9.245
-    // header for why the caller can't even attempt to supply one.
-    // `commentaryId`/`createdAt` are optional passthroughs (unchanged
-    // AddPublicationCommentaryUseCase/PublicationCommentary contract,
-    // 0.9.242/0.9.244) — this method still resolves no identity, checks
-    // no authorization, and constructs nothing itself. 0.9.542 threads
-    // them through so a caller-side manual retry of an unchanged draft
-    // can reuse the store's own idempotent-retry identity instead of
-    // minting a fresh commentaryId (and therefore a fresh, visible
-    // duplicate) on every call — see
-    // ui/components/OwnPublicationPanel.js's own 0.9.542 header.
-    addPublicationCommentary({ publicationId, content, commentaryId, createdAt }) {
-        if (!this._addPublicationCommentaryUseCase) {
-            throw new Error('WorldNavigationSession: publication commentary cannot be created — no AddPublicationCommentaryUseCase wired');
-        }
-        return this._addPublicationCommentaryUseCase.execute({ publicationId, content, commentaryId, createdAt });
-    }
-
-    // 0.9.284 — Notification History UI Boundary. The read-only seam a
-    // Notification History panel calls through — this method never
-    // touches NotificationEventStore or NotificationEvent itself, and
-    // never resolves an identity of its own; both are
-    // GetRecipientNotificationEventsUseCase's own job (0.9.283). Same
-    // "enforce/offer only when the collaborator is actually wired"
-    // posture as getPublicationCommentaries() above: a session built
-    // without one wired (every pre-0.9.284 caller) answers `[]`, never
-    // a throw — "no capability wired" degrades to "nothing to show."
-    // Once wired, this method performs NO try/catch of its own — an
-    // authentication failure ("sign in to view your notifications") or
-    // a genuine storage failure both propagate unmodified out of
-    // execute(), exactly as unpublishDocument() lets
-    // UnpublishDocumentUseCase's own errors propagate. A caller
-    // collapsing "no notifications" and "notifications could not be
-    // loaded" into the same empty result would be inventing a
-    // distinction this method deliberately does not make on its own —
-    // see ui/components/NotificationHistoryPanel.js for how the one
-    // real caller keeps them apart. Ordering is whatever the use case
-    // itself returns — this method performs no sort of its own.
-    getRecipientNotificationEvents() {
-        if (!this._getRecipientNotificationEventsUseCase) {
-            return [];
-        }
-        return this._getRecipientNotificationEventsUseCase.execute();
-    }
-
-    // _ensureEditableSelection() — REMOVED (0.5.9). Was the fork-on-write
-    // guard for selection-driven mutations (move/rotate/delete/align/
-    // distribute/numeric transform/gizmo drags), all gone now. Region/
-    // Landmark naming below uses _ensureEditableDocumentId instead —
-    // it never needed the selection-remapping this one did.
-
-    // Guard for document-scoped mutations that are not selection-driven
-    // (placement, groups, paste). Returns the documentId to actually
-    // operate against — unchanged when already editable, the new
-    // fork's id otherwise.
-    _ensureEditableDocumentId(documentId) {
-        if (!documentId || !this._publishedDocumentIds.has(documentId)) {
-            return documentId;
-        }
-        return this._forkForEdit(documentId);
-    }
-
-    // The actual Copy-on-Write: forks `sourceDocumentId`, swaps this
-    // session's view of it for the fork (the published source is
-    // unloaded from this session — the mutation the caller is about to
-    // perform must land on the fork, never on the source), and remaps
-    // any live references (selection, focus, hover) that pointed at
-    // the source. Returns the fork's documentId.
-    //
-    // Throws if the publication's fork policy forbids forking — the
-    // mutation the caller is attempting is rejected, exactly like
-    // ForkDocumentUseCase's existing enforcement (0.2.13), rather than
-    // silently allowed or silently dropped.
-    _forkForEdit(sourceDocumentId) {
-        const sourceDoc = this._loadedDocuments.get(sourceDocumentId);
-        if (!sourceDoc) {
-            throw new Error(`WorldNavigationSession: no loaded document "${sourceDocumentId}" to fork`);
-        }
-
-        const policy = this._checkForkPolicy(sourceDocumentId);
-        if (!policy.allowed) {
-            throw new Error(
-                `WorldNavigationSession: forking is not permitted under license `
-                + `${policy.license ? policy.license.id : 'UNSPECIFIED'} for document "${sourceDocumentId}"`
-            );
-        }
-
-        const user = this._identityProvider ? this._identityProvider.currentUser() : null;
-        const fork = this._documentCloneService.execute(sourceDoc, {
-            title: `Fork of ${sourceDoc.metadata.title || 'Untitled'}`,
-            author: user ? user.username : null,
-            parentDocumentId: sourceDoc.world.id,
-            // Hardening (post-0.2.22): without this, the fork's bricks have no wired
-            // eventBus, so every mutation after this one updates the
-            // domain model correctly but never tells the renderer —
-            // the mesh freezes wherever addWorld first placed it. Same
-            // bus _loadWorld already passes to loadPublicationDocumentUseCase
-            // for the source, and the one the active WorldRenderer
-            // subscribed to in start().
-            eventBus: this._eventBus
-        });
-        const forkId = fork.world.id;
-
-        this._loadedDocuments.set(forkId, fork);
-        const history = new CommandHistory({ world: fork.world });
-        history.markUnsaved();
-        this._registerCommandHistory(forkId, history);
-
-        // The fork inherits the source's position permanently: it is
-        // not discoverable (never published), so the layout/discovery
-        // providers can never resolve a position for `forkId` on their
-        // own — every later lookup must come back here, not fall
-        // through to their "unknown document" default.
-        const pos = this._getWorldPosition(sourceDocumentId);
-        this._localPositions.set(forkId, pos);
-        this._localOnlyDocumentIds.add(forkId);
-
-        if (this._session) {
-            this._session.removeWorld(sourceDoc.world, sourceDocumentId);
-            this._session.addWorld(fork.world, forkId, pos);
-        }
-
-        // The published source is superseded in THIS session's view —
-        // it was never mutated (a fresh reload of the same publication
-        // elsewhere still resolves it byte-for-byte unchanged), but
-        // this session now works against the fork exclusively.
-        this._loadedDocuments.delete(sourceDocumentId);
-        this._unregisterCommandHistory(sourceDocumentId);
-        this._publishedDocumentIds.delete(sourceDocumentId);
-
-        this._remapReferencesAfterFork(sourceDocumentId, sourceDoc, forkId, fork);
-
-        // 0.2.21: so the UI can say what just happened instead of the
-        // document id silently changing underneath the user — see
-        // consumeForkNotice() / WorldView's guarded().
-        this._pendingForkNotice = {
-            sourceDocumentId,
-            sourceTitle: sourceDoc.metadata.title || 'Untitled',
-            forkId,
-            forkTitle: fork.metadata.title
-        };
-
-        return forkId;
-    }
-
-    // Drains the notice _forkForEdit leaves behind, if any. Returns
-    // null (not just falsy) when nothing forked since the last call —
-    // callers can `if (notice) ...` without worrying about undefined.
-    consumeForkNotice() {
-        const notice = this._pendingForkNotice;
-        this._pendingForkNotice = null;
-        return notice;
-    }
-
-    // The world position to render/pivot `documentId` at. Prefers a
-    // remembered local position (set at fork time — see _forkForEdit)
-    // over the layout provider, because the provider can only resolve
-    // positions for documents it can discover, and a fork never is
-    // one. Used everywhere a position is needed for a document that
-    // might be a fork, not just inside _forkForEdit itself.
-    _getWorldPosition(documentId) {
-        if (this._localPositions.has(documentId)) {
-            return this._localPositions.get(documentId);
-        }
-        return this._worldLayoutProvider.getPosition(documentId);
-    }
-
-    // Every Publication on record for `documentId`, or [] when there is
-    // no discoveryProvider wired to ask at all. The one lookup shared by
-    // _isKnownPublication (is this world published at all?) and
-    // _checkForkPolicy (may it be forked?).
-    _findPublications(documentId) {
-        if (!this._discoveryProvider || typeof this._discoveryProvider.findByDocumentId !== 'function') {
-            return [];
-        }
-        return this._discoveryProvider.findByDocumentId(documentId) || [];
-    }
-
-    // Is `documentId` a real, published world — the actual condition
-    // fork-on-write exists to protect? A session with no
-    // discoveryProvider wired cannot tell, and does not claim to (see
-    // _loadWorld).
-    _isKnownPublication(documentId) {
-        return this._findPublications(documentId).length > 0;
-    }
-
-    // fork policy (0.2.13): does the license governing `documentId`
-    // permit forking at all? Enforced only when a Publication can
-    // actually be resolved for it — no matching publication allows the
-    // fork rather than introducing a new capability regression where
-    // none existed before (matches ForkDocumentUseCase's own "only
-    // enforce when a sourcePublication is known" behavior). In
-    // practice this is only ever reached for documentIds
-    // _isKnownPublication already confirmed, so the "no publication"
-    // branch is defensive, not a live path.
-    _checkForkPolicy(documentId) {
-        const publications = this._findPublications(documentId);
-        if (publications.length === 0) {
-            return { allowed: true, license: null };
-        }
-        // Most recent publication of this document governs.
-        const publication = publications.reduce((latest, p) =>
-            (!latest || p.publishedAt > latest.publishedAt) ? p : latest, null);
-        const license = publication.license instanceof License
-            ? publication.license
-            : new License(publication.license || {});
-        return { allowed: license.forkAllowed, license };
-    }
-
-    // "Edit a Copy" (0.5.9) — the publication id (if any) governing
-    // `documentId`, for a caller building a `/editor?fork=` navigation
-    // exactly like ui/components/PublicationCatalog.js#forkPublication()
-    // already does: without a `publication` query param,
-    // ForkDocumentUseCase's own license enforcement never runs (see its
-    // own header — "only enforce when a sourcePublication is known").
-    // Reuses the SAME "most recent Publication governs" reduction
-    // _checkForkPolicy() above already applies, so a viewer can never
-    // see a different fork outcome ("allowed"/license) here than
-    // World View's own in-session fork-on-write would have applied to
-    // the identical document. Returns null when the document is not a
-    // known publication at all (a local-only fork, or one this
-    // replica's discoveryProvider simply cannot resolve) — never throws.
-    getPublicationIdForDocument(documentId) {
-        const publications = this._findPublications(documentId);
-        if (publications.length === 0) {
-            return null;
-        }
-        const publication = publications.reduce((latest, p) =>
-            (!latest || p.publishedAt > latest.publishedAt) ? p : latest, null);
-        return publication.id;
-    }
-
-    // 0.9.140 — Own Publication Distribution Entry Point. The actual
-    // Publication domain object (never just its id) governing
-    // `documentId`, when — and only when — the document is itself a
-    // known, published snapshot. Reuses `_resolvePublicationForPlacement()`
-    // verbatim (the SAME "most recent Publication for this documentId
-    // wins" reduction `getPublicationIdForDocument`, immediately above,
-    // and `_checkForkPolicy` already each perform independently) rather
-    // than introducing a second, competing notion of "the" Publication
-    // for a document. Exists so a caller that needs the OBJECT itself —
-    // World View's own local "distribute my current snapshot" action,
-    // which has no use for a bare id — never has to resolve it through
-    // a discovery provider of its own. null, never throws, for a
-    // document with no known Publication (an unpublished fork, or a
-    // plain loaded document that was never published at all).
-    //
-    // 0.9.597 — Publication Action Provider Continuity Fix. This is the
-    // ONE method ui/views/WorldView.js's own `ownPublication` computation
-    // binds to `OwnPublicationPanel`'s own `publication` prop
-    // (0.9.596's own Section C, "the exact input OwnPublicationPanel's
-    // own `publication` prop is bound to"). It no longer reuses
-    // `_resolvePublicationForPlacement()` verbatim — that method (and
-    // `_findPublications()` beneath it) stays exactly as local-only as
-    // before, still the sole authority for placement resolution
-    // (`_resolvePlacementRecord`/`getPlacementInfo`/`checkPlacementOverlap`/
-    // `unpublishDocument`) and for fork-policy (`_isKnownPublication`/
-    // `_checkForkPolicy`)/`getPublicationIdForDocument`. This method now
-    // performs the IDENTICAL "most recent Publication for this documentId
-    // wins" reduction independently, over
-    // `_publicationActionDiscoveryProvider` (see this class's own
-    // constructor comment) — so a Repository-admitted Publication
-    // (0.9.595) that this replica never locally published becomes
-    // resolvable here without also making `_isKnownPublication()` decide
-    // a plain, never-published document is "known" or `_checkForkPolicy()`
-    // apply that Publication's license to it, which is exactly the
-    // ripple-effect risk 0.9.596's own Section D live-proved a shared
-    // `_findPublications()` lookup would create. A caller that never
-    // wires `publicationActionDiscoveryProvider` (every pre-0.9.597
-    // caller, and every existing test) gets `_publicationActionDiscoveryProvider
-    // === discoveryProvider`, so this method's observable behavior is
-    // byte-for-byte identical to calling `_resolvePublicationForPlacement()`
-    // as before.
-    getPublicationForDocument(documentId) {
-        if (!this._publicationActionDiscoveryProvider || typeof this._publicationActionDiscoveryProvider.findByDocumentId !== 'function') {
-            return null;
-        }
-        const publications = this._publicationActionDiscoveryProvider.findByDocumentId(documentId) || [];
-        if (publications.length === 0) return null;
-        return publications.reduce((latest, p) => (!latest || p.publishedAt > latest.publishedAt) ? p : latest, null);
-    }
-
-    // Remaps this session's live references — selection, focus, active
-    // document, hover — from the just-superseded source document onto
-    // its fork. Bricks get fresh ids on clone (DocumentCloneService),
-    // so brick references are remapped POSITIONALLY (same building
-    // index, same brick index within it) rather than by id; the clone
-    // preserves structure and order exactly, so position is a stable
-    // identity across the fork boundary.
-    _remapReferencesAfterFork(sourceDocumentId, sourceDoc, forkId, forkDoc) {
-        if (this._focusedDocumentId === sourceDocumentId) {
-            this._focusedDocumentId = forkId;
-        }
-        // 0.2.27: a fork only ever happens because a mutation targeted
-        // sourceDocumentId — and every mutation path resolves its
-        // target from _activeDocumentId (or a selection that itself
-        // gets remapped below). Whichever one caused this fork, if it
-        // was the active document, the fork must become the new active
-        // document too — otherwise the very next mutation would
-        // silently target a document that no longer exists in this
-        // session's view (it was just superseded and unloaded).
-        if (this._activeDocumentId === sourceDocumentId) {
-            this._activeDocumentId = forkId;
-        }
-        if (this._spatialSelection && this._spatialSelection.documentId === sourceDocumentId) {
-            if (this._spatialSelection.type === 'ground') {
-                this._spatialSelection = SpatialSelectionState.ground(this._spatialSelection.position);
-            } else {
-                const items = this._spatialSelection.items
-                    .map((item) => item.type === 'brick'
-                        ? this._remapBrickReference(sourceDoc, forkDoc, item.buildingId, item.brickId)
-                        : null)
-                    .filter((item) => item !== null);
-                this._spatialSelection = items.length > 0
-                    ? SpatialSelectionState.bricks({ documentId: forkId, items })
-                    : SpatialSelectionState.empty();
-            }
-            // The renderer's own selection highlight and the transform
-            // gizmo were both set up against the source document's
-            // (now-removed) brick meshes. Without this, the visuals
-            // stay pinned to whatever was on screen before the fork —
-            // typically nothing, since removeWorld just tore those
-            // meshes down — and the gizmo can no longer be grabbed even
-            // though the (correct, forked) selection state says
-            // something is selected.
-            if (this._session) {
-                this._session.selectBricks(this._spatialSelection.brickIds, this._spatialSelection.brickId);
-            }
-            this._refreshEditingContext();
-            this._refreshInspection();
-            this._refreshGizmo();
-        }
-        if (this._spatialHover && this._spatialHover.documentId === sourceDocumentId) {
-            this._setSpatialHover(SpatialHoverState.empty());
-        }
-    }
-
-    // Positional remap: same building index, same brick index within
-    // it. Returns null if the source reference cannot be resolved
-    // (defensive — should not happen for a fresh, unedited clone).
-    _remapBrickReference(sourceDoc, forkDoc, buildingId, brickId) {
-        const sourceBuildings = sourceDoc.world.getBuildings();
-        const buildingIndex = sourceBuildings.findIndex((b) => b.id === buildingId);
-        if (buildingIndex === -1) return null;
-        const sourceBricks = sourceBuildings[buildingIndex].getBricks();
-        const brickIndex = sourceBricks.findIndex((b) => b.id === brickId);
-        if (brickIndex === -1) return null;
-
-        const forkBuildings = forkDoc.world.getBuildings();
-        const forkBuilding = forkBuildings[buildingIndex];
-        if (!forkBuilding) return null;
-        const forkBrick = forkBuilding.getBricks()[brickIndex];
-        if (!forkBrick) return null;
-        return { type: 'brick', buildingId: forkBuilding.id, brickId: forkBrick.id };
-    }
 
     // -----------------------------------------------------------------
     // Internal
     // -----------------------------------------------------------------
 
-    // 0.2.27: "which document would the next mutation land on" —
-    // shared by _getActiveCommandHistory (undo/redo) and the history-
-    // replay preview below, so both agree with every other mutation
-    // path in this file instead of each independently guessing (the
-    // group-ops methods above had exactly this kind of drift before
-    // this milestone: two call sites resolving "the" document
-    // differently, and disagreeing whenever selection and active
-    // diverged). A non-empty selection wins — it's the more specific
-    // answer — falling back to the active document, never the
-    // camera-focused one.
+    // The document the next mutation would land on, shared by
+    // _getActiveCommandHistory (undo/redo) and history preview so they agree
+    // with every other mutation path. A non-empty selection wins, then the
+    // active document, never the camera-focused one.
     _resolveMutationTargetId() {
         if (this._spatialSelection && !this._spatialSelection.isEmpty && this._spatialSelection.documentId) {
             return this._spatialSelection.documentId;
@@ -6727,30 +1388,15 @@ export class WorldNavigationSession {
         return this._commandHistories.get(document.world.id) || null;
     }
 
-	// 0.9.605 — Wire Publication Discovery into World Rendering. Tries
-	// the ordinary LOCAL lookup first, exactly as every prior milestone
-	// — this is the only path a locally-published document, or a
-	// lazily-forked one, has ever used, and it is completely unchanged
-	// here. Only when storage[documentId] comes back empty (never for
-	// any OTHER failure, e.g. a corrupted local document failing
-	// validation, which still propagates unmodified) does it fall
-	// through to the read-through material bridge
-	// (loadPublishedWorldSessionUseCase) for a Publication
-	// worldLayoutProvider's own widened discovery (see
-	// application/CreateWorldViewUseCase.js) may now have surfaced but
-	// this replica never locally published — resolving it via
-	// `.getDocument()` so `_loadedDocuments` holds the exact same
-	// Document shape (`.world`) every other caller already expects,
-	// never a PublishedWorldSession itself and never a copy into
-	// storage[documentId].
-	// Returns { document, isMaterializedPublication }. The second field
-	// tells _loadWorld() below whether `document` came from a genuinely
-	// resolved Publication object via the fallback (always true there —
-	// _resolvePublicationMaterial() never returns anything else), so it
-	// can be marked immutable in `_publishedDocumentIds` exactly like
-	// any other published snapshot, WITHOUT reading _findPublications()/
-	// _discoveryProvider (fork-policy's own narrow choke point) to
-	// decide it.
+	// Tries local storage first, unchanged. Only when storage[documentId] is
+	// empty (any other failure, such as validation, still propagates) does it
+	// fall back to the read-through material bridge for a Publication surfaced
+	// by worldLayoutProvider but never published locally. `.getDocument()` keeps
+	// `_loadedDocuments` holding ordinary Documents, never a
+	// PublishedWorldSession and never a copy into storage.
+	// Returns { document, isMaterializedPublication }, so _loadWorld() can mark
+	// fallback documents immutable without consulting fork policy's
+	// _findPublications()/_discoveryProvider.
 	_resolveWorldDocument(documentId) {
 	    try {
 	        return { document: this._loadPublicationDocumentUseCase.execute(documentId, this._eventBus), isMaterializedPublication: false };
@@ -6767,14 +1413,10 @@ export class WorldNavigationSession {
 	    }
 	}
 
-	// Resolves a materializable Publication for `documentId` through
-	// `_publicationActionDiscoveryProvider` — the SAME wider capability
-	// getPublicationForDocument()/findPublicationById() already read
-	// (0.9.597), never `_discoveryProvider`/_findPublications()'s own
-	// narrow, fork-policy-governing choke point. Returns null (never
-	// throws) whenever no fallback is possible, so
-	// _resolveWorldDocument() above can cleanly re-throw the ORIGINAL
-	// "not found" error instead.
+	// Resolves a materializable Publication through
+	// `_publicationActionDiscoveryProvider`, never the narrow fork-policy
+	// provider. Returns null when no fallback is possible, so
+	// _resolveWorldDocument() re-throws the original "not found".
 	_resolvePublicationMaterial(documentId) {
 	    if (!this._loadPublishedWorldSessionUseCase || !this._publicationActionDiscoveryProvider
 	        || typeof this._publicationActionDiscoveryProvider.findByDocumentId !== 'function') {
@@ -6788,41 +1430,24 @@ export class WorldNavigationSession {
 	_loadWorld(documentId) {
 	    const { document, isMaterializedPublication } = this._resolveWorldDocument(documentId);
 	    this._loadedDocuments.set(documentId, document);
-	    // 0.2.20: a world streamed in this way is a published snapshot,
-	    // immutable until (and unless) an edit forks it — see
-	    // _ensureEditableSelection/_ensureEditableDocumentId — but only
-	    // when a real Publication can be resolved for it. In real
-	    // streaming usage (updateSpatialView) that is always true: a
-	    // documentId only becomes visible/loadable in the first place
-	    // because WorldLayoutProvider/discoveryProvider already know it
-	    // as published. Without a discoveryProvider wired at all, this
-	    // session has no way to tell a published world from any other
-	    // loaded document, so it does not claim to — exactly the same
-	    // "enforce only when we can" rule _checkForkPolicy already
-	    // follows for license checks.
-	    // 0.9.605: `isMaterializedPublication` is a SECOND, independent
-	    // path to the same conclusion — a documentId resolved through
-	    // the material bridge is, by construction, a genuine Publication
-	    // (_resolvePublicationMaterial() never returns anything else),
-	    // so it is marked immutable here too, without ever consulting
-	    // _isKnownPublication()/_findPublications() (fork-policy's own
-	    // narrow choke point, left exactly as 0.9.596 established it).
+	    // A streamed-in world is a published snapshot, immutable until an edit forks
+	    // it (see _ensureEditableDocumentId), but only when a Publication resolves.
+	    // In streaming that's always true, since only published documents become
+	    // visible. Without a discoveryProvider this session can't tell, so it
+	    // doesn't claim to. A materialized Publication is marked immutable too,
+	    // without consulting _isKnownPublication().
 	    if (isMaterializedPublication || this._isKnownPublication(documentId)) {
 	        this._publishedDocumentIds.add(documentId);
 	    }
 	    if (!this._focusedDocumentId) {
-	        this._focusedDocumentId = documentId; // Set focus on first load
+	        this._focusedDocumentId = documentId;
 	    }
-	    // 0.9.606 — see this constructor's own _homeDocumentId comment:
-	    // set once, on the same "nothing else to be instead of"
-	    // condition as _focusedDocumentId's own bootstrap, but — unlike
-	    // _focusedDocumentId — never cleared by _unloadWorld() when this
-	    // document later streams out.
+	    // Set once, like _focusedDocumentId, but never cleared by _unloadWorld();
+	    // see the _homeDocumentId constructor comment.
 	    if (!this._homeDocumentId) {
 	        this._homeDocumentId = documentId;
 	    }
-	    // 0.2.27: bootstrap the active document the same way — the very
-	    // first thing streamed in has nothing else to be "instead of."
+	    // Bootstrap the active document the same way.
 	    if (!this._activeDocumentId) {
 	        this._activeDocumentId = documentId;
 	    }
@@ -6837,9 +1462,8 @@ export class WorldNavigationSession {
         if (this._focusedDocumentId === documentId) {
             this._focusedDocumentId = null;
         }
-        // 0.2.27: a document that just left this session's view can't
-        // remain the active (editing) document either — nothing would
-        // be there for a mutation to land on.
+        // An unloaded document can't stay active; a mutation would have nowhere to
+        // land.
         if (this._activeDocumentId === documentId) {
             this._activeDocumentId = null;
         }
@@ -6863,16 +1487,10 @@ export class WorldNavigationSession {
         this._refreshGizmo();
     }
 
-	// 0.2.27: whenever a real (non-ground, non-empty) selection is set,
-	// the document it belongs to BECOMES the active document — see
-	// docs/Principles.md, "Camera Focus, Active Document, and Selection
-	// Are Three Different Things." This is what makes "select a brick
-	// in a different loaded document" and "editing always targets the
-	// active document" the same guarantee instead of two separate
-	// invariants that could drift apart: picking, marquee-select,
-	// select-all, and selecting a group all funnel through this one
-	// setter, so there is exactly one place this sync can happen, not
-	// one per call site to keep in sync by hand.
+	// A real (non-ground, non-empty) selection makes its document active (see
+	// docs/Principles.md, "Camera Focus, Active Document, and Selection Are
+	// Three Different Things"). Every selection path funnels through this
+	// setter, so the sync happens in one place.
 	_setSpatialSelection(selection) {
 	    this._spatialSelection = selection;
 	    if (selection && !selection.isEmpty && selection.documentId) {
@@ -6882,18 +1500,11 @@ export class WorldNavigationSession {
 	    this._refreshInspection();
 	}
 
-    // 0.2.93 — renderer/PlacementMeshRegistry.js is keyed by placementId
-    // alone, with no documentId of its own (see its own header) —
-    // PickingService#pickPlacement() therefore only ever returns a bare
-    // placementId, never which document it lives in. World View can
-    // have MANY documents streamed in at once, each with zero or more
-    // StructurePlacements, so a hit has to be resolved back to whichever
-    // loaded document's World actually contains it. placementId is
-    // minted per-instance (core/StructurePlacement.js, createId()),
-    // never reused across placements, so the first match is the only
-    // match. Returns null in the (defensive, shouldn't happen in
-    // practice) case that the hit outlived its document — e.g. the
-    // document streamed out between the raycast and this lookup.
+    // PlacementMeshRegistry is keyed by placementId alone, so a pick returns
+    // no document. With many documents streamed in, the hit is resolved back to
+    // whichever World contains it. placementIds are unique per instance, so the
+    // first match is the only one. Null if the document streamed out in
+    // between.
     _resolvePlacementHostDocumentId(placementId) {
         for (const [documentId, document] of this._loadedDocuments) {
             if (document.world.getStructurePlacement(placementId)) {
@@ -6918,10 +1529,8 @@ export class WorldNavigationSession {
         this._spatialHover = hover;
     }
 
-    // 0.2.39 — deliberately minimal, unlike _setSpatialSelection: an
-    // avatar interaction target has no editing context, no brick
-    // inspection, no gizmo presentation to refresh — it is JUST an
-    // identifier a caller (getAvatarInfo()) resolves fresh on demand.
+    // Minimal, unlike _setSpatialSelection: an avatar target is just an id
+    // that getAvatarInfo() resolves on demand.
     _setAvatarInteraction(avatarInteraction) {
         this._avatarInteraction = avatarInteraction;
     }
@@ -6934,19 +1543,11 @@ export class WorldNavigationSession {
         this._spatialInspection = this._inspectionService.inspect(this._spatialSelection);
     }
 
-    // 0.5.9 — permanently inert. _refreshEditingContext()/_refreshGizmo()
-    // used to recompute "what can I do to the current selection" and the
-    // gizmo's own presentation after every selection/mutation change —
-    // both were called from a couple dozen places across this file (
-    // selection changes, navigation, undo/redo, avatar interaction...).
-    // Now that World View has no editing kernel or gizmo left at all
-    // (see docs/Principles.md, "World View Observes and Navigates;
-    // Editor Mutates and Builds (0.5.9)"), leaving these two AS
-    // deliberate no-ops is far less invasive than hunting every one of
-    // those call sites individually — `_spatialEditingContext` simply
-    // stays permanently empty, which is the architecturally correct
-    // answer anyway ("nothing is editable"), and getSpatialEditingContext()
-    // keeps returning that same accurate, harmless empty context.
+    // Permanently inert: World View has no editing kernel or gizmo (see
+    // docs/Principles.md, "World View Observes and Navigates; Editor Mutates and
+    // Builds"). Keeping these as no-ops is less invasive than removing their
+    // many call sites; `_spatialEditingContext` stays empty, which is the
+    // correct answer ("nothing is editable").
     _refreshEditingContext() {
         this._spatialEditingContext = SpatialEditingContext.empty();
     }
@@ -6967,12 +1568,10 @@ export class WorldNavigationSession {
 	}
 	saveDocument(documentId) {
 	    const id = documentId || this._activeDocumentId;
-	    // 0.2.20: defense in depth — every guarded mutation already forks
-	    // before marking a document dirty, so a still-published document
-	    // should never reach here with anything to save. Refuse rather
-	    // than silently persisting over the published source's storage
-	    // slot (see docs/Principles.md, "A published snapshot is never
-	    // mutated in place").
+	    // Defense in depth: guarded mutations fork before marking dirty, so a
+	    // published document should never have anything to save. Refuse rather
+	    // than overwrite the published source (see docs/Principles.md, "A
+	    // published snapshot is never mutated in place").
 	    if (this._publishedDocumentIds.has(id)) {
 	        throw new Error(`WorldNavigationSession: "${id}" is a published snapshot and cannot be saved directly — edit it to fork first`);
 	    }
@@ -6992,77 +1591,7 @@ export class WorldNavigationSession {
 	    if (this.isDocumentDirty(doc.world.id)) this.saveDocument(doc.world.id);
 	    return this._publishDocumentUseCase.execute({ document: doc });
 	}
-	getTimeline(documentId) {
-	    const doc = this.getDocument(documentId || this._activeDocumentId);
-	    const history = doc ? this._commandHistories.get(doc.world.id) : null;
-	    return history ? history.getTimeline() : [];
-	}		
 	
-	restoreHistoryAt(cursor, documentId) {
-	    if (!this._replayDocumentUseCase) {
-	        throw new Error('no restore configured'); // <--- ADD GUARD
-	    }
-	    const docId = documentId || this._activeDocumentId;
-	    const doc = this.getDocument(docId);
-	    if (!doc) throw new Error('no loaded document');
-	    
-	    const history = this._commandHistories.get(doc.world.id);
-	    if (!history) throw new Error('no history');
-	
-	    // 1. Rebuild the world and document
-	    const restoredWorld = this._replayDocumentUseCase.execute(history, { endCursor: cursor });
-	    const restoredDocument = new Document({
-	        world: restoredWorld,
-	        metadata: doc.metadata
-	    });
-	    
-	    // 2. Rebuild the history
-	    const restoredHistory = new CommandHistory({ world: restoredWorld });
-	    restoredHistory.markUnsaved();
-	
-	    // 3. Update session state
-	    this._loadedDocuments.set(docId, restoredDocument);
-	    this._registerCommandHistory(restoredWorld.id, restoredHistory);
-	
-	    // 4. Retire the old history
-	    if (!this._retiredHistories) this._retiredHistories = new Map();
-	    if (!this._retiredHistories.has(doc.world.id)) this._retiredHistories.set(doc.world.id, []);
-	    this._retiredHistories.get(doc.world.id).push(history);
-	
-	    // 5. Update Renderer
-	    //
-	    // 0.9.208 — a preview is only "the thing occupying this document's
-	    // render slot" when it belongs to THIS documentId. Previewing
-	    // document A and then restoring an unrelated document B used to
-	    // check only `this._historyPreview.active` — true regardless of
-	    // which document it belonged to — so restoring B wiped A's
-	    // preview out from under it (`_historyPreview = null`, no render
-	    // call to bring A's live world back) while B's own live world was
-	    // never removed before the restored one was added on top of it.
-	    // Scoping the check to documentId means a preview for a different
-	    // document is left completely untouched: it keeps its own
-	    // `replay:${otherDocId}` slot and its own hidden live world,
-	    // exactly as it was before this restore.
-	    if (this._session) {
-	        const previewingThisDocument = this._historyPreview
-	            && this._historyPreview.active
-	            && this._historyPreview.documentId === docId;
-	        if (previewingThisDocument) {
-	            this._session.removeWorld(this._historyPreview.world, `replay:${docId}`);
-	            this._historyPreview = null;
-	        } else {
-	            this._session.removeWorld(doc.world, docId);
-	        }
-	        this._session.addWorld(restoredWorld, docId, this._worldLayoutProvider.getPosition(docId));
-	    }
-	
-	    this.clearSelection();
-	}
-	
-	// copySelection/pasteClipboard/duplicateSelection/
-	// _duplicateBrickSelection/repeatSelection — REMOVED (0.5.9). See
-	// the "Placement Mode & Gizmo interaction" removal note above.
-
 	cloneDocument(documentId) {
 	    const doc = this.getDocument(documentId || this._activeDocumentId);
 	    if (!doc) throw new Error('no loaded document');
@@ -7070,7 +1599,7 @@ export class WorldNavigationSession {
 	    this._loadedDocuments.set(clone.world.id, clone);
 	    
 	    const history = new CommandHistory({ world: clone.world });
-	    history.markUnsaved(); // <--- ADD THIS LINE (matches forkDocument behavior)
+	    history.markUnsaved();
 
 	    this._registerCommandHistory(clone.world.id, history);
 	    if (this._session) this._session.addWorld(clone.world, clone.world.id, this._worldLayoutProvider.getPosition(clone.world.id));
@@ -7099,771 +1628,7 @@ export class WorldNavigationSession {
 	    this._activeDocumentId = fork.world.id;
 	    return fork.world.id;
 	}
-	// getGroups/createGroupFromSelection/selectGroup/
-	// addSelectionToSelectedGroup/removeSelectionFromSelectedGroup/
-	// renameGroup/duplicateGroup/deleteGroup — REMOVED (0.5.9). See the
-	// "Placement Mode & Gizmo interaction" removal note above.
 
-	// -----------------------------------------------------------------
-	// World Landmarks (0.3.7) — explicit, persistent World content.
-	// -----------------------------------------------------------------
-	//
-	// Landmarks already appear in getWorldLocations() (kind: 'landmark',
-	// see application/WorldLocationDirectory.js) for navigation/compass
-	// purposes — focusLocation() already moves the camera to one, no
-	// changes needed there. This section is only the MUTATION surface:
-	// create, rename/redescribe, and remove, each an ordinary Command
-	// executed through the exact same
-	// this._commandHistories.get(worldId).execute(cmd) chokepoint every
-	// other named World content type (Group, above) already uses — so
-	// propagation (WorldCommandPropagationUseCase, wired once in
-	// _registerCommandHistory) and undo/redo need zero landmark-specific
-	// code. See core/WorldLandmark.js's own header and docs/Principles.md,
-	// "A Landmark Is World Content, Not Spatial Presence (0.3.7)."
-	//
-	// getLandmark() is the one richer read: a WorldLocation deliberately
-	// never carries description/authorIdentityId (core/WorldLocation.js)
-	// or a worldId, so the Edit Landmark form reads the raw WorldLandmark
-	// instead — searched across every loaded document (see
-	// _resolveLandmarkOwner below), the same "world-wide, not just the
-	// active document" scope getWorldLocations() already has, so the
-	// form always has real title/description to prefill regardless of
-	// which loaded World the landmark actually lives in. Returns null
-	// when no loaded document currently has it.
-	getLandmark(landmarkId) {
-	    const doc = this._resolveLandmarkOwner(landmarkId);
-	    if (!doc) return null;
-	    return doc.world.getWorldLandmark(landmarkId).toJSON();
-	}
-
-	// Which loaded document's World actually owns landmarkId. Landmarks
-	// are world-wide destinations exactly like structures (see
-	// WorldLocationDirectory's own header) — a landmark shown in the
-	// Locations panel may belong to any currently loaded document, not
-	// only the active one — so getLandmark()/update/remove below resolve
-	// by searching rather than assuming "the active document."
-	_resolveLandmarkOwner(landmarkId) {
-	    for (const doc of this.getLoadedDocuments()) {
-	        if (doc.world.getWorldLandmark(landmarkId)) {
-	            return doc;
-	        }
-	    }
-	    return null;
-	}
-
-	// "Place Here" — a landmark at the local avatar's own current
-	// position, in the ACTIVE document's World (the world you're
-	// actually working in) — the same _ensureEditableDocumentId
-	// fork-on-write guard, same canEditDocument authorization gate the
-	// milestone design calls for: "any EDIT member can modify World
-	// landmarks," never a separate LandmarkOwner/ACL concept. This is
-	// deliberately NOT construction/mutation in the 0.5.9 sense (see
-	// docs/Principles.md, "World View Observes and Navigates; Editor
-	// Mutates and Builds") — naming a place a viewer is standing at is
-	// annotation, not building; it stays here, on purpose.
-	//
-	// Requires a live avatar (see getAvatarPosition()'s own header) —
-	// World View hides the Add Landmark affordance without one, but
-	// this throws rather than silently doing nothing if called
-	// directly. core/WorldLandmark.js stores X/Z as authoritative and
-	// documents Y as "derived from terrain at render time," but (like
-	// StructurePlacement's own position) the value actually stored here
-	// is still the avatar's real, currently-correct Y. The avatar's own
-	// position is in the shared/absolute layout space (see
-	// application/WorldSpatialContextService.js, which compares it
-	// directly against placement positions already offset the same
-	// way) — this World's own layout offset (getDocumentPosition) must
-	// be subtracted to get the LOCAL position WorldLandmark stores,
-	// the exact inverse of the offset WorldLocationDirectory#
-	// _landmarkLocationsFor() adds back for display.
-	createLandmarkHere(title, description = '') {
-	    const avatarPos = this.getAvatarPosition();
-	    if (!avatarPos) {
-	        throw new Error('WorldNavigationSession: cannot add a landmark without a live avatar position');
-	    }
-	    this._activeDocumentId = this._ensureEditableDocumentId(this._activeDocumentId);
-	    const doc = this.getDocument(this._activeDocumentId);
-	    if (!doc) {
-	        throw new Error('WorldNavigationSession: no active World to add a landmark to');
-	    }
-	    const worldId = doc.world.id;
-	    if (!this.canEditDocument(worldId)) {
-	        throw new Error('WorldNavigationSession: not authorized to add landmarks to this World');
-	    }
-	    const authorIdentityId = resolveSigningIdentityId(this._identityProvider);
-	    if (!authorIdentityId) {
-	        throw new Error('WorldNavigationSession: sign in to add a landmark');
-	    }
-	    const layoutPosition = this.getDocumentPosition(worldId);
-	    const cmd = new CreateWorldLandmarkCommand({
-	        worldId,
-	        authorIdentityId,
-	        title,
-	        description,
-	        position: new Position(
-	            avatarPos.x - layoutPosition.x,
-	            avatarPos.y - layoutPosition.y,
-	            avatarPos.z - layoutPosition.z
-	        )
-	    });
-	    this._commandHistories.get(worldId).execute(cmd);
-	    return cmd.executedLandmarkId;
-	}
-
-	updateLandmark(landmarkId, { title, description } = {}) {
-	    const owner = this._resolveLandmarkOwner(landmarkId);
-	    if (!owner) {
-	        throw new Error(`WorldNavigationSession: no landmark "${landmarkId}" known`);
-	    }
-	    const worldId = this._ensureEditableDocumentId(owner.world.id);
-	    if (!this.canEditDocument(worldId)) {
-	        throw new Error('WorldNavigationSession: not authorized to edit landmarks in this World');
-	    }
-	    this._commandHistories.get(worldId).execute(
-	        new UpdateWorldLandmarkCommand({ worldId, landmarkId, title, description })
-	    );
-	    return true;
-	}
-
-	removeLandmark(landmarkId) {
-	    const owner = this._resolveLandmarkOwner(landmarkId);
-	    if (!owner) {
-	        throw new Error(`WorldNavigationSession: no landmark "${landmarkId}" known`);
-	    }
-	    const worldId = this._ensureEditableDocumentId(owner.world.id);
-	    if (!this.canEditDocument(worldId)) {
-	        throw new Error('WorldNavigationSession: not authorized to remove landmarks from this World');
-	    }
-	    this._commandHistories.get(worldId).execute(
-	        new RemoveWorldLandmarkCommand({ worldId, landmarkId })
-	    );
-	    return true;
-	}
-
-	// -----------------------------------------------------------------
-	// World Animal Decorations (0.9.702) — bakes the nearest RELEASED
-	// animal (application/AnimalRuntimeInstances.js's own ephemeral,
-	// session-local AnimalPresence — never a deterministic, tile-baked
-	// one) into the ACTIVE document's World as durable, publishable
-	// content. The direct structural twin of createLandmarkHere() above
-	// — same fork-on-write guard (_ensureEditableDocumentId), same
-	// canEditDocument authorization gate, same local-position-via-
-	// layout-offset-subtraction — but sourcing species/position from a
-	// nearby released animal instead of a form's title/description, and
-	// with no separate update/remove counterpart (see
-	// core/AnimalDecoration.js's own header: decorative only, v1).
-	//
-	// UNLIKE createLandmarkHere(), Y IS NOT DISCARDED OR RE-DERIVABLE —
-	// see core/AnimalDecoration.js's own header for why an animal
-	// decoration's position is composed exactly like a Brick's/
-	// StructurePlacement's own local position, never like a Landmark's.
-	// avatarPos.y already reflects any real height the avatar (and
-	// therefore a released animal standing at the same spot) gained
-	// from standing on a placed structure's own bricks — a genuine
-	// domain-level fact application/AvatarMovementConstraint.js already
-	// produces — so subtracting only this document's own layout offset
-	// (never re-deriving from terrain, the way withGroundElevation()
-	// does for a LIVE avatar's own render position — see
-	// application/RenderWorldViewUseCase.js's own header) is what makes
-	// "released on top of a pyramid" survive the round trip through
-	// storage/publish/reload.
-	//
-	// RETURNS null, NEVER THROWS, WHEN NOTHING NEARBY QUALIFIES — a
-	// keybind can be pressed opportunistically with nothing released
-	// nearby at all; that is an ordinary, expected outcome, never a
-	// caller mistake the way calling this with no live avatar at all is
-	// (createLandmarkHere()'s own header explains that latter case; the
-	// same posture applies here).
-	//
-	// TRANSFERS OWNERSHIP FROM RUNTIME TO DOCUMENT. Once the decoration
-	// command commits, the source AnimalPresence is discard()'d from
-	// application/AnimalRuntimeInstances.js — the SAME "remove and
-	// permanently exclude" effect a catch already performs (see that
-	// method's own header) — so a decorated animal stops being
-	// individually rendered/tracked THIS session and can never be
-	// re-caught or re-decorated a second time under its old runtime id.
-	// It is not a live, catchable creature for anyone who loads the
-	// published World later either — see core/AnimalDecoration.js's own
-	// header, "Decorative only, v1."
-	decorateNearestReleasedAnimalHere() {
-	    const avatarPos = this.getAvatarPosition();
-	    if (!avatarPos) {
-	        throw new Error('WorldNavigationSession: cannot decorate a World without a live avatar position');
-	    }
-	    const target = this._animalRuntimeInstances.nearestReleased(avatarPos, ANIMAL_INTERACTION_RADIUS);
-	    if (!target) {
-	        return null;
-	    }
-	    this._activeDocumentId = this._ensureEditableDocumentId(this._activeDocumentId);
-	    const doc = this.getDocument(this._activeDocumentId);
-	    if (!doc) {
-	        throw new Error('WorldNavigationSession: no active World to add a decoration to');
-	    }
-	    const worldId = doc.world.id;
-	    if (!this.canEditDocument(worldId)) {
-	        throw new Error('WorldNavigationSession: not authorized to decorate this World');
-	    }
-	    const authorIdentityId = resolveSigningIdentityId(this._identityProvider);
-	    if (!authorIdentityId) {
-	        throw new Error('WorldNavigationSession: sign in to decorate a World');
-	    }
-	    const layoutPosition = this.getDocumentPosition(worldId);
-	    const cmd = new CreateWorldAnimalDecorationCommand({
-	        worldId,
-	        authorIdentityId,
-	        species: target.species,
-	        position: new Position(
-	            target.position.x - layoutPosition.x,
-	            target.position.y - layoutPosition.y,
-	            target.position.z - layoutPosition.z
-	        )
-	    });
-	    this._commandHistories.get(worldId).execute(cmd);
-	    this._animalRuntimeInstances.discard(target.id, target.position);
-	    return cmd.executedDecorationId;
-	}
-
-	// 0.9.703 — World Animal Decorations: Removal. THE 'G' KEY'S ACTUAL
-	// DISPATCHER — see WORLD_ANIMAL_DECORATION_KEY's own header and
-	// _processWorldAnimalDecorationInput()'s own header for the full
-	// rationale. Mirrors application/AvatarAnimalInteractionController.js's
-	// own 'F' priority rule exactly:
-	//
-	//   a released animal is in range   -> G decorates it
-	//   otherwise, a decoration is in range -> G undecorates it
-	//   otherwise                       -> G does nothing
-	//
-	// Decorating wins the tie when BOTH are simultaneously true, the
-	// identical "there's something right here" priority 'F' already
-	// gives catching over releasing — baking a NEW animal in is the more
-	// common, more deliberate action; undoing an old one only matters
-	// when there is nothing fresher to decorate.
-	toggleNearestAnimalDecorationHere() {
-	    const avatarPos = this.getAvatarPosition();
-	    if (!avatarPos) {
-		    throw new Error('WorldNavigationSession: cannot toggle a World animal decoration without a live avatar position');
-	    }
-	    if (this._animalRuntimeInstances.nearestReleased(avatarPos, ANIMAL_INTERACTION_RADIUS)) {
-		    return this.decorateNearestReleasedAnimalHere();
-	    }
-	    return this.undecorateNearestAnimalDecorationHere();
-	}
-
-	// The single nearest AnimalDecoration within `radius` of `avatarPos`,
-	// searched across EVERY currently loaded document — the identical
-	// "a decoration shown here may belong to any loaded document, not
-	// only the active one" scope _resolveLandmarkOwner() already keeps
-	// for landmarks, because undecorating (unlike decorating, which only
-	// ever writes into the ACTIVE document) can reasonably target a
-	// decoration standing in any World this session has streamed in.
-	// Returns `{ decoration, doc, globalPosition }` or `null` — never
-	// just the decoration alone, since the caller needs `doc` to resolve
-	// which document to edit and `globalPosition` to hand the animal
-	// back to application/AnimalRuntimeInstances.js at the right spot. A
-	// READ, exactly like AnimalRuntimeInstances#nearestReleased() this
-	// mirrors — no discovery, no eviction, no mutation.
-	_nearestAnimalDecorationNear(avatarPos, radius) {
-	    let best = null;
-	    let bestDistance = Infinity;
-	    for (const doc of this.getLoadedDocuments()) {
-		    const layoutPosition = this.getDocumentPosition(doc.world.id);
-		    for (const decoration of doc.world.getAnimalDecorations()) {
-			    const globalPosition = {
-				    x: decoration.position.x + layoutPosition.x,
-				    y: decoration.position.y + layoutPosition.y,
-				    z: decoration.position.z + layoutPosition.z
-			    };
-			    const dx = globalPosition.x - avatarPos.x;
-			    const dz = globalPosition.z - avatarPos.z;
-			    const distance = dx * dx + dz * dz;
-			    if (distance > radius * radius) {
-				    continue;
-			    }
-			    if (best === null || distance < bestDistance || (distance === bestDistance && decoration.id < best.decoration.id)) {
-				    best = { decoration, doc, globalPosition };
-				    bestDistance = distance;
-			    }
-		    }
-	    }
-	    return best;
-	}
-
-	// The undo half of decorateNearestReleasedAnimalHere(): removes the
-	// nearest AnimalDecoration from whichever loaded World it actually
-	// belongs to, and hands it BACK to application/AnimalRuntimeInstances.js
-	// as a live, session-local, catchable AnimalPresence again — the
-	// direct answer to "I decorated this and changed my mind." A FRESH
-	// id, never the decoration's own: an AnimalDecoration's id is a
-	// durable-World-content identity (minted by
-	// CreateWorldAnimalDecorationCommand, stable across every future
-	// load of this World), while a released AnimalPresence's id is
-	// always freshly minted at release time (see
-	// application/AvatarAnimalInteractionController.js#_tickRelease()'s
-	// own header for why) — reusing the decoration's own id here would
-	// blur those two, unrelated identity spaces together.
-	//
-	// Same fork-on-write guard, same canEditDocument authorization gate
-	// as every other World-mutating method in this file. RETURNS null,
-	// NEVER THROWS, WHEN NOTHING NEARBY QUALIFIES — the identical
-	// "an opportunistic keybind press with nothing to act on is not a
-	// caller mistake" posture decorateNearestReleasedAnimalHere()'s own
-	// header already establishes.
-	undecorateNearestAnimalDecorationHere() {
-	    const avatarPos = this.getAvatarPosition();
-	    if (!avatarPos) {
-		    throw new Error('WorldNavigationSession: cannot undecorate a World without a live avatar position');
-	    }
-	    const found = this._nearestAnimalDecorationNear(avatarPos, ANIMAL_INTERACTION_RADIUS);
-	    if (!found) {
-		    return null;
-	    }
-	    const { decoration, doc, globalPosition } = found;
-	    const worldId = this._ensureEditableDocumentId(doc.world.id);
-	    if (!this.canEditDocument(worldId)) {
-		    throw new Error('WorldNavigationSession: not authorized to remove a decoration from this World');
-	    }
-	    this._commandHistories.get(worldId).execute(
-		    new RemoveWorldAnimalDecorationCommand({ worldId, decorationId: decoration.id })
-	    );
-	    this._animalRuntimeInstances.add(new AnimalPresence({
-		    id: createId(),
-		    species: decoration.species,
-		    position: new Position(globalPosition.x, globalPosition.y, globalPosition.z)
-	    }));
-	    return decoration.id;
-	}
-
-	// -----------------------------------------------------------------
-	// World Regions (0.5.0) — explicit, persistent World content: a
-	// named AREA (center + radius) rather than a landmark's single
-	// point. Mirrors the World Landmarks section immediately above in
-	// every structural respect — same Command chokepoint (so
-	// propagation/undo/redo need zero region-specific code), same
-	// world-wide "search every loaded document" resolution, same
-	// canEditDocument() authorization gate, never a second
-	// RegionOwner/ACL concept. See core/WorldRegion.js's own header and
-	// docs/Principles.md, "Users Name Places; The World Derives
-	// Geography From Names (0.5.0)."
-	// -----------------------------------------------------------------
-
-	getRegion(regionId) {
-	    const doc = this._resolveRegionOwner(regionId);
-	    if (!doc) return null;
-	    return doc.world.getWorldRegion(regionId).toJSON();
-	}
-
-	_resolveRegionOwner(regionId) {
-	    for (const doc of this.getLoadedDocuments()) {
-	        if (doc.world.getWorldRegion(regionId)) {
-	            return doc;
-	        }
-	    }
-	    return null;
-	}
-
-	// "Name This Area" — a region CENTERED on the local avatar's own
-	// current position, in the ACTIVE document's World, exactly the same
-	// fork-on-write / authorization posture createLandmarkHere() already
-	// established one section above. `radius` is required — unlike a
-	// landmark's single point, an area has no meaningful default extent;
-	// the caller (a form field, or a test) decides how big "here" means.
-	// `kind`/`parentRegionId` are both optional: a region with no kind
-	// picked defaults to RegionKind.PLACE, and a region with no parent
-	// is exactly as valid as one nested three levels deep — see
-	// core/WorldRegion.js's own header on why hierarchy is never
-	// mandatory.
-	createRegionHere(name, { description = '', kind = RegionKind.PLACE, radius, parentRegionId = null } = {}) {
-	    if (!Number.isFinite(radius) || radius <= 0) {
-	        throw new Error('WorldNavigationSession: a region requires a positive radius');
-	    }
-	    const avatarPos = this.getAvatarPosition();
-	    if (!avatarPos) {
-	        throw new Error('WorldNavigationSession: cannot add a region without a live avatar position');
-	    }
-	    this._activeDocumentId = this._ensureEditableDocumentId(this._activeDocumentId);
-	    const doc = this.getDocument(this._activeDocumentId);
-	    if (!doc) {
-	        throw new Error('WorldNavigationSession: no active World to add a region to');
-	    }
-	    const worldId = doc.world.id;
-	    if (!this.canEditDocument(worldId)) {
-	        throw new Error('WorldNavigationSession: not authorized to add regions to this World');
-	    }
-	    const authorIdentityId = resolveSigningIdentityId(this._identityProvider);
-	    if (!authorIdentityId) {
-	        throw new Error('WorldNavigationSession: sign in to add a region');
-	    }
-	    const layoutPosition = this.getDocumentPosition(worldId);
-	    const cmd = new CreateWorldRegionCommand({
-	        worldId,
-	        authorIdentityId,
-	        name,
-	        description,
-	        kind,
-	        radius,
-	        parentRegionId,
-	        position: new Position(
-	            avatarPos.x - layoutPosition.x,
-	            avatarPos.y - layoutPosition.y,
-	            avatarPos.z - layoutPosition.z
-	        )
-	    });
-	    this._commandHistories.get(worldId).execute(cmd);
-	    return cmd.executedRegionId;
-	}
-
-	updateRegion(regionId, { name, description, kind, radius } = {}) {
-	    const owner = this._resolveRegionOwner(regionId);
-	    if (!owner) {
-	        throw new Error(`WorldNavigationSession: no region "${regionId}" known`);
-	    }
-	    const worldId = this._ensureEditableDocumentId(owner.world.id);
-	    if (!this.canEditDocument(worldId)) {
-	        throw new Error('WorldNavigationSession: not authorized to edit regions in this World');
-	    }
-	    this._commandHistories.get(worldId).execute(
-	        new UpdateWorldRegionCommand({ worldId, regionId, name, description, kind, radius })
-	    );
-	    return true;
-	}
-
-	removeRegion(regionId) {
-	    const owner = this._resolveRegionOwner(regionId);
-	    if (!owner) {
-	        throw new Error(`WorldNavigationSession: no region "${regionId}" known`);
-	    }
-	    const worldId = this._ensureEditableDocumentId(owner.world.id);
-	    if (!this.canEditDocument(worldId)) {
-	        throw new Error('WorldNavigationSession: not authorized to remove regions from this World');
-	    }
-	    this._commandHistories.get(worldId).execute(
-	        new RemoveWorldRegionCommand({ worldId, regionId })
-	    );
-	    return true;
-	}
-
-	// The currently signed-in identity's own did:key id, or null — a
-	// small general-purpose accessor this milestone needed for
-	// ui/components/PlaceNamingPanel.js to tell "my own claim" apart
-	// from everyone else's without duplicating
-	// identity/resolveSigningIdentityId.js's own tolerant lookup in the
-	// UI layer.
-	getMyIdentityId() {
-	    return resolveSigningIdentityId(this._identityProvider);
-	}
-
-	// -----------------------------------------------------------------
-	// Place Naming & Naming Claims (0.5.2) — deliberately NOT another
-	// World Regions section above it. A WorldRegion's own `name` is
-	// untouched by any of this and stays exactly what
-	// core/WorldRegionGeography.js's regionsContaining()/describePlace()
-	// read. What follows is a SEPARATE, additive layer: any identity —
-	// not only a region's author, not even someone holding EDIT on the
-	// World the region lives in — may publish a signed opinion about
-	// what a region should be called (core/PlaceNamingClaim.js), and
-	// this replica can locally prefer one name over whatever
-	// core/PlaceNamingView.js's own ranking would otherwise show. See
-	// docs/Principles.md, "A Name Is A Claim, Not A Fact (0.5.2)."
-	//
-	// Every method below degrades gracefully when
-	// placeNamingClaimUseCase/localNamePreferenceStore were never wired
-	// (every pre-0.5.2 caller, and every existing test): publish/retract
-	// throw a clear "not available" error exactly like
-	// grantWorldEdit()/revokeWorldEdit() already do without
-	// worldMembershipUseCase, while the read methods return an empty/
-	// null "nothing to show" result rather than throwing — a UI can
-	// always safely call getPlaceNamingView()/getPreferredPlaceName()
-	// without first checking whether naming claims are configured at
-	// all.
-	// -----------------------------------------------------------------
-
-	// Signs and publishes "I claim region `regionId` is called `name`,"
-	// scoped to whichever World that region actually belongs to (see
-	// _resolveRegionOwner() above and core/PlaceNamingClaim.js's own
-	// header on why a claim always carries an explicit worldId). Throws
-	// if the region is unknown to this replica, or if naming claims were
-	// never wired — never a canEditDocument() check, unlike every
-	// World-content mutation above: publishing a claim never touches the
-	// World itself. See application/PlaceNamingClaimUseCase.js#publish().
-	publishPlaceNamingClaim(regionId, name) {
-	    if (!this._placeNamingClaimUseCase) {
-	        throw new Error('WorldNavigationSession: place naming claims are not available');
-	    }
-	    const owner = this._resolveRegionOwner(regionId);
-	    if (!owner) {
-	        throw new Error(`WorldNavigationSession: no region "${regionId}" known`);
-	    }
-	    return this._placeNamingClaimUseCase.publish(owner.world.id, regionId, name);
-	}
-
-	// Withdraws a claim THIS identity itself published — see
-	// application/PlaceNamingClaimUseCase.js#retract() on why anyone
-	// else's claim id is silently ignored (returns false) rather than
-	// throwing.
-	retractPlaceNamingClaim(regionId, claimId) {
-	    if (!this._placeNamingClaimUseCase) {
-	        throw new Error('WorldNavigationSession: place naming claims are not available');
-	    }
-	    const owner = this._resolveRegionOwner(regionId);
-	    if (!owner) {
-	        return false;
-	    }
-	    return this._placeNamingClaimUseCase.retract(owner.world.id, claimId);
-	}
-
-	// Every claim this replica knows about for one region, most recent
-	// first — raw facts, unranked. [] when naming claims aren't wired or
-	// the region is unknown, never an error.
-	getPlaceNamingClaims(regionId) {
-	    if (!this._placeNamingClaimUseCase) {
-	        return [];
-	    }
-	    const owner = this._resolveRegionOwner(regionId);
-	    if (!owner) {
-	        return [];
-	    }
-	    return this._placeNamingClaimUseCase.claimsForRegion(owner.world.id, regionId);
-	}
-
-	// core/PlaceNamingView.js#namingView() for one region — ranked by
-	// distinct-author score, most-agreed-on name first. [] under the
-	// same "nothing wired, nothing known" conditions as
-	// getPlaceNamingClaims() above.
-	getPlaceNamingView(regionId) {
-	    if (!this._placeNamingClaimUseCase) {
-	        return [];
-	    }
-	    const owner = this._resolveRegionOwner(regionId);
-	    if (!owner) {
-	        return [];
-	    }
-	    return this._placeNamingClaimUseCase.namingView(owner.world.id, regionId);
-	}
-
-	// 0.9.269 — Nearby Place Naming Claim Adoption Status Indicator. Is a
-	// claim with this exact `claimId`, for this exact `worldId`, already
-	// on this replica's own store — whether because this identity
-	// published it, or because it (or an identical duplicate) was
-	// already adopted/imported before? A thin pass-through to
-	// PlaceNamingClaimUseCase#hasClaim() — see that method's own header
-	// on why `worldId` is taken directly rather than resolved via
-	// _resolveRegionOwner(): a nearby, merely-discovered claim may name
-	// a World this replica isn't currently viewing at all, exactly like
-	// importPlaceNamingClaim() itself already tolerates. false whenever
-	// naming claims aren't wired, never an error — the same "nothing
-	// wired, nothing known" posture getPlaceNamingClaims()/
-	// getPlaceNamingView() already hold, since this is a read, never a
-	// mutation.
-	hasPlaceNamingClaim(worldId, claimId) {
-	    if (!this._placeNamingClaimUseCase) {
-	        return false;
-	    }
-	    return this._placeNamingClaimUseCase.hasClaim(worldId, claimId);
-	}
-
-	// -----------------------------------------------------------------
-	// Decentralized Place Name Exchange (0.5.3) — the missing piece
-	// 0.5.2 deliberately left for this milestone: HOW a claim this
-	// replica published/discovered reaches, or is reached by, another
-	// replica. See application/PlaceNamingClaimExchange.js's own header
-	// for the full design; both methods below are thin delegations —
-	// this session never validates, signs, or verifies anything itself.
-	// -----------------------------------------------------------------
-
-	// Builds a portable publication package for one claim this replica
-	// already has on file for `regionId` — see
-	// application/PlaceNamingClaimPublication.js for the exact wire
-	// shape. What the caller does with the returned package (write it to
-	// a file, copy it to a clipboard) is this session's own business as
-	// little as it is application/ExportBlueprintUseCase.js's. Throws if
-	// exchange isn't wired, the region is unknown, or `claimId` doesn't
-	// match any claim this replica actually has for it — never a stale
-	// or partial package.
-	exportPlaceNamingClaim(regionId, claimId) {
-	    if (!this._placeNamingClaimExchange) {
-	        throw new Error('WorldNavigationSession: place naming exchange is not available');
-	    }
-	    const owner = this._resolveRegionOwner(regionId);
-	    if (!owner) {
-	        throw new Error(`WorldNavigationSession: no region "${regionId}" known`);
-	    }
-	    const claim = this._placeNamingClaimUseCase
-	        ? this._placeNamingClaimUseCase.claimsForRegion(owner.world.id, regionId).find((c) => c.id === claimId)
-	        : null;
-	    if (!claim) {
-	        throw new Error(`WorldNavigationSession: no naming claim "${claimId}" known for this region`);
-	    }
-	    return this._placeNamingClaimExchange.exportClaim(claim);
-	}
-
-	// Imports a naming claim publication `pkg` (untrusted input — see
-	// application/PlaceNamingClaimExchange.js#importClaim()'s own
-	// "validate, construct, verify" order) into this replica's own
-	// claim store. Deliberately NOT scoped to `regionId` or to whatever
-	// World is currently active: a publication carries its own
-	// worldId/regionId, and application/LocalPlaceNamingClaimStore.js is
-	// already scoped per-World — see that store's own header on why it
-	// happily holds claims for a World this replica isn't even currently
-	// viewing. Returns `{ claim, isNew }`; throws for anything malformed
-	// or unverifiable, never silently drops it.
-	importPlaceNamingClaim(pkg) {
-	    if (!this._placeNamingClaimExchange) {
-	        throw new Error('WorldNavigationSession: place naming exchange is not available');
-	    }
-	    return this._placeNamingClaimExchange.importClaim(pkg);
-	}
-
-	// This replica's own LOCAL, unsigned, unshared override — see
-	// application/LocalNamePreferenceStore.js's own header on why this
-	// is a genuinely third concept, never a claim and never the
-	// region's own name.
-	setPreferredPlaceName(regionId, name) {
-	    if (!this._localNamePreferenceStore) {
-	        throw new Error('WorldNavigationSession: place name preferences are not available');
-	    }
-	    const owner = this._resolveRegionOwner(regionId);
-	    if (!owner) {
-	        throw new Error(`WorldNavigationSession: no region "${regionId}" known`);
-	    }
-	    return this._localNamePreferenceStore.setPreferredName(owner.world.id, regionId, name);
-	}
-
-	clearPreferredPlaceName(regionId) {
-	    if (!this._localNamePreferenceStore) {
-	        return false;
-	    }
-	    const owner = this._resolveRegionOwner(regionId);
-	    if (!owner) {
-	        return false;
-	    }
-	    return this._localNamePreferenceStore.clearPreferredName(owner.world.id, regionId);
-	}
-
-	// This replica's own raw local override for one region, or null —
-	// distinct from getDisplayPlaceName() below, which additionally
-	// falls back to the community-claimed and World-authored name. A UI
-	// showing "your preference: ___" reads this; a UI showing "what to
-	// actually label the map with" reads getDisplayPlaceName().
-	getPreferredPlaceName(regionId) {
-	    if (!this._localNamePreferenceStore) {
-	        return null;
-	    }
-	    const owner = this._resolveRegionOwner(regionId);
-	    if (!owner) {
-	        return null;
-	    }
-	    return this._localNamePreferenceStore.getPreferredName(owner.world.id, regionId);
-	}
-
-	// The single name a caller (a map label, a Locations panel row)
-	// should actually DISPLAY for a region, in priority order:
-	//   1. this replica's own local preference, if one was ever set
-	//   2. the top-ranked name from getPlaceNamingView() above, if
-	//      anyone has published a claim at all
-	//   3. the region's own WorldRegion.name — the exact 0.5.0 behavior
-	//      every pre-0.5.2 caller already saw, untouched
-	// Never throws, never returns an empty string for a region that
-	// actually exists — the same "always something sensible to show"
-	// guarantee getRegion() itself already offers.
-	getDisplayPlaceName(regionId) {
-	    const owner = this._resolveRegionOwner(regionId);
-	    const preferred = (this._localNamePreferenceStore && owner)
-	        ? this._localNamePreferenceStore.getPreferredName(owner.world.id, regionId)
-	        : null;
-	    if (preferred) {
-	        return preferred;
-	    }
-	    const claimed = preferredClaimedName(regionId, this.getPlaceNamingClaims(regionId));
-	    if (claimed) {
-	        return claimed;
-	    }
-	    const region = this.getRegion(regionId);
-	    return region ? region.name : '';
-	}
-
-	// addToGroupWithSelection/removeFromGroupWithSelection — REMOVED
-	// (0.5.9), along with the group methods they bridged to above.
-
-	// --- History Preview & Restore (0.1.39 / 0.1.41) ---
-	beginHistoryPreview() {
-	    this._historyPreview = { active: true, cursor: null, world: null };
-	    return true;
-	}
-	
-	previewHistoryAt(cursor) {
-	    if (!this._historyPreview || !this._historyPreview.active) {
-	        throw new Error('no active history preview');
-	    }
-	    const history = this._getActiveCommandHistory();
-	    if (!history) throw new Error('no history');
-	    
-	    const replayWorld = this._replayDocumentUseCase.execute(history, { endCursor: cursor });
-	    // 0.9.208 — captured BEFORE this._historyPreview is overwritten
-	    // below. A second previewHistoryAt() call (selecting a different
-	    // entry while already previewing, without calling
-	    // beginHistoryPreview() again — see WorldView.js's own
-	    // previewSelectedHistoryEntry()) used to unconditionally
-	    // "removeWorld(doc.world, docId)" here, exactly like the FIRST
-	    // call: harmless in that the live world was already removed and
-	    // this is a no-op, but it means the PREVIOUS preview world — the
-	    // one actually rendered under `replay:${docId}` right now — was
-	    // never removed before the new one landed on the very same
-	    // render slot. Tracking it here lets the branch below tell
-	    // "first preview" (nothing previewed yet, hide the live world)
-	    // from "switching the previewed entry" (swap out the previous
-	    // preview world instead).
-	    const previousPreviewWorld = this._historyPreview.world;
-	    const previousPreviewDocumentId = this._historyPreview.documentId;
-	    this._historyPreview.cursor = cursor;
-	    this._historyPreview.world = replayWorld;
-
-	    // Renderer integration: hide live world, show replay world.
-	    // Must resolve the SAME document _getActiveCommandHistory() just
-	    // built `history` from above — otherwise the replay could swap
-	    // out one document's live world while showing a different
-	    // document's history.
-	    // Remembered on _historyPreview itself (not re-resolved at cancel
-	    // time) so a selection/active-document change WHILE the preview
-	    // is open can never make cancelHistoryPreview restore the wrong
-	    // document.
-	    const docId = this._resolveMutationTargetId();
-	    this._historyPreview.documentId = docId;
-	    if (this._session && docId) {
-	        const doc = this.getDocument(docId);
-	        if (doc) {
-	            if (previousPreviewWorld) {
-	                this._session.removeWorld(previousPreviewWorld, `replay:${previousPreviewDocumentId}`);
-	            } else {
-	                this._session.removeWorld(doc.world, docId);
-	            }
-	            this._session.addWorld(replayWorld, `replay:${docId}`, this._worldLayoutProvider.getPosition(docId));
-	        }
-	    }
-	    return true;
-	}
-
-	cancelHistoryPreview() {
-	    if (!this._historyPreview || !this._historyPreview.active) return false;
-	    
-	    const docId = this._historyPreview.documentId;
-	    if (this._session && docId) {
-	        const doc = this.getDocument(docId);
-	        if (doc) {
-	            this._session.removeWorld(this._historyPreview.world, `replay:${docId}`);
-	            this._session.addWorld(doc.world, docId, this._worldLayoutProvider.getPosition(docId));
-	        }
-	    }
-	    this._historyPreview = null;
-	    return true;
-	}
-	
-	getHistoryPreview() {
-	    if (!this._historyPreview || !this._historyPreview.active) return null;
-	    return { cursor: this._historyPreview.cursor, world: this._historyPreview.world };
-	}
-	getRetiredHistories(documentId) {
-	    return this._retiredHistories ? (this._retiredHistories.get(documentId || this._activeDocumentId) || []) : [];
-	}
 	
 	// Add getDocumentManager alias for WorldViewPersistence tests
 	getDocumentManager(documentId) {
@@ -7871,21 +1636,16 @@ export class WorldNavigationSession {
 	}
 	
     dispose() {
-        // 0.2.98 — an honest LEAVE for every World presence was entered
-        // for, rather than relying solely on the eventual connection-
-        // drop pruning every OTHER replica's own WorldPresenceUseCase
-        // performs — see application/WorldPresenceUseCase.js's own
-        // header.
+        // An honest LEAVE for every entered World, rather than relying on other
+        // replicas pruning dropped connections.
         if (this._worldPresenceUseCase) {
             for (const documentId of this._presentWorldDocumentIds) {
                 this._worldPresenceUseCase.leaveWorld(documentId);
             }
         }
         this._presentWorldDocumentIds.clear();
-        // 0.3.0 — the identical honest-LEAVE discipline, one rung
-        // further: also tears down this session's own render-driving
-        // subscriptions and removes every marker it ever added to the
-        // scene, so a disposed session leaves no stale Object3Ds behind.
+        // The same honest LEAVE for spatial presence, plus tearing down render
+        // subscriptions and every marker this session added.
         if (this._worldSpatialPresenceUseCase) {
             for (const documentId of Array.from(this._presentSpatialWorldDocumentIds)) {
                 this.leaveWorldSpatialPresence(documentId);
@@ -7931,29 +1691,23 @@ export class WorldNavigationSession {
             this._cameraFocusFrameSubscription = null;
         }
         this._activeCameraFocus = null;
-        // 0.9.115 — Vehicle Rendering. Mirrors _cameraFocusFrameSubscription's
-        // own teardown immediately above exactly.
+        // Mirrors the camera-focus teardown above.
         if (this._vehicleRenderFrameSubscription) {
             this._vehicleRenderFrameSubscription();
             this._vehicleRenderFrameSubscription = null;
         }
-        // 0.9.700 — Animal Catching. Mirrors the vehicle render
-        // subscription's own teardown immediately above exactly.
+        // Mirrors the vehicle render teardown above.
         if (this._wildlifeExclusionSyncFrameSubscription) {
             this._wildlifeExclusionSyncFrameSubscription();
             this._wildlifeExclusionSyncFrameSubscription = null;
         }
-        // 0.9.701 — Released Animal Rendering. Mirrors the same teardown
-        // shape exactly.
+        // Same teardown shape.
         if (this._animalRenderFrameSubscription) {
             this._animalRenderFrameSubscription();
             this._animalRenderFrameSubscription = null;
         }
-        // 0.9.701 — World View Persistence. Mirrors the two teardowns
-        // immediately above exactly, plus one final, un-throttled save —
-        // leaving World View (never mind a reload) should not lose
-        // whatever moved/was caught/was stored in the last
-        // RUNTIME_PLACEMENT_PERSISTENCE_INTERVAL_MS before this call.
+        // Same teardown, plus one final unthrottled save so nothing from the last
+        // interval is lost.
         if (this._vehicleRuntimePersistenceFrameSubscription) {
             this._vehicleRuntimePersistenceFrameSubscription();
             this._vehicleRuntimePersistenceFrameSubscription = null;
@@ -7974,10 +1728,8 @@ export class WorldNavigationSession {
                 this._animalRuntimeInstances.excludedIds
             );
         }
-        // 0.9.116 — Mounted Vehicle Movement. A fresh start() after this
-        // dispose() should behave like a genuinely fresh session for
-        // vehicles too — no runtime position from a previous World View
-        // visit should bleed into a reloaded one.
+        // A fresh start() after dispose() gets no vehicle positions from the
+        // previous visit.
         this._vehicleRuntimeInstances.clear();
         if (this._presenceSyncService) {
             this._presenceSyncService.dispose();
@@ -7995,16 +1747,9 @@ export class WorldNavigationSession {
         }
         this._localInteractionSequence = 0;
         this._remoteAvatarGestureExpiry.clear();
-        // 0.9.702 — Avatar Inventory Transfer. Mirrors every other
-        // peer-bound collaborator's own teardown immediately above —
-        // never leaves a subscription on the app-wide peerMessageBus/
-        // connectedPeerRegistry outliving this session. Any offer still
-        // escrowed out of `_avatarInventoryStore` at this point simply
-        // stays escrowed — see application/
-        // AvatarInventoryTransferPeerExchange.js's own header on why an
-        // outstanding offer only ever resolves via ACCEPT, DECLINE, or
-        // the recipient disconnecting, never merely because this session
-        // itself ended.
+        // Never leave a subscription on the app-wide peer bus. An offer still in
+        // escrow stays escrowed: it resolves only on ACCEPT, DECLINE or the
+        // recipient disconnecting, never because this session ended.
         if (this._avatarInventoryTransferPeerExchange) {
             this._avatarInventoryTransferPeerExchange.dispose();
             this._avatarInventoryTransferPeerExchange = null;
@@ -8034,20 +1779,27 @@ export class WorldNavigationSession {
         this._focusedDocumentId = null;
         this._activeDocumentId = null;
         this._homeDocumentId = null;
-        // 0.9.208 — every other piece of history-adjacent state above
-        // (commandHistories, loadedDocuments, selection) is reset here so
-        // a fresh start() after this dispose() behaves like a genuinely
-        // new session (see the 0.9.116 comment on this same method for
-        // that standing rule). _historyPreview was missed: left set, an
-        // active preview's `active: true` flag survives dispose() and
-        // permanently blocks undo()/redo() on whatever session state
-        // comes next (they refuse to run while any historyPreview looks
-        // active — see undo()/redo() above), even though the render
-        // session that ever showed that preview world is gone. Retired
-        // histories are session-local bookkeeping for the disposed
-        // session's own documents and don't outlive it either.
+        // Reset so a fresh start() behaves like a new session. A leftover
+        // `active: true` preview would permanently block undo()/redo(). Retired
+        // histories belong to the disposed session too.
         this._historyPreview = null;
         this._retiredHistories = null;
         this._eventBus = null;
     }
 }
+
+// Most of this class's methods live in application/worldNavigation/, one module per concern,
+// and are installed on the prototype as if written in the class body.
+installMethods(
+    WorldNavigationSession,
+    localAvatarMethods,
+    avatarPresenceMethods,
+    placeQueryMethods,
+    worldExperienceMethods,
+    collaborationMethods,
+    placementMethods,
+    forkOnWriteMethods,
+    worldContentMethods,
+    placeNamingMethods,
+    documentHistoryMethods
+);

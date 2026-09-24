@@ -1,4 +1,5 @@
 import { SnapshotCandidateDiscoveryOutcome } from './SnapshotCandidateDiscoveryOutcome.js';
+import { isNonEmptyString, isPlainObject } from '../utils/typeGuards.js';
 
 // 0.9.485 — Walking-Triggered Snapshot Candidate Query Service.
 //
@@ -149,14 +150,6 @@ import { SnapshotCandidateDiscoveryOutcome } from './SnapshotCandidateDiscoveryO
 // - **Ranking, trust scoring, or proximity/radius filtering.**
 // - **Caching a previous `search()` result, or retrying a failed source.**
 //   Every call is independent.
-
-function isPlainObject(value) {
-    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.length > 0;
-}
 
 function isSearchableSource(source) {
     return Boolean(source) && typeof source === 'object' && typeof source.search === 'function';

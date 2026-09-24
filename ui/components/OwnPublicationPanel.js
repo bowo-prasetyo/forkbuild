@@ -10,1477 +10,40 @@ import { createId } from '../../core/createId.js';
 import { sanitizeDistributionErrorMessage } from '../../application/DistributionErrorMessageSanitizer.js';
 import { resolveSavedProviderDefault } from '../../application/SavedProviderDefaultChoice.js';
 
-// 0.9.140 — Own Publication Distribution Entry Point.
-//
-// 0.9.104/0.9.138 each gave WorldEncounterCanvas a "Distribute
-// Publication"/"Distribute Snapshot" action — both reachable only
-// through `selectedEncounter`, which itself only ever exists for a
-// PUBLICATION marker a World Encounter actually surfaced. That chain —
-// peer/marker present -> encounter selectable -> distribution reachable
-// — makes distributing YOUR OWN material accidentally depend on World
-// Encounters having something to show at all. A solo user with zero
-// connected peers and an empty World Encounters panel could publish a
-// World and would still have no on-screen way to distribute its
-// Snapshot, even though nothing about Snapshot distribution actually
-// requires a peer, a marker, or a selection — see `application/
-// SnapshotDistributionCommand.js`'s own header, "no coupling to...
-// World Encounters."
-//
-//   World View's own activeDocumentInfo / current World
-//                │
-//                ▼
-//   session.getPublicationForDocument(activeId)   (0.9.140, WorldNavigationSession.js)
-//                │
-//                ▼
-//   `publication` prop   ★ (THIS component's only input fact)
-//                │
-//                │ click "Distribute Snapshot"
-//                ▼
-//   distributeOwnSnapshot()
-//                │
-//                ▼
-//   snapshotDistributionCommand(publication)   (injected — the SAME
-//                                                app-wide command
-//                                                WorldEncounterCanvas's
-//                                                own "Distribute
-//                                                Snapshot" action
-//                                                already calls)
-//                │
-//                ▼
-//   Promise<{ contentReference, announcement }>  (or a rejection)
-//                │
-//                ▼
-//   this panel's own result display
-//
-// NO NEW COMMAND, NO NEW BYTES-RESOLUTION MECHANISM, NO NEW PROTOCOL.
-// `snapshotDistributionCommand` is the exact same `(publication) ->
-// Promise<{ contentReference, announcement }>` function
-// `ui/views/WorldView.js`'s own `distributeWorldEncounterSnapshot()`
-// already is — this component never imports `application/
-// SnapshotDistributionCommand.js`, `application/
-// SnapshotDistributionRuntimeComposition.js`, `content/
-// ArweaveContentStore.js`, or `application/
-// NostrSnapshotDiscoveryPublisher.js`, and never constructs an Arweave
-// or Nostr client of its own. `distributeWorldEncounterSnapshot()`
-// itself already reads its bytes from `publicationContentStore`, via the
-// Publication's own `contentReference` — the local origin of "which
-// bytes" — so this component supplies
-// nothing but which `Publication` to ask for, exactly the way
-// WorldEncounterCanvas's own `distributablePublication` already does.
-//
-// NEVER A PEER, A MARKER, OR A SELECTION. `publication` is supplied by
-// the host view from its own already-current `activeDocumentInfo`/
-// active document — never derived from `WorldDiscoverySourceRegistry`,
-// a `WorldEncounter`, or anything World Encounters itself produces.
-// This is the entire point of this milestone: the local user's own
-// Snapshot distribution stays reachable with zero connected peers and
-// an empty World Encounters panel.
-//
-// NEVER FOLDED INTO WorldEncounterCanvas. Distributing your own current
-// Snapshot and distributing a Snapshot you discovered/selected in World
-// Encounters are two different actions over two different sources of
-// "which Publication" — see this milestone's own design note, "World
-// Encounters is a peer/publication discovery surface; Snapshot
-// Distribution is an action on the user's own material." Folding this
-// into WorldEncounterCanvas (or making the local user appear as a fake
-// encounter) would re-blur exactly the line this milestone exists to
-// draw. `WorldEncounterCanvas.js` is untouched by this milestone.
-//
-// EPHEMERAL UI STATE ONLY, DUPLICATE- AND STALE-RESPONSE PROTECTED —
-// MIRRORING WorldEncounterCanvas's OWN `snapshotDistributionExecuting`/
-// `snapshotDistributionError`/`snapshotDistributionResult`/
-// `snapshotDistributionRequestId` EXACTLY, one surface over. This
-// component holds its own copy of that same ephemeral shape rather than
-// sharing WorldEncounterCanvas's — the two actions distribute different
-// Publications and must never share (or clobber) one another's
-// in-flight/result state. A change of `publication` (a different
-// document became active, or the active document went from unpublished
-// to published) resets all four fields exactly the way a fresh
-// `selectedEncounter` already resets WorldEncounterCanvas's own.
-//
-// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
-// - **A lifecycle store, persistence, or restoration of any kind.**
-//   Mirrors WorldEncounterCanvas's own identical exclusion for this
-//   family (0.9.138), one surface over.
-// - **Retry, cancel, progress percentage, distribution history, or any
-//   distribution-configuration UI.**
-// - **A "Distribute Signed Claim" action, or merging this panel with
-//   the Signed Claim distribution family.** Snapshot and Signed Claim
-//   distribution stay two separate protocols (see `application/
-//   SnapshotDistributionCommand.js`'s own header); this milestone adds
-//   an entry point for the Snapshot family alone.
-// - **Any change to which Publication is "active."** This component
-//   never decides that itself — it only ever renders whatever
-//   `publication` prop it was handed.
-//
-// 0.9.142 — World View Snapshot Discovery Command.
-//
-// Adds a second, independent action to this SAME "even with zero peers"
-// surface — "Discover Snapshot" — reaching the exact seam this
-// milestone's own header names: `discoverSnapshotCommand`, injected the
-// identical way `snapshotDistributionCommand` already is, a `(publication)
-// -> Promise<{ outcome, bytes, candidates, locator, storage, reason }>`
-// function bound (by `ui/views/WorldView.js`) to a `discoverOwnSnapshot()`
-// wrapper that turns "which publication" into "which contentHash" —
-// `publication.contentReference.hash` — exactly the way
-// `distributeWorldEncounterSnapshot()` already turns "which publication"
-// into "which bytes." This component never reads `contentReference`
-// itself; it forwards the whole `publication` object to the injected
-// command, unread, the identical restraint `distributeOwnSnapshot()`
-// already holds for `snapshotDistributionCommand`.
-//
-// DISCOVERY, NEVER ATTRIBUTION. The result this panel renders is
-// `application/DecentralizedSnapshotResolver.js`'s own
-// `DecentralizedSnapshotResolutionOutcome` vocabulary (RESOLVED,
-// NOT_DISCOVERED, STORE_UNAVAILABLE, CONTENT_UNAVAILABLE,
-// CONTENT_HASH_MISMATCH), rendered VERBATIM — this file introduces no
-// MATCHED/ATTRIBUTED/OWNED/TRUSTED/AUTHENTIC vocabulary of its own, and
-// never compares the resolved Snapshot's own hash against
-// `publication.contentReference.hash` itself (a resolve() call already
-// only ever resolves for that exact `contentHash` — see `application/
-// DiscoverSnapshotCommand.js`'s own header, "contentHash is always an
-// explicit, caller-supplied input"). Comparing a verified Snapshot
-// against a Publication is a separate, later, unscheduled seam (see
-// docs/Roadmap.md's own 0.9.142 entry, "0.9.143 — Snapshot Attribution").
-//
-// A SEPARATE EPHEMERAL STATE, NEVER SHARED WITH DISTRIBUTION'S OWN.
-// `snapshotDiscoveryExecuting`/`snapshotDiscoveryError`/
-// `snapshotDiscoveryResult`/`snapshotDiscoveryRequestId` mirror
-// `snapshotDistributionExecuting`/`snapshotDistributionError`/
-// `snapshotDistributionResult`/`snapshotDistributionRequestId` exactly,
-// one action over — the two actions distribute/discover independently
-// and must never clobber one another's in-flight/result state. Reset on
-// the identical `publication` change the distribution fields already
-// reset on.
-// 0.9.144 — World View Snapshot Attribution Integration.
-//
-// 0.9.142 gave this panel "Discover Snapshot"; 0.9.143 built
-// `application/SnapshotPublicationAttribution.js#resolveSnapshotPublicationAttribution()`
-// — the pure Q3 comparison — and stopped deliberately short of any UI
-// wiring (see that file's own header, "a UI badge or any composition-root
-// wiring... not this milestone"). This is that wiring, and nothing more:
-//
-//   discoverOwnSnapshot()  (unchanged, 0.9.142)
-//           │
-//           ▼
-//   snapshotDiscoveryResult   (unchanged, 0.9.142's own field)
-//           │
-//           ▼
-//   resolveSnapshotPublicationAttribution(publication, snapshotDiscoveryResult)
-//           │
-//           ▼
-//   snapshotAttributionResult   ★ (THIS milestone's own new field)
-//
-// A SEPARATE FIELD, NEVER A REPLACEMENT OF `snapshotDiscoveryResult`. The
-// two stay independently readable — "Snapshot Discovery: RESOLVED" and
-// "Snapshot Attribution: MATCH" are two different facts about two
-// different questions (see `application/SnapshotPublicationAttribution.js`'s
-// own header, Q2 vs Q3), never collapsed into one combined status.
-//
-// THIS FILE CALLS `resolveSnapshotPublicationAttribution()` — A PURE, NO-I/O
-// FUNCTION — DIRECTLY, RATHER THAN THROUGH AN INJECTED COMMAND PROP. Unlike
-// `discoverSnapshotCommand`/`snapshotDistributionCommand` (both real I/O,
-// composed by `ui/main.js`), attribution needs no collaborator to inject —
-// it is the identical restraint every other pure `application/` describer
-// this codebase's UI layer already imports directly (e.g. `application/
-// WorldEncounterSelectionOutcome.js`, one surface over). This component
-// still never hashes bytes, compares hashes, or interprets a resolution
-// outcome itself — `resolveSnapshotPublicationAttribution()` does all of
-// that; this file only calls it and renders what comes back, verbatim.
-//
-// COMPUTED IMMEDIATELY AFTER A SUCCESSFUL DISCOVERY, NEVER ON A SEPARATE
-// CLICK. Attribution has no I/O of its own and nothing further to ask the
-// user for — `publication` and `snapshotDiscoveryResult` are already both
-// in hand the instant discovery resolves, so `discoverOwnSnapshot()` (below)
-// computes both in the same `.then()`, under the same `requestId` guard. A
-// resolution failure (`NOT_DISCOVERED`/`STORE_UNAVAILABLE`/
-// `CONTENT_UNAVAILABLE`/`CONTENT_HASH_MISMATCH`) still produces a
-// `snapshotAttributionResult` — `resolveSnapshotPublicationAttribution()`
-// passes that same failure outcome through unchanged rather than reporting
-// `NO_MATCH` — see that file's own header, "a resolution failure is never
-// reported as no_match."
-//
-// RESET EXACTLY WHERE `snapshotDiscoveryResult` ALREADY IS. A changed
-// Publication (the `publication` watcher, below) and a stale in-flight
-// response (the existing `snapshotDiscoveryRequestId` guard) invalidate
-// `snapshotAttributionResult` the identical way they already invalidate
-// `snapshotDiscoveryResult` — this milestone adds no second reset
-// mechanism of its own.
-//
-// 0.9.151 — World View Snapshot Candidate Browser.
-//
-// 0.9.150's own `application/DiscoverSnapshotCandidatesCommand.js`
-// answers a genuinely different question than `discoverSnapshotCommand`
-// above — "what has been announced under this discoveryTag, at all?"
-// (browsing-oriented discovery) rather than "can THIS ONE, already-known
-// contentHash be retrieved and verified?" (attribution-oriented
-// resolution, unchanged, above) — see that file's own header for the
-// full ATTRIBUTION-ORIENTED-RESOLUTION-vs-BROWSING-ORIENTED-DISCOVERY
-// distinction. This is that command's UI wiring:
-//
-//   click "Discover Snapshots"
-//           │
-//           ▼
-//   discoverSnapshotCandidates()
-//           │
-//           ▼
-//   discoverSnapshotCandidatesCommand()   (injected — the SAME app-wide
-//                                           command ui/main.js composes,
-//                                           reusing the SAME
-//                                           NostrSnapshotDiscoveryQueryService
-//                                           instance `discoverSnapshotCommand`
-//                                           already wraps in a resolver)
-//           │
-//           ▼
-//   snapshotCandidateDiscoveryResult = [ { contentHash, locator,
-//                                           storage }, ... ]   (rendered
-//                                           VERBATIM, in the exact order
-//                                           received — no sort, no
-//                                           dedup, no ranking; see
-//                                           `application/
-//                                           DiscoverSnapshotCandidatesCommand.js`'s
-//                                           own header, "relay arrival
-//                                           order is an observed fact,
-//                                           not a ranking decision")
-//           │
-//           │ click one candidate row
-//           ▼
-//   selectedSnapshotCandidate = candidate   (boring: a plain assignment,
-//                                             nothing else — see below)
-//
-// A COMPLETELY INDEPENDENT REQUEST FROM `discoverSnapshotCommand`'S OWN,
-// NEEDING NO `publication` AT ALL. `discoverSnapshotCommand`/
-// `discoverOwnSnapshot()` answer "does THIS Publication's own
-// contentHash resolve?" and therefore need `publication.contentReference.hash`
-// as an explicit input. `discoverSnapshotCandidatesCommand()` answers
-// "what exists under the shared campaign discoveryTag, period?" — a
-// question with no Publication-shaped input at all (the `discoveryTag`
-// itself is already baked in by `ui/main.js`'s own composition, the
-// identical restraint already held for `discoverSnapshotCommand`'s own
-// `discoveryTag`). This component calls it with zero arguments.
-//
-// A SEPARATE EPHEMERAL STATE, NEVER SHARED WITH DISCOVERY'S OR
-// DISTRIBUTION'S OWN — `snapshotCandidateDiscoveryExecuting`/
-// `snapshotCandidateDiscoveryError`/`snapshotCandidateDiscoveryResult`/
-// `snapshotCandidateDiscoveryRequestId` mirror
-// `snapshotDiscoveryExecuting`/`snapshotDiscoveryError`/
-// `snapshotDiscoveryResult`/`snapshotDiscoveryRequestId` exactly, one
-// operation over — never reused, because the two answer different
-// questions: `snapshotDiscoveryResult` means "this requested content was
-// resolved," `snapshotCandidateDiscoveryResult` means "these candidates
-// were announced." Reset on the identical `publication` change the other
-// two families' fields already reset on, and invalidated by the
-// identical stale-request-id guard — not because browsing depends on
-// "which Publication" (it does not), but because a Publication change is
-// this panel's own existing signal that its prior in-flight/displayed
-// state no longer belongs to the current view, held here for the
-// identical lifecycle-safety reason, one surface over.
-//
-// SELECTION IS DELIBERATELY BORING — A PLAIN ASSIGNMENT, NOTHING ELSE.
-// `selectSnapshotCandidate(candidate)` only ever sets
-// `selectedSnapshotCandidate`. It never calls `discoverSnapshotCommand`,
-// never triggers retrieval/verification/attribution, and never mutates
-// `snapshotCandidateDiscoveryResult` itself — "I found this candidate" and
-// "I asked the system to retrieve and verify it" stay two separate,
-// explicit steps. Resolving a selected candidate is a deliberately
-// unscheduled, later milestone (see docs/Roadmap.md's own 0.9.151 entry).
-//
-// NO DERIVED METADATA, NO RANKING, NO PREFERENCE OF ANY KIND. This
-// component never labels a candidate "best"/"trusted"/"recommended"/
-// "fastest"/"official," never sorts by `storage`, and never deduplicates
-// candidates sharing a `contentHash` — every candidate
-// `discoveryQueryService.search()` itself returned is rendered, in the
-// exact order it arrived. `storage` (`ar`/`ipfs`/...) is displayed as an
-// observed property, never as an implied preference between candidates.
-//
-// DELIBERATELY EXCLUDED — NOT THIS MILESTONE (0.9.151).
-// - **Ranking, deduplication, filtering by contentHash, grouping, or
-//   provider preference among displayed candidates.**
-// - **Caching discovered candidates across discovery calls, or
-//   persisting a selection.** Each click re-runs the full command;
-//   `selectedSnapshotCandidate` is ephemeral component state, exactly
-//   like every other field in this file.
-//
-// 0.9.152 — Selected Snapshot Candidate Resolution.
-//
-// 0.9.151 stopped deliberately short of resolving `selectedSnapshotCandidate`
-// — "selecting a candidate" and "resolving that candidate" stayed two
-// separate, explicit steps. This wires the second step, reaching the
-// narrow seam `application/DecentralizedSnapshotResolver.js`'s own 0.9.152
-// addition names: `resolveCandidate(candidate)`, resolving EXACTLY the
-// candidate handed in — never re-discovered, never re-selected, and never
-// swapped for whichever candidate `resolve(candidate.contentHash)` might
-// pick instead (see that file's own header for why the two are not
-// interchangeable when several candidates can share one contentHash).
-//
-//   selectedSnapshotCandidate   (0.9.151, unchanged — set only by
-//                                 selectSnapshotCandidate(), below)
-//           │
-//           │ click "Resolve Selected Snapshot"
-//           ▼
-//   resolveSelectedSnapshot()
-//           │
-//           ▼
-//   resolveSelectedSnapshotCommand(selectedSnapshotCandidate)   (injected
-//                                           — the SAME app-wide command
-//                                           ui/main.js composes, reusing
-//                                           the SAME resolver/content
-//                                           store discoverSnapshotCommand
-//                                           already wraps)
-//           │
-//           ▼
-//   selectedSnapshotResolutionResult = { outcome, bytes, candidates,
-//                                         locator, storage, reason }
-//        (application/DecentralizedSnapshotResolutionOutcome.js's own
-//        vocabulary, rendered VERBATIM — resolution, never attribution;
-//        see this file's own header, "discovery, never attribution," the
-//        identical restraint held one operation over)
-//
-// THIS COMPONENT NEVER CALLS `resolveSelectedSnapshotCommand` WITH
-// ANYTHING BUT THE CANDIDATE OBJECT ITSELF. It never reads
-// `selectedSnapshotCandidate.contentHash` and hands that bare string to
-// `discoverSnapshotCommand`/`resolveSelectedSnapshotCommand` instead —
-// doing so would silently let the resolver re-select a DIFFERENT
-// candidate sharing that same contentHash, discarding the user's own
-// choice. See `application/ResolveSelectedSnapshotCommand.js`'s own
-// header for the identical restraint one layer down.
-//
-// A SEPARATE EPHEMERAL STATE, NEVER SHARED WITH ANY OTHER FAMILY IN THIS
-// FILE — `selectedSnapshotResolutionExecuting`/
-// `selectedSnapshotResolutionError`/`selectedSnapshotResolutionResult`/
-// `selectedSnapshotResolutionRequestId` mirror
-// `snapshotCandidateDiscoveryExecuting`/.../`snapshotCandidateDiscoveryRequestId`
-// exactly, one operation over. "These candidates were announced," "this
-// one was selected," and "this is what happened when the selected one
-// was resolved" stay three independently-readable facts, never collapsed.
-// Reset on the identical `publication` change every other family in this
-// file already resets on.
-//
-// SELECTING A DIFFERENT CANDIDATE INVALIDATES ANY PRIOR RESOLUTION —
-// `selectSnapshotCandidate()` (below) now also resets
-// `selectedSnapshotResolutionExecuting`/.../`selectedSnapshotResolutionRequestId`
-// whenever the selection actually changes. A resolution result describes
-// what happened when ONE SPECIFIC candidate was retrieved/verified;
-// leaving a stale result on screen after the user selects a DIFFERENT
-// candidate would misrepresent it as describing the new selection.
-// Selection itself is still a plain assignment with no I/O of its own —
-// only a PRIOR resolution's now-stale result is cleared, never a new one
-// computed.
-//
-// NO AUTOMATIC ATTRIBUTION. A successful resolution never triggers
-// `resolveSnapshotPublicationAttribution()` itself — that comparison
-// stays scoped to `discoverOwnSnapshot()`'s own already-known-contentHash
-// question (see this file's own header, "0.9.144"). Whether a
-// browsed-and-resolved Snapshot corresponds to the current Publication is
-// a separate, later, unscheduled question this milestone does not answer.
-//
-// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
-// - **Automatic resolution when a candidate is discovered or selected.**
-//   Resolution stays an explicit, separate click — see "selecting a
-//   different candidate invalidates any prior resolution," above.
-// - **Snapshot–Publication attribution of any kind over the resolved
-//   result.** See "no automatic attribution," above. (0.9.154, below,
-//   fills this gap — still never automatic.)
-// - **Retry, caching, or persistence of a resolution result.**
-//
-// 0.9.154 — Selected Snapshot Attribution.
-//
-// 0.9.152 resolved `selectedSnapshotCandidate` into verified bytes;
-// 0.9.153's own Section E proved, end to end, that resolution alone never
-// attributes. This fills exactly that named gap:
-//
-//   selectedSnapshotResolutionResult   (0.9.152, unchanged — the
-//                                        RESOLVER's own already-verified
-//                                        result, never the candidate's
-//                                        own self-declared metadata)
-//           │
-//           │ click "Attribute Selected Snapshot"
-//           ▼
-//   attributeSelectedSnapshot()
-//           │
-//           ▼
-//   resolveSnapshotPublicationAttribution(publication, selectedSnapshotResolutionResult)
-//           (application/SnapshotPublicationAttribution.js, 0.9.143,
-//           UNMODIFIED — the SAME pure comparison discoverOwnSnapshot()
-//           already calls; no second attribution implementation)
-//           │
-//           ▼
-//   selectedSnapshotAttributionResult   ★ (THIS milestone's own new field)
-//
-// REUSES THE EXISTING PURE FUNCTION DIRECTLY, EXACTLY THE WAY
-// `discoverOwnSnapshot()`'s OWN 0.9.144 ADDITION ALREADY DOES. No new
-// application command was introduced — `resolveSnapshotPublicationAttribution()`
-// takes no I/O and needs no collaborator to inject; this component still
-// never hashes bytes or interprets a resolution outcome itself.
-//
-// COMPARES AGAINST THE RESOLVER'S OWN VERIFIED RESULT, NEVER THE
-// CANDIDATE'S OWN DECLARED contentHash — the critical invariant this
-// milestone exists to hold. `attributeSelectedSnapshot()` reads
-// `this.selectedSnapshotResolutionResult` (bytes that already passed
-// `resolveCandidate()`'s own hash verification), never
-// `this.selectedSnapshotCandidate.contentHash`. Two different candidates
-// can share one self-declared contentHash while one of them fails
-// verification (CONTENT_HASH_MISMATCH) — see `application/
-// SnapshotPublicationAttribution.js`'s own header, "attribution requires
-// an already-verified snapshot." A `selectedSnapshotResolutionResult`
-// that never reached RESOLVED still produces a well-defined attribution
-// value: `resolveSnapshotPublicationAttribution()` passes that same
-// resolution-failure outcome through unchanged rather than ever reporting
-// NO_MATCH for it.
-//
-// EXPLICIT, NEVER AUTOMATIC. Unlike `discoverOwnSnapshot()`'s own 0.9.144
-// wiring (attribution computed inline, in the same `.then()`, because
-// discovery already answers a fixed, already-known contentHash),
-// attribution over a BROWSED-AND-SELECTED candidate is deliberately its
-// own explicit click — selecting a candidate never attributes it, and
-// resolving a candidate never attributes it either. Only this button
-// does.
-//
-// A SEPARATE FIELD, NEVER `snapshotAttributionResult`. That field remains
-// `discoverOwnSnapshot()`'s own, for the already-known-contentHash path;
-// `selectedSnapshotAttributionResult` is this, genuinely independent,
-// path's own — the two paths converge on the identical comparison
-// function while keeping fully separate UI state, per this milestone's
-// own two-path design.
-//
-// NO EXECUTING/ERROR STATE OF ITS OWN — `resolveSnapshotPublicationAttribution()`
-// performs no I/O and never throws for the inputs this button ever hands
-// it (the button stays disabled until both a `publication` with a
-// `contentReference` and a `selectedSnapshotResolutionResult` exist), so
-// there is nothing to await and no rejection to catch — the identical
-// restraint `discoverOwnSnapshot()`'s own 0.9.144 addition already holds
-// for its single, synchronous call site.
-//
-// STALE ATTRIBUTION IS CLEARED WHENEVER THE RESULT IT WAS COMPUTED FROM
-// BECOMES STALE, NEVER RECOMPUTED AUTOMATICALLY. Selecting a DIFFERENT
-// candidate (`selectSnapshotCandidate()`) and re-resolving the CURRENT
-// selection (`resolveSelectedSnapshot()`) both already invalidate
-// `selectedSnapshotResolutionResult`; `selectedSnapshotAttributionResult`
-// is cleared at those same two sites, and by the same Publication-change
-// watcher every other field in this family already resets on — never
-// silently left on screen describing a resolution result that no longer
-// exists.
-//
-// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
-// - **A new application command (e.g. `ResolveSelectedSnapshotAttributionCommand`).**
-//   The existing pure function is reused directly — see "reuses the
-//   existing pure function directly," above.
-// - **Automatic attribution immediately after selection or resolution.**
-// - **Ranking, candidate recommendation, trust scores, "best snapshot,"
-//   provider reputation, ownership/authenticity claims.**
-// - **Persistence, caching, or retry of an attribution result.**
-// - **Any new resolution or attribution outcome vocabulary.** Only
-//   `SnapshotPublicationAttributionOutcome`'s own pre-existing MATCH/
-//   NO_MATCH, plus `DecentralizedSnapshotResolutionOutcome`'s own
-//   pre-existing failure values passed through unchanged, are ever
-//   produced.
-//
-// 0.9.158 — Selected Snapshot Materialization.
-//
-// 0.9.152 through 0.9.157 proved DISCOVER -> SELECT -> RESOLVE -> VERIFY ->
-// ATTRIBUTE complete and correct, entirely in memory: a verified
-// Snapshot's own bytes live only inside `selectedSnapshotResolutionResult`,
-// gone the moment the Publication changes or this component unmounts.
-// Nothing built so far ever turns "verified" into "possessed" — the exact
-// gap `application/MaterializeSnapshotFromPlacementUseCase.js` (0.8.35)
-// and `application/MaterializeSnapshotFromPeerUseCase.js` (0.8.37) already
-// closed for their own explicit sources. This fills the identical gap for
-// a browsed-and-selected, Nostr-discovered candidate:
-//
-//   selectedSnapshotResolutionResult   (0.9.152, unchanged — the
-//                                        RESOLVER's own already-verified
-//                                        result)
-//           │
-//           │ click "Materialize Selected Snapshot"
-//           ▼
-//   materializeSelectedSnapshot()
-//           │
-//           ▼
-//   materializeSelectedSnapshotCommand(selectedSnapshotResolutionResult)
-//           (application/MaterializeSelectedSnapshotCommand.js, 0.9.158 —
-//           injected, mirroring resolveSelectedSnapshotCommand exactly)
-//           │
-//           ▼
-//   selectedSnapshotMaterializationResult   ★ (THIS milestone's own new field)
-//
-// AN INDEPENDENT SIBLING OF "ATTRIBUTE SELECTED SNAPSHOT," NEVER A SEQUEL
-// TO IT. Both `materializeSelectedSnapshot()` and `attributeSelectedSnapshot()`
-// read the SAME `selectedSnapshotResolutionResult`, but neither depends on
-// the other having run, and clicking one never triggers the other —
-// materialization answers "can this replica now retrieve these bytes
-// locally," attribution answers "does this correspond to the current
-// Publication," and a person may want either answer, both, or neither. See
-// `application/MaterializeSnapshotFromSelectedCandidateUseCase.js`'s own
-// header for why materialization never touches attribution, a placement,
-// or a World position.
-//
-// CONSUMES THE RESOLUTION RESULT, NEVER THE CANDIDATE — identical
-// restraint to `attributeSelectedSnapshot()`'s own "compares against the
-// resolver's own verified result," one sibling over.
-// `materializeSelectedSnapshot()` reads `this.selectedSnapshotResolutionResult`,
-// never `this.selectedSnapshotCandidate`. A candidate that was merely
-// SELECTED, never resolved, has no bytes to materialize at all.
-//
-// STALE MATERIALIZATION IS CLEARED WHEREVER THE RESOLUTION RESULT IT
-// DEPENDS ON ALREADY IS — the identical rule `selectedSnapshotAttributionResult`
-// already holds, one sibling over: `selectSnapshotCandidate()` (a
-// different selection), `resolveSelectedSnapshot()` (a fresh resolution
-// attempt), and the Publication-change watcher all clear
-// `selectedSnapshotMaterializationResult` at the same sites they already
-// clear `selectedSnapshotAttributionResult`.
-//
-// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
-// - **Automatic materialization immediately after selection, resolution,
-//   or attribution.** Only this button does.
-// - **World placement, spatial position, or rendering of the materialized
-//   Snapshot.** See docs/Roadmap.md's own 0.9.158 section — a separate,
-//   later, unscheduled seam over this one's own output.
-// - **Ranking, candidate recommendation, trust scores, "best snapshot,"
-//   provider reputation, ownership/authenticity claims.**
-// - **Persistence, caching, or retry of a materialization result.**
-// - **Any new resolution outcome vocabulary.** Only application/
-//   SnapshotCandidateMaterializationOutcome.js's own three new values,
-//   plus `DecentralizedSnapshotResolutionOutcome`'s own pre-existing
-//   failure values passed through unchanged, are ever produced.
-//
-// 0.9.159 — Selected Snapshot World Placement.
-//
-// 0.9.158 closed the gap between VERIFIED and POSSESSED, but deliberately
-// answered nothing about WHERE a materialized Snapshot belongs in the
-// World — see its own header, "World placement, spatial position, or
-// rendering of the materialized Snapshot... a separate, later, unscheduled
-// seam over this one's own output." This milestone is that seam:
-//
-//   selectedSnapshotMaterializationResult   (0.9.158, unchanged)
-//                │
-//                │  click "Place Materialized Snapshot"
-//                ▼
-//   placeMaterializedSnapshot()   (THIS FILE, NEW)
-//                │
-//                ▼
-//   resolveSnapshotWorldPlacement(materialization, placementInfo)
-//     (application/SnapshotWorldPlacement.js, NEW — a PURE function, no
-//     collaborator to inject, exactly like the Snapshot attribution
-//     comparison above)
-//                │
-//                ▼
-//   selectedSnapshotWorldPlacementResult   (NEW field)
-//
-// `placementInfo` IS A NEW, PLAIN DATA PROP — NEVER AN INJECTED COMMAND.
-// Unlike `discoverSnapshotCommand`/`resolveSelectedSnapshotCommand`/
-// `materializeSelectedSnapshotCommand`, this milestone introduces no new
-// capability function at all: `resolveSnapshotWorldPlacement()` is pure, so
-// there is nothing to compose or inject. `placementInfo` is instead the
-// SAME `WorldNavigationSession#getPlacementInfo()`-shaped read the host
-// view already computes for its own Placement Info panel (`activePlacementInfo`
-// in ui/views/WorldView.js) — handed to this component exactly like
-// `publication` already is, and read by `placeMaterializedSnapshot()`
-// exactly the way `attributeSelectedSnapshot()` already reads `this.publication`
-// for its own separate comparison. This component never queries a
-// PlacementRegistry, a spatial index, or any World position itself.
-//
-// AN INDEPENDENT SIBLING OF "MATERIALIZE SELECTED SNAPSHOT" AND "ATTRIBUTE
-// SELECTED SNAPSHOT," NEVER AN AUTOMATIC CONSEQUENCE OF EITHER. Clicking
-// "Materialize Selected Snapshot" never places anything; clicking "Place
-// Materialized Snapshot" never re-materializes or re-attributes anything.
-// A successfully materialized Snapshot does not automatically acquire a
-// World position — only this separate, explicit click computes one.
-//
-// SYNCHRONOUS — NO EXECUTING/ERROR STATE OF ITS OWN, mirroring
-// `attributeSelectedSnapshot()`'s own restraint one sibling over:
-// `resolveSnapshotWorldPlacement()` performs no I/O, so there is nothing to
-// await and nothing that can reject.
-//
-// STALE PLACEMENT IS CLEARED WHEREVER THE MATERIALIZATION RESULT IT DEPENDS
-// ON ALREADY IS — the identical rule `selectedSnapshotAttributionResult`
-// already holds one layer under `selectedSnapshotResolutionResult`, applied
-// here one layer under `selectedSnapshotMaterializationResult`:
-// `selectSnapshotCandidate()`, `resolveSelectedSnapshot()`, a fresh
-// `materializeSelectedSnapshot()` attempt, and the Publication-change
-// watcher all clear `selectedSnapshotWorldPlacementResult` at the same
-// sites they already clear `selectedSnapshotMaterializationResult`.
-//
-// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
-// - **Looking up, creating, or moving a WorldPlacement of any kind.** This
-//   component only ever reads whatever `placementInfo` the host view
-//   already computed — see application/SnapshotWorldPlacement.js's own
-//   header, "never rediscovers."
-// - **Rendering the materialized Snapshot anywhere.** World View stays an
-//   observer of world material — this milestone produces a placement FACT,
-//   nothing more.
-// - **Automatic placement immediately after materialization.** Only this
-//   button does.
-// - **Any new resolution/materialization outcome vocabulary.** Only
-//   application/SnapshotWorldPlacementOutcome.js's own two new values, plus
-//   whatever outcome `selectedSnapshotMaterializationResult` itself already
-//   carries, passed through unchanged, are ever produced.
-//
-// 0.9.160 — Selected Snapshot World Runtime Registration.
-//
-// 0.9.159 produced a placement FACT that lived only inside this
-// component's own ephemeral state — nothing yet made it observable to the
-// running World. This milestone is that seam:
-//
-//   selectedSnapshotWorldPlacementResult   (0.9.159, unchanged)
-//                │
-//                │  click "Register Placed Snapshot"
-//                ▼
-//   registerMaterializedSnapshot()   (THIS FILE, NEW)
-//                │
-//                ▼
-//   registerMaterializedSnapshotWorldSource(worldDiscoverySourceRegistry,
-//     placement, publication)   (application/
-//     MaterializedSnapshotWorldDiscoveryBridge.js, NEW — mutates the SAME
-//     app-wide WorldDiscoverySourceRegistry a connected peer's own World
-//     contribution already registers into, under its own dedicated
-//     origin; see that file's own header for why this is not a new World-
-//     state authority)
-//                │
-//                ▼
-//   selectedSnapshotWorldRegistrationResult   (NEW field)
-//
-// `worldDiscoverySourceRegistry` IS A NEW, PLAIN COLLABORATOR PROP —
-// NEVER AN INJECTED COMMAND. Exactly like `placementInfo` (0.9.159), this
-// is the SAME app-wide `WorldDiscoverySourceRegistry` instance
-// `ui/views/WorldView.js` already injects and hands to `WorldEncounterCanvas`
-// as its own `registry` prop — handed to this component the identical way,
-// so registering a Snapshot here mutates the EXACT registry
-// `WorldEncounterCanvas` is already subscribed to, never a second,
-// disconnected instance.
-//
-// AN INDEPENDENT SIBLING OF "PLACE MATERIALIZED SNAPSHOT," NEVER AN
-// AUTOMATIC CONSEQUENCE OF IT. A successfully PLACED Snapshot does not
-// automatically register itself with the World runtime — only this
-// separate, explicit click does, the identical restraint 0.9.159's own
-// header already holds one sibling under ("a successfully materialized
-// Snapshot does not automatically acquire a World position").
-//
-// SYNCHRONOUS — NO EXECUTING/ERROR STATE OF ITS OWN, mirroring
-// `placeMaterializedSnapshot()`'s own restraint one sibling over:
-// `registerMaterializedSnapshotWorldSource()` performs no I/O — it mutates
-// a plain, in-memory collaborator synchronously.
-//
-// STALE REGISTRATION IS CLEARED WHEREVER THE PLACEMENT RESULT IT DEPENDS
-// ON ALREADY IS, PLUS ONE ADDITIONAL SITE: `selectSnapshotCandidate()`, a
-// fresh `resolveSelectedSnapshot()`/`materializeSelectedSnapshot()`
-// attempt, and the Publication-change watcher all clear
-// `selectedSnapshotWorldRegistrationResult` at the same sites they already
-// clear `selectedSnapshotWorldPlacementResult` — and `placeMaterializedSnapshot()`
-// itself now ALSO clears it immediately before computing a fresh placement
-// result, since a stale registration described the PRIOR placement result,
-// about to be replaced.
-//
-// CLEARING THE UI'S OWN DISPLAYED RESULT NEVER UNREGISTERS ANYTHING FROM
-// THE RUNTIME REGISTRY ITSELF. See application/
-// MaterializedSnapshotWorldDiscoveryBridge.js's own header, "Deliberately
-// excluded... automatically unregistering a Snapshot when the interaction
-// state that produced it goes stale." `selectedSnapshotWorldRegistrationResult`
-// resetting to `null` describes only this component's own ephemeral
-// "what did the last click report" state — the registered
-// `WorldDiscoverySource` itself, if one was ever created, remains in the
-// registry until something explicitly removes it.
-//
-// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
-// - **Populating the registry's `'local'` origin, or any general local-
-//   publication discovery.** See application/
-//   MaterializedSnapshotWorldDiscoveryBridge.js's own header.
-// - **Unregistering a Snapshot, automatically or via any button this
-//   milestone adds.** The bridge file exports an unregister function; no
-//   UI in this file calls it.
-// - **Rendering the registered Snapshot anywhere, or any visibility/
-//   viewport concern.** World View's existing `WorldEncounterCanvas`
-//   observes the registry entirely unmodified by this milestone.
-// - **Any new resolution/materialization/placement outcome vocabulary.**
-//   Only application/SnapshotWorldRegistrationOutcome.js's own one new
-//   value, plus whatever outcome `selectedSnapshotWorldPlacementResult`
-//   itself already carries, passed through unchanged, are ever produced.
-//
-// 0.9.172 — Decentralized Snapshot Position Claim Consumption.
-//
-// 0.9.171 taught a Snapshot discovery candidate to optionally CARRY a
-// publisher's own `publicationId`/`claimedPosition` claim; nothing since
-// has ever CONSUMED one. `placeMaterializedSnapshot()` (0.9.159) has, until
-// now, always read `this.placementInfo` — this replica's own PRE-EXISTING
-// local placement for the active Publication — with no notion a candidate
-// might itself claim a different position entirely. This milestone adds
-// exactly one new, EXPLICIT seam between materializing a Snapshot and
-// placing it:
-//
-//   selectedSnapshotCandidate   (0.9.151, unchanged — may carry
-//        │                       publicationId/claimedPosition, 0.9.171)
-//        │
-//        │  click "Use Claimed Position"
-//        ▼
-//   useClaimedSnapshotPosition()   (THIS FILE, NEW)
-//        │
-//        ▼
-//   resolveSnapshotWorldPositionClaim(candidate, publication.id)
-//     (application/SnapshotWorldPositionClaim.js, NEW — a PURE function,
-//     no collaborator to inject, exactly like resolveSnapshotWorldPlacement()
-//     one sibling over)
-//        │
-//        ▼
-//   selectedSnapshotWorldPositionClaimResult   (NEW field)
-//        │
-//        │  click "Place Materialized Snapshot"
-//        ▼
-//   placeMaterializedSnapshot()   (0.9.159, UPDATED — see below)
-//
-// AN EXPLICIT, SEPARATE CLICK — NEVER AUTOMATIC, NEVER A BYPRODUCT OF
-// SELECTION, RESOLUTION, OR MATERIALIZATION. Selecting a candidate that
-// happens to carry a claim, resolving it, or materializing it never
-// consumes that claim on its own — the identical restraint 0.9.159's own
-// header already holds for placement itself ("a successfully materialized
-// Snapshot does not automatically acquire a World position"), held here
-// one seam earlier: a decentralized position is currently only a
-// PUBLISHER'S claim, and it would be architecturally premature to let an
-// arbitrary network announcement silently alter World state. Only a
-// person's own explicit `useClaimedSnapshotPosition()` click ever computes
-// `selectedSnapshotWorldPositionClaimResult`.
-//
-// `placeMaterializedSnapshot()` PREFERS A CONSUMED CLAIM, BUT FALLS BACK TO
-// `this.placementInfo` UNCHANGED THE MOMENT NO CLAIM WAS CONSUMED. When
-// `selectedSnapshotWorldPositionClaimResult` is `null` (nobody clicked "Use
-// Claimed Position" for this selection) or its own `outcome` is not
-// `SnapshotWorldPositionClaimOutcome.CLAIMED` (ABSENT or MISMATCHED),
-// `placeMaterializedSnapshot()` behaves EXACTLY as 0.9.159 left it — it
-// hands `resolveSnapshotWorldPlacement()` `this.placementInfo`, this
-// replica's own existing local placement, verbatim. This is what keeps
-// every pre-0.9.172 test of this panel's own placement behavior passing
-// unmodified, and is the literal meaning of "the absence of a claim means
-// no decentralized position was supplied — nothing more": no `(0,0,0)` is
-// ever invented, and the receiver's own current position is never
-// substituted either. Only when the outcome IS `CLAIMED` does this method
-// build a fresh, synthetic `placementInfo`-shaped object —
-// `{ placementId: 'claim:<contentHash>:<publicationId>', publicationId,
-// position: claim.position }` — and hand THAT to
-// `resolveSnapshotWorldPlacement()` instead, which remains completely
-// unmodified and unaware any of this happened; see that file's own header,
-// "given a resolved placement input," never taught to understand Nostr or
-// a claim of any kind.
-//
-// THE SYNTHETIC `placementId` NAMES A CLAIM, NEVER A REAL WorldPlacement.
-// `'claim:<contentHash>:<publicationId>'` is never looked up in, or written
-// to, `core/PlacementRecord.js`/`placement/LocalPlacementRegistry.js` — it
-// exists only so `resolveSnapshotWorldPlacement()`'s own placementInfo
-// contract (`placementId`/`publicationId`/`position`, all required) is
-// satisfied, and so a person inspecting `selectedSnapshotWorldPlacementResult.placementId`
-// can tell, structurally, that this placement was borrowed from a claim
-// rather than from this replica's own placement registry — mirroring the
-// identical "traceability, never treated as the Snapshot's own identity"
-// restraint `application/SnapshotWorldPlacement.js`'s own header already
-// holds for `placementId` in general.
-//
-// THE IDENTITY CHECK — `candidate.publicationId === publication.id` — IS
-// PERFORMED ENTIRELY BY `resolveSnapshotWorldPositionClaim()`, NEVER
-// RE-CHECKED HERE. `useClaimedSnapshotPosition()` passes `this.publication.id`
-// straight through; this file never compares `candidate.publicationId`
-// against anything itself, and never invents a fallback identity of its
-// own. See application/SnapshotWorldPositionClaim.js's own header for why
-// that boundary — never "the content hash matches, therefore use this
-// position" — is the one this milestone exists to hold, and for why a
-// mismatch (`MISMATCHED`) is reported distinctly from an ordinary absence
-// (`ABSENT`) rather than silently folded into it.
-//
-// SYNCHRONOUS — NO EXECUTING/ERROR STATE OF ITS OWN, mirroring
-// `attributeSelectedSnapshot()`'s and `placeMaterializedSnapshot()`'s own
-// restraint: `resolveSnapshotWorldPositionClaim()` performs no I/O and no
-// cryptographic re-verification, so there is nothing to await and nothing
-// that can reject.
-//
-// STALENESS — NARROWER THAN THE PLACEMENT FAMILY'S OWN, BY DESIGN. A
-// consumed claim depends on exactly two facts: WHICH candidate is selected,
-// and WHICH Publication is the placement target. `selectedSnapshotWorldPositionClaimResult`
-// is therefore cleared only at `selectSnapshotCandidate()` (a different
-// selection may carry a different claim, or none) and the Publication-
-// change watcher (a different target changes the identity check's own
-// right-hand side) — NEVER at `resolveSelectedSnapshot()` or
-// `materializeSelectedSnapshot()`, since re-resolving or re-materializing
-// the SAME selection against the SAME Publication changes neither fact a
-// consumed claim depends on. `useClaimedSnapshotPosition()` itself also
-// clears `selectedSnapshotWorldPlacementResult`/`selectedSnapshotWorldRegistrationResult`
-// immediately before computing a fresh claim result, the identical
-// "downstream results computed from what is about to change are already
-// stale" rule every sibling action in this family already holds.
-//
-// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
-// - **Signature verification, timestamp freshness, conflicting-position
-//   reconciliation, ranking competing claims, trust scores, or publisher
-//   reputation.** See application/SnapshotWorldPositionClaim.js's own
-//   header.
-// - **Automatic position updates, automatic relocation, or movement of any
-//   kind.** Only an explicit click ever computes or applies a claim.
-// - **Geospatial or collision validation.**
-// - **Changing `application/WorldDiscoverySourceRegistry.js`,
-//   `ui/components/WorldEncounterCanvas.js`, or the Snapshot discovery
-//   protocol (`core/SnapshotDiscoveryEnvelope.js`) again.** All three
-//   remain byte-for-byte as their own prior milestones left them.
-// - **A new `VERIFIED_POSITION` state, or any change to what "verified"
-//   means for a Snapshot.** A candidate's own claimed position remains
-//   untrusted metadata until explicitly consumed; consuming it is not
-//   verifying it.
-//
-// 0.9.198 — Publication Unpublish/Retract UI Action.
-//
-// Every action above (0.9.140 through 0.9.172) reaches FORWARD from a
-// Publication — distribute it, discover its Snapshot, browse/resolve/
-// materialize/place/register some OTHER replica's. Nothing yet lets a
-// Publisher take THEIR OWN Publication back out of the catalog. This
-// adds exactly that, one seam, mirroring `ui/components/
-// PlacementInfoPanel.js`'s own 0.9.197 "Remove from World" addition at
-// the layer above:
-//
-//   publication   (unchanged prop, ★ above)
-//           │
-//           │ click "Unpublish"
-//           ▼
-//   unpublishOwnPublication()   (THIS FILE, NEW)
-//           │
-//           ▼
-//   unpublishCommand(publication)   (injected — a thin WorldView.js
-//                                     wrapper around
-//                                     session.unpublishDocument(),
-//                                     mirroring removePlacementFromPanel()'s
-//                                     own wrap of session.removePlacement()
-//                                     — this component never imports
-//                                     WorldNavigationSession or
-//                                     UnpublishDocumentUseCase itself)
-//
-// NO NEW LIFECYCLE STATE, NO EXECUTING/ERROR FIELD OF ITS OWN. Unlike
-// the Distribute/Discover command families above (real network I/O,
-// genuinely worth an "in flight" indicator), `UnpublishDocumentUseCase`
-// is local and synchronous — the SAME reason `placeMaterializedSnapshot()`/
-// `registerMaterializedSnapshot()` (0.9.159/0.9.160) hold no
-// executing/error state of their own. This component keeps no
-// "unpublished"/"publicationRemoved" result field either: `publication`
-// is supplied by the host view, entirely derived from
-// `session.getPublicationForDocument()` — the SAME "null when the
-// question doesn't apply" read model `getPlacementInfo()` already
-// follows for a placement — so once the catalog no longer has a record
-// for this document, the NEXT prop update already makes `publication`
-// null and this panel's own detail/actions collapse through the exact
-// `v-if="publication"` path an unpublished document already takes.
-//
-// GATED THE SAME WAY EVERY SIBLING ACTION IN THIS FILE ALREADY IS: the
-// button only renders when a caller supplied `unpublishCommand` at all,
-// and is disabled whenever there is no `publication` to unpublish — no
-// second, UI-only ownership rule. `WorldNavigationSession.unpublishDocument()`
-// enforces whatever ownership `UnpublishDocumentUseCase`/
-// `LocalPublisherProvider.unpublish()` themselves do (as of this
-// writing, none — the SAME "own publication" scoping this whole panel
-// already relies on: `publication` is never a foreign Publication found
-// via discovery/search, only ever the ACTIVE document's own, exactly
-// like `distributeOwnSnapshot()`'s own gate above).
-//
-// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
-// - **Confirmation dialogs or an undo affordance.** No other mutation
-//   in this file (or in `ui/views/WorldView.js`) uses one.
-// - **Clearing `selectedSnapshotCandidate` or any of its own downstream
-//   families.** Unpublishing the ACTIVE Publication does not touch
-//   Snapshot browsing/resolution/materialization/placement/registration
-//   state at all — those stay exactly as `UnpublishDocumentUseCase`
-//   itself leaves them (untouched; see that file's own header), and the
-//   very next `publication` prop change (to `null`) already resets
-//   every one of those families through the EXISTING `publication`
-//   watcher, unmodified by this milestone.
-// - **Any new resolution/outcome vocabulary.** `unpublishCommand`
-//   returns `UnpublishDocumentUseCase.execute()`'s own plain boolean,
-//   never rendered as a result block — the panel's own disappearance
-//   IS the observable outcome.
-//
-// 0.9.215 — Snapshot Export Capability Integration.
-//
-// 0.9.212's own reassessment named the one Snapshot capability this
-// codebase had built and tested but never wired to any UI: application/
-// BuildPublicationSnapshotTransferPackageUseCase.js (0.8.32), "the
-// export-side counterpart of application/
-// ImportPublicationSnapshotTransferPackageUseCase.js" by its own header's
-// own words — fully implemented, exercised by seven separate test files,
-// composed nowhere. This is that wiring, and nothing more:
-//
-//   publication   (unchanged prop, ★ above)
-//           │
-//           │ click "Export Snapshot"
-//           ▼
-//   exportOwnSnapshot()   (THIS FILE, NEW)
-//           │
-//           ▼
-//   exportSnapshotCommand(publication)   (injected — a thin
-//                                          WorldView.js wrapper,
-//                                          exportOwnSnapshot(), around
-//                                          the app-wide
-//                                          exportSnapshotCommand
-//                                          ui/main.js composes, itself a
-//                                          thin `(publicationId) ->
-//                                          Promise<pkg>` wrap of
-//                                          snapshotContentMaterializationCoordinator.export() —
-//                                          this component never imports
-//                                          BuildPublicationSnapshotTransferPackageUseCase.js
-//                                          or SnapshotContentMaterializationCoordinator.js
-//                                          itself, mirroring
-//                                          distributeOwnSnapshot()'s own
-//                                          restraint one action over)
-//           │
-//           ▼
-//   Publication Snapshot Transfer Package
-//   { kind, schemaVersion, publicationId, contentHash, content }
-//           │
-//           ▼
-//   this panel's own result display (publicationId + contentHash only —
-//   see below)
-//
-// NO NEW EXPORT PIPELINE, NO NEW SERIALIZATION FORMAT. The use case
-// composed here (`ui/main.js`) is the SAME
-// BuildPublicationSnapshotTransferPackageUseCase.js 0.8.32 already built
-// and 0.8.34's own `ImportPublicationSnapshotTransferPackageUseCase`
-// wiring already treats as import's own counterpart — this milestone
-// adds a coordinator method and a UI action, never a second way to
-// assemble a Snapshot Transfer Package.
-//
-// MIRRORS distributeOwnSnapshot()/discoverOwnSnapshot() EXACTLY — a
-// dedicated `snapshotExportExecuting`/`snapshotExportError`/
-// `snapshotExportResult`/`snapshotExportRequestId` ephemeral family
-// (never shared with either sibling's own), reset on the identical
-// `publication` change and invalidated on unmount the identical way.
-// Gated the identical way every sibling action in this file already is:
-// the button only renders when a caller supplied `exportSnapshotCommand`
-// at all, disabled whenever there is no `publication` or a call is
-// already in flight.
-//
-// NEVER READS `publication.contentReference` ITSELF. Unlike
-// `discoverOwnSnapshot()` (which needs `publication.contentReference.hash`
-// as an explicit input to ask "does this contentHash resolve
-// externally?"), export asks a different question — "does THIS REPLICA
-// already hold the bytes this Publication's own catalog entry claims?" —
-// answerable from `publication.id` alone; `BuildPublicationSnapshotTransferPackageUseCase.js`
-// itself re-reads the contentReference from its own publication catalog
-// lookup, never trusting a value this component could hand it stale.
-//
-// THE RESULT DISPLAY SHOWS IDENTITY FACTS ONLY, NEVER THE BYTES
-// THEMSELVES. `snapshotExportResult.content` (the actual Snapshot bytes)
-// is deliberately never rendered, copied, or offered as a download here
-// — see this milestone's own docs/Roadmap.md entry, "one thing not
-// decided yet": whether an exported package becomes a downloadable file,
-// a copyable blob, or something else is a later, unscheduled product
-// decision. This milestone's only job is making the existing capability
-// REACHABLE, not deciding how its output is consumed.
-//
-// NEVER MUTATES publication, distribution, discovery, placement, or
-// registration state. `BuildPublicationSnapshotTransferPackageUseCase.js`
-// itself performs no hash verification and no write of any kind (see its
-// own header) — this action reads a Publication's own already-stored
-// bytes and returns them, the identical read-only restraint
-// `distributeOwnSnapshot()` already holds for its own resolved bytes,
-// never re-publishing, re-placing, or re-registering anything.
-//
-// 0.9.248 — Publication Commentary UI Integration.
-//
-// 0.9.242-0.9.247 built a complete, authoritative application-layer
-// read/write pair for Publication commentary — GetPublicationCommentariesUseCase
-// (0.9.247) and AddPublicationCommentaryUseCase (0.9.244, with authorship
-// closed by 0.9.245 and authorization by 0.9.246) — reachable from
-// precisely nowhere a person could click. This is that wiring, and
-// deliberately only that: the first product-facing UI over an existing
-// application boundary, mirroring 0.9.215's own "makes the existing
-// capability REACHABLE, not a new capability" restraint one section
-// above.
-//
-//   OwnPublicationPanel (THIS FILE)
-//        │
-//        ├── getPublicationCommentariesCommand(publicationId)   (NEW —
-//        │        a thin (publicationId) -> PublicationCommentary[]
-//        │        function, injected by ui/views/WorldView.js, wrapping
-//        │        WorldNavigationSession.getPublicationCommentaries(),
-//        │        which itself wraps GetPublicationCommentariesUseCase
-//        │        unmodified)
-//        │
-//        └── addPublicationCommentaryCommand({ publicationId, content })
-//                 (NEW — a thin ({publicationId, content}) -> {commentary,
-//                 isNew} function, the identical injection shape,
-//                 wrapping WorldNavigationSession.addPublicationCommentary(),
-//                 which itself wraps AddPublicationCommentaryUseCase
-//                 unmodified)
-//
-// THIS COMPONENT NEVER IMPORTS PublicationCommentary, PublicationCommentaryStore,
-// GetPublicationCommentariesUseCase, or AddPublicationCommentaryUseCase —
-// it only ever calls the two injected command functions above, mirroring
-// the EXACT command-injection boundary `distributeOwnSnapshot()`/
-// `discoverOwnSnapshot()` already hold for Arweave/Nostr. The UI never
-// constructs a PublicationCommentary object and never touches
-// PublicationCommentaryStore, directly or indirectly.
-//
-// EXISTING COMMENTARY IS LOADED ON MOUNT AND ON EVERY PUBLICATION CHANGE
-// — never on a timer, an interval, or a subscription of any kind (see
-// "deliberately excluded," below). Rendered in WHATEVER order
-// getPublicationCommentariesCommand returns, verbatim — this file adds
-// no sort of its own, deferring entirely to
-// GetPublicationCommentariesUseCase's own "never re-sorted here."
-//
-// SUCCESSFUL CREATION RE-QUERIES RATHER THAN APPENDING. On a successful
-// `addPublicationCommentaryCommand()` call, `submitPublicationCommentary()`
-// (below) calls `refreshPublicationCommentaries()` again rather than
-// pushing the returned `commentary` into `publicationCommentaries`
-// itself — one source of truth (the store, read through the SAME query
-// use case every other read goes through), never a second, UI-maintained
-// interpretation of the stored collection that could drift from it.
-//
-// AUTHORSHIP IS NEVER UI-SUPPLIED. `submitPublicationCommentary()` sends
-// `addPublicationCommentaryCommand` exactly `{ publicationId, content }`
-// — no `authorIdentityId` field exists on that call, matching
-// AddPublicationCommentaryUseCase's own 0.9.245 boundary: this file
-// cannot even ATTEMPT to name a different author.
-//
-// SIGN-IN IS OBSERVED, NEVER RE-IMPLEMENTED. `viewerIdentityId` (a new
-// prop, below) is the SAME already-computed `session.getMyIdentityId()`
-// fact `ui/views/WorldView.js`'s own `myIdentityId` already exposes to
-// other panels — this component reads it only to decide whether to show
-// the compose form or a "sign in" hint, and never resolves, derives, or
-// authenticates an identity of its own. The actual authentication
-// decision for a submitted comment is still made entirely inside
-// AddPublicationCommentaryUseCase, which this component never second-
-// guesses: an authenticated `viewerIdentityId` whose session has since
-// expired still gets a real, authoritative rejection from the use case
-// itself, surfaced as `publicationCommentaryError`.
-//
-// A FAILED READ NEVER WIPES AN ALREADY-DISPLAYED LIST; A FAILED WRITE
-// NEVER PERSISTS OR CORRUPTS ONE. See refreshPublicationCommentaries()/
-// submitPublicationCommentary()'s own comments, below, for the exact
-// behavior tests/PublicationCommentaryUIIntegration.test.js Sections
-// F/G exercise.
-//
-// DELIBERATELY EXCLUDED — NOT THIS MILESTONE, per this milestone's own
-// brief: live commentary subscriptions, polling, WebSocket/Nostr
-// propagation or any decentralized commentary distribution, replies,
-// threading, editing, deletion/retraction, moderation, reactions,
-// notifications, unread/read tracking, pagination, a sorting policy, and
-// search. This milestone's own scope is "inspect existing commentary,
-// create new commentary through the authoritative application path" —
-// nothing more.
-//
-// 0.9.251 — Publication Commentary Count UI.
-//
-// 0.9.250's own Section D named the one remaining Commentary seam
-// classified MISSING_UI, plainly: "`publicationCommentaries.length`
-// already sits in component state and is read exactly once, only as the
-// empty-state boolean gate, never rendered as a visible number." This
-// closes exactly that gap, and nothing else:
-//
-//   publicationCommentaries   (0.9.248, unchanged — the array already
-//        │                     populated by refreshPublicationCommentaries()
-//        │                     through GetPublicationCommentariesUseCase)
-//        ▼
-//   publicationCommentaries.length   (read directly in the template,
-//        │                            below — no new field, no computed
-//        │                            property, no second state)
-//        ▼
-//   "Commentary (3)" / "Commentary (0)"   (the section's own <h5> title)
-//
-// NO NEW STATE, NO NEW METHOD, NO NEW USE CASE. `publicationCommentaries.length`
-// is read directly by the template's own `<h5>` interpolation — this
-// milestone adds no `publicationCommentaryCount` data field, no
-// `computed` block (this component has never had one), and no
-// `GetPublicationCommentaryCountUseCase`. `GetPublicationCommentariesUseCase`
-// (0.9.247) already returns the authoritative, complete collection every
-// time; a second, count-specific query would answer the identical
-// question through a second path for no reason — see this file's own
-// "one source of truth" restraint, held throughout 0.9.248-0.9.250.
-//
-// THE COUNT IS ALWAYS DERIVED, NEVER MANUALLY INCREMENTED. There is no
-// `commentCount++` anywhere in this file. Because the displayed number is
-// `publicationCommentaries.length` itself — not a copy of it — every
-// existing site that already sets `publicationCommentaries` (the
-// Publication-change watcher's reset to `[]`, `refreshPublicationCommentaries()`'s
-// own success/failure paths, and `submitPublicationCommentary()`'s own
-// re-query on success) already keeps the rendered count correct with no
-// change to any of those methods. A failed submission
-// (`submitPublicationCommentary()`'s own `catch` block, unchanged) never
-// touches `publicationCommentaries` at all, so the displayed count never
-// moves for a rejected attempt — the identical invariant this file's own
-// 0.9.248 header already established for the list itself, extended for
-// free to the number describing it.
-//
-// NO IDENTITY OR AUTHORIZATION DEPENDENCY OF ITS OWN. The count describes
-// the SAME `publicationCommentaries` array every viewer's
-// `getPublicationCommentariesCommand` call already returns — unauthenticated,
-// per 0.9.247's own header ("no authenticated-caller step, no
-// authorization check"). Rendering a number derived from that array
-// introduces no new read path and therefore no new dependency on
-// `viewerIdentityId`, unlike the compose form immediately below it (which
-// already, separately, gates on sign-in).
-//
-// DELIBERATELY EXCLUDED — NOT THIS MILESTONE. A dedicated count use case
-// or store method; a separately fetched/cached count; live updates via
-// polling or subscription (count changes exactly when
-// `publicationCommentaries` itself already does, per 0.9.247/0.9.248's
-// own existing "read once, on mount and on Publication change, plus a
-// re-query after a successful submission" cadence); any of the six
-// MISSING_DOMAIN_CAPABILITY seams 0.9.250 named (notifications,
-// discovery, moderation/removal, synchronization, navigation, persistence
-// management) or the REACHABLE_BUT_INTERNAL `getById()` finding — none of
-// those seams are touched by, or required for, rendering a count.
-//
-// 0.9.308 — Publication Multi-Placement Visibility.
-//
-// 0.9.307's own Post-Arc Product Evolution Reassessment named the exact
-// gap: `application/DiscoverPlacementsUseCase.js#findByPublicationId()`
-// already returns EVERY PlacementRecord for a Publication, fully
-// implemented and fully tested (tests/PlacementRegistry.test.js), but its
-// ONE production reader — `WorldNavigationSession#_resolvePlacementRecord()`
-// — reduces the result down to a single, most-recently-updated record,
-// by its own documented admission ("browsing/choosing among several is
-// future scope"). A Publication placed more than once — an intended,
-// named scenario (docs/Principles.md, 0.2.23: "an exhibition copy here, a
-// personal copy of the same publication there") — had no way for its own
-// owner to see or manage anything but that one copy. This closes exactly
-// that gap:
-//
-//   click (mount, or a new `publication` becomes current)
-//           │
-//           ▼
-//   refreshPublicationPlacements()
-//           │
-//           ▼
-//   getPublicationPlacementsCommand(publication.id)   (injected — a thin
-//                                     ui/views/WorldView.js wrapper around
-//                                     session.getPlacementsForPublication(),
-//                                     itself a thin, NEW WorldNavigationSession
-//                                     method wrapping DiscoverPlacementsUseCase's
-//                                     own pre-existing findByPublicationId(),
-//                                     never reducing the result — see that
-//                                     method's own header)
-//           │
-//           ▼
-//   publicationPlacements = [ { placementId, position, revision, owner,
-//                                overlapCount, ... }, ... ]   (rendered
-//                                VERBATIM, in the exact order received —
-//                                see "don't collapse multiple placements,"
-//                                below)
-//
-// A READ-SIDE INTEGRATION, NEVER A PLACEMENT-SYSTEM REDESIGN. No new
-// domain class, no new storage shape, no new use case: `PlacementRecord`
-// and `DiscoverPlacementsUseCase` already existed and were already
-// tested before this milestone; the only new code is one
-// WorldNavigationSession method (a thin, non-reducing sibling of
-// `getPlacementInfo()` and its own per-publicationId counterpart), one
-// thin WorldView.js wrapper, one new prop here, and this section's own
-// rendering — the exact size of 0.9.289's own Commentary seam, per
-// 0.9.307's own Section G6 estimate.
-//
-// PLACEMENT RECORDS, NEVER WORLD VISIBILITY OR OCCUPANCY. This section
-// answers "has this Publication been placed here" (a PlacementRecord
-// exists), never "can a viewer currently see it" (World visibility,
-// untouched — no camera, no viewport, no peer-presence concept anywhere
-// in this file) or "does something currently occupy that spot" (spatial
-// occupancy — `getDocumentsAtPosition()`/`checkPlacementOverlap()`'s own
-// question, never called by this section). `getPlacementsForPublication()`
-// queries the PlacementRegistry directly, exactly like
-// `getPlacementInfo()` already does — it is never turned into, and never
-// becomes, a World-state or spatial-index query.
-//
-// DON'T COLLAPSE MULTIPLE PLACEMENTS. Every record
-// `getPublicationPlacementsCommand` returns is rendered — no
-// deduplication by Publication, no "latest placement" reduction (the
-// EXACT reduction `placementInfo`/`activePlacementInfo` above still
-// performs, deliberately unchanged — see this file's own "0.9.159"
-// entry), no arbitrary first-match selection, no ranking, no spatial
-// aggregation. `refreshPublicationPlacements()` performs no `sort()` of
-// its own; `v-for` renders `publicationPlacements` in the exact order
-// `getPlacementsForPublication()` itself returned it. A single placement
-// (length === 1) renders through the SAME list markup as three — never a
-// special-cased "singleton" branch — and zero placements renders the
-// section's own honest `own-publication-placements-empty` message,
-// never treated as an error.
-//
-// NO_PLACEMENTS ≠ DISCOVERY_FAILED — THE CRITICAL SEMANTIC QUESTION.
-// `publicationPlacements: []` with `publicationPlacementsError: null`
-// means "this Publication genuinely has zero placements," a real and
-// distinct value never conflated with a discovery FAILURE
-// (`publicationPlacementsError` set, and — mirroring
-// `refreshPublicationCommentaries()`'s own restraint exactly —
-// `publicationPlacements` left UNCHANGED rather than wiped to `[]`, so a
-// previously-loaded list never silently disappears behind a transient
-// read failure). No new domain status is introduced for this: it is the
-// same plain try/catch shape `refreshPublicationCommentaries()` already
-// uses, one capability over — see that method's own header.
-//
-// STRICTLY READ-ONLY — NO GO-TO-PLACEMENT, NO PER-ROW REMOVE, NOT YET.
-// This section renders facts and nothing else: no button, click handler,
-// or emitted event anywhere in it creates, removes, moves, or alters a
-// placement, a Publication, or World state of any kind. `application/
-// DiscoverPlacementsUseCase.js`, `PlacePublicationUseCase`,
-// `MoveWorldPlacementUseCase`, and `RemoveWorldPlacementUseCase` are all
-// untouched by this milestone; `ui/components/PlacementInfoPanel.js`
-// remains the sole owner of Focus/Move/Remove actions, scoped to the
-// single ACTIVE placement it already renders. Per this milestone's own
-// brief, "the first product gap is visibility, not placement management"
-// — navigation/management actions per discovered placement are a
-// deliberately separate, later, unscheduled decision.
-//
-// `publicationId` IS ALWAYS THE PUBLICATION BEING INSPECTED, NEVER
-// SUBSTITUTED. `refreshPublicationPlacements()` calls
-// `getPublicationPlacementsCommand(publication.id)` — the SAME
-// `publication` prop every sibling capability in this file already reads
-// — never the current user's id, a different Publication's id, or a
-// selected placement's own id. The Publication-change watcher resets
-// `publicationPlacements`/`publicationPlacementsError` on every
-// `publication` switch (including to `null`) so inspecting Publication A
-// never leaves Publication B's placements on screen, mirroring
-// `publicationCommentaries`'s own identical reset one capability over.
-//
-// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
-// - **Any change to `DiscoverPlacementsUseCase`, `PlacePublicationUseCase`,
-//   `MoveWorldPlacementUseCase`, `RemoveWorldPlacementUseCase`, or World
-//   placement semantics of any kind.** All four remain byte-for-byte as
-//   their own prior milestones left them.
-// - **"Go to placement," "Remove this placement," or any other per-row
-//   action.** See "strictly read-only," above.
-// - **A spatial map, ranking, deduplication, or "latest placement"
-//   semantics for this section's own list.** See "don't collapse
-//   multiple placements," above.
-// - **A new Placement domain model or lifecycle, notification
-//   integration, provider-preference integration, or automatic World
-//   synchronization.**
-// - **Live updates, polling, or a subscription of any kind.** Loaded on
-//   mount and on Publication change only — the identical cadence
-//   `publicationCommentaries` already follows.
-//
-// 0.9.324 — Diagnostic Tools Surface.
-//
-// Every capability above (0.9.140 through 0.9.308) rendered directly,
-// always visible, on the SAME primary screen beside ordinary World View
-// actions — Distribute/Export/Unpublish and the discover-candidates ->
-// select -> resolve -> attribute -> materialize -> use-claimed-position ->
-// place -> register Snapshot pipeline alike. That pipeline (0.9.151
-// through 0.9.172) is, by its own design, a MANUAL/RECOVERY counterpart
-// to `application/AutomaticSnapshotEncounterCascade.js`'s own background
-// cascade (0.9.187) — a person reaches for it precisely when they suspect
-// the automatic path failed, not during ordinary exploration. Carrying it
-// permanently on the primary screen made every viewer of "My Publication"
-// see infrastructure/recovery vocabulary (contentHash, resolution
-// outcome, world position claim, runtime registration) they normally
-// never need. This milestone reorganizes ONLY where that pipeline
-// renders:
-//
-//   click "Diagnostic Tools"
-//           │
-//           ▼
-//   diagnosticToolsOpen = true   (NEW, above — a plain boolean, nothing
-//                                  else)
-//           │
-//           ▼
-//   the EXACT SAME discover/select/resolve/attribute/materialize/
-//   use-claimed-position/place/register markup (0.9.151-0.9.172,
-//   byte-for-byte unmoved in the methods/data below this line) now
-//   renders inside a `.modal-overlay`/`.modal-panel` popup instead of
-//   inline on the primary screen
-//
-// A PRESENTATION GROUPING, NEVER A NEW DIAGNOSTIC SUBSYSTEM. No command
-// prop, data field, method, disabled binding, or result/error rendering
-// changed for a single one of the moved actions — every `v-if`,
-// `:disabled`, `@click`, and result `<dl>` in the pipeline is IDENTICAL
-// text to what 0.9.151-0.9.172 already wrote, merely indented one level
-// deeper inside the new overlay. This file still discovers nothing,
-// resolves nothing, materializes nothing, places nothing, and registers
-// nothing itself — `discoverSnapshotCandidates()`/`resolveSelectedSnapshot()`/
-// `attributeSelectedSnapshot()`/`materializeSelectedSnapshot()`/
-// `useClaimedSnapshotPosition()`/`placeMaterializedSnapshot()`/
-// `registerMaterializedSnapshot()` are untouched, calling the exact same
-// injected commands they always have.
-//
-// `diagnosticToolsOpen` HAS EXACTLY ONE JOB: showing or hiding the popup.
-// It is never read by, and never written from, any pipeline method; no
-// existing reset site (the `publication` watcher, candidate reselection,
-// a fresh resolve/materialize attempt) touches it, and it never resets any
-// of them. Closing the popup and reopening it (or switching Publications
-// while it stays open) shows whatever `snapshotCandidateDiscoveryResult`/
-// `selectedSnapshotCandidate`/`selectedSnapshotResolutionResult`/etc.
-// already held — identical to what a person would have seen had the
-// markup never moved.
-//
-// "CHECK SNAPSHOT MATCH," "DISTRIBUTE SNAPSHOT," "EXPORT SNAPSHOT," AND
-// "UNPUBLISH" STAY ON THE PRIMARY SCREEN, DELIBERATELY. These four answer
-// ordinary lifecycle questions over the ACTIVE Publication itself
-// ("publish it," "does my own distribution resolve," "hand me my own
-// bytes," "retract it") — none of them is a multi-stage manual recovery
-// path over a BROWSED, otherwise-automatic candidate, so none of them
-// moves. Reorganizing them into "Diagnostic Tools" merely for symmetry
-// with the Snapshot pipeline was considered and rejected — see this
-// milestone's own product brief, "don't create artificial categories
-// merely so [sections] look symmetrical." No Place Naming section exists
-// in this popup for the identical reason: this codebase's Place Naming
-// surfaces (`ui/components/PlaceNamingPanel.js`'s own Publish/Export/
-// Import actions; World View's own automatic "Nearby Place Names"
-// discovery, driven by `PlaceNamingDiscoveryMonitor`) have no
-// manually-triggered, multi-stage recovery pipeline analogous to this
-// one — Place Naming discovery runs automatically with no manual
-// counterpart to relocate, and Publish/Export/Import are Place Naming's
-// own ordinary, always-needed workflow, not exceptional troubleshooting.
-//
-// GATED ON THE SAME THREE COMMAND PROPS THE PIPELINE'S OWN BUTTONS
-// ALREADY EACH GATE ON. The "Diagnostic Tools" trigger renders only when
-// `discoverSnapshotCandidatesCommand`, `resolveSelectedSnapshotCommand`,
-// or `materializeSelectedSnapshotCommand` is supplied — mirroring, never
-// replacing, each button's own existing `v-if`. A host that supplies
-// none of the three sees no trigger and no popup, exactly as it saw no
-// pipeline buttons before this milestone.
-//
-// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
-// - **Any new application command, use case, or orchestration.** Every
-//   arrow in the pipeline diagram above already existed; this milestone
-//   adds one boolean and one popup wrapper.
-// - **Diagnostics logging, telemetry, or a diagnostic history.** Opening
-//   or closing the popup produces no record of any kind.
-// - **Retry, new recovery actions, or any change to what a button does.**
-// - **Any change to automatic discovery or `AutomaticSnapshotEncounterCascade.js`.**
-//   Both remain byte-for-byte as their own prior milestones left them.
-// - **A generic `DiagnosticService`, a second "diagnostic mode," or any
-//   application-layer concept of "diagnostic."** "Diagnostic Tools" is a
-//   name for a popup in this file alone.
-//
-// 0.9.347 — Post-Publish Distribution Entry Point.
-//
-// 0.9.346's own audit named the exact gap: `WorldEncounterCanvas.js`'s
-// "Distribute Publication" action is reachable ONLY when
-// `this.selectedEncounter && this.selectedEncounter.kind === 'PUBLICATION'`
-// — i.e. only by navigating World View and selecting a marker — while
-// this panel's own "Distribute Snapshot" (0.9.140) has needed no such
-// selection for 200+ milestones. That audit's own header already named
-// this panel as never having grown a "Distribute Publication" action of
-// its own. This gives it exactly that, mirroring `distributeOwnSnapshot()`
-// (0.9.140) byte-for-byte, one action over:
-//
-//   publication   (unchanged prop, ★ above)
-//           │
-//           │ click "Distribute Publication"
-//           ▼
-//   distributeOwnPublication()   (THIS FILE, NEW)
-//           │
-//           ▼
-//   publicationDistributionCommand(publication, distributionDiscoveryProvider)
-//                                    (injected — the SAME `(publication,
-//                                    discoveryProvider) -> Promise<Publication
-//                                    DistributionResult | null>` function
-//                                    `ui/views/WorldView.js`'s own
-//                                    `distributeWorldEncounterPublication()`
-//                                    already is — the EXACT wrapper
-//                                    `WorldEncounterCanvas`'s own
-//                                    `distributionCommand` prop already
-//                                    binds to, reused here unmodified)
-//           │
-//           ▼
-//   publicationDistributionResult | rejection
-//
-// AMENDED BY 0.9.668 — Bug fix. `publicationDiscoveryProvider` joined
-// `publication` as a new, optional second argument on this SAME call —
-// still exactly one `distributeOwnPublication()`, never a second command.
-// Before this fix, this call site forwarded `publication` alone, which
-// `distributeWorldEncounterPublication()` reads as "no discoveryProvider" —
-// always Nostr — regardless of what a Wanderer had saved via
-// /settings/announcement-discovery-provider. See this file's own props
-// header, "defaultDiscoveryDistributionProvider," and the new
-// Announcement/Discovery substrate `<select>` in the template below,
-// mirroring `WorldEncounterCanvas.js`'s own identical `<select>` (0.9.430)
-// exactly, one host component over.
-//
-// NO NEW COMMAND, NO NEW SEQUENCER, NO SELECTEDENCOUNTER OF ANY KIND. This
-// component never imports `application/PublicationDistributionExecutor.js`,
-// never constructs an Arweave uploader or a Nostr discovery publisher, and
-// never reads a `WorldEncounter`/`selectedEncounter` — the entire point of
-// this milestone is freeing "Distribute Publication" from that gate the
-// identical way 0.9.140 already freed "Distribute Snapshot" from it, not
-// building a second implementation of the capability. `WorldEncounterCanvas.js`
-// is untouched by this milestone — its own "Distribute Publication" action,
-// reachable through a selected marker, keeps working exactly as before;
-// this is a second, independent entry point over the SAME injected command,
-// never a replacement.
-//
-// MIRRORS `distributeOwnSnapshot()` EXACTLY: A DEDICATED, RESULT-STORING
-// EPHEMERAL FAMILY. `publicationDistributionExecuting`/
-// `publicationDistributionError`/`publicationDistributionResult`/
-// `publicationDistributionRequestId` never share state with the Snapshot
-// family's own identically-shaped fields — distributing a Publication
-// record and distributing a Snapshot are two different operations over
-// two different substrates (see `application/PublicationDistributionExecutor.js`'s
-// own header vs. `application/SnapshotDistributionCommand.js`'s own,
-// "no coupling"), and this panel already holds that line for every other
-// sibling pair it owns. Unlike `WorldEncounterCanvas.js`'s own
-// `distributeSelectedPublication()` (which stores no result of its own,
-// relying entirely on `distributionLifecycleStore`'s separate subscription
-// — see that file's own header, "execution is ephemeral UI state — never
-// a third lifecycle value"), this panel stores and renders the resolved
-// `PublicationDistributionResult` directly, the identical convention
-// `distributeOwnSnapshot()` already holds for its own result — this panel
-// has no `distributionLifecycleStore` subscription of any kind to lean on
-// instead.
-//
-// RESET EXACTLY WHERE THE SNAPSHOT DISTRIBUTION FAMILY ALREADY IS — the
-// `publication` watcher and `beforeUnmount()` clear/bump this family's own
-// four fields at the identical sites, for the identical lifecycle-safety
-// reason, one action over.
-//
-// STAYS ON THE PRIMARY SCREEN, NEVER MOVED INTO "DIAGNOSTIC TOOLS." See
-// this file's own header, "'Check Snapshot Match,' 'Distribute Snapshot,'
-// 'Export Snapshot,' and 'Unpublish' stay on the primary screen,
-// deliberately" — Distribute Publication answers the identical kind of
-// ordinary, single-click lifecycle question over the ACTIVE Publication,
-// not a multi-stage manual recovery path over a browsed candidate.
-//
-// GATED THE IDENTICAL WAY EVERY SIBLING ACTION IN THIS FILE ALREADY IS:
-// the button only renders when a caller supplied `publicationDistributionCommand`
-// at all, and is disabled whenever there is no `publication` or a call is
-// already in flight — no second, UI-only readiness rule.
-//
-// DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
-// - **Remote IPFS pinning, Bitcoin anchoring, or Base anchoring.** 0.9.346's
-//   own verdict named both as carrying genuine external prerequisites (a
-//   hosted pinning account; a connected, funded wallet) and explicitly
-//   recommended they stay exactly where they already are — in
-//   `ui/views/DecentralizedPublicationsView.js`'s own Publication Center —
-//   rather than being promoted to a one-click post-publish surface before
-//   a person is ready for them. Neither is referenced anywhere in this
-//   milestone.
-// - **A generic `distributePublication(publication, targets)` API, a
-//   "Distribute to…" menu abstraction, an aggregate distribution status,
-//   a distribution queue, or a retry scheduler.** Each distribution family
-//   in this codebase stays its own independent action over its own
-//   collaborator, exactly as 0.9.346's own Section E already confirmed at
-//   the code level — this milestone adds one more independent button,
-//   never a unifying abstraction over the buttons that already exist.
-// - **Automatic invocation of any kind.** Publishing a Repository still
-//   produces nothing but a toast on both surfaces
-//   (`Toolbar.js#publish()`/`WorldView.js#publishActiveDocument()`,
-//   unmodified) — this milestone only makes an already-existing capability
-//   reachable with one more click than before, never zero.
-// - **Any change to `PublishDocumentUseCase.js`, `UnpublishDocumentUseCase.js`,
-//   or either publish-success toast handler.** The local-first invariant
-//   0.9.346's own Section D already proved — a local publish succeeds with
-//   zero distribution collaborator ever constructed — holds unmodified: a
-//   Publication is fully valid whether or not this button is ever clicked,
-//   and a distribution failure never turns a successful local Publication
-//   into a failed one.
+// Actions on the local user's own current Publication in World View:
+// distribute it and its Snapshot, export the Snapshot, place or unpublish it,
+// list its placements, and read and write its Commentary. Also hosts the
+// manual Snapshot diagnostic pipeline.
+//
+// Needs no peer, World Encounter or selection: the `publication` prop comes
+// from the host view, so a solo user can still distribute their own work.
+// Every capability is an injected, app-wide command (the same ones
+// WorldEncounterCanvas uses); this component builds no commands of its own. An
+// absent (null) command hides its feature.
+//
+// Every action is an explicit click, never automatic, and keeps its own
+// executing/error/result state. Async actions use a request id so duplicate
+// and stale responses are dropped; changing `publication` (and unmounting)
+// resets everything.
+//
+// Diagnostic pipeline (manual counterpart of AutomaticSnapshotEncounterCascade,
+// for walking the stages by hand when the automatic path fails):
+// discover candidates -> select -> resolve -> attribute / materialize ->
+// use claimed position -> place -> register in the World runtime. Each stage
+// reads only the previous stage's result (resolution uses the candidate
+// object, attribution and materialization use the resolver's verified result,
+// never the candidate's self-declared hash), and clearing a result clears
+// everything computed from it. Candidates and lists are shown verbatim, with no
+// ranking, dedup or "trusted" label. Attribution is identity correspondence
+// between hashes, never authorship.
+//
+// Commentary and placements are loaded on mount and on publication change,
+// never polled. A failed read keeps the current list and only sets the error,
+// so "none" and "failed" stay distinguishable. Authorship is never supplied by
+// the UI.
 
-// AMENDED BY 0.9.671 — Publication Distribution Result Shape Fix.
-// `publicationDistributionCommand` is `distributeWorldEncounterPublication()`
-// (`ui/views/WorldView.js`, unmodified) — and, per THAT function's own
-// 0.9.450 header, it resolves a BARE `PublicationDistributionResult` only
-// when `discoveryProvider === 'arweave'`; every other choice (`'nostr'`,
-// this panel's own default — see `distributionDiscoveryProvider`'s own
-// initializer, below) resolves an ARRAY instead (one element per
-// configured relay), calling `multiRelayNostrPublicationDistributionCommand()`
-// under the hood. `distributeOwnPublication()` stored that resolved value
-// directly, and the template read `publicationDistributionResult.publication.objectId`
-// straight off it — correct for the bare-object 'arweave' case, but
-// `[].publication` is `undefined` for the array case, so a genuinely
-// successful Nostr-substrate distribution (this panel's own default
-// substrate) crashed Vue's render the instant it resolved, exactly the
-// gap `ui/views/EditorView.js`'s own `normalizeDistributionResultForDisplay()`
-// (0.9.526) already closed once for its sibling "Distribute now" action,
-// one caller over — this is that identical fix, reused here verbatim,
-// never a new normalization convention of its own. See EditorView.js's
-// own 0.9.526 header for why wrapping (never unwrapping) is the right
-// direction: a one-element array already matches the arweave-path shape
-// (`arr[0]`) that the template's own indexing/`v-for` below already
-// expects for the nostr path.
+// The Nostr path resolves an array (one per relay) and Arweave a single
+// result; normalize to an array, as EditorView does.
 function normalizeDistributionResultForDisplay(result) {
     if (Array.isArray(result)) {
         return result;
@@ -1492,251 +55,109 @@ export default {
     name: 'OwnPublicationPanel',
     components: { WorldDistributionDialog, PublicationCommentaryRemoteCheck },
     props: {
-        // The local user's own current Publication (`publisher/
-        // Publication.js`), or `null` when the currently active document
-        // has never been published. Supplied by the host view — this
-        // component never resolves it itself.
+        // Supplied by the host view; null when the active document is unpublished.
         publication: {
             type: Object,
             default: null
         },
-        // 0.9.198 — optional. A `(publication) -> boolean` function, or
-        // `null` when the capability is unavailable — see this file's
-        // own header, "0.9.198 — Publication Unpublish/Retract UI
-        // Action." Synchronous, unlike every OTHER command prop in this
-        // file: `UnpublishDocumentUseCase` performs no network I/O, so
-        // there is nothing to await. Called with the whole `publication`
-        // object, exactly like `snapshotDistributionCommand` above,
-        // never a bare id.
+        // `(publication) -> boolean`. Synchronous: unpublishing does no network I/O.
         unpublishCommand: {
             type: Function,
             default: null
         },
-        // `(publication, storage) -> Promise<{ contentReference,
-        // announcement }>`, or `null` when the capability is unavailable
-        // — the identical shape/default `WorldEncounterCanvas`'s own
-        // `snapshotDistributionCommand` prop already uses.
+        // `(publication, storage) -> Promise<{ contentReference, announcement }>`.
         snapshotDistributionCommand: {
             type: Function,
             default: null
         },
-        // Bug fix — the eligible-and-currently-registered Snapshot
-        // Distribution content backends ('ipfs'/'ar'), the SAME plain
-        // array `ui/views/WorldView.js` already reads once from the
-        // app-wide `snapshotDistributionAvailableStorageTypes` command —
-        // see that file's own injection comment. Never recomputed here;
-        // this component only renders whatever it was handed. Empty
-        // (the default) means no picker renders at all — distributeOwnSnapshot()
-        // then falls back to 'ar', the historical, silent default.
+        // Registered Snapshot distribution backends ('ipfs'/'ar'). Empty means no
+        // picker, and distributeOwnSnapshot() uses 'ar'.
         snapshotDistributionStorageTypes: {
             type: Array,
             default: () => []
         },
-        // 0.9.667 — Role Provider Preference As Dropdown Default. This
-        // replica's own resolved CONTENT preference, ui/main.js's own
-        // `defaultContentDistributionProvider`, forwarded through
-        // ui/views/WorldView.js exactly like `snapshotDistributionStorageTypes`
-        // immediately above already is. Read only to seed
-        // `distributionStorage`'s own initial choice, below — see
-        // application/SavedProviderDefaultChoice.js's own header.
+        // Seeds distributionStorage's initial choice only.
         defaultContentDistributionProvider: {
             type: String,
             default: null
         },
-        // Bug fix — this replica's own resolved ANNOUNCEMENT_AND_DISCOVERY
-        // preference, ui/main.js's own `defaultAnnouncementDiscoveryProvider`,
-        // forwarded through ui/views/WorldView.js exactly like
-        // `defaultContentDistributionProvider` immediately above already
-        // is, and the SAME prop `WorldEncounterCanvas`'s own
-        // `defaultDiscoveryDistributionProvider` (0.9.667) already reads
-        // for the identical "Distribute Publication" action. Read only to
-        // seed `distributionDiscoveryProvider`'s own initial value, below
-        // — never re-read afterward, and never used to override a choice
-        // already made on this component. Before this fix, this panel's
-        // own "Distribute Publication" button had no such prop at all and
-        // always distributed via Nostr, regardless of what a Wanderer had
-        // saved via /settings/announcement-discovery-provider.
-        //
-        // That one field is now shared by "Distribute Snapshot" too — see
-        // WorldDistributionDialog.js's own header, "ONE SHARED SETTINGS
-        // BLOCK FOR BOTH PROTOCOLS."
+        // The saved Announcement/Discovery preference; seeds the shared substrate
+        // choice once and never overrides a pick.
         defaultDiscoveryDistributionProvider: {
             type: String,
             default: 'nostr'
         },
-        // 0.9.347 — optional. A `(publication) -> Promise<Publication
-        // DistributionResult | null>` function, or `null` when the
-        // capability is unavailable — see this file's own header,
-        // "0.9.347 — Post-Publish Distribution Entry Point." The SAME
-        // shape `WorldEncounterCanvas`'s own `distributionCommand` prop
-        // already uses; this component forwards the whole `publication`
-        // object, unread, exactly like `snapshotDistributionCommand`
-        // above.
+        // `(publication) -> Promise<PublicationDistributionResult | null>`.
         publicationDistributionCommand: {
             type: Function,
             default: null
         },
-        // 0.9.142 — optional. A `(publication) -> Promise<{ outcome,
-        // bytes, candidates, locator, storage, reason }>` function, or
-        // `null` when the capability is unavailable — see this file's
-        // own header, "0.9.142 — World View Snapshot Discovery Command."
+        // `(publication) -> Promise<{ outcome, bytes, candidates, locator, storage, reason }>`.
         discoverSnapshotCommand: {
             type: Function,
             default: null
         },
-        // 0.9.215 — optional. A `(publication) -> Promise<Publication
-        // SnapshotTransferPackage>` function, or `null` when the
-        // capability is unavailable — see this file's own header,
-        // "0.9.215 — Snapshot Export Capability Integration." Mirrors
-        // `snapshotDistributionCommand`/`discoverSnapshotCommand` exactly:
-        // this component forwards the whole `publication` object,
-        // unread, to whatever wrapper the host view bound here
-        // (`ui/views/WorldView.js`'s own `exportOwnSnapshot()`, which
-        // resolves `publication.id` before calling the app-wide
-        // `exportSnapshotCommand`).
+        // `(publication) -> Promise<PublicationSnapshotTransferPackage>`.
         exportSnapshotCommand: {
             type: Function,
             default: null
         },
-        // 0.9.151 — optional. A `() -> Promise<[{ contentHash, locator,
-        // storage }, ...]>` function, or `null` when the capability is
-        // unavailable — see this file's own header, "0.9.151 — World
-        // View Snapshot Candidate Browser." Unlike `discoverSnapshotCommand`,
-        // this function takes no argument — it is not "which Publication."
+        // `() -> Promise<candidate[]>`; takes no publication.
         discoverSnapshotCandidatesCommand: {
             type: Function,
             default: null
         },
-        // 0.9.589 — optional. A `() -> Promise<{ outcome, candidates }>`
-        // function, or `null` when unavailable — see this file's own
-        // header, "0.9.589 — Distinguish Snapshot Discovery Absence from
-        // Discovery Failure." A SIBLING of `discoverSnapshotCandidatesCommand`
-        // above, never a replacement: when supplied, `discoverSnapshotCandidates()`
-        // (below) calls this instead, so it can render the honest
-        // `snapshotCandidateDiscoveryOutcome === 'unavailable'` case
-        // rather than always claiming "no Snapshots have been announced."
-        // A host that supplies only the legacy `discoverSnapshotCandidatesCommand`
-        // keeps the exact pre-0.9.589 behavior — see `discoverSnapshotCandidates()`.
+        // `() -> Promise<{ outcome, candidates }>`. Preferred when supplied, so an
+        // unavailable search is not reported as "nothing announced".
         discoverSnapshotCandidatesWithOutcomeCommand: {
             type: Function,
             default: null
         },
-        // 0.9.152 — optional. A `(candidate) -> Promise<{ outcome, bytes,
-        // candidates, locator, storage, reason }>` function, or `null`
-        // when the capability is unavailable — see this file's own
-        // header, "0.9.152 — Selected Snapshot Candidate Resolution."
-        // Takes the SELECTED CANDIDATE OBJECT itself, never a bare
-        // contentHash — see that header for why the two are not
-        // interchangeable.
+        // `(candidate) -> Promise<resolution>`; takes the candidate object, never a bare
+        // contentHash.
         resolveSelectedSnapshotCommand: {
             type: Function,
             default: null
         },
-        // 0.9.158 — optional. A `(resolution) -> Promise<{ outcome,
-        // contentHash, contentReference, reason, source }>` function, or
-        // `null` when the capability is unavailable — see this file's own
-        // header, "0.9.158 — Selected Snapshot Materialization." Takes the
-        // ALREADY-COMPUTED `selectedSnapshotResolutionResult` itself,
-        // never the selected candidate object and never a bare
-        // contentHash — see that header for why materialization must
-        // consume an already-verified resolution result.
+        // `(resolution) -> Promise<materialization>`; takes the verified resolution
+        // result.
         materializeSelectedSnapshotCommand: {
             type: Function,
             default: null
         },
-        // 0.9.159 — optional. `WorldNavigationSession#getPlacementInfo()`'s
-        // own already-computed `{ placementId, publicationId, position:
-        // {x,y,z}, rotation, revision, owner, movable, overlapCount }`, or
-        // `null` when the active document's own Publication has never been
-        // placed anywhere in the World — see this file's own header,
-        // "0.9.159 — Selected Snapshot World Placement." A plain DATA prop,
-        // never an injected command — this component never queries a
-        // PlacementRegistry or spatial index itself.
+        // The active document's single placement, or null. A data prop.
         placementInfo: {
             type: Object,
             default: null
         },
-        // 0.9.160 — optional. The SAME app-wide `application/
-        // WorldDiscoverySourceRegistry.js` (0.9.9) instance
-        // `ui/views/WorldView.js` already injects and hands to
-        // `WorldEncounterCanvas` as its own `registry` prop — see this
-        // file's own header, "0.9.160 — Selected Snapshot World Runtime
-        // Registration." A plain collaborator prop, never a command
-        // function — this component calls its `setSource()` method
-        // directly, through `registerMaterializedSnapshotWorldSource()`,
-        // rather than being handed a pre-composed capability.
+        // The app-wide WorldDiscoverySourceRegistry (a collaborator, not a command).
         worldDiscoverySourceRegistry: {
             type: Object,
             default: null
         },
-        // 0.9.248 — Publication Commentary UI Integration. See this
-        // file's own header, "0.9.248." A `(publicationId) ->
-        // PublicationCommentary[]` function, or `null` when the
-        // capability is unavailable — mirrors every other optional
-        // command prop in this file (`null` default, feature hidden
-        // when absent). Unlike the Promise-returning Distribute/
-        // Discover/Export commands above, this one is SYNCHRONOUS —
-        // GetPublicationCommentariesUseCase performs no network I/O —
-        // so this component awaits nothing and shows no "loading"
-        // state for it.
+        // `(publicationId) -> PublicationCommentary[]`. Synchronous.
         getPublicationCommentariesCommand: {
             type: Function,
             default: null
         },
-        // 0.9.248 — a `({ publicationId, content }) -> { commentary,
-        // isNew }` function, or `null` when the capability is
-        // unavailable. Also synchronous. Deliberately takes ONLY
-        // `publicationId`/`content` — never `authorIdentityId` — see
-        // this file's own header for why the UI cannot even attempt to
-        // supply one.
+        // `({ publicationId, content }) -> { commentary, isNew }`. Synchronous. Never
+        // takes an author: the use case resolves it.
         addPublicationCommentaryCommand: {
             type: Function,
             default: null
         },
-        // 0.9.248 — the CURRENT viewer's own identityId, or `null` when
-        // nobody is signed in. The SAME already-computed session fact
-        // `ui/views/WorldView.js`'s own `myIdentityId` already exposes
-        // elsewhere (`session.getMyIdentityId()`) — this component reads
-        // it only to decide whether to show the compose form or a
-        // sign-in hint; it never derives, resolves, or authenticates an
-        // identity itself, and never sends this value to
-        // addPublicationCommentaryCommand (the use case resolves the
-        // real author on its own — see this file's own header, "the
-        // application use case remains authoritative").
+        // Only decides whether to show the compose form or a sign-in hint.
         viewerIdentityId: {
             type: String,
             default: null
         },
-        // 0.9.308 — Publication Multi-Placement Visibility. A
-        // `(publicationId) -> PlacementInfo[]` function, or `null` when
-        // the capability is unavailable — see this file's own header,
-        // "0.9.308." Mirrors `getPublicationCommentariesCommand` exactly:
-        // synchronous (WorldNavigationSession.getPlacementsForPublication()
-        // performs no network I/O), `null`-default, feature hidden when
-        // absent. Deliberately takes `publicationId`, never the
-        // `placementInfo` prop above — that prop is the SINGULAR,
-        // already-reduced placement for the ACTIVE document; this
-        // command answers a different question, "every placement this
-        // Publication has," and must be invoked fresh, never assembled
-        // by filtering/deriving from `placementInfo`.
+        // `(publicationId) -> PlacementInfo[]`: every placement of the Publication,
+        // called fresh, never derived from `placementInfo`.
         getPublicationPlacementsCommand: {
             type: Function,
             default: null
         },
-        // 0.9.600 — Publication First-Placement Action Wiring Fix. A
-        // `(publication) -> WorldPlacement` function, or `null` when the
-        // capability is unavailable — mirrors `unpublishCommand` exactly:
-        // synchronous (WorldNavigationSession.placePublication() performs
-        // no network I/O), `null`-default, feature hidden when absent,
-        // forwards the WHOLE `publication` object, unread, exactly like
-        // `unpublishCommand`/`snapshotDistributionCommand` above — this
-        // component never resolves a position or a publicationId itself.
-        // Rendered beside the EXISTING, already publicationId-keyed
-        // `.own-publication-placements` listing (see this file's own
-        // `getPublicationPlacementsCommand` immediately above) — never a
-        // new panel or a new surface (see tests/
-        // FirstPublicationPlacementCapabilityBoundaryAudit.test.js,
-        // 0.9.599, Section G).
+        // `(publication) -> WorldPlacement`. Synchronous.
         placePublicationCommand: {
             type: Function,
             default: null
@@ -1744,238 +165,80 @@ export default {
     },
     data() {
         return {
-            // 0.9.324 — Diagnostic Tools Surface. Purely a "is the popup
-            // currently rendered" flag — see this file's own header,
-            // "0.9.324," and the trigger button's own comment below. Never
-            // read by, and never resets, any Snapshot pipeline field —
-            // toggling it changes visibility only, never behavior.
+            // Visibility only; never touches pipeline state.
             diagnosticToolsOpen: false,
             snapshotDistributionExecuting: false,
             snapshotDistributionError: null,
             snapshotDistributionResult: null,
             snapshotDistributionRequestId: 0,
-            // One shared Storage/Announcement choice for BOTH "Distribute
-            // Publication" and "Distribute Snapshot" (and the combined
-            // action) — page-local UI state only. The two actions used to
-            // carry separate, always-identically-seeded pickers; see
-            // WorldDistributionDialog.js's own header, "ONE SHARED
-            // SETTINGS BLOCK FOR BOTH PROTOCOLS." Opens on the injected
-            // `defaultDiscoveryDistributionProvider` prop, mirroring
-            // `WorldEncounterCanvas.js`'s own identical field exactly.
+            // One substrate choice shared by both distribution actions. Page-local.
             distributionDiscoveryProvider: this.defaultDiscoveryDistributionProvider || 'nostr',
-            // Backs the distributionStorage computed below. `null` until a
-            // Wanderer explicitly picks a storage from the picker; the
-            // computed's own getter supplies the default until then.
+            // null until a storage is picked; the computed supplies the default.
             distributionStorageChoice: null,
-            // The Remote Pinning (e.g. Pinata) endpoint/credential draft,
-            // shown only when distributionStorage === 'remote-pinning',
-            // shared by both actions. A plain object, never a class
-            // instance — this component still imports no application/
-            // class of its own. Never persisted anywhere; discarded on
-            // reload like every other ephemeral field in this file.
+            // Shared by both actions; never persisted.
             remotePinningDraft: { endpoint: '', credential: '', requestField: '', responseField: '' },
-            // 0.9.347 — see this file's own header, "0.9.347 — Post-Publish
-            // Distribution Entry Point." A separate ephemeral state, never
-            // shared with the Snapshot distribution family's own —
-            // mirrors `snapshotDistributionExecuting`/`snapshotDistributionError`/
-            // `snapshotDistributionResult`/`snapshotDistributionRequestId`
-            // exactly, one action over.
             publicationDistributionExecuting: false,
             publicationDistributionError: null,
             publicationDistributionResult: null,
             publicationDistributionRequestId: 0,
-            // 0.9.672 — World View Distribution Dialog. Purely a "is the
-            // popup currently open" flag, mirroring this file's own
-            // pre-existing `diagnosticToolsOpen` exactly — see
-            // WorldDistributionDialog.js's own header. Never read by, and
-            // never written from, either distribution action itself.
             distributionDialogOpen: false,
             snapshotDiscoveryExecuting: false,
             snapshotDiscoveryError: null,
             snapshotDiscoveryResult: null,
             snapshotDiscoveryRequestId: 0,
-            // 0.9.215 — see this file's own header, "0.9.215 — Snapshot
-            // Export Capability Integration." A separate ephemeral state,
-            // never shared with distribution's or discovery's own —
-            // mirrors `snapshotDistributionExecuting`/
-            // `snapshotDistributionError`/`snapshotDistributionResult`/
-            // `snapshotDistributionRequestId` exactly, one action over.
             snapshotExportExecuting: false,
             snapshotExportError: null,
             snapshotExportResult: null,
             snapshotExportRequestId: 0,
-            // 0.9.144 — see this file's own header, "a separate field,
-            // never a replacement of snapshotDiscoveryResult." `null` until
-            // a discovery call resolves; never written by anything but
-            // `discoverOwnSnapshot()`, below.
             snapshotAttributionResult: null,
-            // 0.9.151 — see this file's own header, "a separate ephemeral
-            // state, never shared with discovery's or distribution's own."
             snapshotCandidateDiscoveryExecuting: false,
             snapshotCandidateDiscoveryError: null,
-            // `null` until a candidate discovery call resolves; `[]` is a
-            // legitimate, distinct result (zero candidates announced), not
-            // an error — see `discoverSnapshotCandidates()`, below.
+            // [] (nothing announced) is a real result, distinct from null (not run).
             snapshotCandidateDiscoveryResult: null,
             snapshotCandidateDiscoveryRequestId: 0,
-            // 0.9.589 — `null` until a candidate discovery call resolves
-            // THROUGH `discoverSnapshotCandidatesWithOutcomeCommand`;
-            // stays `null` forever when only the legacy
-            // `discoverSnapshotCandidatesCommand` was supplied — see this
-            // file's own header, "0.9.589." One of
-            // `SnapshotCandidateDiscoveryOutcome`'s own `found`/`empty`/
-            // `unavailable` values — never written by anything but
-            // `discoverSnapshotCandidates()`, below.
+            // found/empty/unavailable; stays null with the legacy command.
             snapshotCandidateDiscoveryOutcome: null,
-            // `null` until the user clicks a candidate row — see this
-            // file's own header, "selection is deliberately boring."
             selectedSnapshotCandidate: null,
-            // 0.9.152 — see this file's own header, "a separate ephemeral
-            // state, never shared with any other family in this file."
             selectedSnapshotResolutionExecuting: false,
             selectedSnapshotResolutionError: null,
-            // `null` until a selected-candidate resolution call resolves;
-            // never written by anything but `resolveSelectedSnapshot()`,
-            // below.
             selectedSnapshotResolutionResult: null,
             selectedSnapshotResolutionRequestId: 0,
-            // 0.9.154 — see this file's own header, "a separate field,
-            // never snapshotAttributionResult." `null` until
-            // attributeSelectedSnapshot() is explicitly clicked; never
-            // written by anything else.
             selectedSnapshotAttributionResult: null,
-            // 0.9.158 — see this file's own header, "0.9.158 — Selected
-            // Snapshot Materialization." A separate ephemeral family, never
-            // shared with `selectedSnapshotAttributionResult`'s own —
-            // materialization and attribution are two independent siblings
-            // over the SAME `selectedSnapshotResolutionResult`, never a
-            // sequence. `null` until materializeSelectedSnapshot() is
-            // explicitly clicked; never written by anything else.
             selectedSnapshotMaterializationExecuting: false,
             selectedSnapshotMaterializationError: null,
             selectedSnapshotMaterializationResult: null,
             selectedSnapshotMaterializationRequestId: 0,
-            // 0.9.159 — see this file's own header, "0.9.159 — Selected
-            // Snapshot World Placement." A separate ephemeral field, never
-            // shared with `selectedSnapshotAttributionResult`'s own — an
-            // independent sibling of both attribution and materialization,
-            // never a sequel to either. `null` until placeMaterializedSnapshot()
-            // is explicitly clicked; never written by anything else. No
-            // executing/error state of its own — see this file's own
-            // header, "synchronous."
             selectedSnapshotWorldPlacementResult: null,
-            // 0.9.160 — see this file's own header, "0.9.160 — Selected
-            // Snapshot World Runtime Registration." A separate ephemeral
-            // field, never shared with `selectedSnapshotWorldPlacementResult`
-            // itself — an independent sibling, never a sequel. `null`
-            // until registerMaterializedSnapshot() is explicitly clicked;
-            // never written by anything else. No executing/error state of
-            // its own — see this file's own header, "synchronous."
             selectedSnapshotWorldRegistrationResult: null,
-            // 0.9.172 — see this file's own header, "0.9.172 — Decentralized
-            // Snapshot Position Claim Consumption." A separate ephemeral
-            // field, never shared with `selectedSnapshotWorldPlacementResult`
-            // itself. `null` until `useClaimedSnapshotPosition()` is
-            // explicitly clicked; never written by anything else. No
-            // executing/error state of its own — see this file's own
-            // header, "synchronous."
             selectedSnapshotWorldPositionClaimResult: null,
-            // 0.9.248 — Publication Commentary UI Integration. The four
-            // fields named in this milestone's own brief, kept ephemeral
-            // and local to this panel — see this file's own header. Never
-            // written by anything but refreshPublicationCommentaries()/
-            // submitPublicationCommentary(), below, and the publication
-            // watcher's own reset.
-            //
-            // `publicationCommentaries` — every PublicationCommentary
-            // GetPublicationCommentariesUseCase returned for the CURRENT
-            // publication, in the EXACT order it returned them (no sort
-            // of any kind performed here — see this file's own header,
-            // "preserve the returned order"). `[]` is a legitimate,
-            // distinct value (no commentary yet, or the capability is
-            // unavailable), never an error.
+            // In the order returned (never re-sorted); [] is a real result.
             publicationCommentaries: [],
-            // `newCommentaryText` — the compose textarea's own v-model
-            // target. Cleared only on a SUCCESSFUL submission; left
-            // exactly as typed after a failed one, so a rejected attempt
-            // never discards what the person wrote.
+            // Cleared only on success, so a failed submit never loses the text.
             newCommentaryText: '',
-            // `publicationCommentarySubmitting` — guards against a
-            // double-submit from a second click before the first
-            // synchronous call has updated this flag back to false. No
-            // separate "loading" flag for the read side: a synchronous
-            // getForPublication() read has nothing to show a spinner for.
+            // Guards against double-submit.
             publicationCommentarySubmitting: false,
-            // `publicationCommentaryError` — the most recent read OR
-            // write failure's message, or `null`. A FAILED refresh never
-            // clears `publicationCommentaries` itself (see
-            // refreshPublicationCommentaries() below) — this field is the
-            // only thing a failure ever changes, so previously-loaded
-            // commentary stays on screen instead of being replaced by an
-            // empty list.
+            // A failed refresh sets only this, keeping the displayed list.
             publicationCommentaryError: null,
-            // 0.9.542 — Publication Commentary Submission Experience
-            // Product Reassessment. Mirrors
-            // ui/components/PublicationCommentarySection.js's own
-            // `pendingCommentaryDraft` exactly — see that file's own
-            // submitCommentary() comment for the full rationale. `{ content, commentaryId, createdAt }` for the
-            // CURRENT in-progress compose attempt, or `null`; reused
-            // across a manual retry of byte-identical content so the
-            // store's own commentaryId-keyed idempotent retry actually
-            // engages, and reset by the publication watcher below exactly
-            // where `publicationCommentaries` already is.
+            // `{ content, commentaryId, createdAt }` of the current attempt. Retrying the
+            // same text reuses the id so the store's idempotent retry applies; editing
+            // mints a new one.
             pendingCommentaryDraft: null,
-            // 0.9.308 — Publication Multi-Placement Visibility. Mirrors
-            // `publicationCommentaries`/`publicationCommentaryError`'s own
-            // shape exactly, one capability over — see this file's own
-            // header. Never written by anything but
-            // refreshPublicationPlacements(), below, and the publication
-            // watcher's own reset.
-            //
-            // `publicationPlacements` — every placement
-            // getPublicationPlacementsCommand returned for the CURRENT
-            // publication, in the EXACT order it returned them (no sort,
-            // dedup, "latest," or ranking of any kind performed here —
-            // see this file's own header, "preserve multiplicity"). `[]`
-            // is a legitimate, distinct value (a genuinely unplaced
-            // Publication, or the capability is unavailable), never an
-            // error.
+            // PLACEMENT RECORDS, NEVER WORLD VISIBILITY OR OCCUPANCY: whether it has been
+            // placed, not whether anyone can see it or something occupies the spot. In
+            // the order returned, never sorted, deduplicated or reduced; [] is a real
+            // result.
             publicationPlacements: [],
-            // `publicationPlacementsError` — the most recent read
-            // failure's message, or `null`. A FAILED refresh never clears
-            // `publicationPlacements` itself (see
-            // refreshPublicationPlacements() below) — this field is the
-            // only thing a failure ever changes, so a previously-loaded
-            // placement list stays on screen instead of being replaced by
-            // an empty one, and so NO_PLACEMENTS (`publicationPlacements:
-            // []`, `publicationPlacementsError: null`) stays
-            // distinguishable from DISCOVERY_FAILED (`publicationPlacementsError`
-            // set) — see this file's own header, "the critical semantic
-            // question."
+            // NO_PLACEMENTS ≠ DISCOVERY_FAILED: a failed refresh sets only this, so []
+            // with no error stays distinct from a failed read.
             publicationPlacementsError: null
         };
     },
     computed: {
-        // The one Arweave/IPFS/Remote-Pinning choice the Distribution
-        // dialog's shared Storage picker shows, read by both
-        // distributeOwnPublication() (as its Material storage) and
-        // distributeOwnSnapshot() (as its Snapshot storage).
-        //
-        // When Snapshot distribution is available, the eligible list is
-        // the backends `snapshotDistributionStorageTypes` currently
-        // lists plus 'remote-pinning' (never registered in that
-        // registry — see content/IpfsRemotePinningContentStore.js's own
-        // header), since a choice the Snapshot leg cannot honor would
-        // only fail later; the fallback is that list's first entry, or
-        // 'ar'. Publication-only, all three Material storages are
-        // eligible — application/PublicationMaterialUploaderComposition.js
-        // can always construct any of them — falling back to 'ar'.
-        //
-        // 0.9.667 — this replica's own saved Content preference (the
-        // injected `defaultContentDistributionProvider` prop) wins over
-        // that fallback whenever it names an eligible backend — see
-        // application/SavedProviderDefaultChoice.js's own header. The
-        // Endpoint/Credential draft still opens empty either way.
+        // The shared Storage choice for both actions. With Snapshot distribution
+        // available the options are its registered backends plus 'remote-pinning'
+        // (which never has its own registry key), otherwise all three Material
+        // storages. The saved Content preference wins when eligible, then the first
+        // registered backend, then 'ar'.
         distributionStorage: {
             get() {
                 const eligible = this.snapshotDistributionCommand
@@ -1992,10 +255,8 @@ export default {
         }
     },
     watch: {
-        // A different Publication (or none at all) becoming current
-        // means any prior in-flight call, error, or result belongs to a
-        // Publication that is no longer this panel's own — mirrors
-        // WorldEncounterCanvas's own reset-on-fresh-selection exactly.
+        // A different Publication resets every family below: in-flight calls, errors
+        // and results all belonged to the previous one.
         publication(next, prev) {
             const nextId = next ? next.id : null;
             const prevId = prev ? prev.id : null;
@@ -2006,9 +267,6 @@ export default {
             this.snapshotDistributionError = null;
             this.snapshotDistributionResult = null;
             this.snapshotDistributionRequestId += 1;
-            // 0.9.347 — reset for the identical lifecycle-safety reason,
-            // one action over — see this file's own header, "reset
-            // exactly where the Snapshot distribution family already is."
             this.publicationDistributionExecuting = false;
             this.publicationDistributionError = null;
             this.publicationDistributionResult = null;
@@ -2018,134 +276,53 @@ export default {
             this.snapshotDiscoveryError = null;
             this.snapshotDiscoveryResult = null;
             this.snapshotDiscoveryRequestId += 1;
-            // 0.9.215 — reset for the identical lifecycle-safety reason,
-            // one action over — see this file's own header, "a separate
-            // ephemeral state... reset on the identical publication
-            // change."
             this.snapshotExportExecuting = false;
             this.snapshotExportError = null;
             this.snapshotExportResult = null;
             this.snapshotExportRequestId += 1;
-            // 0.9.144 — a different (or cleared) Publication invalidates
-            // any prior attribution verdict the same way it already
-            // invalidates the discovery result it was computed from.
             this.snapshotAttributionResult = null;
-            // 0.9.151 — reset for the identical lifecycle-safety reason,
-            // one operation over — see this file's own header, "a
-            // separate ephemeral state... reset on the identical
-            // publication change."
             this.snapshotCandidateDiscoveryExecuting = false;
             this.snapshotCandidateDiscoveryError = null;
             this.snapshotCandidateDiscoveryResult = null;
-            // 0.9.589 — reset for the identical lifecycle-safety reason,
-            // one field over: a prior outcome described a call for a
-            // Publication that is no longer this panel's own.
             this.snapshotCandidateDiscoveryOutcome = null;
             this.snapshotCandidateDiscoveryRequestId += 1;
             this.selectedSnapshotCandidate = null;
-            // 0.9.152 — reset for the identical lifecycle-safety reason,
-            // one operation over — see this file's own header, "a
-            // separate ephemeral state... reset on the identical
-            // publication change."
             this.selectedSnapshotResolutionExecuting = false;
             this.selectedSnapshotResolutionError = null;
             this.selectedSnapshotResolutionResult = null;
             this.selectedSnapshotResolutionRequestId += 1;
-            // 0.9.154 — a different (or cleared) Publication invalidates
-            // any prior selected-candidate attribution verdict the same
-            // way it already invalidates the resolution result it was
-            // computed from.
             this.selectedSnapshotAttributionResult = null;
-            // 0.9.158 — a different (or cleared) Publication invalidates
-            // any prior selected-candidate materialization result the
-            // identical way it already invalidates the resolution result
-            // it was computed from — see this file's own header, "a
-            // separate ephemeral family."
             this.selectedSnapshotMaterializationExecuting = false;
             this.selectedSnapshotMaterializationError = null;
             this.selectedSnapshotMaterializationResult = null;
             this.selectedSnapshotMaterializationRequestId += 1;
-            // 0.9.159 — a different (or cleared) Publication invalidates
-            // any prior selected-candidate World Placement result the
-            // identical way it already invalidates the materialization
-            // result it was computed from.
             this.selectedSnapshotWorldPlacementResult = null;
-            // 0.9.160 — the identical staleness rule, one sibling over: a
-            // prior World Runtime Registration result described the OLD
-            // placement result it was computed from.
             this.selectedSnapshotWorldRegistrationResult = null;
-            // 0.9.172 — a different (or cleared) Publication changes the
-            // identity check's own right-hand side
-            // (`resolveSnapshotWorldPositionClaim()`'s own `publicationId`
-            // argument) — any prior consumed claim was checked against the
-            // OLD Publication's own id.
             this.selectedSnapshotWorldPositionClaimResult = null;
-            // 0.9.248 — a different (or cleared) Publication means any
-            // prior commentary list, compose draft, in-flight submit
-            // guard, and error all belong to a Publication that is no
-            // longer this panel's own — the identical lifecycle-safety
-            // reason every OTHER family in this watcher already resets
-            // on. This is also the ONLY place a Publication SWITCH is
-            // handled: switching from P1 to P2 must never leave P1's
-            // commentary on screen (see tests/
-            // PublicationCommentaryUIIntegration.test.js, Section I).
             this.publicationCommentaries = [];
             this.newCommentaryText = '';
             this.publicationCommentarySubmitting = false;
             this.publicationCommentaryError = null;
-            // 0.9.542 — a different (or cleared) Publication invalidates
-            // any pending retry draft the identical way it already
-            // invalidates the draft text itself, above: a draft's
-            // reused commentaryId is only ever valid for retries against
-            // the SAME publicationId it was minted for.
             this.pendingCommentaryDraft = null;
-            // 0.9.308 — a different (or cleared) Publication means any
-            // prior placement list and error belong to a Publication
-            // that is no longer this panel's own — the identical
-            // lifecycle-safety reason every OTHER family in this watcher
-            // already resets on. Switching from P1 to P2 must never
-            // leave P1's placements on screen.
             this.publicationPlacements = [];
             this.publicationPlacementsError = null;
-            // Guarded the same way `guarded()`'s own `session.consumeForkNotice`
-            // check is in ui/views/WorldView.js — every OTHER sibling
-            // watcher/test in this codebase's own pre-0.9.248 suite calls
-            // this exact watcher directly via `OwnPublicationPanel.watch.publication.call(ctx, ...)`
-            // against a minimal ctx built for ITS OWN family alone, with
-            // no reason to know this milestone's method exists. A real
-            // Vue instance always has this method; only a hand-built test
-            // ctx from an unrelated milestone's own test file does not.
+            // Test contexts for other families call this watcher without these methods.
             if (typeof this.refreshPublicationCommentaries === 'function') {
                 this.refreshPublicationCommentaries();
             }
-            // 0.9.308 — the identical guard, one capability over, for the
-            // identical reason.
             if (typeof this.refreshPublicationPlacements === 'function') {
                 this.refreshPublicationPlacements();
             }
         }
     },
     mounted() {
-        // 0.9.248 — a `watch()` handler only fires on a SUBSEQUENT
-        // change, never for the value a prop already held when this
-        // component was created — so a panel mounted with a publication
-        // already current (the common case: World View already has an
-        // `ownPublication` by the time this panel first renders) needs
-        // its own initial load here. Mirrors PublicationPreview.js's own
-        // `mounted()` restraint: read once, on mount, nothing recurring.
+        // Watchers only fire on later changes, so load once on mount.
         this.refreshPublicationCommentaries();
-        // 0.9.308 — the identical initial-load restraint, one capability
-        // over.
         this.refreshPublicationPlacements();
     },
     beforeUnmount() {
-        // Invalidates any still-in-flight call, mirroring
-        // WorldEncounterCanvas's own `beforeUnmount()` invalidation of
-        // `snapshotDistributionRequestId`.
+        // Invalidate in-flight calls.
         this.snapshotDistributionRequestId += 1;
-        // 0.9.347 — invalidates any still-in-flight call, mirroring
-        // `snapshotDistributionRequestId`'s own invalidation immediately
-        // above, one action over.
         this.publicationDistributionRequestId += 1;
         this.snapshotDiscoveryRequestId += 1;
         this.snapshotExportRequestId += 1;
@@ -2154,16 +331,7 @@ export default {
         this.selectedSnapshotMaterializationRequestId += 1;
     },
     methods: {
-        // 0.9.198 — the only call site of `unpublishCommand` in this
-        // file. A no-op whenever there is no `publication` or no
-        // `unpublishCommand` — the identical gate every sibling action's
-        // own guard clause in this file already applies. Synchronous —
-        // no executing/error state to set, see this file's own header,
-        // "no new lifecycle state, no executing/error field of its
-        // own." Never clears any OTHER field in this component: a
-        // successful unpublish is observed entirely through the
-        // `publication` prop itself going `null` on the host view's
-        // next refresh, not through anything this method writes.
+        // Synchronous. Success shows up as the `publication` prop becoming null.
         unpublishOwnPublication() {
             const publication = this.publication;
             if (!publication || !this.unpublishCommand) {
@@ -2171,18 +339,7 @@ export default {
             }
             this.unpublishCommand(publication);
         },
-        // 0.9.600 — the only call site of `placePublicationCommand` in
-        // this file. A no-op whenever there is no `publication` or no
-        // `placePublicationCommand` — the identical gate every sibling
-        // action's own guard clause in this file already applies.
-        // Synchronous, mirroring `unpublishOwnPublication()` immediately
-        // above — no executing/error state of its own. A successful
-        // placement is observed entirely through
-        // `getPublicationPlacementsCommand` on this component's next
-        // refresh (see `refreshPublicationPlacements()`), so this
-        // re-runs that same read immediately after, exactly like a
-        // fresh `publication` prop change already triggers — never a
-        // second, invented "placed" field of its own.
+        // Synchronous; re-reads the placement list afterwards.
         placeOwnPublication() {
             const publication = this.publication;
             if (!publication || !this.placePublicationCommand) {
@@ -2193,12 +350,7 @@ export default {
                 this.refreshPublicationPlacements();
             }
         },
-        // The only writer of `snapshotDistributionExecuting`/
-        // `snapshotDistributionError`/`snapshotDistributionResult`, and
-        // the only caller of `snapshotDistributionCommand` in this file
-        // — mirrors WorldEncounterCanvas's own `distributeSelectedSnapshot()`
-        // exactly. A no-op whenever there is no `publication`, no
-        // `snapshotDistributionCommand`, or a call is already in flight.
+        // No-op without a publication or command, or while busy.
         distributeOwnSnapshot() {
             const publication = this.publication;
             if (!publication || !this.snapshotDistributionCommand || this.snapshotDistributionExecuting) {
@@ -2238,13 +390,6 @@ export default {
                     }
                 });
         },
-        // 0.9.347 — the only writer of `publicationDistributionExecuting`/
-        // `publicationDistributionError`/`publicationDistributionResult`,
-        // and the only caller of `publicationDistributionCommand` in this
-        // file — mirrors `distributeOwnSnapshot()` immediately above,
-        // exactly, one substrate over. A no-op whenever there is no
-        // `publication`, no `publicationDistributionCommand`, or a call is
-        // already in flight.
         distributeOwnPublication() {
             const publication = this.publication;
             if (!publication || !this.publicationDistributionCommand || this.publicationDistributionExecuting) {
@@ -2281,27 +426,13 @@ export default {
                     }
                 });
         },
-        // UX-level convenience only: fires the two already-independent
-        // actions above from one click. Each keeps its own protocol, its
-        // own executing/error/result state, and its own outcome display —
-        // this never introduces a combined result or an aggregate status,
-        // and a failure in one never stops or hides the other. Run
-        // SEQUENTIALLY, never concurrently — see WorldEncounterCanvas.js's
-        // own distributeSelectedPublicationAndSnapshot() for why: both legs
-        // can end up signing through the SAME injected browser extension,
-        // and firing two signing requests at once is a real-world
-        // extension failure mode (no popup ever shown, no response ever
-        // received), not a race either leg's own code could detect.
+        // Runs both actions from one click, each with its own state. Sequential, never
+        // concurrent: both may sign through the same extension, and two simultaneous
+        // requests can silently hang it.
         distributeOwnPublicationAndSnapshot() {
             return Promise.resolve(this.distributeOwnSnapshot())
                 .then(() => this.distributeOwnPublication());
         },
-        // 0.9.142 — the only writer of `snapshotDiscoveryExecuting`/
-        // `snapshotDiscoveryError`/`snapshotDiscoveryResult`, and the
-        // only caller of `discoverSnapshotCommand` in this file — mirrors
-        // `distributeOwnSnapshot()` exactly, one action over. A no-op
-        // whenever there is no `publication`, no `discoverSnapshotCommand`,
-        // or a call is already in flight.
         discoverOwnSnapshot() {
             const publication = this.publication;
             if (!publication || !this.discoverSnapshotCommand || this.snapshotDiscoveryExecuting) {
@@ -2318,13 +449,7 @@ export default {
                 .then((result) => {
                     if (requestId === this.snapshotDiscoveryRequestId) {
                         this.snapshotDiscoveryResult = result;
-                        // 0.9.144 — the one call site of
-                        // resolveSnapshotPublicationAttribution() in this
-                        // file. Computed immediately, under the same
-                        // requestId guard as snapshotDiscoveryResult itself
-                        // — see this file's own header, "computed
-                        // immediately after a successful discovery, never
-                        // on a separate click."
+                        // Computed immediately after a successful discovery, under the same request id.
                         this.snapshotAttributionResult = resolveSnapshotPublicationAttribution(publication, result);
                     }
                 })
@@ -2341,16 +466,6 @@ export default {
                     }
                 });
         },
-        // 0.9.215 — the only writer of `snapshotExportExecuting`/
-        // `snapshotExportError`/`snapshotExportResult`, and the only
-        // caller of `exportSnapshotCommand` in this file — mirrors
-        // `distributeOwnSnapshot()` exactly, one action over. A no-op
-        // whenever there is no `publication`, no `exportSnapshotCommand`,
-        // or a call is already in flight. Never reads
-        // `publication.contentReference` itself — see this file's own
-        // header, "0.9.215 — Snapshot Export Capability Integration,"
-        // export names WHICH PUBLICATION, resolved entirely by the
-        // injected command and the use case behind it.
         exportOwnSnapshot() {
             const publication = this.publication;
             if (!publication || !this.exportSnapshotCommand || this.snapshotExportExecuting) {
@@ -2382,28 +497,8 @@ export default {
                     }
                 });
         },
-        // 0.9.151 — the only writer of `snapshotCandidateDiscoveryExecuting`/
-        // `snapshotCandidateDiscoveryError`/`snapshotCandidateDiscoveryResult`,
-        // and the only caller of `discoverSnapshotCandidatesCommand`/
-        // `discoverSnapshotCandidatesWithOutcomeCommand` in this file —
-        // mirrors `discoverOwnSnapshot()`'s own guard/requestId pattern
-        // exactly, one operation over. Unlike `discoverOwnSnapshot()`, this
-        // method needs no `publication` at all — see this file's own
-        // header, "a completely independent request... needing no
-        // publication at all." A no-op whenever neither command prop was
-        // supplied, or a call is already in flight.
-        //
-        // 0.9.589 — PREFERS `discoverSnapshotCandidatesWithOutcomeCommand`
-        // WHEN SUPPLIED, FALLS BACK TO THE LEGACY `discoverSnapshotCandidatesCommand`
-        // UNCHANGED OTHERWISE. A host that supplies only the legacy prop
-        // (every test in this codebase predating 0.9.589, and any future
-        // caller with no need for the distinction) gets EXACTLY the
-        // pre-0.9.589 behavior: `snapshotCandidateDiscoveryResult` set to
-        // the bare array, `snapshotCandidateDiscoveryOutcome` left `null`
-        // forever, and the template's own pre-existing empty-state copy
-        // shown for a `[]` result — see the template's own `v-else-if`
-        // chain, below. Only when the outcome-aware command is supplied
-        // does `snapshotCandidateDiscoveryOutcome` ever become non-null.
+        // Needs no publication. Prefers the outcome-aware command; with only the legacy
+        // one, the outcome stays null.
         discoverSnapshotCandidates() {
             if ((!this.discoverSnapshotCandidatesCommand && !this.discoverSnapshotCandidatesWithOutcomeCommand) || this.snapshotCandidateDiscoveryExecuting) {
                 return;
@@ -2420,9 +515,6 @@ export default {
                 .then(() => (withOutcome ? this.discoverSnapshotCandidatesWithOutcomeCommand() : this.discoverSnapshotCandidatesCommand()))
                 .then((result) => {
                     if (requestId === this.snapshotCandidateDiscoveryRequestId) {
-                        // Rendered verbatim, in this exact order — see
-                        // this file's own header, "no derived metadata,
-                        // no ranking, no preference of any kind."
                         this.snapshotCandidateDiscoveryResult = withOutcome ? result.candidates : result;
                         this.snapshotCandidateDiscoveryOutcome = withOutcome ? result.outcome : null;
                     }
@@ -2440,19 +532,8 @@ export default {
                     }
                 });
         },
-        // 0.9.151 — the only writer of `selectedSnapshotCandidate`. See
-        // this file's own header, "selection is deliberately boring": a
-        // plain assignment, nothing else — never a call to
-        // `discoverSnapshotCommand`, and never a mutation of
-        // `snapshotCandidateDiscoveryResult` itself.
-        //
-        // 0.9.152 — also the only place a PRIOR selected-candidate
-        // resolution result is invalidated: when the selection actually
-        // changes, any `selectedSnapshotResolutionResult` computed for
-        // the OLD selection no longer describes the new one — see this
-        // file's own header, "selecting a different candidate invalidates
-        // any prior resolution." Still no I/O of its own: nothing here
-        // calls `resolveSelectedSnapshotCommand`.
+        // Selection is a plain assignment. Changing it clears the resolution and
+        // everything computed from it.
         selectSnapshotCandidate(candidate) {
             if (candidate === this.selectedSnapshotCandidate) {
                 return;
@@ -2462,45 +543,15 @@ export default {
             this.selectedSnapshotResolutionError = null;
             this.selectedSnapshotResolutionResult = null;
             this.selectedSnapshotResolutionRequestId += 1;
-            // 0.9.154 — a prior attribution verdict described the OLD
-            // selection's own resolution result; it no longer describes
-            // anything once that resolution result itself is cleared
-            // above. See this file's own header, "stale attribution is
-            // cleared whenever the result it was computed from becomes
-            // stale."
             this.selectedSnapshotAttributionResult = null;
-            // 0.9.158 — the identical staleness rule, one sibling over: a
-            // prior materialization result described the OLD selection's
-            // own resolution result too.
             this.selectedSnapshotMaterializationExecuting = false;
             this.selectedSnapshotMaterializationError = null;
             this.selectedSnapshotMaterializationResult = null;
             this.selectedSnapshotMaterializationRequestId += 1;
-            // 0.9.159 — the identical staleness rule, one sibling over: a
-            // prior World Placement result described the OLD selection's
-            // own materialization result too.
             this.selectedSnapshotWorldPlacementResult = null;
-            // 0.9.160 — the identical staleness rule, one sibling over: a
-            // prior World Runtime Registration result described the OLD
-            // selection's own placement result too.
             this.selectedSnapshotWorldRegistrationResult = null;
-            // 0.9.172 — a different selection may carry a different claim,
-            // or none at all — any prior consumed claim described the OLD
-            // candidate.
             this.selectedSnapshotWorldPositionClaimResult = null;
         },
-        // 0.9.152 — the only writer of `selectedSnapshotResolutionExecuting`/
-        // `selectedSnapshotResolutionError`/`selectedSnapshotResolutionResult`,
-        // and the only caller of `resolveSelectedSnapshotCommand` in this
-        // file — mirrors `discoverSnapshotCandidates()`'s own guard/
-        // requestId pattern exactly, one operation over. A no-op whenever
-        // there is no `selectedSnapshotCandidate`, no
-        // `resolveSelectedSnapshotCommand`, or a call is already in
-        // flight. Calls `resolveSelectedSnapshotCommand` with the
-        // SELECTED CANDIDATE OBJECT itself — never its bare `contentHash`
-        // — see this file's own header, "this component never calls
-        // resolveSelectedSnapshotCommand with anything but the candidate
-        // object itself."
         resolveSelectedSnapshot() {
             const candidate = this.selectedSnapshotCandidate;
             if (!candidate || !this.resolveSelectedSnapshotCommand || this.selectedSnapshotResolutionExecuting) {
@@ -2510,27 +561,13 @@ export default {
             this.selectedSnapshotResolutionExecuting = true;
             this.selectedSnapshotResolutionError = null;
             this.selectedSnapshotResolutionRequestId += 1;
-            // 0.9.154 — a fresh resolution attempt for the CURRENT
-            // selection is about to replace `selectedSnapshotResolutionResult`;
-            // any attribution verdict computed from the PRIOR result no
-            // longer describes what will be on screen. See this file's
-            // own header, "stale attribution is cleared whenever the
-            // result it was computed from becomes stale."
+            // A new resolution replaces the old one, so clear what was computed from it.
             this.selectedSnapshotAttributionResult = null;
-            // 0.9.158 — the identical staleness rule, one sibling over: a
-            // prior materialization result was computed from the PRIOR
-            // resolution result, about to be replaced.
             this.selectedSnapshotMaterializationExecuting = false;
             this.selectedSnapshotMaterializationError = null;
             this.selectedSnapshotMaterializationResult = null;
             this.selectedSnapshotMaterializationRequestId += 1;
-            // 0.9.159 — the identical staleness rule, one sibling over: a
-            // prior World Placement result was computed from the PRIOR
-            // materialization result, about to be replaced.
             this.selectedSnapshotWorldPlacementResult = null;
-            // 0.9.160 — the identical staleness rule, one sibling over: a
-            // prior World Runtime Registration result was computed from
-            // the PRIOR placement result, about to be replaced.
             this.selectedSnapshotWorldRegistrationResult = null;
             const requestId = this.selectedSnapshotResolutionRequestId;
 
@@ -2554,18 +591,8 @@ export default {
                     }
                 });
         },
-        // 0.9.154 — the only writer of `selectedSnapshotAttributionResult`,
-        // and the only call site of `resolveSnapshotPublicationAttribution()`
-        // over the SELECTED-CANDIDATE path in this file (`discoverOwnSnapshot()`
-        // holds its own, separate call site for the already-known-contentHash
-        // path). A no-op whenever there is no `publication`, no
-        // `publication.contentReference` (the pure function itself would
-        // throw for either), or no `selectedSnapshotResolutionResult` yet
-        // to attribute. Synchronous — no executing/error state, see this
-        // file's own header, "no executing/error state of its own." Reads
-        // `selectedSnapshotResolutionResult` — the RESOLVER's own verified
-        // result — never `selectedSnapshotCandidate.contentHash`, the
-        // critical invariant this milestone exists to hold.
+        // Synchronous. Reads the resolver's verified result, never the candidate's own
+        // contentHash.
         attributeSelectedSnapshot() {
             const publication = this.publication;
             const resolution = this.selectedSnapshotResolutionResult;
@@ -2574,22 +601,7 @@ export default {
             }
             this.selectedSnapshotAttributionResult = resolveSnapshotPublicationAttribution(publication, resolution);
         },
-        // 0.9.158 — the only writer of `selectedSnapshotMaterializationExecuting`/
-        // `selectedSnapshotMaterializationError`/`selectedSnapshotMaterializationResult`,
-        // and the only caller of `materializeSelectedSnapshotCommand` in
-        // this file — mirrors `resolveSelectedSnapshot()`'s own guard/
-        // requestId pattern exactly, one sibling over. A no-op whenever
-        // there is no `selectedSnapshotResolutionResult`, no
-        // `materializeSelectedSnapshotCommand`, or a call is already in
-        // flight — needs no `publication` at all, unlike
-        // `attributeSelectedSnapshot()`, since materialization never
-        // touches the Publication (see application/
-        // MaterializeSnapshotFromSelectedCandidateUseCase.js's own header,
-        // "no publicationId, no publicationKnown"). Calls
-        // `materializeSelectedSnapshotCommand` with the RESOLUTION RESULT
-        // itself — never `selectedSnapshotCandidate`, and never a bare
-        // contentHash — see that use case's own header, "consumes the
-        // resolution result, never the candidate."
+        // Needs no publication: materialization never touches it.
         materializeSelectedSnapshot() {
             const resolution = this.selectedSnapshotResolutionResult;
             if (!resolution || !this.materializeSelectedSnapshotCommand || this.selectedSnapshotMaterializationExecuting) {
@@ -2599,16 +611,7 @@ export default {
             this.selectedSnapshotMaterializationExecuting = true;
             this.selectedSnapshotMaterializationError = null;
             this.selectedSnapshotMaterializationRequestId += 1;
-            // 0.9.159 — a fresh materialization attempt is about to replace
-            // `selectedSnapshotMaterializationResult`; any World Placement
-            // result computed from the PRIOR materialization result no
-            // longer describes what will be on screen. See this file's own
-            // header, "stale placement is cleared wherever the
-            // materialization result it depends on already is."
             this.selectedSnapshotWorldPlacementResult = null;
-            // 0.9.160 — the identical staleness rule, one sibling over: a
-            // prior World Runtime Registration result described the PRIOR
-            // placement result, about to be replaced.
             this.selectedSnapshotWorldRegistrationResult = null;
             const requestId = this.selectedSnapshotMaterializationRequestId;
 
@@ -2632,57 +635,25 @@ export default {
                     }
                 });
         },
-        // 0.9.172 — the only writer of `selectedSnapshotWorldPositionClaimResult`,
-        // and the only call site of `resolveSnapshotWorldPositionClaim()` in
-        // this file — mirrors `attributeSelectedSnapshot()`'s own
-        // synchronous, no-executing/error-state shape exactly. A no-op
-        // whenever there is no `selectedSnapshotCandidate` or no
-        // `publication` — the two facts the identity check itself needs
-        // (`candidate.publicationId === publication.id`). See this file's
-        // own header, "0.9.172," for why this is a SEPARATE, explicit click
-        // rather than anything selection/resolution/materialization ever
-        // does on their own.
+        // Synchronous. A separate explicit click; checks candidate.publicationId ===
+        // publication.id.
         useClaimedSnapshotPosition() {
             const candidate = this.selectedSnapshotCandidate;
             const publication = this.publication;
             if (!candidate || !publication) {
                 return;
             }
-            // A fresh claim result is about to replace
-            // `selectedSnapshotWorldPositionClaimResult`; any World
-            // Placement/Registration result computed from the PRIOR claim
-            // result (or from the local-placement fallback it may have
-            // overridden) no longer describes what `placeMaterializedSnapshot()`
-            // will now produce.
             this.selectedSnapshotWorldPlacementResult = null;
             this.selectedSnapshotWorldRegistrationResult = null;
             this.selectedSnapshotWorldPositionClaimResult = resolveSnapshotWorldPositionClaim(candidate, publication.id);
         },
-        // 0.9.159 — the only writer of `selectedSnapshotWorldPlacementResult`,
-        // and the only call site of `resolveSnapshotWorldPlacement()` in
-        // this file. A no-op whenever there is no
-        // `selectedSnapshotMaterializationResult` yet to place.
-        //
-        // 0.9.172 — UPDATED. When `selectedSnapshotWorldPositionClaimResult`
-        // exists AND its own `outcome` is `SnapshotWorldPositionClaimOutcome.CLAIMED`,
-        // this method builds a synthetic `placementInfo`-shaped object out
-        // of the consumed claim's own `position` and hands THAT to
-        // `resolveSnapshotWorldPlacement()` instead of `this.placementInfo`.
-        // In every other case — no claim result yet, or one whose outcome
-        // is ABSENT/MISMATCHED — this method is byte-for-byte what 0.9.159
-        // already was: `this.placementInfo`, the receiver's own existing
-        // local placement, unchanged. See this file's own header, "prefers
-        // a consumed claim, but falls back... the moment no claim was
-        // consumed."
+        // Uses the consumed claim's position when its outcome is CLAIMED, otherwise the
+        // local placementInfo.
         placeMaterializedSnapshot() {
             const materialization = this.selectedSnapshotMaterializationResult;
             if (!materialization) {
                 return;
             }
-            // 0.9.160 — a fresh placement result is about to replace
-            // `selectedSnapshotWorldPlacementResult`; any World Runtime
-            // Registration result computed from the PRIOR placement result
-            // no longer describes it.
             this.selectedSnapshotWorldRegistrationResult = null;
 
             const claim = this.selectedSnapshotWorldPositionClaimResult;
@@ -2695,16 +666,6 @@ export default {
                 : this.placementInfo;
             this.selectedSnapshotWorldPlacementResult = resolveSnapshotWorldPlacement(materialization, effectivePlacementInfo);
         },
-        // 0.9.160 — the only writer of `selectedSnapshotWorldRegistrationResult`,
-        // and the only call site of `registerMaterializedSnapshotWorldSource()`
-        // in this file — mirrors `placeMaterializedSnapshot()`'s own
-        // synchronous, no-executing/error-state shape exactly, one sibling
-        // over. A no-op whenever there is no `selectedSnapshotWorldPlacementResult`
-        // yet to register, or no `worldDiscoverySourceRegistry` to register
-        // it with. Passes `this.publication` straight through — the SAME
-        // Publication object `placementInfo` (and therefore
-        // `selectedSnapshotWorldPlacementResult`) was already keyed to —
-        // never re-fetched or reconstructed here.
         registerMaterializedSnapshot() {
             const placement = this.selectedSnapshotWorldPlacementResult;
             if (!placement || !this.worldDiscoverySourceRegistry) {
@@ -2712,21 +673,8 @@ export default {
             }
             this.selectedSnapshotWorldRegistrationResult = registerMaterializedSnapshotWorldSource(this.worldDiscoverySourceRegistry, placement, this.publication);
         },
-        // 0.9.248 — the only writer of `publicationCommentaries`, and the
-        // only call site of `getPublicationCommentariesCommand` in this
-        // file. Called on mount, whenever `publication` changes (see the
-        // watcher above), and again after a successful submission below
-        // — never on a timer, an interval, or any other implicit trigger
-        // (see this file's own header, "no live commentary subscriptions,
-        // no polling"). A no-op — `publicationCommentaries` reset to `[]`
-        // — whenever there is no `publication` or no
-        // `getPublicationCommentariesCommand`. A FAILED read leaves
-        // `publicationCommentaries` exactly as it was (never wiped to
-        // `[]`) and only sets `publicationCommentaryError` — see this
-        // file's own header on `publicationCommentaryError`. Rendered in
-        // WHATEVER order the command returns, verbatim — this method
-        // performs no `sort()` of its own, mirroring
-        // GetPublicationCommentariesUseCase's own "never re-sorted here."
+        // Called on mount, on publication change and after a successful submit, never
+        // on a timer. Keeps the returned order.
         refreshPublicationCommentaries() {
             const publication = this.publication;
             if (!publication || !this.getPublicationCommentariesCommand) {
@@ -2742,42 +690,11 @@ export default {
                 this.publicationCommentaryError = 'Commentary could not be loaded.';
             }
         },
-        // 0.9.248 — the only writer of `publicationCommentarySubmitting`,
-        // and the only call site of `addPublicationCommentaryCommand` in
-        // this file. A no-op whenever there is no `publication`, no
-        // `addPublicationCommentaryCommand`, blank/whitespace-only
-        // `newCommentaryText`, or a submission is already in flight —
-        // the identical guard-clause shape every other action in this
-        // file already uses. Sends ONLY `{ publicationId, content }` —
-        // never `authorIdentityId` — see this file's own header,
-        // "the UI should never construct PublicationCommentary directly."
-        //
-        // ON SUCCESS: clears the compose draft and RE-QUERIES through
-        // refreshPublicationCommentaries() rather than appending the
-        // returned `commentary` into `publicationCommentaries` itself —
-        // see this file's own header for why re-querying is preferred:
-        // one source of truth for "what commentary exists," never a
-        // second, UI-maintained interpretation of the store's own
-        // collection.
-        //
-        // ON FAILURE (no signed-in identity, authorization denied, a
-        // storage conflict): `publicationCommentaryError` is set to the
-        // thrown error's own message, `newCommentaryText` is left
-        // UNCHANGED (a rejected attempt never discards what was typed),
-        // and `publicationCommentaries` is left UNCHANGED — a failed
-        // creation never corrupts the already-displayed list, and never
-        // persists anything (AddPublicationCommentaryUseCase's own
-        // header: authentication/authorization run BEFORE construction,
-        // so a denied call leaves no partially-built record behind).
-        //
-        // 0.9.542 — see `pendingCommentaryDraft`'s own data() header, and
-        // ui/components/PublicationCommentarySection.js's own
-        // submitCommentary() comment for the full rationale: a manual retry of an unedited
-        // draft after an error reuses the SAME commentaryId/createdAt, so
-        // it lands on the store's own idempotent no-op if the earlier
-        // attempt actually persisted (a notificationSink failure after a
-        // successful save, in particular) — never a second, duplicate
-        // commentary. Editing the draft before retrying mints a fresh id.
+        // Sends only { publicationId, content }. On success, clears the draft and
+        // re-reads (one source of truth) instead of appending. On failure, keeps the
+        // text and the list. A retry of unchanged text reuses the same
+        // commentaryId/createdAt, so it lands on the store's idempotent no-op instead
+        // of creating a duplicate.
         submitPublicationCommentary() {
             const publication = this.publication;
             const content = this.newCommentaryText.trim();
@@ -2801,21 +718,8 @@ export default {
                 this.publicationCommentarySubmitting = false;
             }
         },
-        // 0.9.308 — Publication Multi-Placement Visibility. Mirrors
-        // refreshPublicationCommentaries() exactly, one capability over
-        // (see this file's own header, "no new command needed... a
-        // thin injected command"). A no-op — `publicationPlacements`
-        // reset to `[]` — whenever there is no `publication` or no
-        // `getPublicationPlacementsCommand`. A FAILED read leaves
-        // `publicationPlacements` exactly as it was (never wiped to
-        // `[]`) and only sets `publicationPlacementsError` — this is
-        // the entire mechanism that keeps NO_PLACEMENTS (`[]`, no error)
-        // distinguishable from DISCOVERY_FAILED (an error, prior list
-        // untouched); see this file's own header, "the critical
-        // semantic question." Rendered in WHATEVER order the command
-        // returns, verbatim — this method performs no `sort()`, dedup,
-        // or "latest" reduction of its own — see this file's own header,
-        // "preserve all three records."
+        // Same shape as refreshPublicationCommentaries(). A failed read keeps the list
+        // and only sets the error.
         refreshPublicationPlacements() {
             const publication = this.publication;
             if (!publication || !this.getPublicationPlacementsCommand) {
@@ -2831,16 +735,8 @@ export default {
                 this.publicationPlacementsError = 'Placements could not be loaded.';
             }
         },
-        // 0.9.528 — Snapshot Encounter & Placement Product Experience
-        // Reassessment, Section C/I. Thin template-callable wrappers
-        // around application/SnapshotOutcomeInspectionView.js's own two
-        // pure functions — this component's `template` is a
-        // runtime-compiled string, not an SFC, so a bare module-level
-        // import is never callable from inside `{{ }}` on its own; see
-        // ui/components/WorldEncounterCanvas.js's own
-        // `describeMaterialLoadStatusLabel()` for the identical shape,
-        // one component over. No logic of their own — see that file's
-        // own header for what each label does and does not claim.
+        // The template is a runtime-compiled string, so imported functions need these
+        // wrappers to be callable from `{{ }}`.
         describeSnapshotResolutionLabel(outcome) {
             return describeSnapshotResolutionOutcomeLabel(outcome);
         },
@@ -2862,44 +758,19 @@ export default {
                 Publish your current World to distribute its Snapshot.
             </p>
 
-            <!-- 0.9.308 — Publication Multi-Placement Visibility. Read-only:
-                 renders whatever getPublicationPlacementsCommand returns,
-                 nothing more — no "Focus"/"Move"/"Remove" action per row
-                 (see this file's own header, "one thing I would not do
-                 yet"; ui/components/PlacementInfoPanel.js already owns
-                 those actions for the SINGLE active placement). Rendered
-                 only when a caller supplied getPublicationPlacementsCommand,
-                 mirroring every other optional capability section in this
-                 file. Every placement this Publication has is shown —
-                 never deduplicated, never reduced to "the latest one"
-                 (unlike placementInfo/activePlacementInfo above, which
-                 IS that reduction) — see this file's own header, "don't
-                 collapse multiple placements." -->
+            <!--
+                Read-only list of every placement (per-placement actions live in
+                PlacementInfoPanel).
+            -->
             <div v-if="getPublicationPlacementsCommand" class="own-publication-placements">
                 <h5 class="own-publication-placements-title">Placements ({{ publicationPlacements.length }})</h5>
 
-                <!-- DISCOVERY_FAILED — a genuine read failure, distinct
-                     from NO_PLACEMENTS below (see refreshPublicationPlacements()'s
-                     own header). Rendered instead of the list/empty-state
-                     branches, mirroring publicationCommentaryError's own
-                     precedence one capability over. -->
                 <p v-if="publicationPlacementsError" class="own-publication-placements-error">{{ publicationPlacementsError }}</p>
 
-                <!-- NO_PLACEMENTS — an honest, intentional empty state,
-                     never an error and never indistinguishable from a
-                     genuine read failure above (which sets
-                     publicationPlacementsError, not this branch). -->
                 <p v-else-if="!publicationPlacements.length" class="own-publication-placements-empty">
                     This Publication has not been placed anywhere yet.
                 </p>
                 <ul v-else class="own-publication-placements-list">
-                    <!-- Rendered in EXACTLY the order publicationPlacements
-                         already holds — no sort, dedup, "latest," or
-                         ranking of any kind (see this file's own header).
-                         A single placement (length === 1) renders through
-                         this SAME v-for, never a separate "singleton"
-                         branch. placementId is a stable, unique key
-                         regardless of display order. -->
                     <li
                         v-for="placement in publicationPlacements"
                         :key="placement.placementId"
@@ -2916,21 +787,10 @@ export default {
                     </li>
                 </ul>
 
-                <!-- 0.9.600 — Publication First-Placement Action Wiring
-                     Fix. Rendered only when a caller supplied
-                     placePublicationCommand, mirroring every other
-                     optional capability section in this file. Disabled
-                     whenever there is no publication to place — no
-                     "already placed" disabling of any kind, since
-                     PlacePublicationUseCase already, unconditionally,
-                     supports creating a Publication's first AND every
-                     subsequent placement (see this file's own header,
-                     "0.9.600" and tests/
-                     FirstPublicationPlacementCapabilityBoundaryAudit.
-                     test.js, 0.9.599, Section C1). Deliberately placed
-                     inside THIS listing, never a new panel — the
-                     smallest natural home per that audit's own Section
-                     G. -->
+                <!--
+                    Always enabled with a publication: a Publication can be placed any number of
+                    times.
+                -->
                 <button
                     v-if="placePublicationCommand"
                     type="button"
@@ -2940,15 +800,10 @@ export default {
                 >Place</button>
             </div>
 
-            <!-- 0.9.198 — Publication Unpublish/Retract UI Action.
-                 Retracts THIS Publication from the publication-facing
-                 catalog — never a placement, the Document, or any
-                 Snapshot/Nostr/Arweave material (see this file's own
-                 header). Rendered only when a caller supplied an
-                 unpublishCommand. Disabled whenever there is no
-                 publication to unpublish — no confirmation dialog, no
-                 separate "…ing" label, since retraction is local and
-                 synchronous, unlike Distribute/Discover above. -->
+            <!--
+                Retracts the Publication from the catalog only; never a placement, the
+                Document or distributed material.
+            -->
             <button
                 v-if="unpublishCommand"
                 type="button"
@@ -2957,18 +812,7 @@ export default {
                 @click="unpublishOwnPublication"
             >Unpublish</button>
 
-            <!-- 0.9.672 — World View Distribution Dialog. Every Distribute
-                 Snapshot/Distribute Publication storage/substrate picker,
-                 button, and result display that used to render inline
-                 here now lives in WorldDistributionDialog.js (see that
-                 file's own header, shared verbatim with
-                 WorldEncounterCanvas.js's own identical trigger) — a
-                 single "Distribute" button replaces them all on this
-                 primary screen. Rendered whenever EITHER protocol is
-                 usable at all; the dialog itself renders only the
-                 section(s) that apply, exactly like each protocol's own
-                 dedicated button already only rendered when that
-                 protocol's own command was supplied. -->
+            <!-- Opens WorldDistributionDialog, which holds every storage/substrate choice. -->
             <button
                 v-if="snapshotDistributionCommand || publicationDistributionCommand"
                 type="button"
@@ -2998,18 +842,7 @@ export default {
                 @distribute-snapshot="distributeOwnSnapshot"
             />
 
-            <!-- 0.9.215 — Snapshot Export Capability Integration.
-                 Reachable with zero connected peers and an empty World
-                 Encounters panel, the identical restraint Distribute
-                 Snapshot above already holds — see this file's own
-                 header. Rendered only when a caller supplied an
-                 exportSnapshotCommand. Disabled whenever there is no
-                 local Publication yet, or a call is already in flight.
-                 Deliberately no file save, download, or copy-to-clipboard
-                 here: this milestone exposes the existing export
-                 capability and its result's own identity facts, not a
-                 product decision about how the exported package reaches
-                 the user — see docs/Roadmap.md's own 0.9.215 entry. -->
+            <!-- Shows the exported package's identity facts only. Deliberately no file save, download, or copy-to-clipboard. -->
             <button
                 v-if="exportSnapshotCommand"
                 type="button"
@@ -3026,23 +859,7 @@ export default {
                 <dd>{{ snapshotExportResult.contentHash }}</dd>
             </dl>
 
-            <!-- 0.9.142 — reachable with zero connected peers and an
-                 empty World Encounters panel, exactly like Distribute
-                 Snapshot above. Rendered only when a caller supplied a
-                 discoverSnapshotCommand. Disabled whenever there is no
-                 local Publication yet, the Publication has never been
-                 placed (no contentReference), or a call is already in
-                 flight.
-
-                 0.9.151 — RENAMED from "Discover Snapshot" to "Check
-                 Snapshot Match": this action always answered "does THIS
-                 Publication's own contentHash resolve?" (attribution-
-                 oriented resolution), which "Discover Snapshot" no
-                 longer describes unambiguously now that "Discover
-                 Snapshots" (below) exists for the OTHER, browsing-
-                 oriented question. Behavior, method name
-                 (discoverOwnSnapshot), and every other field this action
-                 writes are unchanged — only this button's own label. -->
+            <!-- Checks whether this Publication's own contentHash resolves. -->
             <button
                 v-if="discoverSnapshotCommand"
                 type="button"
@@ -3051,16 +868,6 @@ export default {
                 @click="discoverOwnSnapshot"
             >{{ snapshotDiscoveryExecuting ? 'Checking…' : 'Check Snapshot Match' }}</button>
 
-            <!-- The resolver's own DecentralizedSnapshotResolutionOutcome
-                 vocabulary — see this file's own header, "discovery, never
-                 attribution." 0.9.528 — Snapshot Encounter & Placement
-                 Product Experience Reassessment, Section C/I: routed
-                 through application/SnapshotOutcomeInspectionView.js's own
-                 describeSnapshotResolutionOutcomeLabel() rather than
-                 rendered as the raw outcome string ('resolved',
-                 'not-discovered', ...) — the identical discipline 0.9.519
-                 established for ui/components/WorldEncounterCanvas.js's
-                 own Material/Verification panel, extended here. -->
             <p v-if="snapshotDiscoveryError" class="own-publication-discovery-error">{{ snapshotDiscoveryError }}</p>
             <dl v-else-if="snapshotDiscoveryResult" class="own-publication-discovery-detail">
                 <dt>Outcome</dt>
@@ -3075,49 +882,16 @@ export default {
                 </template>
             </dl>
 
-            <!-- 0.9.144 — a separate result, below Snapshot Discovery's own,
-                 never merged into it — see this file's own header, "a
-                 separate field, never a replacement," and application/
-                 SnapshotPublicationAttribution.js's own header for what
-                 MATCH does and does not mean. 0.9.528 — routed through
-                 describeSnapshotAttributionOutcomeLabel(), see the
-                 discovery panel's own comment immediately above: the bare
-                 word "match" is exactly the kind of unqualified claim
-                 docs/Principles.md's 0.8.3 warns against, echoed here as
-                 "Confirmed to match this Publication" — an identity
-                 correspondence between two content hashes, never authorship
-                 or trustworthiness. -->
+            <!-- "Confirmed to match" means two hashes correspond, never authorship or trust. -->
             <dl v-if="snapshotAttributionResult" class="own-publication-attribution-detail">
                 <dt>Snapshot Attribution</dt>
                 <dd>{{ describeSnapshotAttributionLabel(snapshotAttributionResult.outcome) }}</dd>
             </dl>
 
-            <!-- 0.9.324 — Diagnostic Tools Surface. The ENTIRE
-                 discover-candidates -> select -> resolve -> attribute ->
-                 materialize -> use-claimed-position -> place -> register
-                 pipeline (0.9.151 through 0.9.172, unmodified below) is a
-                 deliberately-retained MANUAL/RECOVERY counterpart to
-                 application/AutomaticSnapshotEncounterCascade.js's own
-                 background cascade — valuable precisely because it exposes
-                 individual stages a person can walk one at a time when the
-                 automatic path fails silently, not because it belongs
-                 beside ordinary World View actions like Distribute/Export/
-                 Unpublish above. This trigger and the modal-overlay it
-                 opens are a PURE PRESENTATION GROUPING: no command, prop,
-                 data field, method, or disabled/result binding anywhere in
-                 this pipeline changed — every one of those still lives
-                 exactly where 0.9.151-0.9.172 left it, in THIS component,
-                 called from THIS same click handler. diagnosticToolsOpen
-                 (new, below) controls only whether this markup is
-                 currently rendered; it is never read by, and never
-                 resets, any of the pipeline's own ephemeral state — closing
-                 this popup and reopening it shows whatever
-                 snapshotCandidateDiscoveryResult/selectedSnapshotCandidate/
-                 etc. already held, unchanged, the identical restraint
-                 already governing v-if elsewhere in this file. Gated on
-                 the same three command props the pipeline's own buttons
-                 already individually gate on, so the trigger itself never
-                 renders when the whole capability is unavailable. -->
+            <!--
+                Groups the manual diagnostic pipeline in a popup. Presentation only: closing
+                and reopening shows the same state.
+            -->
             <button
                 v-if="discoverSnapshotCandidatesCommand || resolveSelectedSnapshotCommand || materializeSelectedSnapshotCommand"
                 type="button"
@@ -3140,17 +914,7 @@ export default {
 
                     <h4 class="own-publication-diagnostic-section-title">Snapshots</h4>
 
-            <!-- 0.9.151 — World View Snapshot Candidate Browser. A
-                 genuinely different operation from Check Snapshot Match
-                 above — see this file's own header. Reachable with zero
-                 connected peers, zero World Encounters, AND no local
-                 Publication at all: browsing what has been announced
-                 under the shared campaign discoveryTag never depends on
-                 "which Publication," so this button is disabled only
-                 while a call is already in flight. Rendered when a caller
-                 supplied either discoverSnapshotCandidatesCommand or its
-                 0.9.589 discoverSnapshotCandidatesWithOutcomeCommand
-                 sibling. -->
+            <!-- Needs no Publication; disabled only while busy. -->
             <button
                 v-if="discoverSnapshotCandidatesCommand || discoverSnapshotCandidatesWithOutcomeCommand"
                 type="button"
@@ -3161,24 +925,10 @@ export default {
 
             <p v-if="snapshotCandidateDiscoveryError" class="own-publication-candidate-discovery-error">{{ snapshotCandidateDiscoveryError }}</p>
 
-            <!-- An empty array is a legitimate, distinct result (zero
-                 candidates announced) — never treated as an error, and
-                 never collapsed into the "not yet run" (null) state. See
-                 this file's own header, "no derived metadata, no
-                 ranking, no preference of any kind" — every candidate is
-                 rendered, in the exact order discovered, with no sort,
-                 dedup, "best"/"trusted" label, or storage-type
-                 preference of any kind.
-
-                 0.9.589 — an empty result no longer asserts a single flat
-                 fact. snapshotCandidateDiscoveryOutcome === 'unavailable'
-                 (only ever set through discoverSnapshotCandidatesWithOutcomeCommand
-                 — see discoverSnapshotCandidates(), above) means the
-                 query itself could not be completed, and says so honestly
-                 instead of claiming certainty about what has or hasn't
-                 been announced. Every other case — a genuine 'empty'
-                 result, or the legacy path where the outcome is unknown
-                 (null) — keeps the original wording unchanged. -->
+            <!--
+                [] is a real result. 'unavailable' says the search could not complete rather
+                than claiming nothing was announced. Shown in discovery order, unranked.
+            -->
             <div v-else-if="snapshotCandidateDiscoveryResult" class="own-publication-candidate-list">
                 <h5 class="own-publication-candidate-list-title">Discovered Snapshots</h5>
                 <p v-if="snapshotCandidateDiscoveryResult.length === 0 && snapshotCandidateDiscoveryOutcome === 'unavailable'" class="own-publication-candidate-list-unavailable">
@@ -3207,12 +957,6 @@ export default {
                 </ul>
             </div>
 
-            <!-- 0.9.152 — Selected Snapshot Candidate Resolution. Reachable
-                 only once a candidate has actually been selected above —
-                 resolving "nothing selected" makes no sense. Rendered only
-                 when a caller supplied a resolveSelectedSnapshotCommand.
-                 Disabled whenever there is no selection, or a call is
-                 already in flight. -->
             <button
                 v-if="resolveSelectedSnapshotCommand"
                 type="button"
@@ -3221,17 +965,6 @@ export default {
                 @click="resolveSelectedSnapshot"
             >{{ selectedSnapshotResolutionExecuting ? 'Resolving…' : 'Resolve Selected Snapshot' }}</button>
 
-            <!-- The resolver's own DecentralizedSnapshotResolutionOutcome
-                 vocabulary — see this file's own header, "no automatic
-                 attribution": this is a separate result from
-                 snapshotDiscoveryResult/snapshotAttributionResult above,
-                 describing what happened when the SELECTED candidate
-                 (never the Publication) was retrieved/verified. 0.9.528 —
-                 routed through describeSnapshotResolutionLabel(), the
-                 identical label table Snapshot Discovery above already
-                 uses (same enum, same meaning, same wording — never two
-                 different sentences for the same outcome depending which
-                 panel shows it). -->
             <p v-if="selectedSnapshotResolutionError" class="own-publication-selected-resolution-error">{{ selectedSnapshotResolutionError }}</p>
             <dl v-else-if="selectedSnapshotResolutionResult" class="own-publication-selected-resolution-detail">
                 <dt>Selected Snapshot Resolution</dt>
@@ -3246,16 +979,6 @@ export default {
                 </template>
             </dl>
 
-            <!-- 0.9.154 — Selected Snapshot Attribution. Reachable only
-                 once the selected candidate has actually been resolved
-                 above — attributing "nothing resolved yet" makes no
-                 sense. Rendered in the SAME resolveSelectedSnapshotCommand
-                 family (attribution over a browsed/selected candidate has
-                 no meaning without the resolution capability that
-                 produces its input). Disabled whenever there is no
-                 Publication, the Publication has never been placed (no
-                 contentReference), or there is no
-                 selectedSnapshotResolutionResult yet to attribute. -->
             <button
                 v-if="resolveSelectedSnapshotCommand"
                 type="button"
@@ -3264,17 +987,6 @@ export default {
                 @click="attributeSelectedSnapshot"
             >Attribute Selected Snapshot</button>
 
-            <!-- A separate result from selectedSnapshotResolutionResult
-                 above, and from snapshotAttributionResult (the OTHER,
-                 already-known-contentHash path) — see this file's own
-                 header, "a separate field, never snapshotAttributionResult."
-                 Compares the RESOLVER's own verified bytes against this
-                 Publication, never the candidate's own self-declared
-                 contentHash. 0.9.528 — routed through
-                 describeSnapshotAttributionLabel(), the identical label
-                 table Snapshot Attribution above already uses (same two
-                 outcomes, same wording, never a stronger claim here than
-                 there). -->
             <dl v-if="selectedSnapshotAttributionResult" class="own-publication-selected-attribution-detail">
                 <dt>Selected Snapshot Attribution</dt>
                 <dd>{{ describeSnapshotAttributionLabel(selectedSnapshotAttributionResult.outcome) }}</dd>
@@ -3284,17 +996,6 @@ export default {
                 </template>
             </dl>
 
-            <!-- 0.9.158 — Selected Snapshot Materialization. An independent
-                 SIBLING of "Attribute Selected Snapshot" above, not a
-                 sequel — both read the SAME selectedSnapshotResolutionResult,
-                 but materialization never touches the Publication and
-                 attribution never touches local storage. Reachable only
-                 once the selected candidate has actually been resolved
-                 above — materializing "nothing resolved yet" makes no
-                 sense. Rendered only when a caller supplied a
-                 materializeSelectedSnapshotCommand. Disabled whenever
-                 there is no selectedSnapshotResolutionResult yet, or a
-                 call is already in flight. -->
             <button
                 v-if="materializeSelectedSnapshotCommand"
                 type="button"
@@ -3303,14 +1004,6 @@ export default {
                 @click="materializeSelectedSnapshot"
             >{{ selectedSnapshotMaterializationExecuting ? 'Materializing…' : 'Materialize Selected Snapshot' }}</button>
 
-            <!-- A separate result from selectedSnapshotResolutionResult/
-                 selectedSnapshotAttributionResult above — see this file's
-                 own header, "a separate ephemeral family." On a resolution
-                 that never reached RESOLVED, this reports the RESOLVER'S
-                 OWN failure outcome unchanged (never a materialization-
-                 specific catch-all) — see application/
-                 MaterializeSnapshotFromSelectedCandidateUseCase.js's own
-                 header. -->
             <p v-if="selectedSnapshotMaterializationError" class="own-publication-selected-materialization-error">{{ selectedSnapshotMaterializationError }}</p>
             <dl v-else-if="selectedSnapshotMaterializationResult" class="own-publication-selected-materialization-detail">
                 <dt>Selected Snapshot Materialization</dt>
@@ -3321,16 +1014,6 @@ export default {
                 </template>
             </dl>
 
-            <!-- 0.9.172 — Decentralized Snapshot Position Claim Consumption.
-                 An independent, EXPLICIT action between "Materialize
-                 Selected Snapshot" and "Place Materialized Snapshot" below
-                 — never automatic, never a byproduct of selection,
-                 resolution, or materialization. See this file's own
-                 header, "0.9.172." Disabled whenever there is no
-                 selectedSnapshotCandidate or no publication — the two
-                 facts the identity check itself needs. Synchronous — no
-                 "…ing" label, since resolveSnapshotWorldPositionClaim()
-                 performs no I/O. -->
             <button
                 v-if="materializeSelectedSnapshotCommand"
                 type="button"
@@ -3339,11 +1022,6 @@ export default {
                 @click="useClaimedSnapshotPosition"
             >Use Claimed Position</button>
 
-            <!-- A separate result from selectedSnapshotWorldPlacementResult
-                 below. CLAIMED/ABSENT/MISMATCHED — see application/
-                 SnapshotWorldPositionClaimOutcome.js's own header. Position
-                 is rendered only on CLAIMED — a mismatched or absent claim
-                 fabricates nothing. -->
             <dl v-if="selectedSnapshotWorldPositionClaimResult" class="own-publication-selected-world-position-claim-detail">
                 <dt>Selected Snapshot Position Claim</dt>
                 <dd>{{ selectedSnapshotWorldPositionClaimResult.outcome }}</dd>
@@ -3353,18 +1031,6 @@ export default {
                 </template>
             </dl>
 
-            <!-- 0.9.159 — Selected Snapshot World Placement. An independent
-                 SIBLING of "Materialize Selected Snapshot" above, not an
-                 automatic consequence of it — see this file's own header,
-                 "0.9.159." Reachable in the SAME materializeSelectedSnapshotCommand
-                 family (placing a Snapshot that was never even materialized
-                 has no meaning). Disabled whenever there is no
-                 selectedSnapshotMaterializationResult yet. Synchronous — no
-                 "…ing" label, since resolveSnapshotWorldPlacement() performs
-                 no I/O. 0.9.172 — when a claim was consumed (CLAIMED), the
-                 resulting placement borrows the claim's own position
-                 instead of placementInfo; otherwise this button's own
-                 behavior is unchanged. -->
             <button
                 v-if="materializeSelectedSnapshotCommand"
                 type="button"
@@ -3373,14 +1039,6 @@ export default {
                 @click="placeMaterializedSnapshot"
             >Place Materialized Snapshot</button>
 
-            <!-- A separate result from selectedSnapshotMaterializationResult
-                 above — see this file's own header, "an independent sibling
-                 ... never a sequel." On a materialization that never
-                 reached STORED/ALREADY_AVAILABLE, this reports that SAME
-                 failure outcome unchanged (never a placement-specific
-                 catch-all) — see application/SnapshotWorldPlacement.js's
-                 own header. Position is rendered only on PLACED — this
-                 milestone never fabricates one. -->
             <dl v-if="selectedSnapshotWorldPlacementResult" class="own-publication-selected-world-placement-detail">
                 <dt>Selected Snapshot World Placement</dt>
                 <dd>{{ selectedSnapshotWorldPlacementResult.outcome }}</dd>
@@ -3394,15 +1052,6 @@ export default {
                 </template>
             </dl>
 
-            <!-- 0.9.160 — Selected Snapshot World Runtime Registration. An
-                 independent SIBLING of "Place Materialized Snapshot" above,
-                 not an automatic consequence of it — see this file's own
-                 header, "0.9.160." Reachable in the SAME
-                 materializeSelectedSnapshotCommand family (registering a
-                 Snapshot that was never even placed has no meaning).
-                 Disabled whenever there is no selectedSnapshotWorldPlacementResult
-                 yet. Synchronous — no "…ing" label, since
-                 registerMaterializedSnapshotWorldSource() performs no I/O. -->
             <button
                 v-if="materializeSelectedSnapshotCommand"
                 type="button"
@@ -3411,12 +1060,6 @@ export default {
                 @click="registerMaterializedSnapshot"
             >Register Placed Snapshot</button>
 
-            <!-- A separate result from selectedSnapshotWorldPlacementResult
-                 above. On a placement that never reached PLACED, this
-                 reports that SAME outcome unchanged (never a registration-
-                 specific catch-all) — see application/
-                 MaterializedSnapshotWorldDiscoveryBridge.js's own header.
-                 Origin is rendered only on REGISTERED. -->
             <dl v-if="selectedSnapshotWorldRegistrationResult" class="own-publication-selected-world-registration-detail">
                 <dt>Selected Snapshot World Registration</dt>
                 <dd>{{ selectedSnapshotWorldRegistrationResult.outcome }}</dd>
@@ -3438,15 +1081,6 @@ export default {
                 </div>
             </div>
 
-            <!-- 0.9.248 — Publication Commentary UI Integration.
-                 Rendered only when a caller supplied
-                 getPublicationCommentariesCommand, mirroring every other
-                 optional capability section in this file. Existing
-                 commentary is shown for ANY publication (own or not —
-                 CanCommentOnPublicationUseCase permits commenting on any
-                 Publication that exists), never gated on 'publication'
-                 being the local user's own; only the surface this panel
-                 already happens to be is scoped to "my own." -->
             <div v-if="getPublicationCommentariesCommand" class="own-publication-commentary">
                 <h5 class="own-publication-commentary-title">Commentary ({{ publicationCommentaries.length }})</h5>
 
@@ -3458,17 +1092,8 @@ export default {
                     @refreshed="refreshPublicationCommentaries"
                 />
 
-                <!-- H — Empty state: an intentional message, never an
-                     error, never indistinguishable from a genuine read
-                     failure above (which sets publicationCommentaryError,
-                     not this branch). -->
                 <p v-if="!publicationCommentaries.length" class="own-publication-commentary-empty">No commentary yet.</p>
                 <ul v-else class="own-publication-commentary-list">
-                    <!-- Rendered in EXACTLY the order
-                         publicationCommentaries already holds — see
-                         refreshPublicationCommentaries()'s own header,
-                         "never re-sorted here." commentaryId is a stable,
-                         unique key regardless of display order. -->
                     <li
                         v-for="commentary in publicationCommentaries"
                         :key="commentary.commentaryId"
@@ -3479,14 +1104,6 @@ export default {
                     </li>
                 </ul>
 
-                <!-- Sign-in-required state: shown instead of the compose
-                     form whenever there is no viewerIdentityId — this
-                     component never attempts creation, and never
-                     reproduces AddPublicationCommentaryUseCase's own
-                     identity resolution, to reach this decision; it only
-                     reads the SAME already-computed session fact
-                     ui/views/WorldView.js's own myIdentityId already is
-                     — see this file's own header. -->
                 <p v-if="addPublicationCommentaryCommand && !viewerIdentityId" class="own-publication-commentary-signin-hint">
                     Sign in to add commentary.
                 </p>

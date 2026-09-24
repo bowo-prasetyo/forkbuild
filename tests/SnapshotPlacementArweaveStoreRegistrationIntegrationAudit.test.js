@@ -342,8 +342,8 @@ async function run() {
     {
         check(RoleProviderRole.CONTENT !== RoleProviderRole.ANNOUNCEMENT_AND_DISCOVERY, 'H. CONTENT and ANNOUNCEMENT_AND_DISCOVERY remain two distinct role names');
 
-        const registrationBlockMatch = mainSource.match(/\/\/ 0\.9\.505 — Register Arweave as Snapshot Content Store\.\n\/\/\n\/\/ tests\/[\s\S]*?publicationSnapshotPlacementResolutionStoreRegistry\.register\(arweaveSnapshotPlacementContentStore\);/);
-        check(Boolean(registrationBlockMatch), 'H. the real 0.9.505 registration block is found in ui/main.js for inspection');
+        const registrationBlockMatch = mainSource.match(/const arweaveSnapshotPlacementContentStore = new ArweaveContentStore\([\s\S]*?publicationSnapshotPlacementResolutionStoreRegistry\.register\(arweaveSnapshotPlacementContentStore\);/);
+        check(Boolean(registrationBlockMatch), 'H. the Arweave content store registration block is found in ui/main.js for inspection');
         const registrationBlock = registrationBlockMatch[0].split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         check(!/nostr/i.test(registrationBlockMatch[0]), 'H. the registration block itself never references Nostr in any form, including in its own comments');
         check(!registrationBlock.includes('DiscoveryPublisher'), 'H. ...nor any DiscoveryPublisher in its actual code');

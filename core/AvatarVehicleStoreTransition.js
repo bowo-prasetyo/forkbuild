@@ -7,6 +7,7 @@ import {
     withEntryAdded
 } from './AvatarInventory.js';
 import { VehicleType, isValidVehicleType } from './VehicleType.js';
+import { isNonEmptyString } from '../utils/typeGuards.js';
 
 // 0.9.670 — Avatar Vehicle Store Transition.
 //
@@ -59,9 +60,6 @@ import { VehicleType, isValidVehicleType } from './VehicleType.js';
 // `withEntryAdded()` — core/AvatarInventory.js's own only way an entry
 // is ever added. This file never touches `currentInventory.entries`
 // directly.
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.length > 0;
-}
 
 export function deriveAvatarVehicleStoreTransition({
     currentMount = null,

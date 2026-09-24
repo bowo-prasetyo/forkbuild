@@ -1,4 +1,5 @@
 import { describeSnapshotDiscoveryEnvelope, SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
+import { withTimeout } from '../utils/withTimeout.js';
 
 const DEFAULT_GATEWAY_URL = 'https://arweave.net';
 // Deliberately DISTINCT from application/ArweaveAnnouncementPublisher.js's
@@ -304,7 +305,7 @@ export class ArweaveSnapshotDiscoveryPublisher {
         const material = JSON.stringify(described);
         const tag = Object.freeze({ name: this._tagName, value: this._discoveryTag });
 
-        const result = await withTimeout(this._uploadTaggedTransaction(material, tag), this._timeoutMs);
+        const result = await withTimeout(this._uploadTaggedTransaction(material, tag), this._timeoutMs, 'ArweaveSnapshotDiscoveryPublisher: uploadTaggedTransaction timed out');
 
         if (result === null || result === undefined) {
             return null;
@@ -319,19 +320,3 @@ export class ArweaveSnapshotDiscoveryPublisher {
 
 ArweaveSnapshotDiscoveryPublisher.DEFAULT_GATEWAY_URL = DEFAULT_GATEWAY_URL;
 ArweaveSnapshotDiscoveryPublisher.DEFAULT_TAG_NAME = DEFAULT_TAG_NAME;
-
-// Races `promise` against `timeoutMs`; rejects if the timer fires first —
-// a timeout is a genuine failure here, never collapsed to `null`. Mirrors
-// application/ArweaveAnnouncementPublisher.js's own identically-named
-// helper, deliberately not imported from it — the same "kept deliberately
-// separate rather than cross-imported" convention this whole family
-// already follows. The timer is always cleared, whichever settles first.
-function withTimeout(promise, timeoutMs) {
-    return new Promise((resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error('ArweaveSnapshotDiscoveryPublisher: uploadTaggedTransaction timed out')), timeoutMs);
-        Promise.resolve(promise).then(
-            (value) => { clearTimeout(timer); resolve(value); },
-            (error) => { clearTimeout(timer); reject(error); }
-        );
-    });
-}

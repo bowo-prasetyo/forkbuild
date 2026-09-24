@@ -7,6 +7,7 @@ import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterM
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.104 — World View Publication Distribution Action.
 //
@@ -392,8 +393,7 @@ async function runTests() {
     // Section I — architectural regression: ui/views/WorldView.js.
     // ---------------------------------------------------------------
     {
-        const viewSourceUrl = new URL('../ui/views/WorldView.js', import.meta.url);
-        const viewSource = await readFile(viewSourceUrl, 'utf8');
+        const viewSource = (await Promise.all(worldViewFiles().map((file) => readFile(new URL('../' + file, import.meta.url), 'utf8')))).join('\n');
         const viewCodeOnly = viewSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         assert(viewCodeOnly.includes("inject('publicationDistributionCommand', null)"),

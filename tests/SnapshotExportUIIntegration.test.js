@@ -12,6 +12,7 @@ import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.215 — Snapshot Export Capability Integration.
 //
@@ -224,7 +225,7 @@ async function runTests() {
         // and its own exportOwnSnapshot() wrapper calls exactly that
         // injected function — never constructing a use case or
         // coordinator of its own.
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/inject\('exportSnapshotCommand',\s*null\)/.test(codeOnly(worldViewSource)), 'A3a. WorldView.js injects exportSnapshotCommand');
         assert(/function exportOwnSnapshot\(publication\)\s*\{[\s\S]{0,300}?exportSnapshotCommand\(publication\.id\)/.test(worldViewSource),
             'A3b. WorldView.js\'s own exportOwnSnapshot() calls the injected exportSnapshotCommand with publication.id');
@@ -463,7 +464,7 @@ async function runTests() {
     // refresh tick specifically).
     // ---------------------------------------------------------------
     {
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
 
         // G1 — the automatic cascade's own call site inside
         // refreshSpatialUI() never references export.
@@ -495,9 +496,9 @@ async function runTests() {
             assert(!importBlock.includes(forbidden), `H1. OwnPublicationPanel.js's own import block never references ${forbidden} — only the injected exportSnapshotCommand prop`);
         }
 
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const codeOnlyWorldView = codeOnly(worldViewSource);
-        const worldViewImportBlock = codeOnlyWorldView.slice(0, codeOnlyWorldView.indexOf('export default'));
+        const worldViewImportBlock = (codeOnlyWorldView.match(/^import[^;]*;/gm) || []).join('\n');
         for (const forbidden of ['BuildPublicationSnapshotTransferPackageUseCase', 'SnapshotContentMaterializationCoordinator', 'publicationContentStore']) {
             assert(!worldViewImportBlock.includes(forbidden), `H2. WorldView.js's own import block never references ${forbidden} — only the injected exportSnapshotCommand capability`);
         }

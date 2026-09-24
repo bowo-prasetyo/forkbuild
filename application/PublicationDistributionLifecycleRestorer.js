@@ -1,3 +1,5 @@
+import { isNonEmptyString } from '../utils/typeGuards.js';
+
 // 0.9.56 — Publication Distribution Lifecycle Restoration Boundary.
 //
 // 0.9.54 answered "how does a lifecycle survive a process restart"
@@ -215,10 +217,6 @@
 // - **A durability status, dirty flag, or any other representation of
 //   memory/persistence divergence.** This file only ever moves a fact in
 //   one direction, once per call, on explicit request.
-
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.length > 0;
-}
 
 export class PublicationDistributionLifecycleRestorer {
     constructor(persistence, store) {

@@ -479,7 +479,7 @@ async function runTests() {
         assert(addCalls === 1, 'J1. AMENDED BY 0.9.595: none of the three new actions themselves EVER calls decentralizedPublicationDiscoveryProvider.add() — addCalls stays at exactly 1 (the one admission from selection/inspection, above) after all three actions run; this section\'s own original point (these actions never trigger a SECOND, independent Repository insertion of their own) still holds, unweakened.');
 
         const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
-        const milestoneSectionStart = canvasSource.indexOf('// 0.9.558 — Known Publication Encounter Continuation.\n//');
+        const milestoneSectionStart = canvasSource.indexOf('// OBSERVER-LOCAL ENCOUNTERS.');
         const milestoneSectionEnd = canvasSource.indexOf('export default {');
         const milestoneHeader = canvasSource.slice(milestoneSectionStart, milestoneSectionEnd);
         assert(milestoneHeader.includes('NOT A FOURTH ACTION SET') && milestoneHeader.includes('never the Publication Catalog/Repository browser'), 'J2. Sanity: this milestone\'s own header documents the boundary it holds to — no fifth action, no catalog/search surface.');

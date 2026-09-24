@@ -1,3 +1,5 @@
+import { isNonEmptyString } from '../utils/typeGuards.js';
+
 // 0.9.26 — Decentralized World Discovery Lead Registry.
 //
 // 0.9.24 named the shape of a lead; 0.9.25 built the seam that asks a
@@ -187,10 +189,6 @@ function isDescribedLead(value) {
         && typeof value.origin === 'string' && value.origin.length > 0
         && typeof value.discoveryTag === 'string' && value.discoveryTag.length > 0
         && typeof value.uri === 'string' && value.uri.length > 0;
-}
-
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.length > 0;
 }
 
 function leadKey(origin, discoveryTag, uri) {

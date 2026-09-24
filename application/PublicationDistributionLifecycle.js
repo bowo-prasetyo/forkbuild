@@ -1,3 +1,5 @@
+import { isNonEmptyString, isPlainObject } from '../utils/typeGuards.js';
+
 export const PublicationDistributionState = Object.freeze({
     ABSENT: 'ABSENT',
     PRESENT: 'PRESENT'
@@ -142,14 +144,6 @@ export const PublicationDistributionState = Object.freeze({
 //   describes lifecycle facts; a later, unscheduled milestone may introduce
 //   how lifecycle state changes — this file only names what independently
 //   exists right now, from one `result`, once.
-
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.length > 0;
-}
-
-function isPlainObject(value) {
-    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
 
 // Pure. Describes ONE material distribution state — see this file's own
 // header, "material and discovery state stay independent." Returns

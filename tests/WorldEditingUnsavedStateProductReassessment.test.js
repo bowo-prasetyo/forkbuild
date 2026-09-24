@@ -29,6 +29,7 @@ import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { ForkPublishedWorldUseCase } from '../application/ForkPublishedWorldUseCase.js';
 import { LifecycleStatus, computeLifecycleStatus, describeLifecycleStatus } from '../application/DocumentLifecycleStatus.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.579 — World Editing & Unsaved-State Product Reassessment.
 //
@@ -725,7 +726,7 @@ async function main() {
         // as a presentation fact (what does the Editor show?), not as
         // new error infrastructure.
         const editorViewSource = await readSource('ui/views/EditorView.js');
-        const loadCatchMatch = editorViewSource.match(/} catch \(err\) \{\s*\/\/ 0\.9\.574[\s\S]*?feedback\.show\(err\.reason === LoadFailureReason\.MATERIAL_UNAVAILABLE[\s\S]*?\);/);
+        const loadCatchMatch = editorViewSource.match(/} catch \(err\) \{\s*\/\/[\s\S]*?feedback\.show\(err\.reason === LoadFailureReason\.MATERIAL_UNAVAILABLE[\s\S]*?\);/);
         assert(loadCatchMatch !== null, 'J3a. EditorView.js\'s own route.query.load catch block located.');
         assert(/"This Publication's material is currently unavailable\."/.test(loadCatchMatch[0]),
             'J3b. A MATERIAL_UNAVAILABLE load failure shows a plain, safe, Wanderer-facing sentence — never a raw class name or storage key (the exact leak 0.9.559/0.9.574 named and this same file already fixed, reconfirmed still true here).');
@@ -769,7 +770,7 @@ async function main() {
         // published directly at the WorldNavigationSession layer) is
         // still the real, cited fact — reconfirmed here as this
         // section's own dirty+published defensive check (A3e).
-        const sessionSource = await readSource('application/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(/is a published snapshot and cannot be saved directly — edit it to fork first/.test(sessionSource),
             'K4. Reconfirmed, verbatim: the World View surface structurally refuses to save an already-published id in place — a dirty+published combination (A3e\'s defensive concern) can never actually arise at THAT surface.');
 
@@ -802,7 +803,7 @@ async function main() {
 
         // L2. The World View surface computes isPublished correctly —
         // quoted verbatim.
-        const sessionSource = await readSource('application/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(/const isPublished = this\.isDocumentPublished\(id\);/.test(sessionSource),
             'L2. WorldNavigationSession.getDocumentInfo() correctly derives isPublished from the real isDocumentPublished(id) check — quoted verbatim.');
         assert(/editable: !isPublished,/.test(sessionSource), 'L2b. And correctly gates editability on it — a published document\'s info panel says PUBLISHED and is marked non-editable, forcing a fork.');

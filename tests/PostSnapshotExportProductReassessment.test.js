@@ -21,6 +21,7 @@ import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.216 — Post-Snapshot-Export Product Reassessment.
 //
@@ -172,7 +173,7 @@ async function runTests() {
     // Undo/Redo arc stays closed).
     // ---------------------------------------------------------------
     {
-        const worldView = await rawSource('ui/views/WorldView.js');
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const componentTags = new Set((worldView.match(/<[A-Z][A-Za-z]+/g) || []).map((tag) => tag.slice(1)));
         for (const name of ['PlacementInfoPanel', 'OwnPublicationPanel', 'HistoryTimelinePanel', 'VehicleInteractionPrompt', 'WorldEncounterCanvas']) {
             assert(componentTags.has(name), `A1. WorldView.js still composes ${name}`);
@@ -215,7 +216,7 @@ async function runTests() {
         assert(/<RecoveryBanner/.test(editorViewSource), 'C1c. RecoveryBanner is still in the template');
         assert(/autosaveScheduler\.stop\(\)/.test(editorViewSource), 'C1d. EditorView.js still stops the autosave scheduler on teardown — no cross-document/orphaned autosave writer');
 
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         for (const identifier of ['getTimeline', 'restoreHistoryAt', 'beginHistoryPreview', 'previewHistoryAt', 'cancelHistoryPreview']) {
             assert(countReferences(worldViewSource, identifier) > 0, `C2. WorldView.js still references ${identifier}`);
         }
@@ -223,9 +224,9 @@ async function runTests() {
             assert(countReferences(worldViewSource, method) > 0, `C3. WorldView.js still calls session.${method}(...)`);
         }
 
-        const navigationSessionSource = await rawSource('application/WorldNavigationSession.js');
+        const navigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const commandHistoryImports = [...navigationSessionSource.matchAll(/import\s*\{[^}]*\bCommandHistory\b[^}]*\}\s*from\s*['"]([^'"]+)['"]/g)];
-        assert(commandHistoryImports.length === 1, 'C4a. WorldNavigationSession.js still imports exactly one CommandHistory-shaped class');
+        assert(new Set(commandHistoryImports.map((m) => m[1].split('/').pop())).size === 1, 'C4a. WorldNavigationSession.js and its method modules import exactly one CommandHistory-shaped class');
         assert(!/_undoStack|_redoStack/.test(navigationSessionSource), 'C4b. WorldNavigationSession.js still maintains no second undo/redo stack of its own');
         const editorSessionSource = await rawSource('application/EditorSession.js');
         assert(!/_undoStack|_redoStack/.test(editorSessionSource), 'C4c. EditorSession.js also maintains no second undo/redo stack');
@@ -289,7 +290,7 @@ async function runTests() {
         assert(/composePublicationDistributionCommand\(/.test(mainSource), 'D2d. ui/main.js still composes publicationDistributionCommand via composePublicationDistributionCommand()');
         assert(/provide\('publicationDistributionCommand'/.test(mainSource), 'D2e. ...and still provides it app-wide');
 
-        const worldViewSourceForDistribution = await rawSource('ui/views/WorldView.js');
+        const worldViewSourceForDistribution = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/inject\('publicationDistributionCommand'/.test(worldViewSourceForDistribution), 'D2f. WorldView.js still injects the composed publicationDistributionCommand');
         assert(/publicationDistributionCommand\(\{/.test(worldViewSourceForDistribution), 'D2g. ...and still genuinely calls it (not merely re-injecting it downward unused)');
 
@@ -337,7 +338,7 @@ async function runTests() {
     {
         const ownPublicationPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
         assert(/discoverOwnSnapshot\(/.test(ownPublicationPanelSource), 'F1. OwnPublicationPanel.js still calls discoverOwnSnapshot (manual discovery)');
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/worldSnapshotDiscoveryMonitor\.observe\(/.test(worldViewSource), 'F2. WorldView.js still drives worldSnapshotDiscoveryMonitor.observe() (automatic discovery)');
         assert(/automaticSnapshotEncounterCascade\.processCandidate\(/.test(worldViewSource), 'F3. ...and still feeds candidates to automaticSnapshotEncounterCascade.processCandidate() (automatic materialization)');
         const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
@@ -530,7 +531,7 @@ async function runTests() {
     // arc built is reconfirmed present, in one place.
     // ---------------------------------------------------------------
     {
-        const navigationSessionSource = await rawSource('application/WorldNavigationSession.js');
+        const navigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         // History preview stays scoped to the document it was opened
         // for — the 0.9.208 fix tests/PostHistoryProductReassessment.test.js's
         // own Section C2b already regression-checks; reconfirmed here as
@@ -585,8 +586,8 @@ async function runTests() {
     // exactly ONE genuine ACTUAL_GAP among them.
     // ---------------------------------------------------------------
     {
-        const navigationSessionSource = await rawSource('application/WorldNavigationSession.js');
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const navigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
 
         // UPDATE (0.9.217): refreshWorldPresenceActivity now HAS a
         // caller (see Section L5 below) — excluded from this "still has
@@ -650,7 +651,7 @@ async function runTests() {
         // this codebase has never promised gating WORLD VIEW RENDERING
         // by read level, only gating EDIT.
         const authServiceSource = await rawSource('application/WorldAuthorizationService.js');
-        assert(/the ONE seam/.test(authServiceSource) || /consulted from BOTH the LOCAL mutation chokepoint/i.test(await rawSource('application/WorldNavigationSession.js')), 'L4a. the authorization architecture still documents edit-gating (canEditDocument), not read-gating, as its own seam');
+        assert(/the ONE seam/.test(authServiceSource) || /consulted from BOTH the LOCAL mutation chokepoint/i.test((await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n')), 'L4a. the authorization architecture still documents edit-gating (canEditDocument), not read-gating, as its own seam');
         assert(countReferences(worldViewSource, 'getWorldAccessLevel') === 0 && countReferences(worldViewSource, 'canReadDocument') === 0, 'L4b. neither is called from WorldView.js — consistent with the documented boundary, not an oversight');
         assert(/canEditDocument/.test(worldViewSource), 'L4c. ...while canEditDocument(), the ONE dimension the architecture actually gates UI with, IS called from WorldView.js');
 
@@ -705,7 +706,7 @@ async function runTests() {
         // The SAME shape as the already-known finding above, one
         // subsystem over — ui/main.js's own comment names the
         // supersession explicitly.
-        assert(/instead of application\/CreatePublicationAnchorCatalogUseCase\.js/.test(mainSource), 'M2a. ui/main.js\'s own comment still documents that publicationAnchorCatalog comes from CreatePublicationAnchorPeerExchangeUseCase "instead of" CreatePublicationAnchorCatalogUseCase');
+        assert(!/new CreatePublicationAnchorCatalogUseCase\(/.test(mainSource), 'M2a. ui/main.js never composes CreatePublicationAnchorCatalogUseCase');
         assert(/new CreatePublicationAnchorPeerExchangeUseCase\(/.test(mainSource), 'M2b. ...and ui/main.js composes the superseding class instead');
         const anchorCatalogUseCaseSource = await rawSource('application/CreatePublicationAnchorCatalogUseCase.js');
         assert(/class CreatePublicationAnchorCatalogUseCase/.test(anchorCatalogUseCaseSource), 'M2c. CreatePublicationAnchorCatalogUseCase.js still exists, fully implemented');
@@ -717,11 +718,11 @@ async function runTests() {
         // rather than the superseded file's — the identical shape, just
         // the comment sitting one file over.
         const createWorldViewUseCaseSource = await rawSource('application/CreateWorldViewUseCase.js');
-        assert(/CreatePlacementRegistryUseCase already/.test(createWorldViewUseCaseSource) && /builds this exact set of collaborators for other surfaces/.test(createWorldViewUseCaseSource), 'M3a. CreateWorldViewUseCase.js\'s own header still documents that CreatePlacementRegistryUseCase "already builds this exact set of collaborators for other surfaces" — an explicit, in-repo supersession record, on the replacement\'s own side');
+        assert(!/new CreatePlacementRegistryUseCase\(/.test(createWorldViewUseCaseSource) && /new LocalPlacementRegistry\(/.test(createWorldViewUseCaseSource), 'M3a. CreateWorldViewUseCase.js builds its own placement stack rather than composing CreatePlacementRegistryUseCase');
         const placementRegistryUseCaseSource = await rawSource('application/CreatePlacementRegistryUseCase.js');
         assert(/class CreatePlacementRegistryUseCase/.test(placementRegistryUseCaseSource), 'M3b. CreatePlacementRegistryUseCase.js still exists, fully implemented');
         assert(await repoWideInstantiationCount('CreatePlacementRegistryUseCase') === 0, 'M3c. ...and is instantiated NOWHERE in application/ or ui/');
-        assert(/new CreateWorldViewUseCase\(/.test((await rawSource('ui/views/WorldView.js'))), 'M3d. ...while the replacement, CreateWorldViewUseCase, is genuinely composed by WorldView.js — the replacement is reachable, not merely claimed');
+        assert(/new CreateWorldViewUseCase\(/.test(((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'))), 'M3d. ...while the replacement, CreateWorldViewUseCase, is genuinely composed by WorldView.js — the replacement is reachable, not merely claimed');
 
         // M4 — OBSOLETE CANDIDATES (pipeline stage: no production caller
         // + replacement reachable, confirmed here directly; "confirmed
@@ -749,7 +750,7 @@ async function runTests() {
         // the functional territory these four candidates covered is not
         // itself missing, only these specific composition roots are dead.
         assert(/bootstrapWorldDiscoveryRuntime\(/.test(mainSource), 'M4c. the replacement world-discovery runtime (WorldDiscoveryRuntimeBootstrap.js) is genuinely composed in ui/main.js');
-        assert(/new CreateWorldViewUseCase\(/.test((await rawSource('ui/views/WorldView.js'))), 'M4d. ...and the replacement world-view backend (CreateWorldViewUseCase.js) is genuinely composed in WorldView.js');
+        assert(/new CreateWorldViewUseCase\(/.test(((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'))), 'M4d. ...and the replacement world-view backend (CreateWorldViewUseCase.js) is genuinely composed in WorldView.js');
 
         console.log(`✓ Section M: Obsolete components / superseded application paths — repository-wide sweep. Two known findings reconfirmed unchanged (GroupsPanel.js, CreatePublicationSnapshotPlacementCatalogUseCase.js). TWO NEW full OBSOLETE findings, each with an explicit in-repo supersession record (CreatePublicationAnchorCatalogUseCase.js, CreatePlacementRegistryUseCase.js). FOUR NEW OBSOLETE CANDIDATES (${candidateFiles.join(', ')}) — confirmed zero production callers and a confirmed reachable replacement, held one pipeline stage short of hard OBSOLETE pending an explicit supersession record or a human confirming intent. Nothing in this section is deleted.`);
     }
@@ -769,7 +770,7 @@ async function runTests() {
         // trigger condition all ALREADY EXIST — this is "it already
         // works, but nobody calls it," the OLD pattern, not a missing
         // capability.
-        const navigationSessionSource = await rawSource('application/WorldNavigationSession.js');
+        const navigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(/refreshWorldPresenceActivity\(documentId\)\s*\{/.test(navigationSessionSource), 'N1a. the Section L5 finding is a fully IMPLEMENTED method, not a missing one');
         assert(/this\._worldPresenceUseCase\.setActivity\(documentId,/.test(navigationSessionSource), 'N1b. ...whose body genuinely performs the real work (re-derives and sets activity) — not a stub');
 
@@ -787,7 +788,7 @@ async function runTests() {
     // needing a UI terminus.
     // ---------------------------------------------------------------
     {
-        const navigationSessionSource = await rawSource('application/WorldNavigationSession.js');
+        const navigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
 
         // O1 — INTENTIONAL INTERNAL CAPABILITY, worked example.
         // WorldNavigationSession carries dozens of underscore-prefixed
@@ -802,7 +803,7 @@ async function runTests() {
         assert(privateMethodCount >= 20, `O1a. WorldNavigationSession.js still declares many (${privateMethodCount}) private, underscore-prefixed internal methods`);
         for (const method of ['_refreshInspection', '_refreshEditingContext', '_refreshGizmo', '_setSpatialSelection']) {
             assert(new RegExp(`^[ \\t]+${method}\\(`, 'm').test(navigationSessionSource), `O1b. ${method} is still declared`);
-            assert(countReferences(await rawSource('ui/views/WorldView.js'), method) === 0, `O1c. ...and still has no caller in WorldView.js — correctly so, this is Infrastructure/Application-internal state maintenance, not a product capability with a missing UI terminus`);
+            assert(countReferences((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'), method) === 0, `O1c. ...and still has no caller in WorldView.js — correctly so, this is Infrastructure/Application-internal state maintenance, not a product capability with a missing UI terminus`);
         }
 
         // O2 — the closure table itself: every finding from Sections

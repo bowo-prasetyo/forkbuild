@@ -10,6 +10,7 @@ import { composePublicationDistributionCommand } from '../application/Publicatio
 import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
 import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
 import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.435 — Publications Distribution Section Product & UI Boundary Audit.
 //
@@ -205,7 +206,7 @@ async function run() {
     {
         const ownPanelSource = await source('ui/components/OwnPublicationPanel.js');
         const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
-        const publicationsViewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const publicationsViewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
 
         // OwnPublicationPanel.js — exactly two distribution-capable actions,
         // both Content+Announcement/Discovery COMBINED in one call each
@@ -361,7 +362,7 @@ async function run() {
         // C1 — the exact entry shape /publications itself builds. Never
         // assumed: read live from the view's own source, confirming
         // makeCatalogShapedEntry() (above) is not a fabricated shape.
-        const viewSource = codeOnly(await source('ui/views/DecentralizedPublicationsView.js'));
+        const viewSource = codeOnly((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n'));
         assert(/placementCreationAttempts:\s*\{\}/.test(viewSource), n('C1a. `entry.placementCreationAttempts: {}` is confirmed live in the real view\'s own entry construction'));
         assert(/creationAttempts:\s*\{\}/.test(viewSource), n('C1b. ...and `entry.creationAttempts: {}` likewise'));
         assert(/entry\.publication\.id/.test(viewSource) && /entry\.publication\.contentReference\.hash/.test(viewSource), n('C1c. ...and `entry.publication` is read as a real domain object (`.id`, `.contentReference.hash`), never a plain serialized blob'));
@@ -418,7 +419,7 @@ async function run() {
     // ===============================================================
     {
         const ownPanelSource = await source('ui/components/OwnPublicationPanel.js');
-        const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
 
         // OwnPublicationPanel/WorldEncounterCanvas hold ONE set of
         // *_Executing/*_Error/*_Result/*_RequestId fields — correct for
@@ -445,7 +446,7 @@ async function run() {
     {
         const ownPanelSource = await source('ui/components/OwnPublicationPanel.js');
         const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
-        const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
 
         // UPDATED by 0.9.437 — Contextual Distribution Configuration
         // Reachability, this audit's own recommended next step (Section H),

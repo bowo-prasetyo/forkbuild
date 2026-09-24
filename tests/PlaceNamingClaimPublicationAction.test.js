@@ -12,6 +12,7 @@ import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.320 — Explicit Place Naming Publication Action.
 // See docs/Roadmap.md, "0.9.320 — Explicit Place Naming Publication
@@ -533,7 +534,7 @@ async function run() {
     // Section I — architectural regression.
     // ---------------------------------------------------------------
     {
-        const worldViewCode = await codeOnlySource('ui/views/WorldView.js');
+        const worldViewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(worldViewCode.includes("inject('publishPlaceNamingClaimToNostrCommand'"), '39. ui/views/WorldView.js injects the app-wide publishPlaceNamingClaimToNostrCommand');
         assert(worldViewCode.includes('function publishNamingClaimToNostr('), '40. ui/views/WorldView.js defines publishNamingClaimToNostr()');
         assert(worldViewCode.includes('session.getPlaceNamingClaims(regionId)'), '41. publishNamingClaimToNostr() reads the claim back through session.getPlaceNamingClaims(), the same reproduction Section C relies on');
